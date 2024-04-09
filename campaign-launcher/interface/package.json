@@ -34,9 +34,7 @@
     "yup": "^1.4.0"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-inject": "^5.0.5",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@types/uuid": "^9.0.8",
@@ -52,7 +50,6 @@
     "eslint-plugin-react": "^7.34.1",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
-    "rollup-plugin-polyfill-node": "^0.13.0",
     "swagger-typescript-api": "^13.0.3",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
