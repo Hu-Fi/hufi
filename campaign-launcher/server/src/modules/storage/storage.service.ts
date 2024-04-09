@@ -4,10 +4,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import stringify from 'json-stable-stringify';
 import * as Minio from 'minio';
 
-import { S3ConfigService } from '@/common/config/s3-config.service';
-import { ErrorBucket } from '@/common/constants/errors';
-import { ContentType, Extension } from '@/common/enums/storage';
-import { UploadedFile } from '@/common/interfaces';
+import { S3ConfigService } from '../../common/config/s3-config.service';
+import { ErrorBucket } from '../../common/constants/errors';
+import { ContentType, Extension } from '../../common/enums/storage';
+import { UploadedFile } from '../../common/interfaces';
 
 @Injectable()
 export class StorageService {

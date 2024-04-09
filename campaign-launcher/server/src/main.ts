@@ -2,9 +2,9 @@ import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 
-import init from '@/app-init';
-import { ServerConfigService } from '@/common/config/server-config.service';
-import { AppModule } from '@/modules/app/app.module';
+import init from './app-init';
+import { ServerConfigService } from './common/config/server-config.service';
+import { AppModule } from './modules/app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<INestApplication>(AppModule, {

@@ -3,8 +3,8 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
 
-import init from '@/app-init';
-import { AppModule } from '@/modules/app/app.module';
+import init from '../src/app-init';
+import { AppModule } from '../src/modules/app/app.module';
 
 const expressApp = express();
 const adapter = new ExpressAdapter(expressApp);

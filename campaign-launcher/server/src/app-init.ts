@@ -6,8 +6,8 @@ import cookieParser from 'cookie-parser';
 import expressSession from 'express-session';
 import helmet from 'helmet';
 
-import { ServerConfigService } from '@/common/config/server-config.service';
-import { AppModule } from '@/modules/app/app.module';
+import { ServerConfigService } from './common/config/server-config.service';
+import { AppModule } from './modules/app/app.module';
 
 export default async function init(app: any) {
   const configService: ConfigService = app.get(ConfigService);

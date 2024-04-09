@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 
+import { StorageService } from '../storage/storage.service';
+
 import { ManifestController } from './manifest.controller';
 import { ManifestService } from './manifest.service';
-
-import { StorageService } from '@/modules/storage/storage.service';
 
 @Module({
   controllers: [ManifestController],

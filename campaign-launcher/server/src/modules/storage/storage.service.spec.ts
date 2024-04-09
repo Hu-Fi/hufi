@@ -1,11 +1,9 @@
 import { ConfigModule, ConfigService, registerAs } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
-import { StorageService } from './storage.service';
-
-import { S3ConfigService } from '@/common/config/s3-config.service';
-import { ErrorBucket } from '@/common/constants/errors';
-import { ContentType } from '@/common/enums/storage';
+import { S3ConfigService } from '../../common/config/s3-config.service';
+import { ErrorBucket } from '../../common/constants/errors';
+import { ContentType } from '../../common/enums/storage';
 import {
   MOCK_MANIFEST,
   MOCK_S3_ACCESS_KEY,
@@ -14,7 +12,9 @@ import {
   MOCK_S3_PORT,
   MOCK_S3_SECRET_KEY,
   MOCK_S3_USE_SSL,
-} from '@/test/constants';
+} from '../../test/constants';
+
+import { StorageService } from './storage.service';
 
 jest.mock('minio', () => {
   class Client {
@@ -80,7 +80,7 @@ describe('StorageService', () => {
         hash: expect.any(String),
       });
       expect(storageService.minioClient.putObject).toHaveBeenCalledWith(
-        MOCK_BUCKET_NAME,
+        MOCK_S3_BUCKET,
         expect.any(String),
         expect.any(String),
         {
