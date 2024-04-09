@@ -1,5 +1,6 @@
 // liquidity-score.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+
 import { Campaign } from './campaign.entity';
 
 @Entity()

@@ -5,6 +5,7 @@ import {
   ManyToMany,
   JoinTable,
 } from 'typeorm';
+
 import { Campaign } from './campaign.entity';
 
 @Entity()

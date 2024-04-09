@@ -6,8 +6,9 @@ import {
   ManyToMany,
   OneToMany,
 } from 'typeorm';
-import { User } from './user.entity';
+
 import { LiquidityScore } from './liquidity-score.entity';
+import { User } from './user.entity';
 
 @Entity()
 export class Campaign {

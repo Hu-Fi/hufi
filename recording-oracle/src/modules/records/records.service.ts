@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import * as ccxt from 'ccxt';
 // import { Cron, CronExpression } from '@nestjs/schedule';
-import { LiquidityScoreCalculation } from './liquidity-score.model';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as ccxt from 'ccxt';
 import { Repository } from 'typeorm';
-import { Campaign } from 'src/common/entities/campaign.entity';
-import { User } from 'src/common/entities/user.entity';
+
+import { Campaign } from '../../common/entities/campaign.entity';
+import { User } from '../../common/entities/user.entity';
+
+import { LiquidityScoreCalculation } from './liquidity-score.model';
 
 @Injectable()
-export class RecordService {
+export class RecordsService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -21,6 +23,7 @@ export class RecordService {
     apiKey: string,
     secret: string,
   ): ccxt.Exchange {
+    // eslint-disable-next-line import/namespace
     const exchangeClass = ccxt[exchangeId];
     if (!exchangeClass) {
       throw new Error(`Exchange ${exchangeId} not supported.`);

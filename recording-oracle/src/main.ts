@@ -1,22 +1,26 @@
+import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+import init from './app-init';
+import { ServerConfigService } from './common/config/server-config.service';
+import { AppModule } from './modules/app/app.module';
 
 async function bootstrap() {
+  const app = await NestFactory.create<INestApplication>(AppModule, {
+    cors: true,
+  });
+  await init(app);
 
-  const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  const configService: ConfigService = app.get(ConfigService);
+  const serverConfigService = new ServerConfigService(configService);
 
+  const host = serverConfigService.host;
+  const port = serverConfigService.port;
 
-  const config = new DocumentBuilder()
-    .setTitle('Recording Oracle API')
-    .setDescription('Recording Oracle API to record data ')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
-
-  const port = process.env.PORT || 3098;
-  await app.listen(port);
+  await app.listen(port, host, async () => {
+    console.info(`API server is running on http://${host}:${port}`);
+  });
 }
-bootstrap();
+
+void bootstrap();

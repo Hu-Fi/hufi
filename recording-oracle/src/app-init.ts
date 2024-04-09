@@ -30,8 +30,8 @@ export default async function init(app: any) {
   app.use(urlencoded({ limit: '5mb', extended: true }));
 
   const config = new DocumentBuilder()
-    .setTitle('HuFi Campaign Launcher API')
-    .setDescription('HuFi Campaign Launcher API')
+    .setTitle('HuFi Recording Oracle API')
+    .setDescription('Recording Oracle API to record data')
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);

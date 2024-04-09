@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../common/entities/user.entity';
-import { Campaign } from '../common/entities/campaign.entity';
-import { EncryptionService } from '../encryption/encryption.service';
+
+import { Campaign } from '../../common/entities/campaign.entity';
+import { User } from '../../common/entities/user.entity';
+import { EncryptionService } from '../../encryption/encryption.service';
 
 @Injectable()
 export class UserService {
@@ -16,7 +17,7 @@ export class UserService {
 
   async signUp(
     userId: string,
-    exchange:string,
+    exchange: string,
     apiKey: string,
     secret: string,
     campaignAddress: string,

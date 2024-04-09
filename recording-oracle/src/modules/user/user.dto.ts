@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SignUpUserDto {
   @ApiProperty({ example: '1', description: 'UserID' })
@@ -9,6 +9,9 @@ export class SignUpUserDto {
   apiKey: string;
   @ApiProperty({ example: 'xxx', description: 'API SECRET for the Exchange' })
   secret: string;
-  @ApiProperty({ example: '0x00', description: 'Address of the campaign to sign up for.' })
+  @ApiProperty({
+    example: '0x00',
+    description: 'Address of the campaign to sign up for.',
+  })
   campaignAddress: string;
 }
