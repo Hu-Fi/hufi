@@ -18,11 +18,11 @@
       "destination": "api/app.ts"
     },
     {
-      "source": "/health",
+      "source": "/api/health",
       "destination": "api/app.ts"
     },
     {
-      "source": "/manifest/(.*)",
+      "source": "/api/manifest/(.*)",
       "destination": "api/app.ts"
     }
   ],
