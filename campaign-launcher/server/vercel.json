@@ -3,7 +3,7 @@
   "buildCommand": "yarn build",
   "outputDirectory": "dist",
   "functions": {
-    "api/app.ts": {
+    "dist/api/app.js": {
       "maxDuration": 300
     }
   },
@@ -11,19 +11,19 @@
   "rewrites": [
     {
       "source": "/swagger",
-      "destination": "/api/app.ts"
+      "destination": "/dist/api/app.js"
     },
     {
       "source": "/swagger/(.*)",
-      "destination": "/api/app.ts"
+      "destination": "/dist/api/app.js"
     },
     {
       "source": "/health",
-      "destination": "/api/app.ts"
+      "destination": "/dist/api/app.js"
     },
     {
       "source": "/manifest/(.*)",
-      "destination": "/api/app.ts"
+      "destination": "/dist/api/app.js"
     }
   ],
   "headers": [
