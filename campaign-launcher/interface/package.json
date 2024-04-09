@@ -34,7 +34,6 @@
     "yup": "^1.4.0"
   },
   "devDependencies": {
-    "@rollup/plugin-inject": "^5.0.5",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@types/uuid": "^9.0.8",
@@ -53,6 +52,7 @@
     "swagger-typescript-api": "^13.0.3",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
+    "vite-plugin-node-polyfills": "^0.21.0",
     "vitest": "^1.4.0"
   }
 }

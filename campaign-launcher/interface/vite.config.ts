@@ -1,6 +1,6 @@
 import { resolve } from 'path';
-import inject from '@rollup/plugin-inject';
 import { defineConfig } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const proxyApi = process.env.PROXY_API || 'http://localhost:5000';
 
@@ -13,7 +13,11 @@ export default defineConfig(() => {
         '/api': proxyApi,
       },
     },
-    plugins: [],
+    plugins: [
+      nodePolyfills({
+        protocolImports: true,
+      }),
+    ],
     build: {
       outDir: 'dist',
       sourcemap: true,
@@ -21,7 +25,6 @@ export default defineConfig(() => {
         transformMixedEsModules: true,
       },
       rollupOptions: {
-        plugins: [inject({ Buffer: ['buffer/', 'Buffer'] })],
         onwarn(warning, defaultHandler) {
           if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
             return;
