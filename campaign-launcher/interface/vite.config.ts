@@ -21,7 +21,7 @@ export default defineConfig(() => {
         transformMixedEsModules: true,
       },
       rollupOptions: {
-        plugins: [inject({ Buffer: ['Buffer', 'Buffer'], process: 'process' })],
+        plugins: [inject({ Buffer: ['buffer/', 'Buffer'] })],
         onwarn(warning, defaultHandler) {
           if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
             return;
