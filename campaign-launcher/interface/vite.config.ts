@@ -31,6 +31,17 @@ export default defineConfig(() => {
           }),
           cjs(),
         ],
+        onwarn(warning, defaultHandler) {
+          if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+            return;
+          }
+
+          if (warning.code === 'SOURCEMAP_ERROR') {
+            return;
+          }
+
+          defaultHandler(warning);
+        },
       },
     },
     resolve: {

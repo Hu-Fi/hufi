@@ -723,15 +723,14 @@
   resolved "https://registry.yarnpkg.com/@human-protocol/core/-/core-2.1.0.tgz#af4ad8b920f89ef29028f82a9ecae40103ec0e75"
   integrity sha512-fEuWkH9E2FpW6iP7WFmKLKJG4FqW3axjx2eU//JuLyh2sKx6Tz5EhNuTCwopwPfB2I5/9LEhZ+XyeRySH02g+Q==
 
-"@human-protocol/sdk@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-2.1.0.tgz#6b7ced1980fb63b5921f5c9d1422ca6250f958e8"
-  integrity sha512-91yB6/5UCs+w7oatCEk7cucECffIpKzJO8ECQA+OThQChPKn8ZbePrXXP6SaGrfk6Yd8Wo0qExGAuOw9AUZ0tA==
+"@human-protocol/sdk@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-2.1.1.tgz#c335b5fad9cd63618a1c41a0e48a877776cda483"
+  integrity sha512-No5SOzZDC7PtmkUOqAs/SoGpn+LpH7zLZTuAdDTL58JL/QEWpNoMSfA0An5D5AH0PpR+AgRIR0vNyP68g+m9oQ==
   dependencies:
     "@human-protocol/core" "*"
     aws-sdk "^2.1528.0"
     axios "^1.4.0"
-    crypto "^1.0.1"
     graphql "^16.8.1"
     graphql-request "^6.1.0"
     graphql-tag "^2.12.6"
@@ -739,7 +738,7 @@
     openpgp "^5.10.2"
     secp256k1 "^4.0.3"
     vitest "^0.30.1"
-    winston "^3.8.2"
+    winston "^3.13.0"
 
 "@humanwhocodes/config-array@^0.11.14":
   version "0.11.14"
@@ -3045,11 +3044,6 @@ crossws@^0.2.0, crossws@^0.2.2:
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/crossws/-/crossws-0.2.4.tgz#82a8b518bff1018ab1d21ced9e35ffbe1681ad03"
   integrity sha512-DAxroI2uSOgUKLz00NX6A8U/8EE3SZHmIND+10jkVSaypvyt57J5JEOxAQOL6lQxyzi/wZbTIwssU1uy69h5Vg==
-
-crypto@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/crypto/-/crypto-1.0.1.tgz#2af1b7cad8175d24c8a1b0778255794a21803037"
-  integrity sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==
 
 csstype@^3.0.2, csstype@^3.1.3:
   version "3.1.3"
@@ -7360,7 +7354,7 @@ winston-transport@^4.7.0:
     readable-stream "^3.6.0"
     triple-beam "^1.3.0"
 
-winston@^3.8.2:
+winston@^3.13.0:
   version "3.13.0"
   resolved "https://registry.yarnpkg.com/winston/-/winston-3.13.0.tgz#e76c0d722f78e04838158c61adc1287201de7ce3"
   integrity sha512-rwidmA1w3SE4j0E5MuIufFhyJPBDG7Nu71RkZor1p2+qHvJSZ9GYDA81AyleQcZbh/+V6HjeBdfnTZJm9rSeQQ==
