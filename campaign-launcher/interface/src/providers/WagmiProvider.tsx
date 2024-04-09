@@ -13,10 +13,10 @@ import {
   sepolia,
   skaleHumanProtocol,
 } from 'wagmi/chains';
-import { walletConnect } from 'wagmi/connectors';
+// import { walletConnect } from 'wagmi/connectors';
 
-const walletConnectProjectId = import.meta.env
-  .VITE_APP_WALLETCONNECT_PROJECT_ID;
+// const walletConnectProjectId = import.meta.env
+//   .VITE_APP_WALLETCONNECT_PROJECT_ID;
 
 declare module 'wagmi' {
   interface Register {
