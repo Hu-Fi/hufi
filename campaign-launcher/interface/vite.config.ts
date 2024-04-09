@@ -2,15 +2,15 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-const proxyApi = process.env.PROXY_API || 'http://localhost:5000';
-
 // https://vitejs.dev/config/
 export default defineConfig(() => {
   return {
     server: {
       port: 3000,
       proxy: {
-        '/api': proxyApi,
+        '/api': {
+          target: 'http://localhost:5000',
+        },
       },
     },
     plugins: [

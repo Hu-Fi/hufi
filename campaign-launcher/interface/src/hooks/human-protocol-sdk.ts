@@ -9,11 +9,11 @@ import { useMemo } from 'react';
 import { v4 as uuidV4 } from 'uuid';
 import { Config, useChainId, useConnectorClient } from 'wagmi';
 
-import { useNotification, useWalletBalance } from '.';
+import { ManifestUploadResponseDto } from '../api/client/data-contracts';
+import { oracles } from '../config/escrow';
+import { clientToSigner } from '../utils/wagmi-ethers';
 
-import { ManifestUploadResponseDto } from '@/api/client/data-contracts';
-import { oracles } from '@/config/escrow';
-import { clientToSigner } from '@/utils/wagmi-ethers';
+import { useNotification, useWalletBalance } from '.';
 
 export const useClientToSigner = () => {
   const chainId = useChainId();

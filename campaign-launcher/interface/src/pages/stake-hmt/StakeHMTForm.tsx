@@ -12,7 +12,7 @@ import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
-import { useWalletBalance } from '@/hooks';
+import { useWalletBalance } from '../../hooks';
 
 export type StakeHMTFormValues = {
   amount: number;

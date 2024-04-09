@@ -1,8 +1,7 @@
 import { FC } from 'react';
 
+import { useStakeHMT } from '../../hooks';
 import { StakeHMTForm, StakeHMTFormValues } from './StakeHMTForm';
-
-import { useStakeHMT } from '@/hooks';
 
 export const StakeHMT: FC = () => {
   const stakeHMT = useStakeHMT();

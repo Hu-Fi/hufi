@@ -1,7 +1,7 @@
 import { Box, Link, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { FC } from 'react';
 
-import { SocialIcons } from '@/components/social-icons';
+import { SocialIcons } from '../components/social-icons';
 
 export const Footer: FC = () => {
   const theme = useTheme();
@@ -14,7 +14,8 @@ export const Footer: FC = () => {
           Terms and conditions
         </Typography>
         <Typography color="text.secondary" variant="caption" mt={1}>
-          © {new Date().getFullYear()} HPF. HUMAN Protocol® is a registered trademark
+          © {new Date().getFullYear()} HPF. HUMAN Protocol® is a registered
+          trademark
         </Typography>
       </Box>
     </Box>
@@ -26,18 +27,22 @@ export const Footer: FC = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Link href="https://www.humanprotocol.org/privacy-policy" sx={{ textDecoration: 'none' }}>
+        <Link
+          href="https://www.humanprotocol.org/privacy-policy"
+          sx={{ textDecoration: 'none' }}
+        >
           <Typography color="text.secondary" variant="caption" lineHeight={1}>
             Terms and conditions
           </Typography>
         </Link>
       </Box>
       <Typography color="text.secondary" variant="caption">
-        © {new Date().getFullYear()} HPF. HUMAN Protocol® is a registered trademark
+        © {new Date().getFullYear()} HPF. HUMAN Protocol® is a registered
+        trademark
       </Typography>
       <SocialIcons />
     </Box>

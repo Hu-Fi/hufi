@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
-import { CreateCampaign } from '@/pages/create-campaign';
-import { Main } from '@/pages/main';
-import { StakeHMT } from '@/pages/stake-hmt';
+import { CreateCampaign } from './pages/create-campaign';
+import { Main } from './pages/main';
+import { StakeHMT } from './pages/stake-hmt';
 
 interface Route {
   key: string;

@@ -1,7 +1,7 @@
 import { Box, Link } from '@mui/material';
 import { FC } from 'react';
 
-import { DiscordIcon, GithubIcon, LinkedinIcon, TwitterIcon } from '@/components/icons';
+import { DiscordIcon, GithubIcon, LinkedinIcon, TwitterIcon } from '../icons';
 
 type SocialIconProps = {
   direction?: 'row' | 'row-reverse' | 'column' | 'column-reverse';

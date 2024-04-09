@@ -13,9 +13,9 @@ import {
 import { FC, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import logoSvg from '@/assets/logo.svg';
-import { ConnectWallet } from '@/components/connect-wallet';
-import { SocialIcons } from '@/components/social-icons';
+import logoSvg from '../assets/logo.svg';
+import { ConnectWallet } from '../components/connect-wallet';
+import { SocialIcons } from '../components/social-icons';
 
 type NavLink = {
   title: string;

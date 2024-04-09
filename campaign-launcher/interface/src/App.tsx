@@ -4,15 +4,15 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { FC } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import { MainLayout } from '@/layout';
+import { MainLayout } from './layout';
 import {
   ApiProvider,
   NotificationProvider,
   QueryClientProvider,
   ThemeProvider,
   WagmiProvider,
-} from '@/providers';
-import { routes as appRoutes } from '@/routes';
+} from './providers';
+import { routes as appRoutes } from './routes';
 
 export const App: FC = () => {
   return (

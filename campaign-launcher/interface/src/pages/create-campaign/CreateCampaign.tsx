@@ -1,10 +1,9 @@
 import { FC } from 'react';
 
+import { useUploadManifest } from '../../api/manifest';
+import { useCreateEscrow } from '../../hooks';
+
 import { CampaignForm, CampaignFormValues } from './CampaignForm';
-
-import { useUploadManifest } from '@/api/manifest';
-
-import { useCreateEscrow } from '@/hooks';
 
 export const CreateCampaign: FC = () => {
   const { mutateAsync: uploadManifest } = useUploadManifest();

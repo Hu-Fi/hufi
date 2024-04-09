@@ -13,12 +13,11 @@ import { styled } from '@mui/material/styles';
 import { FC, MouseEvent, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 
+import profileSvg from '../../assets/profile.svg';
+import { useWalletBalance } from '../../hooks';
+import { shortenAddress } from '../../utils/address';
+import { CopyLinkIcon, OpenInNewIcon } from '../icons';
 import { WalletModal } from './WalletModal';
-
-import profileSvg from '@/assets/profile.svg';
-import { CopyLinkIcon, OpenInNewIcon } from '@/components/icons';
-import { useWalletBalance } from '@/hooks';
-import { shortenAddress } from '@/utils/address';
 
 const ProfileMenu = styled((props: MenuProps) => (
   <Menu
