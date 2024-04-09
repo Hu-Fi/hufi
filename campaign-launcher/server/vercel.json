@@ -44,5 +44,6 @@
         }
       ]
     }
-  ]
+  ],
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- ."
 }

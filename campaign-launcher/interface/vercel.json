@@ -1,0 +1,4 @@
+{
+  "version": 2,
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- ."
+}
