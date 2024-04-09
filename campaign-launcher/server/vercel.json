@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "yarn build",
+  "outputDirectory": "dist",
   "functions": {
     "api/app.ts": {
       "maxDuration": 300
