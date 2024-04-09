@@ -38,22 +38,7 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
-        process: 'rollup-plugin-node-polyfills/polyfills/process-es6',
-        buffer: 'rollup-plugin-node-polyfills/polyfills/buffer-es6',
-        events: 'rollup-plugin-node-polyfills/polyfills/events',
-        util: 'rollup-plugin-node-polyfills/polyfills/util',
-        sys: 'util',
-        stream: 'rollup-plugin-node-polyfills/polyfills/stream',
-        _stream_duplex:
-          'rollup-plugin-node-polyfills/polyfills/readable-stream/duplex',
-        _stream_passthrough:
-          'rollup-plugin-node-polyfills/polyfills/readable-stream/passthrough',
-        _stream_readable:
-          'rollup-plugin-node-polyfills/polyfills/readable-stream/readable',
-        _stream_writable:
-          'rollup-plugin-node-polyfills/polyfills/readable-stream/writable',
-        _stream_transform:
-          'rollup-plugin-node-polyfills/polyfills/readable-stream/transform',
+        buffer: 'buffer/',
       },
     },
     optimizeDeps: {},
