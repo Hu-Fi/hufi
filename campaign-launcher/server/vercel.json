@@ -3,7 +3,7 @@
   "buildCommand": "yarn build",
   "outputDirectory": "dist",
   "functions": {
-    "dist/api/app.js": {
+    "api/app.js": {
       "maxDuration": 300
     }
   },
