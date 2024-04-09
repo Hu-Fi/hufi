@@ -2,8 +2,7 @@ import { resolve } from 'path';
 import inject from '@rollup/plugin-inject';
 import { defineConfig } from 'vite';
 
-const proxyHost = process.env.PROXY_HOST || 'localhost';
-const proxyPort = process.env.PROXY_PORT || '5000';
+const proxyApi = process.env.PROXY_API || 'http://localhost:5000';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -11,7 +10,7 @@ export default defineConfig(() => {
     server: {
       port: 3000,
       proxy: {
-        '/api': `http://${proxyHost}:${proxyPort}`,
+        '/api': proxyApi,
       },
     },
     plugins: [],
@@ -20,7 +19,6 @@ export default defineConfig(() => {
       sourcemap: true,
       commonjsOptions: {
         transformMixedEsModules: true,
-        // include: [],
       },
       rollupOptions: {
         plugins: [inject({ Buffer: ['Buffer', 'Buffer'], process: 'process' })],
