@@ -13,8 +13,7 @@ export interface ManifestUploadRequestDto {
   chainId: number;
   requesterAddress: string;
   exchangeName: string;
-  tokenA: string;
-  tokenB: string;
+  token: string;
   /** @format date-time */
   startDate: string;
   duration: number;

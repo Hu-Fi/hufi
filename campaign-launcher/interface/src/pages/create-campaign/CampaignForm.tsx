@@ -21,8 +21,7 @@ export type CampaignFormValues = {
   chainId: number;
   exchangeName: string;
   requesterAddress: string;
-  tokenA: string;
-  tokenB: string;
+  token: string;
   startDate: Date;
   duration: number;
   fundAmount: number;
@@ -46,8 +45,7 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
       chainId,
       requesterAddress: account.address,
       exchangeName: 'binance',
-      tokenA: 'eth',
-      tokenB: 'usdt',
+      token: 'bnb',
       startDate: new Date(),
       duration: 7862400,
       fundAmount: 0.0001,
@@ -69,30 +67,6 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
           }}
           gap={2}
         >
-          <FormControl error={!!errors.chainId}>
-            <InputLabel id="network-select-label">Network</InputLabel>
-            <Controller
-              name="chainId"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  labelId="network-select-label"
-                  id="network-select"
-                  label="Network"
-                  disabled
-                  {...field}
-                >
-                  <MenuItem value={1}>Mainnet</MenuItem>
-                  <MenuItem value={11155111}>Sepolia</MenuItem>
-                  <MenuItem value={137}>Polygon Mainnet</MenuItem>
-                  <MenuItem value={80001}>Polygon Mumbai</MenuItem>
-                </Select>
-              )}
-            />
-            {errors.chainId && (
-              <FormHelperText>{errors.chainId.message}</FormHelperText>
-            )}
-          </FormControl>
           <FormControl error={!!errors.exchangeName}>
             <InputLabel id="exchange-select-label">Exchange</InputLabel>
             <Controller
@@ -115,10 +89,10 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
               <FormHelperText>{errors.exchangeName.message}</FormHelperText>
             )}
           </FormControl>
-          <FormControl error={!!errors.tokenA}>
-            <InputLabel id="token-a-select-label">Token A</InputLabel>
+          <FormControl error={!!errors.token}>
+            <InputLabel id="token-a-select-label">Token</InputLabel>
             <Controller
-              name="tokenA"
+              name="token"
               control={control}
               render={({ field }) => (
                 <Select
@@ -134,31 +108,8 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
                 </Select>
               )}
             />
-            {errors.tokenA && (
-              <FormHelperText>{errors.tokenA.message}</FormHelperText>
-            )}
-          </FormControl>
-          <FormControl error={!!errors.tokenB}>
-            <InputLabel id="token-b-select-label">Token B</InputLabel>
-            <Controller
-              name="tokenB"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  labelId="token-b-select-label"
-                  id="token-b-select"
-                  label="Token B"
-                  {...field}
-                >
-                  <MenuItem value={'eth'}>ETH</MenuItem>
-                  <MenuItem value={'bnb'}>BNB</MenuItem>
-                  <MenuItem value={'usdt'}>USDT</MenuItem>
-                  <MenuItem value={'usdc'}>USDC</MenuItem>
-                </Select>
-              )}
-            />
-            {errors.tokenB && (
-              <FormHelperText>{errors.tokenB.message}</FormHelperText>
+            {errors.token && (
+              <FormHelperText>{errors.token.message}</FormHelperText>
             )}
           </FormControl>
           <FormControl error={!!errors.startDate}>
@@ -169,6 +120,7 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
                 <DatePicker
                   label="Start Date"
                   closeOnSelect
+                  disablePast
                   {...field}
                   value={dayjs(field.value)}
                 />
@@ -236,17 +188,7 @@ const validationSchema = yup.object({
   chainId: yup.number().required('Required'),
   exchangeName: yup.string().required('Required'),
   requesterAddress: yup.string().required('Required'),
-  tokenA: yup.string().required('Required'),
-  tokenB: yup
-    .string()
-    .required('Required')
-    .test(
-      'not-same-as-token-a',
-      'Token B should not be same as Token A',
-      function (value) {
-        return value !== this.parent.tokenA;
-      }
-    ),
+  token: yup.string().required('Required'),
   startDate: yup.date().required('Required'),
   duration: yup.number().required('Required'),
   fundAmount: yup.number().required('Required'),

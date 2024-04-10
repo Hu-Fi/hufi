@@ -17,11 +17,7 @@ export class ManifestUploadRequestDto {
 
   @ApiProperty()
   @IsString()
-  tokenA: string;
-
-  @ApiProperty()
-  @IsString()
-  tokenB: string;
+  token: string;
 
   @ApiProperty()
   @IsDate()
