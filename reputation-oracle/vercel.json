@@ -20,12 +20,16 @@
   "crons": [
     {
       "path": "/cron/webhook/pending",
-      "schedule": "*/1 * * * *"
+      "schedule": "1 1 * * *"
     },
     {
       "path": "/cron/webhook/paid",
-      "schedule": "*/1 * * * *"
+      "schedule": "1 1 * * *"
     }
   ],
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet ."
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet .",
+  "outputDirectory": "dist",
+  "buildCommand": "yarn workspace @human-protocol/reputation-oracle build",
+  "devCommand": "node packages/apps/reputation-oracle/server/dist/src/main.js",
+  "installCommand": "yarn install"
 }
