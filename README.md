@@ -9,6 +9,7 @@ HuFi introduces a decentralized approach to market-making, enabling anyone with 
 
 HuFi utilizes the Human Protocol to ensure fair compensation for market makers. By leveraging the same smart contract framework and infrastructure already in use for various applications, including machine learning, market makers can trust that they will receive timely and fair payment. This trust is reinforced by the use of the same Escrow Factories, which have a proven track record of reliably disbursing payments to individuals involved in machine learning labeling tasks for years.
 
+
 ## Building blocks
 - [Campaign Launcher](./campaign-launcher)
 - [Mr.Market](https://github.com/Hu-Fi/Mr.Market)
