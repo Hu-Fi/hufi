@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/app.ts": {
-      "maxDuration": 300
+      "maxDuration": 10
     }
   },
   "redirects": [{ "source": "/", "destination": "/swagger" }],
