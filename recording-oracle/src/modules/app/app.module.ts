@@ -45,6 +45,7 @@ import { AppController } from './app.controller';
       entities: [Campaign, LiquidityScore, User],
       synchronize: true,
       autoLoadEntities: true,
+      ssl: process.env.DB_SSL === 'true',
     }),
     HealthModule,
     RecordsModule,
