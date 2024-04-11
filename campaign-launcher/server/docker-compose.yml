@@ -1,4 +1,5 @@
 version: '3.8'
+name: campaign-launcher-server
 services:
   minio:
     container_name: minio

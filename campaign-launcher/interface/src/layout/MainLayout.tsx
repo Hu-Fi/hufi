@@ -1,5 +1,6 @@
-import { Box } from '@mui/material';
 import { FC, PropsWithChildren } from 'react';
+
+import { Box } from '@mui/material';
 
 import { Footer } from './Footer';
 import { Header } from './Header';

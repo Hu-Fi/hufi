@@ -1,5 +1,6 @@
-import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon';
 import { FC } from 'react';
+
+import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon';
 
 export const TwitterIcon: FC<SvgIconProps> = (props) => {
   return (

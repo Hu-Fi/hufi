@@ -1,3 +1,5 @@
+import { FC, useState } from 'react';
+
 import { Menu as MenuIcon } from '@mui/icons-material';
 import {
   AppBar,
@@ -10,7 +12,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { FC, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import logoSvg from '../assets/logo.svg';

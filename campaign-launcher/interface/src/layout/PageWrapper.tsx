@@ -1,5 +1,6 @@
-import Box from '@mui/material/Box';
 import { FC, PropsWithChildren } from 'react';
+
+import Box from '@mui/material/Box';
 
 export const PageWrapper: FC<PropsWithChildren<{}>> = ({ children }) => (
   <Box sx={{ px: { xs: 0, md: 3, lg: 5, xl: 7 } }}>

@@ -1,19 +1,26 @@
+import { useEffect, useMemo, useState } from 'react';
+
 import {
   ChainId,
   EscrowClient,
+  EscrowUtils,
   NETWORKS,
   StakingClient,
 } from '@human-protocol/sdk';
+import { EscrowData } from '@human-protocol/sdk/dist/graphql';
 import { parseUnits } from 'ethers';
-import { useMemo } from 'react';
 import { v4 as uuidV4 } from 'uuid';
 import { Config, useChainId, useConnectorClient } from 'wagmi';
 
-import { ManifestUploadResponseDto } from '../api/client/data-contracts';
+import { useNotification, useWalletBalance } from '.';
+import {
+  ManifestDto,
+  ManifestUploadResponseDto,
+} from '../api/client/data-contracts';
+import { useDownloadManifest } from '../api/manifest';
 import { oracles } from '../config/escrow';
 import { clientToSigner } from '../utils/wagmi-ethers';
 
-import { useNotification, useWalletBalance } from '.';
 
 export const useClientToSigner = () => {
   const chainId = useChainId();
@@ -126,4 +133,72 @@ export const useStakeHMT = () => {
       });
     }
   };
+};
+
+export type EscrowDataExtended = EscrowData &
+  Omit<ManifestDto, 'token'> & {
+    symbol: string;
+  };
+
+export const useCampaigns = () => {
+  const chainId = useChainId();
+  const { setNotification } = useNotification();
+  const { mutateAsync } = useDownloadManifest();
+
+  const [campaigns, setCampaigns] = useState<EscrowDataExtended[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCampaigns = async () => {
+    setLoading(true);
+    try {
+      const campaigns = await EscrowUtils.getEscrows({
+        networks: [chainId as ChainId],
+        exchangeOracle: oracles.exchangeOracle,
+      });
+
+      const campaignsWithManifest: Array<EscrowDataExtended | undefined> =
+        await Promise.all(
+          campaigns.map(async (campaign) => {
+            let manifest;
+
+            try {
+              manifest = await mutateAsync(campaign.manifestHash || '').then(
+                (res) => res.data
+              );
+            } catch {
+              manifest = undefined;
+            }
+
+            if (!manifest) {
+              return undefined;
+            }
+
+            return {
+              ...manifest,
+              ...campaign,
+              symbol: manifest.token,
+            };
+          })
+        );
+
+      setCampaigns(
+        campaignsWithManifest.filter(
+          (campaign) => campaign !== undefined
+        ) as EscrowDataExtended[]
+      );
+    } catch (e) {
+      setNotification({
+        type: 'error',
+        message: (e as Error).message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  return { campaigns, loading };
 };

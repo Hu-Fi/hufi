@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import stringify from 'json-stable-stringify';
 import * as Minio from 'minio';
 
@@ -11,6 +11,8 @@ import { UploadedFile } from '../../common/interfaces';
 
 @Injectable()
 export class StorageService {
+  private readonly logger = new Logger(StorageService.name);
+
   public readonly minioClient: Minio.Client;
 
   constructor(public readonly s3ConfigService: S3ConfigService) {
@@ -56,6 +58,45 @@ export class StorageService {
       return { url: this.formatUrl(key), hash };
     } catch (e) {
       throw new BadRequestException('File not uploaded');
+    }
+  }
+
+  private async readObject(key: string): Promise<any> {
+    return await new Promise((res, rej) => {
+      let miniData = '';
+      this.minioClient.getObject(
+        this.s3ConfigService.bucket,
+        key,
+        function (err, exData) {
+          if (err) {
+            rej(err);
+            return;
+          }
+
+          exData.on('data', function (chunk) {
+            miniData += chunk;
+          });
+          exData.on('end', function () {
+            res(JSON.parse(miniData));
+          });
+          exData.on('error', (err) => {
+            rej(err);
+          });
+        },
+      );
+    });
+  }
+
+  public async downloadFile(hash: string): Promise<any> {
+    try {
+      return await this.readObject(`s3${hash}${Extension.JSON}`);
+    } catch (e) {
+      this.logger.debug('JSON file not found. Trying to download as text...');
+    }
+    try {
+      return await this.readObject(`s3${hash}`);
+    } catch (e) {
+      throw new BadRequestException('File not found');
     }
   }
 }

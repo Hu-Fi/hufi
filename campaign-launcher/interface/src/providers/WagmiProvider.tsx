@@ -1,4 +1,5 @@
 import { FC, PropsWithChildren } from 'react';
+
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
 import {
   avalanche,

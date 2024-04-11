@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 /* tslint:disable */
 /*
  * ---------------------------------------------------------------
@@ -10,6 +10,7 @@
  */
 
 import {
+  ManifestDto,
   ManifestUploadRequestDto,
   ManifestUploadResponseDto,
 } from './data-contracts';
@@ -50,6 +51,27 @@ export class Api<
       method: 'POST',
       body: data,
       type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags manifest
+   * @name ManifestControllerDownloadManifest
+   * @summary Download manifest data
+   * @request GET:/api/manifest/download
+   */
+  manifestControllerDownloadManifest = (
+    query: {
+      hash: string;
+    },
+    params: RequestParams = {}
+  ) =>
+    this.request<ManifestDto, void>({
+      path: `/api/manifest/download`,
+      method: 'GET',
+      query: query,
       format: 'json',
       ...params,
     });
