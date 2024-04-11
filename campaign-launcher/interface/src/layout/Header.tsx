@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import logoSvg from '../assets/logo.svg';
 import { ConnectWallet } from '../components/connect-wallet';
 import { SocialIcons } from '../components/social-icons';
+import { PATHS, ROUTES } from '../routes';
 
 type NavLink = {
   title: string;
@@ -25,8 +26,7 @@ type NavLink = {
 };
 
 const NAV_LINKS: NavLink[] = [
-  { title: 'Create a campaign', href: '/create-campaign' },
-  { title: 'Stake HMT', href: '/stake-hmt' },
+  ...ROUTES.map((route) => ({ title: route.title, href: route.path })),
   { title: 'HUMAN Website', href: 'https://humanprotocol.org', external: true },
 ];
 
@@ -104,7 +104,7 @@ export const Header: FC = () => {
               }}
             >
               <Link
-                to="/"
+                to={PATHS.MAIN}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
