@@ -1,51 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import {
-  ChainId,
-  EscrowClient,
-  EscrowUtils,
-  NETWORKS,
-  StakingClient,
-} from '@human-protocol/sdk';
+import { ChainId, EscrowClient, EscrowUtils } from '@human-protocol/sdk';
 import { EscrowData } from '@human-protocol/sdk/dist/graphql';
 import { parseUnits } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
-import { Config, useChainId, useConnectorClient } from 'wagmi';
+import { useChainId } from 'wagmi';
 
-import { useNotification, useWalletBalance } from '.';
+import { useClientToSigner } from './common';
+import { useNotification } from '../';
 import {
   ManifestDto,
   ManifestUploadResponseDto,
-} from '../api/client/data-contracts';
-import { useDownloadManifest } from '../api/manifest';
-import { oracles } from '../config/escrow';
-import { clientToSigner } from '../utils/wagmi-ethers';
-
-
-export const useClientToSigner = () => {
-  const chainId = useChainId();
-  const { data: client } = useConnectorClient<Config>({ chainId });
-
-  return useMemo(() => {
-    let network = undefined;
-    let signer = undefined;
-
-    if (!client) {
-      return {
-        network,
-        signer,
-      };
-    }
-
-    network = NETWORKS[chainId as ChainId];
-    signer = clientToSigner(client);
-
-    return {
-      network,
-      signer,
-    };
-  }, [client]);
-};
+} from '../../api/client/data-contracts';
+import { useDownloadManifest } from '../../api/manifest';
+import { oracles } from '../../config/escrow';
 
 export const useCreateEscrow = () => {
   const { signer, network } = useClientToSigner();
@@ -98,44 +66,7 @@ export const useCreateEscrow = () => {
   };
 };
 
-export const useStakeHMT = () => {
-  const { signer } = useClientToSigner();
-  const { setNotification } = useNotification();
-  const walletBalance = useWalletBalance();
-
-  return async (amount: number) => {
-    if (!signer) {
-      return;
-    }
-
-    const amountInWei = parseUnits(amount.toString(), walletBalance.decimals);
-
-    try {
-      const stakingClient = await StakingClient.build(signer);
-
-      await stakingClient.approveStake(amountInWei);
-
-      setNotification({
-        type: 'success',
-        message: 'Staking approved.',
-      });
-
-      await stakingClient.stake(amountInWei);
-
-      setNotification({
-        type: 'success',
-        message: 'Staked HMT successfully.',
-      });
-    } catch (e) {
-      setNotification({
-        type: 'error',
-        message: (e as Error).message,
-      });
-    }
-  };
-};
-
-export type EscrowDataExtended = EscrowData &
+export type CampaignData = EscrowData &
   Omit<ManifestDto, 'token'> & {
     symbol: string;
   };
@@ -145,7 +76,7 @@ export const useCampaigns = () => {
   const { setNotification } = useNotification();
   const { mutateAsync } = useDownloadManifest();
 
-  const [campaigns, setCampaigns] = useState<EscrowDataExtended[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCampaigns = async () => {
@@ -156,7 +87,7 @@ export const useCampaigns = () => {
         exchangeOracle: oracles.exchangeOracle,
       });
 
-      const campaignsWithManifest: Array<EscrowDataExtended | undefined> =
+      const campaignsWithManifest: Array<CampaignData | undefined> =
         await Promise.all(
           campaigns.map(async (campaign) => {
             let manifest;
@@ -184,7 +115,7 @@ export const useCampaigns = () => {
       setCampaigns(
         campaignsWithManifest.filter(
           (campaign) => campaign !== undefined
-        ) as EscrowDataExtended[]
+        ) as CampaignData[]
       );
     } catch (e) {
       setNotification({

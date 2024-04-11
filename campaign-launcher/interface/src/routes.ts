@@ -11,23 +11,29 @@ interface Route {
   component: FC;
 }
 
-export const routes: Array<Route> = [
+export const PATHS = {
+  MAIN: '/',
+  CREATE_CAMPAIGN: '/create-campaign',
+  STAKE_HMT: '/stake-hmt',
+};
+
+export const ROUTES: Array<Route> = [
   {
     key: 'main',
-    title: 'Main',
-    path: '/',
+    title: 'Home',
+    path: PATHS.MAIN,
     component: Main,
   },
   {
     key: 'create-campaign',
     title: 'Create a campaign',
-    path: '/create-campaign',
+    path: PATHS.CREATE_CAMPAIGN,
     component: CreateCampaign,
   },
   {
     key: 'stake',
     title: 'Stake HMT',
-    path: '/stake-hmt',
+    path: PATHS.STAKE_HMT,
     component: StakeHMT,
   },
 ];

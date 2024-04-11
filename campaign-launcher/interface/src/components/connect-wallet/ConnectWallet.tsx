@@ -1,7 +1,10 @@
 import { FC, MouseEvent, useState } from 'react';
 
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
-import { ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material';
+import {
+  ArrowDropDown as ArrowDropDownIcon,
+  Logout as LogoutIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -9,10 +12,11 @@ import {
   Menu,
   MenuProps,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount, useChainId, useDisconnect } from 'wagmi';
 
 import { WalletModal } from './WalletModal';
 import profileSvg from '../../assets/profile.svg';
@@ -45,6 +49,8 @@ const ProfileMenu = styled((props: MenuProps) => (
 export const ConnectWallet: FC = () => {
   const { address } = useAccount();
   const chainId = useChainId();
+  const { disconnect } = useDisconnect();
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -116,27 +122,42 @@ export const ConnectWallet: FC = () => {
             </Typography>
           </Box>
           <Stack direction="row" sx={{ ml: 3 }} spacing="10px">
-            <IconButton
-              color="primary"
-              sx={{ background: '#F6F7FE' }}
-              onClick={() => navigator.clipboard.writeText(address)}
-            >
-              <CopyLinkIcon />
-            </IconButton>
-            <IconButton
-              color="primary"
-              sx={{ background: '#F6F7FE' }}
-              onClick={() => window.open(accountUrl)}
-            >
-              <OpenInNewIcon />
-            </IconButton>
-            <IconButton
-              color="primary"
-              sx={{ background: '#F6F7FE' }}
-              onClick={() => window.open(tokenUrl)}
-            >
-              <OpenInNewIcon />
-            </IconButton>
+            <Tooltip title="Copy Address">
+              <IconButton
+                color="primary"
+                sx={{ background: '#F6F7FE' }}
+                onClick={() => navigator.clipboard.writeText(address)}
+              >
+                <CopyLinkIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Explore account on Blockchain Scan">
+              <IconButton
+                color="primary"
+                sx={{ background: '#F6F7FE' }}
+                onClick={() => window.open(accountUrl)}
+              >
+                <OpenInNewIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Explore token on Blockchain Scan">
+              <IconButton
+                color="primary"
+                sx={{ background: '#F6F7FE' }}
+                onClick={() => window.open(tokenUrl)}
+              >
+                <OpenInNewIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Switch Account">
+              <IconButton
+                color="primary"
+                sx={{ background: '#F6F7FE' }}
+                onClick={() => disconnect()}
+              >
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
           </Stack>
         </Box>
         <Typography variant="h4" fontWeight={600} textAlign="center" mt={4}>

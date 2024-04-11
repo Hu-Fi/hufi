@@ -12,7 +12,7 @@ import {
   ThemeProvider,
   WagmiProvider,
 } from './providers';
-import { routes as appRoutes } from './routes';
+import { ROUTES } from './routes';
 
 export const App: FC = () => {
   return (
@@ -25,7 +25,7 @@ export const App: FC = () => {
                 <Router>
                   <MainLayout>
                     <Routes>
-                      {appRoutes.map((route) => (
+                      {ROUTES.map((route) => (
                         <Route
                           key={route.key}
                           path={route.path}
