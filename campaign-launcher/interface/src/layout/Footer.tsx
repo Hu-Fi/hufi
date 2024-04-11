@@ -1,5 +1,6 @@
-import { Box, Link, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { FC } from 'react';
+
+import { Box, Link, Typography, useMediaQuery, useTheme } from '@mui/material';
 
 import { SocialIcons } from '../components/social-icons';
 

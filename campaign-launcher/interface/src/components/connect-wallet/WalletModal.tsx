@@ -1,3 +1,5 @@
+import { FC } from 'react';
+
 import { Close as CloseIcon } from '@mui/icons-material';
 import {
   Box,
@@ -7,7 +9,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { FC } from 'react';
 import { useConnect } from 'wagmi';
 
 import coinbaseSvg from '../../assets/coinbase.svg';

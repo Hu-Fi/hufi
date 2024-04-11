@@ -1,5 +1,6 @@
-import { Alert, Snackbar } from '@mui/material';
 import { FC, PropsWithChildren, createContext, useState } from 'react';
+
+import { Alert, Snackbar } from '@mui/material';
 
 type Notification = {
   message: string;

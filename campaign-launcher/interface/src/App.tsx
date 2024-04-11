@@ -1,7 +1,7 @@
+import { FC } from 'react';
+
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-
-import { FC } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import { MainLayout } from './layout';

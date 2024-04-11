@@ -1,3 +1,5 @@
+import { FC } from 'react';
+
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Box,
@@ -12,10 +14,12 @@ import {
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useAccount, useChainId } from 'wagmi';
 import * as yup from 'yup';
+
+import { CryptoEntity } from '../../components/crypto-entity';
+import { EXCHANGES, TOKENS } from '../../constants';
 
 export type CampaignFormValues = {
   chainId: number;
@@ -79,9 +83,11 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
                   label="Exchange"
                   {...field}
                 >
-                  <MenuItem value={'binance'}>Binance</MenuItem>
-                  <MenuItem value={'bitfinex'}>Bitfinex</MenuItem>
-                  <MenuItem value={'mexc'}>MEXC</MenuItem>
+                  {EXCHANGES.map((exchange) => (
+                    <MenuItem key={exchange.name} value={exchange.name}>
+                      <CryptoEntity name={exchange.name} />
+                    </MenuItem>
+                  ))}
                 </Select>
               )}
             />
@@ -101,10 +107,11 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
                   label="Token A"
                   {...field}
                 >
-                  <MenuItem value={'eth'}>ETH</MenuItem>
-                  <MenuItem value={'bnb'}>BNB</MenuItem>
-                  <MenuItem value={'usdt'}>USDT</MenuItem>
-                  <MenuItem value={'usdc'}>USDC</MenuItem>
+                  {TOKENS.map((token) => (
+                    <MenuItem key={token.name} value={token.name}>
+                      <CryptoEntity name={token.name} />
+                    </MenuItem>
+                  ))}
                 </Select>
               )}
             />

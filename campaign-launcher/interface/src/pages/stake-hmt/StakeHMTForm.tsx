@@ -1,3 +1,5 @@
+import { FC } from 'react';
+
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Box,
@@ -8,7 +10,6 @@ import {
   Typography,
 } from '@mui/material';
 import { formatUnits } from 'ethers';
-import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 

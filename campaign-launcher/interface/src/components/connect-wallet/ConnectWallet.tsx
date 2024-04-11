@@ -1,3 +1,5 @@
+import { FC, MouseEvent, useState } from 'react';
+
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import { ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material';
 import {
@@ -10,14 +12,13 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { FC, MouseEvent, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 
+import { WalletModal } from './WalletModal';
 import profileSvg from '../../assets/profile.svg';
 import { useWalletBalance } from '../../hooks';
 import { shortenAddress } from '../../utils/address';
 import { CopyLinkIcon, OpenInNewIcon } from '../icons';
-import { WalletModal } from './WalletModal';
 
 const ProfileMenu = styled((props: MenuProps) => (
   <Menu

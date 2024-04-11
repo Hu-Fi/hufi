@@ -1,5 +1,6 @@
-import { Box, Link } from '@mui/material';
 import { FC } from 'react';
+
+import { Box, Link } from '@mui/material';
 
 import { DiscordIcon, GithubIcon, LinkedinIcon, TwitterIcon } from '../icons';
 

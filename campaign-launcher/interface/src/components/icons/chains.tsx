@@ -1,5 +1,6 @@
-import { ChainId } from '@human-protocol/sdk';
 import { ReactElement } from 'react';
+
+import { ChainId } from '@human-protocol/sdk';
 
 import { AvalancheIcon } from './AvalancheIcon';
 import { BinanceSmartChainIcon } from './BinanceSmartChainIcon';

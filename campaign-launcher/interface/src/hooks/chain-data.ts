@@ -1,6 +1,6 @@
-import { ChainId, NETWORKS } from '@human-protocol/sdk';
-
 import { useEffect, useState } from 'react';
+
+import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import { Address } from 'viem';
 import { useAccount, useBalance, useChainId } from 'wagmi';
 

@@ -1,8 +1,9 @@
+import { FC, PropsWithChildren } from 'react';
+
 import {
   createTheme,
   ThemeProvider as MUIThemeProvider,
 } from '@mui/material/styles';
-import { FC, PropsWithChildren } from 'react';
 
 const theme = createTheme({
   palette: {
