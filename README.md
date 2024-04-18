@@ -11,14 +11,9 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
 
 ## Demo Videos
 
-<div style="display: flex; justify-content: space-around; align-items: center;">
-  <div>
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/XERjwulS4co?si=M1iDt9ybR-l01lBS" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-  </div>
-  <div>
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/1-cB4a0INyc?si=Ti0WNCT162yOF4op" frameborder="0" allow="accelerometer;clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-  </div>
-</div>
+[![Video Title 1](https://img.youtube.com/vi/XERjwulS4co/0.jpg)](https://www.youtube.com/watch?v=XERjwulS4co)
+[![Video Title 2](https://img.youtube.com/vi/1-cB4a0INyc/0.jpg)](https://www.youtube.com/watch?v=1-cB4a0INyc)
+
 
 ## Building blocks
 - [Campaign Launcher](./campaign-launcher)
