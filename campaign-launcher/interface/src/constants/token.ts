@@ -31,4 +31,9 @@ export const TOKENS: TokenData[] = [
     label: 'USDC',
     icon: usdcLogo,
   },
+  {
+    name: 'husd',
+    label: 'HUSD',
+    icon: usdcLogo,
+  },
 ];

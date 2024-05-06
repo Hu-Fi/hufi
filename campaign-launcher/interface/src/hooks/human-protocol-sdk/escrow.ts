@@ -84,6 +84,7 @@ export const useCampaigns = () => {
     try {
       const campaigns = await EscrowUtils.getEscrows({
         networks: [chainId as ChainId],
+        // TODO: Consider using recording/reputation oracle
         exchangeOracle: oracles.exchangeOracle,
       });
 
@@ -107,7 +108,7 @@ export const useCampaigns = () => {
             return {
               ...manifest,
               ...campaign,
-              symbol: manifest.token,
+              symbol: manifest.token.toLowerCase(),
             };
           })
         );

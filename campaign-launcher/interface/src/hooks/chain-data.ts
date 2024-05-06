@@ -27,6 +27,7 @@ export const useHMTPrice = () => {
 export const useWalletBalance = () => {
   const { address } = useAccount();
   const chainId = useChainId();
+
   const { data: balance } = useBalance({
     address,
     chainId,
