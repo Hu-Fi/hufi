@@ -1,10 +1,9 @@
 {
-  "name": "server",
+  "name": "campaign-launcher-server",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "description": "HuFi Campaign Launcher Server",
+  "author": "Human Protocol",
+  "license": "GPLv3",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"{api,src,test}/**/*.ts\"",

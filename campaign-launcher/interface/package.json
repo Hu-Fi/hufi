@@ -1,8 +1,9 @@
 {
-  "name": "campaign-launcher",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "campaign-launcher-ui",
+  "version": "0.0.1",
+  "description": "HuFi Campaign Launcher Interface",
+  "author": "Human Protocol",
+  "license": "GPLv3",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
