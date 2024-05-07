@@ -3,7 +3,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
 import { S3ConfigType, s3ConfigKey } from '../../common/config';
 import crypto from 'crypto';
-import { liquidityDto } from '../webhook/webhook.dto';
+import { LiquidityDto } from '../webhook/webhook.dto';
 import { SaveLiquidityDto } from './storage.dto';
 
 @Injectable()
@@ -41,7 +41,7 @@ export class StorageService {
   public async uploadLiquidities(
     escrowAddress: string,
     chainId: ChainId,
-    liquidities: liquidityDto[],
+    liquidities: LiquidityDto[],
   ): Promise<SaveLiquidityDto> {
     if (!(await this.minioClient.bucketExists(this.s3Config.bucket))) {
       throw new BadRequestException('Bucket not found');

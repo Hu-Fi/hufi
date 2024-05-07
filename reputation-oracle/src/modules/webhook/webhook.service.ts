@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { EscrowClient, EscrowUtils } from '@human-protocol/sdk';
 import { WebhookIncomingEntity } from './webhook-incoming.entity';
-import { WebhookIncomingDto, liquidityDto } from './webhook.dto';
+import { WebhookIncomingDto, LiquidityDto } from './webhook.dto';
 import { ErrorWebhook } from '../../common/constants/errors';
 import { WebhookRepository } from './webhook.repository';
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
@@ -90,7 +90,7 @@ export class WebhookService {
 
       const intermediateResultsUrl =
         await escrowClient.getIntermediateResultsUrl(escrowAddress);
-      const intermediateResults: liquidityDto[] = JSON.parse(
+      const intermediateResults: LiquidityDto[] = JSON.parse(
         await this.storageService.download(intermediateResultsUrl),
       );
       const { url, hash } = await this.storageService.uploadLiquidities(
@@ -135,13 +135,13 @@ export class WebhookService {
    * @param finalResults - The final results.
    * @returns {string[]} - Returns an array of recipient addresses.
    */
-  private getRecipients(finalResults: liquidityDto[]): string[] {
+  private getRecipients(finalResults: LiquidityDto[]): string[] {
     return finalResults.map((item) => item.liquidityProvider);
   }
 
   public calculateCampaignPayoutAmounts(
     totalAmount: BigNumber,
-    results: liquidityDto[],
+    results: LiquidityDto[],
   ): bigint[] {
     // Convert the liquidity scores to BigNumber for precision in calculations.
     const bigNumberResults = results.map((result) => ({

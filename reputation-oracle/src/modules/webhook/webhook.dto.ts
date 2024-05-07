@@ -98,7 +98,7 @@ export class CampaignManifestDto {
   fundAmount: number;
 }
 
-export class liquidityDto {
+export class LiquidityDto {
   chainId: ChainId;
   liquidityProvider: string;
   liquidityScore: string;
