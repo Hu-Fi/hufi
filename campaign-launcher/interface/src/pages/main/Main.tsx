@@ -1,13 +1,12 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
-import { Box, Typography } from '@mui/material';
+import { Box, Link, SelectChangeEvent, Typography } from '@mui/material';
 import { BigNumberish, ethers } from 'ethers';
-import { Link } from 'react-router-dom';
-import { useChainId } from 'wagmi';
 
 import { CryptoEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
+import { NetworkSelect } from '../../components/network-select';
 import { PaginatedTable } from '../../components/paginated-table';
 import { useCampaigns } from '../../hooks';
 import { ExchangeName, TokenName } from '../../types';
@@ -15,15 +14,25 @@ import { shortenAddress } from '../../utils/address';
 import dayjs from '../../utils/dayjs';
 
 export const Main: FC = () => {
-  const { loading, campaigns } = useCampaigns();
-  const chainId = useChainId();
-  const network = NETWORKS[chainId as ChainId];
+  const [chainId, setChainId] = useState(ChainId.ALL);
+  const { loading, campaigns } = useCampaigns(chainId);
+
+  const handleNetworkChange = (e: SelectChangeEvent<ChainId>) => {
+    setChainId(e.target.value as ChainId);
+  };
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap={6}>
+    <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
       <Typography variant="h4" color="primary">
         Campaigns
       </Typography>
+      <Box display="flex" width="100%" justifyContent="flex-end">
+        <NetworkSelect
+          showAllNetwork
+          value={chainId}
+          onChange={handleNetworkChange}
+        />
+      </Box>
       {loading ? (
         <Loading />
       ) : (
@@ -32,13 +41,18 @@ export const Main: FC = () => {
             {
               id: 'address',
               label: 'Address',
-              format: (value) => (
+              format: (value, row) => (
                 <Link
-                  to={`${network?.scanUrl}/address/${value}`}
+                  href={
+                    row?.chainId
+                      ? `${NETWORKS[row.chainId as ChainId]?.scanUrl}/address/${value}`
+                      : '#'
+                  }
                   target="_blank"
                   rel="noreferrer"
+                  underline="none"
                 >
-                  <Typography>{shortenAddress(value as string)}</Typography>
+                  {shortenAddress(value as string)}
                 </Link>
               ),
             },
