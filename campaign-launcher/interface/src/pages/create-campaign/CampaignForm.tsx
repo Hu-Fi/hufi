@@ -182,6 +182,7 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
             color="primary"
             type="submit"
             sx={{ py: 2, borderRadius: 2 }}
+            disabled={!account.isConnected}
           >
             Create
           </Button>
