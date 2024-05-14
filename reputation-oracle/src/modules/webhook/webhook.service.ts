@@ -120,7 +120,6 @@ export class WebhookService {
           resultsUrl: url,
           checkPassed: true,
           status: WebhookStatus.PAID,
-          retriesCount: 0,
         },
       );
 
