@@ -12,7 +12,7 @@ $ cd hufi/recording-oracle
 $ yarn
 ```
 
-## Running the app
+## API
 
 ```bash
 # development
