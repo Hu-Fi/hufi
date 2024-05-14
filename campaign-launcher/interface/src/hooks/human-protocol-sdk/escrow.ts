@@ -4,7 +4,6 @@ import { ChainId, EscrowClient, EscrowUtils } from '@human-protocol/sdk';
 import { EscrowData } from '@human-protocol/sdk/dist/graphql';
 import { parseUnits } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
-import { useChainId } from 'wagmi';
 
 import { useClientToSigner } from './common';
 import { useNotification } from '../';
@@ -14,6 +13,7 @@ import {
 } from '../../api/client/data-contracts';
 import { useDownloadManifest } from '../../api/manifest';
 import { oracles } from '../../config/escrow';
+import { SUPPORTED_CHAIN_IDS } from '../../constants';
 
 export const useCreateEscrow = () => {
   const { signer, network } = useClientToSigner();
@@ -71,8 +71,7 @@ export type CampaignData = EscrowData &
     symbol: string;
   };
 
-export const useCampaigns = () => {
-  const chainId = useChainId();
+export const useCampaigns = (chainId: ChainId) => {
   const { setNotification } = useNotification();
   const { mutateAsync } = useDownloadManifest();
 
@@ -83,7 +82,8 @@ export const useCampaigns = () => {
     setLoading(true);
     try {
       const campaigns = await EscrowUtils.getEscrows({
-        networks: [chainId as ChainId],
+        networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
+        // TODO: Consider using recording/reputation oracle
         exchangeOracle: oracles.exchangeOracle,
       });
 
@@ -107,7 +107,7 @@ export const useCampaigns = () => {
             return {
               ...manifest,
               ...campaign,
-              symbol: manifest.token,
+              symbol: manifest.token.toLowerCase(),
             };
           })
         );
@@ -129,7 +129,7 @@ export const useCampaigns = () => {
 
   useEffect(() => {
     fetchCampaigns();
-  }, []);
+  }, [chainId]);
 
   return { campaigns, loading };
 };

@@ -114,7 +114,13 @@ export const ConnectWallet: FC = () => {
           'aria-labelledby': 'profile-button',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <img src={profileSvg} alt="profile" />
             <Typography variant="body2" fontWeight={600} sx={{ ml: 1 }}>
@@ -149,7 +155,7 @@ export const ConnectWallet: FC = () => {
                 <OpenInNewIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Switch Account">
+            <Tooltip title="Disconnect">
               <IconButton
                 color="primary"
                 sx={{ background: '#F6F7FE' }}

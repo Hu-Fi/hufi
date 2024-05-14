@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { formatUnits } from 'ethers';
 import { Controller, useForm } from 'react-hook-form';
+import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
 import { useWalletBalance } from '../../hooks';
@@ -25,6 +26,7 @@ type StakeHMTFormProps = {
 
 export const StakeHMTForm: FC<StakeHMTFormProps> = ({ onSubmit }) => {
   const walletBalance = useWalletBalance();
+  const account = useAccount();
   const walletBalanceFormatted = +formatUnits(
     walletBalance.value || '0',
     walletBalance.decimals
@@ -100,6 +102,7 @@ export const StakeHMTForm: FC<StakeHMTFormProps> = ({ onSubmit }) => {
             color="primary"
             type="submit"
             sx={{ py: 2, borderRadius: 2 }}
+            disabled={!account.isConnected}
           >
             Stake
           </Button>

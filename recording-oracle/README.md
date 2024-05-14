@@ -7,11 +7,36 @@ Recording Oracle is a tool designed to calculate liquidity score for all the use
 
 ## Installation
 ```bash
-git clone https://github.com/Hu-Fi/hufi.git
-cd hufi/recording-oracle
-yarn
+$ git clone https://github.com/Hu-Fi/hufi.git
+$ cd hufi/recording-oracle
+$ yarn
 ```
 
+## API
+
+```bash
+# development
+$ yarn start
+
+# watch mode
+$ yarn start:dev
+
+# production mode
+$ yarn start:prod
+```
+
+## Test
+
+```bash
+# unit tests
+$ yarn test
+
+# e2e tests
+$ yarn test:e2e
+
+# test coverage
+$ yarn test:cov
+```
 ## API
 
 - <b>POST</b> `/records/calculate-liquidity-score`
@@ -27,3 +52,4 @@ yarn
   "since": number
   }
   ```
+

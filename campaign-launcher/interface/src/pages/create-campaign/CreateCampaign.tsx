@@ -4,8 +4,8 @@ import { Navigate } from 'react-router-dom';
 
 import { CampaignForm, CampaignFormValues } from './CampaignForm';
 import { useUploadManifest } from '../../api/manifest';
-import { useCreateEscrow, useLeader, useNotification } from '../../hooks';
 import { Loading } from '../../components/loading';
+import { useCreateEscrow, useLeader, useNotification } from '../../hooks';
 import { PATHS } from '../../routes';
 
 export const CreateCampaign: FC = () => {

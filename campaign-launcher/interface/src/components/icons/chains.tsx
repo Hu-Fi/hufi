@@ -15,10 +15,9 @@ import { SkaleHumanProtocolIcon } from './SkaleHumanProtocolIcon';
 export const CHAIN_ICONS: { [chainId in ChainId]?: ReactElement } = {
   [ChainId.ALL]: <HumanIcon />,
   [ChainId.MAINNET]: <EthereumIcon />,
-  [ChainId.RINKEBY]: <EthereumIcon />,
-  [ChainId.GOERLI]: <EthereumIcon />,
+  [ChainId.SEPOLIA]: <EthereumIcon />,
   [ChainId.POLYGON]: <PolygonIcon />,
-  [ChainId.POLYGON_MUMBAI]: <PolygonIcon />,
+  [ChainId.POLYGON_AMOY]: <PolygonIcon />,
   [ChainId.BSC_MAINNET]: <BinanceSmartChainIcon />,
   [ChainId.BSC_TESTNET]: <BinanceSmartChainIcon />,
   [ChainId.MOONBEAM]: <MoonbeamIcon />,
@@ -27,5 +26,5 @@ export const CHAIN_ICONS: { [chainId in ChainId]?: ReactElement } = {
   [ChainId.AVALANCHE_TESTNET]: <AvalancheIcon />,
   [ChainId.SKALE]: <SkaleHumanProtocolIcon />,
   [ChainId.CELO]: <CeloIcon />,
-  [ChainId.CELO_ALFAJORES]: <CeloIcon />
+  [ChainId.CELO_ALFAJORES]: <CeloIcon />,
 };

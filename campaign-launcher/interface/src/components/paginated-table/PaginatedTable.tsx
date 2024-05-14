@@ -17,7 +17,7 @@ export type Column<T> = {
   label: string;
   minWidth?: number;
   align?: 'right';
-  format?: (value: unknown) => ReactNode;
+  format?: (value: unknown, row?: T) => ReactNode;
 };
 
 export type PaginatedTableProps<T> = {
@@ -74,7 +74,7 @@ export function PaginatedTable<T>({
                         align={column.align}
                       >
                         {column.format ? (
-                          column.format(row[column.id])
+                          column.format(row[column.id], row)
                         ) : (
                           <Typography>
                             {row[column.id] as unknown as string}
