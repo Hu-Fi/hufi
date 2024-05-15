@@ -1,4 +1,4 @@
-export type ExchangeName = 'binance' | 'bitfinex' | 'mexc';
+export type ExchangeName = 'binance' | 'bitfinex' | 'mexc' | '4swap' | 'exin1';
 
 export type ExchangeData = {
   name: ExchangeName;
