@@ -2,6 +2,7 @@ import { FC } from 'react';
 
 import { CreateCampaign } from './pages/create-campaign';
 import { Main } from './pages/main';
+import { MintHUSD } from './pages/mint-husd';
 import { StakeHMT } from './pages/stake-hmt';
 
 interface Route {
@@ -14,6 +15,7 @@ interface Route {
 export const PATHS = {
   MAIN: '/',
   CREATE_CAMPAIGN: '/create-campaign',
+  MINT_HUSD: '/mint-husd',
   STAKE_HMT: '/stake-hmt',
 };
 
@@ -26,9 +28,15 @@ export const ROUTES: Array<Route> = [
   },
   {
     key: 'create-campaign',
-    title: 'Create a campaign',
+    title: 'Create Campaign',
     path: PATHS.CREATE_CAMPAIGN,
     component: CreateCampaign,
+  },
+  {
+    key: 'mint-husd',
+    title: 'Mint HUSD',
+    path: PATHS.MINT_HUSD,
+    component: MintHUSD,
   },
   {
     key: 'stake',
