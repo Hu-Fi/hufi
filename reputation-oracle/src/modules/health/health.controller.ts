@@ -5,7 +5,7 @@ import { HealthService } from './health.service';
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
-  constructor(private healthService : HealthService) {}
+  constructor(private healthService: HealthService) {}
 
   @Get('/')
   @ApiOperation({ summary: 'Get server health status' })
