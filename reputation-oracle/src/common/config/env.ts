@@ -12,9 +12,8 @@ export const ConfigNames = {
   POSTGRES_HOST: 'POSTGRES_HOST',
   POSTGRES_USER: 'POSTGRES_USER',
   POSTGRES_PASSWORD: 'POSTGRES_PASSWORD',
-  POSTGRES_DATABASE: 'POSTGRES_DATABASE',
+  POSTGRES_DB: 'POSTGRES_DB',
   POSTGRES_PORT: 'POSTGRES_PORT',
-  POSTGRES_SYNC: 'POSTGRES_SYNC',
   POSTGRES_SSL: 'POSTGRES_SSL',
   WEB3_PRIVATE_KEY: 'WEB3_PRIVATE_KEY',
   S3_ENDPOINT: 'S3_ENDPOINT',
@@ -37,13 +36,12 @@ export const envValidator = Joi.object({
   JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.string().default(1000000000),
   JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.string().default(1000000000),
   // Database
-  DB_TYPE: Joi.string().default('postgres'),
+  POSTGRES_TYPE: Joi.string().default('postgres'),
   POSTGRES_HOST: Joi.string().default('127.0.0.1'),
   POSTGRES_USER: Joi.string().default('operator'),
   POSTGRES_PASSWORD: Joi.string().default('qwerty'),
-  POSTGRES_DATABASE: Joi.string().default('reputation-oracle'),
+  POSTGRES_DB: Joi.string().default('reputation-oracle'),
   POSTGRES_PORT: Joi.string().default('5432'),
-  POSTGRES_SYNC: Joi.string().default('false'),
   POSTGRES_SSL: Joi.string().default('false'),
   // Web3
   WEB3_PRIVATE_KEY: Joi.string().required(),
@@ -54,5 +52,4 @@ export const envValidator = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string().default('reputation'),
   S3_USE_SSL: Joi.string().default(false),
-
 });
