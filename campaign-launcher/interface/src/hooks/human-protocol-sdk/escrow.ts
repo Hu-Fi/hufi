@@ -11,7 +11,6 @@ import {
   ManifestDto,
   ManifestUploadResponseDto,
 } from '../../api/client/data-contracts';
-import { useDownloadManifest } from '../../api/manifest';
 import { oracles } from '../../config/escrow';
 import { SUPPORTED_CHAIN_IDS } from '../../constants';
 
@@ -73,7 +72,6 @@ export type CampaignData = EscrowData &
 
 export const useCampaigns = (chainId: ChainId) => {
   const { setNotification } = useNotification();
-  const { mutateAsync } = useDownloadManifest();
 
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,9 +90,15 @@ export const useCampaigns = (chainId: ChainId) => {
           campaigns.map(async (campaign) => {
             let manifest;
 
+            console.log(campaign.manifestUrl);
+            if (campaign.manifestUrl) {
+              const data = await fetch(campaign.manifestUrl);
+              console.log(data);
+            }
+
             try {
-              manifest = await mutateAsync(campaign.manifestHash || '').then(
-                (res) => res.data
+              manifest = await fetch(campaign.manifestUrl!).then((res) =>
+                res.json()
               );
             } catch {
               manifest = undefined;
