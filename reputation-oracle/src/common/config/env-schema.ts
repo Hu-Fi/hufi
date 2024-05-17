@@ -16,7 +16,7 @@ export const envValidator = Joi.object({
   POSTGRES_HOST: Joi.string().default('127.0.0.1'),
   POSTGRES_USER: Joi.string().default('user'),
   POSTGRES_PASSWORD: Joi.string().default('password'),
-  POSTGRES_DB: Joi.string().default('reputation-oracle'),
+  POSTGRES_DATABASE: Joi.string().default('reputation-oracle'),
   POSTGRES_PORT: Joi.string().default('5432'),
   POSTGRES_SSL: Joi.string().default('false'),
   // Web3

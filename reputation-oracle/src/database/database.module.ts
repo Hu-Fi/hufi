@@ -43,7 +43,7 @@ import { WebhookIncomingEntity } from '../modules/webhook/webhook-incoming.entit
           username: configService.get<string>('POSTGRES_USER', 'user'),
           password: configService.get<string>('POSTGRES_PASSWORD', 'password'),
           database: configService.get<string>(
-            'POSTGRES_DB',
+            'POSTGRES_DATABASE',
             'reputation-oracle',
           ),
           keepConnectionAlive: configService.get<string>('NODE_ENV') === 'test',
