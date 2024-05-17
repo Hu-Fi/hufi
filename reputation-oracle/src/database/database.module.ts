@@ -8,7 +8,6 @@ import { NS } from '../common/constants';
 import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
 import { WebhookIncomingEntity } from '../modules/webhook/webhook-incoming.entity';
 
-
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -44,7 +43,7 @@ import { WebhookIncomingEntity } from '../modules/webhook/webhook-incoming.entit
           username: configService.get<string>('POSTGRES_USER', 'operator'),
           password: configService.get<string>('POSTGRES_PASSWORD', 'qwerty'),
           database: configService.get<string>(
-            'POSTGRES_DATABASE',
+            'POSTGRES_DB',
             'reputation-oracle',
           ),
           keepConnectionAlive: configService.get<string>('NODE_ENV') === 'test',

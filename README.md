@@ -9,8 +9,42 @@ HuFi introduces a decentralized approach to market-making, enabling anyone with 
 
 HuFi utilizes the Human Protocol to ensure fair compensation for market makers. By leveraging the same smart contract framework and infrastructure already in use for various applications, including machine learning, market makers can trust that they will receive timely and fair payment. This trust is reinforced by the use of the same Escrow Factories, which have a proven track record of reliably disbursing payments to individuals involved in machine learning labeling tasks for years.
 
-## Building blocks
+## Services
 - [Campaign Launcher](./campaign-launcher)
+  
+  Campaign launcher launches market making campaigns.
 - [Mr.Market](https://github.com/Hu-Fi/Mr.Market)
+  
+  Mr.Market is a trading bot, that is contributing to the market making campaigns. Users can contribute to Mr.Market itself by providing liquidity, so that they can be rewarded the portion of rewards that Mr.Market makes.
 - [Recording oracle](./recording-oracle)
-- Reputation oracle
+  
+  Recording oracle keeps track of the activities for the campaigns(trading, making orders, etc.).
+- [Reputation oracle](./reputation-oracle)
+  
+  Reputation oracle calculates the score of each user involved in the campaign, and distributes the campaign fund.
+
+## Development
+
+### Prerequisites
+- [Docker](https://docs.docker.com/engine/install/)
+- [Node.js (*v18 is recommended*)](https://nodejs.org/en/download/package-manager) 
+- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
+
+### All in one go
+1. Install all dependencies
+    ```bash
+    $ make install
+    ```
+
+2. Create environment files
+    ```bash
+    $ make create-env-files
+    ```
+
+3. Start development servers
+    ```bash
+    $ make start
+    ```
+
+### Individual services
+Please refer to README of individual services.
