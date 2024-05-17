@@ -11,7 +11,7 @@ export class ServerConfigService {
     return this.configService.get<string>('HOST', 'localhost');
   }
   get port(): number {
-    return +this.configService.get<number>('PORT', 5001);
+    return +this.configService.get<number>('PORT', 5002);
   }
   get sessionSecret(): string {
     return this.configService.get<string>('SESSION_SECRET', 'session-secret');

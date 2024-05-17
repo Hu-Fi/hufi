@@ -1,32 +1,30 @@
 import { ChainId, StorageClient } from '@human-protocol/sdk';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
-import { S3ConfigType, s3ConfigKey } from '../../common/config';
 import crypto from 'crypto';
-import { LiquidityDto } from '../webhook/webhook.dto';
+
 import { SaveLiquidityDto } from './storage.dto';
+import { LiquidityDto } from '../webhook/webhook.dto';
+import { S3ConfigService } from '../../common/config/s3-config.service';
 
 @Injectable()
 export class StorageService {
   public readonly minioClient: Minio.Client;
 
-  constructor(
-    @Inject(s3ConfigKey)
-    private s3Config: S3ConfigType,
-  ) {
+  constructor(public readonly s3ConfigService: S3ConfigService) {
     this.minioClient = new Minio.Client({
-      endPoint: this.s3Config.endPoint,
-      port: this.s3Config.port,
-      accessKey: this.s3Config.accessKey,
-      secretKey: this.s3Config.secretKey,
-      useSSL: this.s3Config.useSSL,
+      endPoint: this.s3ConfigService.endPoint,
+      port: this.s3ConfigService.port,
+      accessKey: this.s3ConfigService.accessKey,
+      secretKey: this.s3ConfigService.secretKey,
+      useSSL: this.s3ConfigService.useSSL,
     });
   }
   public getUrl(escrowAddress: string, chainId: ChainId): string {
-    return `${this.s3Config.useSSL ? 'https' : 'http'}://${
-      this.s3Config.endPoint
-    }:${this.s3Config.port}/${
-      this.s3Config.bucket
+    return `${this.s3ConfigService.useSSL ? 'https' : 'http'}://${
+      this.s3ConfigService.endPoint
+    }:${this.s3ConfigService.port}/${
+      this.s3ConfigService.bucket
     }/${escrowAddress}-${chainId}.json`;
   }
 
@@ -43,7 +41,7 @@ export class StorageService {
     chainId: ChainId,
     liquidities: LiquidityDto[],
   ): Promise<SaveLiquidityDto> {
-    if (!(await this.minioClient.bucketExists(this.s3Config.bucket))) {
+    if (!(await this.minioClient.bucketExists(this.s3ConfigService.bucket))) {
       throw new BadRequestException('Bucket not found');
     }
     const content = JSON.stringify(liquidities);
@@ -51,7 +49,7 @@ export class StorageService {
       const hash = crypto.createHash('sha1').update(content).digest('hex');
       const filename = `${escrowAddress}-${chainId}.json`;
       await this.minioClient.putObject(
-        this.s3Config.bucket,
+        this.s3ConfigService.bucket,
         filename,
         JSON.stringify(content),
         content.length,
