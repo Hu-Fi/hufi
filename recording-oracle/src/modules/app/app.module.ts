@@ -41,7 +41,7 @@ import { AppController } from './app.controller';
       port: parseInt(process.env.POSTGRES_PORT, 10),
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
+      database: process.env.POSTGRES_DATABASE,
       entities: [Campaign, LiquidityScore, User],
       synchronize: true,
       autoLoadEntities: true,

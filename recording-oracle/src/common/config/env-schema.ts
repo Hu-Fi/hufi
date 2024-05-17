@@ -10,7 +10,7 @@ export const envValidator = Joi.object({
   POSTGRES_HOST: Joi.string().default('localhost'),
   POSTGRES_USER: Joi.string().default('user'),
   POSTGRES_PASSWORD: Joi.string().default('password'),
-  POSTGRES_DB: Joi.string().default('recording-oracle'),
+  POSTGRES_DATABASE: Joi.string().default('recording-oracle'),
   POSTGRES_PORT: Joi.string().default('5432'),
   POSTGRES_SSL: Joi.string().default('false'),
 });
