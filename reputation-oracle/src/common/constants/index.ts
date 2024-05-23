@@ -5,3 +5,4 @@ export const INITIAL_REPUTATION = 0;
 export const JWT_PREFIX = 'bearer ';
 
 export const HEADER_SIGNATURE_KEY = 'human-signature';
+export * from './networks';
