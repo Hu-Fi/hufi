@@ -18,7 +18,7 @@ export class S3ConfigService {
     return this.configService.get<string>('S3_SECRET_KEY', '');
   }
   get bucket(): string {
-    return this.configService.get<string>('S3_BUCKET', 'reputation');
+    return this.configService.get<string>('S3_BUCKET', 'recordings');
   }
   get useSSL(): boolean {
     return this.configService.get<string>('S3_USE_SSL', 'false') === 'true';
