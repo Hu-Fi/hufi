@@ -18,6 +18,8 @@ import { RecordsModule } from '../records/records.module';
 import { UserModule } from '../user/user.module';
 
 import { AppController } from './app.controller';
+import { Web3Module } from '../web3/web3.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   providers: [
@@ -49,6 +51,8 @@ import { AppController } from './app.controller';
     }),
     HealthModule,
     RecordsModule,
+    Web3Module,
+    StorageModule,
     UserModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../../', 'node_modules/swagger-ui-dist'),
