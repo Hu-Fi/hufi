@@ -17,6 +17,7 @@ export class UserService {
 
   async signUp(
     userId: string,
+    walletAddress:string,
     exchange: string,
     apiKey: string,
     secret: string,
