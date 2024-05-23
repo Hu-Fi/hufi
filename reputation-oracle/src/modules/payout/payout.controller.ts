@@ -1,5 +1,6 @@
 import { Controller, Post } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+
 import { PayoutService } from './payout.service';
 
 @ApiTags('Payout') // Add API tag for grouping
@@ -24,7 +25,10 @@ export class PayoutController {
   }
 
   @ApiOperation({ summary: 'Manually execute payouts and disable auto cron' }) // Add operation summary
-  @ApiResponse({ status: 200, description: 'Manual payout executed and cron job disabled' }) // Add response description
+  @ApiResponse({
+    status: 200,
+    description: 'Manual payout executed and cron job disabled',
+  }) // Add response description
   @Post('manual-payout')
   async manualPayout() {
     await this.payoutService.manualPayout();

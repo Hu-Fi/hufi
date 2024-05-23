@@ -1,12 +1,13 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AxiosResponse, AxiosHeaders } from 'axios';
 import { of } from 'rxjs';
-import { AxiosResponse, AxiosRequestConfig, AxiosHeaders } from 'axios';
-import { PayoutService } from './payout.service';
-import { WebhookService } from '../webhook/webhook.service';
+
 import { ChainId } from '../../common/enums';
-import { EscrowUtils } from '@human-protocol/sdk';
-import { Manifest } from 'src/common/interfaces/manifest';
+import { Manifest } from '../../common/interfaces/manifest';
+import { WebhookService } from '../webhook/webhook.service';
+
+import { PayoutService } from './payout.service';
 
 jest.mock('@human-protocol/sdk');
 
@@ -88,8 +89,16 @@ describe('PayoutService', () => {
 
   describe('processPayouts', () => {
     const campaignsMock = [
-      { manifestUrl: 'http://example.com/manifest1', escrowAddress: '0x1', chainId: 1 },
-      { manifestUrl: 'http://example.com/manifest2', escrowAddress: '0x2', chainId: 1 },
+      {
+        manifestUrl: 'http://example.com/manifest1',
+        escrowAddress: '0x1',
+        chainId: 1,
+      },
+      {
+        manifestUrl: 'http://example.com/manifest2',
+        escrowAddress: '0x2',
+        chainId: 1,
+      },
     ];
 
     const manifestMock: Manifest = {
@@ -116,7 +125,7 @@ describe('PayoutService', () => {
 
     beforeEach(() => {
       jest.spyOn(service, 'fetchCampaigns').mockImplementation(async () => {
-        (service as any).campaigns = campaignsMock.map(campaign => ({
+        (service as any).campaigns = campaignsMock.map((campaign) => ({
           ...campaign,
           ...manifestMock,
         }));

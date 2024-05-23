@@ -1,15 +1,16 @@
+import { ChainId } from '@human-protocol/sdk';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
+
+import { NetworkConfigService } from '../../common/config/network-config.service';
+import { Web3ConfigService } from '../../common/config/web3-config.service';
+import { ErrorWeb3 } from '../../common/constants/errors';
 import {
   LOCALHOST_CHAIN_IDS,
   MAINNET_CHAIN_IDS,
   TESTNET_CHAIN_IDS,
 } from '../../common/constants/networks';
 import { Web3Env } from '../../common/enums/web3';
-import { ErrorWeb3 } from '../../common/constants/errors';
-import { ChainId } from '@human-protocol/sdk';
-import { Web3ConfigService } from '../../common/config/web3-config.service';
-import { NetworkConfigService } from '../../common/config/network-config.service';
 
 @Injectable()
 export class Web3Service {

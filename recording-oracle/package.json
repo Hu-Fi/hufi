@@ -6,13 +6,14 @@
   "license": "AGPL-3.0",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"{api,src,test}/**/*.ts\"",
     "start": "nest start",
     "start:db": "docker-compose up -d",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{api,src,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{api,src,test}/**/*.ts\"",
+    "lint:fix": "eslint --fix \"{api,src,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -87,5 +88,11 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "lint-staged": {
+    "{api,src,test}/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

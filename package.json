@@ -1,0 +1,20 @@
+{
+  "name": "hufi",
+  "version": "1.0.0",
+  "description": "HuFi Monorepo",
+  "repository": "https://github.com/Hu-Fi/hufi",
+  "author": "Human Protocol",
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "husk": "^0.5.3",
+    "lint-staged": "^15.2.4"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "setup": "cd scripts && make install",
+    "start": "cd scripts && make start",
+    "lint": "cd scripts && make lint",
+    "lint:fix": "cd scripts && make lint-fix",
+    "format": "cd scripts && make format"
+  }
+}

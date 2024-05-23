@@ -1,6 +1,7 @@
 import { StorageClient } from '@human-protocol/sdk';
 import { ConfigModule, registerAs } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+
 import {
   MOCK_FILE_URL,
   MOCK_S3_ACCESS_KEY,
@@ -10,6 +11,7 @@ import {
   MOCK_S3_SECRET_KEY,
   MOCK_S3_USE_SSL,
 } from '../../../test/constants';
+
 import { StorageService } from './storage.service';
 
 jest.mock('@human-protocol/sdk', () => ({

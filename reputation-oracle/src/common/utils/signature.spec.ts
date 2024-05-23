@@ -1,6 +1,7 @@
-import { verifySignature, recoverSigner, signMessage } from './signature';
 import { MOCK_ADDRESS, MOCK_PRIVATE_KEY } from '../../../test/constants';
 import { ErrorSignature } from '../constants/errors';
+
+import { verifySignature, recoverSigner, signMessage } from './signature';
 
 jest.doMock('ethers', () => {
   return {

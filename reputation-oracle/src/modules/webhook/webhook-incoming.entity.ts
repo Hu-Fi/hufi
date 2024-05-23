@@ -1,9 +1,9 @@
+import { ChainId } from '@human-protocol/sdk';
 import { Column, Entity } from 'typeorm';
 
 import { NS } from '../../common/constants';
-import { BaseEntity } from '../../database/base.entity';
 import { WebhookStatus } from '../../common/enums';
-import { ChainId } from '@human-protocol/sdk';
+import { BaseEntity } from '../../database/base.entity';
 
 @Entity({ schema: NS, name: 'webhook_incoming' })
 export class WebhookIncomingEntity extends BaseEntity {

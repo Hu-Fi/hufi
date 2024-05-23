@@ -1,10 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { SignatureAuthGuard } from './signature.auth';
-import { verifySignature } from '../utils/signature';
 import { ChainId, EscrowUtils } from '@human-protocol/sdk';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { MOCK_ADDRESS } from '../../../test/constants';
 import { Role } from '../enums/role';
+import { verifySignature } from '../utils/signature';
+
+import { SignatureAuthGuard } from './signature.auth';
 
 jest.mock('../../common/utils/signature');
 

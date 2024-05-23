@@ -33,17 +33,12 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
 ### All in one go
 1. Install all dependencies
     ```bash
-    $ make install
+    $ yarn setup
     ```
 
-2. Create environment files
+2. Start development servers
     ```bash
-    $ make create-env-files
-    ```
-
-3. Start development servers
-    ```bash
-    $ make start
+    $ yarn start
     ```
 
 ### Individual services

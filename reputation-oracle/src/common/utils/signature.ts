@@ -1,5 +1,6 @@
 import { ConflictException } from '@nestjs/common';
-import { ethers,verifyMessage } from 'ethers';
+import { ethers, verifyMessage } from 'ethers';
+
 import { ErrorSignature } from '../constants/errors';
 
 export function verifySignature(

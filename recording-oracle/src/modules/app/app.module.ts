@@ -15,11 +15,11 @@ import { User } from '../../common/entities/user.entity';
 import { HttpValidationPipe } from '../../common/pipes';
 import { HealthModule } from '../health/health.module';
 import { RecordsModule } from '../records/records.module';
+import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
+import { Web3Module } from '../web3/web3.module';
 
 import { AppController } from './app.controller';
-import { Web3Module } from '../web3/web3.module';
-import { StorageModule } from '../storage/storage.module';
 
 @Module({
   providers: [

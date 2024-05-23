@@ -1,11 +1,13 @@
+import crypto from 'crypto';
+
 import { ChainId, StorageClient } from '@human-protocol/sdk';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
-import crypto from 'crypto';
+
+import { S3ConfigService } from '../../common/config/s3-config.service';
+import { LiquidityDto } from '../webhook/webhook.dto';
 
 import { SaveLiquidityDto } from './storage.dto';
-import { LiquidityDto } from '../webhook/webhook.dto';
-import { S3ConfigService } from '../../common/config/s3-config.service';
 
 @Injectable()
 export class StorageService {

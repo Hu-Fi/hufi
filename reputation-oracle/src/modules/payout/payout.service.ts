@@ -1,14 +1,15 @@
+import { EscrowUtils } from '@human-protocol/sdk';
+import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { HttpService } from '@nestjs/axios';
-import { EventType } from '../../common/enums';
 import { lastValueFrom } from 'rxjs';
-import { SUPPORTED_CHAIN_IDS } from 'src/common/constants/networks';
-import { ChainId } from 'src/common/enums/chainid';
-import { EscrowUtils } from '@human-protocol/sdk';
-import { Manifest } from 'src/common/interfaces/manifest';
-import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
+
+import { SUPPORTED_CHAIN_IDS } from '../../common/constants/networks';
+import { EventType } from '../../common/enums';
+import { ChainId } from '../../common/enums/chainid';
+import { Manifest } from '../../common/interfaces/manifest';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
+import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
 
 interface CampaignWithManifest extends Manifest {
   escrowAddress: string;
@@ -22,7 +23,7 @@ export class PayoutService {
 
   constructor(
     private httpService: HttpService,
-    private webhookService: WebhookService // Inject WebhookService
+    private webhookService: WebhookService, // Inject WebhookService
   ) {}
 
   async fetchCampaigns(chainId: number): Promise<void> {
@@ -32,30 +33,35 @@ export class PayoutService {
         recordingOracle: process.env.RECORDING_ORACLE,
       });
 
-      const campaignsWithManifest: Array<CampaignWithManifest> = await Promise.all(
-        campaigns.map(async (campaign) => {
-          let manifest;
+      const campaignsWithManifest: Array<CampaignWithManifest> =
+        await Promise.all(
+          campaigns.map(async (campaign) => {
+            let manifest;
 
-          try {
-            const response = await lastValueFrom(this.httpService.get(campaign.manifestUrl));
-            manifest = response.data;
-          } catch {
-            manifest = undefined;
-          }
+            try {
+              const response = await lastValueFrom(
+                this.httpService.get(campaign.manifestUrl),
+              );
+              manifest = response.data;
+            } catch {
+              manifest = undefined;
+            }
 
-          if (!manifest) {
-            return undefined;
-          }
+            if (!manifest) {
+              return undefined;
+            }
 
-          return {
-            ...manifest,
-            escrowAddress: campaign.address,
-            chainId: campaign.chainId,
-          } as CampaignWithManifest;
-        })
+            return {
+              ...manifest,
+              escrowAddress: campaign.address,
+              chainId: campaign.chainId,
+            } as CampaignWithManifest;
+          }),
+        );
+
+      this.campaigns = campaignsWithManifest.filter(
+        (campaign) => campaign !== undefined,
       );
-
-      this.campaigns = campaignsWithManifest.filter(campaign => campaign !== undefined);
     } catch (e: any) {
       this.logger.error('Error fetching campaigns:', e);
       throw new Error(e);
@@ -105,9 +111,16 @@ export class PayoutService {
 
       try {
         await this.webhookService.createIncomingWebhook(data);
-        this.logger.log('Webhook created for campaign:', campaign.escrowAddress);
+        this.logger.log(
+          'Webhook created for campaign:',
+          campaign.escrowAddress,
+        );
       } catch (error) {
-        this.logger.error('Error creating webhook for campaign:', campaign.escrowAddress, error);
+        this.logger.error(
+          'Error creating webhook for campaign:',
+          campaign.escrowAddress,
+          error,
+        );
       }
     }
 

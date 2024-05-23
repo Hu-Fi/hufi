@@ -1,12 +1,14 @@
+import * as path from 'path';
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as path from 'path';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+
 import { NS } from '../common/constants';
+import { WebhookIncomingEntity } from '../modules/webhook/webhook-incoming.entity';
 
 import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
-import { WebhookIncomingEntity } from '../modules/webhook/webhook-incoming.entity';
 
 @Module({
   imports: [

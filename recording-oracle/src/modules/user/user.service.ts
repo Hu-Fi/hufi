@@ -17,7 +17,7 @@ export class UserService {
 
   async signUp(
     userId: string,
-    walletAddress:string,
+    walletAddress: string,
     exchange: string,
     apiKey: string,
     secret: string,
@@ -64,5 +64,4 @@ export class UserService {
     await this.userRepository.save(user);
     return user;
   }
-
 }

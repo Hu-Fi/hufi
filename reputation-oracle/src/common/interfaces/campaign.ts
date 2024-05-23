@@ -1,5 +1,5 @@
 export interface Campaign {
-    manifestHash: string;
-    manifestUrl:string
-    // Add other campaign properties here
-  }
+  manifestHash: string;
+  manifestUrl: string;
+  // Add other campaign properties here
+}

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
-import { Web3ConfigService } from '../../common/config/web3-config.service';
+
 import { NetworkConfigService } from '../../common/config/network-config.service';
+import { Web3ConfigService } from '../../common/config/web3-config.service';
 
 @Injectable()
 export class Web3Service {

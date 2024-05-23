@@ -1,4 +1,6 @@
+import { ChainId } from '@human-protocol/sdk';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -7,9 +9,8 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
+
 import { EventType, WebhookStatus } from '../../common/enums';
-import { ChainId } from '@human-protocol/sdk';
-import { Type } from 'class-transformer';
 
 export class WebhookIncomingDto {
   @ApiProperty()
