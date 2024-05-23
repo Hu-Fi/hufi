@@ -13,6 +13,9 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column()
+  walletAddress:string;
+
   @Column({ unique: true })
   userId: string; // Ensure this matches what you're using in the service
 

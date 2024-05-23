@@ -17,6 +17,7 @@ export class UserService {
 
   async signUp(
     userId: string,
+    walletAddress:string,
     exchange: string,
     apiKey: string,
     secret: string,
@@ -64,5 +65,4 @@ export class UserService {
     return user;
   }
 
-  // Additional methods (e.g., decrypt API keys, fetch user info, etc.)
 }

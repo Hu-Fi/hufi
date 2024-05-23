@@ -1,21 +1,46 @@
-import { Injectable } from '@nestjs/common';
-// import { Cron, CronExpression } from '@nestjs/schedule';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as ccxt from 'ccxt';
+import { HttpService } from '@nestjs/axios';
 import { Repository } from 'typeorm';
+import * as ccxt from 'ccxt';
+import { lastValueFrom } from 'rxjs';
+
 
 import { Campaign } from '../../common/entities/campaign.entity';
 import { User } from '../../common/entities/user.entity';
 
 import { LiquidityScoreCalculation } from './liquidity-score.model';
+import { EncryptionService } from '../../encryption/encryption.service';
+import { SUPPORTED_CHAIN_IDS } from '../../common/constants/chains'
+import { EscrowUtils,EscrowClient, StakingClient, ChainId } from '@human-protocol/sdk'; // Import EscrowUtils and SUPPORTED_CHAIN_IDS
+import { Manifest } from '../../common/interfaces/manifest';
+import { Web3ConfigService } from '../../common/config/web3-config.service';
+import { Web3Service } from '../web3/web3.service';
+import { LiquidityDto } from './liquidity.dto';
+import { StorageService } from '../storage/storage.service';
+
+interface CampaignWithManifest extends Manifest {
+  escrowAddress: string;
+}
+
 
 @Injectable()
 export class RecordsService {
+  private logger = new Logger(RecordsService.name);
+  private campaigns: Array<CampaignWithManifest> = [];
+
   constructor(
+    private web3ConfigService: Web3ConfigService,
+    @Inject(Web3Service)
+    private readonly web3Service: Web3Service,
+    @Inject(StorageService)
+    private storageService :StorageService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(Campaign)
     private campaignRepository: Repository<Campaign>,
+    private readonly httpService: HttpService,
   ) {}
 
   private getExchangeInstance(
@@ -23,7 +48,6 @@ export class RecordsService {
     apiKey: string,
     secret: string,
   ): ccxt.Exchange {
-    // eslint-disable-next-line import/namespace
     const exchangeClass = ccxt[exchangeId];
     if (!exchangeClass) {
       throw new Error(`Exchange ${exchangeId} not supported.`);
@@ -109,28 +133,131 @@ export class RecordsService {
     return liquidityScoreCalculation.calculate();
   }
 
-  //   @Cron(CronExpression.EVERY_MINUTE)
-  //   async handleLiquidityScores(): Promise<void> {
-  //     this.logger.debug('Running Liquidity Score Updates');
+  @Cron(CronExpression.EVERY_HOUR) // Adjust the frequency as needed
+  async calculateScoresForCampaigns(): Promise<void> {
+    const chainId = SUPPORTED_CHAIN_IDS[0]; // or ChainId.ALL, based on your requirement
+    await this.fetchCampaigns(chainId);
 
-  //     const campaigns = await this.campaignRepository.find({ relations: ['users'] });
-  //     for (const campaign of campaigns) {
-  //       for (const user of campaign.users) {
-  //         try {
-  //           // Assuming you have stored API keys and other necessary details within the user or campaign entities
-  //           const { apiKey, secret } = user; // Ensure these are decrypted securely
-  //           // You need to adjust based on your actual data model
-  //           const exchangeId = campaign.exchangeId; // Example, adjust as needed
-  //           const symbol = campaign.symbol; // Adjust as needed
-  //           const since = /* Determine how to calculate 'since' based on your logic */;
+    for (const campaign of this.campaigns) {
+      const users = await this.userRepository.find({
+        where: {
+          campaigns: {
+            // Assuming `Campaign` entity has an `address` field
+            address: campaign.escrowAddress
+          }
+        },
+        relations: ["campaigns"]  // Make sure to load the campaigns relationship
+      });
 
-  //           const score = await this.calculateLiquidityScore(apiKey, secret, exchangeId, symbol, since);
-  //           // Update the score in your database
-  //           // This step depends on how you've structured your liquidity score storage
-  //         } catch (error) {
-  //           this.logger.error(`Failed to update liquidity score for user ${user.id} on campaign ${campaign.address}: ${error.message}`);
-  //         }
-  //       }
-  //     }
-  //   }
+      for (const user of users) {
+        const { apiKey, secret, exchange } = user;
+        const decryptedApiKey = EncryptionService.decrypt(apiKey);
+        const decryptedSecret = EncryptionService.decrypt(secret);
+
+        const liquidityScore = await this.calculateLiquidityScore(
+          decryptedApiKey,
+          decryptedSecret,
+          exchange,
+          campaign.token, // Adjust symbol as needed
+          Date.now() - campaign.startBlock // Example: trades from the last 24 hours
+        );
+
+        // Upload intermediate result
+        await this.pushLiquidityScore(campaign.escrowAddress,campaign.chainId,user.walletAddress,liquidityScore.toString())
+
+
+      }
+    }
+  }
+
+   async pushLiquidityScore(
+    escrowAddress: string,
+    chainId: ChainId,
+    liquidityProvider: string,
+    score: string,
+  ): Promise<string> {
+    const signer = this.web3Service.getSigner(chainId);
+    const escrowClient = await EscrowClient.build(signer);
+
+    let liquidities: LiquidityDto[];
+    const existingLiquiditiesURL: string = await escrowClient.getIntermediateResultsUrl(escrowAddress);
+    if (existingLiquiditiesURL) {
+      liquidities = JSON.parse(await this.storageService.download(existingLiquiditiesURL));
+      if (liquidities) {
+        const exisitingLiquidity = liquidities.find((liq) => liq.liquidityProvider === liquidityProvider);
+        if (exisitingLiquidity) {
+          exisitingLiquidity.liquidityScore = score;
+        } else {
+          liquidities.push({
+            chainId: chainId,
+            liquidityProvider: liquidityProvider,
+            liquidityScore: score,
+          });
+        }
+      } else {
+        throw new NotFoundException("Error: Intermediate result not found");
+      }
+
+    } else {
+      liquidities = [
+        {
+          chainId,
+          liquidityProvider,
+          liquidityScore: score,
+        }
+      ]
+    }
+
+    const saveLiquidityResult = await this.storageService.uploadLiquidities(
+      escrowAddress,
+      chainId,
+      liquidities,
+    );
+    
+    if (!existingLiquiditiesURL) {
+      await escrowClient.storeResults(
+        escrowAddress,
+        saveLiquidityResult.url,
+        saveLiquidityResult.hash,
+      );
+    }
+
+    return 'Liquidity Scores are recorded.';
+  }
+  async fetchCampaigns(chainId: number): Promise<void> {
+    try {
+      const campaigns = await EscrowUtils.getEscrows({
+        networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
+        recordingOracle: process.env.RECORDING_ORACLE,
+      });
+
+      const campaignsWithManifest: Array<CampaignWithManifest> = await Promise.all(
+        campaigns.map(async (campaign) => {
+          let manifest;
+
+          try {
+            const response = await lastValueFrom(this.httpService.get(campaign.manifestUrl));
+            manifest = response.data;
+          } catch {
+            manifest = undefined;
+          }
+
+          if (!manifest) {
+            return undefined;
+          }
+
+          return {
+            ...manifest,
+            escrowAddress: campaign.address,
+            chainId: campaign.chainId,
+          } as CampaignWithManifest;
+        })
+      );
+
+      this.campaigns = campaignsWithManifest.filter(campaign => campaign !== undefined);
+    } catch (e: any) {
+      this.logger.error('Error fetching campaigns:', e);
+      throw new Error(e);
+    }
+  }
 }

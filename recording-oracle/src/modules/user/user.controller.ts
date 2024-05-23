@@ -25,9 +25,10 @@ export class UserController {
   }) // Customize the response object as needed
   @ApiResponse({ status: 400, description: 'Bad request' })
   async signUp(@Body() signUpUserDto: SignUpUserDto) {
-    const { userId, exchange, apiKey, secret, campaignAddress } = signUpUserDto;
+    const { userId,walletAddress, exchange, apiKey, secret, campaignAddress } = signUpUserDto;
     const user = await this.userService.signUp(
       userId,
+      walletAddress,
       exchange,
       apiKey,
       secret,
