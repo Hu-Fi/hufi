@@ -1,19 +1,21 @@
-import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
-import { AppController } from './app.controller';
-import { DatabaseModule } from '../../database/database.module';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
+
 import { envValidator } from '../../common/config';
 import { EnvConfigModule } from '../../common/config/config.module';
 import { DatabaseExceptionFilter } from '../../common/exceptions/database.filter';
 import { SnakeCaseInterceptor } from '../../common/interceptors';
 import { HttpValidationPipe } from '../../common/pipes';
+import { DatabaseModule } from '../../database/database.module';
 import { HealthModule } from '../health/health.module';
-import { WebhookModule } from '../webhook/webhook.module';
 import { Web3Module } from '../web3/web3.module';
+import { WebhookModule } from '../webhook/webhook.module';
+
+import { AppController } from './app.controller';
 
 @Module({
   providers: [

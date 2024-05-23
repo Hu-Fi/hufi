@@ -1,11 +1,11 @@
 export interface Manifest {
-    chainId: number;
-    requesterAddress: string;
-    exchangeName: string;
-    token: string;
-    duration: number;
-    fundAmount: number;
-    startBlock: number;
-    endBlock: number;
-    type: string;
-  }
+  chainId: number;
+  requesterAddress: string;
+  exchangeName: string;
+  token: string;
+  duration: number;
+  fundAmount: number;
+  startBlock: number;
+  endBlock: number;
+  type: string;
+}

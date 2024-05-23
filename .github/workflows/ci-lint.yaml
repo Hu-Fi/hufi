@@ -1,0 +1,20 @@
+name: Lint check
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: yarn setup
+        name: Install dependencies
+      - run: yarn lint
+        working-directory: ./scripts
+        name: Run lint

@@ -14,7 +14,7 @@ export class User {
   id: number;
 
   @Column()
-  walletAddress:string;
+  walletAddress: string;
 
   @Column({ unique: true })
   userId: string; // Ensure this matches what you're using in the service

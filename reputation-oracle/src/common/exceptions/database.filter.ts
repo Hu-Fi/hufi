@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+
 import { DatabaseError } from '../../database/database.error';
 
 @Catch(DatabaseError)

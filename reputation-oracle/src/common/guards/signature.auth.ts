@@ -1,13 +1,14 @@
+import { EscrowUtils } from '@human-protocol/sdk';
 import {
   CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { verifySignature } from '../utils/signature';
+
 import { HEADER_SIGNATURE_KEY } from '../constants';
-import { EscrowUtils } from '@human-protocol/sdk';
 import { Role } from '../enums/role';
+import { verifySignature } from '../utils/signature';
 
 @Injectable()
 export class SignatureAuthGuard implements CanActivate {
@@ -25,11 +26,11 @@ export class SignatureAuthGuard implements CanActivate {
         data.escrowAddress,
       );
       if (this.role.includes(Role.JobLaucher))
-      oracleAddresses.push(escrowData.launcher);
+        oracleAddresses.push(escrowData.launcher);
       if (this.role.includes(Role.Exchange))
-      oracleAddresses.push(escrowData.exchangeOracle!);
+        oracleAddresses.push(escrowData.exchangeOracle!);
       if (this.role.includes(Role.Recording))
-      oracleAddresses.push(escrowData.recordingOracle!);
+        oracleAddresses.push(escrowData.recordingOracle!);
 
       const isVerified = verifySignature(data, signature, oracleAddresses);
 

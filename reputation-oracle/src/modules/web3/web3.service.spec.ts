@@ -1,6 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+
 import { networkMap } from '../../common/config';
+
 import { Web3Service } from './web3.service';
 
 describe('Web3Service', () => {
