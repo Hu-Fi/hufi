@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsString, IsNumber, IsDate } from 'class-validator';
 
@@ -29,8 +29,8 @@ export class ManifestUploadRequestDto {
   duration: number;
 
   @ApiProperty()
-  @IsNumber()
-  fundAmount: number;
+  @IsString()
+  fundAmount: string;
 }
 
 export class ManifestUploadResponseDto {
@@ -41,20 +41,4 @@ export class ManifestUploadResponseDto {
   @ApiProperty()
   @IsString()
   hash: string;
-}
-
-export class ManifestDto extends OmitType(ManifestUploadRequestDto, [
-  'startDate',
-]) {
-  @ApiProperty()
-  @IsNumber()
-  startBlock: number;
-
-  @ApiProperty()
-  @IsNumber()
-  endBlock: number;
-
-  @ApiProperty()
-  @IsString()
-  type: string;
 }

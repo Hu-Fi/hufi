@@ -4,7 +4,6 @@ import { JOB_TYPE } from '../../common/constants';
 import { StorageService } from '../storage/storage.service';
 
 import {
-  ManifestDto,
   ManifestUploadRequestDto,
   ManifestUploadResponseDto,
 } from './manifest.dto';
@@ -32,9 +31,5 @@ export class ManifestService {
     const uploadedFile = await this.storageService.uploadFile(manifest);
 
     return uploadedFile;
-  }
-
-  public async downloadManifest(hash: string): Promise<ManifestDto> {
-    return this.storageService.downloadFile(hash);
   }
 }

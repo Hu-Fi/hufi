@@ -11,7 +11,6 @@ import {
   HUSD_CONTRACT_ADDRESS,
   HUSD_MARKET_MAKING_CAMPAIGN_DURATION,
   HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES,
-  HUSD_MARKET_MAKING_CAMPAIGN_FUND_AMOUNT,
   USDT_CONTRACT_ADDRESS,
 } from '../../constants';
 
@@ -47,24 +46,41 @@ export const useMintHUSD = () => {
       await husdContract.decimals()
     );
 
-    const campaignManifest = {
-      chainId,
-      requesterAddress: HUSD_CONTRACT_ADDRESS[chainId as ChainId]!,
-      exchangeName:
-        HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES[
-          Math.floor(
-            Math.random() * HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES.length
-          )
-        ],
-      token: await husdContract.symbol(),
-      fundAmount: +ethers
-        .parseEther(HUSD_MARKET_MAKING_CAMPAIGN_FUND_AMOUNT)
-        .toString(),
-      startDate: new Date().toISOString(),
-      duration: HUSD_MARKET_MAKING_CAMPAIGN_DURATION,
-    };
+    let fundAmount = '';
+    try {
+      const campaignTier =
+        await husdContract.getCampaignTierToLaunch(amountInWei);
 
-    const { data: manifest } = await uploadManifest(campaignManifest);
+      fundAmount = campaignTier[1].toString();
+    } catch {
+      fundAmount = '';
+    }
+
+    let manifest;
+
+    try {
+      if (fundAmount.length) {
+        const campaignManifest = {
+          chainId,
+          requesterAddress: HUSD_CONTRACT_ADDRESS[chainId as ChainId]!,
+          exchangeName:
+            HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES[
+              Math.floor(
+                Math.random() * HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES.length
+              )
+            ],
+          token: await husdContract.symbol(),
+          fundAmount,
+          startDate: new Date().toISOString(),
+          duration: HUSD_MARKET_MAKING_CAMPAIGN_DURATION,
+        };
+
+        const res = await uploadManifest(campaignManifest);
+        manifest = res.data;
+      }
+    } catch {
+      manifest = null;
+    }
 
     try {
       await usdtContract.approve(
@@ -80,13 +96,13 @@ export const useMintHUSD = () => {
       await husdContract.mint(
         await signer.getAddress(),
         amountInWei,
-        manifest.url,
-        manifest.hash
+        manifest?.url || '',
+        manifest?.hash || ''
       );
 
       setNotification({
         type: 'success',
-        message: 'Minted HUSD successfully.',
+        message: `Minted HUSD successfully${manifest?.url ? ', and campaign created.' : '.'}`,
       });
     } catch (e) {
       setNotification({
