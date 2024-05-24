@@ -12,5 +12,4 @@ export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 
 // TODO: Make these values configurable
 export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['exin1', '4swap'];
-export const HUSD_MARKET_MAKING_CAMPAIGN_FUND_AMOUNT = '0.000001';
 export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds

@@ -1,4 +1,4 @@
- 
+/* eslint-disable */
 /* tslint:disable */
 /*
  * ---------------------------------------------------------------
@@ -17,22 +17,10 @@ export interface ManifestUploadRequestDto {
   /** @format date-time */
   startDate: string;
   duration: number;
-  fundAmount: number;
+  fundAmount: string;
 }
 
 export interface ManifestUploadResponseDto {
   url: string;
   hash: string;
-}
-
-export interface ManifestDto {
-  chainId: number;
-  requesterAddress: string;
-  exchangeName: string;
-  token: string;
-  duration: number;
-  fundAmount: number;
-  startBlock: number;
-  endBlock: number;
-  type: string;
 }

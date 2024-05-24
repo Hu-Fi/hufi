@@ -7,13 +7,10 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { useClientToSigner } from './common';
 import { useNotification } from '../';
-import {
-  ManifestDto,
-  ManifestUploadResponseDto,
-} from '../../api/client/data-contracts';
-import { useDownloadManifest } from '../../api/manifest';
+import { ManifestUploadResponseDto } from '../../api/client/data-contracts';
 import { oracles } from '../../config/escrow';
 import { SUPPORTED_CHAIN_IDS } from '../../constants';
+import { ManifestDto } from '../../types/manifest';
 
 export const useCreateEscrow = () => {
   const { signer, network } = useClientToSigner();
@@ -73,7 +70,6 @@ export type CampaignData = EscrowData &
 
 export const useCampaigns = (chainId: ChainId) => {
   const { setNotification } = useNotification();
-  const { mutateAsync } = useDownloadManifest();
 
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,9 +89,11 @@ export const useCampaigns = (chainId: ChainId) => {
             let manifest;
 
             try {
-              manifest = await mutateAsync(campaign.manifestHash || '').then(
-                (res) => res.data
-              );
+              if (campaign.manifestUrl) {
+                manifest = await fetch(campaign.manifestUrl).then((res) =>
+                  res.json()
+                );
+              }
             } catch {
               manifest = undefined;
             }
