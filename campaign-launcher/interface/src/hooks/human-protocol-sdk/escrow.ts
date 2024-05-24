@@ -92,7 +92,7 @@ export const useCampaigns = (chainId: ChainId) => {
               if (campaign.manifestUrl) {
                 // @dev Temporary fix to handle http/https issue
                 const url = campaign.manifestUrl.replace(
-                  'http://storage.googleapis.com',
+                  'http://storage.googleapis.com:80',
                   'https://storage.googleapis.com'
                 );
                 manifest = await fetch(url).then((res) => res.json());
