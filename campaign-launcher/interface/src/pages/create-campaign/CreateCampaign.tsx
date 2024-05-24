@@ -17,6 +17,7 @@ export const CreateCampaign: FC = () => {
   const handleSubmit = async (data: CampaignFormValues) => {
     const { data: manifest } = await uploadManifest({
       ...data,
+      fundAmount: data.fundAmount.toString(),
       startDate: data.startDate.toISOString(),
     });
 
