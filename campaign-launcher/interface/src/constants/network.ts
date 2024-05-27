@@ -11,4 +11,5 @@ export const SUPPORTED_CHAIN_IDS = [
   //   ChainId.MOONBASE_ALPHA,
   //   ChainId.CELO,
   //   ChainId.CELO_ALFAJORES,
+  ...(import.meta.env.MODE === 'development' ? [ChainId.LOCALHOST] : []),
 ];

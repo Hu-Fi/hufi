@@ -31,15 +31,35 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
 - [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
 
 ### All in one go
+
 1. Install all dependencies
     ```bash
     $ yarn setup
     ```
 
-2. Start development servers
+2. Prepare Human Protocl Eco-System
+   
+   **Run this from [Human Protocol](https://github.com/humanprotocol/human-protocol) repo.**
+   ```bash
+   $ cd scripts
+   $ make web3
+   ```
+
+3. Deploy HumanUSD contracts
+   
+   **Run this from [HumanUSD](https://github.com/Hu-Fi/human-usd) repo.
+   ```bash
+   $ yarn deploy:local
+   ```
+
+4. Start development servers
     ```bash
     $ yarn start
     ```
 
 ### Individual services
 Please refer to README of individual services.
+- [Campaign Launcher UI](./campaign-launcher/interface/README.md)
+- [Campaign Launcher API](./campaign-launcher/server/README.md)
+- [Recording Oracle](./recording-oracle/README.md)
+- [Reputation Oracle](./reputation-oracle/README.md)

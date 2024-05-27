@@ -7,7 +7,7 @@ import {
   StakingClient,
 } from '@human-protocol/sdk';
 import { parseUnits } from 'ethers';
-import { useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { useClientToSigner } from './common';
 import { useNotification, useWalletBalance } from '../';
@@ -53,7 +53,7 @@ export const useStakeHMT = () => {
 };
 
 export const useLeader = () => {
-  const chainId = useChainId();
+  const { chainId } = useAccount();
   const { signer } = useClientToSigner();
   const { setNotification } = useNotification();
   const [leader, setLeader] = useState<ILeader | null>();

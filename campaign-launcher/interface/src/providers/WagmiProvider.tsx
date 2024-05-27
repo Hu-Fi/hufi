@@ -1,11 +1,13 @@
 import { FC, PropsWithChildren } from 'react';
 
+import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
 import {
   avalanche,
   avalancheFuji,
   bsc,
   bscTestnet,
+  localhost,
   mainnet,
   moonbaseAlpha,
   moonbeam,
@@ -38,6 +40,10 @@ export const config = createConfig({
     avalanche,
     avalancheFuji,
     skaleHumanProtocol,
+    {
+      ...localhost,
+      id: ChainId.LOCALHOST,
+    },
   ],
   // connectors: [walletConnect({ projectId: walletConnectProjectId })],
   connectors: [],
@@ -53,6 +59,7 @@ export const config = createConfig({
     [avalanche.id]: http(),
     [avalancheFuji.id]: http(),
     [skaleHumanProtocol.id]: http(),
+    [ChainId.LOCALHOST]: http(),
   },
 });
 

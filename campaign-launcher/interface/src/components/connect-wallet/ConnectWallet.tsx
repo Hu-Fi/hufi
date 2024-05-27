@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { useAccount, useChainId, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 
 import { WalletModal } from './WalletModal';
 import profileSvg from '../../assets/profile.svg';
@@ -47,8 +47,7 @@ const ProfileMenu = styled((props: MenuProps) => (
 }));
 
 export const ConnectWallet: FC = () => {
-  const { address } = useAccount();
-  const chainId = useChainId();
+  const { address, chainId } = useAccount();
   const { disconnect } = useDisconnect();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -67,7 +66,6 @@ export const ConnectWallet: FC = () => {
 
   const network = NETWORKS[chainId as ChainId];
   const accountUrl = `${network?.scanUrl}/address/${address}`;
-  const tokenUrl = `${network?.scanUrl}/token/${network?.hmtAddress}`;
 
   if (!address) {
     return (
@@ -142,15 +140,6 @@ export const ConnectWallet: FC = () => {
                 color="primary"
                 sx={{ background: '#F6F7FE' }}
                 onClick={() => window.open(accountUrl)}
-              >
-                <OpenInNewIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Explore token on Blockchain Scan">
-              <IconButton
-                color="primary"
-                sx={{ background: '#F6F7FE' }}
-                onClick={() => window.open(tokenUrl)}
               >
                 <OpenInNewIcon />
               </IconButton>

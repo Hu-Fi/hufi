@@ -1,6 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
 import { ethers, parseUnits } from 'ethers';
-import { useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { useClientToSigner } from './common';
 import { useNotification } from '../';
@@ -15,7 +15,7 @@ import {
 } from '../../constants';
 
 export const useMintHUSD = () => {
-  const chainId = useChainId();
+  const { chainId } = useAccount();
   const { signer } = useClientToSigner();
   const { setNotification } = useNotification();
   const { mutateAsync: uploadManifest } = useUploadManifest();
@@ -59,7 +59,7 @@ export const useMintHUSD = () => {
     let manifest;
 
     try {
-      if (fundAmount.length) {
+      if (fundAmount.length && chainId) {
         const campaignManifest = {
           chainId,
           requesterAddress: HUSD_CONTRACT_ADDRESS[chainId as ChainId]!,
