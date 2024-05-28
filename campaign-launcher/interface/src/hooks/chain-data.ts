@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import { Address } from 'viem';
-import { useAccount, useBalance, useChainId } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 
 export const useHMTPrice = () => {
   const [price, setPrice] = useState<number>();
@@ -25,12 +25,10 @@ export const useHMTPrice = () => {
 };
 
 export const useWalletBalance = () => {
-  const { address } = useAccount();
-  const chainId = useChainId();
+  const { address, chainId } = useAccount();
 
   const { data: balance } = useBalance({
     address,
-    chainId,
     token: NETWORKS[chainId as ChainId]?.hmtAddress as Address,
   });
   const price = useHMTPrice();

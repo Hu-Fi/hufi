@@ -15,7 +15,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { Controller, useForm } from 'react-hook-form';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
 import { CryptoEntity } from '../../components/crypto-entity';
@@ -36,7 +36,6 @@ type CampaignFormProps = {
 };
 
 export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
-  const chainId = useChainId();
   const account = useAccount();
 
   const {
@@ -46,7 +45,7 @@ export const CampaignForm: FC<CampaignFormProps> = ({ onSubmit }) => {
   } = useForm<CampaignFormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
-      chainId,
+      chainId: account.chainId,
       requesterAddress: account.address,
       exchangeName: 'binance',
       token: 'bnb',

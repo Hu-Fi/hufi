@@ -29,12 +29,6 @@ export class NetworkConfigService {
           rpcUrl: this.configService.get<string>('RPC_URL_POLYGON_AMOY'),
         },
       }),
-      ...(this.configService.get<string>('RPC_URL_SEPOLIA') && {
-        sepolia: {
-          chainId: ChainId.SEPOLIA,
-          rpcUrl: this.configService.get<string>('RPC_URL_SEPOLIA'),
-        },
-      }),
       ...(this.configService.get<string>('RPC_URL_BSC_MAINNET') && {
         bsc: {
           chainId: ChainId.BSC_MAINNET,
@@ -45,12 +39,6 @@ export class NetworkConfigService {
         bsctest: {
           chainId: ChainId.BSC_TESTNET,
           rpcUrl: this.configService.get<string>('RPC_URL_BSC_TESTNET'),
-        },
-      }),
-      ...(this.configService.get<string>('RPC_URL_MOONBEAM') && {
-        moonbeam: {
-          chainId: ChainId.MOONBEAM,
-          rpcUrl: this.configService.get<string>('RPC_URL_MOONBEAM'),
         },
       }),
       ...(this.configService.get<string>('RPC_URL_LOCALHOST') && {

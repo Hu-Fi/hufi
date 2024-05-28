@@ -27,6 +27,7 @@ export const envValidator = Joi.object({
   RPC_URL_POLYGON_AMOY: Joi.string(),
   RPC_URL_BSC_MAINNET: Joi.string(),
   RPC_URL_BSC_TESTNET: Joi.string(),
+  RPC_URL_LOCALHOST: Joi.string(),
   // S3
   S3_ENDPOINT: Joi.string().default('127.0.0.1'),
   S3_PORT: Joi.string().default(9000),

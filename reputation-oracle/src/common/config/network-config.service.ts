@@ -44,6 +44,12 @@ export class NetworkConfigService {
           rpcUrl: this.configService.get<string>('RPC_URL_BSC_TESTNET'),
         },
       }),
+      ...(this.configService.get<string>('RPC_URL_LOCALHOST') && {
+        localhost: {
+          chainId: ChainId.LOCALHOST,
+          rpcUrl: this.configService.get<string>('RPC_URL_LOCALHOST'),
+        },
+      }),
     };
 
     // Remove networks without RPC URLs

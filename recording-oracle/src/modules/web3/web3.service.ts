@@ -14,7 +14,7 @@ export class Web3Service {
   ) {
     const privateKey = this.web3ConfigService.privateKey;
 
-    for (const network of networkConfigService.networks) {
+    for (const network of this.networkConfigService.networks) {
       const provider = new ethers.JsonRpcProvider(network.rpcUrl);
       this.signers[network.chainId] = new Wallet(privateKey, provider);
     }
