@@ -10,6 +10,7 @@ import { ChainId } from '../../common/enums/chainid';
 import { Manifest } from '../../common/interfaces/manifest';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
 import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
+
 import { Web3ConfigService } from 'src/common/config/web3-config.service';
 
 interface CampaignWithManifest extends Manifest {
@@ -32,7 +33,7 @@ export class PayoutService {
     try {
       const campaigns = await EscrowUtils.getEscrows({
         networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
-        recordingOracle: this.web3ConfigService.recordingOracle
+        recordingOracle: this.web3ConfigService.recordingOracle,
       });
 
       const campaignsWithManifest: Array<CampaignWithManifest> =
