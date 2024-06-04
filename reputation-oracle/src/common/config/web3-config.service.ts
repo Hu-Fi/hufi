@@ -13,4 +13,7 @@ export class Web3ConfigService {
   get gasPriceMultiplier(): number {
     return +this.configService.get<number>('GAS_PRICE_MULTIPLIER', 1);
   }
+  get recordingOracle(): string {
+    return this.configService.get<string>('RECORDING_ORACLE', '');
+  }
 }

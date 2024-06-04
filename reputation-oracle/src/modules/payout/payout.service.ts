@@ -10,6 +10,7 @@ import { ChainId } from '../../common/enums/chainid';
 import { Manifest } from '../../common/interfaces/manifest';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
 import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
+import { Web3ConfigService } from 'src/common/config/web3-config.service';
 
 interface CampaignWithManifest extends Manifest {
   escrowAddress: string;
@@ -22,6 +23,7 @@ export class PayoutService {
   private cronEnabled: boolean = false; // Flag to control the cron job
 
   constructor(
+    private web3ConfigService: Web3ConfigService,
     private httpService: HttpService,
     private webhookService: WebhookService, // Inject WebhookService
   ) {}
@@ -30,7 +32,7 @@ export class PayoutService {
     try {
       const campaigns = await EscrowUtils.getEscrows({
         networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
-        recordingOracle: process.env.RECORDING_ORACLE,
+        recordingOracle: this.web3ConfigService.recordingOracle
       });
 
       const campaignsWithManifest: Array<CampaignWithManifest> =
