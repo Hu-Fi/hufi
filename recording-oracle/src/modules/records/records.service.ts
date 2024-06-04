@@ -234,7 +234,7 @@ export class RecordsService {
     try {
       const campaigns = await EscrowUtils.getEscrows({
         networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
-        recordingOracle: process.env.RECORDING_ORACLE,
+        recordingOracle: this.web3ConfigService.recordingOracle,
       });
 
       const campaignsWithManifest: Array<CampaignWithManifest> =

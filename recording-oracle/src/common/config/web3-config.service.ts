@@ -7,4 +7,7 @@ export class Web3ConfigService {
   get privateKey(): string {
     return this.configService.get<string>('WEB3_PRIVATE_KEY', '');
   }
+  get recordingOracle(): string {
+    return this.configService.get<string>('RECORDING_ORACLE', '');
+  }
 }

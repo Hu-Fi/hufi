@@ -48,8 +48,9 @@ export class StorageService {
     }
     const content = JSON.stringify(liquidities);
     try {
+      const date = Date.now();
       const hash = crypto.createHash('sha1').update(content).digest('hex');
-      const filename = `${escrowAddress}-${chainId}.json`;
+      const filename = `${escrowAddress}-${chainId}-${date}.json`;
       await this.minioClient.putObject(
         this.s3ConfigService.bucket,
         filename,
