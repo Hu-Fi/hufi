@@ -1,6 +1,6 @@
 import { EscrowUtils, EscrowClient, ChainId } from '@human-protocol/sdk'; // Import EscrowUtils and SUPPORTED_CHAIN_IDS
 import { HttpService } from '@nestjs/axios';
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as ccxt from 'ccxt';
@@ -138,10 +138,11 @@ export class RecordsService {
     await this.fetchCampaigns(chainId);
 
     for (const campaign of this.campaigns) {
+      const liquidityDataForCampaign: LiquidityDto[] = [];
+
       const users = await this.userRepository.find({
         where: {
           campaigns: {
-            // Assuming `Campaign` entity has an `address` field
             address: campaign.escrowAddress,
           },
         },
@@ -157,78 +158,49 @@ export class RecordsService {
           decryptedApiKey,
           decryptedSecret,
           exchange,
-          campaign.token, // Adjust symbol as needed
-          Date.now() - campaign.startBlock, // Example: trades from the last 24 hours
+          campaign.token,
+          Date.now() - campaign.startBlock,
         );
 
-        // Upload intermediate result
-        await this.pushLiquidityScore(
+        liquidityDataForCampaign.push({
+          chainId: campaign.chainId,
+          liquidityProvider: user.walletAddress,
+          liquidityScore: liquidityScore.toString(),
+        });
+      }
+
+      // Once all users are processed, push all scores at once
+      if (liquidityDataForCampaign.length > 0) {
+        await this.pushLiquidityScores(
           campaign.escrowAddress,
           campaign.chainId,
-          user.walletAddress,
-          liquidityScore.toString(),
+          liquidityDataForCampaign,
         );
       }
     }
   }
 
-  async pushLiquidityScore(
+  async pushLiquidityScores(
     escrowAddress: string,
     chainId: ChainId,
-    liquidityProvider: string,
-    score: string,
+    liquidityData: LiquidityDto[],
   ): Promise<string> {
     const signer = this.web3Service.getSigner(chainId);
     const escrowClient = await EscrowClient.build(signer);
 
-    let liquidities: LiquidityDto[];
-    const existingLiquiditiesURL: string =
-      await escrowClient.getIntermediateResultsUrl(escrowAddress);
-    if (existingLiquiditiesURL) {
-      liquidities = JSON.parse(
-        await this.storageService.download(existingLiquiditiesURL),
-      );
-      if (liquidities) {
-        const exisitingLiquidity = liquidities.find(
-          (liq) => liq.liquidityProvider === liquidityProvider,
-        );
-        if (exisitingLiquidity) {
-          exisitingLiquidity.liquidityScore = score;
-        } else {
-          liquidities.push({
-            chainId: chainId,
-            liquidityProvider: liquidityProvider,
-            liquidityScore: score,
-          });
-        }
-      } else {
-        throw new NotFoundException('Error: Intermediate result not found');
-      }
-    } else {
-      liquidities = [
-        {
-          chainId,
-          liquidityProvider,
-          liquidityScore: score,
-        },
-      ];
-    }
-
     const saveLiquidityResult = await this.storageService.uploadLiquidities(
       escrowAddress,
       chainId,
-      liquidities,
+      liquidityData,
     );
 
-    if (!existingLiquiditiesURL) {
-      await escrowClient.storeResults(
-        escrowAddress,
-        saveLiquidityResult.url,
-        saveLiquidityResult.hash,
-      );
-    }
+    await escrowClient.storeResults(
+      escrowAddress,
+      saveLiquidityResult.url,
+      saveLiquidityResult.hash,
+    );
 
-    return 'Liquidity Scores are recorded.';
+    return 'Liquidity Scores for all users have been recorded.';
   }
   async fetchCampaigns(chainId: number): Promise<void> {
     try {
