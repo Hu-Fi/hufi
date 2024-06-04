@@ -1,9 +1,9 @@
+import { ChainId } from '@human-protocol/sdk';
 import { HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AxiosResponse, AxiosHeaders } from 'axios';
 import { of } from 'rxjs';
 
-import { ChainId } from '../../common/enums';
 import { Manifest } from '../../common/interfaces/manifest';
 import { WebhookService } from '../webhook/webhook.service';
 

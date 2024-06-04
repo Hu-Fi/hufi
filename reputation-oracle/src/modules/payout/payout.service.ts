@@ -1,4 +1,4 @@
-import { EscrowUtils } from '@human-protocol/sdk';
+import { EscrowUtils, ChainId } from '@human-protocol/sdk';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -6,7 +6,6 @@ import { lastValueFrom } from 'rxjs';
 
 import { SUPPORTED_CHAIN_IDS } from '../../common/constants/networks';
 import { EventType } from '../../common/enums';
-import { ChainId } from '../../common/enums/chainid';
 import { Manifest } from '../../common/interfaces/manifest';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
 import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
