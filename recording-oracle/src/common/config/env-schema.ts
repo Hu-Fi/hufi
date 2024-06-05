@@ -6,6 +6,7 @@ export const envValidator = Joi.object({
   HOST: Joi.string(),
   PORT: Joi.string(),
   SESSION_SECRET: Joi.string(),
+  API_KEY: Joi.string(),
   // Datbase
   POSTGRES_HOST: Joi.string().default('localhost'),
   POSTGRES_USER: Joi.string().default('user'),

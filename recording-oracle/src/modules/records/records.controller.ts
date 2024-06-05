@@ -4,8 +4,17 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiHeader,
+} from '@nestjs/swagger';
+
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
 import { RecordsService } from './records.service';
 import { RequestDto } from './request.dto';
@@ -15,11 +24,16 @@ import { RequestDto } from './request.dto';
 export class RecordsController {
   constructor(private readonly recordsService: RecordsService) {}
 
+  @UseGuards(ApiKeyGuard)
   @Post('calculate-liquidity-score')
   @ApiOperation({
     summary: 'Calculate liquidity score',
     description:
-      'Calculates the liquidity score for a given exchange, symbol, and user based on trades and open orders.',
+      "Calculates the liquidity score for a given exchange, symbol, and user based on trades and open orders.\n\n*This endpoint will be deprecated once it's confirmed that the cron job is running correctly.*",
+  })
+  @ApiHeader({
+    name: 'x-api-key',
+    description: 'API key for authentication',
   })
   @ApiBody({
     description: 'Payload to calculate liquidity score',
