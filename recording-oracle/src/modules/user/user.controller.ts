@@ -1,18 +1,32 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiHeader,
+} from '@nestjs/swagger';
+
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
 import { SignUpUserDto } from './user.dto';
 import { UserService } from './user.service';
 
-@ApiTags('users') // Tags this controller for swagger documentation under "users"
+@ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(ApiKeyGuard)
   @Post('signup')
   @ApiOperation({
     summary: 'Sign up a user',
-    description: 'Registers user and associates them with a campaign.',
+    description:
+      'Registers user and associates with a campaign.\n\n*Security Warning: Please provide the **Read-Only** API key and secret for the exchange.*',
+  })
+  @ApiHeader({
+    name: 'x-api-key',
+    description: 'API key for authentication',
   })
   @ApiBody({
     type: SignUpUserDto,
@@ -22,7 +36,7 @@ export class UserController {
     status: 201,
     description: 'User signed up successfully',
     type: Object,
-  }) // Customize the response object as needed
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async signUp(@Body() signUpUserDto: SignUpUserDto) {
     const { userId, walletAddress, exchange, apiKey, secret, campaignAddress } =
