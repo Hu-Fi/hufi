@@ -3,32 +3,38 @@ import bitfinexLogo from '../assets/exchanges/bitfinex.png';
 import exin1Logo from '../assets/exchanges/exin-one.png';
 import fourSwapLogo from '../assets/exchanges/four-swap.png';
 import mexcLogo from '../assets/exchanges/mexc.jpeg';
-import { ExchangeData } from '../types';
+import uniswapLogo from '../assets/exchanges/uniswap.svg';
+import { ExchangeData, ExchangeName } from '../types';
 
 export const EXCHANGES: ExchangeData[] = [
   {
-    name: 'binance',
+    name: ExchangeName.Binance,
     label: 'Binance',
     icon: binanceLogo,
   },
   {
-    name: 'bitfinex',
+    name: ExchangeName.Bitfinex,
     label: 'Bitfinex',
     icon: bitfinexLogo,
   },
   {
-    name: 'mexc',
+    name: ExchangeName.MEXC,
     label: 'MEXC Exchange',
     icon: mexcLogo,
   },
   {
-    name: '4swap',
+    name: ExchangeName.FourSwap,
     label: '4swap',
     icon: fourSwapLogo,
   },
   {
-    name: 'exin1',
+    name: ExchangeName.ExinOne,
     label: 'ExinOne',
     icon: exin1Logo,
+  },
+  {
+    name: ExchangeName.Uniswap,
+    label: 'Uniswap',
+    icon: uniswapLogo,
   },
 ];
