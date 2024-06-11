@@ -2,22 +2,19 @@ import { join } from 'path';
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { EnvConfigModule } from '../../common/config/config.module';
 import { envValidator } from '../../common/config/env-schema';
-import { Campaign } from '../../common/entities/campaign.entity';
-import { LiquidityScore } from '../../common/entities/liquidity-score.entity';
-import { User } from '../../common/entities/user.entity';
+import { ExceptionFilter } from '../../common/exceptions/exception.filter';
+import { SnakeCaseInterceptor } from '../../common/interceptors/snake-case';
 import { HttpValidationPipe } from '../../common/pipes';
+import { DatabaseModule } from '../../database/database.module';
+import { AuthModule } from '../auth/auth.module';
 import { HealthModule } from '../health/health.module';
-import { RecordsModule } from '../records/records.module';
-import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
-import { Web3Module } from '../web3/web3.module';
 
 import { AppController } from './app.controller';
 
@@ -26,6 +23,14 @@ import { AppController } from './app.controller';
     {
       provide: APP_PIPE,
       useClass: HttpValidationPipe,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SnakeCaseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ExceptionFilter,
     },
   ],
   imports: [
@@ -37,22 +42,9 @@ import { AppController } from './app.controller';
     }),
     EnvConfigModule,
     ScheduleModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.POSTGRES_HOST,
-      port: parseInt(process.env.POSTGRES_PORT, 10),
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DATABASE,
-      entities: [Campaign, LiquidityScore, User],
-      synchronize: true,
-      autoLoadEntities: true,
-      ssl: process.env.POSTGRES_SSL === 'true',
-    }),
+    DatabaseModule,
     HealthModule,
-    RecordsModule,
-    Web3Module,
-    StorageModule,
+    AuthModule,
     UserModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../../', 'node_modules/swagger-ui-dist'),

@@ -1,54 +1,46 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBody,
-  ApiHeader,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
-import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt.guard';
+import { RequestWithUser } from '../../common/types/request';
+import { ExchangeAPIKeyEntity } from '../../database/entities';
 
-import { SignUpUserDto } from './user.dto';
+import { ExchangeAPIKeyCreateRequestDto } from './user.dto';
 import { UserService } from './user.service';
 
-@ApiTags('users')
-@Controller('users')
+@ApiTags('User')
+@Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(ApiKeyGuard)
-  @Post('signup')
+  @UseGuards(JwtAuthGuard)
+  @Post('exchange-api-key')
+  @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Sign up a user',
+    summary: 'Register exchange API key',
     description:
-      'Registers user and associates with a campaign.\n\n*Security Warning: Please provide the **Read-Only** API key and secret for the exchange.*',
-  })
-  @ApiHeader({
-    name: 'x-api-key',
-    description: 'API key for authentication',
+      '*Security Warning: Please provide the **Read-Only** API key and secret for the exchange.*',
   })
   @ApiBody({
-    type: SignUpUserDto,
-    description: 'The required information to sign up a new user.',
+    type: ExchangeAPIKeyCreateRequestDto,
+    description: 'Exchange name, API key and secret',
   })
   @ApiResponse({
     status: 201,
-    description: 'User signed up successfully',
+    description: 'Created a new exchange API key record for the user',
     type: Object,
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async signUp(@Body() signUpUserDto: SignUpUserDto) {
-    const { userId, walletAddress, exchange, apiKey, secret, campaignAddress } =
-      signUpUserDto;
-    const user = await this.userService.signUp(
-      userId,
-      walletAddress,
-      exchange,
-      apiKey,
-      secret,
-      campaignAddress,
-    );
-    return { message: 'User signed up successfully', userId: user.userId };
+  public async createExchangeAPIKey(
+    @Req() request: RequestWithUser,
+    @Body() data: ExchangeAPIKeyCreateRequestDto,
+  ): Promise<ExchangeAPIKeyEntity> {
+    return await this.userService.createExchangeAPIKey(request.user, data);
   }
 }

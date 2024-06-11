@@ -1,19 +1,22 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Campaign } from '../../common/entities/campaign.entity';
-import { User } from '../../common/entities/user.entity';
+import { PGPConfigService } from '../../common/config/pgp-config.service';
+import { Web3Service } from '../web3/web3.service';
 
+import { ExchangeAPIKeyRepository } from './exchange-api-key.repository';
 import { UserController } from './user.controller';
+import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    TypeOrmModule.forFeature([Campaign]),
+  providers: [
+    UserService,
+    UserRepository,
+    Web3Service,
+    ExchangeAPIKeyRepository,
+    PGPConfigService,
   ],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService], // Export UserService if it's used outside this module
+  exports: [UserService],
 })
 export class UserModule {}

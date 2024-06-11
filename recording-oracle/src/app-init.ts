@@ -33,6 +33,7 @@ export default async function init(app: any) {
     .setTitle('HuFi Recording Oracle API')
     .setDescription('Recording Oracle API to record data')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
