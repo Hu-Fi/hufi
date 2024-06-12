@@ -1,22 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEthereumAddress, IsString } from 'class-validator';
 
-export class SignUpUserDto {
-  @ApiProperty({ example: '1', description: 'UserID' })
-  userId: string;
-  @ApiProperty({
-    example: '0x00',
-    description: 'Wallet Address to receive rewards',
-  })
-  walletAddress: string;
-  @ApiProperty({ example: 'binance', description: 'Exchange name' })
-  exchange: string;
-  @ApiProperty({ example: 'xxx', description: 'API Key for the Exchange' })
-  apiKey: string;
-  @ApiProperty({ example: 'xxx', description: 'API Secret for the Exchange' })
-  secret: string;
-  @ApiProperty({
-    example: '0x00',
-    description: 'Address of the campaign to sign up for.',
-  })
-  campaignAddress: string;
+export class SignatureBodyDto {
+  @ApiProperty()
+  @IsString()
+  @IsEthereumAddress()
+  public from: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsEthereumAddress()
+  public to: string;
+
+  @ApiProperty()
+  @IsString()
+  public contents: string;
+
+  @ApiProperty()
+  @IsString()
+  public nonce: string | undefined;
+}
+
+export class ExchangeAPIKeyCreateRequestDto {
+  @ApiProperty()
+  @IsString()
+  public exchangeName: string;
+
+  @ApiProperty()
+  @IsString()
+  public apiKey: string;
+
+  @ApiProperty()
+  @IsString()
+  public secret: string;
 }

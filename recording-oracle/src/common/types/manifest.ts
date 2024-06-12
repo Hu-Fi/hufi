@@ -1,4 +1,4 @@
-export interface Manifest {
+export type Manifest = {
   chainId: number;
   requesterAddress: string;
   exchangeName: string;
@@ -8,4 +8,4 @@ export interface Manifest {
   startBlock: number;
   endBlock: number;
   type: string;
-}
+};

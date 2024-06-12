@@ -9,19 +9,19 @@ import { Repository } from 'typeorm';
 
 import { Web3ConfigService } from '../../common/config/web3-config.service';
 import { SUPPORTED_CHAIN_IDS } from '../../common/constants/chains';
-import { Campaign } from '../../common/entities/campaign.entity';
-import { User } from '../../common/entities/user.entity';
-import { Manifest } from '../../common/interfaces/manifest';
-import { EncryptionService } from '../../encryption/encryption.service';
+import { Manifest } from '../../common/types/manifest';
+import { CampaignEntity } from '../../database/entities/campaign.entity';
+import { UserEntity } from '../../database/entities/user.entity';
+// import { EncryptionService } from '../encryption/encryption.service';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
 
 import { LiquidityScoreCalculation } from './liquidity-score.model';
 import { LiquidityDto } from './liquidity.dto';
 
-interface CampaignWithManifest extends Manifest {
+type CampaignWithManifest = Manifest & {
   escrowAddress: string;
-}
+};
 
 @Injectable()
 export class RecordsService {
@@ -34,10 +34,10 @@ export class RecordsService {
     private readonly web3Service: Web3Service,
     @Inject(StorageService)
     private storageService: StorageService,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Campaign)
-    private campaignRepository: Repository<Campaign>,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+    @InjectRepository(CampaignEntity)
+    private campaignRepository: Repository<CampaignEntity>,
     private readonly httpService: HttpService,
   ) {}
 
@@ -140,34 +140,34 @@ export class RecordsService {
     for (const campaign of this.campaigns) {
       const liquidityDataForCampaign: LiquidityDto[] = [];
 
-      const users = await this.userRepository.find({
-        where: {
-          campaigns: {
-            address: campaign.escrowAddress,
-          },
-        },
-        relations: ['campaigns'], // Make sure to load the campaigns relationship
-      });
+      // const users = await this.userRepository.find({
+      //   where: {
+      //     campaigns: {
+      //       address: campaign.escrowAddress,
+      //     },
+      //   },
+      //   relations: ['campaigns'], // Make sure to load the campaigns relationship
+      // });
 
-      for (const user of users) {
-        const { apiKey, secret, exchange } = user;
-        const decryptedApiKey = EncryptionService.decrypt(apiKey);
-        const decryptedSecret = EncryptionService.decrypt(secret);
+      // for (const user of users) {
+      //   const { apiKey, secret, exchange } = user;
+      //   const decryptedApiKey = EncryptionService.decrypt(apiKey);
+      //   const decryptedSecret = EncryptionService.decrypt(secret);
 
-        const liquidityScore = await this.calculateLiquidityScore(
-          decryptedApiKey,
-          decryptedSecret,
-          exchange,
-          campaign.token,
-          Date.now() - campaign.startBlock,
-        );
+      //   const liquidityScore = await this.calculateLiquidityScore(
+      //     decryptedApiKey,
+      //     decryptedSecret,
+      //     exchange,
+      //     campaign.token,
+      //     Date.now() - campaign.startBlock,
+      //   );
 
-        liquidityDataForCampaign.push({
-          chainId: campaign.chainId,
-          liquidityProvider: user.walletAddress,
-          liquidityScore: liquidityScore.toString(),
-        });
-      }
+      //   liquidityDataForCampaign.push({
+      //     chainId: campaign.chainId,
+      //     liquidityProvider: user.walletAddress,
+      //     liquidityScore: liquidityScore.toString(),
+      //   });
+      // }
 
       // Once all users are processed, push all scores at once
       if (liquidityDataForCampaign.length > 0) {
@@ -206,7 +206,7 @@ export class RecordsService {
     try {
       const campaigns = await EscrowUtils.getEscrows({
         networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
-        recordingOracle: this.web3ConfigService.recordingOracle,
+        // recordingOracle: this.web3ConfigService.recordingOracle,
       });
 
       const campaignsWithManifest: Array<CampaignWithManifest> =

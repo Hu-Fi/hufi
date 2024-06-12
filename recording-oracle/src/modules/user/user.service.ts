@@ -1,67 +1,119 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EncryptionUtils } from '@human-protocol/sdk';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
-import { Campaign } from '../../common/entities/campaign.entity';
-import { User } from '../../common/entities/user.entity';
-import { EncryptionService } from '../../encryption/encryption.service';
+import { PGPConfigService } from '../../common/config/pgp-config.service';
+import { ErrorUser } from '../../common/constants/errors';
+import { UserStatus } from '../../common/enums/user';
+import { SignatureType } from '../../common/enums/web3';
+import { ControlledError } from '../../common/errors/controlled';
+import { generateNonce } from '../../common/utils/signature';
+import { ExchangeAPIKeyEntity, UserEntity } from '../../database/entities';
+import { Web3Service } from '../web3/web3.service';
+
+import { ExchangeAPIKeyRepository } from './exchange-api-key.repository';
+import { ExchangeAPIKeyCreateRequestDto, SignatureBodyDto } from './user.dto';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Campaign)
-    private campaignRepository: Repository<Campaign>,
+    private userRepository: UserRepository,
+    private exchangeAPIKeyRepository: ExchangeAPIKeyRepository,
+    private web3Service: Web3Service,
+    private pgpConfigService: PGPConfigService,
   ) {}
 
-  async signUp(
-    userId: string,
-    walletAddress: string,
-    exchange: string,
-    apiKey: string,
-    secret: string,
-    campaignAddress: string,
-  ): Promise<User> {
-    // Encrypt API keys
-    const encryptedApiKey = EncryptionService.encrypt(apiKey);
-    const encryptedSecret = EncryptionService.encrypt(secret);
+  public async createWeb3User(address: string): Promise<UserEntity> {
+    const userEntity = await this.userRepository.findOneByEvmAddress(address);
 
-    // Check if the campaign exists, create if not
-    let campaign = await this.campaignRepository.findOneBy({
-      address: campaignAddress,
-    });
-    if (!campaign) {
-      campaign = this.campaignRepository.create({ address: campaignAddress });
-      await this.campaignRepository.save(campaign);
+    if (userEntity) {
+      this.logger.log(ErrorUser.AlreadyExists, UserService.name);
+      throw new ControlledError(ErrorUser.AlreadyExists, HttpStatus.CONFLICT);
     }
 
-    // Check if the user exists
-    let user = await this.userRepository.findOne({
-      where: { userId },
-      relations: ['campaigns'], // Load campaigns to check existing associations
-    });
+    const newUser = new UserEntity();
+    newUser.evmAddress = address;
+    newUser.nonce = generateNonce();
+    newUser.status = UserStatus.ACTIVE;
 
-    if (user) {
-      // Update API keys and campaigns
-      user.apiKey = encryptedApiKey;
-      user.secret = encryptedSecret;
-      // Add campaign to user's campaigns if not already associated
-      if (!user.campaigns.some((c) => c.address === campaignAddress)) {
-        user.campaigns.push(campaign);
-      }
-    } else {
-      // Create new user
-      user = this.userRepository.create({
-        userId,
-        exchange,
-        apiKey: encryptedApiKey,
-        secret: encryptedSecret,
-        campaigns: [campaign],
-      });
+    return await this.userRepository.createUnique(newUser);
+  }
+
+  public async getByAddress(address: string): Promise<UserEntity> {
+    const userEntity = await this.userRepository.findOneByEvmAddress(address);
+
+    if (!userEntity) {
+      throw new ControlledError(ErrorUser.NotFound, HttpStatus.NOT_FOUND);
     }
 
-    await this.userRepository.save(user);
-    return user;
+    return userEntity;
+  }
+
+  public async prepareSignatureBody(
+    type: SignatureType,
+    address: string,
+  ): Promise<SignatureBodyDto> {
+    let content: string;
+    let nonce: string | undefined;
+
+    switch (type) {
+      case SignatureType.SIGNUP:
+        content = 'signup';
+        break;
+      case SignatureType.SIGNIN:
+        content = 'signin';
+        nonce = (await this.userRepository.findOneByEvmAddress(address))?.nonce;
+        break;
+      default:
+        throw new ControlledError('Type not allowed', HttpStatus.BAD_REQUEST);
+    }
+
+    return {
+      from: address,
+      to: this.web3Service.getOperatorAddress(),
+      contents: content,
+      nonce: nonce ?? undefined,
+    };
+  }
+
+  public async updateNonce(userEntity: UserEntity): Promise<UserEntity> {
+    userEntity.nonce = generateNonce();
+    return userEntity.save();
+  }
+
+  public async createExchangeAPIKey(
+    user: UserEntity,
+    exchangeAPIKeyData: ExchangeAPIKeyCreateRequestDto,
+  ) {
+    const exchangeAPIKey =
+      await this.exchangeAPIKeyRepository.findByUserAndExchange(
+        user,
+        exchangeAPIKeyData.exchangeName,
+      );
+
+    if (exchangeAPIKey) {
+      throw new ControlledError(
+        ErrorUser.ExchangeAPIKeyExists,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const encryptedApiKey = await EncryptionUtils.encrypt(
+      exchangeAPIKeyData.apiKey,
+      [this.pgpConfigService.publicKey],
+    );
+    const encryptedSecret = await EncryptionUtils.encrypt(
+      exchangeAPIKeyData.secret,
+      [this.pgpConfigService.publicKey],
+    );
+
+    const newExchangeAPIKey = new ExchangeAPIKeyEntity();
+    newExchangeAPIKey.exchangeName = exchangeAPIKeyData.exchangeName;
+    newExchangeAPIKey.apiKey = encryptedApiKey;
+    newExchangeAPIKey.secret = encryptedSecret;
+
+    return await this.exchangeAPIKeyRepository.createUnique(newExchangeAPIKey);
   }
 }
