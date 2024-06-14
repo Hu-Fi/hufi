@@ -1,13 +1,10 @@
 import crypto from 'crypto';
 
-import { ChainId, StorageClient } from '@human-protocol/sdk';
+import { ChainId, StorageClient, UploadFile } from '@human-protocol/sdk';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
 
 import { S3ConfigService } from '../../common/config/s3-config.service';
-import { LiquidityDto } from '../records/liquidity.dto';
-
-import { SaveLiquidityDto } from './storage.dto';
 
 @Injectable()
 export class StorageService {
@@ -22,12 +19,10 @@ export class StorageService {
       useSSL: this.s3ConfigService.useSSL,
     });
   }
-  public getUrl(escrowAddress: string, chainId: ChainId): string {
+  public getUrl(filename: string): string {
     return `${this.s3ConfigService.useSSL ? 'https' : 'http'}://${
       this.s3ConfigService.endPoint
-    }:${this.s3ConfigService.port}/${
-      this.s3ConfigService.bucket
-    }/${escrowAddress}-${chainId}.json`;
+    }:${this.s3ConfigService.port}/${this.s3ConfigService.bucket}/${filename}`;
   }
 
   public async download(url: string): Promise<any> {
@@ -38,15 +33,22 @@ export class StorageService {
     }
   }
 
-  public async uploadLiquidities(
+  public async uploadEscrowResult(
     escrowAddress: string,
     chainId: ChainId,
-    liquidities: LiquidityDto[],
-  ): Promise<SaveLiquidityDto> {
+    data: any,
+  ): Promise<UploadFile> {
     if (!(await this.minioClient.bucketExists(this.s3ConfigService.bucket))) {
       throw new BadRequestException('Bucket not found');
     }
-    const content = JSON.stringify(liquidities);
+
+    let content;
+    if (typeof data === 'string') {
+      content = data;
+    } else {
+      content = JSON.stringify(data);
+    }
+
     try {
       const date = Date.now();
       const hash = crypto.createHash('sha1').update(content).digest('hex');
@@ -62,7 +64,11 @@ export class StorageService {
         },
       );
 
-      return { url: this.getUrl(escrowAddress, chainId), hash };
+      return {
+        key: filename,
+        url: this.getUrl(filename),
+        hash,
+      };
     } catch (e) {
       throw new BadRequestException('File not uploaded');
     }

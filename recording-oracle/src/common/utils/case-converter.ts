@@ -21,7 +21,11 @@ export class CaseConverter {
   static transformToSnakeCase(obj: any): any {
     if (Array.isArray(obj)) {
       return obj.map((item) => CaseConverter.transformToSnakeCase(item));
-    } else if (typeof obj === 'object' && obj !== null) {
+    } else if (
+      typeof obj === 'object' &&
+      obj !== null &&
+      Object.keys(obj).length
+    ) {
       return Object.keys(obj).reduce(
         (acc: Record<string, any>, key: string) => {
           const snakeCaseKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();

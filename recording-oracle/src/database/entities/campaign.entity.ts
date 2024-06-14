@@ -15,6 +15,43 @@ export class CampaignEntity extends BaseEntity {
   @Column()
   address: string; // Address of the campaign
 
+  @Column({
+    nullable: true,
+  })
+  exchangeName: string | null; // Name of the exchange
+
+  @Column({
+    nullable: true,
+  })
+  token: string | null; // Token used in the campaign
+
+  @Column({
+    type: 'date',
+    nullable: true,
+  })
+  startDate: Date | null; // Start date of the campaign
+
+  @Column({
+    type: 'date',
+    nullable: true,
+  })
+  endDate: Date | null; // End date of the campaign
+
+  @Column({
+    nullable: true,
+  })
+  fundToken: string | null; // Fund token of the campaign
+
+  @Column({
+    nullable: true,
+  })
+  fundAmount: string | null; // Fund amount of the campaign
+
+  @Column({
+    default: 'NOW()',
+  })
+  lastSyncedAt: Date; // Last synced timestamp
+
   @ManyToMany(() => UserEntity, (user) => user.campaigns)
   users: UserEntity[];
 

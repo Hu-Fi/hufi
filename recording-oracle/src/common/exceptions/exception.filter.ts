@@ -33,9 +33,9 @@ export class ExceptionFilter implements IExceptionFilter {
 
       this.logger.error(message, exception.stack);
     } else {
-      if (exception.statusCode === HttpStatus.BAD_REQUEST) {
-        status = exception.statusCode;
-        message = exception.message;
+      if (exception.response?.statusCode === HttpStatus.BAD_REQUEST) {
+        status = exception.response.statusCode;
+        message = exception.response.message;
       }
       this.logger.error(
         `Unhandled exception: ${exception.message}`,

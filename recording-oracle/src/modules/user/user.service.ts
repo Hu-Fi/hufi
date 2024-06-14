@@ -6,12 +6,18 @@ import { ErrorUser } from '../../common/constants/errors';
 import { UserStatus } from '../../common/enums/user';
 import { SignatureType } from '../../common/enums/web3';
 import { ControlledError } from '../../common/errors/controlled';
+import { isCenteralizedExchange } from '../../common/utils/exchange';
 import { generateNonce } from '../../common/utils/signature';
 import { ExchangeAPIKeyEntity, UserEntity } from '../../database/entities';
+import { CampaignService } from '../campaign/campaign.service';
 import { Web3Service } from '../web3/web3.service';
 
 import { ExchangeAPIKeyRepository } from './exchange-api-key.repository';
-import { ExchangeAPIKeyCreateRequestDto, SignatureBodyDto } from './user.dto';
+import {
+  CampaignRegisterRequestDto,
+  ExchangeAPIKeyCreateRequestDto,
+  SignatureBodyDto,
+} from './user.dto';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -23,6 +29,7 @@ export class UserService {
     private exchangeAPIKeyRepository: ExchangeAPIKeyRepository,
     private web3Service: Web3Service,
     private pgpConfigService: PGPConfigService,
+    private campaignService: CampaignService,
   ) {}
 
   public async createWeb3User(address: string): Promise<UserEntity> {
@@ -110,10 +117,45 @@ export class UserService {
     );
 
     const newExchangeAPIKey = new ExchangeAPIKeyEntity();
+    newExchangeAPIKey.user = user;
     newExchangeAPIKey.exchangeName = exchangeAPIKeyData.exchangeName;
     newExchangeAPIKey.apiKey = encryptedApiKey;
     newExchangeAPIKey.secret = encryptedSecret;
 
     return await this.exchangeAPIKeyRepository.createUnique(newExchangeAPIKey);
+  }
+
+  public async registerToCampaign(
+    user: UserEntity,
+    data: CampaignRegisterRequestDto,
+  ) {
+    const campaign = await this.campaignService.createCampaignIfNotExists(data);
+
+    if (user.campaigns?.some((c) => c.id === campaign.id)) {
+      throw new ControlledError(
+        ErrorUser.CampaignAlreadyRegistered,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const exchangeAPIKey =
+      await this.exchangeAPIKeyRepository.findByUserAndExchange(
+        user,
+        campaign.exchangeName,
+      );
+
+    if (isCenteralizedExchange(campaign.exchangeName) && !exchangeAPIKey) {
+      throw new ControlledError(
+        ErrorUser.ExchangeAPIKeyMissing,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (user.campaigns) {
+      user.campaigns.push(campaign);
+    } else {
+      user.campaigns = [campaign];
+    }
+    await user.save();
   }
 }

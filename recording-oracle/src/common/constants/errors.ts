@@ -14,6 +14,8 @@ export enum ErrorUser {
   NotFound = 'User not found',
   AlreadyExists = 'User already exists',
   ExchangeAPIKeyExists = 'Exchange API key already exists',
+  CampaignAlreadyRegistered = 'User already registered for the campaign',
+  ExchangeAPIKeyMissing = 'Exchange API key not found',
 }
 
 /**
@@ -31,4 +33,14 @@ export enum ErrorWeb3 {
 export enum ErrorSignature {
   SignatureNotVerified = 'Signature not verified',
   InvalidSignature = 'Invalid signature',
+}
+
+/**
+ * Represents error messages related to campaign.
+ */
+export enum ErrorCampaign {
+  NotFound = 'Campaign not found',
+  AlreadyExists = 'Campaign already exists',
+  InvalidChainId = 'Invalid chain id',
+  InvalidCampaignData = 'Invalid campaign data',
 }
