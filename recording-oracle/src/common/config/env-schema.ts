@@ -18,4 +18,10 @@ export const envValidator = Joi.object({
   POSTGRES_PORT: Joi.string().default('5432'),
   POSTGRES_SSL: Joi.string().default('false'),
   POSTGRES_LOGGING: Joi.string(),
+  // Web3
+  WEB3_ENV: Joi.string().default('localhost'),
+  WEB3_PRIVATE_KEY: Joi.string(),
+  GAS_PRICE_MULTIPLIER: Joi.number().default(1),
+  RPC_URL_SEPOLIA: Joi.string(),
+  RPC_URL_LOCALHOST: Joi.string(),
 });

@@ -11,12 +11,18 @@ export class UserRepository extends BaseRepository<UserEntity> {
   }
 
   async findById(id: string): Promise<UserEntity | null> {
-    return this.findOne({ where: { id } });
+    return this.findOne({
+      where: { id },
+      relations: { campaigns: true, exchangeAPIKeys: true },
+    });
   }
 
   public async findOneByEvmAddress(
     evmAddress: string,
   ): Promise<UserEntity | null> {
-    return this.findOne({ where: { evmAddress } });
+    return this.findOne({
+      where: { evmAddress },
+      relations: { campaigns: true, exchangeAPIKeys: true },
+    });
   }
 }

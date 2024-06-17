@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEthereumAddress,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 
 export class SignatureBodyDto {
   @ApiProperty()
@@ -22,15 +27,50 @@ export class SignatureBodyDto {
 }
 
 export class ExchangeAPIKeyCreateRequestDto {
-  @ApiProperty()
+  @ApiProperty({
+    name: 'exchange_name',
+    description: 'Name of the exchange',
+  })
   @IsString()
   public exchangeName: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    name: 'api_key',
+    description: 'Read-only API key for the exchange',
+  })
   @IsString()
   public apiKey: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    name: 'secret',
+    description: 'Read-only API secret for the exchange',
+  })
   @IsString()
   public secret: string;
+}
+
+export class CampaignRegisterRequestDto {
+  @ApiProperty({
+    name: 'chain_id',
+    description: 'Chain ID of the campaign',
+  })
+  @IsNumber()
+  public chainId: number;
+
+  @ApiProperty({
+    name: 'address',
+    description: 'Address of the campaign',
+  })
+  @IsString()
+  @IsEthereumAddress()
+  public address: string;
+}
+
+export class CampaignRegisterResponseDto {
+  @ApiProperty({
+    name: 'success',
+    description: 'Whether the registration was successful',
+  })
+  @IsBoolean()
+  public success: boolean;
 }

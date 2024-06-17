@@ -2,10 +2,11 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
+  HttpStatus,
 } from '@nestjs/common';
 
 import { ServerConfigService } from '../config/server-config.service';
+import { ControlledError } from '../errors/controlled';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
@@ -17,12 +18,12 @@ export class ApiKeyGuard implements CanActivate {
     const apiKey = request.headers['x-api-key'];
 
     if (!apiKey) {
-      throw new UnauthorizedException('API key is missing.');
+      throw new ControlledError('API key is missing.', HttpStatus.UNAUTHORIZED);
     }
 
     // call your env. var the name you want
     if (apiKey !== this.serverConfigService.apiKey) {
-      throw new UnauthorizedException('Invalid API key.');
+      throw new ControlledError('Invalid API key.', HttpStatus.UNAUTHORIZED);
     }
 
     return true;

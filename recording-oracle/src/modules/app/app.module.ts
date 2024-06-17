@@ -13,8 +13,14 @@ import { SnakeCaseInterceptor } from '../../common/interceptors/snake-case';
 import { HttpValidationPipe } from '../../common/pipes';
 import { DatabaseModule } from '../../database/database.module';
 import { AuthModule } from '../auth/auth.module';
+import { CampaignModule } from '../campaign/campaign.module';
+import { ExchangeModule } from '../exchange/exchange.module';
 import { HealthModule } from '../health/health.module';
+import { LiquidityScoreModule } from '../liquidity-score/liquidity-score.module';
+import { RecordsModule } from '../records/records.module';
+import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
+import { Web3Module } from '../web3/web3.module';
 
 import { AppController } from './app.controller';
 
@@ -46,6 +52,12 @@ import { AppController } from './app.controller';
     HealthModule,
     AuthModule,
     UserModule,
+    CampaignModule,
+    ExchangeModule,
+    RecordsModule,
+    StorageModule,
+    Web3Module,
+    LiquidityScoreModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../../', 'node_modules/swagger-ui-dist'),
     }),
