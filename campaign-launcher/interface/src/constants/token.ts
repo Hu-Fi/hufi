@@ -36,4 +36,9 @@ export const TOKENS: TokenData[] = [
     label: 'HUSD',
     icon: usdcLogo,
   },
+  {
+    name: '0xf15d41e06fe329427c643ed2203f14c409cb4b85',
+    label: 'HUSD',
+    icon: usdcLogo,
+  },
 ];

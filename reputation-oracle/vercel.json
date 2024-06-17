@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "yarn build",
+  "buildCommand": "yarn build && yarn migration:run",
   "outputDirectory": "dist",
   "functions": {
     "api/app.ts": {

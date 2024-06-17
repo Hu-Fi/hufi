@@ -4,13 +4,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { lastValueFrom } from 'rxjs';
 
+import { Web3ConfigService } from '../../common/config/web3-config.service';
 import { SUPPORTED_CHAIN_IDS } from '../../common/constants/networks';
 import { EventType } from '../../common/enums';
 import { Manifest } from '../../common/interfaces/manifest';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
 import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
-
-import { Web3ConfigService } from 'src/common/config/web3-config.service';
 
 interface CampaignWithManifest extends Manifest {
   escrowAddress: string;
@@ -93,15 +92,15 @@ export class PayoutService {
   }
 
   // Method to manually execute payouts and disable auto cron
-  async manualPayout(): Promise<void> {
+  async manualPayout(chainId = ChainId.ALL): Promise<void> {
     this.disableCron();
-    await this.processPayouts();
+    await this.processPayouts(chainId);
   }
 
   // Process the payouts (used by both cron and manual methods)
-  private async processPayouts(): Promise<void> {
+  private async processPayouts(chainId = ChainId.ALL): Promise<void> {
     // Ensure campaigns are fetched before executing cron job
-    await this.fetchCampaigns(ChainId.ALL);
+    await this.fetchCampaigns(chainId);
 
     // Iterate over each campaign and create a webhook
     for (const campaign of this.campaigns) {

@@ -69,7 +69,7 @@ export const useMintHUSD = () => {
                 Math.random() * HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES.length
               )
             ],
-          token: await husdContract.getAddress(),
+          token: (await husdContract.getAddress()).toLowerCase(),
           fundAmount,
           startDate: new Date().toISOString(),
           duration: HUSD_MARKET_MAKING_CAMPAIGN_DURATION,

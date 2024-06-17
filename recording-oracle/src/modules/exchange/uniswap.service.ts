@@ -19,17 +19,17 @@ export class UniswapService {
     }>(
       chainId,
       gql`
-        query getSwaps($sender: String!, $token: String!, $since: Int!) {
+        query getSwaps($origin: String!, $token: String!, $since: Int!) {
           swaps(
-            where: { sender: $sender, token0: $token, timestamp_gt: $since }
+            where: { origin: $origin, token0: $token, timestamp_gt: $since }
           ) {
             amount0
           }
         }
       `,
       {
-        sender: operator,
-        token,
+        origin: operator.toLowerCase(),
+        token: token.toLowerCase(),
         since: sinceTimestamp,
       },
     );
@@ -39,20 +39,22 @@ export class UniswapService {
     }>(
       chainId,
       gql`
-        query getSwaps($sender: String!, $token: String!, $since: Int!) {
+        query getSwaps($origin: String!, $token: String!, $since: Int!) {
           swaps(
-            where: { sender: $sender, token1: $token, timestamp_gt: $since }
+            where: { origin: $origin, token1: $token, timestamp_gt: $since }
           ) {
             amount1
           }
         }
       `,
       {
-        sender: operator,
-        token,
+        origin: operator.toLowerCase(),
+        token: token.toLowerCase(),
         since: sinceTimestamp,
       },
     );
+
+    console.log(sellTrades, buyTrades);
 
     return [
       ...sellTrades.swaps.map((trade: any) => +trade.amount0),
