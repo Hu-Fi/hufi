@@ -14,7 +14,7 @@ export const MAINNET_CHAIN_IDS = [
 
 export const SUPPORTED_CHAIN_IDS = [
   //   ChainId.MAINNET,
-  //   ChainId.SEPOLIA,
+  ChainId.SEPOLIA,
   //   ChainId.BSC_MAINNET,
   //   ChainId.BSC_TESTNET,
   ChainId.POLYGON,

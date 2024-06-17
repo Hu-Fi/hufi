@@ -11,11 +11,11 @@ export class CampaignRepository extends BaseRepository<CampaignEntity> {
   }
 
   async findAll(): Promise<CampaignEntity[]> {
-    return this.findAll();
+    return this.find({ relations: { users: true } });
   }
 
   async findById(id: string): Promise<CampaignEntity | null> {
-    return this.findOne({ where: { id } });
+    return this.findOne({ where: { id }, relations: { users: true } });
   }
 
   public async findOneByChainIdAndAddress(

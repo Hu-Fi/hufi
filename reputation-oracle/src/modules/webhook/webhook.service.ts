@@ -1,4 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import { EscrowClient, EscrowUtils } from '@human-protocol/sdk';
 import {
   BadRequestException,
@@ -7,6 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ethers } from 'ethers';
 import { LessThanOrEqual } from 'typeorm';
 
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
@@ -104,7 +104,7 @@ export class WebhookService {
       const recipients = this.getRecipients(intermediateResults);
       const totalAmount = await escrowClient.getBalance(escrowAddress);
       const amounts = this.calculateCampaignPayoutAmounts(
-        BigNumber.from(totalAmount),
+        BigInt(totalAmount),
         intermediateResults,
       );
 
@@ -141,33 +141,29 @@ export class WebhookService {
   }
 
   public calculateCampaignPayoutAmounts(
-    totalAmount: BigNumber,
+    totalAmount: bigint,
     results: LiquidityDto[],
   ): bigint[] {
     // Convert the liquidity scores to BigNumber for precision in calculations.
     const bigNumberResults = results.map((result) => ({
       ...result,
-      liquidityScore: BigNumber.from(result.liquidityScore),
+      liquidityScore: ethers.parseEther(result.liquidityScore),
     }));
 
     // Calculate the total liquidity score as a BigNumber.
     const totalLiquidityScore = bigNumberResults.reduce(
-      (total, item) => total.add(item.liquidityScore),
-      BigNumber.from(0),
+      (total, item) => total + item.liquidityScore,
+      BigInt(0),
     );
 
     // Map through each result, calculate each recipient's payout, and return the array.
     const payouts = bigNumberResults.map((result) => {
       const participantScore = result.liquidityScore;
-      const participantPercentage = participantScore.div(totalLiquidityScore);
-      return BigInt(totalAmount.mul(participantPercentage).toString());
+      const participantPercentage = participantScore / totalLiquidityScore;
+      return totalAmount * participantPercentage;
     });
 
     return payouts;
-  }
-
-  public convertBigNumberToBigInt(bigNumberArray: BigNumber[]): bigint[] {
-    return bigNumberArray.map((bn) => BigInt(bn.toString()));
   }
 
   /**
@@ -235,8 +231,8 @@ export class WebhookService {
       );
 
       if (escrow.finalResultsUrl) {
-        const balance = BigNumber.from(escrow.balance);
-        if (balance.isZero()) {
+        const balance = BigInt(escrow.balance);
+        if (balance === 0n) {
           await escrowClient.complete(webhookEntity.escrowAddress);
         }
         await this.webhookRepository.updateOne(

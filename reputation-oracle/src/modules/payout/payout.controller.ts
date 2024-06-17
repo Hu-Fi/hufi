@@ -1,5 +1,5 @@
-import { Controller, Post } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Param, Post } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
 import { PayoutService } from './payout.service';
 
@@ -32,6 +32,18 @@ export class PayoutController {
   @Post('manual-payout')
   async manualPayout() {
     await this.payoutService.manualPayout();
+    return { message: 'Manual payout executed and cron job disabled' };
+  }
+
+  @ApiOperation({ summary: 'Manually execute payouts for chain id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Manual payout executed and cron job disabled',
+  })
+  @ApiParam({ name: 'chainId', description: 'Chain ID', required: true })
+  @Post('manual-payout/:chainId')
+  async manualPayoutForChainId(@Param('chainId') chainId: number) {
+    await this.payoutService.manualPayout(chainId);
     return { message: 'Manual payout executed and cron job disabled' };
   }
 }

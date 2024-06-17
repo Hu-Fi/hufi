@@ -1,5 +1,5 @@
 export const SERVICE_NAME = 'Reputation Oracle';
-export const NS = 'hmt';
+export const NS = 'hufi';
 export const RETRIES_COUNT_THRESHOLD = 3;
 export const INITIAL_REPUTATION = 0;
 export const JWT_PREFIX = 'bearer ';

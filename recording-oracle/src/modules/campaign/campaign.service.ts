@@ -84,6 +84,7 @@ export class CampaignService {
     campaign.endDate = new Date(campaignData.endBlock * 1000);
     campaign.fundToken = campaignDetails.token;
     campaign.fundAmount = campaignData.fundAmount;
+    campaign.lastSyncedAt = new Date(campaignData.startBlock * 1000);
 
     return await this.campaignRepository.createUnique(campaign);
   }

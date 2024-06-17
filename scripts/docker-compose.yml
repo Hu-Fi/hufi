@@ -55,6 +55,8 @@ services:
       /usr/bin/mc config host add myminio http://minio:9000 user password;
       /usr/bin/mc mb myminio/manifests;
       /usr/bin/mc anonymous set public myminio/manifests;
+      /usr/bin/mc mb myminio/recordings;
+      /usr/bin/mc anonymous set public myminio/recordings;
       /usr/bin/mc mb myminio/reputations;
       /usr/bin/mc anonymous set public myminio/reputations;
       "

@@ -22,12 +22,10 @@ export class StorageService {
       useSSL: this.s3ConfigService.useSSL,
     });
   }
-  public getUrl(escrowAddress: string, chainId: ChainId): string {
+  public getUrl(key: string): string {
     return `${this.s3ConfigService.useSSL ? 'https' : 'http'}://${
       this.s3ConfigService.endPoint
-    }:${this.s3ConfigService.port}/${
-      this.s3ConfigService.bucket
-    }/${escrowAddress}-${chainId}.json`;
+    }:${this.s3ConfigService.port}/${this.s3ConfigService.bucket}/${key}`;
   }
 
   public async download(url: string): Promise<any> {
@@ -62,7 +60,7 @@ export class StorageService {
         },
       );
 
-      return { url: this.getUrl(escrowAddress, chainId), hash };
+      return { url: this.getUrl(filename), hash };
     } catch (e) {
       throw new BadRequestException('File not uploaded');
     }

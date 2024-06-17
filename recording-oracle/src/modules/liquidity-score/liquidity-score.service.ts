@@ -45,7 +45,7 @@ export class LiquidityScoreService {
 
   public async calculateLiquidityScore(
     payload: LiquidityScoreCalculateRequestDto,
-  ): Promise<UploadFile> {
+  ): Promise<UploadFile | null> {
     const campaign = await this.campaignService.getCampaign(
       payload.chainId,
       payload.address,
@@ -57,6 +57,10 @@ export class LiquidityScoreService {
 
     const campaignLiquidityScore =
       await this._calculateCampaignLiquidityScore(campaign);
+
+    if (!campaignLiquidityScore.length) {
+      return null;
+    }
 
     return await this.recordsService.pushLiquidityScores(
       campaign.address,
@@ -99,9 +103,11 @@ export class LiquidityScoreService {
         );
       }
 
-      await this._saveLiquidityScore(campaign, user, liquidityScore);
+      if (liquidityScore === 0) {
+        continue;
+      }
 
-      await this.campaignService.updateLastSyncedAt(campaign, new Date());
+      await this._saveLiquidityScore(campaign, user, liquidityScore);
 
       campaignLiquidityScore.push({
         chainId: campaign.chainId,
@@ -109,6 +115,8 @@ export class LiquidityScoreService {
         liquidityScore: liquidityScore.toString(),
       });
     }
+
+    await this.campaignService.updateLastSyncedAt(campaign, new Date());
 
     return campaignLiquidityScore;
   }
