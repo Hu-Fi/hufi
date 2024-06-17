@@ -22,11 +22,19 @@
       "destination": "api/app.ts"
     },
     {
-      "source": "/api/records/(.*)",
+      "source": "/api/auth/(.*)",
       "destination": "api/app.ts"
     },
     {
-      "source": "/api/users/(.*)",
+      "source": "/api/user/(.*)",
+      "destination": "api/app.ts"
+    },
+    {
+      "source": "/api/campaign",
+      "destination": "api/app.ts"
+    },
+    {
+      "source": "/api/liquidity-score/calculate",
       "destination": "api/app.ts"
     }
   ],
