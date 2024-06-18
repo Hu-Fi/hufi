@@ -104,7 +104,7 @@ export class WebhookService {
       const recipients = this.getRecipients(intermediateResults);
       const totalAmount = await escrowClient.getBalance(escrowAddress);
       const amounts = this.calculateCampaignPayoutAmounts(
-        BigInt(totalAmount),
+        totalAmount,
         intermediateResults,
       );
 
@@ -153,15 +153,13 @@ export class WebhookService {
     // Calculate the total liquidity score as a BigNumber.
     const totalLiquidityScore = bigNumberResults.reduce(
       (total, item) => total + item.liquidityScore,
-      BigInt(0),
+      0n,
     );
 
     // Map through each result, calculate each recipient's payout, and return the array.
-    const payouts = bigNumberResults.map((result) => {
-      const participantScore = result.liquidityScore;
-      const participantPercentage = participantScore / totalLiquidityScore;
-      return totalAmount * participantPercentage;
-    });
+    const payouts = bigNumberResults.map(
+      (result) => (totalAmount * result.liquidityScore) / totalLiquidityScore,
+    );
 
     return payouts;
   }
