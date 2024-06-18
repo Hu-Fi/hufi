@@ -1,4 +1,4 @@
-import { EscrowUtils, ChainId } from '@human-protocol/sdk';
+import { EscrowUtils, ChainId, EscrowStatus } from '@human-protocol/sdk';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -13,6 +13,7 @@ import { WebhookService } from '../webhook/webhook.service'; // Import WebhookSe
 
 interface CampaignWithManifest extends Manifest {
   escrowAddress: string;
+  status: EscrowStatus;
 }
 
 @Injectable()
@@ -56,6 +57,7 @@ export class PayoutService {
               ...manifest,
               escrowAddress: campaign.address,
               chainId: campaign.chainId,
+              status: +campaign.status,
             } as CampaignWithManifest;
           }),
         );
@@ -104,6 +106,14 @@ export class PayoutService {
 
     // Iterate over each campaign and create a webhook
     for (const campaign of this.campaigns) {
+      // Only Pending or Partial
+      if (
+        campaign.status !== EscrowStatus.Pending &&
+        campaign.status !== EscrowStatus.Partial
+      ) {
+        continue;
+      }
+
       const data: WebhookIncomingDto = {
         chainId: campaign.chainId,
         eventType: EventType.CAMPAIGN_PAYOUT,

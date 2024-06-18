@@ -54,11 +54,9 @@ export class UniswapService {
       },
     );
 
-    console.log(sellTrades, buyTrades);
-
     return [
-      ...sellTrades.swaps.map((trade: any) => +trade.amount0),
-      ...buyTrades.swaps.map((trade: any) => +trade.amount1),
+      ...sellTrades.swaps.map((trade: any) => Math.abs(+trade.amount0)),
+      ...buyTrades.swaps.map((trade: any) => Math.abs(+trade.amount1)),
     ];
   }
 
