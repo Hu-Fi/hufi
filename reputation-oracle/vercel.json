@@ -28,6 +28,10 @@
     {
       "source": "/api/webhook/(.*)",
       "destination": "api/app.ts"
+    },
+    {
+      "source": "/api/payout/(.*)",
+      "destination": "api/app.ts"
     }
   ],
   "headers": [
