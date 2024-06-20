@@ -87,6 +87,10 @@ export const Main: FC = () => {
               format: (value) =>
                 `${ethers.formatEther(value as BigNumberish)} HMT`,
             },
+            {
+              id: 'status',
+              label: 'Status',
+            },
           ]}
           data={campaigns}
         />
