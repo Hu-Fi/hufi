@@ -1,16 +1,18 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Logger, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Public } from '../../common/decorators';
+import { SignatureBodyDto } from '../user/user.dto';
+import { UserService } from '../user/user.service';
 
 import {
   AuthDto,
+  PrepareSignatureDto,
   RefreshTokenDto,
   Web3SignInDto,
   Web3SignUpDto,
 } from './auth.dto';
 import { AuthService } from './auth.service';
-import { TokenRepository } from './token.repository';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -19,11 +21,12 @@ export class AuthController {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly tokenRepository: TokenRepository,
+    private readonly userService: UserService,
   ) {}
 
   @Public()
   @Post('/web3/signup')
+  @HttpCode(200)
   @ApiOperation({
     summary: 'Web3 User Signup',
     description: 'Endpoint for Web3 user registration.',
@@ -44,6 +47,7 @@ export class AuthController {
 
   @Public()
   @Post('/web3/signin')
+  @HttpCode(200)
   @ApiOperation({
     summary: 'Web3 User Signin',
     description: 'Endpoint for Web3 user authentication.',
@@ -64,6 +68,7 @@ export class AuthController {
 
   @Public()
   @Post('/refresh-token')
+  @HttpCode(200)
   @ApiBody({ type: RefreshTokenDto })
   @ApiOperation({
     summary: 'Refresh Token',
@@ -76,5 +81,29 @@ export class AuthController {
   })
   async refreshToken(@Body() data: RefreshTokenDto): Promise<AuthDto> {
     return this.authService.refreshToken(data);
+  }
+
+  @Public()
+  @Post('/prepare-signature')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Web3 signature body',
+    description:
+      'Endpoint for generating typed structured data objects compliant with EIP-712. The generated object should be convertible to a string format to ensure compatibility with signature mechanisms.',
+  })
+  @ApiBody({ type: PrepareSignatureDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Typed structured data object generated successfully',
+    type: SignatureBodyDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. Missing or invalid credentials.',
+  })
+  public async prepareSignature(
+    @Body() data: PrepareSignatureDto,
+  ): Promise<SignatureBodyDto> {
+    return await this.userService.prepareSignatureBody(data.type, data.address);
   }
 }

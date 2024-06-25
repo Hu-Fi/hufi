@@ -1,0 +1,1 @@
+export { CampaignDetail } from './CampaignDetail';

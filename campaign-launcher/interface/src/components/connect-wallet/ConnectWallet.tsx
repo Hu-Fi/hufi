@@ -16,11 +16,13 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { ethers } from 'ethers';
 import { useAccount, useDisconnect } from 'wagmi';
 
 import { WalletModal } from './WalletModal';
 import profileSvg from '../../assets/profile.svg';
 import { useWalletBalance } from '../../hooks';
+import { useAuthentication } from '../../hooks/recording-oracle';
 import { shortenAddress } from '../../utils/address';
 import { CopyLinkIcon, OpenInNewIcon } from '../icons';
 
@@ -49,6 +51,7 @@ const ProfileMenu = styled((props: MenuProps) => (
 export const ConnectWallet: FC = () => {
   const { address, chainId } = useAccount();
   const { disconnect } = useDisconnect();
+  const { signOut } = useAuthentication();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -86,6 +89,11 @@ export const ConnectWallet: FC = () => {
       </>
     );
   }
+
+  const walletBalanceFormatted = ethers.formatUnits(
+    walletBalance.value || 0,
+    walletBalance.decimals
+  );
 
   return (
     <>
@@ -148,7 +156,10 @@ export const ConnectWallet: FC = () => {
               <IconButton
                 color="primary"
                 sx={{ background: '#F6F7FE' }}
-                onClick={() => disconnect()}
+                onClick={() => {
+                  disconnect();
+                  signOut();
+                }}
               >
                 <LogoutIcon />
               </IconButton>
@@ -156,7 +167,7 @@ export const ConnectWallet: FC = () => {
           </Stack>
         </Box>
         <Typography variant="h4" fontWeight={600} textAlign="center" mt={4}>
-          {walletBalance?.formatted} HMT
+          {(+walletBalanceFormatted).toFixed(2)} HMT
         </Typography>
         <Typography
           color="text.secondary"
@@ -164,8 +175,8 @@ export const ConnectWallet: FC = () => {
           textAlign="center"
           mt={1}
         >
-          {walletBalance?.formatted && walletBalance?.usdPrice
-            ? `$ ${Number(walletBalance.formatted) * walletBalance.usdPrice}`
+          {walletBalanceFormatted && walletBalance?.usdPrice
+            ? `$ ${(+walletBalanceFormatted * walletBalance.usdPrice).toFixed(2)}`
             : ''}
         </Typography>
       </ProfileMenu>

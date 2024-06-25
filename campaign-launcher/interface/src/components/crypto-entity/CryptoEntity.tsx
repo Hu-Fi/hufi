@@ -19,7 +19,9 @@ export const CryptoEntity: FC<CryptoEntityProps> = ({ name }) => {
   return (
     <Box display="flex" alignItems="center" gap={1}>
       {icon && <img src={icon} alt={name} width={24} />}
-      <Typography>{label ?? '-'}</Typography>
+      <Typography color="primary" variant="body2">
+        {label ?? '-'}
+      </Typography>
     </Box>
   );
 };
