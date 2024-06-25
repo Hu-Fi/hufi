@@ -3,6 +3,7 @@ import { FC, useState } from 'react';
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import { Box, Link, SelectChangeEvent, Typography } from '@mui/material';
 import { BigNumberish, ethers } from 'ethers';
+import { useNavigate } from 'react-router-dom';
 
 import { CryptoEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
@@ -16,6 +17,7 @@ import dayjs from '../../utils/dayjs';
 export const Main: FC = () => {
   const [chainId, setChainId] = useState(ChainId.ALL);
   const { loading, campaigns } = useCampaigns(chainId);
+  const navigate = useNavigate();
 
   const handleNetworkChange = (e: SelectChangeEvent<ChainId>) => {
     setChainId(e.target.value as ChainId);
@@ -93,6 +95,9 @@ export const Main: FC = () => {
             },
           ]}
           data={campaigns}
+          onClickRow={(row) => {
+            navigate(`/campaign-detail/${row.chainId}/${row.address}`);
+          }}
         />
       )}
     </Box>

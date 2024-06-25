@@ -1,5 +1,6 @@
 import { FC } from 'react';
 
+import { CampaignDetail } from './pages/campaign-detail';
 import { CreateCampaign } from './pages/create-campaign';
 import { Main } from './pages/main';
 import { MintHUSD } from './pages/mint-husd';
@@ -17,6 +18,7 @@ export const PATHS = {
   CREATE_CAMPAIGN: '/create-campaign',
   MINT_HUSD: '/mint-husd',
   STAKE_HMT: '/stake-hmt',
+  CAMPAIGN_DETAIL: '/campaign-detail/:chainId/:address',
 };
 
 export const ROUTES: Array<Route> = [
@@ -43,5 +45,11 @@ export const ROUTES: Array<Route> = [
     title: 'Stake HMT',
     path: PATHS.STAKE_HMT,
     component: StakeHMT,
+  },
+  {
+    key: 'campaign-detail',
+    title: 'Campaign Detail',
+    path: PATHS.CAMPAIGN_DETAIL,
+    component: CampaignDetail,
   },
 ];

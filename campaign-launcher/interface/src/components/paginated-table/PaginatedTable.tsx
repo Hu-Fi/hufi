@@ -24,12 +24,14 @@ export type PaginatedTableProps<T> = {
   columns: Column<T>[];
   data: T[];
   rowsPerPageOptions?: number[];
+  onClickRow?: (row: T) => void;
 };
 
 export function PaginatedTable<T>({
   columns,
   data,
   rowsPerPageOptions = [5, 10, 25],
+  onClickRow,
 }: PaginatedTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
@@ -67,7 +69,13 @@ export function PaginatedTable<T>({
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => {
                 return (
-                  <TableRow key={`row-${index}`}>
+                  <TableRow
+                    key={`row-${index}`}
+                    onClick={() => onClickRow?.(row)}
+                    sx={{
+                      ...(onClickRow ? { cursor: 'pointer' } : {}),
+                    }}
+                  >
                     {columns.map((column) => (
                       <TableCell
                         key={column.id.toString()}

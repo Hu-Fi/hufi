@@ -158,4 +158,14 @@ export class UserService {
     }
     await user.save();
   }
+
+  public async checkCampaignRegistration(user: UserEntity, address: string) {
+    return user.campaigns?.some(
+      (c) => c.address.toLowerCase() === address.toLowerCase(),
+    );
+  }
+
+  public async checkUserExists(address: string): Promise<boolean> {
+    return !!(await this.userRepository.findOneByEvmAddress(address));
+  }
 }

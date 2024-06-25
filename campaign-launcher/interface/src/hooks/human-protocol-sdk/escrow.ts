@@ -134,3 +134,55 @@ export const useCampaigns = (chainId: ChainId) => {
 
   return { campaigns, loading };
 };
+
+export const useCampaign = (chainId: ChainId, address: string) => {
+  const { setNotification } = useNotification();
+
+  const [campaign, setCampaign] = useState<CampaignData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCampaign = async () => {
+    setLoading(true);
+    try {
+      const campaign = await EscrowUtils.getEscrow(chainId, address);
+
+      let manifest;
+
+      try {
+        if (campaign.manifestUrl) {
+          // @dev Temporary fix to handle http/https issue
+          const url = campaign.manifestUrl.replace(
+            'http://storage.googleapis.com:80',
+            'https://storage.googleapis.com'
+          );
+          manifest = await fetch(url).then((res) => res.json());
+        }
+      } catch {
+        manifest = undefined;
+      }
+
+      if (!manifest) {
+        return undefined;
+      }
+
+      setCampaign({
+        ...manifest,
+        ...campaign,
+        symbol: manifest.token.toLowerCase(),
+      });
+    } catch (e) {
+      setNotification({
+        type: 'error',
+        message: (e as Error).message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCampaign();
+  }, [chainId, address]);
+
+  return { campaign, loading };
+};

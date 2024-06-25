@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsEthereumAddress, IsString, IsUUID } from 'class-validator';
+
+import { SignatureType } from '../../common/enums/web3';
 
 export class AuthDto {
   @ApiProperty({ name: 'refresh_token' })
@@ -37,6 +39,19 @@ export class RefreshTokenDto {
   @ApiProperty({ name: 'refresh_token' })
   @IsUUID()
   public refreshToken: string;
+}
+
+export class PrepareSignatureDto {
+  @ApiProperty()
+  @IsString()
+  @IsEthereumAddress()
+  public address: string;
+
+  @ApiProperty({
+    enum: SignatureType,
+  })
+  @IsEnum(SignatureType)
+  public type: SignatureType;
 }
 
 // export class ForgotPasswordDto {
