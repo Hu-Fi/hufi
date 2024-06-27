@@ -18,10 +18,14 @@ export type MintHUSDFormValues = {
 };
 
 type MintHUSDFormProps = {
+  isSubmitting?: boolean;
   onSubmit: (data: MintHUSDFormValues) => void;
 };
 
-export const MintHUSDForm: FC<MintHUSDFormProps> = ({ onSubmit }) => {
+export const MintHUSDForm: FC<MintHUSDFormProps> = ({
+  isSubmitting,
+  onSubmit,
+}) => {
   const account = useAccount();
 
   const {
@@ -80,7 +84,7 @@ export const MintHUSDForm: FC<MintHUSDFormProps> = ({ onSubmit }) => {
             color="primary"
             type="submit"
             sx={{ py: 2, borderRadius: 2 }}
-            disabled={!account.isConnected}
+            disabled={!account.isConnected || isSubmitting}
           >
             Mint
           </Button>

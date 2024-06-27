@@ -24,12 +24,6 @@ export class WebhookController {
   @Public()
   @Get('/cron/pending')
   public async processPendingCronJob(): Promise<any> {
-    return this.webhookService.processPendingCronJob();
-  }
-
-  @Public()
-  @Get('/cron/paid')
-  public async processPaidCronJob(): Promise<any> {
-    return this.webhookService.processPaidCronJob();
+    return this.webhookService.processPendingWebhooks();
   }
 }

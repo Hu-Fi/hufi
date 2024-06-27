@@ -1,15 +1,15 @@
-import { EscrowUtils, ChainId } from '@human-protocol/sdk';
+import { EscrowUtils, ChainId, EscrowClient } from '@human-protocol/sdk';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { lastValueFrom } from 'rxjs';
 
 import { Web3ConfigService } from '../../common/config/web3-config.service';
-import { SUPPORTED_CHAIN_IDS } from '../../common/constants/networks';
 import { EventType } from '../../common/enums';
 import { Manifest } from '../../common/interfaces/manifest';
+import { Web3Service } from '../web3/web3.service';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
-import { WebhookService } from '../webhook/webhook.service'; // Import WebhookService
+import { WebhookService } from '../webhook/webhook.service';
 
 interface CampaignWithManifest extends Manifest {
   escrowAddress: string;
@@ -20,10 +20,11 @@ interface CampaignWithManifest extends Manifest {
 export class PayoutService {
   private readonly logger = new Logger(PayoutService.name);
   private campaigns: Array<CampaignWithManifest> = [];
-  private cronEnabled: boolean = false; // Flag to control the cron job
+  private cronEnabled: boolean = true; // Flag to control the cron job
 
   constructor(
     private web3ConfigService: Web3ConfigService,
+    private web3Service: Web3Service,
     private httpService: HttpService,
     private webhookService: WebhookService, // Inject WebhookService
   ) {}
@@ -31,7 +32,10 @@ export class PayoutService {
   async fetchCampaigns(chainId: number): Promise<void> {
     try {
       const campaigns = await EscrowUtils.getEscrows({
-        networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
+        networks:
+          chainId === ChainId.ALL
+            ? this.web3Service.getValidChains()
+            : [chainId],
         recordingOracle: this.web3ConfigService.recordingOracle,
       });
 
@@ -71,7 +75,12 @@ export class PayoutService {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  /**
+   * Cron job to execute payouts.
+   * Liquidity score calculation is done at midnight every day, by recording oracle,
+   * so, giving a buffer of 3 hours to ensure the liquidity score is calculated before payouts.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async handleCron(): Promise<void> {
     if (!this.cronEnabled) {
       this.logger.log('Cron job is disabled.');
@@ -101,6 +110,8 @@ export class PayoutService {
 
   // Process the payouts (used by both cron and manual methods)
   private async processPayouts(chainId = ChainId.ALL): Promise<void> {
+    this.logger.log('Processing payouts for campaigns.');
+
     // Ensure campaigns are fetched before executing cron job
     await this.fetchCampaigns(chainId);
 
@@ -108,6 +119,11 @@ export class PayoutService {
     for (const campaign of this.campaigns) {
       // Only Pending or Partial
       if (campaign.status !== 'Pending' && campaign.status !== 'Partial') {
+        continue;
+      }
+
+      // Only campaigns that have not ended
+      if (campaign.endBlock * 1000 < new Date().getTime()) {
         continue;
       }
 
@@ -134,14 +150,54 @@ export class PayoutService {
 
     // Process pending webhooks
     try {
-      const processed = await this.webhookService.processPendingCronJob();
-      if (processed) {
-        this.logger.log('Pending webhooks processed successfully.');
-      } else {
-        this.logger.log('No pending webhooks to process.');
-      }
+      this.logger.log('Processing the pending webhooks.');
+      await this.webhookService.processPendingWebhooks();
     } catch (error) {
       this.logger.error('Error processing pending webhooks:', error);
+    }
+  }
+
+  /**
+   * Cron job to cancel expired campaigns / complete the finished campaigns.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_4AM)
+  async finalizeCampaigns(): Promise<void> {
+    this.logger.log('Checking expired campaigns.');
+
+    // Ensure campaigns are fetched before executing cron job
+    await this.fetchCampaigns(ChainId.ALL);
+
+    // Iterate over each campaign and finalize it
+    for (const campaign of this.campaigns) {
+      try {
+        const signer = this.web3Service.getSigner(campaign.chainId);
+        const escrowClient = await EscrowClient.build(signer);
+
+        const escrow = await EscrowUtils.getEscrow(
+          campaign.chainId,
+          campaign.escrowAddress,
+        );
+
+        const balance = BigInt(escrow.balance);
+
+        if (balance === 0n) {
+          if (campaign.status === 'Paid') {
+            this.logger.log(
+              `Completing campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
+            );
+            await escrowClient.complete(campaign.escrowAddress);
+          }
+        } else {
+          if (campaign.endBlock * 1000 < new Date().getTime()) {
+            this.logger.log(
+              `Cancelling campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
+            );
+            await escrowClient.cancel(campaign.escrowAddress);
+          }
+        }
+      } catch (error) {
+        this.logger.error('Error finalizing campaign:', error);
+      }
     }
   }
 }

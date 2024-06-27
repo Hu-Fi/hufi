@@ -1,4 +1,5 @@
-import { EscrowClient, EscrowUtils } from '@human-protocol/sdk';
+import { EscrowClient } from '@human-protocol/sdk';
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   Inject,
@@ -7,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ethers } from 'ethers';
+import { lastValueFrom } from 'rxjs';
 import { LessThanOrEqual } from 'typeorm';
 
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
@@ -22,11 +24,13 @@ import { WebhookRepository } from './webhook.repository';
 @Injectable()
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
+
   constructor(
     private readonly web3Service: Web3Service,
     @Inject(StorageService)
     private readonly storageService: StorageService,
     private readonly webhookRepository: WebhookRepository,
+    private readonly httpService: HttpService,
   ) {}
 
   /**
@@ -69,8 +73,8 @@ export class WebhookService {
    * @param webhookEntity The entity representing the webhook data.
    * @throws {Error} Will throw an error if processing fails at any step.
    */
-  public async processPendingCronJob(): Promise<boolean> {
-    const webhookEntity = await this.webhookRepository.findOne(
+  public async processPendingWebhooks(): Promise<void> {
+    const webhookEntities = await this.webhookRepository.find(
       {
         status: WebhookStatus.PENDING,
         retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
@@ -83,51 +87,95 @@ export class WebhookService {
       },
     );
 
-    if (!webhookEntity) return false;
+    for (const webhookEntity of webhookEntities) {
+      try {
+        const { chainId, escrowAddress } = webhookEntity;
+        const signer = this.web3Service.getSigner(chainId);
+        const escrowClient = await EscrowClient.build(signer);
 
-    try {
-      const { chainId, escrowAddress } = webhookEntity;
-      const signer = this.web3Service.getSigner(chainId);
-      const escrowClient = await EscrowClient.build(signer);
+        this.logger.log(
+          `Escrow address: ${escrowAddress}`,
+          WebhookService.name,
+        );
 
-      const intermediateResultsUrl =
-        await escrowClient.getIntermediateResultsUrl(escrowAddress);
-      const intermediateResults: LiquidityDto[] = JSON.parse(
-        await this.storageService.download(intermediateResultsUrl),
-      );
-      const { url, hash } = await this.storageService.uploadLiquidities(
-        escrowAddress,
-        chainId,
-        intermediateResults,
-      );
+        const intermediateResultsUrl =
+          await escrowClient.getIntermediateResultsUrl(escrowAddress);
 
-      const recipients = this.getRecipients(intermediateResults);
-      const totalAmount = await escrowClient.getBalance(escrowAddress);
-      const amounts = this.calculateCampaignPayoutAmounts(
-        totalAmount,
-        intermediateResults,
-      );
+        if (!intermediateResultsUrl) {
+          throw new Error('Intermediate result not found');
+        }
 
-      await escrowClient.bulkPayOut(
-        escrowAddress,
-        recipients,
-        amounts,
-        url,
-        hash,
-      );
+        let intermediateResultContent;
+        try {
+          intermediateResultContent = await this.storageService.download(
+            intermediateResultsUrl,
+          );
+        } catch {
+          intermediateResultContent = null;
+        }
+        if (!intermediateResultContent) {
+          throw new Error('Invalid intermediate results');
+        }
 
-      await this.webhookRepository.updateOne(
-        { id: webhookEntity.id },
-        {
-          resultsUrl: url,
-          checkPassed: true,
-          status: WebhookStatus.PAID,
-        },
-      );
+        let intermediateResults;
+        try {
+          intermediateResults = JSON.parse(intermediateResultContent);
+        } catch {
+          intermediateResults = null;
+        }
+        if (!intermediateResults) {
+          throw new Error('Invalid intermediate results');
+        }
 
-      return true;
-    } catch (e) {
-      return await this.handleWebhookError(webhookEntity, e);
+        const { url, hash } = await this.storageService.uploadLiquidities(
+          escrowAddress,
+          chainId,
+          intermediateResults,
+        );
+
+        const recipients = this.getRecipients(intermediateResults);
+        const totalAmount = await escrowClient.getBalance(escrowAddress);
+
+        if (totalAmount === 0n) {
+          throw new Error('No funds to distribute');
+        }
+
+        const manifestUrl = await escrowClient.getManifestUrl(escrowAddress);
+        const response = await lastValueFrom(this.httpService.get(manifestUrl));
+        const manifest = response.data;
+
+        const endBlock = manifest.endBlock;
+        const remainingDays = Math.floor(
+          (endBlock - Math.floor(Date.now() / 1000)) / 86400,
+        );
+        const amountForDay = totalAmount / BigInt(remainingDays);
+
+        const amounts = this.calculateCampaignPayoutAmounts(
+          amountForDay,
+          intermediateResults,
+        );
+
+        this.logger.log(`Recipients: ${recipients}, Amounts: ${amounts}`);
+
+        await escrowClient.bulkPayOut(
+          escrowAddress,
+          recipients,
+          amounts,
+          url,
+          hash,
+        );
+
+        await this.webhookRepository.updateOne(
+          { id: webhookEntity.id },
+          {
+            resultsUrl: url,
+            checkPassed: true,
+            status: WebhookStatus.PAID,
+          },
+        );
+      } catch (e) {
+        await this.handleWebhookError(webhookEntity, e);
+      }
     }
   }
 
@@ -196,54 +244,5 @@ export class WebhookService {
       WebhookService.name,
     );
     return false;
-  }
-
-  /**
-   * Processing a webhook of an entity with a paid status.
-   * @returns {Promise<boolean>} - Return the boolean result of the method.
-   * @throws {Error} - An error object if an error occurred.
-   */
-  public async processPaidCronJob(): Promise<boolean> {
-    const webhookEntity = await this.webhookRepository.findOne(
-      {
-        status: WebhookStatus.PAID,
-        retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
-        waitUntil: LessThanOrEqual(new Date()),
-      },
-      {
-        order: {
-          waitUntil: SortDirection.ASC,
-        },
-      },
-    );
-
-    if (!webhookEntity) return false;
-
-    try {
-      const signer = this.web3Service.getSigner(webhookEntity.chainId);
-      const escrowClient = await EscrowClient.build(signer);
-
-      const escrow = await EscrowUtils.getEscrow(
-        webhookEntity.chainId,
-        webhookEntity.escrowAddress,
-      );
-
-      if (escrow.finalResultsUrl) {
-        const balance = BigInt(escrow.balance);
-        if (balance === 0n) {
-          await escrowClient.complete(webhookEntity.escrowAddress);
-        }
-        await this.webhookRepository.updateOne(
-          {
-            id: webhookEntity.id,
-          },
-          { status: WebhookStatus.COMPLETED },
-        );
-      }
-
-      return true;
-    } catch (e) {
-      return await this.handleWebhookError(webhookEntity, e);
-    }
   }
 }

@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
-import { ChainId, NETWORKS } from '@human-protocol/sdk';
-import { Box, Link, SelectChangeEvent, Typography } from '@mui/material';
+import { ChainId } from '@human-protocol/sdk';
+import { Box, SelectChangeEvent, Typography } from '@mui/material';
 import { BigNumberish, ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 
@@ -43,20 +43,7 @@ export const Main: FC = () => {
             {
               id: 'address',
               label: 'Address',
-              format: (value, row) => (
-                <Link
-                  href={
-                    row?.chainId
-                      ? `${NETWORKS[row.chainId as ChainId]?.scanUrl}/address/${value}`
-                      : '#'
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  underline="none"
-                >
-                  {shortenAddress(value as string)}
-                </Link>
-              ),
+              format: (value) => shortenAddress(value as string),
             },
             {
               id: 'exchangeName',

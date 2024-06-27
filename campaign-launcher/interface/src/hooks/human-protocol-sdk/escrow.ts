@@ -15,13 +15,19 @@ import { ManifestDto } from '../../types/manifest';
 export const useCreateEscrow = () => {
   const { signer, network } = useClientToSigner();
   const { setNotification } = useNotification();
+  const [isLoading, setIsLoading] = useState(false);
 
-  return async (manifest: ManifestUploadResponseDto, amount: number) => {
+  const createEscrow = async (
+    manifest: ManifestUploadResponseDto,
+    amount: number
+  ) => {
+    if (!signer || !network) {
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      if (!signer || !network) {
-        return;
-      }
-
       const escrowClient = await EscrowClient.build(signer);
 
       const escrowAddress = await escrowClient.createEscrow(
@@ -59,8 +65,12 @@ export const useCreateEscrow = () => {
         type: 'error',
         message: (e as Error).message,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  return { createEscrow, isLoading };
 };
 
 export type CampaignData = EscrowData &

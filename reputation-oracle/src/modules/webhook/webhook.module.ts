@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -16,6 +17,7 @@ import { WebhookService } from './webhook.service';
     ConfigModule,
     Web3Module,
     StorageModule,
+    HttpModule,
   ],
   controllers: [WebhookController],
   providers: [Logger, WebhookService, WebhookRepository],

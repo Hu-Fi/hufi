@@ -248,6 +248,8 @@ export class LiquidityScoreService {
         );
       }
     }
+
+    this.logger.log('Finished calculating liquidity scores');
   }
 }
 

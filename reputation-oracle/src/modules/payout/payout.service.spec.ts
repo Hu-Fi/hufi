@@ -31,7 +31,7 @@ describe('PayoutService', () => {
           provide: WebhookService,
           useValue: {
             createIncomingWebhook: jest.fn(),
-            processPendingCronJob: jest.fn(),
+            processPendingWebhooks: jest.fn(),
           },
         },
       ],
@@ -64,7 +64,7 @@ describe('PayoutService', () => {
     it('should not process payouts if cron is disabled', async () => {
       service.disableCron();
       await service.handleCron();
-      expect(webhookService.processPendingCronJob).not.toHaveBeenCalled();
+      expect(webhookService.processPendingWebhooks).not.toHaveBeenCalled();
     });
 
     it('should process payouts if cron is enabled', async () => {
@@ -144,7 +144,7 @@ describe('PayoutService', () => {
       jest.spyOn(httpService, 'get').mockReturnValue(of(axiosResponse));
       await service['processPayouts']();
 
-      expect(webhookService.processPendingCronJob).toHaveBeenCalled();
+      expect(webhookService.processPendingWebhooks).toHaveBeenCalled();
     });
   });
 });

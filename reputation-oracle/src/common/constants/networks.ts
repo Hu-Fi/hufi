@@ -1,16 +1,8 @@
 import { ChainId } from '@human-protocol/sdk';
 
-export const TESTNET_CHAIN_IDS = [
-  ChainId.BSC_TESTNET,
-  ChainId.POLYGON_AMOY,
-  ChainId.SEPOLIA,
-];
+export const TESTNET_CHAIN_IDS = [ChainId.POLYGON_AMOY, ChainId.SEPOLIA];
 
-export const MAINNET_CHAIN_IDS = [
-  ChainId.BSC_MAINNET,
-  ChainId.POLYGON,
-  ChainId.MOONBEAM,
-];
+export const MAINNET_CHAIN_IDS = [ChainId.POLYGON];
 
 export const SUPPORTED_CHAIN_IDS = [
   //   ChainId.MAINNET,
