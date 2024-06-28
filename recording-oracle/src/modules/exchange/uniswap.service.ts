@@ -1,8 +1,10 @@
 import { ChainId } from '@human-protocol/sdk';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class UniswapService {
+  private logger: Logger = new Logger(UniswapService.name);
+
   constructor() {}
 
   public async fetchTrades(
@@ -11,6 +13,10 @@ export class UniswapService {
     token: string,
     since: Date,
   ) {
+    this.logger.log(
+      `Fetching trades for ${operator} on ${token} since ${since.toISOString()}`,
+    );
+
     const { gql } = await this._importGraphQLRequest();
     const sinceTimestamp = Math.floor(since.getTime() / 1000);
 

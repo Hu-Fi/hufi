@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { NS } from '../common/constants';
@@ -19,7 +20,16 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
         typeOrmLoggerService: TypeOrmLoggerService,
         configService: ConfigService,
       ) => {
-        typeOrmLoggerService.setOptions('all');
+        const loggerOptions = configService
+          .get<string>('POSTGRES_LOGGING', '')
+          ?.split(', ');
+
+        typeOrmLoggerService.setOptions(
+          loggerOptions && loggerOptions[0] === 'all'
+            ? 'all'
+            : (loggerOptions as LoggerOptions) ?? false,
+        );
+
         return {
           name: 'default',
           type: 'postgres',

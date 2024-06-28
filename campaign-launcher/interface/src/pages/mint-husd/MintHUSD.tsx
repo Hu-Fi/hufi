@@ -4,11 +4,11 @@ import { MintHUSDForm, MintHUSDFormValues } from './MintHUSDForm';
 import { useMintHUSD } from '../../hooks';
 
 export const MintHUSD: FC = () => {
-  const mintHUSD = useMintHUSD();
+  const { isLoading: isMintingHUSD, mintHUSD } = useMintHUSD();
 
   const handleSubmit = async (data: MintHUSDFormValues) => {
     await mintHUSD(data.amount);
   };
 
-  return <MintHUSDForm onSubmit={handleSubmit} />;
+  return <MintHUSDForm isSubmitting={isMintingHUSD} onSubmit={handleSubmit} />;
 };

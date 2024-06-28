@@ -10,7 +10,7 @@ import { PATHS } from '../../routes';
 
 export const CreateCampaign: FC = () => {
   const { mutateAsync: uploadManifest } = useUploadManifest();
-  const createEscrow = useCreateEscrow();
+  const { isLoading: isCreatingEscrow, createEscrow } = useCreateEscrow();
   const { loading, leader } = useLeader();
   const { setNotification } = useNotification();
 
@@ -37,6 +37,12 @@ export const CreateCampaign: FC = () => {
   }
 
   return (
-    <>{loading ? <Loading /> : <CampaignForm onSubmit={handleSubmit} />}</>
+    <>
+      {loading ? (
+        <Loading />
+      ) : (
+        <CampaignForm isSubmitting={isCreatingEscrow} onSubmit={handleSubmit} />
+      )}
+    </>
   );
 };

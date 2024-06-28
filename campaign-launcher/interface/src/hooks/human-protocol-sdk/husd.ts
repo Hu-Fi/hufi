@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { ChainId } from '@human-protocol/sdk';
 import { ethers, parseUnits } from 'ethers';
 import { useAccount } from 'wagmi';
@@ -19,8 +21,9 @@ export const useMintHUSD = () => {
   const { signer } = useClientToSigner();
   const { setNotification } = useNotification();
   const { mutateAsync: uploadManifest } = useUploadManifest();
+  const [isLoading, setIsLoading] = useState(false);
 
-  return async (amount: number) => {
+  const mintHUSD = async (amount: number) => {
     if (
       !signer ||
       !HUSD_CONTRACT_ADDRESS[chainId as ChainId] ||
@@ -28,6 +31,8 @@ export const useMintHUSD = () => {
     ) {
       return;
     }
+
+    setIsLoading(true);
 
     const husdContract = new ethers.Contract(
       HUSD_CONTRACT_ADDRESS[chainId as ChainId]!,
@@ -83,22 +88,24 @@ export const useMintHUSD = () => {
     }
 
     try {
-      await usdtContract.approve(
+      const approveTx = await usdtContract.approve(
         HUSD_CONTRACT_ADDRESS[chainId as ChainId]!,
         amountInWei
       );
+      await approveTx.wait();
 
       setNotification({
         type: 'success',
         message: 'USDT approved.',
       });
 
-      await husdContract.mint(
+      const mintTx = await husdContract.mint(
         await signer.getAddress(),
         amountInWei,
         manifest?.url || '',
         manifest?.hash || ''
       );
+      await mintTx.wait();
 
       setNotification({
         type: 'success',
@@ -109,6 +116,13 @@ export const useMintHUSD = () => {
         type: 'error',
         message: (e as Error).message,
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  return {
+    mintHUSD,
+    isLoading,
   };
 };

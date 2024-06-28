@@ -3,6 +3,7 @@ import { join } from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { envValidator } from '../../common/config';
@@ -49,6 +50,7 @@ import { AppController } from './app.controller';
       rootPath: join(__dirname, '../../../', 'node_modules/swagger-ui-dist'),
     }),
     EnvConfigModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
 })

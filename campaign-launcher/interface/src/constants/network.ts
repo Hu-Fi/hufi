@@ -5,11 +5,11 @@ export const SUPPORTED_CHAIN_IDS = [
   ChainId.SEPOLIA,
   //   ChainId.BSC_MAINNET,
   //   ChainId.BSC_TESTNET,
-  ChainId.POLYGON,
+  // ChainId.POLYGON,
   ChainId.POLYGON_AMOY,
   //   ChainId.MOONBEAM,
   //   ChainId.MOONBASE_ALPHA,
   //   ChainId.CELO,
   //   ChainId.CELO_ALFAJORES,
-  ...(import.meta.env.MODE === 'development' ? [ChainId.LOCALHOST] : []),
+  // ...(import.meta.env.MODE === 'development' ? [ChainId.LOCALHOST] : []),
 ];
