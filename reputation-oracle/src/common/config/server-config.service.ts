@@ -16,4 +16,7 @@ export class ServerConfigService {
   get sessionSecret(): string {
     return this.configService.get<string>('SESSION_SECRET', 'session-secret');
   }
+  get cronSecret(): string {
+    return this.configService.get<string>('CRON_SECRET', 'cron-secret');
+  }
 }

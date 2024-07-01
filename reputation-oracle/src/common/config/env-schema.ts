@@ -6,6 +6,7 @@ export const envValidator = Joi.object({
   HOST: Joi.string().default('localhost'),
   PORT: Joi.string().default(5002),
   SESSION_SECRET: Joi.string().default('secret'),
+  CRON_SECRET: Joi.string().default('cron-secret'),
   // Auth
   HASH_SECRET: Joi.string().default('a328af3fc1dad15342cc3d68936008fa'),
   JWT_SECRET: Joi.string().default('secret'),
