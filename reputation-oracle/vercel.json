@@ -34,6 +34,16 @@
       "destination": "api/app.ts"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/payout/cron/process-payout",
+      "schedule": "0 08 * * *"
+    },
+    {
+      "path": "/api/payout/cron/finalize-campaign",
+      "schedule": "0 16 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -5,6 +5,8 @@ export enum ExchangeName {
   FourSwap = '4swap',
   ExinOne = 'exin1',
   Uniswap = 'uniswap',
+  BigOne = 'bigone',
+  LBank = 'lbank',
 }
 
 export type ExchangeData = {

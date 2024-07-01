@@ -20,7 +20,6 @@ interface CampaignWithManifest extends Manifest {
 export class PayoutService {
   private readonly logger = new Logger(PayoutService.name);
   private campaigns: Array<CampaignWithManifest> = [];
-  private cronEnabled: boolean = true; // Flag to control the cron job
 
   constructor(
     private web3ConfigService: Web3ConfigService,
@@ -76,40 +75,11 @@ export class PayoutService {
   }
 
   /**
-   * Cron job to execute payouts.
-   * Liquidity score calculation is done at midnight every day, by recording oracle,
-   * so, giving a buffer of 3 hours to ensure the liquidity score is calculated before payouts.
+   * Cron job to process the campaign payouts.
    */
-  @Cron(CronExpression.EVERY_DAY_AT_3AM)
-  async handleCron(): Promise<void> {
-    if (!this.cronEnabled) {
-      this.logger.log('Cron job is disabled.');
-      return;
-    }
-
-    await this.processPayouts();
-  }
-
-  // Method to enable the cron job
-  enableCron() {
-    this.cronEnabled = true;
-    this.logger.log('Cron job enabled.');
-  }
-
-  // Method to disable the cron job
-  disableCron() {
-    this.cronEnabled = false;
-    this.logger.log('Cron job disabled.');
-  }
-
-  // Method to manually execute payouts and disable auto cron
-  async manualPayout(chainId = ChainId.ALL): Promise<void> {
-    this.disableCron();
-    await this.processPayouts(chainId);
-  }
-
+  @Cron(CronExpression.EVERY_DAY_AT_8AM)
   // Process the payouts (used by both cron and manual methods)
-  private async processPayouts(chainId = ChainId.ALL): Promise<void> {
+  async processPayouts(chainId = ChainId.ALL): Promise<void> {
     this.logger.log('Processing payouts for campaigns.');
 
     // Ensure campaigns are fetched before executing cron job
@@ -160,7 +130,7 @@ export class PayoutService {
   /**
    * Cron job to cancel expired campaigns / complete the finished campaigns.
    */
-  @Cron(CronExpression.EVERY_DAY_AT_4AM)
+  @Cron(CronExpression.EVERY_DAY_AT_4PM)
   async finalizeCampaigns(): Promise<void> {
     this.logger.log('Checking expired campaigns.');
 

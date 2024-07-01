@@ -1,5 +1,13 @@
-import { Controller, Param, Post } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+
+import { CronAuthGuard } from '../../common/guards/cron-auth.guard';
 
 import { PayoutService } from './payout.service';
 
@@ -8,42 +16,52 @@ import { PayoutService } from './payout.service';
 export class PayoutController {
   constructor(private readonly payoutService: PayoutService) {}
 
-  @ApiOperation({ summary: 'Enable the cron job' }) // Add operation summary
-  @ApiResponse({ status: 200, description: 'Cron job enabled' }) // Add response description
-  @Post('cron/enable')
-  enableCron() {
-    this.payoutService.enableCron();
-    return { message: 'Cron job enabled' };
-  }
-
-  @ApiOperation({ summary: 'Disable the cron job' }) // Add operation summary
-  @ApiResponse({ status: 200, description: 'Cron job disabled' }) // Add response description
-  @Post('cron/disable')
-  disableCron() {
-    this.payoutService.disableCron();
-    return { message: 'Cron job disabled' };
-  }
-
   @ApiOperation({ summary: 'Manually execute payouts and disable auto cron' }) // Add operation summary
   @ApiResponse({
     status: 200,
-    description: 'Manual payout executed and cron job disabled',
+    description: 'Manual payout executed',
   }) // Add response description
   @Post('manual-payout')
   async manualPayout() {
-    await this.payoutService.manualPayout();
-    return { message: 'Manual payout executed and cron job disabled' };
+    await this.payoutService.processPayouts();
+    return { message: 'Manual payout executed' };
   }
 
   @ApiOperation({ summary: 'Manually execute payouts for chain id' })
   @ApiResponse({
     status: 200,
-    description: 'Manual payout executed and cron job disabled',
+    description: 'Manual payout executed',
   })
   @ApiParam({ name: 'chainId', description: 'Chain ID', required: true })
   @Post('manual-payout/:chainId')
   async manualPayoutForChainId(@Param('chainId') chainId: number) {
-    await this.payoutService.manualPayout(chainId);
-    return { message: 'Manual payout executed and cron job disabled' };
+    await this.payoutService.processPayouts(chainId);
+    return { message: 'Manual payout executed' };
+  }
+
+  @UseGuards(CronAuthGuard)
+  @ApiOperation({ summary: 'Cron job to execute payouts' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Cron job executed',
+  })
+  @Get('cron/process-payout')
+  async cronPayout() {
+    await this.payoutService.processPayouts();
+    return { message: 'Cron job executed' };
+  }
+
+  @UseGuards(CronAuthGuard)
+  @ApiOperation({ summary: 'Cron job to finalize campaigns' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Cron job executed',
+  })
+  @Get('cron/finalize-campaign')
+  async cronFinalize() {
+    await this.payoutService.finalizeCampaigns();
+    return { message: 'Cron job executed' };
   }
 }

@@ -34,8 +34,14 @@
       "destination": "api/app.ts"
     },
     {
-      "source": "/api/liquidity-score/calculate",
+      "source": "/api/liquidity-score/(.*)",
       "destination": "api/app.ts"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/liquidity-score/cron",
+      "schedule": "0 0 * * *"
     }
   ],
   "headers": [
