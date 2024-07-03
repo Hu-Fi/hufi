@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 import { ChainId, EscrowClient, EscrowUtils } from '@human-protocol/sdk';
 import { EscrowData } from '@human-protocol/sdk/dist/graphql';
-import { parseUnits } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 
 import { useClientToSigner } from './common';
@@ -19,7 +18,7 @@ export const useCreateEscrow = () => {
 
   const createEscrow = async (
     manifest: ManifestUploadResponseDto,
-    amount: number
+    fundAmount: bigint
   ) => {
     if (!signer || !network) {
       return;
@@ -54,8 +53,7 @@ export const useCreateEscrow = () => {
         message: 'Escrow setup successfully.',
       });
 
-      const fundAmount = parseUnits(amount.toString(), 'ether');
-      await escrowClient.fund(escrowAddress, BigInt(fundAmount));
+      await escrowClient.fund(escrowAddress, fundAmount);
       setNotification({
         type: 'success',
         message: 'Escrow funded successfully.',

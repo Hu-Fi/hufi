@@ -18,8 +18,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
-import { CryptoEntity } from '../../components/crypto-entity';
-import { EXCHANGES, TOKENS } from '../../constants';
+import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
+import { EXCHANGES, PAIRS, TOKENS } from '../../constants';
+import { ExchangeType } from '../../types';
 
 export type CampaignFormValues = {
   chainId: number;
@@ -45,6 +46,7 @@ export const CampaignForm: FC<CampaignFormProps> = ({
   const {
     control,
     formState: { errors },
+    watch,
     handleSubmit,
   } = useForm<CampaignFormValues>({
     resolver: yupResolver(validationSchema),
@@ -52,12 +54,15 @@ export const CampaignForm: FC<CampaignFormProps> = ({
       chainId: account.chainId,
       requesterAddress: account.address,
       exchangeName: 'binance',
-      token: 'bnb',
+      token: 'BNB/USDT',
       startDate: new Date(),
       duration: 7862400,
       fundAmount: 0.0001,
     },
   });
+
+  const exchangeName = watch('exchangeName');
+  const exchange = EXCHANGES.find((exchange) => exchange.name === exchangeName);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -99,25 +104,52 @@ export const CampaignForm: FC<CampaignFormProps> = ({
             )}
           </FormControl>
           <FormControl error={!!errors.token}>
-            <InputLabel id="token-a-select-label">Token</InputLabel>
-            <Controller
-              name="token"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  labelId="token-a-select-label"
-                  id="token-a-select"
-                  label="Token A"
-                  {...field}
-                >
-                  {TOKENS.map((token) => (
-                    <MenuItem key={token.name} value={token.name}>
-                      <CryptoEntity name={token.name} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
+            {exchange?.type === ExchangeType.CEX ? (
+              <>
+                <InputLabel id="token-a-select-label">Trading Pair</InputLabel>
+                <Controller
+                  name="token"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      labelId="token-a-select-label"
+                      id="token-a-select"
+                      label="TokenA/TokenB"
+                      {...field}
+                    >
+                      {PAIRS.map((pair) => (
+                        <MenuItem key={pair.symbol} value={pair.symbol}>
+                          <CryptoPairEntity symbol={pair.symbol} />
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+              </>
+            ) : (
+              <>
+                <InputLabel id="token-a-select-label">Token</InputLabel>
+                <Controller
+                  name="token"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      labelId="token-a-select-label"
+                      id="token-a-select"
+                      label="Token A"
+                      {...field}
+                    >
+                      {TOKENS.map((token) => (
+                        <MenuItem key={token.name} value={token.name}>
+                          <CryptoEntity name={token.name} />
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+              </>
+            )}
+
             {errors.token && (
               <FormHelperText>{errors.token.message}</FormHelperText>
             )}
