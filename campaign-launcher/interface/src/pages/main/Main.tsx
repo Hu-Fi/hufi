@@ -2,10 +2,10 @@ import { FC, useState } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { Box, SelectChangeEvent, Typography } from '@mui/material';
-import { BigNumberish, ethers } from 'ethers';
+import { BigNumberish, ethers, isAddress } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 
-import { CryptoEntity } from '../../components/crypto-entity';
+import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
 import { NetworkSelect } from '../../components/network-select';
 import { PaginatedTable } from '../../components/paginated-table';
@@ -53,7 +53,13 @@ export const Main: FC = () => {
             {
               id: 'symbol',
               label: 'Symbol',
-              format: (value) => <CryptoEntity name={value as TokenName} />,
+              format: (value) =>
+                Object.values(TokenName).includes(value as TokenName) ||
+                isAddress(value) ? (
+                  <CryptoEntity name={value as TokenName} />
+                ) : (
+                  <CryptoPairEntity symbol={value as string} />
+                ),
             },
             {
               id: 'startBlock',

@@ -9,8 +9,14 @@ export enum ExchangeName {
   LBank = 'lbank',
 }
 
+export enum ExchangeType {
+  CEX = 'cex',
+  DEX = 'dex',
+}
+
 export type ExchangeData = {
   name: ExchangeName;
   label: string;
+  type: ExchangeType;
   icon?: string;
 };

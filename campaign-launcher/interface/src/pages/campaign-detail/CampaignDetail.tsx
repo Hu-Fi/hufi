@@ -4,19 +4,27 @@ import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import { Alert, Box, Button, Grid, Link, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { ethers } from 'ethers';
+import { ethers, isAddress } from 'ethers';
+import {
+  usePopupState,
+  bindDialog,
+  bindTrigger,
+} from 'material-ui-popup-state/hooks';
 import { useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
-import { CryptoEntity } from '../../components/crypto-entity';
+import { APIKeyDialog, APIKeyFormValues } from './APIKeyDialog';
+import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
+import { EXCHANGES } from '../../constants';
 import { useCampaign } from '../../hooks';
 import {
   useAuthentication,
   useJoinCampaign,
+  useRegisterExchangeAPIKey,
   useUserCampaignStatus,
 } from '../../hooks/recording-oracle';
-import { ExchangeName, TokenName } from '../../types';
+import { ExchangeName, ExchangeType, TokenName } from '../../types';
 
 type CampaignDetailProps = {};
 
@@ -45,6 +53,35 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
         fetchUserCampaignStatus();
       },
     });
+  const {
+    registerExchangeAPIKeyAsync,
+    isLoading: isRegisterExchangeAPIKeyLoading,
+  } = useRegisterExchangeAPIKey();
+
+  const apiKeyDialogPopupState = usePopupState({
+    variant: 'popover',
+    popupId: 'api-key-dialog',
+  });
+
+  const isCexCampaign =
+    EXCHANGES.find((exchange) => exchange.name === campaign?.exchangeName)
+      ?.type === ExchangeType.CEX;
+
+  const handleSubmit = async (values: APIKeyFormValues) => {
+    apiKeyDialogPopupState.close();
+
+    if (!campaign?.exchangeName) {
+      return;
+    }
+
+    await registerExchangeAPIKeyAsync(
+      campaign?.exchangeName,
+      values.apiKey,
+      values.secret
+    );
+
+    await joinCampaignAsync(campaign.address);
+  };
 
   return (
     <Box display="flex" flexDirection="column" alignItems="flex-start" gap={4}>
@@ -102,7 +139,13 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
                     >
                       Symbol
                     </Typography>
-                    <CryptoEntity name={campaign.symbol as TokenName} />
+                    {Object.values(TokenName).includes(
+                      campaign.symbol as TokenName
+                    ) || isAddress(campaign.symbol) ? (
+                      <CryptoEntity name={campaign.symbol as TokenName} />
+                    ) : (
+                      <CryptoPairEntity symbol={campaign.symbol as string} />
+                    )}
                   </>
                 )}
                 {campaign?.startBlock && (
@@ -200,17 +243,30 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
               variant="contained"
               color="primary"
               disabled={
-                isROAuthLoading || !campaign?.address || isJoinCampaignLoading
+                isROAuthLoading ||
+                !campaign?.address ||
+                isJoinCampaignLoading ||
+                isRegisterExchangeAPIKeyLoading
               }
-              onClick={() =>
-                campaign?.address && joinCampaignAsync(campaign.address)
-              }
+              {...(isCexCampaign
+                ? bindTrigger(apiKeyDialogPopupState)
+                : {
+                    onClick: () =>
+                      campaign?.address && joinCampaignAsync(campaign?.address),
+                  })}
             >
               Join
             </Button>
           ) : null}
         </>
       )}
+      <APIKeyDialog
+        {...bindDialog(apiKeyDialogPopupState)}
+        maxWidth="sm"
+        fullWidth
+        onSave={handleSubmit}
+        onCancel={() => apiKeyDialogPopupState.close()}
+      />
     </Box>
   );
 };

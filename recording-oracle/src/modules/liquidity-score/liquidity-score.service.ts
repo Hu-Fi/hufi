@@ -153,10 +153,11 @@ export class LiquidityScoreService {
       apiKey,
       secret,
     );
+
     const trades = await this.ccxtService.fetchTrades(
       exchange,
       symbol,
-      since.getDate(),
+      since.getTime(),
     );
     const tradeVolume = trades.reduce((acc, trade) => acc + trade.amount, 0);
 

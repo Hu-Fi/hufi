@@ -1,5 +1,6 @@
 import { FC } from 'react';
 
+import { ethers } from 'ethers';
 import { Navigate } from 'react-router-dom';
 
 import { CampaignForm, CampaignFormValues } from './CampaignForm';
@@ -15,13 +16,15 @@ export const CreateCampaign: FC = () => {
   const { setNotification } = useNotification();
 
   const handleSubmit = async (data: CampaignFormValues) => {
+    const fundAmount = ethers.parseUnits(data.fundAmount.toString(), 'ether');
+
     const { data: manifest } = await uploadManifest({
       ...data,
-      fundAmount: data.fundAmount.toString(),
+      fundAmount: fundAmount.toString(),
       startDate: data.startDate.toISOString(),
     });
 
-    await createEscrow(manifest, data.fundAmount);
+    await createEscrow(manifest, fundAmount);
   };
 
   if (

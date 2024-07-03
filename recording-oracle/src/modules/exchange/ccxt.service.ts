@@ -18,6 +18,12 @@ export class CCXTService {
     return new exchangeClass({ apiKey, secret });
   }
 
+  public async fetchTradePairs(
+    exchange: ccxt.Exchange,
+  ): Promise<ccxt.Market[]> {
+    return exchange.loadMarkets();
+  }
+
   public async fetchTrades(
     exchange: ccxt.Exchange,
     symbol: string,

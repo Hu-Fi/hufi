@@ -2,3 +2,4 @@ export * from './exchange';
 export * from './husd';
 export * from './network';
 export * from './token';
+export * from './pair';
