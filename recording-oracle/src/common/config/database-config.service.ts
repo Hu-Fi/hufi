@@ -23,7 +23,7 @@ export class DatabaseConfigService {
     );
   }
   get ssl(): boolean {
-    return this.configService.get<string>('POSTGRES_SSL', 'false') === 'true';
+    return this.configService.get<boolean>('POSTGRES_SSL', false);
   }
   get logging(): string {
     return this.configService.get<string>('POSTGRES_LOGGING', '');

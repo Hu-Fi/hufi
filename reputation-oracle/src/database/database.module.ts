@@ -60,8 +60,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
           ),
           keepConnectionAlive: configService.get<string>('NODE_ENV') === 'test',
           migrationsRun: false,
-          ssl:
-            configService.get<string>('POSTGRES_SSL')!.toLowerCase() === 'true',
+          ssl: configService.get<boolean>('POSTGRES_SSL', false),
         };
       },
     }),

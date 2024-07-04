@@ -1,4 +1,4 @@
-import { EscrowClient, ChainId, UploadFile } from '@human-protocol/sdk'; // Import EscrowUtils and SUPPORTED_CHAIN_IDS
+import { EscrowClient, ChainId, UploadFile } from '@human-protocol/sdk';
 import { Inject, Injectable } from '@nestjs/common';
 
 import { LiquidityScore } from '../../common/types/liquidity-score';

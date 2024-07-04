@@ -8,7 +8,7 @@ import {
   SelectProps,
 } from '@mui/material';
 
-import { SUPPORTED_CHAIN_IDS } from '../../constants';
+import { getSupportedChainIds } from '../../config/network';
 import { CHAIN_ICONS } from '../icons/chains';
 
 export type NetworkSelectProps<T> = SelectProps<T> & {
@@ -55,7 +55,7 @@ export function NetworkSelect<T>({
             All Networks
           </MenuItem>
         )}
-        {(supportedChainIds ?? SUPPORTED_CHAIN_IDS).map((chainId) => {
+        {(supportedChainIds ?? getSupportedChainIds()).map((chainId) => {
           const IconComponent = CHAIN_ICONS[chainId];
           return (
             <MenuItem value={chainId} key={chainId}>

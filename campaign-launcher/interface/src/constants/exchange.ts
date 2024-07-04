@@ -28,18 +28,6 @@ export const EXCHANGES: ExchangeData[] = [
     icon: mexcLogo,
   },
   {
-    name: ExchangeName.FourSwap,
-    label: '4swap',
-    type: ExchangeType.DEX,
-    icon: fourSwapLogo,
-  },
-  {
-    name: ExchangeName.ExinOne,
-    label: 'ExinOne',
-    type: ExchangeType.DEX,
-    icon: exin1Logo,
-  },
-  {
     name: ExchangeName.BigOne,
     label: 'BigOne',
     type: ExchangeType.CEX,
@@ -56,5 +44,17 @@ export const EXCHANGES: ExchangeData[] = [
     label: 'Uniswap',
     type: ExchangeType.DEX,
     icon: uniswapLogo,
+  },
+  {
+    name: ExchangeName.FourSwap,
+    label: '4swap',
+    type: ExchangeType.DEX,
+    icon: fourSwapLogo,
+  },
+  {
+    name: ExchangeName.ExinOne,
+    label: 'ExinOne',
+    type: ExchangeType.DEX,
+    icon: exin1Logo,
   },
 ];

@@ -16,4 +16,7 @@ export class ServerConfigService {
   get sessionSecret(): string {
     return this.configService.get<string>('SESSION_SECRET', 'session-secret');
   }
+  get apiKey(): string {
+    return this.configService.get<string>('API_KEY', 'api-key');
+  }
 }

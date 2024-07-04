@@ -8,7 +8,7 @@ import { useClientToSigner } from './common';
 import { useNotification } from '../';
 import { ManifestUploadResponseDto } from '../../api/client/data-contracts';
 import { oracles } from '../../config/escrow';
-import { SUPPORTED_CHAIN_IDS } from '../../constants';
+import { getSupportedChainIds } from '../../config/network';
 import { ManifestDto } from '../../types/manifest';
 
 export const useCreateEscrow = () => {
@@ -86,9 +86,9 @@ export const useCampaigns = (chainId: ChainId) => {
     setLoading(true);
     try {
       const campaigns = await EscrowUtils.getEscrows({
-        networks: chainId === ChainId.ALL ? SUPPORTED_CHAIN_IDS : [chainId],
-        // TODO: Consider using recording/reputation oracle
-        exchangeOracle: oracles.exchangeOracle,
+        networks: chainId === ChainId.ALL ? getSupportedChainIds() : [chainId],
+        recordingOracle: oracles.recordingOracle,
+        reputationOracle: oracles.reputationOracle,
       });
 
       const campaignsWithManifest: Array<CampaignData | undefined> =

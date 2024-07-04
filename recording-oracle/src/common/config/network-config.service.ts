@@ -17,6 +17,12 @@ export class NetworkConfigService {
 
   constructor(private configService: ConfigService) {
     this.networkMap = {
+      ...(this.configService.get<string>('RPC_URL_MAINNET') && {
+        mainnet: {
+          chainId: ChainId.MAINNET,
+          rpcUrl: this.configService.get<string>('RPC_URL_MAINNET'),
+        },
+      }),
       ...(this.configService.get<string>('RPC_URL_SEPOLIA') && {
         sepolia: {
           chainId: ChainId.SEPOLIA,

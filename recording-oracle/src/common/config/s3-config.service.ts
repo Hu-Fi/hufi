@@ -21,6 +21,6 @@ export class S3ConfigService {
     return this.configService.get<string>('S3_BUCKET', 'recordings');
   }
   get useSSL(): boolean {
-    return this.configService.get<string>('S3_USE_SSL', 'false') === 'true';
+    return this.configService.get<boolean>('S3_USE_SSL', false);
   }
 }
