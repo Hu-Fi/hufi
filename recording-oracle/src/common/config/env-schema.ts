@@ -25,6 +25,7 @@ export const envValidator = Joi.object({
   WEB3_ENV: Joi.string().required(),
   WEB3_PRIVATE_KEY: Joi.string().required(),
   GAS_PRICE_MULTIPLIER: Joi.number(),
+  SUBGRAPH_API_KEY: Joi.string().required(),
   RPC_URL_MAINNET: Joi.string(),
   RPC_URL_SEPOLIA: Joi.string(),
   RPC_URL_POLYGON: Joi.string(),

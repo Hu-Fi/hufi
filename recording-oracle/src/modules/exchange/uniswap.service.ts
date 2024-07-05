@@ -1,11 +1,16 @@
 import { ChainId } from '@human-protocol/sdk';
 import { Injectable, Logger } from '@nestjs/common';
 
+import { Web3ConfigService } from '../../common/config/web3-config.service';
+import { UNISWAP_V3_SUBGRAPH_ID } from '../../common/constants/subgraph';
+
 @Injectable()
 export class UniswapService {
   private logger: Logger = new Logger(UniswapService.name);
+  private subgraphBaseURL =
+    'https://gateway-arbitrum.network.thegraph.com/api/';
 
-  constructor() {}
+  constructor(private web3ConfigService: Web3ConfigService) {}
 
   public async fetchTrades(
     chainId: number,
@@ -81,12 +86,24 @@ export class UniswapService {
   }
 
   private _getSubgraphURL(chainId: number) {
-    // TODO: Read subgraph URL from configuration
     switch (chainId) {
+      case ChainId.MAINNET:
+      case ChainId.POLYGON:
+      case ChainId.BSC_MAINNET:
+        return this._getSubgraphURLFromId(UNISWAP_V3_SUBGRAPH_ID[chainId]);
       case ChainId.SEPOLIA:
         return 'https://api.studio.thegraph.com/query/37613/human-uniswap-v3/version/latest';
       default:
         return '';
     }
+  }
+
+  private _getSubgraphURLFromId(id: string) {
+    return (
+      this.subgraphBaseURL +
+      this.web3ConfigService.subgraphAPIKey +
+      '/subgraphs/id/' +
+      id
+    );
   }
 }
