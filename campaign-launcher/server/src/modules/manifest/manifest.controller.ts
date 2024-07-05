@@ -1,5 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
 import {
   ManifestUploadRequestDto,
@@ -12,8 +14,14 @@ import { ManifestService } from './manifest.service';
 export class ManifestController {
   constructor(private manifestService: ManifestService) {}
 
+  @UseGuards(ApiKeyGuard)
   @Post('/upload')
   @ApiOperation({ summary: 'Upload manifest data' })
+  @ApiHeader({
+    name: 'x-api-key',
+    description: 'API Key',
+    required: true,
+  })
   @ApiResponse({
     status: 201,
     description: 'Manifest uploaded',
