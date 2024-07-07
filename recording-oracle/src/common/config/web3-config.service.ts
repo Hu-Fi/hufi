@@ -16,4 +16,7 @@ export class Web3ConfigService {
   get gasPriceMultiplier(): number {
     return +this.configService.get<number>('GAS_PRICE_MULTIPLIER', 1);
   }
+  get subgraphAPIKey(): string {
+    return this.configService.get<string>('SUBGRAPH_API_KEY', '');
+  }
 }

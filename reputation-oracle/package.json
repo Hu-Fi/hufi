@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@ethersproject/bignumber": "^5.7.0",
-    "@human-protocol/sdk": "^2.1.3",
+    "@human-protocol/sdk": "^3.0.0",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.2",
