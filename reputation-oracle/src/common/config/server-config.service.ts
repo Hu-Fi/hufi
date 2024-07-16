@@ -13,9 +13,6 @@ export class ServerConfigService {
   get port(): number {
     return +this.configService.get<number>('PORT', 5002);
   }
-  get sessionSecret(): string {
-    return this.configService.get<string>('SESSION_SECRET', 'session-secret');
-  }
   get cronSecret(): string {
     return this.configService.get<string>('CRON_SECRET', 'cron-secret');
   }
