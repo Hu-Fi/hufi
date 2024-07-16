@@ -6,23 +6,22 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
-import { EnvConfigModule } from '../../common/config/config.module';
-import { envValidator } from '../../common/config/env-schema';
-import { ExceptionFilter } from '../../common/exceptions/exception.filter';
-import { SnakeCaseInterceptor } from '../../common/interceptors/snake-case';
-import { HttpValidationPipe } from '../../common/pipes';
-import { DatabaseModule } from '../../database/database.module';
-import { AuthModule } from '../auth/auth.module';
-import { CampaignModule } from '../campaign/campaign.module';
-import { ExchangeModule } from '../exchange/exchange.module';
-import { HealthModule } from '../health/health.module';
-import { LiquidityScoreModule } from '../liquidity-score/liquidity-score.module';
-import { RecordsModule } from '../records/records.module';
-import { StorageModule } from '../storage/storage.module';
-import { UserModule } from '../user/user.module';
-import { Web3Module } from '../web3/web3.module';
-
 import { AppController } from './app.controller';
+import { EnvConfigModule } from './common/config/config.module';
+import { envValidator } from './common/config/env-schema';
+import { ExceptionFilter } from './common/exceptions/exception.filter';
+import { SnakeCaseInterceptor } from './common/interceptors/snake-case';
+import { HttpValidationPipe } from './common/pipes';
+import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { CampaignModule } from './modules/campaign/campaign.module';
+import { ExchangeModule } from './modules/exchange/exchange.module';
+import { HealthModule } from './modules/health/health.module';
+import { LiquidityScoreModule } from './modules/liquidity-score/liquidity-score.module';
+import { RecordsModule } from './modules/records/records.module';
+import { StorageModule } from './modules/storage/storage.module';
+import { UserModule } from './modules/user/user.module';
+import { Web3Module } from './modules/web3/web3.module';
 
 @Module({
   providers: [
@@ -59,7 +58,7 @@ import { AppController } from './app.controller';
     Web3Module,
     LiquidityScoreModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '../../../', 'node_modules/swagger-ui-dist'),
+      rootPath: join(__dirname, '././modules/', 'node_modules/swagger-ui-dist'),
     }),
   ],
   controllers: [AppController],
