@@ -13,9 +13,6 @@ export class ServerConfigService {
   get port(): number {
     return +this.configService.get<number>('PORT', 5001);
   }
-  get sessionSecret(): string {
-    return this.configService.get<string>('SESSION_SECRET', 'session-secret');
-  }
   get apiKey(): string {
     return this.configService.get<string>('API_KEY', 'api-key');
   }
