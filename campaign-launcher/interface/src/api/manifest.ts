@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import {
   ManifestUploadRequestDto,
   ManifestUploadResponseDto,
-} from './client/data-contracts';
+} from './client/Api';
 import { MutationOptions } from './types';
 import { useApi } from './use-api';
 import { apiKey } from '../config/api';
@@ -18,7 +18,7 @@ export const useUploadManifest = (
 
   return useMutation({
     mutationFn: (data: ManifestUploadRequestDto) =>
-      api.manifestControllerUploadManifest(data, {
+      api.manifest.manifestControllerUploadManifest(data, {
         headers: {
           'x-api-key': apiKey,
         },
