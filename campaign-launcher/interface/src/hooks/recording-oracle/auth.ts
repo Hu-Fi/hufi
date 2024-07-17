@@ -27,7 +27,7 @@ export const useAuthentication = () => {
     setIsLoading(true);
 
     try {
-      const signatureContent = await request('/api/auth/prepare-signature', {
+      const signatureContent = await request('/auth/prepare-signature', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export const useAuthentication = () => {
         message: JSON.stringify(signatureContent),
       });
 
-      const authData = await request('/api/auth/web3/signin', {
+      const authData = await request('/auth/web3/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export const useAuthentication = () => {
     setIsLoading(true);
 
     try {
-      const signatureContent = await request('/api/auth/prepare-signature', {
+      const signatureContent = await request('/auth/prepare-signature', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export const useAuthentication = () => {
         message: JSON.stringify(signatureContent),
       });
 
-      const authData = await request('/api/auth/web3/signup', {
+      const authData = await request('/auth/web3/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,11 +128,11 @@ export const useAuthentication = () => {
 
   const checkUserExists = async () => {
     try {
-      const response = await request(
-        `/api/user/${account.address}/exists`
-      ).catch(() => {
-        throw new Error('Failed to check user existence');
-      });
+      const response = await request(`/user/${account.address}/exists`).catch(
+        () => {
+          throw new Error('Failed to check user existence');
+        }
+      );
 
       setIsUserExists(response);
     } catch (e) {

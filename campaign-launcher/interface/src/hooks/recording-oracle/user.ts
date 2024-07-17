@@ -32,7 +32,7 @@ export const useRegisterExchangeAPIKey = ({
         }
       }
 
-      const response = await requestWithAuth('/api/user/exchange-api-key', {
+      const response = await requestWithAuth('/user/exchange-api-key', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

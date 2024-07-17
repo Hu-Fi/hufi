@@ -12,7 +12,7 @@
     "lint:fix": "eslint \"*.{ts,tsx}\" --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
     "format": "prettier --write \"*.{ts,tsx}\"",
     "preview": "vite preview",
-    "gen-api": "npx swagger-typescript-api --path $API_HOST/swagger-json --modular --clean-output --output ./src/api/client"
+    "gen-api": "npx swagger-typescript-api --path $API_HOST/swagger-json --clean-output --output ./src/api/client"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",

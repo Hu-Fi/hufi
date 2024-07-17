@@ -30,7 +30,7 @@ export const useJoinCampaign = ({ onSuccess }: JoinCampaignOptions) => {
         }
       }
 
-      const response = await requestWithAuth('/api/user/campaign', {
+      const response = await requestWithAuth('/user/campaign', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export const useUserCampaignStatus = (address: string) => {
     try {
       if (isAuthenticated) {
         const response = await requestWithAuth(
-          `/api/user/campaign/${getAddress(address)}`,
+          `/user/campaign/${getAddress(address)}`,
           {
             method: 'GET',
           }

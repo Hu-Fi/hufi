@@ -6,7 +6,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { useClientToSigner } from './common';
 import { useNotification } from '../';
-import { ManifestUploadResponseDto } from '../../api/client/data-contracts';
+import { ManifestUploadResponseDto } from '../../api/client/Api';
 import { oracles } from '../../config/escrow';
 import { getSupportedChainIds } from '../../config/network';
 import { ManifestDto } from '../../types/manifest';
