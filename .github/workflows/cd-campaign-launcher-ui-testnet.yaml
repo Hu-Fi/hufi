@@ -1,0 +1,25 @@
+name: Deploy Campaign Launcher UI Testnet
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "campaign-launcher/interface/**"
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - "campaign-launcher/interface/**"
+
+jobs:
+  render-deploy:
+    name: Render deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_CAMPAIGN_LAUNCHER_UI_TESTNET_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_CAMPAGIN_LAUNCHER_UI_TESTNET_API_KEY }}
+          wait-for-success: true
