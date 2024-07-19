@@ -4,7 +4,7 @@ import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import { Alert, Box, Button, Grid, Link, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { ethers, isAddress } from 'ethers';
+import { ethers } from 'ethers';
 import {
   usePopupState,
   bindDialog,
@@ -14,9 +14,9 @@ import { useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { APIKeyDialog, APIKeyFormValues } from './APIKeyDialog';
+import { useExchanges } from '../../api/exchange';
 import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
-import { EXCHANGES } from '../../constants';
 import { useCampaign } from '../../hooks';
 import {
   useAuthentication,
@@ -24,7 +24,7 @@ import {
   useRegisterExchangeAPIKey,
   useUserCampaignStatus,
 } from '../../hooks/recording-oracle';
-import { ExchangeName, ExchangeType, TokenName } from '../../types';
+import { ExchangeType } from '../../types';
 
 type CampaignDetailProps = {};
 
@@ -63,9 +63,12 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
     popupId: 'api-key-dialog',
   });
 
-  const isCexCampaign =
-    EXCHANGES.find((exchange) => exchange.name === campaign?.exchangeName)
-      ?.type === ExchangeType.CEX;
+  const { data: exchanges, isLoading: isLoadingExchanges } = useExchanges();
+
+  const exchange = exchanges?.find(
+    (exchange) =>
+      exchange.name?.toLowerCase() === campaign?.exchangeName.toLowerCase()
+  );
 
   const handleSubmit = async (values: APIKeyFormValues) => {
     apiKeyDialogPopupState.close();
@@ -85,7 +88,7 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
 
   return (
     <Box display="flex" flexDirection="column" alignItems="flex-start" gap={4}>
-      {loading ? (
+      {loading || isLoadingExchanges ? (
         <Loading />
       ) : (
         <>
@@ -126,7 +129,9 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
                       Exchange
                     </Typography>
                     <CryptoEntity
-                      name={campaign.exchangeName as ExchangeName}
+                      name={campaign.exchangeName}
+                      displayName={exchange?.displayName}
+                      logo={exchange?.logo}
                     />
                   </>
                 )}
@@ -139,12 +144,10 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
                     >
                       Symbol
                     </Typography>
-                    {Object.values(TokenName).includes(
-                      campaign.symbol as TokenName
-                    ) || isAddress(campaign.symbol) ? (
-                      <CryptoEntity name={campaign.symbol as TokenName} />
-                    ) : (
+                    {campaign.symbol.includes('/') ? (
                       <CryptoPairEntity symbol={campaign.symbol as string} />
+                    ) : (
+                      <CryptoEntity name={campaign.symbol} />
                     )}
                   </>
                 )}
@@ -248,7 +251,7 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
                 isJoinCampaignLoading ||
                 isRegisterExchangeAPIKeyLoading
               }
-              {...(isCexCampaign
+              {...(exchange.type === ExchangeType.CEX
                 ? bindTrigger(apiKeyDialogPopupState)
                 : {
                     onClick: () =>

@@ -2,21 +2,22 @@ import { FC, useState } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { Box, SelectChangeEvent, Typography } from '@mui/material';
-import { BigNumberish, ethers, isAddress } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 
+import { useExchanges } from '../../api/exchange';
 import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
 import { NetworkSelect } from '../../components/network-select';
 import { PaginatedTable } from '../../components/paginated-table';
 import { useCampaigns } from '../../hooks';
-import { ExchangeName, TokenName } from '../../types';
 import { shortenAddress } from '../../utils/address';
 import dayjs from '../../utils/dayjs';
 
 export const Main: FC = () => {
   const [chainId, setChainId] = useState(ChainId.ALL);
   const { loading, campaigns } = useCampaigns(chainId);
+  const { data: exchanges, isLoading: isLoadingExchanges } = useExchanges();
   const navigate = useNavigate();
 
   const handleNetworkChange = (e: SelectChangeEvent<ChainId>) => {
@@ -35,7 +36,7 @@ export const Main: FC = () => {
           onChange={handleNetworkChange}
         />
       </Box>
-      {loading ? (
+      {loading || isLoadingExchanges ? (
         <Loading />
       ) : (
         <PaginatedTable
@@ -48,17 +49,27 @@ export const Main: FC = () => {
             {
               id: 'exchangeName',
               label: 'Exchange',
-              format: (value) => <CryptoEntity name={value as ExchangeName} />,
+              format: (value) => {
+                const exchange = exchanges?.find(
+                  (exchange) => exchange.name === value
+                );
+                return (
+                  <CryptoEntity
+                    name={exchange?.name}
+                    displayName={exchange?.displayName}
+                    logo={exchange?.logo}
+                  />
+                );
+              },
             },
             {
               id: 'symbol',
               label: 'Symbol',
               format: (value) =>
-                Object.values(TokenName).includes(value as TokenName) ||
-                isAddress(value) ? (
-                  <CryptoEntity name={value as TokenName} />
-                ) : (
+                (value as string).includes('/') ? (
                   <CryptoPairEntity symbol={value as string} />
+                ) : (
+                  <CryptoEntity name={value as string} />
                 ),
             },
             {

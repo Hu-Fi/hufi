@@ -1,7 +1,5 @@
 import { ChainId } from '@human-protocol/sdk';
 
-import { ExchangeName } from '../types';
-
 // TODO: Read USDT contract address from Human Protocol SDK
 export const USDT_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
   [ChainId.LOCALHOST]: '0xc5a5C42992dECbae36851359345FE25997F5C42d',
@@ -17,5 +15,5 @@ export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 };
 
 // TODO: Make these values configurable
-export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = [ExchangeName.Uniswap];
+export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['uniswap'];
 export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds
