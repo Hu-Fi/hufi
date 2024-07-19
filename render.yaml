@@ -74,6 +74,7 @@ services:
         source: /*
         destination: /index.html
     rootDir: campaign-launcher/interface
+    autoDeploy: false
   - type: web
     name: hufi-campaign-launcher-server
     runtime: node
@@ -104,6 +105,7 @@ services:
     buildCommand: yarn install --production=false; yarn build;
     startCommand: yarn start:prod
     rootDir: campaign-launcher/server
+    autoDeploy: false
   - type: web
     name: hufi-reputation-oracle-server
     runtime: node
@@ -169,6 +171,7 @@ services:
     startCommand: yarn start:prod
     preDeployCommand: yarn migration:run
     rootDir: reputation-oracle
+    autoDeploy: false
   - type: web
     name: hufi-recording-oracle-server
     runtime: node
@@ -240,6 +243,7 @@ services:
     startCommand: yarn start:prod
     preDeployCommand: yarn migration:run
     rootDir: recording-oracle
+    autoDeploy: false
   - type: web
     name: hufi-campaign-launcher-ui-testnet
     runtime: static
@@ -279,7 +283,7 @@ services:
         source: /*
         destination: /index.html
     rootDir: campaign-launcher/interface
-    pullRequestPreviewsEnabled: true
+    autoDeploy: false
   - type: web
     name: hufi-reputation-oracle-server-testnet
     runtime: node
@@ -344,7 +348,7 @@ services:
     startCommand: yarn start:prod
     preDeployCommand: yarn migration:run
     rootDir: reputation-oracle
-    pullRequestPreviewsEnabled: true
+    autoDeploy: false
   - type: web
     name: hufi-recording-oracle-server-testnet
     runtime: node
@@ -419,7 +423,7 @@ services:
     startCommand: yarn start:prod
     preDeployCommand: yarn migration:run
     rootDir: recording-oracle
-    pullRequestPreviewsEnabled: true
+    autoDeploy: false
   - type: web
     name: hufi-campaign-launcher-server-testnet
     runtime: node
@@ -449,5 +453,5 @@ services:
     buildCommand: yarn install --production=false; yarn build;
     startCommand: yarn start:prod
     rootDir: campaign-launcher/server
-    pullRequestPreviewsEnabled: true
+    autoDeploy: false
 version: "1"
