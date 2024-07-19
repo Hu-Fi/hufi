@@ -4,47 +4,40 @@ import ethLogo from '../assets/tokens/eth.png';
 import usdcLogo from '../assets/tokens/usdc.png';
 import usdtLogo from '../assets/tokens/usdt.png';
 import xinLogo from '../assets/tokens/xin.png';
-import { TokenData, TokenName } from '../types';
+import { TokenData } from '../types';
 
 export const TOKENS: TokenData[] = [
   {
-    name: TokenName.BTC,
-    label: 'BTC',
+    name: 'btc',
     icon: btcLogo,
   },
   {
-    name: TokenName.ETH,
-    label: 'ETH',
+    name: 'eth',
     icon: ethLogo,
   },
   {
-    name: TokenName.BNB,
-    label: 'BNB',
+    name: 'bnb',
     icon: bnbLogo,
   },
   {
-    name: TokenName.USDT,
-    label: 'USDT',
+    name: 'usdt',
     icon: usdtLogo,
   },
   {
-    name: TokenName.USDC,
-    label: 'USDC',
+    name: 'usdc',
     icon: usdcLogo,
   },
   {
-    name: TokenName.HUSD,
-    label: 'HUSD',
+    name: 'husd',
     icon: usdcLogo,
   },
   {
     name: '0xf15d41e06fe329427c643ed2203f14c409cb4b85',
-    label: 'HUSD',
+    label: 'USDC',
     icon: usdcLogo,
   },
   {
-    name: TokenName.XIN,
-    label: 'XIN',
+    name: 'xin',
     icon: xinLogo,
   },
 ];

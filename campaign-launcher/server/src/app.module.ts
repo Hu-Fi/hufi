@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { EnvConfigModule } from './common/config/config.module';
 import { envValidator } from './common/config/env-schema';
 import { HttpValidationPipe } from './common/pipes';
+import { ExchangeModule } from './modules/exchange/exchange.module';
 import { HealthModule } from './modules/health/health.module';
 import { ManifestModule } from './modules/manifest/manifest.module';
 import { StorageModule } from './modules/storage/storage.module';
@@ -29,6 +30,7 @@ import { StorageModule } from './modules/storage/storage.module';
     }),
     EnvConfigModule,
     HealthModule,
+    ExchangeModule,
     ManifestModule,
     StorageModule,
     ServeStaticModule.forRoot({

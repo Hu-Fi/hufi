@@ -15,7 +15,7 @@ export class ManifestService {
   public async uploadManifest(
     data: ManifestUploadRequestDto,
   ): Promise<ManifestUploadResponseDto> {
-    const { startDate, duration, ...manifestData } = data;
+    const { startDate, duration, additionalData, ...manifestData } = data;
 
     const startBlock = Math.floor(startDate.getTime() / 1000);
     const endBlock = startBlock + duration;
@@ -26,6 +26,7 @@ export class ManifestService {
       endBlock,
       duration,
       type: JOB_TYPE,
+      ...(additionalData ? JSON.parse(additionalData) : {}),
     };
 
     const uploadedFile = await this.storageService.uploadFile(manifest);
