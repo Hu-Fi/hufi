@@ -1,4 +1,3 @@
-previewsEnabled: true
 databases:
   - name: hufi-recording-oracle-mainnet
     databaseName: hufi_recording_oracle_mainnet
@@ -280,6 +279,7 @@ services:
         source: /*
         destination: /index.html
     rootDir: campaign-launcher/interface
+    pullRequestPreviewsEnabled: true
   - type: web
     name: hufi-reputation-oracle-server-testnet
     runtime: node
@@ -344,6 +344,7 @@ services:
     startCommand: yarn start:prod
     preDeployCommand: yarn migration:run
     rootDir: reputation-oracle
+    pullRequestPreviewsEnabled: true
   - type: web
     name: hufi-recording-oracle-server-testnet
     runtime: node
@@ -418,6 +419,7 @@ services:
     startCommand: yarn start:prod
     preDeployCommand: yarn migration:run
     rootDir: recording-oracle
+    pullRequestPreviewsEnabled: true
   - type: web
     name: hufi-campaign-launcher-server-testnet
     runtime: node
@@ -447,4 +449,5 @@ services:
     buildCommand: yarn install --production=false; yarn build;
     startCommand: yarn start:prod
     rootDir: campaign-launcher/server
+    pullRequestPreviewsEnabled: true
 version: "1"
