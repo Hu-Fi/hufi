@@ -1,7 +1,5 @@
-import { TokenName } from './token';
-
 export type PairData = {
-  base: TokenName;
-  quote: TokenName;
+  base: string;
+  quote: string;
   symbol: string;
 };
