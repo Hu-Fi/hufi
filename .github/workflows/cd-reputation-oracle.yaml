@@ -1,4 +1,4 @@
-name: Campaign Launcher UI
+name: Reputation Oracle
 
 on:
   push:
@@ -6,13 +6,13 @@ on:
       - develop
       - main
     paths:
-      - "campaign-launcher/interface/**"
+      - "reputation-oracle/**"
   pull_request:
     branches:
       - develop
       - main
     paths:
-      - "campaign-launcher/interface/**"
+      - "reputation-oracle/**"
 
 jobs:
   render-deploy-testnet:
@@ -25,12 +25,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: JorgeLNJunior/render-deploy@v1.4.4
         with:
-          service_id: ${{ secrets.RENDER_CAMPAIGN_LAUNCHER_UI_TESTNET_SERVICE_ID }}
+          service_id: ${{ secrets.RENDER_REPUTATION_ORACLE_TESTNET_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
           clear_cache: true
           wait_deploy: true
           github_deployment: true
-          deployment_environment: "Campaign Launcher UI Testnet"
+          deployment_environment: "Reputation Oracle Testnet"
           github_token: ${{ secrets.GITHUB_TOKEN }}
   render-deploy-mainnet:
     name: Deploy on Mainnet
@@ -42,10 +42,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: JorgeLNJunior/render-deploy@v1.4.4
         with:
-          service_id: ${{ secrets.RENDER_CAMPAIGN_LAUNCHER_UI_MAINNET_SERVICE_ID }}
+          service_id: ${{ secrets.RENDER_REPUTATION_ORACLE_MAINNET_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
           clear_cache: true
           wait_deploy: true
           github_deployment: true
-          deployment_environment: "Campaign Launcher UI Mainnet"
+          deployment_environment: "Reputation Oracle Mainnet"
           github_token: ${{ secrets.GITHUB_TOKEN }}
