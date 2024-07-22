@@ -279,7 +279,9 @@ const NavMenu: FC<NavMenuProps> = ({ navLink }) => {
                   to={nav.href}
                   style={{ textDecoration: 'none', padding: '6px 8px' }}
                 >
-                  {nav.title}
+                  <Typography color="primary" variant="body2" fontWeight={600}>
+                    {nav.title}
+                  </Typography>
                 </Link>
               </MenuItem>
             )
