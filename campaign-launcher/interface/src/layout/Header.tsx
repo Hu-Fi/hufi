@@ -306,7 +306,7 @@ const NavMobileMenu: FC<NavMenuProps> = ({ navLink }) => {
         }}
       >
         <Typography color="primary" variant="body2" fontWeight={600}>
-          {navLink.title}
+          {navLink.title} Test
         </Typography>
       </Box>
       <Box
