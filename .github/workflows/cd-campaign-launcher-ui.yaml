@@ -18,7 +18,6 @@ jobs:
   render-deploy-testnet:
     name: Deploy on Testnet
     runs-on: ubuntu-latest
-
     if: ${{ github.event.pull_request.base.ref == 'develop' || github.ref == 'refs/heads/develop' }}
     permissions:
       deployments: write
@@ -30,9 +29,6 @@ jobs:
           api_key: ${{ secrets.RENDER_CAMPAGIN_LAUNCHER_UI_TESTNET_API_KEY }}
           clear_cache: true
           wait_deploy: true
-          github_deployment: true
-          deployment_environment: "staging"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
   render-deploy-mainnet:
     name: Deploy on Mainnet
     runs-on: ubuntu-latest
@@ -48,5 +44,5 @@ jobs:
           clear_cache: true
           wait_deploy: true
           github_deployment: true
-          deployment_environment: "production"
+          deployment_environment: "Campaign Launcher UI Mainnet"
           github_token: ${{ secrets.GITHUB_TOKEN }}
