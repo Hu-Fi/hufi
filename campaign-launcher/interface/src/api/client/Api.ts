@@ -18,6 +18,7 @@ export interface ManifestUploadRequestDto {
   startDate: string;
   duration: number;
   fundAmount: string;
+  additionalData?: string;
 }
 
 export interface ManifestUploadResponseDto {
@@ -291,6 +292,42 @@ export class Api<
     healthControllerGetHealth: (params: RequestParams = {}) =>
       this.request<string, void>({
         path: `/health`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+  };
+  exchange = {
+    /**
+     * No description
+     *
+     * @tags exchange
+     * @name ExchangeControllerGetExchangeList
+     * @summary List the supported exchanges
+     * @request GET:/exchange/list
+     */
+    exchangeControllerGetExchangeList: (params: RequestParams = {}) =>
+      this.request<any[], void>({
+        path: `/exchange/list`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags exchange
+     * @name ExchangeControllerGetSymbols
+     * @summary List the supported symbols/tokens
+     * @request GET:/exchange/symbols/{exchangeName}
+     */
+    exchangeControllerGetSymbols: (
+      exchangeName: string,
+      params: RequestParams = {}
+    ) =>
+      this.request<any[], void>({
+        path: `/exchange/symbols/${exchangeName}`,
         method: 'GET',
         format: 'json',
         ...params,

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsNumber, IsDate } from 'class-validator';
+import { IsString, IsNumber, IsDate, IsOptional } from 'class-validator';
 
 export class ManifestUploadRequestDto {
   @ApiProperty()
@@ -31,6 +31,11 @@ export class ManifestUploadRequestDto {
   @ApiProperty()
   @IsString()
   fundAmount: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  additionalData?: string;
 }
 
 export class ManifestUploadResponseDto {
