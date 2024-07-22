@@ -18,7 +18,8 @@ jobs:
   render-deploy-testnet:
     name: Deploy on Testnet
     runs-on: ubuntu-latest
-    if: ${{ github.base_ref == 'refs/heads/develop' || github.ref == 'refs/heads/develop' }}
+
+    if: ${{ github.event.pull_request.base.ref == 'develop' || github.ref == 'refs/heads/develop' }}
     permissions:
       deployments: write
     steps:
@@ -35,7 +36,7 @@ jobs:
   render-deploy-mainnet:
     name: Deploy on Mainnet
     runs-on: ubuntu-latest
-    if: ${{ github.base_ref == 'refs/heads/main' || github.ref == 'refs/heads/main' }}
+    if: ${{ github.event.pull_request.base.ref == 'main' || github.ref == 'refs/heads/main' }}
     permissions:
       deployments: write
     steps:
