@@ -35,8 +35,9 @@ export class CCXTService {
   public async fetchOpenOrders(
     exchange: ccxt.Exchange,
     symbol: string,
+    since: number,
   ): Promise<ccxt.Order[]> {
-    return exchange.fetchOpenOrders(symbol);
+    return exchange.fetchOpenOrders(symbol, since);
   }
 
   public async fetchOrderBook(
@@ -55,12 +56,14 @@ export class CCXTService {
   public async processOpenOrders(
     exchange: ccxt.Exchange,
     symbol: string,
+    since: number,
   ): Promise<{
     openOrderVolume: number;
     averageDuration: number;
     spread: number;
   }> {
-    const orders = await this.fetchOpenOrders(exchange, symbol);
+    const orders = await this.fetchOpenOrders(exchange, symbol, since);
+
     const orderBook = await this.fetchOrderBook(exchange, symbol);
     const spread = this.calculateSpread(orderBook);
 
