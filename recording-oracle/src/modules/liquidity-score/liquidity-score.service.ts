@@ -162,7 +162,11 @@ export class LiquidityScoreService {
     const tradeVolume = trades.reduce((acc, trade) => acc + trade.amount, 0);
 
     const { openOrderVolume, averageDuration, spread } =
-      await this.ccxtService.processOpenOrders(exchange, symbol);
+      await this.ccxtService.processOpenOrders(
+        exchange,
+        symbol,
+        since.getTime(),
+      );
 
     const liquidityScoreCalculation = new LiquidityScoreCalculation(
       tradeVolume,
