@@ -11,7 +11,7 @@ export class CCXTService {
     secret: string,
   ): ccxt.Exchange {
     // eslint-disable-next-line import/namespace
-    const exchangeClass = ccxt[exchangeName];
+    const exchangeClass = ccxt.pro[exchangeName] || ccxt[exchangeName];
     if (!exchangeClass) {
       throw new Error(`Exchange ${exchangeName} not supported.`);
     }
