@@ -10,12 +10,13 @@ import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
 import { NetworkSelect } from '../../components/network-select';
 import { PaginatedTable } from '../../components/paginated-table';
+import { getSupportedChainIds } from '../../config/network';
 import { useCampaigns } from '../../hooks';
 import { shortenAddress } from '../../utils/address';
 import dayjs from '../../utils/dayjs';
 
 export const Main: FC = () => {
-  const [chainId, setChainId] = useState(ChainId.ALL);
+  const [chainId, setChainId] = useState(getSupportedChainIds()?.[0]);
   const { loading, campaigns } = useCampaigns(chainId);
   const { data: exchanges, isLoading: isLoadingExchanges } = useExchanges();
   const navigate = useNavigate();
