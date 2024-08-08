@@ -24,7 +24,7 @@ export const CreateCampaign: FC = () => {
       startDate: data.startDate.toISOString(),
     });
 
-    await createEscrow(manifest, fundAmount);
+    await createEscrow(manifest, data.fundToken, fundAmount);
   };
 
   if (
