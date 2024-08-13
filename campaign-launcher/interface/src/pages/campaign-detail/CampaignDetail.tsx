@@ -14,10 +14,10 @@ import { useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { APIKeyDialog, APIKeyFormValues } from './APIKeyDialog';
+import { useCampaign } from '../../api/campaign';
 import { useExchanges } from '../../api/exchange';
 import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
-import { useCampaign } from '../../hooks';
 import {
   useAuthentication,
   useJoinCampaign,
@@ -38,7 +38,7 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
     return null;
   }
 
-  const { campaign, loading } = useCampaign(+chainId, address);
+  const { data: campaign, isLoading: loading } = useCampaign(+chainId, address);
 
   const account = useAccount();
   const { isLoading: isROAuthLoading } = useAuthentication();

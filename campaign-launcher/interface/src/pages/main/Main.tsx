@@ -5,18 +5,19 @@ import { Box, SelectChangeEvent, Typography } from '@mui/material';
 import { BigNumberish, ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 
+import { useCampaigns } from '../../api/campaign';
 import { useExchanges } from '../../api/exchange';
 import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
 import { NetworkSelect } from '../../components/network-select';
 import { PaginatedTable } from '../../components/paginated-table';
-import { useCampaigns } from '../../hooks';
+import { getSupportedChainIds } from '../../config/network';
 import { shortenAddress } from '../../utils/address';
 import dayjs from '../../utils/dayjs';
 
 export const Main: FC = () => {
-  const [chainId, setChainId] = useState(ChainId.ALL);
-  const { loading, campaigns } = useCampaigns(chainId);
+  const [chainId, setChainId] = useState(getSupportedChainIds()?.[0]);
+  const { data: campaigns, isLoading: loading } = useCampaigns(chainId);
   const { data: exchanges, isLoading: isLoadingExchanges } = useExchanges();
   const navigate = useNavigate();
 
@@ -98,7 +99,7 @@ export const Main: FC = () => {
               label: 'Status',
             },
           ]}
-          data={campaigns}
+          data={campaigns || []}
           onClickRow={(row) => {
             navigate(`/campaign-detail/${row.chainId}/${row.address}`);
           }}

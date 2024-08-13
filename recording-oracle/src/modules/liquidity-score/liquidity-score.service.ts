@@ -83,6 +83,10 @@ export class LiquidityScoreService {
 
     const campaignLiquidityScore: LiquidityScore[] = [];
 
+    const fromDate = campaign.lastSyncedAt;
+    const toDate =
+      new Date() < campaign.endDate ? new Date() : campaign.endDate;
+
     for (const user of campaign.users) {
       let liquidityScore;
 
@@ -91,7 +95,8 @@ export class LiquidityScoreService {
           campaign.exchangeName,
           campaign.token,
           user,
-          campaign.lastSyncedAt,
+          fromDate,
+          toDate,
         );
       } else {
         liquidityScore = await this._calculateDEXLiquidityScore(
@@ -99,7 +104,8 @@ export class LiquidityScoreService {
           campaign.chainId,
           campaign.token,
           user,
-          campaign.lastSyncedAt,
+          fromDate,
+          toDate,
         );
       }
 
@@ -126,6 +132,7 @@ export class LiquidityScoreService {
     symbol: string,
     user: UserEntity,
     since: Date,
+    to: Date,
   ): Promise<number> {
     const encryption = await Encryption.build(
       this.pgpConfigService.privateKey,
@@ -159,13 +166,16 @@ export class LiquidityScoreService {
       symbol,
       since.getTime(),
     );
-    const tradeVolume = trades.reduce((acc, trade) => acc + trade.amount, 0);
+    const tradeVolume = trades
+      .filter((trade) => trade.timestamp < to.getTime())
+      .reduce((acc, trade) => acc + trade.amount, 0);
 
     const { openOrderVolume, averageDuration, spread } =
       await this.ccxtService.processOpenOrders(
         exchange,
         symbol,
         since.getTime(),
+        to.getTime(),
       );
 
     const liquidityScoreCalculation = new LiquidityScoreCalculation(
@@ -183,7 +193,8 @@ export class LiquidityScoreService {
     chainId: number,
     token: string,
     user: UserEntity,
-    since: Date,
+    from: Date,
+    to: Date,
   ): Promise<number> {
     let trades: number[] = [];
 
@@ -193,7 +204,8 @@ export class LiquidityScoreService {
           chainId,
           user.evmAddress,
           token,
-          since,
+          from,
+          to,
         );
         break;
     }

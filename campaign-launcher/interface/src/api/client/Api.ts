@@ -26,6 +26,59 @@ export interface ManifestUploadResponseDto {
   hash: string;
 }
 
+export interface CampaignDataDto {
+  chainId: number;
+  requesterAddress: string;
+  exchangeName: string;
+  symbol: string;
+  duration: number;
+  fundAmount: string;
+  startBlock: number;
+  endBlock: number;
+  type: string;
+  address: string;
+  amountPaid: string;
+  balance: string;
+  count: string;
+  factoryAddress: string;
+  finalResultsUrl: string;
+  intermediateResultsUrl: string;
+  launcher: string;
+  manifestHash: string;
+  manifestUrl: string;
+  recordingOracle: string;
+  recordingOracleFee: string;
+  reputationOracle: string;
+  reputationOracleFee: string;
+  exchangeOracle: string;
+  exchangeOracleFee: string;
+  status: string;
+  token: string;
+  totalFundedAmount: string;
+  createdAt: string;
+}
+
+export interface LeaderDataDto {
+  id: string;
+  chainId: number;
+  address: string;
+  amountStaked: string;
+  amountAllocated: string;
+  amountLocked: string;
+  lockedUntilTimestamp: string;
+  amountWithdrawn: string;
+  amountSlashed: string;
+  reputation: string;
+  reward: string;
+  amountJobsLaunched: string;
+  role: string;
+  fee: string;
+  publicKey: string;
+  webhookUrl: string;
+  url: string;
+  jobTypes: string[];
+}
+
 export type QueryParamsType = Record<string | number, any>;
 export type ResponseFormat = keyof Omit<Body, 'body' | 'bodyUsed'>;
 
@@ -351,6 +404,128 @@ export class Api<
         method: 'POST',
         body: data,
         type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+  };
+  campaign = {
+    /**
+     * No description
+     *
+     * @tags campaign
+     * @name CampaignControllerGetCampaigns
+     * @summary Get campaigns for the given chain ID
+     * @request GET:/campaign
+     */
+    campaignControllerGetCampaigns: (
+      query?: {
+        /** Chain ID */
+        chainId?:
+          | -1
+          | 1
+          | 4
+          | 5
+          | 11155111
+          | 56
+          | 97
+          | 137
+          | 80001
+          | 80002
+          | 1284
+          | 1287
+          | 43113
+          | 43114
+          | 42220
+          | 44787
+          | 195
+          | 1338
+          | 196;
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<any[], void>({
+        path: `/campaign`,
+        method: 'GET',
+        query: query,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags campaign
+     * @name CampaignControllerGetCampaign
+     * @summary Get the campaign data for the given chain Id and escrow address
+     * @request GET:/campaign/{chainId}/{escrowAddress}
+     */
+    campaignControllerGetCampaign: (
+      chainId:
+        | -1
+        | 1
+        | 4
+        | 5
+        | 11155111
+        | 56
+        | 97
+        | 137
+        | 80001
+        | 80002
+        | 1284
+        | 1287
+        | 43113
+        | 43114
+        | 42220
+        | 44787
+        | 195
+        | 1338
+        | 196,
+      escrowAddress: string,
+      params: RequestParams = {}
+    ) =>
+      this.request<CampaignDataDto, void>({
+        path: `/campaign/${chainId}/${escrowAddress}`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+  };
+  leader = {
+    /**
+     * No description
+     *
+     * @tags leader
+     * @name LeaderControllerGetLeader
+     * @summary Get the leader data for the given chain Id and address
+     * @request GET:/leader/{chainId}/{address}
+     */
+    leaderControllerGetLeader: (
+      chainId:
+        | -1
+        | 1
+        | 4
+        | 5
+        | 11155111
+        | 56
+        | 97
+        | 137
+        | 80001
+        | 80002
+        | 1284
+        | 1287
+        | 43113
+        | 43114
+        | 42220
+        | 44787
+        | 195
+        | 1338
+        | 196,
+      address: string,
+      params: RequestParams = {}
+    ) =>
+      this.request<LeaderDataDto, void>({
+        path: `/leader/${chainId}/${address}`,
+        method: 'GET',
         format: 'json',
         ...params,
       }),

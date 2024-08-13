@@ -52,7 +52,9 @@ export class CampaignService {
   public async getAllActiveCampaigns() {
     const campaigns = await this.campaignRepository.findAll();
 
-    return campaigns.filter(async (campaign) => campaign.endDate > new Date());
+    return campaigns.filter(
+      async (campaign) => campaign.lastSyncedAt < campaign.endDate,
+    );
   }
 
   public async updateLastSyncedAt(campaign: CampaignEntity, date: Date) {
