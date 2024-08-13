@@ -16,7 +16,7 @@ export const CryptoEntity: FC<CryptoEntityProps> = ({
   logo,
 }) => {
   const { icon, label } = TOKENS.find(
-    (token) => token.name.toLowerCase() === name.toLowerCase()
+    (token) => token.name?.toLowerCase() === name?.toLowerCase()
   ) || {
     icon: logo,
     label: displayName ?? name,

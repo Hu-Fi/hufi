@@ -29,46 +29,57 @@ export class PayoutService {
   ) {}
 
   async fetchCampaigns(chainId: number): Promise<void> {
-    try {
-      const campaigns = await EscrowUtils.getEscrows({
-        chainId,
-        recordingOracle: this.web3ConfigService.recordingOracle,
-      });
+    let supportedChainIds = [chainId];
 
-      const campaignsWithManifest: Array<CampaignWithManifest> =
-        await Promise.all(
-          campaigns.map(async (campaign) => {
-            let manifest;
-
-            try {
-              const response = await lastValueFrom(
-                this.httpService.get(campaign.manifestUrl),
-              );
-              manifest = response.data;
-            } catch {
-              manifest = undefined;
-            }
-
-            if (!manifest) {
-              return undefined;
-            }
-
-            return {
-              ...manifest,
-              escrowAddress: campaign.address,
-              chainId: campaign.chainId,
-              status: campaign.status,
-            } as CampaignWithManifest;
-          }),
-        );
-
-      this.campaigns = campaignsWithManifest.filter(
-        (campaign) => campaign !== undefined,
-      );
-    } catch (e: any) {
-      this.logger.error('Error fetching campaigns:', e);
-      throw new Error(e);
+    if (chainId === ChainId.ALL) {
+      supportedChainIds = this.web3Service.getValidChains();
     }
+
+    const allCampaigns = [];
+
+    for (const supportedChainId of supportedChainIds) {
+      try {
+        const campaigns = await EscrowUtils.getEscrows({
+          chainId: supportedChainId,
+          recordingOracle: this.web3ConfigService.recordingOracle,
+        });
+
+        const campaignsWithManifest: Array<CampaignWithManifest> =
+          await Promise.all(
+            campaigns.map(async (campaign) => {
+              let manifest;
+
+              try {
+                const response = await lastValueFrom(
+                  this.httpService.get(campaign.manifestUrl),
+                );
+                manifest = response.data;
+              } catch {
+                manifest = undefined;
+              }
+
+              if (!manifest) {
+                return undefined;
+              }
+
+              return {
+                ...manifest,
+                escrowAddress: campaign.address,
+                chainId: campaign.chainId,
+                status: campaign.status,
+              } as CampaignWithManifest;
+            }),
+          );
+
+        allCampaigns.push(
+          ...campaignsWithManifest.filter((campaign) => !!campaign),
+        );
+      } catch (e: any) {
+        this.logger.error('Error fetching campaigns:', e);
+      }
+    }
+
+    this.campaigns = allCampaigns;
   }
 
   /**

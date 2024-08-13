@@ -16,7 +16,7 @@ export const CreateCampaign: FC = () => {
   const { isLoading: loading, data: leader } = useLeader();
   const { setNotification } = useNotification();
 
-  const handleSubmit = async (data: CampaignFormValues) => {
+  const handleSubmit = async ({ fundToken, ...data }: CampaignFormValues) => {
     const fundAmount = ethers.parseUnits(data.fundAmount.toString(), 'ether');
 
     const { data: manifest } = await uploadManifest({
@@ -25,7 +25,7 @@ export const CreateCampaign: FC = () => {
       startDate: data.startDate.toISOString(),
     });
 
-    await createEscrow(manifest, data.fundToken, fundAmount);
+    await createEscrow(manifest, fundToken, fundAmount);
   };
 
   if (
