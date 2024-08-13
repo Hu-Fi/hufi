@@ -60,7 +60,9 @@ export class CampaignService {
             }),
           );
 
-        allCampaigns.push(...campaignsWithManifest);
+        allCampaigns.push(
+          ...campaignsWithManifest.filter((campaign) => !!campaign),
+        );
       } catch (error) {
         this.logger.error(
           `Failed to fetch campaigns for chainId: ${supportedChainId}`,

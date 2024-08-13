@@ -72,7 +72,7 @@ export class PayoutService {
           );
 
         allCampaigns.push(
-          ...campaignsWithManifest.filter((campaign) => campaign !== undefined),
+          ...campaignsWithManifest.filter((campaign) => !!campaign),
         );
       } catch (e: any) {
         this.logger.error('Error fetching campaigns:', e);
