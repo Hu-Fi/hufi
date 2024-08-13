@@ -31,10 +31,7 @@ export class PayoutService {
   async fetchCampaigns(chainId: number): Promise<void> {
     try {
       const campaigns = await EscrowUtils.getEscrows({
-        networks:
-          chainId === ChainId.ALL
-            ? this.web3Service.getValidChains()
-            : [chainId],
+        chainId,
         recordingOracle: this.web3ConfigService.recordingOracle,
       });
 

@@ -13,4 +13,9 @@ export const envValidator = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string().required(),
   S3_USE_SSL: Joi.boolean(),
+  // Web3
+  WEB3_ENV: Joi.string().required(),
+  SUBGRAPH_API_KEY: Joi.string().required(),
+  RECORDING_ORACLE: Joi.string().required(),
+  REPUTATION_ORACLE: Joi.string().required(),
 });

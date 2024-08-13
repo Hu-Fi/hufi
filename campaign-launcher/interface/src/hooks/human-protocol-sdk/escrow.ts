@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { ChainId, EscrowClient, EscrowUtils } from '@human-protocol/sdk';
-import { EscrowData } from '@human-protocol/sdk/dist/graphql';
+import { ChainId, EscrowClient } from '@human-protocol/sdk';
 import { v4 as uuidV4 } from 'uuid';
 import { useAccount } from 'wagmi';
 
@@ -9,7 +8,6 @@ import { useClientToSigner } from './common';
 import { useNotification } from '../';
 import { ManifestUploadResponseDto } from '../../api/client/Api';
 import { oracles } from '../../config/escrow';
-import { ManifestDto } from '../../types/manifest';
 import { getTokenAddress } from '../../utils/token';
 
 export const useCreateEscrow = () => {
@@ -78,128 +76,4 @@ export const useCreateEscrow = () => {
   };
 
   return { createEscrow, isLoading };
-};
-
-export type CampaignData = EscrowData &
-  Omit<ManifestDto, 'token'> & {
-    symbol: string;
-  };
-
-export const useCampaigns = (chainId: ChainId) => {
-  const { setNotification } = useNotification();
-
-  const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchCampaigns = async () => {
-    setLoading(true);
-    try {
-      const campaigns = await EscrowUtils.getEscrows({
-        chainId,
-        recordingOracle: oracles.recordingOracle,
-        reputationOracle: oracles.reputationOracle,
-      });
-
-      const campaignsWithManifest: Array<CampaignData | undefined> =
-        await Promise.all(
-          campaigns.map(async (campaign) => {
-            let manifest;
-
-            try {
-              if (campaign.manifestUrl) {
-                // @dev Temporary fix to handle http/https issue
-                const url = campaign.manifestUrl.replace(
-                  'http://storage.googleapis.com:80',
-                  'https://storage.googleapis.com'
-                );
-                manifest = await fetch(url).then((res) => res.json());
-              }
-            } catch {
-              manifest = undefined;
-            }
-
-            if (!manifest) {
-              return undefined;
-            }
-
-            return {
-              ...manifest,
-              ...campaign,
-              symbol: manifest.token.toLowerCase(),
-            };
-          })
-        );
-
-      setCampaigns(
-        campaignsWithManifest.filter(
-          (campaign) => campaign !== undefined
-        ) as CampaignData[]
-      );
-    } catch (e) {
-      setNotification({
-        type: 'error',
-        message: (e as Error).message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCampaigns();
-  }, [chainId]);
-
-  return { campaigns, loading };
-};
-
-export const useCampaign = (chainId: ChainId, address: string) => {
-  const { setNotification } = useNotification();
-
-  const [campaign, setCampaign] = useState<CampaignData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchCampaign = async () => {
-    setLoading(true);
-    try {
-      const campaign = await EscrowUtils.getEscrow(chainId, address);
-
-      let manifest;
-
-      try {
-        if (campaign.manifestUrl) {
-          // @dev Temporary fix to handle http/https issue
-          const url = campaign.manifestUrl.replace(
-            'http://storage.googleapis.com:80',
-            'https://storage.googleapis.com'
-          );
-          manifest = await fetch(url).then((res) => res.json());
-        }
-      } catch {
-        manifest = undefined;
-      }
-
-      if (!manifest) {
-        return undefined;
-      }
-
-      setCampaign({
-        ...manifest,
-        ...campaign,
-        symbol: manifest.token.toLowerCase(),
-      });
-    } catch (e) {
-      setNotification({
-        type: 'error',
-        message: (e as Error).message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCampaign();
-  }, [chainId, address]);
-
-  return { campaign, loading };
 };

@@ -57,6 +57,7 @@ export class CCXTService {
     exchange: ccxt.Exchange,
     symbol: string,
     since: number,
+    to: number,
   ): Promise<{
     openOrderVolume: number;
     averageDuration: number;
@@ -69,12 +70,14 @@ export class CCXTService {
 
     const now = Date.now();
     let totalDuration = 0;
-    const openOrderVolume = orders.reduce((acc, order) => {
-      const orderCreationTime = new Date(order.timestamp).getTime();
-      const duration = (now - orderCreationTime) / 1000; // Convert duration from milliseconds to seconds
-      totalDuration += duration;
-      return acc + order.amount;
-    }, 0);
+    const openOrderVolume = orders
+      .filter((order) => order.timestamp < to)
+      .reduce((acc, order) => {
+        const orderCreationTime = new Date(order.timestamp).getTime();
+        const duration = (now - orderCreationTime) / 1000; // Convert duration from milliseconds to seconds
+        totalDuration += duration;
+        return acc + order.amount;
+      }, 0);
 
     const averageDuration = orders.length ? totalDuration / orders.length : 0;
 

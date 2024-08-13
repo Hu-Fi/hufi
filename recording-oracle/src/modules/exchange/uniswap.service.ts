@@ -16,23 +16,35 @@ export class UniswapService {
     chainId: number,
     operator: string,
     token: string,
-    since: Date,
+    from: Date,
+    to: Date,
   ) {
     this.logger.log(
-      `Fetching trades for ${operator} on ${token} since ${since.toISOString()}`,
+      `Fetching trades for ${operator} on ${token} from ${from.toISOString()} to ${to.toISOString()}`,
     );
 
     const { gql } = await this._importGraphQLRequest();
-    const sinceTimestamp = Math.floor(since.getTime() / 1000);
+    const fromTimestamp = Math.floor(from.getTime() / 1000);
+    const toTimestamp = Math.floor(to.getTime() / 1000);
 
     const sellTrades = await this._fetchSubgraph<{
       swaps: Array<{ amount0: string }>;
     }>(
       chainId,
       gql`
-        query getSwaps($origin: String!, $token: String!, $since: Int!) {
+        query getSwaps(
+          $origin: String!
+          $token: String!
+          $from: Int!
+          $to: Int!
+        ) {
           swaps(
-            where: { origin: $origin, token0: $token, timestamp_gt: $since }
+            where: {
+              origin: $origin
+              token0: $token
+              timestamp_gt: $from
+              timestamp_lt: $to
+            }
           ) {
             amount0
           }
@@ -41,7 +53,8 @@ export class UniswapService {
       {
         origin: operator.toLowerCase(),
         token: token.toLowerCase(),
-        since: sinceTimestamp,
+        from: fromTimestamp,
+        to: toTimestamp,
       },
     );
 
@@ -50,9 +63,19 @@ export class UniswapService {
     }>(
       chainId,
       gql`
-        query getSwaps($origin: String!, $token: String!, $since: Int!) {
+        query getSwaps(
+          $origin: String!
+          $token: String!
+          $from: Int!
+          $to: Int!
+        ) {
           swaps(
-            where: { origin: $origin, token1: $token, timestamp_gt: $since }
+            where: {
+              origin: $origin
+              token1: $token
+              timestamp_gt: $from
+              timstamp_lt: $to
+            }
           ) {
             amount1
           }
@@ -61,7 +84,8 @@ export class UniswapService {
       {
         origin: operator.toLowerCase(),
         token: token.toLowerCase(),
-        since: sinceTimestamp,
+        from: fromTimestamp,
+        to: toTimestamp,
       },
     );
 

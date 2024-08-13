@@ -246,10 +246,6 @@ export const CampaignForm: FC<CampaignFormProps> = ({
                   <MenuItem value={3 * 30 * ONE_DAY_IN_SECONDS}>
                     3 Months
                   </MenuItem>
-                  <MenuItem value={6 * 30 * ONE_DAY_IN_SECONDS}>
-                    6 Months
-                  </MenuItem>
-                  <MenuItem value={365 * ONE_DAY_IN_SECONDS}>1 Year</MenuItem>
                 </Select>
               )}
             />
