@@ -101,7 +101,7 @@ export const Main: FC = () => {
           ]}
           data={campaigns || []}
           onClickRow={(row) => {
-            navigate(`/campaign-detail/${row.chainId}/${row.address}`);
+            navigate(`/campaign-detail/${row?.chainId}/${row?.address}`);
           }}
         />
       )}
