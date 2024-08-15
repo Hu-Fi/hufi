@@ -64,7 +64,7 @@ export class UserController {
     type: Object,
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  public async getExchangeAPIKey(
+  public async checkExchangeAPIKeyExists(
     @Req() request: RequestWithUser,
     @Param('exchangeName') exchangeName: string,
   ): Promise<boolean> {
