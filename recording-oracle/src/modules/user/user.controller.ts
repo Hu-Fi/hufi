@@ -53,6 +53,28 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('exchange-api-key/:exchangeName/exists')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Check if user has exchange API key',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'True if user has exchange API key, false otherwise',
+    type: Object,
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  public async checkExchangeAPIKeyExists(
+    @Req() request: RequestWithUser,
+    @Param('exchangeName') exchangeName: string,
+  ): Promise<boolean> {
+    return await this.userService.checkExchangeAPIKeyExists(
+      request.user,
+      exchangeName,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('exchange-api-key')
   @ApiBearerAuth()
   @ApiOperation({

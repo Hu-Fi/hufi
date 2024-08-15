@@ -23,6 +23,7 @@ import {
   useJoinCampaign,
   useRegisterExchangeAPIKey,
   useUserCampaignStatus,
+  useUserExchangeAPIKeyExists,
 } from '../../hooks/recording-oracle';
 import { ExchangeType } from '../../types';
 
@@ -57,6 +58,9 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
     registerExchangeAPIKeyAsync,
     isLoading: isRegisterExchangeAPIKeyLoading,
   } = useRegisterExchangeAPIKey();
+  const { data: userExchangeAPIKeyExists } = useUserExchangeAPIKeyExists(
+    campaign?.exchangeName
+  );
 
   const apiKeyDialogPopupState = usePopupState({
     variant: 'popover',
@@ -77,11 +81,13 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
       return;
     }
 
-    await registerExchangeAPIKeyAsync(
-      campaign?.exchangeName,
-      values.apiKey,
-      values.secret
-    );
+    if (!userExchangeAPIKeyExists) {
+      await registerExchangeAPIKeyAsync(
+        campaign?.exchangeName,
+        values.apiKey,
+        values.secret
+      );
+    }
 
     await joinCampaignAsync(campaign.address);
   };
@@ -251,7 +257,8 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
                 isJoinCampaignLoading ||
                 isRegisterExchangeAPIKeyLoading
               }
-              {...(exchange.type === ExchangeType.CEX
+              {...(exchange?.type === ExchangeType.CEX &&
+              !userExchangeAPIKeyExists
                 ? bindTrigger(apiKeyDialogPopupState)
                 : {
                     onClick: () =>
