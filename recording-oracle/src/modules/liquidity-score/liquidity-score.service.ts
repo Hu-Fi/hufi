@@ -46,6 +46,13 @@ export class LiquidityScoreService {
   public async calculateLiquidityScore(
     payload: LiquidityScoreCalculateRequestDto,
   ): Promise<UploadFile | null> {
+    this.logger.debug(
+      `Calculating liquidity score for campaign ${payload.address}`,
+    );
+
+    this.logger.debug(
+      `Fetching campaign ${payload.address} from chain ${payload.chainId}`,
+    );
     const campaign = await this.campaignService.getCampaign(
       payload.chainId,
       payload.address,
@@ -84,8 +91,11 @@ export class LiquidityScoreService {
     const campaignLiquidityScore: LiquidityScore[] = [];
 
     const fromDate = campaign.lastSyncedAt;
-    const toDate =
-      new Date() < campaign.endDate ? new Date() : campaign.endDate;
+    let toDate = campaign.endDate;
+
+    if (new Date() < toDate) {
+      toDate = new Date();
+    }
 
     for (const user of campaign.users) {
       let liquidityScore;
@@ -134,6 +144,10 @@ export class LiquidityScoreService {
     since: Date,
     to: Date,
   ): Promise<number> {
+    this.logger.debug(
+      `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
+    );
+
     const encryption = await Encryption.build(
       this.pgpConfigService.privateKey,
       this.pgpConfigService.passphrase,

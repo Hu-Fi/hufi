@@ -90,6 +90,16 @@ export class UserService {
     return userEntity.save();
   }
 
+  public async checkExchangeAPIKeyExists(
+    user: UserEntity,
+    exchangeName: string,
+  ): Promise<boolean> {
+    return !!(await this.exchangeAPIKeyRepository.findByUserAndExchange(
+      user,
+      exchangeName,
+    ));
+  }
+
   public async createExchangeAPIKey(
     user: UserEntity,
     exchangeAPIKeyData: ExchangeAPIKeyCreateRequestDto,

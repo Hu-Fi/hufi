@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { useQuery } from '@tanstack/react-query';
+
 import { requestWithAuth } from './api';
 import { useAuthentication } from './auth';
 import { useNotification } from '../notification';
@@ -68,4 +70,19 @@ export const useRegisterExchangeAPIKey = ({
     isLoading,
     registerExchangeAPIKeyAsync,
   };
+};
+
+export const useUserExchangeAPIKeyExists = (exchangeName?: string) => {
+  return useQuery({
+    queryKey: ['user', 'exchange-api-key', exchangeName],
+    queryFn: async () => {
+      return await requestWithAuth(
+        `/user/exchange-api-key/${exchangeName}/exists`,
+        {
+          method: 'GET',
+        }
+      );
+    },
+    enabled: !!exchangeName?.length,
+  });
 };

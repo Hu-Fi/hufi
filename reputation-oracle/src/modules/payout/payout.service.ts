@@ -100,11 +100,6 @@ export class PayoutService {
         continue;
       }
 
-      // Only campaigns that have not ended
-      if (campaign.endBlock * 1000 < new Date().getTime()) {
-        continue;
-      }
-
       const data: WebhookIncomingDto = {
         chainId: campaign.chainId,
         eventType: EventType.CAMPAIGN_PAYOUT,
