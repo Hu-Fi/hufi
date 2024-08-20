@@ -11,7 +11,7 @@ export class CCXTService {
     secret: string,
   ): ccxt.Exchange {
     // eslint-disable-next-line import/namespace
-    const exchangeClass = ccxt[exchangeName];
+    const exchangeClass = ccxt.pro[exchangeName] || ccxt[exchangeName];
     if (!exchangeClass) {
       throw new Error(`Exchange ${exchangeName} not supported.`);
     }
@@ -35,8 +35,9 @@ export class CCXTService {
   public async fetchOpenOrders(
     exchange: ccxt.Exchange,
     symbol: string,
+    since: number,
   ): Promise<ccxt.Order[]> {
-    return exchange.fetchOpenOrders(symbol);
+    return exchange.fetchOpenOrders(symbol, since);
   }
 
   public async fetchOrderBook(
@@ -55,23 +56,28 @@ export class CCXTService {
   public async processOpenOrders(
     exchange: ccxt.Exchange,
     symbol: string,
+    since: number,
+    to: number,
   ): Promise<{
     openOrderVolume: number;
     averageDuration: number;
     spread: number;
   }> {
-    const orders = await this.fetchOpenOrders(exchange, symbol);
+    const orders = await this.fetchOpenOrders(exchange, symbol, since);
+
     const orderBook = await this.fetchOrderBook(exchange, symbol);
     const spread = this.calculateSpread(orderBook);
 
     const now = Date.now();
     let totalDuration = 0;
-    const openOrderVolume = orders.reduce((acc, order) => {
-      const orderCreationTime = new Date(order.timestamp).getTime();
-      const duration = (now - orderCreationTime) / 1000; // Convert duration from milliseconds to seconds
-      totalDuration += duration;
-      return acc + order.amount;
-    }, 0);
+    const openOrderVolume = orders
+      .filter((order) => order.timestamp < to)
+      .reduce((acc, order) => {
+        const orderCreationTime = new Date(order.timestamp).getTime();
+        const duration = (now - orderCreationTime) / 1000; // Convert duration from milliseconds to seconds
+        totalDuration += duration;
+        return acc + order.amount;
+      }, 0);
 
     const averageDuration = orders.length ? totalDuration / orders.length : 0;
 

@@ -591,10 +591,10 @@
   resolved "https://registry.yarnpkg.com/@human-protocol/core/-/core-2.1.2.tgz#c679794a4a0826384800cae926566ca333465b12"
   integrity sha512-aJUj492beKkWnwZT+7VMmRrRUErFybiDyHvXi7cfQ5o8lR68JLMzlRiSP1aEjzuKN6tLWvX4zS0xLJAkhRYdMQ==
 
-"@human-protocol/sdk@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-3.0.0.tgz#0d2da8a41df24aee268fbac85b075557fff9c95e"
-  integrity sha512-5ny/+/oYEiXTllDlq0N2R/aniFsoJa36krQX3KzLv4wQU/OPZOAzmL9+WRaSS6QA/TclkqPVmOwNHt+6ucL2BA==
+"@human-protocol/sdk@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-3.0.2.tgz#b8158fe1e381038a1625a5aa4e5bb894d7bf4b34"
+  integrity sha512-kIqJ3zvCTZjD0qkcSsX09YXaDRTwlDy3AGqCX06Zdt6MWepr2tCJBrHEDPqpVxWsmGO1VsFKIWmrGZefoBaLNQ==
   dependencies:
     "@human-protocol/core" "*"
     aws-sdk "^2.1528.0"

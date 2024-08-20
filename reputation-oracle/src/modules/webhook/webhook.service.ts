@@ -145,9 +145,12 @@ export class WebhookService {
         const manifest = response.data;
 
         const endBlock = manifest.endBlock;
-        const remainingDays = Math.floor(
+        let remainingDays = Math.floor(
           (endBlock - Math.floor(Date.now() / 1000)) / 86400,
         );
+        if (remainingDays < 1) {
+          remainingDays = 1;
+        }
         const amountForDay = totalAmount / BigInt(remainingDays);
 
         const amounts = this.calculateCampaignPayoutAmounts(

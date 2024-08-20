@@ -26,13 +26,13 @@ export class CampaignEntity extends BaseEntity {
   token: string | null; // Token used in the campaign
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     nullable: true,
   })
   startDate: Date | null; // Start date of the campaign
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     nullable: true,
   })
   endDate: Date | null; // End date of the campaign
@@ -48,7 +48,8 @@ export class CampaignEntity extends BaseEntity {
   fundAmount: string | null; // Fund amount of the campaign
 
   @Column({
-    default: 'NOW()',
+    type: 'timestamp',
+    default: () => 'now()',
   })
   lastSyncedAt: Date; // Last synced timestamp
 

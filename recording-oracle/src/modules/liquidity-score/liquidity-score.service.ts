@@ -46,6 +46,13 @@ export class LiquidityScoreService {
   public async calculateLiquidityScore(
     payload: LiquidityScoreCalculateRequestDto,
   ): Promise<UploadFile | null> {
+    this.logger.debug(
+      `Calculating liquidity score for campaign ${payload.address}`,
+    );
+
+    this.logger.debug(
+      `Fetching campaign ${payload.address} from chain ${payload.chainId}`,
+    );
     const campaign = await this.campaignService.getCampaign(
       payload.chainId,
       payload.address,
@@ -83,6 +90,13 @@ export class LiquidityScoreService {
 
     const campaignLiquidityScore: LiquidityScore[] = [];
 
+    const fromDate = campaign.lastSyncedAt;
+    let toDate = campaign.endDate;
+
+    if (new Date() < toDate) {
+      toDate = new Date();
+    }
+
     for (const user of campaign.users) {
       let liquidityScore;
 
@@ -91,7 +105,8 @@ export class LiquidityScoreService {
           campaign.exchangeName,
           campaign.token,
           user,
-          campaign.lastSyncedAt,
+          fromDate,
+          toDate,
         );
       } else {
         liquidityScore = await this._calculateDEXLiquidityScore(
@@ -99,7 +114,8 @@ export class LiquidityScoreService {
           campaign.chainId,
           campaign.token,
           user,
-          campaign.lastSyncedAt,
+          fromDate,
+          toDate,
         );
       }
 
@@ -126,7 +142,12 @@ export class LiquidityScoreService {
     symbol: string,
     user: UserEntity,
     since: Date,
+    to: Date,
   ): Promise<number> {
+    this.logger.debug(
+      `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
+    );
+
     const encryption = await Encryption.build(
       this.pgpConfigService.privateKey,
       this.pgpConfigService.passphrase,
@@ -159,10 +180,17 @@ export class LiquidityScoreService {
       symbol,
       since.getTime(),
     );
-    const tradeVolume = trades.reduce((acc, trade) => acc + trade.amount, 0);
+    const tradeVolume = trades
+      .filter((trade) => trade.timestamp < to.getTime())
+      .reduce((acc, trade) => acc + trade.amount, 0);
 
     const { openOrderVolume, averageDuration, spread } =
-      await this.ccxtService.processOpenOrders(exchange, symbol);
+      await this.ccxtService.processOpenOrders(
+        exchange,
+        symbol,
+        since.getTime(),
+        to.getTime(),
+      );
 
     const liquidityScoreCalculation = new LiquidityScoreCalculation(
       tradeVolume,
@@ -179,7 +207,8 @@ export class LiquidityScoreService {
     chainId: number,
     token: string,
     user: UserEntity,
-    since: Date,
+    from: Date,
+    to: Date,
   ): Promise<number> {
     let trades: number[] = [];
 
@@ -189,7 +218,8 @@ export class LiquidityScoreService {
           chainId,
           user.evmAddress,
           token,
-          since,
+          from,
+          to,
         );
         break;
     }

@@ -22,7 +22,7 @@ import * as yup from 'yup';
 import { useExchanges, useSymbols } from '../../api/exchange';
 import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
-import { TOKENS } from '../../constants';
+import { ONE_DAY_IN_SECONDS, FUND_TOKENS, TOKENS } from '../../constants';
 import { ExchangeType } from '../../types';
 
 export type CampaignFormValues = {
@@ -32,6 +32,7 @@ export type CampaignFormValues = {
   token: string;
   startDate: Date;
   duration: number;
+  fundToken: string;
   fundAmount: number;
   additionalData?: string;
 };
@@ -60,7 +61,8 @@ export const CampaignForm: FC<CampaignFormProps> = ({
       exchangeName: '',
       token: '',
       startDate: new Date(),
-      duration: 7862400,
+      duration: ONE_DAY_IN_SECONDS,
+      fundToken: 'hmt',
       fundAmount: 0.0001,
     },
   });
@@ -237,14 +239,45 @@ export const CampaignForm: FC<CampaignFormProps> = ({
                   label="Duration"
                   {...field}
                 >
-                  <MenuItem value={7862400}>3 Months</MenuItem>
-                  <MenuItem value={15724800}>6 Months</MenuItem>
-                  <MenuItem value={31536000}>1 Year</MenuItem>
+                  <MenuItem value={ONE_DAY_IN_SECONDS}>1 Day</MenuItem>
+                  <MenuItem value={7 * ONE_DAY_IN_SECONDS}>7 Days</MenuItem>
+                  <MenuItem value={15 * ONE_DAY_IN_SECONDS}>15 Days</MenuItem>
+                  <MenuItem value={30 * ONE_DAY_IN_SECONDS}>1 Month</MenuItem>
+                  <MenuItem value={3 * 30 * ONE_DAY_IN_SECONDS}>
+                    3 Months
+                  </MenuItem>
                 </Select>
               )}
             />
             {errors.duration && (
               <FormHelperText>{errors.duration.message}</FormHelperText>
+            )}
+          </FormControl>
+          <FormControl error={!!errors.token}>
+            <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
+            <Controller
+              name="fundToken"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  labelId="fund-token-select-label"
+                  id="fund-token-select"
+                  label="Fund Token"
+                  {...field}
+                >
+                  {TOKENS.filter((token) =>
+                    FUND_TOKENS.includes(token.name)
+                  ).map((token) => (
+                    <MenuItem key={token.name} value={token.name}>
+                      <CryptoEntity name={token.name} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            />
+
+            {errors.fundToken && (
+              <FormHelperText>{errors.fundToken.message}</FormHelperText>
             )}
           </FormControl>
           <FormControl error={!!errors.fundAmount}>
@@ -307,6 +340,7 @@ const validationSchema = yup.object({
   token: yup.string().required('Required'),
   startDate: yup.date().required('Required'),
   duration: yup.number().required('Required'),
+  fundToken: yup.string().required('Required'),
   fundAmount: yup.number().required('Required'),
   additionalData: yup.string().test('is-json', 'Invalid JSON', (value) => {
     if (!value) {

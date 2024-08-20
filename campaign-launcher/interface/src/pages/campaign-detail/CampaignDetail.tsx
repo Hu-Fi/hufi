@@ -14,15 +14,16 @@ import { useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { APIKeyDialog, APIKeyFormValues } from './APIKeyDialog';
+import { useCampaign } from '../../api/campaign';
 import { useExchanges } from '../../api/exchange';
 import { CryptoEntity, CryptoPairEntity } from '../../components/crypto-entity';
 import { Loading } from '../../components/loading';
-import { useCampaign } from '../../hooks';
 import {
   useAuthentication,
   useJoinCampaign,
   useRegisterExchangeAPIKey,
   useUserCampaignStatus,
+  useUserExchangeAPIKeyExists,
 } from '../../hooks/recording-oracle';
 import { ExchangeType } from '../../types';
 
@@ -38,7 +39,7 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
     return null;
   }
 
-  const { campaign, loading } = useCampaign(+chainId, address);
+  const { data: campaign, isLoading: loading } = useCampaign(+chainId, address);
 
   const account = useAccount();
   const { isLoading: isROAuthLoading } = useAuthentication();
@@ -57,6 +58,9 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
     registerExchangeAPIKeyAsync,
     isLoading: isRegisterExchangeAPIKeyLoading,
   } = useRegisterExchangeAPIKey();
+  const { data: userExchangeAPIKeyExists } = useUserExchangeAPIKeyExists(
+    campaign?.exchangeName
+  );
 
   const apiKeyDialogPopupState = usePopupState({
     variant: 'popover',
@@ -77,11 +81,13 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
       return;
     }
 
-    await registerExchangeAPIKeyAsync(
-      campaign?.exchangeName,
-      values.apiKey,
-      values.secret
-    );
+    if (!userExchangeAPIKeyExists) {
+      await registerExchangeAPIKeyAsync(
+        campaign?.exchangeName,
+        values.apiKey,
+        values.secret
+      );
+    }
 
     await joinCampaignAsync(campaign.address);
   };
@@ -251,7 +257,8 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
                 isJoinCampaignLoading ||
                 isRegisterExchangeAPIKeyLoading
               }
-              {...(exchange.type === ExchangeType.CEX
+              {...(exchange?.type === ExchangeType.CEX &&
+              !userExchangeAPIKeyExists
                 ? bindTrigger(apiKeyDialogPopupState)
                 : {
                     onClick: () =>
