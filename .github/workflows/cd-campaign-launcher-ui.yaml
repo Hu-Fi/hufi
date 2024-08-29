@@ -29,8 +29,6 @@ jobs:
           api_key: ${{ secrets.RENDER_API_KEY }}
           clear_cache: true
           wait_deploy: true
-          github_deployment: true
-          deployment_environment: "Campaign Launcher UI Testnet"
           github_token: ${{ secrets.GITHUB_TOKEN }}
   render-deploy-mainnet:
     name: Deploy on Mainnet
