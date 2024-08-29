@@ -158,14 +158,22 @@ export class PayoutService {
             this.logger.log(
               `Completing campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
             );
-            await escrowClient.complete(campaign.escrowAddress);
+            await escrowClient.complete(campaign.escrowAddress, {
+              gasPrice: await this.web3Service.calculateGasPrice(
+                campaign.chainId,
+              ),
+            });
           }
         } else {
           if (campaign.endBlock * 1000 < new Date().getTime()) {
             this.logger.log(
               `Cancelling campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
             );
-            await escrowClient.cancel(campaign.escrowAddress);
+            await escrowClient.cancel(campaign.escrowAddress, {
+              gasPrice: await this.web3Service.calculateGasPrice(
+                campaign.chainId,
+              ),
+            });
           }
         }
       } catch (error) {
