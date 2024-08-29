@@ -69,7 +69,7 @@ export class Web3Service {
     const multiplier = this.web3ConfigService.gasPriceMultiplier;
     const gasPrice = (await signer.provider?.getFeeData())?.gasPrice;
     if (gasPrice) {
-      return gasPrice * BigInt(multiplier);
+      return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
     }
     throw new Error(ErrorWeb3.GasPriceError);
   }

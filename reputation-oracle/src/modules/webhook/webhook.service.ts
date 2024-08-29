@@ -166,6 +166,9 @@ export class WebhookService {
           amounts,
           url,
           hash,
+          {
+            gasPrice: await this.web3Service.calculateGasPrice(chainId),
+          },
         );
 
         await this.webhookRepository.updateOne(
