@@ -86,8 +86,11 @@ export const useUserCampaignStatus = (address: string) => {
         );
 
         setIsRegistered(response);
+      } else {
+        setIsRegistered(false);
       }
     } catch (e) {
+      setIsRegistered(false);
       setNotification({
         type: 'error',
         message: (e as Error).message,

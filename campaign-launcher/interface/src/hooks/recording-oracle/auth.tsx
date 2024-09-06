@@ -1,4 +1,11 @@
-import { useEffect, useState } from 'react';
+import {
+  createContext,
+  FC,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import { useAccount, useSignMessage } from 'wagmi';
 
@@ -6,7 +13,20 @@ import { request } from './api';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from './constants';
 import { useNotification } from '../notification';
 
-export const useAuthentication = () => {
+type AuthenticationContextType = {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isUserExists: boolean;
+  signInAsync: () => Promise<void>;
+  signUpAsync: () => Promise<void>;
+  signOut: () => Promise<void>;
+};
+
+const AuthenticationContext = createContext<AuthenticationContextType>(
+  {} as AuthenticationContextType
+);
+
+export const AuthenticationProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUserExists, setIsUserExists] = useState(false);
@@ -14,13 +34,16 @@ export const useAuthentication = () => {
   const { setNotification } = useNotification();
   const { signMessageAsync } = useSignMessage();
 
-  const signInFromStorage = () => {
+  const signInFromStorage = (): boolean => {
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
     if (accessToken && refreshToken) {
       setIsAuthenticated(true);
+      return true;
     }
+
+    return false;
   };
 
   const signInAsync = async () => {
@@ -119,14 +142,14 @@ export const useAuthentication = () => {
     }
   };
 
-  const signOut = () => {
+  const signOut = async () => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
 
     setIsAuthenticated(false);
   };
 
-  const checkUserExists = async () => {
+  const checkUserExists = async (): Promise<boolean> => {
     try {
       const response = await request(`/user/${account.address}/exists`).catch(
         () => {
@@ -135,22 +158,45 @@ export const useAuthentication = () => {
       );
 
       setIsUserExists(response);
+
+      return response;
     } catch (e) {
       setIsUserExists(false);
+      return false;
     }
   };
 
   useEffect(() => {
-    signInFromStorage();
-    checkUserExists();
-  }, []);
+    if (account.address) {
+      if (signInFromStorage()) {
+        return;
+      }
 
-  return {
-    isAuthenticated,
-    isLoading,
-    isUserExists,
-    signInAsync,
-    signUpAsync,
-    signOut,
-  };
+      (async () => {
+        const isExists = await checkUserExists();
+        if (isExists && !isAuthenticated) {
+          await signInAsync();
+        }
+      })();
+    }
+  }, [account.address]);
+
+  return (
+    <AuthenticationContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        isUserExists,
+        signInAsync,
+        signUpAsync,
+        signOut,
+      }}
+    >
+      {children}
+    </AuthenticationContext.Provider>
+  );
+};
+
+export const useAuthentication = () => {
+  return useContext(AuthenticationContext);
 };

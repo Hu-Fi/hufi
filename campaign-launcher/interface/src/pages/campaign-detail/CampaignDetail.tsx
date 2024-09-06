@@ -57,8 +57,16 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
   const {
     registerExchangeAPIKeyAsync,
     isLoading: isRegisterExchangeAPIKeyLoading,
-  } = useRegisterExchangeAPIKey();
+  } = useRegisterExchangeAPIKey({
+    onSuccess: async () => {
+      if (campaign) {
+        await joinCampaignAsync(campaign.address);
+      }
+    },
+  });
+
   const { data: userExchangeAPIKeyExists } = useUserExchangeAPIKeyExists(
+    account.address,
     campaign?.exchangeName
   );
 
@@ -81,15 +89,11 @@ export const CampaignDetail: FC<CampaignDetailProps> = () => {
       return;
     }
 
-    if (!userExchangeAPIKeyExists) {
-      await registerExchangeAPIKeyAsync(
-        campaign?.exchangeName,
-        values.apiKey,
-        values.secret
-      );
-    }
-
-    await joinCampaignAsync(campaign.address);
+    await registerExchangeAPIKeyAsync(
+      campaign?.exchangeName,
+      values.apiKey,
+      values.secret
+    );
   };
 
   return (
