@@ -52,9 +52,7 @@ export class UserController {
     return await this.userService.checkUserExists(address);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('exchange-api-key/:exchangeName/exists')
-  @ApiBearerAuth()
+  @Get(':address/exchange-api-key/:exchangeName/exists')
   @ApiOperation({
     summary: 'Check if user has exchange API key',
   })
@@ -65,11 +63,11 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   public async checkExchangeAPIKeyExists(
-    @Req() request: RequestWithUser,
+    @Param('address') address: string,
     @Param('exchangeName') exchangeName: string,
   ): Promise<boolean> {
     return await this.userService.checkExchangeAPIKeyExists(
-      request.user,
+      address,
       exchangeName,
     );
   }

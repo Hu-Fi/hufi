@@ -4,6 +4,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import { AuthenticationProvider as ROAuthenticationProvider } from './hooks/recording-oracle';
 import { MainLayout } from './layout';
 import {
   ApiProvider,
@@ -19,25 +20,27 @@ export const App: FC = () => {
     <WagmiProvider>
       <QueryClientProvider>
         <ApiProvider>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <ThemeProvider>
-              <NotificationProvider>
-                <Router>
-                  <MainLayout>
-                    <Routes>
-                      {ROUTES.map((route) => (
-                        <Route
-                          key={route.key}
-                          path={route.path}
-                          element={<route.component />}
-                        />
-                      ))}
-                    </Routes>
-                  </MainLayout>
-                </Router>
-              </NotificationProvider>
-            </ThemeProvider>
-          </LocalizationProvider>
+          <ROAuthenticationProvider>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <ThemeProvider>
+                <NotificationProvider>
+                  <Router>
+                    <MainLayout>
+                      <Routes>
+                        {ROUTES.map((route) => (
+                          <Route
+                            key={route.key}
+                            path={route.path}
+                            element={<route.component />}
+                          />
+                        ))}
+                      </Routes>
+                    </MainLayout>
+                  </Router>
+                </NotificationProvider>
+              </ThemeProvider>
+            </LocalizationProvider>
+          </ROAuthenticationProvider>
         </ApiProvider>
       </QueryClientProvider>
     </WagmiProvider>

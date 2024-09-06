@@ -159,6 +159,7 @@ export const ConnectWallet: FC = () => {
                 onClick={() => {
                   disconnect();
                   signOut();
+                  setModalOpen(false);
                 }}
               >
                 <LogoutIcon />
