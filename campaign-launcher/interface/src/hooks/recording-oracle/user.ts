@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 
-import { requestWithAuth } from './api';
+import { request, requestWithAuth } from './api';
 import { useAuthentication } from './auth';
 import { useNotification } from '../notification';
 
@@ -34,7 +34,7 @@ export const useRegisterExchangeAPIKey = ({
         }
       }
 
-      const response = await requestWithAuth('/user/exchange-api-key', {
+      await requestWithAuth('/user/exchange-api-key', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,10 +45,6 @@ export const useRegisterExchangeAPIKey = ({
           secret: secret,
         }),
       });
-
-      if (!response.success) {
-        throw new Error('Failed to register exchange API Key');
-      }
 
       setNotification({
         type: 'success',
@@ -72,17 +68,20 @@ export const useRegisterExchangeAPIKey = ({
   };
 };
 
-export const useUserExchangeAPIKeyExists = (exchangeName?: string) => {
+export const useUserExchangeAPIKeyExists = (
+  accountAddress?: string,
+  exchangeName?: string
+) => {
   return useQuery({
-    queryKey: ['user', 'exchange-api-key', exchangeName],
+    queryKey: ['user', accountAddress, 'exchange-api-key', exchangeName],
     queryFn: async () => {
-      return await requestWithAuth(
-        `/user/exchange-api-key/${exchangeName}/exists`,
+      return await request(
+        `/user/${accountAddress}/exchange-api-key/${exchangeName}/exists`,
         {
           method: 'GET',
         }
       );
     },
-    enabled: !!exchangeName?.length,
+    enabled: !!accountAddress && !!exchangeName,
   });
 };

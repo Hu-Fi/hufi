@@ -91,9 +91,11 @@ export class UserService {
   }
 
   public async checkExchangeAPIKeyExists(
-    user: UserEntity,
+    address: string,
     exchangeName: string,
   ): Promise<boolean> {
+    const user = await this.getByAddress(address);
+
     return !!(await this.exchangeAPIKeyRepository.findByUserAndExchange(
       user,
       exchangeName,
