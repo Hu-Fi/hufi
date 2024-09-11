@@ -13,7 +13,4 @@ export class ServerConfigService {
   get port(): number {
     return +this.configService.get<number>('PORT', 5002);
   }
-  get cronSecret(): string {
-    return this.configService.get<string>('CRON_SECRET', 'cron-secret');
-  }
 }

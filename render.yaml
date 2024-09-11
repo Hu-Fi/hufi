@@ -164,8 +164,6 @@ services:
         sync: false
       - key: HASH_SECRET
         sync: false
-      - key: CRON_SECRET
-        sync: false
     region: oregon
     buildCommand: yarn install --production=false; yarn build;
     startCommand: yarn start:prod
@@ -233,8 +231,6 @@ services:
       - key: JWT_ACCESS_TOKEN_EXPIRES_IN
         sync: false
       - key: HOST
-        sync: false
-      - key: CRON_SECRET
         sync: false
       - key: API_KEY
         sync: false
@@ -341,8 +337,6 @@ services:
         sync: false
       - key: HASH_SECRET
         sync: false
-      - key: CRON_SECRET
-        sync: false
     region: oregon
     buildCommand: yarn install --production=false; yarn build;
     startCommand: yarn start:prod
@@ -413,8 +407,6 @@ services:
       - key: JWT_ACCESS_TOKEN_EXPIRES_IN
         sync: false
       - key: HOST
-        sync: false
-      - key: CRON_SECRET
         sync: false
       - key: API_KEY
         sync: false

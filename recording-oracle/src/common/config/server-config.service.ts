@@ -16,7 +16,4 @@ export class ServerConfigService {
   get apiKey(): string {
     return this.configService.get<string>('API_KEY', 'api-key');
   }
-  get cronSecret(): string {
-    return this.configService.get<string>('CRON_SECRET', 'cron-secret');
-  }
 }
