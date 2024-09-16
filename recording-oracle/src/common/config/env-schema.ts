@@ -6,7 +6,6 @@ export const envValidator = Joi.object({
   HOST: Joi.string(),
   PORT: Joi.number(),
   API_KEY: Joi.string().required(),
-  CRON_SECRET: Joi.string().required(),
   // Auth
   JWT_PRIVATE_KEY: Joi.string().required(),
   JWT_PUBLIC_KEY: Joi.string().required(),

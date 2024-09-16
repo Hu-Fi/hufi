@@ -1,26 +1,18 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-
-import { CronAuthGuard } from '../../common/guards/cron-auth.guard';
+import { Controller, Param, Post } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
 import { PayoutService } from './payout.service';
 
-@ApiTags('Payout') // Add API tag for grouping
+@ApiTags('Payout')
 @Controller('payout')
 export class PayoutController {
   constructor(private readonly payoutService: PayoutService) {}
 
-  @ApiOperation({ summary: 'Manually execute payouts and disable auto cron' }) // Add operation summary
+  @ApiOperation({ summary: 'Manually execute payouts and disable auto cron' })
   @ApiResponse({
     status: 200,
     description: 'Manual payout executed',
-  }) // Add response description
+  })
   @Post('manual-payout')
   async manualPayout() {
     await this.payoutService.processPayouts();
@@ -37,31 +29,5 @@ export class PayoutController {
   async manualPayoutForChainId(@Param('chainId') chainId: number) {
     await this.payoutService.processPayouts(chainId);
     return { message: 'Manual payout executed' };
-  }
-
-  @UseGuards(CronAuthGuard)
-  @ApiOperation({ summary: 'Cron job to execute payouts' })
-  @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Cron job executed',
-  })
-  @Get('cron/process-payout')
-  async cronPayout() {
-    await this.payoutService.processPayouts();
-    return { message: 'Cron job executed' };
-  }
-
-  @UseGuards(CronAuthGuard)
-  @ApiOperation({ summary: 'Cron job to finalize campaigns' })
-  @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Cron job executed',
-  })
-  @Get('cron/finalize-campaign')
-  async cronFinalize() {
-    await this.payoutService.finalizeCampaigns();
-    return { message: 'Cron job executed' };
   }
 }

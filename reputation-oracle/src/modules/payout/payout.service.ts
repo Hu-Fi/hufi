@@ -120,14 +120,6 @@ export class PayoutService {
         );
       }
     }
-
-    // Process pending webhooks
-    try {
-      this.logger.log('Processing the pending webhooks.');
-      await this.webhookService.processPendingWebhooks();
-    } catch (error) {
-      this.logger.error('Error processing pending webhooks:', error);
-    }
   }
 
   /**

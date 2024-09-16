@@ -21,7 +21,6 @@ export class ApiKeyGuard implements CanActivate {
       throw new ControlledError('API key is missing.', HttpStatus.UNAUTHORIZED);
     }
 
-    // call your env. var the name you want
     if (apiKey !== this.serverConfigService.apiKey) {
       throw new ControlledError('Invalid API key.', HttpStatus.UNAUTHORIZED);
     }

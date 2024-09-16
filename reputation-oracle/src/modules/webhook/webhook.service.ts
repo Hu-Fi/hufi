@@ -7,6 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ethers } from 'ethers';
 import { lastValueFrom } from 'rxjs';
 import { LessThanOrEqual } from 'typeorm';
@@ -73,6 +74,7 @@ export class WebhookService {
    * @param webhookEntity The entity representing the webhook data.
    * @throws {Error} Will throw an error if processing fails at any step.
    */
+  @Cron(CronExpression.EVERY_2_HOURS)
   public async processPendingWebhooks(): Promise<void> {
     const webhookEntities = await this.webhookRepository.find(
       {
