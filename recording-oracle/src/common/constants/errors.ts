@@ -44,3 +44,10 @@ export enum ErrorCampaign {
   InvalidChainId = 'Invalid chain id',
   InvalidCampaignData = 'Invalid campaign data',
 }
+
+export enum ErrorMrMarket {
+  WalletAlreadyExists = 'Wallet already exists',
+  CampaignAlreadyRegistered = 'Mr.Market already registered for the campaign',
+  ExchangeAPIKeyExists = 'Exchange API key already exists',
+  InvalidCampaign = 'Invalid campaign',
+}
