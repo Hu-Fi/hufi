@@ -49,6 +49,15 @@ export const useCreateEscrow = () => {
         message: 'Escrow created successfully.',
       });
 
+      const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
+      await (await tokenContract.approve(escrowAddress, fundAmount)).wait();
+
+      await escrowClient.fund(escrowAddress, fundAmount);
+      setNotification({
+        type: 'success',
+        message: 'Escrow funded successfully.',
+      });
+
       const escrowConfig = {
         ...oracles,
         manifestUrl: manifest.url,
@@ -60,15 +69,6 @@ export const useCreateEscrow = () => {
       setNotification({
         type: 'success',
         message: 'Escrow setup successfully.',
-      });
-
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
-      await (await tokenContract.approve(escrowAddress, fundAmount)).wait();
-
-      await escrowClient.fund(escrowAddress, fundAmount);
-      setNotification({
-        type: 'success',
-        message: 'Escrow funded successfully.',
       });
     } catch (e) {
       setNotification({
