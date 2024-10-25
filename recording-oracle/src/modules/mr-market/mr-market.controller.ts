@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -19,6 +19,34 @@ import { MrMarketService } from './mr-market.service';
 @Controller('mr-market')
 export class MrMarketController {
   constructor(private readonly mrMarketService: MrMarketService) {}
+
+  @Get('campaign')
+  @UseGuards(ApiKeyGuard)
+  @ApiHeader({
+    name: 'x-api-key',
+    description: 'API key for authentication',
+  })
+  @ApiOperation({
+    summary: 'Check if Mr.Market is registered to the campaign',
+    description: 'Check if Mr.Market is registered to the campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Mr.Market is registered to the campaign',
+    type: Boolean,
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  public async checkCampaignRegistration(
+    @Query('chainId') chainId: number,
+    @Query('walletAddress') walletAddress: string,
+    @Query('address') address: string,
+  ): Promise<boolean> {
+    return await this.mrMarketService.checkCampaignRegistration(
+      chainId,
+      walletAddress,
+      address,
+    );
+  }
 
   @Post('campaign')
   @UseGuards(ApiKeyGuard)

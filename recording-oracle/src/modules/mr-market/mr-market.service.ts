@@ -66,4 +66,18 @@ export class MrMarketService {
     }
     await user.save();
   }
+
+  public async checkCampaignRegistration(
+    chainId: number,
+    walletAddress: string,
+    address: string,
+  ) {
+    const user = await this.createOrGetMrMarketUser(walletAddress);
+
+    return user.campaigns?.some(
+      (c) =>
+        c.address.toLowerCase() === address.toLowerCase() &&
+        c.chainId === chainId,
+    );
+  }
 }
