@@ -129,3 +129,25 @@ export class CampaignDataDto {
   @IsString()
   createdAt: string;
 }
+
+export class CreateCampaignDto {
+  @ApiProperty()
+  @IsEnum(ChainId)
+  chainId: ChainId;
+
+  @ApiProperty()
+  @IsString()
+  manifestUrl: string;
+
+  @ApiProperty()
+  @IsString()
+  manifestHash: string;
+
+  @ApiProperty()
+  @IsString()
+  tokenAddress: string;
+
+  @ApiProperty()
+  @IsString()
+  fundAmount: string;
+}
