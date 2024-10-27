@@ -1,9 +1,12 @@
-import { ChainId, EscrowUtils } from '@human-protocol/sdk';
+import { ChainId, EscrowClient, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable, Logger } from '@nestjs/common';
+import { ethers } from 'ethers';
+import { v4 as uuidV4 } from 'uuid';
 
 import { Web3Service } from '../web3/web3.service';
 
-import { CampaignDataDto } from './campaign.dto';
+import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
+import ERC20ABI from './ERC20.json';
 
 @Injectable()
 export class CampaignService {
@@ -101,5 +104,47 @@ export class CampaignService {
       ...campaign,
       symbol: manifest.token.toLowerCase(),
     };
+  }
+
+  public async createCampaign(
+    campaignData: CreateCampaignDto,
+  ): Promise<string> {
+    const { chainId, tokenAddress, fundAmount, manifestUrl, manifestHash } =
+      campaignData;
+
+    const signer = this.web3Service.getSigner(chainId);
+    const escrowClient = await EscrowClient.build(signer);
+
+    this.logger.log(`Creating escrow on chain: ${chainId}`);
+    const escrowAddress = await escrowClient.createEscrow(
+      tokenAddress,
+      [signer.address],
+      uuidV4(),
+    );
+    this.logger.log(`Escrow created at address: ${escrowAddress}`);
+
+    this.logger.log(`Funding escrow with ${fundAmount} tokens`);
+    const fundAmountBigInt = ethers.parseUnits(fundAmount, 'ether');
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
+    await (await tokenContract.approve(escrowAddress, fundAmountBigInt)).wait();
+
+    await escrowClient.fund(escrowAddress, fundAmountBigInt);
+    this.logger.log(`Escrow funded successfully`);
+
+    this.logger.log(`Setting up escrow with manifest`);
+    const escrowConfig = {
+      exchangeOracle: this.web3Service.getExchangeOracle(),
+      exchangeOracleFee: BigInt(this.web3Service.getExchangeOracleFee()),
+      recordingOracle: this.web3Service.getRecordingOracle(),
+      recordingOracleFee: BigInt(this.web3Service.getRecordingOracleFee()),
+      reputationOracle: this.web3Service.getReputationOracle(),
+      reputationOracleFee: BigInt(this.web3Service.getReputationOracleFee()),
+      manifestUrl,
+      manifestHash,
+    };
+    await escrowClient.setup(escrowAddress, escrowConfig);
+    this.logger.log(`Escrow setup successfully`);
+
+    return escrowAddress;
   }
 }
