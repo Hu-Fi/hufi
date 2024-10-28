@@ -18,6 +18,7 @@ import { CampaignModule } from './modules/campaign/campaign.module';
 import { ExchangeModule } from './modules/exchange/exchange.module';
 import { HealthModule } from './modules/health/health.module';
 import { LiquidityScoreModule } from './modules/liquidity-score/liquidity-score.module';
+import { MrMarketModule } from './modules/mr-market/mr-market.module';
 import { RecordsModule } from './modules/records/records.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
@@ -57,6 +58,7 @@ import { Web3Module } from './modules/web3/web3.module';
     StorageModule,
     Web3Module,
     LiquidityScoreModule,
+    MrMarketModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '././modules/', 'node_modules/swagger-ui-dist'),
     }),

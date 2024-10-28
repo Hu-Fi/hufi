@@ -18,4 +18,13 @@ export const envValidator = Joi.object({
   SUBGRAPH_API_KEY: Joi.string().required(),
   RECORDING_ORACLE: Joi.string().required(),
   REPUTATION_ORACLE: Joi.string().required(),
+  WEB3_PRIVATE_KEY: Joi.string().required(),
+  GAS_PRICE_MULTIPLIER: Joi.number(),
+  RPC_URL_MAINNET: Joi.string(),
+  RPC_URL_SEPOLIA: Joi.string(),
+  RPC_URL_POLYGON: Joi.string(),
+  RPC_URL_POLYGON_AMOY: Joi.string(),
+  RPC_URL_BSC_MAINNET: Joi.string(),
+  RPC_URL_BSC_TESTNET: Joi.string(),
+  RPC_URL_LOCALHOST: Joi.string(),
 });
