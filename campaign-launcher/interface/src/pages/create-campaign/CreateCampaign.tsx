@@ -17,7 +17,10 @@ export const CreateCampaign: FC = () => {
   const { setNotification } = useNotification();
 
   const handleSubmit = async ({ fundToken, ...data }: CampaignFormValues) => {
-    const fundAmount = ethers.parseUnits(data.fundAmount.toString(), 'ether');
+    const fundAmount = ethers.parseUnits(
+      data.fundAmount.toString(),
+      fundToken === 'usdt' ? 6 : 18
+    );
 
     const { data: manifest } = await uploadManifest({
       ...data,
