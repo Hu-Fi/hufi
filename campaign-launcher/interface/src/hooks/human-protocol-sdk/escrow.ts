@@ -8,7 +8,8 @@ import { useAccount } from 'wagmi';
 import { useClientToSigner } from './common';
 import { useNotification } from '../';
 import ERC20ABI from '../../abi/ERC20.json';
-import { ManifestUploadResponseDto } from '../../api/client/Api';
+import { ManifestUploadRequestDto } from '../../api/client/Api';
+import { useUploadManifest } from '../../api/manifest';
 import { oracles } from '../../config/escrow';
 import { getTokenAddress } from '../../utils/token';
 
@@ -17,11 +18,11 @@ export const useCreateEscrow = () => {
   const { signer, network } = useClientToSigner();
   const { setNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
+  const { mutateAsync: uploadManifest } = useUploadManifest();
 
   const createEscrow = async (
-    manifest: ManifestUploadResponseDto,
     fundToken: string,
-    fundAmount: bigint
+    data: ManifestUploadRequestDto
   ) => {
     if (!signer || !network) {
       return;
@@ -38,6 +39,18 @@ export const useCreateEscrow = () => {
         throw new Error('Fund token is not supported.');
       }
 
+      const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
+
+      const fundAmount = ethers.parseUnits(
+        data.fundAmount,
+        await tokenContract.decimals()
+      );
+
+      const { data: manifest } = await uploadManifest({
+        ...data,
+        fundAmount: fundAmount.toString(),
+      });
+
       const escrowAddress = await escrowClient.createEscrow(
         tokenAddress,
         [signer.address],
@@ -49,7 +62,6 @@ export const useCreateEscrow = () => {
         message: 'Escrow created successfully.',
       });
 
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
       await (await tokenContract.approve(escrowAddress, fundAmount)).wait();
 
       await escrowClient.fund(escrowAddress, fundAmount);
