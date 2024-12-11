@@ -146,14 +146,32 @@ export class WebhookService {
         const response = await lastValueFrom(this.httpService.get(manifestUrl));
         const manifest = response.data;
 
-        const endBlock = manifest.endBlock;
-        let remainingDays = Math.floor(
-          (endBlock - Math.floor(Date.now() / 1000)) / 86400,
+        const totalVolume = intermediateResults.reduce(
+          (total, item) => total + ethers.parseEther(item.liquidityScore),
+          0n,
         );
-        if (remainingDays < 1) {
-          remainingDays = 1;
+
+        const totalAmountByVolume = this.getTotalAmountByVolume(
+          manifest,
+          totalVolume,
+        );
+
+        let amountForDay = 0n;
+        if (totalAmountByVolume) {
+          amountForDay = totalAmountByVolume;
+          if (totalAmount < amountForDay) {
+            amountForDay = totalAmount;
+          }
+        } else {
+          const endBlock = manifest.endBlock;
+          let remainingDays = Math.floor(
+            (endBlock - Math.floor(Date.now() / 1000)) / 86400,
+          );
+          if (remainingDays < 1) {
+            remainingDays = 1;
+          }
+          amountForDay = totalAmount / BigInt(remainingDays);
         }
-        const amountForDay = totalAmount / BigInt(remainingDays);
 
         const amounts = this.calculateCampaignPayoutAmounts(
           amountForDay,
@@ -252,5 +270,21 @@ export class WebhookService {
       WebhookService.name,
     );
     return false;
+  }
+
+  private getTotalAmountByVolume(
+    manifest: any,
+    totalVolume: bigint,
+  ): bigint | null {
+    if (manifest?.token?.toLowerCase() === 'xin/usdt') {
+      // TODO: Better handling of volume based payouts
+      // 100 USDT for 100K volume, USDT is in 6 decimals
+      return (
+        (ethers.parseUnits('100', 6) * totalVolume) /
+        ethers.parseEther('100000')
+      );
+    }
+
+    return null;
   }
 }
