@@ -260,24 +260,22 @@ export class LiquidityScoreService {
     const campaigns = await this.campaignService.getAllActiveCampaigns();
 
     for (const campaign of campaigns) {
+      let campaignLiquidityScore = [];
+
       try {
-        const campaignLiquidityScore =
+        campaignLiquidityScore =
           await this._calculateCampaignLiquidityScore(campaign);
-
-        if (!campaignLiquidityScore.length) {
-          continue;
-        }
-
-        await this.recordsService.pushLiquidityScores(
-          campaign.address,
-          campaign.chainId,
-          campaignLiquidityScore,
-        );
       } catch {
         this.logger.error(
           `Failed to calculate liquidity score for campaign ${campaign.address}`,
         );
       }
+
+      await this.recordsService.pushLiquidityScores(
+        campaign.address,
+        campaign.chainId,
+        campaignLiquidityScore,
+      );
     }
 
     this.logger.log('Finished calculating liquidity scores');
