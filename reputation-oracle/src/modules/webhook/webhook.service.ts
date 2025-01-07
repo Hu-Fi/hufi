@@ -129,6 +129,10 @@ export class WebhookService {
           throw new Error('Invalid intermediate results');
         }
 
+        if (intermediateResults.length === 0) {
+          throw new Error('No liquidity providers found');
+        }
+
         const { url, hash } = await this.storageService.uploadLiquidities(
           escrowAddress,
           chainId,

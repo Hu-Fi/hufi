@@ -30,17 +30,10 @@ export class MrMarketService {
   }
 
   public async registerToCampaign(data: CampaignRegisterRequestDto) {
-    const user = await this.createOrGetMrMarketUser(data.walletAddress);
-    const campaign = await this.campaignService.createCampaignIfNotExists(data);
-
-    if (user.campaigns?.some((c) => c.id === campaign.id)) {
-      throw new ControlledError(
-        ErrorMrMarket.CampaignAlreadyRegistered,
-        HttpStatus.CONFLICT,
-      );
-    }
+    await this.createOrGetMrMarketUser(data.walletAddress);
 
     try {
+      const user = await this.userService.getByAddress(data.walletAddress);
       await this.userService.createExchangeAPIKey(user, {
         exchangeName: data.exchangeName,
         apiKey: data.apiKey,
@@ -52,19 +45,36 @@ export class MrMarketService {
       }
     }
 
-    if (!isCenteralizedExchange(campaign.exchangeName)) {
-      throw new ControlledError(
-        ErrorMrMarket.InvalidCampaign,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    try {
+      const user = await this.userService.getByAddress(data.walletAddress);
+      const campaign =
+        await this.campaignService.createCampaignIfNotExists(data);
 
-    if (user.campaigns) {
-      user.campaigns.push(campaign);
-    } else {
-      user.campaigns = [campaign];
+      if (user.campaigns?.some((c) => c.id === campaign.id)) {
+        throw new ControlledError(
+          ErrorMrMarket.CampaignAlreadyRegistered,
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      if (!isCenteralizedExchange(campaign.exchangeName)) {
+        throw new ControlledError(
+          ErrorMrMarket.InvalidCampaign,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (user.campaigns) {
+        user.campaigns.push(campaign);
+      } else {
+        user.campaigns = [campaign];
+      }
+      await user.save();
+    } catch (e) {
+      if (e.message !== ErrorMrMarket.CampaignAlreadyRegistered) {
+        throw e;
+      }
     }
-    await user.save();
   }
 
   public async checkCampaignRegistration(
