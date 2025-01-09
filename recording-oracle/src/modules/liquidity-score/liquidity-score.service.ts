@@ -65,10 +65,6 @@ export class LiquidityScoreService {
     const campaignLiquidityScore =
       await this._calculateCampaignLiquidityScore(campaign);
 
-    if (!campaignLiquidityScore.length) {
-      return null;
-    }
-
     return await this.recordsService.pushLiquidityScores(
       campaign.address,
       campaign.chainId,
@@ -144,62 +140,70 @@ export class LiquidityScoreService {
     since: Date,
     to: Date,
   ): Promise<number> {
-    this.logger.debug(
-      `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
-    );
+    try {
+      this.logger.debug(
+        `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
+      );
 
-    const encryption = await Encryption.build(
-      this.pgpConfigService.privateKey,
-      this.pgpConfigService.passphrase,
-    );
+      const encryption = await Encryption.build(
+        this.pgpConfigService.privateKey,
+        this.pgpConfigService.passphrase,
+      );
 
-    const exchangeAPIKey =
-      await this.exchangeAPIKeyRepository.findByUserAndExchange(
-        user,
+      const exchangeAPIKey =
+        await this.exchangeAPIKeyRepository.findByUserAndExchange(
+          user,
+          exchangeName,
+        );
+
+      if (!exchangeAPIKey) {
+        this.logger.warn(
+          `No API key found for user ${user.evmAddress} on exchange ${exchangeName}`,
+        );
+        return 0;
+      }
+
+      const apiKey = await encryption.decrypt(exchangeAPIKey.apiKey);
+      const secret = await encryption.decrypt(exchangeAPIKey.secret);
+
+      const exchange = this.ccxtService.getExchangeInstance(
         exchangeName,
+        apiKey,
+        secret,
       );
 
-    if (!exchangeAPIKey) {
-      this.logger.warn(
-        `No API key found for user ${user.evmAddress} on exchange ${exchangeName}`,
-      );
-      return 0;
-    }
-
-    const apiKey = await encryption.decrypt(exchangeAPIKey.apiKey);
-    const secret = await encryption.decrypt(exchangeAPIKey.secret);
-
-    const exchange = this.ccxtService.getExchangeInstance(
-      exchangeName,
-      apiKey,
-      secret,
-    );
-
-    const trades = await this.ccxtService.fetchTrades(
-      exchange,
-      symbol,
-      since.getTime(),
-    );
-    const tradeVolume = trades
-      .filter((trade) => trade.timestamp < to.getTime())
-      .reduce((acc, trade) => acc + trade.amount, 0);
-
-    const { openOrderVolume, averageDuration, spread } =
-      await this.ccxtService.processOpenOrders(
+      const trades = await this.ccxtService.fetchTrades(
         exchange,
         symbol,
         since.getTime(),
-        to.getTime(),
+      );
+      const tradeVolume = trades
+        .filter((trade) => trade.timestamp < to.getTime())
+        .reduce((acc, trade) => acc + trade.amount, 0);
+
+      const { openOrderVolume, averageDuration, spread } =
+        await this.ccxtService.processOpenOrders(
+          exchange,
+          symbol,
+          since.getTime(),
+          to.getTime(),
+        );
+
+      const liquidityScoreCalculation = new LiquidityScoreCalculation(
+        tradeVolume,
+        openOrderVolume,
+        averageDuration,
+        spread,
       );
 
-    const liquidityScoreCalculation = new LiquidityScoreCalculation(
-      tradeVolume,
-      openOrderVolume,
-      averageDuration,
-      spread,
-    );
+      return liquidityScoreCalculation.calculate();
+    } catch (e) {
+      this.logger.error(
+        `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
+      );
 
-    return liquidityScoreCalculation.calculate();
+      return 0;
+    }
   }
 
   private async _calculateDEXLiquidityScore(
@@ -210,31 +214,38 @@ export class LiquidityScoreService {
     from: Date,
     to: Date,
   ): Promise<number> {
-    let trades: number[] = [];
+    try {
+      let trades: number[] = [];
 
-    switch (exchangeName) {
-      case 'uniswap':
-        trades = await this.uniswapService.fetchTrades(
-          chainId,
-          user.evmAddress,
-          token,
-          from,
-          to,
-        );
-        break;
+      switch (exchangeName) {
+        case 'uniswap':
+          trades = await this.uniswapService.fetchTrades(
+            chainId,
+            user.evmAddress,
+            token,
+            from,
+            to,
+          );
+          break;
+      }
+
+      const tradeVolume = trades.reduce((acc, trade) => acc + trade, 0);
+
+      const liquidityScoreCalculation = new LiquidityScoreCalculation(
+        tradeVolume,
+        // Open orders are not applicable for DEXs
+        0,
+        0,
+        1,
+      );
+
+      return liquidityScoreCalculation.calculate();
+    } catch (e) {
+      this.logger.error(
+        `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for token ${token} from ${from} to ${to}`,
+      );
+      return 0;
     }
-
-    const tradeVolume = trades.reduce((acc, trade) => acc + trade, 0);
-
-    const liquidityScoreCalculation = new LiquidityScoreCalculation(
-      tradeVolume,
-      // Open orders are not applicable for DEXs
-      0,
-      0,
-      1,
-    );
-
-    return liquidityScoreCalculation.calculate();
   }
 
   public async _saveLiquidityScore(
