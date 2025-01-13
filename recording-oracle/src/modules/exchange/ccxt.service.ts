@@ -76,7 +76,7 @@ export class CCXTService {
         const orderCreationTime = new Date(order.timestamp).getTime();
         const duration = (now - orderCreationTime) / 1000; // Convert duration from milliseconds to seconds
         totalDuration += duration;
-        return acc + order.amount;
+        return acc + order.cost;
       }, 0);
 
     const averageDuration = orders.length ? totalDuration / orders.length : 0;

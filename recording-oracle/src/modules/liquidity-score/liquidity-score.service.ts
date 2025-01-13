@@ -179,7 +179,7 @@ export class LiquidityScoreService {
       );
       const tradeVolume = trades
         .filter((trade) => trade.timestamp < to.getTime())
-        .reduce((acc, trade) => acc + trade.amount, 0);
+        .reduce((acc, trade) => acc + trade.cost, 0);
 
       const { openOrderVolume, averageDuration, spread } =
         await this.ccxtService.processOpenOrders(
@@ -264,7 +264,8 @@ export class LiquidityScoreService {
   }
 
   // Adjust the frequency as needed
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_2_HOURS)
   async calculateScoresForCampaigns(): Promise<void> {
     this.logger.log('Calculating liquidity scores for all active campaigns');
 
