@@ -85,8 +85,7 @@ export class PayoutService {
   /**
    * Cron job to process the campaign payouts.
    */
-  // @Cron(CronExpression.EVERY_DAY_AT_8AM)
-  @Cron(CronExpression.EVERY_2_HOURS)
+  @Cron(CronExpression.EVERY_DAY_AT_8AM)
   // Process the payouts (used by both cron and manual methods)
   async processPayouts(chainId = ChainId.ALL): Promise<void> {
     this.logger.log('Processing payouts for campaigns.');
