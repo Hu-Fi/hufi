@@ -115,6 +115,9 @@ export class LiquidityScoreService {
         );
       }
 
+      // Round the Liquidity Score
+      liquidityScore = Math.round(liquidityScore);
+
       if (liquidityScore === 0) {
         continue;
       }
@@ -264,8 +267,7 @@ export class LiquidityScoreService {
   }
 
   // Adjust the frequency as needed
-  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  @Cron(CronExpression.EVERY_2_HOURS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async calculateScoresForCampaigns(): Promise<void> {
     this.logger.log('Calculating liquidity scores for all active campaigns');
 
