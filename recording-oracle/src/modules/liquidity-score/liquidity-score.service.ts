@@ -171,8 +171,8 @@ export class LiquidityScoreService {
 
       const exchange = this.ccxtService.getExchangeInstance(
         exchangeName,
-        apiKey,
-        secret,
+        new TextDecoder().decode(apiKey),
+        new TextDecoder().decode(secret),
       );
 
       const trades = await this.ccxtService.fetchTrades(
