@@ -1,4 +1,4 @@
-import { EscrowClient } from '@human-protocol/sdk';
+import { ChainId, EscrowClient, NETWORKS } from '@human-protocol/sdk';
 import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
@@ -15,6 +15,7 @@ import { LessThanOrEqual } from 'typeorm';
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
 import { ErrorWebhook } from '../../common/constants/errors';
 import { EventType, SortDirection, WebhookStatus } from '../../common/enums';
+import { USDT_CONTRACT_ADDRESS } from '../../constants/token';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
 
@@ -147,6 +148,7 @@ export class WebhookService {
         }
 
         const manifestUrl = await escrowClient.getManifestUrl(escrowAddress);
+        const fundToken = await escrowClient.getTokenAddress(escrowAddress);
         const response = await lastValueFrom(this.httpService.get(manifestUrl));
         const manifest = response.data;
 
@@ -156,7 +158,9 @@ export class WebhookService {
         );
 
         const totalAmountByVolume = this.getTotalAmountByVolume(
+          chainId,
           manifest,
+          fundToken,
           totalVolume,
         );
 
@@ -190,6 +194,7 @@ export class WebhookService {
           amounts,
           url,
           hash,
+          1,
           false,
           {
             gasPrice: await this.web3Service.calculateGasPrice(chainId),
@@ -278,16 +283,30 @@ export class WebhookService {
   }
 
   private getTotalAmountByVolume(
+    chainId: ChainId,
     manifest: any,
+    token: string,
     totalVolume: bigint,
   ): bigint | null {
     if (manifest?.token?.toLowerCase() === 'xin/usdt') {
       // TODO: Better handling of volume based payouts
       // 100 USDT for 100K volume, USDT is in 6 decimals
-      return (
-        (ethers.parseUnits('100', 6) * totalVolume) /
-        ethers.parseEther('100000')
-      );
+      let amount;
+
+      if (
+        token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()
+      ) {
+        amount = ethers.parseUnits('100', 6);
+      } else if (
+        token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
+      ) {
+        // TODO: Get HMT price from oracle. For now use fixed value of 1 HMT = 0.025 USDT
+        amount = ethers.parseUnits('4000', 18);
+      } else {
+        return null;
+      }
+
+      return (amount * totalVolume) / ethers.parseEther('100000');
     }
 
     return null;
