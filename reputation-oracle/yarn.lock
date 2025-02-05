@@ -577,10 +577,10 @@
   resolved "https://registry.yarnpkg.com/@human-protocol/core/-/core-2.1.2.tgz#c679794a4a0826384800cae926566ca333465b12"
   integrity sha512-aJUj492beKkWnwZT+7VMmRrRUErFybiDyHvXi7cfQ5o8lR68JLMzlRiSP1aEjzuKN6tLWvX4zS0xLJAkhRYdMQ==
 
-"@human-protocol/sdk@^3.0.8":
-  version "3.0.8"
-  resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-3.0.8.tgz#05564cdcc7cd2c1d3eba0abf910e38330912bfec"
-  integrity sha512-5EkGKQQYpNLeAN4JETA1LjC+dDVtU7PSbHj7Y3X3NUNS5HDW58M5jvXWUjcaD51C6oEtdm1Vh1vPhNEvvcWbiw==
+"@human-protocol/sdk@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-4.0.0.tgz#63542dbbf368432f28c0d1293903e925bfe519d8"
+  integrity sha512-70GG7No5+4opmzGNiyMcqyWP+ChOVsiXun7wuLE1POnZjIddtwtbsN2wuzqjfCBelSkjILBZQChICI9wDMMoww==
   dependencies:
     "@human-protocol/core" "*"
     axios "^1.4.0"
