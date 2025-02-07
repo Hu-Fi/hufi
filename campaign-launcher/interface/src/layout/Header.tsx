@@ -39,7 +39,8 @@ const NAV_LINKS: NavLink[] = [
     children: [
       {
         title: 'Stake HMT',
-        href: PATHS.STAKE_HMT,
+        href: import.meta.env.VITE_APP_STAKING_DASHBOARD_URL,
+        external: true,
       },
       {
         title: 'Mint HUSD',
@@ -277,6 +278,7 @@ const NavMenu: FC<NavMenuProps> = ({ navLink }) => {
               <MenuItem key={nav.title} onClick={handleClose}>
                 <Link
                   to={nav.href}
+                  target={nav.external ? '_blank' : '_self'}
                   style={{ textDecoration: 'none', padding: '6px 8px' }}
                 >
                   <Typography color="primary" variant="body2" fontWeight={600}>
