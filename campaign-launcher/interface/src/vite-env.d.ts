@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_RECORDING_ORACLE_FEE: number;
   readonly VITE_APP_REPUTATION_ORACLE_ADDRESS: string;
   readonly VITE_APP_REPUTATION_ORACLE_FEE: number;
+
+  readonly VITE_APP_STAKING_DASHBOARD_URL: string;
 }
 
 interface ImportMeta {

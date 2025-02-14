@@ -38,11 +38,13 @@ export type CampaignFormValues = {
 };
 
 type CampaignFormProps = {
+  disabled?: boolean;
   isSubmitting?: boolean;
   onSubmit: (data: CampaignFormValues) => void;
 };
 
 export const CampaignForm: FC<CampaignFormProps> = ({
+  disabled,
   isSubmitting,
   onSubmit,
 }) => {
@@ -323,7 +325,7 @@ export const CampaignForm: FC<CampaignFormProps> = ({
             color="primary"
             type="submit"
             sx={{ py: 2, borderRadius: 2 }}
-            disabled={!account.isConnected || isSubmitting}
+            disabled={!account.isConnected || isSubmitting || disabled}
           >
             Create
           </Button>
