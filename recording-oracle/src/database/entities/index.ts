@@ -3,3 +3,4 @@ export { ExchangeAPIKeyEntity } from './exchange-api-key.entity';
 export { LiquidityScoreEntity } from './liquidity-score.entity';
 export { TokenEntity } from './token.entity';
 export { UserEntity } from './user.entity';
+export { Web3TransactionEntity } from './web3-transaction.entity';

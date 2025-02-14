@@ -16,6 +16,7 @@ import {
   LiquidityScoreEntity,
   TokenEntity,
   UserEntity,
+  Web3TransactionEntity,
 } from './entities';
 import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
 
@@ -48,6 +49,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
             LiquidityScoreEntity,
             TokenEntity,
             UserEntity,
+            Web3TransactionEntity,
           ],
           // We are using migrations, synchronize should be set to false.
           synchronize: false,

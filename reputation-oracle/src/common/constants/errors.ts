@@ -129,3 +129,8 @@ export enum ErrorWeb3 {
 export enum ErrorOperator {
   OperatorNotActive = 'Operator not active',
 }
+
+export enum ErrorWeb3Transaction {
+  NotFound = 'Web3 transaction not found',
+  InvalidContract = 'Invalid contract',
+}
