@@ -51,3 +51,8 @@ export enum ErrorMrMarket {
   ExchangeAPIKeyExists = 'Exchange API key already exists',
   InvalidCampaign = 'Invalid campaign',
 }
+
+export enum ErrorWeb3Transaction {
+  NotFound = 'Web3 transaction not found',
+  InvalidContract = 'Invalid contract',
+}

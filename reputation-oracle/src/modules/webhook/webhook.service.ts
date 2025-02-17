@@ -15,9 +15,11 @@ import { LessThanOrEqual } from 'typeorm';
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
 import { ErrorWebhook } from '../../common/constants/errors';
 import { EventType, SortDirection, WebhookStatus } from '../../common/enums';
+import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { USDT_CONTRACT_ADDRESS } from '../../constants/token';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
+import { Web3TransactionService } from '../web3-transaction/web3-transaction.service';
 
 import { WebhookIncomingEntity } from './webhook-incoming.entity';
 import { WebhookIncomingDto, LiquidityDto } from './webhook.dto';
@@ -33,6 +35,7 @@ export class WebhookService {
     private readonly storageService: StorageService,
     private readonly webhookRepository: WebhookRepository,
     private readonly httpService: HttpService,
+    private web3TransactionService: Web3TransactionService,
   ) {}
 
   /**
@@ -188,18 +191,60 @@ export class WebhookService {
 
         this.logger.log(`Recipients: ${recipients}, Amounts: ${amounts}`);
 
-        await escrowClient.bulkPayOut(
-          escrowAddress,
-          recipients,
-          amounts,
-          url,
-          hash,
-          1,
-          false,
-          {
-            gasPrice: await this.web3Service.calculateGasPrice(chainId),
-          },
-        );
+        const gasPrice = await this.web3Service.calculateGasPrice(chainId);
+
+        await this.web3TransactionService.saveWeb3Transaction({
+          chainId,
+          contract: 'escrow',
+          address: escrowAddress,
+          method: 'bulkPayOut',
+          data: [
+            recipients,
+            amounts,
+            url,
+            hash,
+            1,
+            false,
+            {
+              gasPrice,
+            },
+          ],
+          status: Web3TransactionStatus.PENDING,
+        });
+
+        try {
+          await escrowClient.bulkPayOut(
+            escrowAddress,
+            recipients,
+            amounts,
+            url,
+            hash,
+            1,
+            false,
+            {
+              gasPrice: await this.web3Service.calculateGasPrice(chainId),
+            },
+          );
+
+          await this.web3TransactionService.updateWeb3TransactionStatus(
+            webhookEntity.id,
+            Web3TransactionStatus.SUCCESS,
+          );
+
+          this.logger.log(
+            `Successfully paid out campaign: ${chainId} - ${escrowAddress}`,
+            WebhookService.name,
+          );
+        } catch {
+          await this.web3TransactionService.updateWeb3TransactionStatus(
+            webhookEntity.id,
+            Web3TransactionStatus.FAILED,
+          );
+
+          throw new Error(
+            `Failed to payout campaign: ${chainId} - ${escrowAddress}`,
+          );
+        }
 
         await this.webhookRepository.updateOne(
           { id: webhookEntity.id },

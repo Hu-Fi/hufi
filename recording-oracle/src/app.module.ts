@@ -23,6 +23,7 @@ import { RecordsModule } from './modules/records/records.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { Web3Module } from './modules/web3/web3.module';
+import { Web3TransactionModule } from './modules/web3-transaction/web3-transaction.module';
 
 @Module({
   providers: [
@@ -59,6 +60,7 @@ import { Web3Module } from './modules/web3/web3.module';
     Web3Module,
     LiquidityScoreModule,
     MrMarketModule,
+    Web3TransactionModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '././modules/', 'node_modules/swagger-ui-dist'),
     }),

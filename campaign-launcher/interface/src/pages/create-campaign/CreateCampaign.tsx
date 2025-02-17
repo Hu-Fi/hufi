@@ -1,12 +1,9 @@
-import { FC } from 'react';
-
-import { Navigate } from 'react-router-dom';
+import { FC, useEffect, useMemo } from 'react';
 
 import { CampaignForm, CampaignFormValues } from './CampaignForm';
 import { useLeader } from '../../api/leader';
 import { Loading } from '../../components/loading';
 import { useCreateEscrow, useNotification } from '../../hooks';
-import { PATHS } from '../../routes';
 
 export const CreateCampaign: FC = () => {
   const { isLoading: isCreatingEscrow, createEscrow } = useCreateEscrow();
@@ -21,24 +18,30 @@ export const CreateCampaign: FC = () => {
     });
   };
 
-  if (
-    !loading &&
-    (leader === null || leader?.amountStaked.toString() === '0')
-  ) {
-    setNotification({
-      type: 'warning',
-      message: 'You must stake HMT to create a campaign',
-    });
+  const isValidLeader = useMemo(
+    () => !loading && +(leader?.amountStaked ?? '0') > 0,
+    [loading, leader]
+  );
 
-    return <Navigate to={PATHS.STAKE_HMT} />;
-  }
+  useEffect(() => {
+    if (!isValidLeader) {
+      setNotification({
+        type: 'warning',
+        message: 'You must stake HMT to create a campaign',
+      });
+    }
+  }, [loading]);
 
   return (
     <>
       {loading ? (
         <Loading />
       ) : (
-        <CampaignForm isSubmitting={isCreatingEscrow} onSubmit={handleSubmit} />
+        <CampaignForm
+          isSubmitting={isCreatingEscrow}
+          onSubmit={handleSubmit}
+          disabled={!isValidLeader}
+        />
       )}
     </>
   );
