@@ -64,7 +64,10 @@ export class WebhookService {
       });
 
       if (!webhookEntity) {
-        this.logger.error(`Failed to create webhook entity`, WebhookService.name);
+        this.logger.error(
+          `Failed to create webhook entity`,
+          WebhookService.name,
+        );
         throw new NotFoundException(ErrorWebhook.NotCreated);
       }
 
@@ -149,11 +152,18 @@ export class WebhookService {
           try {
             intermediateResults = JSON.parse(intermediateResultContent);
           } catch (parseErr) {
-            throw new Error(`Invalid JSON in intermediate results: ${parseErr}`);
+            throw new Error(
+              `Invalid JSON in intermediate results: ${parseErr}`,
+            );
           }
 
-          if (!Array.isArray(intermediateResults) || !intermediateResults.length) {
-            throw new Error('No liquidity providers found in intermediate results');
+          if (
+            !Array.isArray(intermediateResults) ||
+            !intermediateResults.length
+          ) {
+            throw new Error(
+              'No liquidity providers found in intermediate results',
+            );
           }
 
           // Upload results to storage (for example, as "proof" or record)
@@ -165,11 +175,17 @@ export class WebhookService {
 
           // Summarize recipients
           const recipients = this.getRecipients(intermediateResults);
-          this.logger.debug(`Recipients: ${JSON.stringify(recipients)}`, WebhookService.name);
+          this.logger.debug(
+            `Recipients: ${JSON.stringify(recipients)}`,
+            WebhookService.name,
+          );
 
           // Check how much the contract has
           const totalAmount = await escrowClient.getBalance(escrowAddress);
-          this.logger.debug(`Escrow contract balance: ${totalAmount.toString()}`, WebhookService.name);
+          this.logger.debug(
+            `Escrow contract balance: ${totalAmount.toString()}`,
+            WebhookService.name,
+          );
 
           if (totalAmount === 0n) {
             throw new Error('No funds to distribute in escrow');
@@ -181,10 +197,14 @@ export class WebhookService {
 
           let manifest: any;
           try {
-            const response = await lastValueFrom(this.httpService.get(manifestUrl));
+            const response = await lastValueFrom(
+              this.httpService.get(manifestUrl),
+            );
             manifest = response.data;
           } catch (manifestErr) {
-            throw new Error(`Failed to download or parse manifest: ${manifestErr.message}`);
+            throw new Error(
+              `Failed to download or parse manifest: ${manifestErr.message}`,
+            );
           }
 
           // 1) Compute totalVolume from intermediate results
@@ -218,7 +238,10 @@ export class WebhookService {
           }
 
           // 3) Calculate each user's portion
-          const amounts = this.calculateCampaignPayoutAmounts(amountForDay, intermediateResults);
+          const amounts = this.calculateCampaignPayoutAmounts(
+            amountForDay,
+            intermediateResults,
+          );
 
           // Double-check that sum(amounts) <= totalAmount
           const sumOfAmounts = amounts.reduce((acc, val) => acc + val, 0n);
@@ -237,7 +260,10 @@ export class WebhookService {
 
           // Prepare gas price
           const gasPrice = await this.web3Service.calculateGasPrice(chainId);
-          this.logger.debug(`Calculated gas price: ${gasPrice.toString()}`, WebhookService.name);
+          this.logger.debug(
+            `Calculated gas price: ${gasPrice.toString()}`,
+            WebhookService.name,
+          );
 
           // 4) Save the web3 transaction record BEFORE making the on-chain call
           //    Capture the returned transaction ID for later updates

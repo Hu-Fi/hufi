@@ -1,10 +1,12 @@
 import crypto from 'crypto';
+
 import { ChainId, StorageClient } from '@human-protocol/sdk';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
 
 import { S3ConfigService } from '../../common/config/s3-config.service';
 import { LiquidityDto } from '../webhook/webhook.dto';
+
 import { SaveLiquidityDto } from './storage.dto';
 
 @Injectable()
@@ -57,7 +59,10 @@ export class StorageService {
 
     try {
       // Create a hash of the content
-      const hash = crypto.createHash('sha1').update(contentString).digest('hex');
+      const hash = crypto
+        .createHash('sha1')
+        .update(contentString)
+        .digest('hex');
       const filename = `${escrowAddress}-${chainId}-${Date.now()}.json`;
 
       // Upload the JSON string

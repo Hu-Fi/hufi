@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 
 import { ErrorWebhook } from '../../common/constants/errors';
+
 import { WebhookIncomingEntity } from './webhook-incoming.entity';
 import {
   WebhookIncomingCreateDto,
@@ -75,7 +76,10 @@ export class WebhookRepository {
       // Save it to the database
       return await this.webhookIncomingEntityRepository.save(entity);
     } catch (e) {
-      this.logger.error(`Failed to create webhook entity: ${e.message}`, e.stack);
+      this.logger.error(
+        `Failed to create webhook entity: ${e.message}`,
+        e.stack,
+      );
       // Instead of returning undefined, we throw the error
       throw e;
     }
