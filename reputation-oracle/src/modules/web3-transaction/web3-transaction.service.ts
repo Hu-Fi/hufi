@@ -20,6 +20,9 @@ export class Web3TransactionService {
     private web3Service: Web3Service,
   ) {}
 
+  /**
+   * Saves a new Web3 transaction record in the DB.
+   */
   public async saveWeb3Transaction(
     payload: Web3TransactionDto,
   ): Promise<Web3TransactionEntity> {
@@ -28,23 +31,28 @@ export class Web3TransactionService {
     );
 
     const web3Transaction = new Web3TransactionEntity();
-
     web3Transaction.chainId = payload.chainId;
     web3Transaction.contract = payload.contract;
     web3Transaction.address = payload.address;
     web3Transaction.method = payload.method;
     web3Transaction.data = payload.data;
+    web3Transaction.status = payload.status;
 
+    // Custom "createUnique" approach; presumably checks if there's an existing record or saves it
     await this.web3TransactionRepository.createUnique(web3Transaction);
 
     return web3Transaction;
   }
 
+  /**
+   * Updates the status of a Web3 transaction record by ID.
+   * Throws if not found.
+   */
   public async updateWeb3TransactionStatus(
     id: number,
     status: Web3TransactionStatus,
   ): Promise<Web3TransactionEntity> {
-    this.logger.debug(`Updating web3 transaction status ${id}`);
+    this.logger.debug(`Updating web3 transaction ${id} to status: ${status}`);
 
     const web3Transaction = await this.web3TransactionRepository.findOne({
       where: { id },
@@ -58,11 +66,12 @@ export class Web3TransactionService {
     }
 
     web3Transaction.status = status;
-
     return this.web3TransactionRepository.save(web3Transaction);
   }
 
-  // Adjust the frequency as needed
+  /**
+   * Periodically retries FAILED Web3 transactions.
+   */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async retryFailedWeb3Transactions(): Promise<void> {
     this.logger.log('Retrying failed web3 transactions');
@@ -82,6 +91,10 @@ export class Web3TransactionService {
 
         switch (transaction.contract) {
           case 'escrow':
+            // e.g., escrowClient.bulkPayOut(...), escrowClient.someMethod(...)
+            // transaction.method => e.g. 'bulkPayOut'
+            // transaction.address => escrow address
+            // transaction.data => array of arguments
             await escrowClient[transaction.method](
               transaction.address,
               ...transaction.data,
@@ -101,7 +114,9 @@ export class Web3TransactionService {
       } catch (error) {
         this.logger.error(
           `Failed to retry transaction ${transaction.id}: ${error.message}`,
+          error.stack,
         );
+        // You might want to increment a retry counter or handle differently
       }
     }
 
