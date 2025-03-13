@@ -1,12 +1,10 @@
 import crypto from 'crypto';
-
 import { ChainId, StorageClient } from '@human-protocol/sdk';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
 
 import { S3ConfigService } from '../../common/config/s3-config.service';
 import { LiquidityDto } from '../webhook/webhook.dto';
-
 import { SaveLiquidityDto } from './storage.dto';
 
 @Injectable()
@@ -22,47 +20,64 @@ export class StorageService {
       useSSL: this.s3ConfigService.useSSL,
     });
   }
+
   public getUrl(key: string): string {
-    return `${this.s3ConfigService.useSSL ? 'https' : 'http'}://${
-      this.s3ConfigService.endPoint
-    }:${this.s3ConfigService.port}/${this.s3ConfigService.bucket}/${key}`;
+    const protocol = this.s3ConfigService.useSSL ? 'https' : 'http';
+    return `${protocol}://${this.s3ConfigService.endPoint}:${this.s3ConfigService.port}/${this.s3ConfigService.bucket}/${key}`;
   }
 
+  /**
+   * Downloads content from a given URL using the StorageClient
+   */
   public async download(url: string): Promise<any> {
     try {
       return await StorageClient.downloadFileFromUrl(url);
     } catch {
+      // Return an empty array or some fallback if the download fails
       return [];
     }
   }
 
+  /**
+   * Uploads a JSON array of `LiquidityDto` objects to Minio/S3 and returns
+   * the URL and an SHA1 hash of the content.
+   */
   public async uploadLiquidities(
     escrowAddress: string,
     chainId: ChainId,
     liquidities: LiquidityDto[],
   ): Promise<SaveLiquidityDto> {
+    // Ensure bucket exists first
     if (!(await this.minioClient.bucketExists(this.s3ConfigService.bucket))) {
       throw new BadRequestException('Bucket not found');
     }
-    const content = JSON.stringify(liquidities);
+
+    // Convert the array to a JSON string
+    const contentString = JSON.stringify(liquidities);
+
     try {
-      const date = Date.now();
-      const hash = crypto.createHash('sha1').update(content).digest('hex');
-      const filename = `${escrowAddress}-${chainId}-${date}.json`;
+      // Create a hash of the content
+      const hash = crypto.createHash('sha1').update(contentString).digest('hex');
+      const filename = `${escrowAddress}-${chainId}-${Date.now()}.json`;
+
+      // Upload the JSON string
       await this.minioClient.putObject(
         this.s3ConfigService.bucket,
         filename,
-        JSON.stringify(content),
-        content.length,
+        contentString,
+        contentString.length,
         {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store',
         },
       );
 
-      return { url: this.getUrl(filename), hash };
+      return {
+        url: this.getUrl(filename),
+        hash,
+      };
     } catch (e) {
-      throw new BadRequestException('File not uploaded');
+      throw new BadRequestException(`File not uploaded: ${e.message}`);
     }
   }
 }

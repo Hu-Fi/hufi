@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 
 import { ErrorWebhook } from '../../common/constants/errors';
-
 import { WebhookIncomingEntity } from './webhook-incoming.entity';
 import {
   WebhookIncomingCreateDto,
@@ -32,7 +31,7 @@ export class WebhookRepository {
       await this.webhookIncomingEntityRepository.findOneBy(where);
 
     if (!webhookIncomingEntity) {
-      this.logger.log(ErrorWebhook.NotFound, WebhookRepository.name);
+      this.logger.error(ErrorWebhook.NotFound, WebhookRepository.name);
       throw new NotFoundException(ErrorWebhook.NotFound);
     }
 
@@ -58,6 +57,8 @@ export class WebhookRepository {
   ): Promise<WebhookIncomingEntity[]> {
     return this.webhookIncomingEntityRepository.find({
       where,
+      // You can override this default 'order' by passing
+      // an 'order' key in the 'options' argument if needed
       order: {
         createdAt: 'DESC',
       },
@@ -67,11 +68,16 @@ export class WebhookRepository {
 
   public async create(
     dto: WebhookIncomingCreateDto,
-  ): Promise<WebhookIncomingEntity | undefined> {
+  ): Promise<WebhookIncomingEntity> {
     try {
-      return this.webhookIncomingEntityRepository.create(dto).save();
+      // Create a new entity instance
+      const entity = this.webhookIncomingEntityRepository.create(dto);
+      // Save it to the database
+      return await this.webhookIncomingEntityRepository.save(entity);
     } catch (e) {
-      return;
+      this.logger.error(`Failed to create webhook entity: ${e.message}`, e.stack);
+      // Instead of returning undefined, we throw the error
+      throw e;
     }
   }
 }
