@@ -1,16 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiBody,
-  ApiHeader,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -18,9 +8,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { ApiKeyGuard } from '../../common/guards/api-key.guard';
-
-import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
+import { CampaignDataDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
 
 @ApiTags('campaign')
@@ -63,22 +51,5 @@ export class CampaignController {
     @Param('escrowAddress') escrowAddress: string,
   ) {
     return this.campaignService.getCampaign(chainId, escrowAddress);
-  }
-
-  @Post('/')
-  @ApiOperation({ summary: 'Create a new campaign' })
-  @UseGuards(ApiKeyGuard)
-  @ApiHeader({
-    name: 'x-api-key',
-    required: true,
-    description: 'API key',
-  })
-  @ApiBody({ type: CreateCampaignDto })
-  @ApiResponse({
-    status: 201,
-    description: 'Campaign created',
-  })
-  async createCampaign(@Body() campaignData: CreateCampaignDto) {
-    return this.campaignService.createCampaign(campaignData);
   }
 }
