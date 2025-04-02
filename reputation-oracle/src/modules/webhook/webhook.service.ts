@@ -75,22 +75,9 @@ export class WebhookService {
   /**
    * Processes a pending webhook. Validates and processes incoming data,
    * then sends payments based on the processing results.
-   * @param webhookEntity The entity representing the webhook data.
-   * @throws {Error} Will throw an error if processing fails at any step.
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   public async processPendingWebhooks(): Promise<void> {
-<<<<<<< Updated upstream
-    const webhookEntities = await this.webhookRepository.find(
-      {
-        status: WebhookStatus.PENDING,
-        retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
-        waitUntil: LessThanOrEqual(new Date()),
-      },
-      {
-        order: {
-          waitUntil: SortDirection.ASC,
-=======
     try {
       // Find all webhook entries that are still pending, haven't exceeded retries, and are due for processing.
       const webhookEntities = await this.webhookRepository.find(
@@ -98,160 +85,26 @@ export class WebhookService {
           status: WebhookStatus.PENDING,
           retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
           waitUntil: LessThanOrEqual(new Date()),
->>>>>>> Stashed changes
         },
-      },
-    );
+        {
+          order: {
+            waitUntil: SortDirection.ASC,
+          },
+        },
+      );
 
-    for (const webhookEntity of webhookEntities) {
-      try {
-        const { chainId, escrowAddress } = webhookEntity;
-        const signer = this.web3Service.getSigner(chainId);
-        const escrowClient = await EscrowClient.build(signer);
-
-        this.logger.log(
-          `Escrow address: ${escrowAddress}`,
-          WebhookService.name,
-        );
-
-        const intermediateResultsUrl =
-          await escrowClient.getIntermediateResultsUrl(escrowAddress);
-
-        if (!intermediateResultsUrl) {
-          throw new Error('Intermediate result not found');
-        }
-
-        let intermediateResultContent;
+      for (const webhookEntity of webhookEntities) {
         try {
-          intermediateResultContent = await this.storageService.download(
-            intermediateResultsUrl,
-          );
-        } catch {
-          intermediateResultContent = null;
-        }
-        if (!intermediateResultContent) {
-          throw new Error('Invalid intermediate results');
-        }
-
-        let intermediateResults;
-        try {
-          intermediateResults = JSON.parse(intermediateResultContent);
-        } catch {
-          intermediateResults = null;
-        }
-        if (!intermediateResults) {
-          throw new Error('Invalid intermediate results');
-        }
-
-        if (intermediateResults.length === 0) {
-          throw new Error('No liquidity providers found');
-        }
-
-        const { url, hash } = await this.storageService.uploadLiquidities(
-          escrowAddress,
-          chainId,
-          intermediateResults,
-        );
-
-        const recipients = this.getRecipients(intermediateResults);
-        const totalAmount = await escrowClient.getBalance(escrowAddress);
-
-        if (totalAmount === 0n) {
-          throw new Error('No funds to distribute');
-        }
-
-        const manifestUrl = await escrowClient.getManifestUrl(escrowAddress);
-        const fundToken = await escrowClient.getTokenAddress(escrowAddress);
-        const response = await lastValueFrom(this.httpService.get(manifestUrl));
-        const manifest = response.data;
-
-        const totalVolume = intermediateResults.reduce(
-          (total, item) => total + ethers.parseEther(item.liquidityScore),
-          0n,
-        );
-
-        const totalAmountByVolume = this.getTotalAmountByVolume(
-          chainId,
-          manifest,
-          fundToken,
-          totalVolume,
-        );
-
-        let amountForDay = 0n;
-        if (totalAmountByVolume) {
-          amountForDay = totalAmountByVolume;
-          if (totalAmount < amountForDay) {
-            amountForDay = totalAmount;
-          }
-        } else {
-          const endBlock = manifest.endBlock;
-          let remainingDays = Math.floor(
-            (endBlock - Math.floor(Date.now() / 1000)) / 86400,
-          );
-          if (remainingDays < 1) {
-            remainingDays = 1;
-          }
-          amountForDay = totalAmount / BigInt(remainingDays);
-        }
-
-        const amounts = this.calculateCampaignPayoutAmounts(
-          amountForDay,
-          intermediateResults,
-        );
-
-        this.logger.log(`Recipients: ${recipients}, Amounts: ${amounts}`);
-
-        const gasPrice = await this.web3Service.calculateGasPrice(chainId);
-
-        await this.web3TransactionService.saveWeb3Transaction({
-          chainId,
-          contract: 'escrow',
-          address: escrowAddress,
-          method: 'bulkPayOut',
-          data: [
-            recipients,
-            amounts,
-            url,
-            hash,
-            1,
-            false,
-            {
-              gasPrice,
-            },
-          ],
-          status: Web3TransactionStatus.PENDING,
-        });
-
-        try {
-          await escrowClient.bulkPayOut(
-            escrowAddress,
-            recipients,
-            amounts,
-            url,
-            hash,
-            1,
-            false,
-            {
-              gasPrice: await this.web3Service.calculateGasPrice(chainId),
-            },
-          );
-
-          await this.web3TransactionService.updateWeb3TransactionStatus(
-            webhookEntity.id,
-            Web3TransactionStatus.SUCCESS,
-          );
+          const { chainId, escrowAddress } = webhookEntity;
+          const signer = this.web3Service.getSigner(chainId);
+          const escrowClient = await EscrowClient.build(signer);
 
           this.logger.log(
-            `Successfully paid out campaign: ${chainId} - ${escrowAddress}`,
+            `Processing escrow address: ${escrowAddress}`,
             WebhookService.name,
           );
-<<<<<<< Updated upstream
-        } catch {
-          await this.web3TransactionService.updateWeb3TransactionStatus(
-            webhookEntity.id,
-            Web3TransactionStatus.FAILED,
-=======
 
+          // Get the intermediateResultsUrl from the escrow
           const intermediateResultsUrl =
             await escrowClient.getIntermediateResultsUrl(escrowAddress);
 
@@ -260,7 +113,7 @@ export class WebhookService {
           }
 
           // Attempt to download and parse intermediate results
-          let intermediateResultContent;
+          let intermediateResultContent: string | null;
           try {
             intermediateResultContent = await this.storageService.download(
               intermediateResultsUrl,
@@ -300,14 +153,10 @@ export class WebhookService {
             escrowAddress,
             chainId,
             intermediateResults,
->>>>>>> Stashed changes
           );
 
-          throw new Error(
-            `Failed to payout campaign: ${chainId} - ${escrowAddress}`,
-          );
-<<<<<<< Updated upstream
-=======
+          // Extract recipients
+          const recipients = this.getRecipients(intermediateResults);
 
           // Check how much the contract has
           const totalAmount = await escrowClient.getBalance(escrowAddress);
@@ -337,9 +186,8 @@ export class WebhookService {
           }
 
           // 1) Compute totalVolume from intermediate results
-          // Attempt to parse "liquidityScore" from each item
-          const totalVolume = intermediateResults.reduce((total, item) => {
-            return total + ethers.parseEther(item.liquidityScore);
+          const totalVolume = intermediateResults.reduce((acc, item) => {
+            return acc + ethers.parseEther(item.liquidityScore);
           }, 0n);
 
           // 2) Possibly override daily amount if there's a volume-based calculation
@@ -351,6 +199,7 @@ export class WebhookService {
           );
 
           if (amountForDay) {
+            // If the escrow has less than that daily amount, just use the entire escrow
             if (totalAmount < amountForDay) {
               amountForDay = totalAmount;
             }
@@ -394,12 +243,11 @@ export class WebhookService {
             WebhookService.name,
           );
 
-          // CHANGED: Convert BigInts to strings before saving Web3Transaction
+          // Convert BigInts to strings before saving Web3Transaction to avoid JSON issues
           const amountsAsStrings = amounts.map((a) => a.toString());
           const gasPriceString = gasPrice.toString();
 
           // 4) Save the web3 transaction record BEFORE making the on-chain call
-          //    We store the data as strings to avoid BigInt JSON errors
           const newTx = await this.web3TransactionService.saveWeb3Transaction({
             chainId,
             contract: 'escrow',
@@ -417,86 +265,48 @@ export class WebhookService {
             status: Web3TransactionStatus.PENDING,
           });
 
-          // 5) Attempt the actual transaction
-          try {
-            // Note: for the actual on-chain call, we can keep them as BigInt
-            // because ethers supports BigInt. We only convert to string above
-            // to avoid JSON issues in the DB.
-            await escrowClient.bulkPayOut(
-              escrowAddress,
-              recipients,
-              amounts,
-              url,
-              hash,
-              1,
-              false,
-              {
-                gasPrice,
-              },
-            );
+          // 5) Attempt the actual transaction on-chain
+          await escrowClient.bulkPayOut(
+            escrowAddress,
+            recipients,
+            amounts,
+            url,
+            hash,
+            1,
+            false,
+            { gasPrice },
+          );
 
-            // If we get here, transaction succeeded
-            this.logger.log(
-              `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
-              WebhookService.name,
-            );
+          // If we reach here, transaction succeeded
+          this.logger.log(
+            `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
+            WebhookService.name,
+          );
+          await this.web3TransactionService.updateWeb3TransactionStatus(
+            newTx.id,
+            Web3TransactionStatus.SUCCESS,
+          );
 
-            await this.web3TransactionService.updateWeb3TransactionStatus(
-              newTx.id,
-              Web3TransactionStatus.SUCCESS,
-            );
-
-            // Mark the webhook as "PAID"
-            await this.webhookRepository.updateOne(
-              { id: webhookEntity.id },
-              {
-                resultsUrl: url,
-                checkPassed: true,
-                status: WebhookStatus.PAID,
-              },
-            );
-          } catch (txErr) {
-            // Mark the web3 transaction as FAILED
-            this.logger.error(
-              `Failed to payout on-chain: ${txErr.message}`,
-              txErr.stack,
-            );
-
-            await this.web3TransactionService.updateWeb3TransactionStatus(
-              newTx.id,
-              Web3TransactionStatus.FAILED,
-            );
-
-            throw new Error(
-              `Failed to payout campaign: chainId=${chainId}, escrow=${escrowAddress}; original error: ${txErr.message}`,
-            );
-          }
-        } catch (e) {
+          // Mark the webhook as paid
+          await this.webhookRepository.updateOne(
+            { id: webhookEntity.id },
+            {
+              resultsUrl: url,
+              checkPassed: true,
+              status: WebhookStatus.PAID,
+            },
+          );
+        } catch (err) {
           // If any error occurs, handle retries & logging
-          await this.handleWebhookError(webhookEntity, e);
->>>>>>> Stashed changes
+          await this.handleWebhookError(webhookEntity, err);
         }
-
-        await this.webhookRepository.updateOne(
-          { id: webhookEntity.id },
-          {
-            resultsUrl: url,
-            checkPassed: true,
-            status: WebhookStatus.PAID,
-          },
-        );
-      } catch (e) {
-        await this.handleWebhookError(webhookEntity, e);
       }
-<<<<<<< Updated upstream
-=======
     } catch (outerErr) {
       // Catch any outer error from the cron job itself
       this.logger.error(
         `processPendingWebhooks encountered an error: ${outerErr.message}`,
         outerErr.stack,
       );
->>>>>>> Stashed changes
     }
   }
 
@@ -509,39 +319,35 @@ export class WebhookService {
     return finalResults.map((item) => item.liquidityProvider);
   }
 
+  /**
+   * Given a total payout amount and an array of liquidity result objects,
+   * calculates how much each provider gets based on their liquidityScore.
+   */
   public calculateCampaignPayoutAmounts(
     totalAmount: bigint,
     results: LiquidityDto[],
   ): bigint[] {
-<<<<<<< Updated upstream
-    // Convert the liquidity scores to BigNumber for precision in calculations.
-=======
     // Convert liquidityScore to BigInt using parseEther
->>>>>>> Stashed changes
     const bigNumberResults = results.map((result) => ({
       ...result,
       liquidityScore: ethers.parseEther(result.liquidityScore),
     }));
 
-    // Calculate the total liquidity score as a BigNumber.
+    // Calculate total liquidity score
     const totalLiquidityScore = bigNumberResults.reduce(
-      (total, item) => total + item.liquidityScore,
+      (sum, item) => sum + item.liquidityScore,
       0n,
     );
 
-<<<<<<< Updated upstream
-    // Map through each result, calculate each recipient's payout, and return the array.
-    const payouts = bigNumberResults.map(
-      (result) => (totalAmount * result.liquidityScore) / totalLiquidityScore,
-    );
-=======
     if (totalLiquidityScore === 0n) {
-      // Edge case: if no liquidity, everyone gets 0
+      // Edge case: if no liquidity at all, everyone gets zero
       return new Array(bigNumberResults.length).fill(0n);
     }
->>>>>>> Stashed changes
 
-    return payouts;
+    // Map through each result to calculate each recipient's payout
+    return bigNumberResults.map(
+      (result) => (totalAmount * result.liquidityScore) / totalLiquidityScore,
+    );
   }
 
   /**
@@ -565,24 +371,24 @@ export class WebhookService {
         { id: webhookEntity.id },
         {
           retriesCount: webhookEntity.retriesCount + 1,
-<<<<<<< Updated upstream
-=======
-          // If you need a delay, set waitUntil to a future time;
-          // for immediate retry, just set to now:
->>>>>>> Stashed changes
           waitUntil: new Date(),
         },
       );
     }
 
     this.logger.error(
-      'An error occurred during webhook validation: ',
+      'An error occurred during webhook validation:',
       error,
       WebhookService.name,
     );
     return false;
   }
 
+  /**
+   * For certain campaigns, calculates how much to pay out in total each day based on volume.
+   * Example: If manifest says “xin/usdt” and your token is indeed USDT or HMT,
+   * implement logic to convert the totalVolume of liquidity into a daily payout.
+   */
   private getTotalAmountByVolume(
     chainId: ChainId,
     manifest: any,
@@ -590,36 +396,25 @@ export class WebhookService {
     totalVolume: bigint,
   ): bigint | null {
     if (manifest?.token?.toLowerCase() === 'xin/usdt') {
-<<<<<<< Updated upstream
-      // TODO: Better handling of volume based payouts
-      // 100 USDT for 100K volume, USDT is in 6 decimals
-      let amount;
-=======
       // Example: 100 USDT for 100K volume => 1 USDT per 1K volume
+
       let amount: bigint;
->>>>>>> Stashed changes
 
       if (
         token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()
       ) {
+        // 100 USDT in 6 decimals
         amount = ethers.parseUnits('100', 6);
       } else if (
         token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
       ) {
-<<<<<<< Updated upstream
-        // TODO: Get HMT price from oracle. For now use fixed value of 1 HMT = 0.025 USDT
-=======
-        // For demonstration, 1 HMT = ~0.025 USDT => 100 USDT => ~4000 HMT
->>>>>>> Stashed changes
+        // For demonstration, assume 1 HMT = ~0.025 USDT => 100 USDT => ~4000 HMT
         amount = ethers.parseUnits('4000', 18);
       } else {
         return null;
       }
 
-<<<<<<< Updated upstream
-=======
-      // The ratio for 100,000 volume
->>>>>>> Stashed changes
+      // Scale the “amount” according to totalVolume over 100,000
       return (amount * totalVolume) / ethers.parseEther('100000');
     }
 
