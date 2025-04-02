@@ -1,5 +1,4 @@
 import { FC, useState } from 'react';
-
 import { Menu as MenuIcon } from '@mui/icons-material';
 import {
   AppBar,
@@ -20,6 +19,7 @@ import { Link } from 'react-router-dom';
 import logoSvg from '../assets/logo.svg';
 import { ConnectWallet } from '../components/connect-wallet';
 import { SocialIcons } from '../components/social-icons';
+import { NetworkSwitcher } from '../components/network-switch/NetworkSwitcher';
 import { PATHS } from '../routes';
 
 type NavLink = {
@@ -65,10 +65,7 @@ export const Header: FC = () => {
   const renderNavLinks = () => (
     <Stack direction="row" spacing={2}>
       {NAV_LINKS.map((nav) => {
-        if (nav.children) {
-          return <NavMenu key={nav.title} navLink={nav} />;
-        }
-
+        if (nav.children) return <NavMenu key={nav.title} navLink={nav} />;
         if (nav.href) {
           return (
             <Link
@@ -83,7 +80,6 @@ export const Header: FC = () => {
             </Link>
           );
         }
-
         return null;
       })}
     </Stack>
@@ -92,10 +88,7 @@ export const Header: FC = () => {
   const renderMobileLinks = () => (
     <Box>
       {NAV_LINKS.map((nav) => {
-        if (nav.children) {
-          return <NavMobileMenu key={nav.title} navLink={nav} />;
-        }
-
+        if (nav.children) return <NavMobileMenu key={nav.title} navLink={nav} />;
         if (nav.href) {
           return (
             <Link
@@ -115,7 +108,6 @@ export const Header: FC = () => {
             </Link>
           );
         }
-
         return null;
       })}
     </Box>
@@ -174,12 +166,15 @@ export const Header: FC = () => {
                   Campaign Launcher
                 </Typography>
               </Link>
+
               {!isDownLg && (
                 <Box display="flex" alignItems="center" gap={3}>
                   {renderNavLinks()}
+                  <NetworkSwitcher />
                   <ConnectWallet />
                 </Box>
               )}
+
               {isDownLg && (
                 <Box>
                   <IconButton
@@ -195,6 +190,7 @@ export const Header: FC = () => {
           </Box>
         </Toolbar>
       </AppBar>
+
       <Drawer
         anchor="top"
         open={drawerOpen}
@@ -209,10 +205,16 @@ export const Header: FC = () => {
         }}
       >
         <Box height="100%" position="relative">
-          {renderMobileLinks()}
-          <Box px={4} py="26px">
+        <Box display="flex" alignItems="center">
+          {renderNavLinks()}
+          <Box ml={1}>
+            <NetworkSwitcher />
+          </Box>
+          <Box ml={1}>
             <ConnectWallet />
           </Box>
+        </Box>
+
           <Box
             sx={{
               position: 'absolute',

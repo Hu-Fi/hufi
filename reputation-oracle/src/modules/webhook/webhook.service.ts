@@ -80,6 +80,7 @@ export class WebhookService {
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   public async processPendingWebhooks(): Promise<void> {
+<<<<<<< Updated upstream
     const webhookEntities = await this.webhookRepository.find(
       {
         status: WebhookStatus.PENDING,
@@ -89,6 +90,15 @@ export class WebhookService {
       {
         order: {
           waitUntil: SortDirection.ASC,
+=======
+    try {
+      // Find all webhook entries that are still pending, haven't exceeded retries, and are due for processing.
+      const webhookEntities = await this.webhookRepository.find(
+        {
+          status: WebhookStatus.PENDING,
+          retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
+          waitUntil: LessThanOrEqual(new Date()),
+>>>>>>> Stashed changes
         },
       },
     );
@@ -235,15 +245,236 @@ export class WebhookService {
             `Successfully paid out campaign: ${chainId} - ${escrowAddress}`,
             WebhookService.name,
           );
+<<<<<<< Updated upstream
         } catch {
           await this.web3TransactionService.updateWeb3TransactionStatus(
             webhookEntity.id,
             Web3TransactionStatus.FAILED,
+=======
+
+          const intermediateResultsUrl =
+            await escrowClient.getIntermediateResultsUrl(escrowAddress);
+
+          if (!intermediateResultsUrl) {
+            throw new Error('Intermediate result URL not found');
+          }
+
+          // Attempt to download and parse intermediate results
+          let intermediateResultContent;
+          try {
+            intermediateResultContent = await this.storageService.download(
+              intermediateResultsUrl,
+            );
+          } catch (downloadErr) {
+            this.logger.warn(
+              `Failed to download intermediate results: ${downloadErr.message}`,
+              WebhookService.name,
+            );
+            intermediateResultContent = null;
+          }
+
+          if (!intermediateResultContent) {
+            throw new Error('Invalid intermediate results (empty content)');
+          }
+
+          let intermediateResults: LiquidityDto[];
+          try {
+            intermediateResults = JSON.parse(intermediateResultContent);
+          } catch (parseErr) {
+            throw new Error(
+              `Invalid JSON in intermediate results: ${parseErr}`,
+            );
+          }
+
+          if (
+            !Array.isArray(intermediateResults) ||
+            !intermediateResults.length
+          ) {
+            throw new Error(
+              'No liquidity providers found - intermediate results array is empty or invalid',
+            );
+          }
+
+          // Upload results (for example, as "proof" or record)
+          const { url, hash } = await this.storageService.uploadLiquidities(
+            escrowAddress,
+            chainId,
+            intermediateResults,
+>>>>>>> Stashed changes
           );
 
           throw new Error(
             `Failed to payout campaign: ${chainId} - ${escrowAddress}`,
           );
+<<<<<<< Updated upstream
+=======
+
+          // Check how much the contract has
+          const totalAmount = await escrowClient.getBalance(escrowAddress);
+          this.logger.debug(
+            `Escrow contract balance: ${totalAmount.toString()}`,
+            WebhookService.name,
+          );
+
+          if (totalAmount === 0n) {
+            throw new Error('No funds to distribute in escrow');
+          }
+
+          // Get manifest and relevant info
+          const manifestUrl = await escrowClient.getManifestUrl(escrowAddress);
+          const fundToken = await escrowClient.getTokenAddress(escrowAddress);
+
+          let manifest: any;
+          try {
+            const response = await lastValueFrom(
+              this.httpService.get(manifestUrl),
+            );
+            manifest = response.data;
+          } catch (manifestErr) {
+            throw new Error(
+              `Failed to download or parse manifest: ${manifestErr.message}`,
+            );
+          }
+
+          // 1) Compute totalVolume from intermediate results
+          // Attempt to parse "liquidityScore" from each item
+          const totalVolume = intermediateResults.reduce((total, item) => {
+            return total + ethers.parseEther(item.liquidityScore);
+          }, 0n);
+
+          // 2) Possibly override daily amount if there's a volume-based calculation
+          let amountForDay = this.getTotalAmountByVolume(
+            chainId,
+            manifest,
+            fundToken,
+            totalVolume,
+          );
+
+          if (amountForDay) {
+            if (totalAmount < amountForDay) {
+              amountForDay = totalAmount;
+            }
+          } else {
+            // fallback if no volume-based approach
+            const endBlock = manifest.endBlock;
+            let remainingDays = Math.floor(
+              (endBlock - Math.floor(Date.now() / 1000)) / 86400,
+            );
+            if (remainingDays < 1) {
+              remainingDays = 1;
+            }
+            amountForDay = totalAmount / BigInt(remainingDays);
+          }
+
+          // 3) Calculate each user's portion
+          const amounts = this.calculateCampaignPayoutAmounts(
+            amountForDay,
+            intermediateResults,
+          );
+
+          // Double-check that sum(amounts) <= totalAmount
+          const sumOfAmounts = amounts.reduce((acc, val) => acc + val, 0n);
+          if (sumOfAmounts > totalAmount) {
+            throw new Error(
+              `Calculated payout total (${sumOfAmounts.toString()}) exceeds escrow balance (${totalAmount.toString()})`,
+            );
+          }
+
+          this.logger.debug(
+            `Computed individual amounts: ${JSON.stringify(
+              amounts.map((bn) => bn.toString()),
+            )}`,
+            WebhookService.name,
+          );
+
+          // Prepare gas price
+          const gasPrice = await this.web3Service.calculateGasPrice(chainId);
+          this.logger.debug(
+            `Calculated gas price: ${gasPrice.toString()}`,
+            WebhookService.name,
+          );
+
+          // CHANGED: Convert BigInts to strings before saving Web3Transaction
+          const amountsAsStrings = amounts.map((a) => a.toString());
+          const gasPriceString = gasPrice.toString();
+
+          // 4) Save the web3 transaction record BEFORE making the on-chain call
+          //    We store the data as strings to avoid BigInt JSON errors
+          const newTx = await this.web3TransactionService.saveWeb3Transaction({
+            chainId,
+            contract: 'escrow',
+            address: escrowAddress,
+            method: 'bulkPayOut',
+            data: [
+              recipients,
+              amountsAsStrings,
+              url,
+              hash,
+              1,
+              false,
+              { gasPrice: gasPriceString },
+            ],
+            status: Web3TransactionStatus.PENDING,
+          });
+
+          // 5) Attempt the actual transaction
+          try {
+            // Note: for the actual on-chain call, we can keep them as BigInt
+            // because ethers supports BigInt. We only convert to string above
+            // to avoid JSON issues in the DB.
+            await escrowClient.bulkPayOut(
+              escrowAddress,
+              recipients,
+              amounts,
+              url,
+              hash,
+              1,
+              false,
+              {
+                gasPrice,
+              },
+            );
+
+            // If we get here, transaction succeeded
+            this.logger.log(
+              `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
+              WebhookService.name,
+            );
+
+            await this.web3TransactionService.updateWeb3TransactionStatus(
+              newTx.id,
+              Web3TransactionStatus.SUCCESS,
+            );
+
+            // Mark the webhook as "PAID"
+            await this.webhookRepository.updateOne(
+              { id: webhookEntity.id },
+              {
+                resultsUrl: url,
+                checkPassed: true,
+                status: WebhookStatus.PAID,
+              },
+            );
+          } catch (txErr) {
+            // Mark the web3 transaction as FAILED
+            this.logger.error(
+              `Failed to payout on-chain: ${txErr.message}`,
+              txErr.stack,
+            );
+
+            await this.web3TransactionService.updateWeb3TransactionStatus(
+              newTx.id,
+              Web3TransactionStatus.FAILED,
+            );
+
+            throw new Error(
+              `Failed to payout campaign: chainId=${chainId}, escrow=${escrowAddress}; original error: ${txErr.message}`,
+            );
+          }
+        } catch (e) {
+          // If any error occurs, handle retries & logging
+          await this.handleWebhookError(webhookEntity, e);
+>>>>>>> Stashed changes
         }
 
         await this.webhookRepository.updateOne(
@@ -257,6 +488,15 @@ export class WebhookService {
       } catch (e) {
         await this.handleWebhookError(webhookEntity, e);
       }
+<<<<<<< Updated upstream
+=======
+    } catch (outerErr) {
+      // Catch any outer error from the cron job itself
+      this.logger.error(
+        `processPendingWebhooks encountered an error: ${outerErr.message}`,
+        outerErr.stack,
+      );
+>>>>>>> Stashed changes
     }
   }
 
@@ -273,7 +513,11 @@ export class WebhookService {
     totalAmount: bigint,
     results: LiquidityDto[],
   ): bigint[] {
+<<<<<<< Updated upstream
     // Convert the liquidity scores to BigNumber for precision in calculations.
+=======
+    // Convert liquidityScore to BigInt using parseEther
+>>>>>>> Stashed changes
     const bigNumberResults = results.map((result) => ({
       ...result,
       liquidityScore: ethers.parseEther(result.liquidityScore),
@@ -285,10 +529,17 @@ export class WebhookService {
       0n,
     );
 
+<<<<<<< Updated upstream
     // Map through each result, calculate each recipient's payout, and return the array.
     const payouts = bigNumberResults.map(
       (result) => (totalAmount * result.liquidityScore) / totalLiquidityScore,
     );
+=======
+    if (totalLiquidityScore === 0n) {
+      // Edge case: if no liquidity, everyone gets 0
+      return new Array(bigNumberResults.length).fill(0n);
+    }
+>>>>>>> Stashed changes
 
     return payouts;
   }
@@ -314,6 +565,11 @@ export class WebhookService {
         { id: webhookEntity.id },
         {
           retriesCount: webhookEntity.retriesCount + 1,
+<<<<<<< Updated upstream
+=======
+          // If you need a delay, set waitUntil to a future time;
+          // for immediate retry, just set to now:
+>>>>>>> Stashed changes
           waitUntil: new Date(),
         },
       );
@@ -334,9 +590,14 @@ export class WebhookService {
     totalVolume: bigint,
   ): bigint | null {
     if (manifest?.token?.toLowerCase() === 'xin/usdt') {
+<<<<<<< Updated upstream
       // TODO: Better handling of volume based payouts
       // 100 USDT for 100K volume, USDT is in 6 decimals
       let amount;
+=======
+      // Example: 100 USDT for 100K volume => 1 USDT per 1K volume
+      let amount: bigint;
+>>>>>>> Stashed changes
 
       if (
         token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()
@@ -345,12 +606,20 @@ export class WebhookService {
       } else if (
         token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
       ) {
+<<<<<<< Updated upstream
         // TODO: Get HMT price from oracle. For now use fixed value of 1 HMT = 0.025 USDT
+=======
+        // For demonstration, 1 HMT = ~0.025 USDT => 100 USDT => ~4000 HMT
+>>>>>>> Stashed changes
         amount = ethers.parseUnits('4000', 18);
       } else {
         return null;
       }
 
+<<<<<<< Updated upstream
+=======
+      // The ratio for 100,000 volume
+>>>>>>> Stashed changes
       return (amount * totalVolume) / ethers.parseEther('100000');
     }
 
