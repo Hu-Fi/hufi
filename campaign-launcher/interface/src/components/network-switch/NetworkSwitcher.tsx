@@ -1,7 +1,6 @@
 import { FC, useState, MouseEvent } from 'react';
 import { useAccount, useSwitchChain, useConfig } from 'wagmi';
 import {
-  Box,
   Button,
   Menu,
   MenuItem,

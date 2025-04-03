@@ -62,6 +62,7 @@ export const Header: FC = () => {
 
   const toggleDrawer = () => setDrawerOpen(!drawerOpen);
 
+  // Desktop nav links
   const renderNavLinks = () => (
     <Stack direction="row" spacing={2}>
       {NAV_LINKS.map((nav) => {
@@ -85,10 +86,13 @@ export const Header: FC = () => {
     </Stack>
   );
 
+  // **Mobile** nav links
   const renderMobileLinks = () => (
     <Box>
       {NAV_LINKS.map((nav) => {
-        if (nav.children) return <NavMobileMenu key={nav.title} navLink={nav} />;
+        if (nav.children) {
+          return <NavMobileMenu key={nav.title} navLink={nav} />;
+        }
         if (nav.href) {
           return (
             <Link
@@ -205,15 +209,23 @@ export const Header: FC = () => {
         }}
       >
         <Box height="100%" position="relative">
-        <Box display="flex" alignItems="center">
-          {renderNavLinks()}
-          <Box ml={1}>
-            <NetworkSwitcher />
-          </Box>
-          <Box ml={1}>
-            <ConnectWallet />
-          </Box>
-        </Box>
+          {/*
+            Now we decide which links to show depending on screen size.
+            For smaller screens, we'll show the mobile links. Otherwise, the normal nav.
+          */}
+          {isDownLg ? (
+            renderMobileLinks()
+          ) : (
+            <Box display="flex" alignItems="center">
+              {renderNavLinks()}
+              <Box ml={1}>
+                <NetworkSwitcher />
+              </Box>
+              <Box ml={1}>
+                <ConnectWallet />
+              </Box>
+            </Box>
+          )}
 
           <Box
             sx={{
@@ -238,6 +250,7 @@ type NavMenuProps = {
 const NavMenu: FC<NavMenuProps> = ({ navLink }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
