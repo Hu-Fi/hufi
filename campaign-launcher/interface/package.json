@@ -35,7 +35,7 @@
     "react-window": "^1.8.10",
     "uuid": "^9.0.1",
     "viem": "2.x",
-    "wagmi": "^2.5.17",
+    "wagmi": "^2.14.16",
     "yup": "^1.4.0"
   },
   "devDependencies": {
