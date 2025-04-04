@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 
 import logoSvg from '../assets/logo.svg';
 import { ConnectWallet } from '../components/connect-wallet';
+import { NetworkSwitcher } from '../components/network-switch/NetworkSwitcher';
 import { SocialIcons } from '../components/social-icons';
 import { PATHS } from '../routes';
 
@@ -65,10 +66,7 @@ export const Header: FC = () => {
   const renderNavLinks = () => (
     <Stack direction="row" spacing={2}>
       {NAV_LINKS.map((nav) => {
-        if (nav.children) {
-          return <NavMenu key={nav.title} navLink={nav} />;
-        }
-
+        if (nav.children) return <NavMenu key={nav.title} navLink={nav} />;
         if (nav.href) {
           return (
             <Link
@@ -83,43 +81,38 @@ export const Header: FC = () => {
             </Link>
           );
         }
-
         return null;
       })}
     </Stack>
   );
 
-  const renderMobileLinks = () => (
-    <Box>
-      {NAV_LINKS.map((nav) => {
-        if (nav.children) {
-          return <NavMobileMenu key={nav.title} navLink={nav} />;
-        }
-
-        if (nav.href) {
-          return (
-            <Link
-              key={nav.title}
-              to={nav.href}
-              target={nav.external ? '_blank' : '_self'}
-              style={{
-                textDecoration: 'none',
-                padding: '20px 32px',
-                borderBottom: '1px solid #E9EBFA',
-                display: 'block',
-              }}
-            >
-              <Typography color="primary" variant="body2" fontWeight={600}>
-                {nav.title}
-              </Typography>
-            </Link>
-          );
-        }
-
-        return null;
-      })}
-    </Box>
-  );
+  // const renderMobileLinks = () => (
+  //   <Box>
+  //     {NAV_LINKS.map((nav) => {
+  //       if (nav.children) return <NavMobileMenu key={nav.title} navLink={nav} />;
+  //       if (nav.href) {
+  //         return (
+  //           <Link
+  //             key={nav.title}
+  //             to={nav.href}
+  //             target={nav.external ? '_blank' : '_self'}
+  //             style={{
+  //               textDecoration: 'none',
+  //               padding: '20px 32px',
+  //               borderBottom: '1px solid #E9EBFA',
+  //               display: 'block',
+  //             }}
+  //           >
+  //             <Typography color="primary" variant="body2" fontWeight={600}>
+  //               {nav.title}
+  //             </Typography>
+  //           </Link>
+  //         );
+  //       }
+  //       return null;
+  //     })}
+  //   </Box>
+  // );
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -174,12 +167,15 @@ export const Header: FC = () => {
                   Campaign Launcher
                 </Typography>
               </Link>
+
               {!isDownLg && (
                 <Box display="flex" alignItems="center" gap={3}>
                   {renderNavLinks()}
+                  <NetworkSwitcher />
                   <ConnectWallet />
                 </Box>
               )}
+
               {isDownLg && (
                 <Box>
                   <IconButton
@@ -195,6 +191,7 @@ export const Header: FC = () => {
           </Box>
         </Toolbar>
       </AppBar>
+
       <Drawer
         anchor="top"
         open={drawerOpen}
@@ -209,10 +206,16 @@ export const Header: FC = () => {
         }}
       >
         <Box height="100%" position="relative">
-          {renderMobileLinks()}
-          <Box px={4} py="26px">
-            <ConnectWallet />
+          <Box display="flex" alignItems="center">
+            {renderNavLinks()}
+            <Box ml={1}>
+              <NetworkSwitcher />
+            </Box>
+            <Box ml={1}>
+              <ConnectWallet />
+            </Box>
           </Box>
+
           <Box
             sx={{
               position: 'absolute',
@@ -293,51 +296,51 @@ const NavMenu: FC<NavMenuProps> = ({ navLink }) => {
   );
 };
 
-const NavMobileMenu: FC<NavMenuProps> = ({ navLink }) => {
-  const [isOpen, setIsOpen] = useState(false);
+// const NavMobileMenu: FC<NavMenuProps> = ({ navLink }) => {
+//   const [isOpen, setIsOpen] = useState(false);
 
-  return (
-    <Box>
-      <Box
-        onClick={() => setIsOpen(!isOpen)}
-        sx={{
-          width: '100%',
-          textAlign: 'left',
-          padding: '20px 32px',
-          borderBottom: '1px solid #E9EBFA',
-        }}
-      >
-        <Typography color="primary" variant="body2" fontWeight={600}>
-          {navLink.title}
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          overflow: 'hidden',
-          height: isOpen ? 65 * (navLink.children?.length || 0) : 0,
-          transition: 'all .5s ease-in-out',
-        }}
-      >
-        {navLink.children?.map(
-          (nav) =>
-            nav.href && (
-              <Link
-                key={nav.title}
-                to={nav.href}
-                style={{
-                  textDecoration: 'none',
-                  padding: '20px 64px',
-                  borderBottom: '1px solid #E9EBFA',
-                  display: 'block',
-                }}
-              >
-                <Typography color="primary" variant="body2" fontWeight={400}>
-                  {nav.title}
-                </Typography>
-              </Link>
-            )
-        )}
-      </Box>
-    </Box>
-  );
-};
+//   return (
+//     <Box>
+//       <Box
+//         onClick={() => setIsOpen(!isOpen)}
+//         sx={{
+//           width: '100%',
+//           textAlign: 'left',
+//           padding: '20px 32px',
+//           borderBottom: '1px solid #E9EBFA',
+//         }}
+//       >
+//         <Typography color="primary" variant="body2" fontWeight={600}>
+//           {navLink.title}
+//         </Typography>
+//       </Box>
+//       <Box
+//         sx={{
+//           overflow: 'hidden',
+//           height: isOpen ? 65 * (navLink.children?.length || 0) : 0,
+//           transition: 'all .5s ease-in-out',
+//         }}
+//       >
+//         {navLink.children?.map(
+//           (nav) =>
+//             nav.href && (
+//               <Link
+//                 key={nav.title}
+//                 to={nav.href}
+//                 style={{
+//                   textDecoration: 'none',
+//                   padding: '20px 64px',
+//                   borderBottom: '1px solid #E9EBFA',
+//                   display: 'block',
+//                 }}
+//               >
+//                 <Typography color="primary" variant="body2" fontWeight={400}>
+//                   {nav.title}
+//                 </Typography>
+//               </Link>
+//             )
+//         )}
+//       </Box>
+//     </Box>
+//   );
+// };
