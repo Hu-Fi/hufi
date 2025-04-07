@@ -7,7 +7,14 @@ type Props = {
 
 const Container: FC<PropsWithChildren<Props>> = ({ sx, children }) => {
 	return (
-		<MuiContainer maxWidth="xxl" sx={{ maxWidth: "1920px", mx: "auto", px: { xs: 2, xl: 7 }, ...sx }}>
+		<MuiContainer 
+			maxWidth={false}
+			sx={{ 
+				width: "100%", 
+				px: { xs: 2, sm: 3, md: 4, lg: 5, xl: 6, xxl: 7 }, 
+				...sx 
+			}}
+		>
 			{children}
 		</MuiContainer>
 	)

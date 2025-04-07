@@ -10,6 +10,9 @@ declare module '@mui/material/styles' {
 	interface BreakpointOverrides {
 		xxl: true;
 	}
+	interface SimplePaletteColorOptions {
+		contrast?: string;
+	}
 }
 
 const createAppTheme = (mode: PaletteMode) => {
@@ -30,7 +33,8 @@ const createAppTheme = (mode: PaletteMode) => {
 				? {
 						primary: { 
 							main: '#cdc7ff', 
-							light: '#6309ff'
+							light: '#6309ff',
+							contrast: 'rgba(0, 0, 0, 0.87)',
 						},
 						background: {
 							default: '#100735',
@@ -49,7 +53,8 @@ const createAppTheme = (mode: PaletteMode) => {
 				: {
 						primary: { 
 							main: '#cdc7ff', 
-							light: '#6309ff'
+							light: '#6309ff',
+							contrast: 'rgba(0, 0, 0, 0.87)',
 						},
 						background: {
 							default: '#100735',
@@ -57,6 +62,7 @@ const createAppTheme = (mode: PaletteMode) => {
 						text: {
 							primary: '#d4cfff',
 							secondary: 'rgba(212, 207, 255, 0.70)',
+							disabled: 'rgba(212, 207, 255, 0.50)',
 						},
 						success: {
 							main: '#0ad397'
@@ -68,11 +74,31 @@ const createAppTheme = (mode: PaletteMode) => {
 		},
 		typography: {
 			fontFamily: 'Inter, sans-serif',
-			caption: {
-				fontSize: '12px',
-				lineHeight: '1.25rem',
+			h3: {
+				fontSize: '3rem',
 				fontWeight: 400,
+				lineHeight: '3.5rem',
+				letterSpacing: '0.15px',
+			},
+			h5: {
+				fontSize: '1.5rem',
+				fontWeight: 400,
+				lineHeight: '2.25rem',
+			},
+			caption: {
+				fontSize: '0.75rem',
+				fontWeight: 400,
+				lineHeight: '1.25rem',
 				letterSpacing: '0.4px',
+			},
+		},
+		components: {
+			MuiButton: {
+				styleOverrides: {
+					root: {
+						textTransform: 'none',
+					},
+				},
 			},
 		},
 	});

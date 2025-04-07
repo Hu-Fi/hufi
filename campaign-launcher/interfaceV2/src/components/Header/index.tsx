@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { AppBar, Box, Toolbar, Typography } from "@mui/material"
+import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material"
 import { Link } from "react-router-dom";
 
 import Container from "../Container";
@@ -20,7 +20,7 @@ const Header: FC = () => {
       }}
     >
       <Container>
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: '82px', py: 3 }}>
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: '90px', py: 3 }}>
           <Link to="/">
             <img src={logo} alt="HuFi" width={87} height={32} />
           </Link>
@@ -31,12 +31,15 @@ const Header: FC = () => {
             <Typography>
               Campaigns
             </Typography>
-            <Typography>
-              Launch
-            </Typography>
-            <Typography>
-              Stake
-            </Typography>
+            <Button variant="text" size="medium" sx={{ color: "primary.main" }}>
+              Stake HMT
+            </Button>
+            <Button variant="outlined" size="large" sx={{ color: "primary.main" }}>
+              Launch Campaign
+            </Button>
+            <Button variant="contained" size="large" sx={{ color: "primary.contrast" }}>
+              Connect Wallet
+            </Button>
           </Box>
         </Toolbar>
       </Container>
