@@ -1,4 +1,5 @@
 import { FC, PropsWithChildren } from "react";
+
 import { Paper } from "@mui/material";
 
 const PageWrapper: FC<PropsWithChildren> = ({ children }) => {

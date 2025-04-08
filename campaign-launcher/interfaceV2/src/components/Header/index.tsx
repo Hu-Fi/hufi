@@ -1,9 +1,10 @@
 import { FC } from "react";
-import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material"
+
+import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 
-import Container from "../Container";
 import logo from "../../assets/logo.svg";
+import Container from "../Container";
 
 const Header: FC = () => {
 	return (

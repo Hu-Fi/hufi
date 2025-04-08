@@ -1,12 +1,13 @@
 import { FC } from "react";
-import { Box, IconButton, Link, styled, Typography } from "@mui/material";
-import GitHubIcon from '@mui/icons-material/GitHub';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import TelegramIcon from '@mui/icons-material/Telegram';
-import LinkedInIcon from '@mui/icons-material/LinkedIn';
 
-import Container from "../Container";
+import GitHubIcon from '@mui/icons-material/GitHub';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import { Box, IconButton, Link, styled, Typography } from "@mui/material";
+
 import { DiscordIcon } from "../../icons";
+import Container from "../Container";
 
 const SocialMediaIconButton = styled(IconButton)(({ theme }) => ({
 	padding: 0,

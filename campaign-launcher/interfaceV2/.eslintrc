@@ -1,7 +1,7 @@
 {
   "env": {
     "browser": true,
-    "es2021": true,
+    "es2021": true
   },
   "extends": [
     "eslint:recommended",
@@ -9,12 +9,12 @@
     "plugin:import/typescript",
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
-    "prettier",
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module",
+    "sourceType": "module"
   },
   "plugins": ["@typescript-eslint", "react", "prettier", "import"],
   "rules": {
@@ -24,9 +24,9 @@
       {
         "extendDefaults": true,
         "types": {
-          "{}": false,
-        },
-      },
+          "{}": false
+        }
+      }
     ],
     "import/order": [
       "error",
@@ -36,25 +36,25 @@
           {
             "pattern": "react",
             "group": "external",
-            "position": "before",
-          },
+            "position": "before"
+          }
         ],
         "pathGroupsExcludedImportTypes": ["react"],
         "newlines-between": "always",
         "alphabetize": {
           "order": "asc",
-          "caseInsensitive": true,
-        },
-      },
-    ],
+          "caseInsensitive": true
+        }
+      }
+    ]
   },
   "settings": {
     "import/resolver": {
       "typescript": {},
-      "node": {},
+      "node": {}
     },
     "react": {
-      "version": "detect",
-    },
-  },
+      "version": "detect"
+    }
+  }
 }

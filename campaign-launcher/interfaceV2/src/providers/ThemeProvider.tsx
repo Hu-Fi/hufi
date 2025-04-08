@@ -1,4 +1,5 @@
 import { FC, PropsWithChildren, useMemo, useState } from "react";
+
 import { CssBaseline, PaletteMode } from "@mui/material";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 
@@ -15,7 +16,7 @@ const ThemeProvider: FC<PropsWithChildren> = ({ children }) => {
 		...theme,
 		toggleColorMode
 	}), [theme, toggleColorMode]);
-	
+
 	return (
 		<MuiThemeProvider theme={extendedTheme}>
 			<CssBaseline />
