@@ -1,12 +1,19 @@
 import { FC } from "react";
 
-import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Button, Link as MuiLink, Toolbar } from "@mui/material";
 import { Link } from "react-router-dom";
+import { useAccount } from "wagmi";
 
 import logo from "../../assets/logo.svg";
+import { ROUTES } from "../../constants";
+import Account from "../Account";
+import CampaignsMenu from "../CampaignsMenu";
+import ConnectWallet from "../ConnectWallet";
 import Container from "../Container";
 
 const Header: FC = () => {
+  const { isConnected } = useAccount();
+  
 	return (
 		<AppBar 
       position="static" 
@@ -25,22 +32,19 @@ const Header: FC = () => {
           <Link to="/">
             <img src={logo} alt="HuFi" width={87} height={32} />
           </Link>
-          <Box display="flex" gap={2} alignItems="center">
-            <Typography>
+          <Box display="flex" gap={2} alignItems="center" height="100%">
+            <MuiLink to={ROUTES.DASHBOARD} component={Link} sx={{ textDecoration: 'none', color: 'primary.main', fontWeight: 600, fontSize: '14px' }}>
               Dashboard
-            </Typography>
-            <Typography>
-              Campaigns
-            </Typography>
-            <Button variant="text" size="medium" sx={{ color: "primary.main" }}>
+            </MuiLink>
+            <CampaignsMenu />
+            <Button variant="text" size="medium" sx={{ color: "primary.main", fontWeight: 600, height: '100%' }}>
               Stake HMT
             </Button>
-            <Button variant="outlined" size="large" sx={{ color: "primary.main" }}>
+            <Button variant="outlined" size="large" sx={{ color: "primary.main", height: '42px', fontWeight: 600 }}>
               Launch Campaign
             </Button>
-            <Button variant="contained" size="large" sx={{ color: "primary.contrast" }}>
-              Connect Wallet
-            </Button>
+            {!isConnected && <ConnectWallet />}
+            {isConnected && <Account />}
           </Box>
         </Toolbar>
       </Container>

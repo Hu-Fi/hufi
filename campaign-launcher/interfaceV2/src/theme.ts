@@ -53,7 +53,7 @@ const createAppTheme = (mode: PaletteMode) => {
 				: {
 						primary: { 
 							main: '#cdc7ff', 
-							light: '#6309ff',
+							light: '#320a8d',
 							contrast: 'rgba(0, 0, 0, 0.87)',
 						},
 						background: {

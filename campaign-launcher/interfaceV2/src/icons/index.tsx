@@ -37,3 +37,50 @@ export const JobsIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   )
 }
+
+export const AvatarIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="11" r="10.5" fill="#0DD3FF" />
+      <circle cx="11" cy="11" r="10.5" fill="#858EC6" />
+      <path
+        d="M21.5 11C21.5 16.799 16.799 21.5 11 21.5C5.20101 21.5 0.5 16.799 0.5 11C0.5 5.201 5.20101 11 11 11C16.799 11 21.5 5.201 21.5 11Z"
+        fill="#0DD3FF"
+      />
+      <path
+        d="M21.5 11C21.5 16.799 16.799 21.5 11 21.5C5.20101 21.5 0.5 16.799 0.5 11C0.5 5.201 5.20101 11 11 11C16.799 11 21.5 5.201 21.5 11Z"
+        fill="#320A8D"
+      />
+    </SvgIcon>
+  );
+};
+
+export const PowerIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        fill="currentColor"
+        d="M13.5 3H11.5V13H13.5V3ZM18.33 5.17L16.91 6.59C18.49 7.86 19.5 9.81 19.5 12C19.5 15.87 16.37 19 12.5 19C8.63 19 5.5 15.87 5.5 12C5.5 9.81 6.51 7.86 8.08 6.58L6.67 5.17C4.73 6.82 3.5 9.26 3.5 12C3.5 16.97 7.53 21 12.5 21C17.47 21 21.5 16.97 21.5 12C21.5 9.26 20.27 6.82 18.33 5.17Z"
+      />
+    </SvgIcon>
+  );
+};
+
+export const ArrowDownIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 25 24" fill="none">
+      <path d="M7.5 9.5L12.5 14.5L17.5 9.5H7.5Z" fill="#24046d"/>
+    </SvgIcon>
+  );
+};
+
+export const ChevronIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        fill="currentColor"
+        d="M16.59 8.295L12 12.875L7.41 8.295L6 9.705L12 15.705L18 9.705L16.59 8.295Z"
+      />
+    </SvgIcon>
+  );
+};
