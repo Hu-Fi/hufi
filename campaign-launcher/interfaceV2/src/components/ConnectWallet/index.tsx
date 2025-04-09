@@ -21,8 +21,6 @@ const ConnectWallet: FC = () => {
 
   const onClose = () => setAnchorEl(null);
 
-  console.log(connectors);
-
   return (
     <>
       <Button
