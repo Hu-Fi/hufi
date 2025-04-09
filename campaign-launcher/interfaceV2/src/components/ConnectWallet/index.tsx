@@ -39,7 +39,7 @@ const ConnectWallet: FC = () => {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         slotProps={{
           paper: {
-            elevation: 0,
+            elevation: 4,
             sx: {
               mt: 1,
               backgroundColor: 'background.default',
