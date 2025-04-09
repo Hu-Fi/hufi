@@ -76,6 +76,45 @@ services:
     rootDir: campaign-launcher/interface
     autoDeploy: false
   - type: web
+    name: hufi-campaign-launcher-ui-v2
+    runtime: static
+    repo: https://github.com/Hu-Fi/hufi
+    envVars:
+      - key: NODE_VERSION
+        sync: false
+      - key: VITE_APP_WEB3_ENV
+        sync: false
+      - key: VITE_APP_WALLETCONNECT_PROJECT_ID
+        sync: false
+      - key: VITE_APP_REPUTATION_ORACLE_FEE
+        sync: false
+      - key: VITE_APP_REPUTATION_ORACLE_ADDRESS
+        sync: false
+      - key: VITE_APP_RECORDING_ORACLE_FEE
+        sync: false
+      - key: VITE_APP_RECORDING_ORACLE_API_URL
+        sync: false
+      - key: VITE_APP_RECORDING_ORACLE_ADDRESS
+        sync: false
+      - key: VITE_APP_EXCHANGE_ORACLE_FEE
+        sync: false
+      - key: VITE_APP_EXCHANGE_ORACLE_ADDRESS
+        sync: false
+      - key: VITE_APP_CAMPAIGN_LAUNCHER_API_URL
+        sync: false
+      - key: VITE_APP_CAMPAIGN_LAUNCHER_API_KEY
+        sync: false
+      - key: NODE_ENV
+        sync: false
+    buildCommand: yarn install --production=false; yarn build
+    staticPublishPath: distV2
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    rootDir: campaign-launcher/interfaceV2
+    autoDeploy: false
+  - type: web
     name: hufi-campaign-launcher-server
     runtime: node
     repo: https://github.com/Hu-Fi/hufi
@@ -280,6 +319,46 @@ services:
         destination: /index.html
     rootDir: campaign-launcher/interface
     autoDeploy: false
+  - type: web
+    name: hufi-campaign-launcher-ui-v2-testnet
+    runtime: static
+    repo: https://github.com/Hu-Fi/hufi
+    branch: develop
+    envVars:
+      - key: NODE_VERSION
+        sync: false
+      - key: VITE_APP_WEB3_ENV
+        sync: false
+      - key: VITE_APP_WALLETCONNECT_PROJECT_ID
+        sync: false
+      - key: VITE_APP_REPUTATION_ORACLE_FEE
+        sync: false
+      - key: VITE_APP_REPUTATION_ORACLE_ADDRESS
+        sync: false
+      - key: VITE_APP_RECORDING_ORACLE_FEE
+        sync: false
+      - key: VITE_APP_RECORDING_ORACLE_API_URL
+        sync: false
+      - key: VITE_APP_RECORDING_ORACLE_ADDRESS
+        sync: false
+      - key: VITE_APP_EXCHANGE_ORACLE_FEE
+        sync: false
+      - key: VITE_APP_EXCHANGE_ORACLE_ADDRESS
+        sync: false
+      - key: VITE_APP_CAMPAIGN_LAUNCHER_API_URL
+        sync: false
+      - key: VITE_APP_CAMPAIGN_LAUNCHER_API_KEY
+        sync: false
+      - key: NODE_ENV
+        sync: false
+    buildCommand: yarn install --production=false; yarn build;
+    staticPublishPath: distV2
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    rootDir: campaign-launcher/interfaceV2
+    autoDeploy: false  
   - type: web
     name: hufi-reputation-oracle-server-testnet
     runtime: node
