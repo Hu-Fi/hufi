@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC } from 'react';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -22,9 +22,9 @@ const App: FC = () => {
             </Layout>
           </BrowserRouter>
         </ThemeProvider>
-      </QueryClientProvider>  
-    </WagmiProvider>    
-  )
-}
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+};
 
-export default App
+export default App;

@@ -1,5 +1,5 @@
-import { Box, Paper, Typography, styled } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import { Box, Paper, Typography, styled } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 
 const Circle = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -36,31 +36,44 @@ const Text = styled(Typography)(({ theme }) => ({
 }));
 
 const HowToLaunch = () => {
-	return (
+  return (
     <>
-      <Typography variant="h5" mb={6.5} textAlign="center">Easy and fast. How to launch a market making campaign.</Typography>
+      <Typography variant="h5" mb={6.5} textAlign="center">
+        Easy and fast. How to launch a market making campaign.
+      </Typography>
       <Grid container spacing={2} justifyContent="center">
         <Grid size={4}>
           <Card>
             <Circle>1</Circle>
-            <Text>Stake<br />HMT</Text>
+            <Text>
+              Stake
+              <br />
+              HMT
+            </Text>
           </Card>
         </Grid>
         <Grid size={4}>
           <Card>
             <Circle>2</Circle>
-            <Text>Launch<br />Campaign</Text>
+            <Text>
+              Launch
+              <br />
+              Campaign
+            </Text>
           </Card>
         </Grid>
         <Grid size={4}>
           <Card>
             <Circle>3</Circle>
-            <Text>Approve 4<br />Transactions</Text>
+            <Text>
+              Approve 4<br />
+              Transactions
+            </Text>
           </Card>
         </Grid>
       </Grid>
     </>
-	)
-}
+  );
+};
 
 export default HowToLaunch;

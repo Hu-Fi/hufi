@@ -1,11 +1,6 @@
 import { FC, useState } from 'react';
 
-import {
-  Avatar,
-  Button,
-  Popover,
-  Typography,
-} from '@mui/material';
+import { Avatar, Button, Popover, Typography } from '@mui/material';
 import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from 'wagmi';
 
 import { AvatarIcon, ArrowDownIcon, PowerIcon } from '../../icons';
@@ -53,7 +48,7 @@ const Account: FC = () => {
         <Typography
           variant="body2"
           color="primary.light"
-					fontWeight={600}
+          fontWeight={600}
           paddingX={1}
           sx={{ fontSize: { md: '12px', lg: '14px' } }}
         >

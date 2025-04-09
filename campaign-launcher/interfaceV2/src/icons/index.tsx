@@ -13,30 +13,83 @@ export const DiscordIcon: FC<SvgIconProps> = (props) => {
 export const JobsIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 66 66">
-      <path d="M66 33C66 51.2254 51.2254 66 33 66C14.7746 66 0 51.2254 0 33C0 14.7746 14.7746 0 33 0C51.2254 0 66 14.7746 66 33Z" fill="url(#paint0_radial_271_3)" fillOpacity="0.1"/>
-      <path fillRule="evenodd" clipRule="evenodd" d="M33 61.9304C48.9778 61.9304 61.9304 48.9778 61.9304 33C61.9304 17.0222 48.9778 4.06959 33 4.06959C17.0222 4.06959 4.06959 17.0222 4.06959 33C4.06959 48.9778 17.0222 61.9304 33 61.9304ZM33 66C51.2254 66 66 51.2254 66 33C66 14.7746 51.2254 0 33 0C14.7746 0 0 14.7746 0 33C0 51.2254 14.7746 66 33 66Z" fill="url(#paint1_linear_271_3)" fillOpacity="0.05"/>
-      <path fillRule="evenodd" clipRule="evenodd" d="M22.0488 28.8091V41.6684L35.1138 48.8779L48.1788 41.6684V28.3343L35.5695 21.5743L22.0488 28.8091Z" fill="url(#paint2_linear_271_3)"/>
-      <path fillRule="evenodd" clipRule="evenodd" d="M32.1663 16.3135L44.9438 23.1636V37.0155L31.7939 44.2718L18.644 37.0155V23.5492L32.1663 16.3135Z" stroke="#CDC7FF" strokeWidth="1.24294" fill="transparent"/>
-      <path d="M18.9111 23.7869L31.8075 30.5422L45.1425 23.3922" stroke="#CDC7FF" strokeWidth="1.24294" fill="transparent"/>
-      <path d="M31.8123 44.2718V30.4542" stroke="#CDC7FF" strokeWidth="1.24294" fill="transparent"/>
+      <path
+        d="M66 33C66 51.2254 51.2254 66 33 66C14.7746 66 0 51.2254 0 33C0 14.7746 14.7746 0 33 0C51.2254 0 66 14.7746 66 33Z"
+        fill="url(#paint0_radial_271_3)"
+        fillOpacity="0.1"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M33 61.9304C48.9778 61.9304 61.9304 48.9778 61.9304 33C61.9304 17.0222 48.9778 4.06959 33 4.06959C17.0222 4.06959 4.06959 17.0222 4.06959 33C4.06959 48.9778 17.0222 61.9304 33 61.9304ZM33 66C51.2254 66 66 51.2254 66 33C66 14.7746 51.2254 0 33 0C14.7746 0 0 14.7746 0 33C0 51.2254 14.7746 66 33 66Z"
+        fill="url(#paint1_linear_271_3)"
+        fillOpacity="0.05"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M22.0488 28.8091V41.6684L35.1138 48.8779L48.1788 41.6684V28.3343L35.5695 21.5743L22.0488 28.8091Z"
+        fill="url(#paint2_linear_271_3)"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M32.1663 16.3135L44.9438 23.1636V37.0155L31.7939 44.2718L18.644 37.0155V23.5492L32.1663 16.3135Z"
+        stroke="#CDC7FF"
+        strokeWidth="1.24294"
+        fill="transparent"
+      />
+      <path
+        d="M18.9111 23.7869L31.8075 30.5422L45.1425 23.3922"
+        stroke="#CDC7FF"
+        strokeWidth="1.24294"
+        fill="transparent"
+      />
+      <path
+        d="M31.8123 44.2718V30.4542"
+        stroke="#CDC7FF"
+        strokeWidth="1.24294"
+        fill="transparent"
+      />
       <defs>
-        <radialGradient id="paint0_radial_271_3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(33 10.6895) rotate(90) scale(55.3105)">
-          <stop stopColor="#F0F0FF"/>
-          <stop stopColor="#F1F1FD"/>
-          <stop offset="0.703125" stopColor="white"/>
+        <radialGradient
+          id="paint0_radial_271_3"
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(33 10.6895) rotate(90) scale(55.3105)"
+        >
+          <stop stopColor="#F0F0FF" />
+          <stop stopColor="#F1F1FD" />
+          <stop offset="0.703125" stopColor="white" />
         </radialGradient>
-        <linearGradient id="paint1_linear_271_3" x1="72.5261" y1="66" x2="77.495" y2="44.1101" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F7F8FD"/>
-          <stop offset="1" stopColor="white"/>
+        <linearGradient
+          id="paint1_linear_271_3"
+          x1="72.5261"
+          y1="66"
+          x2="77.495"
+          y2="44.1101"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#F7F8FD" />
+          <stop offset="1" stopColor="white" />
         </linearGradient>
-        <linearGradient id="paint2_linear_271_3" x1="25.8308" y1="26.2446" x2="43.2617" y2="48.1393" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#CDC7FF" stopOpacity="0.2"/>
-          <stop offset="1" stopColor="#CDC7FF" stopOpacity="0"/>
+        <linearGradient
+          id="paint2_linear_271_3"
+          x1="25.8308"
+          y1="26.2446"
+          x2="43.2617"
+          y2="48.1393"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#CDC7FF" stopOpacity="0.2" />
+          <stop offset="1" stopColor="#CDC7FF" stopOpacity="0" />
         </linearGradient>
       </defs>
     </SvgIcon>
-  )
-}
+  );
+};
 
 export const AvatarIcon: FC<SvgIconProps> = (props) => {
   return (
@@ -69,7 +122,7 @@ export const PowerIcon: FC<SvgIconProps> = (props) => {
 export const ArrowDownIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 25 24" fill="none">
-      <path d="M7.5 9.5L12.5 14.5L17.5 9.5H7.5Z" fill="#24046d"/>
+      <path d="M7.5 9.5L12.5 14.5L17.5 9.5H7.5Z" fill="#24046d" />
     </SvgIcon>
   );
 };

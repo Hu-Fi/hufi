@@ -18,7 +18,6 @@ import {
 } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
-
 declare module 'wagmi' {
   interface Register {
     config: typeof config;

@@ -1,28 +1,28 @@
-import { FC } from "react";
+import { FC } from 'react';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import TwitterIcon from '@mui/icons-material/Twitter';
-import { Box, IconButton, Link, styled, Typography } from "@mui/material";
+import { Box, IconButton, Link, styled, Typography } from '@mui/material';
 
-import { DiscordIcon } from "../../icons";
-import Container from "../Container";
+import { DiscordIcon } from '../../icons';
+import Container from '../Container';
 
 const SocialMediaIconButton = styled(IconButton)(({ theme }) => ({
-	padding: 0,
-	'& svg': {
-		fill: theme.palette.text.primary,
-		fillOpacity: 0.7,
-	},
+  padding: 0,
+  '& svg': {
+    fill: theme.palette.text.primary,
+    fillOpacity: 0.7,
+  },
 
-	'&:hover': {
-		background: 'none',
-		'& svg': {
-			fill: theme.palette.text.primary,
-			fillOpacity: 1,
-		},
-	},
+  '&:hover': {
+    background: 'none',
+    '& svg': {
+      fill: theme.palette.text.primary,
+      fillOpacity: 1,
+    },
+  },
 }));
 
 const StyledLink = styled(Link)(({ theme }) => ({
@@ -36,23 +36,29 @@ const StyledLink = styled(Link)(({ theme }) => ({
 }));
 
 const Footer: FC = () => {
-	return (
-		<Box component="footer" sx={{ bgcolor: 'background.default' }}>
-			<Container>
-				<Box
-					display="flex"
-					justifyContent="space-between"
-					alignItems="center"
-					py={4}
-				>
-					<Box display="flex" flexDirection="column" gap="18px">
+  return (
+    <Box component="footer" sx={{ bgcolor: 'background.default' }}>
+      <Container>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          py={4}
+        >
+          <Box display="flex" flexDirection="column" gap="18px">
             <Box display="flex" alignItems="center" gap={3}>
-              <StyledLink href="https://www.humanprotocol.org/privacy-policy" target="_blank">
+              <StyledLink
+                href="https://www.humanprotocol.org/privacy-policy"
+                target="_blank"
+              >
                 <Typography color="text.secondary" variant="caption">
                   Privacy Policy
                 </Typography>
               </StyledLink>
-              <StyledLink href="https://www.humanprotocol.org/privacy-policy" target="_blank">
+              <StyledLink
+                href="https://www.humanprotocol.org/privacy-policy"
+                target="_blank"
+              >
                 <Typography color="text.secondary" variant="caption">
                   Terms of Service
                 </Typography>
@@ -66,28 +72,28 @@ const Footer: FC = () => {
             <Typography color="text.secondary" variant="caption">
               © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
             </Typography>
-					</Box>
-					<Box display="flex" alignItems="center" gap="30px">
-						<SocialMediaIconButton aria-label="GitHub">
-							<GitHubIcon />
-						</SocialMediaIconButton>
-						<SocialMediaIconButton aria-label="Discord">
-							<DiscordIcon />
-						</SocialMediaIconButton>
-						<SocialMediaIconButton aria-label="X">
-							<TwitterIcon />
-						</SocialMediaIconButton>
-						<SocialMediaIconButton aria-label="Telegram">
-							<TelegramIcon />
-						</SocialMediaIconButton>
-						<SocialMediaIconButton aria-label="LinkedIn">
-							<LinkedInIcon />
-						</SocialMediaIconButton>
-					</Box>
-				</Box>
-			</Container>
-		</Box>
-	)
-}
+          </Box>
+          <Box display="flex" alignItems="center" gap="30px">
+            <SocialMediaIconButton aria-label="GitHub">
+              <GitHubIcon />
+            </SocialMediaIconButton>
+            <SocialMediaIconButton aria-label="Discord">
+              <DiscordIcon />
+            </SocialMediaIconButton>
+            <SocialMediaIconButton aria-label="X">
+              <TwitterIcon />
+            </SocialMediaIconButton>
+            <SocialMediaIconButton aria-label="Telegram">
+              <TelegramIcon />
+            </SocialMediaIconButton>
+            <SocialMediaIconButton aria-label="LinkedIn">
+              <LinkedInIcon />
+            </SocialMediaIconButton>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
+  );
+};
 
 export default Footer;
