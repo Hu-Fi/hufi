@@ -7,7 +7,7 @@ import { useCreateEscrow, useNotification } from '../../hooks';
 
 export const CreateCampaign: FC = () => {
   const { isLoading: isCreatingEscrow, createEscrow } = useCreateEscrow();
-  const { isLoading: loading, data: leader } = useLeader();
+  const { isPending, data: leader } = useLeader();
   const { setNotification } = useNotification();
 
   const handleSubmit = async ({ fundToken, ...data }: CampaignFormValues) => {
@@ -19,22 +19,22 @@ export const CreateCampaign: FC = () => {
   };
 
   const isValidLeader = useMemo(
-    () => !loading && +(leader?.amountStaked ?? '0') > 0,
-    [loading, leader]
+    () => !isPending && +(leader?.amountStaked ?? '0') > 0,
+    [isPending, leader]
   );
 
   useEffect(() => {
-    if (!isValidLeader) {
+    if (!isPending && !isValidLeader) {
       setNotification({
         type: 'warning',
         message: 'You must stake HMT to create a campaign',
       });
     }
-  }, [loading]);
+  }, [isPending]);
 
   return (
     <>
-      {loading ? (
+      {isPending ? (
         <Loading />
       ) : (
         <CampaignForm
