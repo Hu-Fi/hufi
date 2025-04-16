@@ -64,6 +64,8 @@ export const config = createConfig({
   },
 });
 
-export const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
+const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
   return <WWagmiProvider config={config}>{children}</WWagmiProvider>;
 };
+
+export default WagmiProvider;

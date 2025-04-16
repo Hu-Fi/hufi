@@ -19,7 +19,7 @@ const persister = createSyncStoragePersister({
   deserialize,
 });
 
-export const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
+const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
   return (
     <PersistQueryClientProvider
       client={queryClient}
@@ -29,3 +29,5 @@ export const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
     </PersistQueryClientProvider>
   );
 };
+
+export default QueryClientProvider;
