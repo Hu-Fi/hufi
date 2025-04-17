@@ -1,6 +1,8 @@
 import { ChainId } from '@human-protocol/sdk';
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import {
+  ApiBody,
+  ApiHeader,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -8,8 +10,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { CampaignDataDto } from './campaign.dto';
+import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
+import { ApiKeyGuard } from 'src/common/guards/api-key.guard';
 
 @ApiTags('campaign')
 @Controller('campaign')
@@ -51,5 +54,45 @@ export class CampaignController {
     @Param('escrowAddress') escrowAddress: string,
   ) {
     return this.campaignService.getCampaign(chainId, escrowAddress);
+  }
+
+  @Get('/stats')
+  @ApiOperation({ summary: 'Get campaign stats: active count and total funds in USD' })
+  @ApiQuery({
+    name: 'chainId',
+    required: false,
+    enum: ChainId,
+    description: 'Optional chain ID to filter campaigns',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign statistics',
+    schema: {
+      example: {
+        activeCampaigns: 4,
+        totalFundsUSD: 12345.67,
+      },
+    },
+  })
+  async getCampaignStats(@Query('chainId') chainId: ChainId) {
+    return this.campaignService.getCampaignStats(chainId);
+  }
+
+
+  @Post('/')
+  @ApiOperation({ summary: 'Create a new campaign' })
+  @UseGuards(ApiKeyGuard)
+  @ApiHeader({
+    name: 'x-api-key',
+    required: true,
+    description: 'API key',
+  })
+  @ApiBody({ type: CreateCampaignDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Campaign created',
+  })
+  async createCampaign(@Body() campaignData: CreateCampaignDto) {
+    return this.campaignService.createCampaign(campaignData);
   }
 }
