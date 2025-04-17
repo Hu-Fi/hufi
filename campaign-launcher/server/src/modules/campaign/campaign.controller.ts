@@ -1,5 +1,13 @@
 import { ChainId } from '@human-protocol/sdk';
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBody,
   ApiHeader,
@@ -12,6 +20,7 @@ import {
 
 import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
+
 import { ApiKeyGuard } from 'src/common/guards/api-key.guard';
 
 @ApiTags('campaign')
@@ -57,7 +66,9 @@ export class CampaignController {
   }
 
   @Get('/stats')
-  @ApiOperation({ summary: 'Get campaign stats: active count and total funds in USD' })
+  @ApiOperation({
+    summary: 'Get campaign stats: active count and total funds in USD',
+  })
   @ApiQuery({
     name: 'chainId',
     required: false,
@@ -77,7 +88,6 @@ export class CampaignController {
   async getCampaignStats(@Query('chainId') chainId: ChainId) {
     return this.campaignService.getCampaignStats(chainId);
   }
-
 
   @Post('/')
   @ApiOperation({ summary: 'Create a new campaign' })

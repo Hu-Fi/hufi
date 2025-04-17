@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 
 import { Web3Service } from '../web3/web3.service';
+
 import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
 import ERC20ABI from './ERC20.json';
 
@@ -49,7 +50,9 @@ export class CampaignService {
                 symbol: manifest.token.toLowerCase(),
               } as CampaignDataDto;
             } catch (err) {
-              this.logger.warn(`Manifest fetch failed: ${campaign.manifestUrl}`);
+              this.logger.warn(
+                `Manifest fetch failed: ${campaign.manifestUrl}`,
+              );
               return undefined;
             }
           }),
@@ -69,7 +72,10 @@ export class CampaignService {
     return allCampaigns;
   }
 
-  public async getCampaign(chainId: ChainId, escrowAddress: string): Promise<CampaignDataDto | undefined> {
+  public async getCampaign(
+    chainId: ChainId,
+    escrowAddress: string,
+  ): Promise<CampaignDataDto | undefined> {
     try {
       const campaign = await EscrowUtils.getEscrow(chainId, escrowAddress);
 
@@ -93,8 +99,11 @@ export class CampaignService {
     }
   }
 
-  public async createCampaign(campaignData: CreateCampaignDto): Promise<string> {
-    const { chainId, tokenAddress, fundAmount, manifestUrl, manifestHash } = campaignData;
+  public async createCampaign(
+    campaignData: CreateCampaignDto,
+  ): Promise<string> {
+    const { chainId, tokenAddress, fundAmount, manifestUrl, manifestHash } =
+      campaignData;
 
     const signer = this.web3Service.getSigner(chainId);
     const escrowClient = await EscrowClient.build(signer);
@@ -145,12 +154,12 @@ export class CampaignService {
     }[];
   }> {
     const allCampaigns = await this.getCampaigns(chainId);
-  
+
     // ✅ Filter only campaigns with status 'Pending' or 'Partial'
     const campaigns = allCampaigns.filter((c) =>
       ['Pending', 'Partial'].includes(c.status),
     );
-  
+
     const chainGroups: Record<number, CampaignDataDto[]> = {};
     for (const campaign of campaigns) {
       if (!chainGroups[campaign.chainId]) {
@@ -158,25 +167,31 @@ export class CampaignService {
       }
       chainGroups[campaign.chainId].push(campaign);
     }
-  
+
     let grandTotalUSD = 0;
     let grandTotalCampaigns = 0;
-  
+
     const resultPerChain = await Promise.all(
       Object.entries(chainGroups).map(async ([chainIdStr, chainCampaigns]) => {
         const chainId = Number(chainIdStr);
         let chainTotalUSD = 0;
-  
+
         for (const campaign of chainCampaigns) {
           const tokenAddress = campaign.token.toLowerCase();
           const rawBalance = campaign.balance ?? '0';
-  
+
           try {
-            const decimals = await this.web3Service.getTokenDecimals(tokenAddress, chainId);
-            const price = await this.web3Service.getTokenPriceUSD(tokenAddress, chainId);
+            const decimals = await this.web3Service.getTokenDecimals(
+              tokenAddress,
+              chainId,
+            );
+            const price = await this.web3Service.getTokenPriceUSD(
+              tokenAddress,
+              chainId,
+            );
             const fundAmount = Number(ethers.formatUnits(rawBalance, decimals));
             const usdValue = fundAmount * price;
-  
+
             chainTotalUSD += usdValue;
           } catch (err) {
             this.logger.warn(
@@ -184,11 +199,11 @@ export class CampaignService {
             );
           }
         }
-  
+
         const campaignCount = chainCampaigns.length;
         grandTotalUSD += chainTotalUSD;
         grandTotalCampaigns += campaignCount;
-  
+
         return {
           chainId,
           chainName: ChainId[chainId],
@@ -200,7 +215,7 @@ export class CampaignService {
         };
       }),
     );
-  
+
     return {
       totalCampaigns: grandTotalCampaigns,
       totalFundsUSD: parseFloat(grandTotalUSD.toFixed(2)),
@@ -210,6 +225,4 @@ export class CampaignService {
       chains: resultPerChain,
     };
   }
-  
-  
 }
