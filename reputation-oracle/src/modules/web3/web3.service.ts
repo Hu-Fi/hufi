@@ -76,7 +76,9 @@ export class Web3Service {
 
       return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
     } catch (error) {
-      this.logger.error(`Error fetching gas price for chain ${chainId}: ${error.message}`);
+      this.logger.error(
+        `Error fetching gas price for chain ${chainId}: ${error.message}`,
+      );
       throw new Error(ErrorWeb3.GasPriceError);
     }
   }
