@@ -26,7 +26,7 @@ export class CampaignService {
       supportedChainIds = this.web3Service.getValidChains();
     }
 
-    const allCampaigns = [];
+    const allCampaigns: CampaignDataDto[] = [];
 
     for (const supportedChainId of supportedChainIds) {
       try {
@@ -37,39 +37,34 @@ export class CampaignService {
           recordingOracle: this.web3Service.getRecordingOracle(),
           reputationOracle: this.web3Service.getReputationOracle(),
         });
+        const campaignsWithManifest = await Promise.all(
+          campaigns.map(async (campaign) => {
+            try {
+              const url = campaign.manifestUrl?.replace(
+                'http://storage.googleapis.com:80',
+                'https://storage.googleapis.com',
+              );
 
-        const campaignsWithManifest: Array<CampaignDataDto | undefined> =
-          await Promise.all(
-            campaigns.map(async (campaign) => {
-              let manifest;
+              if (!url) return undefined;
 
-              try {
-                if (campaign.manifestUrl) {
-                  // @dev Temporary fix to handle http/https issue
-                  const url = campaign.manifestUrl.replace(
-                    'http://storage.googleapis.com:80',
-                    'https://storage.googleapis.com',
-                  );
-                  manifest = await fetch(url).then((res) => res.json());
-                }
-              } catch {
-                manifest = undefined;
-              }
-
-              if (!manifest) {
-                return undefined;
-              }
+              const manifest = await fetch(url).then((res) => res.json());
 
               return {
                 ...manifest,
                 ...campaign,
                 symbol: manifest.token.toLowerCase(),
-              };
-            }),
-          );
+              } as CampaignDataDto;
+            } catch (err) {
+              this.logger.warn(
+                `Manifest fetch failed: ${campaign.manifestUrl}`,
+              );
+              return undefined;
+            }
+          }),
+        );
 
         allCampaigns.push(
-          ...campaignsWithManifest.filter((campaign) => !!campaign),
+          ...campaignsWithManifest.filter((c): c is CampaignDataDto => !!c),
         );
       } catch (error) {
         this.logger.error(
@@ -97,33 +92,31 @@ export class CampaignService {
     });
   }
 
-  public async getCampaign(chainId: ChainId, escrowAddress: string) {
-    const campaign = await EscrowUtils.getEscrow(chainId, escrowAddress);
-
-    let manifest;
-
+  public async getCampaign(
+    chainId: ChainId,
+    escrowAddress: string,
+  ): Promise<CampaignDataDto | undefined> {
     try {
-      if (campaign.manifestUrl) {
-        // @dev Temporary fix to handle http/https issue
-        const url = campaign.manifestUrl.replace(
-          'http://storage.googleapis.com:80',
-          'https://storage.googleapis.com',
-        );
-        manifest = await fetch(url).then((res) => res.json());
-      }
-    } catch {
-      manifest = undefined;
-    }
+      const campaign = await EscrowUtils.getEscrow(chainId, escrowAddress);
 
-    if (!manifest) {
+      const url = campaign.manifestUrl?.replace(
+        'http://storage.googleapis.com:80',
+        'https://storage.googleapis.com',
+      );
+
+      if (!url) return undefined;
+
+      const manifest = await fetch(url).then((res) => res.json());
+
+      return {
+        ...manifest,
+        ...campaign,
+        symbol: manifest.token.toLowerCase(),
+      };
+    } catch (err) {
+      this.logger.error(`Failed to fetch campaign or manifest`, err);
       return undefined;
     }
-
-    return {
-      ...manifest,
-      ...campaign,
-      symbol: manifest.token.toLowerCase(),
-    };
   }
 
   public async createCampaign(
@@ -143,13 +136,12 @@ export class CampaignService {
     );
     this.logger.log(`Escrow created at address: ${escrowAddress}`);
 
-    this.logger.log(`Funding escrow with ${fundAmount} tokens`);
     const fundAmountBigInt = ethers.parseUnits(fundAmount, 'ether');
+
+    this.logger.log(`Approving and funding escrow with ${fundAmount} tokens`);
     const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
     await (await tokenContract.approve(escrowAddress, fundAmountBigInt)).wait();
-
     await escrowClient.fund(escrowAddress, fundAmountBigInt);
-    this.logger.log(`Escrow funded successfully`);
 
     this.logger.log(`Setting up escrow with manifest`);
     const escrowConfig = {
@@ -162,9 +154,95 @@ export class CampaignService {
       manifestUrl,
       manifestHash,
     };
+
     await escrowClient.setup(escrowAddress, escrowConfig);
-    this.logger.log(`Escrow setup successfully`);
+    this.logger.log(`Escrow setup complete`);
 
     return escrowAddress;
+  }
+
+  public async getCampaignStats(chainId = ChainId.ALL): Promise<{
+    totalCampaigns: number;
+    totalFundsUSD: number;
+    averageFundingUSD: number;
+    chains: {
+      chainId: number;
+      chainName: string;
+      campaigns: number;
+      totalFundsUSD: number;
+      averageFundingUSD: number;
+    }[];
+  }> {
+    const allCampaigns = await this.getCampaigns(chainId);
+
+    // ✅ Filter only campaigns with status 'Pending' or 'Partial'
+    const campaigns = allCampaigns.filter((c) =>
+      ['Pending', 'Partial'].includes(c.status),
+    );
+
+    const chainGroups: Record<number, CampaignDataDto[]> = {};
+    for (const campaign of campaigns) {
+      if (!chainGroups[campaign.chainId]) {
+        chainGroups[campaign.chainId] = [];
+      }
+      chainGroups[campaign.chainId].push(campaign);
+    }
+
+    let grandTotalUSD = 0;
+    let grandTotalCampaigns = 0;
+
+    const resultPerChain = await Promise.all(
+      Object.entries(chainGroups).map(async ([chainIdStr, chainCampaigns]) => {
+        const chainId = Number(chainIdStr);
+        let chainTotalUSD = 0;
+
+        for (const campaign of chainCampaigns) {
+          const tokenAddress = campaign.token.toLowerCase();
+          const rawBalance = campaign.balance ?? '0';
+
+          try {
+            const decimals = await this.web3Service.getTokenDecimals(
+              tokenAddress,
+              chainId,
+            );
+            const price = await this.web3Service.getTokenPriceUSD(
+              tokenAddress,
+              chainId,
+            );
+            const fundAmount = Number(ethers.formatUnits(rawBalance, decimals));
+            const usdValue = fundAmount * price;
+
+            chainTotalUSD += usdValue;
+          } catch (err) {
+            this.logger.warn(
+              `Skipping campaign with unsupported token ${tokenAddress} on chain ${chainId}: ${err.message}`,
+            );
+          }
+        }
+
+        const campaignCount = chainCampaigns.length;
+        grandTotalUSD += chainTotalUSD;
+        grandTotalCampaigns += campaignCount;
+
+        return {
+          chainId,
+          chainName: ChainId[chainId],
+          campaigns: campaignCount,
+          totalFundsUSD: parseFloat(chainTotalUSD.toFixed(2)),
+          averageFundingUSD: campaignCount
+            ? parseFloat((chainTotalUSD / campaignCount).toFixed(2))
+            : 0,
+        };
+      }),
+    );
+
+    return {
+      totalCampaigns: grandTotalCampaigns,
+      totalFundsUSD: parseFloat(grandTotalUSD.toFixed(2)),
+      averageFundingUSD: grandTotalCampaigns
+        ? parseFloat((grandTotalUSD / grandTotalCampaigns).toFixed(2))
+        : 0,
+      chains: resultPerChain,
+    };
   }
 }
