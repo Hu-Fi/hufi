@@ -16,9 +16,8 @@ export interface ManifestUploadRequestDto {
     token: string;
     /** @format date-time */
     startDate: string;
-    duration: number;
+    endDate: string;
     fundAmount: string;
-    additionalData?: string;
   }
   
   export interface ManifestUploadResponseDto {
@@ -400,7 +399,7 @@ export interface ManifestUploadRequestDto {
         params: RequestParams = {}
       ) =>
         this.request<ManifestUploadResponseDto, void>({
-          path: `/manifest/upload`,
+          path: `/manifest/v2/upload`,
           method: 'POST',
           body: data,
           type: ContentType.Json,

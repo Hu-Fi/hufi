@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider/LocalizationProvider';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import Layout from './components/Layout';
@@ -15,15 +17,17 @@ const App: FC = () => {
     <WagmiProvider>
       <QueryClientProvider>
         <ExchangesProvider>
-          <ThemeProvider>
-            <BrowserRouter>
-              <Layout>
-                <Routes>
-                  <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                </Routes>
-              </Layout>
-            </BrowserRouter>
-          </ThemeProvider>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <ThemeProvider>
+              <BrowserRouter>
+                <Layout>
+                  <Routes>
+                    <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+                  </Routes>
+                </Layout>
+              </BrowserRouter>
+            </ThemeProvider>
+          </LocalizationProvider>
         </ExchangesProvider>
       </QueryClientProvider>
     </WagmiProvider>

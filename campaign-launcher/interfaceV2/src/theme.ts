@@ -61,6 +61,10 @@ const createAppTheme = (mode: PaletteMode) => {
               violet: '#6309ff',
               contrast: 'rgba(0, 0, 0, 0.87)',
             },
+            secondary: {
+              main: '#5d0Ce9',
+              contrast: 'rgba(255, 255, 255, 0.87)',
+            },
             background: {
               default: '#100735',
             },
@@ -84,6 +88,12 @@ const createAppTheme = (mode: PaletteMode) => {
         fontWeight: 400,
         lineHeight: '3.5rem',
         letterSpacing: '0.15px',
+      },
+      h4: {
+        fontSize: '34px',
+        fontWeight: 600,
+        lineHeight: '42px',
+        letterSpacing: '0.25px',
       },
       h5: {
         fontSize: '1.5rem',

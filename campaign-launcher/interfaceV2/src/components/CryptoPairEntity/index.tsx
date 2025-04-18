@@ -1,0 +1,86 @@
+import { FC } from 'react';
+
+import { Box, Typography } from '@mui/material';
+
+import { TOKENS } from '../../constants/tokens';
+
+export type CryptoPairEntityProps = {
+  symbol: string;
+  size?: 'small' | 'medium' | 'large';
+};
+
+const getStyles = (size: 'small' | 'medium' | 'large') => {
+  switch (size) {
+    case 'small':
+      return {
+        image: {
+          width: 24,
+          border: '1px solid white',
+        },
+        text: {
+          fontWeight: 400,
+          fontSize: 16,
+        },
+      };
+    case 'medium':
+      return {
+        image: {
+          width: 32,
+          border: '1px solid white',
+        },
+        text: {
+          fontWeight: 700,
+          fontSize: 20,
+        },
+      };
+    case 'large':
+      return {
+        image: {
+          width: 72,
+          border: '2px solid white',
+        },
+        text: {
+          fontWeight: 800,
+          fontSize: 30,
+        },
+      };
+    default:
+      return {
+        width: 24,
+        border: '1px solid white',
+      };
+  }
+}
+
+export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({ symbol, size = 'small' }) => {
+  const [base, quote] = symbol.split('/');
+
+  const { icon: baseIcon, label: baseLabel } = TOKENS.find(
+    (token) => token.name.toLowerCase() === base.toLowerCase()
+  ) || { label: base };
+
+  const { icon: quoteIcon, label: quoteLabel } = TOKENS.find(
+    (token) => token.name.toLowerCase() === quote.toLowerCase()
+  ) || { label: quote };
+
+  return (
+    <Box display="flex" alignItems="center" gap={1}>
+      {baseIcon && quoteIcon && (
+        <>
+          <Box component="img" src={baseIcon} alt={baseLabel} borderRadius="100%" {...getStyles(size).image}  />
+          <Box
+            component="img"
+            src={quoteIcon}
+            alt={quoteLabel}
+            marginLeft={-2}
+            borderRadius="100%"
+            {...getStyles(size).image}
+          />
+        </>
+      )}
+      <Typography color="primary" {...getStyles(size).text}>
+        {baseLabel ?? base}/{quoteLabel ?? quote}
+      </Typography>
+    </Box>
+  );
+};

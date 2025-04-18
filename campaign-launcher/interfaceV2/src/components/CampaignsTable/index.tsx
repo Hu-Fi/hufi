@@ -8,6 +8,7 @@ import { CampaignDataDto } from '../../api/client';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatAddress } from '../../utils';
+import { CryptoPairEntity } from '../CryptoPairEntity';
 
 type Props = {
   data: CampaignDataDto[];
@@ -69,11 +70,11 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
     {
       field: 'pair',
       headerName: 'Pair',
-      flex: 1,
+      flex: 1.25,
       renderCell: (params) => {
         return (
           <Typography textTransform="uppercase" fontSize={20} fontWeight={700}>
-            {params.row.symbol}
+            <CryptoPairEntity symbol={params.row.symbol} size="medium" />
           </Typography>
         );
       },
@@ -81,7 +82,7 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 1,
+      flex: 1.25,
       renderCell: (params) => {
         const exchangeLogo = exchanges?.find(
           (exchange) => exchange.name === params.row.exchangeName
@@ -100,7 +101,7 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
     {
       field: 'address',
       headerName: 'Address',
-      flex: 1,
+      flex: 1.25,
       renderCell: (params) => {
         return (
           <Typography display="flex" alignItems="center">
@@ -151,13 +152,12 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
       headerName: 'Status',
       flex: 1,
       renderCell: (params) => {
+        const isActive = params.row.status === 'Pending' || params.row.status === 'Partial';
         return (
           <Typography
-            color={
-              params.row.status === 'active' ? 'success.main' : 'error.main'
-            }
+            color={isActive ? 'success.main' : 'error.main'}
           >
-            {params.row.status}
+            {isActive ? 'Active' : params.row.status}
           </Typography>
         );
       },
@@ -178,6 +178,13 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
       disableRowSelectionOnClick
       getRowSpacing={({ isLastVisible }) => ({ bottom: isLastVisible ? 0 : 8 })}
       pageSizeOptions={[5, 25, 50]}
+      initialState={{
+        pagination: {
+          paginationModel: {
+            pageSize: 5,
+          },
+        },
+      }}
       slots={{
         pagination: () => <CustomPagination withPagination={withPagination} />,
       }}

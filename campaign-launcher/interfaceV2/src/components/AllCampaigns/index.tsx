@@ -1,12 +1,13 @@
 import { FC, useState } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { useCampaigns } from '../../hooks/useCampaigns';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import CampaignsTable from '../CampaignsTable';
 import ExchangeSelect from '../ExchangeSelect';
+import LaunchCampaign from '../LaunchCampaign';
 import StatusSelect from '../StatusSelect';
 
 const AllCampaigns: FC = () => {
@@ -39,13 +40,7 @@ const AllCampaigns: FC = () => {
           <StatusSelect onChange={handleStatusChange} />
           <ExchangeSelect data={exchanges} onChange={handleExchangeChange} />
         </Box>
-        <Button
-          variant="contained"
-          size="medium"
-          sx={{ color: 'primary.contrast', fontWeight: 600, ml: 'auto' }}
-        >
-          Launch Campaign
-        </Button>
+        <LaunchCampaign variant="contained" sx={{ ml: 'auto' }} />
       </Box>
       {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}
       {isCampaignsExist && <CampaignsTable data={campaigns} withPagination />}
