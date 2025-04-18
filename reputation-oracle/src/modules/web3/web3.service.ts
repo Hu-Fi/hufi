@@ -28,7 +28,7 @@ export class Web3Service {
     );
 
     if (!validNetworks.length) {
-      this.logger.log(ErrorWeb3.NoValidNetworks, Web3Service.name);
+      this.logger.error(ErrorWeb3.NoValidNetworks);
       throw new BadRequestException(ErrorWeb3.NoValidNetworks);
     }
 
@@ -46,7 +46,7 @@ export class Web3Service {
   public validateChainId(chainId: number): void {
     const validChainIds = this.getValidChains();
     if (!validChainIds.includes(chainId)) {
-      this.logger.log(ErrorWeb3.InvalidChainId, Web3Service.name);
+      this.logger.error(`${ErrorWeb3.InvalidChainId}: ${chainId}`);
       throw new BadRequestException(ErrorWeb3.InvalidChainId);
     }
   }
@@ -67,11 +67,18 @@ export class Web3Service {
   public async calculateGasPrice(chainId: number): Promise<bigint> {
     const signer = this.getSigner(chainId);
     const multiplier = this.web3ConfigService.gasPriceMultiplier;
-    const gasPrice = (await signer.provider?.getFeeData())?.gasPrice;
-    if (gasPrice) {
+
+    try {
+      const feeData = await signer.provider?.getFeeData();
+      const gasPrice = feeData?.gasPrice;
+
+      if (!gasPrice) throw new Error(ErrorWeb3.GasPriceError);
+
       return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
+    } catch (error) {
+      this.logger.error(`Error fetching gas price for chain ${chainId}: ${error.message}`);
+      throw new Error(ErrorWeb3.GasPriceError);
     }
-    throw new Error(ErrorWeb3.GasPriceError);
   }
 
   public getOperatorAddress(): string {
