@@ -137,3 +137,14 @@ export const ChevronIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const OpenInNewIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 25 24" fill="none">
+      <path
+        fill="currentColor"
+        d="M19.2 19H5.19995V5H12.2V3H5.19995C4.08995 3 3.19995 3.9 3.19995 5V19C3.19995 20.1 4.08995 21 5.19995 21H19.2C20.3 21 21.2 20.1 21.2 19V12H19.2V19ZM14.2 3V5H17.79L7.95995 14.83L9.36995 16.24L19.2 6.41V10H21.2V3H14.2Z"
+      />
+    </SvgIcon>
+  );
+};

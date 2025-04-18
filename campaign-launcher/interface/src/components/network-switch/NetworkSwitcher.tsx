@@ -1,13 +1,8 @@
 import { FC, useState, MouseEvent } from 'react';
-import { useAccount, useSwitchChain, useConfig } from 'wagmi';
-import {
-  Box,
-  Button,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { Button, Menu, MenuItem, Typography } from '@mui/material';
+import { useAccount, useSwitchChain, useConfig } from 'wagmi';
 
 export const NetworkSwitcher: FC = () => {
   const { chain } = useAccount();

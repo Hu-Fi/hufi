@@ -11,10 +11,10 @@ const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
         py: 8,
         px: { xs: 3, sm: 5, md: 7, lg: 9, xl: 11, xxl: 13 },
         flexDirection: 'column',
-        height: '400px',
         borderRadius: '20px',
         bgcolor: 'background.default',
         minHeight: 'calc(100vh - 216px)',
+        gap: 7,
       }}
     >
       {children}

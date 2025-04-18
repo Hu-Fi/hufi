@@ -19,7 +19,7 @@ import {
 import { Public } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import { RequestWithUser } from '../../common/types/request';
-import { ExchangeAPIKeyEntity } from '../../database/entities';
+import { CampaignEntity, ExchangeAPIKeyEntity } from '../../database/entities';
 
 import {
   CampaignRegisterRequestDto,
@@ -144,5 +144,25 @@ export class UserController {
       request.user,
       address,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':address/joined-campaigns')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get all campaigns for a user',
+    description: 'Returns all campaigns that the user has joined',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of campaigns the user has joined',
+    type: [CampaignEntity],
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  public async getUserJoinedCampaigns(
+    @Param('address') address: string,
+  ): Promise<CampaignEntity[]> {
+    return await this.userService.getUserJoinedCampaigns(address);
   }
 }

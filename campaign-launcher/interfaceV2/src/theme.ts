@@ -12,6 +12,10 @@ declare module '@mui/material/styles' {
   }
   interface SimplePaletteColorOptions {
     contrast?: string;
+    violet?: string;
+  }
+  interface PaletteColor {
+    violet?: string;
   }
 }
 
@@ -54,7 +58,12 @@ const createAppTheme = (mode: PaletteMode) => {
             primary: {
               main: '#cdc7ff',
               light: '#320a8d',
+              violet: '#6309ff',
               contrast: 'rgba(0, 0, 0, 0.87)',
+            },
+            secondary: {
+              main: '#5d0Ce9',
+              contrast: 'rgba(255, 255, 255, 0.87)',
             },
             background: {
               default: '#100735',
@@ -80,6 +89,12 @@ const createAppTheme = (mode: PaletteMode) => {
         lineHeight: '3.5rem',
         letterSpacing: '0.15px',
       },
+      h4: {
+        fontSize: '34px',
+        fontWeight: 600,
+        lineHeight: '42px',
+        letterSpacing: '0.25px',
+      },
       h5: {
         fontSize: '1.5rem',
         fontWeight: 400,
@@ -90,6 +105,12 @@ const createAppTheme = (mode: PaletteMode) => {
         fontWeight: 400,
         lineHeight: '1.25rem',
         letterSpacing: '0.4px',
+      },
+      subtitle2: {
+        fontSize: '0.875rem',
+        fontWeight: 600,
+        lineHeight: '1.375rem',
+        letterSpacing: '0.1px',
       },
     },
     components: {

@@ -22,7 +22,7 @@ const Card = styled(Paper)(({ theme }) => ({
   justifyContent: 'center',
   alignItems: 'center',
   gap: '16px',
-  border: `1px solid rgba(255, 255, 255, 0.1)`,
+  border: '1px solid rgba(255, 255, 255, 0.1)',
   boxShadow: 'none',
   width: '100%',
 }));
@@ -37,8 +37,8 @@ const Text = styled(Typography)(({ theme }) => ({
 
 const HowToLaunch = () => {
   return (
-    <>
-      <Typography variant="h5" mb={6.5} textAlign="center">
+    <Box component="section" display="flex" flexDirection="column" gap={6.5}>
+      <Typography variant="h5" textAlign="center">
         Easy and fast. How to launch a market making campaign.
       </Typography>
       <Grid container spacing={2} justifyContent="center">
@@ -72,7 +72,7 @@ const HowToLaunch = () => {
           </Card>
         </Grid>
       </Grid>
-    </>
+    </Box>
   );
 };
 

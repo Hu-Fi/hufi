@@ -8,7 +8,11 @@ import { SignatureType } from '../../common/enums/web3';
 import { ControlledError } from '../../common/errors/controlled';
 import { isCenteralizedExchange } from '../../common/utils/exchange';
 import { generateNonce } from '../../common/utils/signature';
-import { ExchangeAPIKeyEntity, UserEntity } from '../../database/entities';
+import {
+  CampaignEntity,
+  ExchangeAPIKeyEntity,
+  UserEntity,
+} from '../../database/entities';
 import { CampaignService } from '../campaign/campaign.service';
 import { Web3Service } from '../web3/web3.service';
 
@@ -179,5 +183,17 @@ export class UserService {
 
   public async checkUserExists(address: string): Promise<boolean> {
     return !!(await this.userRepository.findOneByEvmAddress(address));
+  }
+
+  public async getUserJoinedCampaigns(
+    address: string,
+  ): Promise<CampaignEntity[]> {
+    const user = await this.userRepository.findOneByEvmAddress(address);
+
+    if (!user || !user.campaigns) {
+      return [];
+    }
+
+    return user.campaigns;
   }
 }

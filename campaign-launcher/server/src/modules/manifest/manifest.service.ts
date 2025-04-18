@@ -5,6 +5,7 @@ import { StorageService } from '../storage/storage.service';
 
 import {
   ManifestUploadRequestDto,
+  ManifestUploadRequestDtoV2,
   ManifestUploadResponseDto,
 } from './manifest.dto';
 
@@ -27,6 +28,26 @@ export class ManifestService {
       duration,
       type: JOB_TYPE,
       ...(additionalData ? JSON.parse(additionalData) : {}),
+    };
+
+    const uploadedFile = await this.storageService.uploadFile(manifest);
+
+    return uploadedFile;
+  }
+
+  public async uploadManifestV2(
+    data: ManifestUploadRequestDtoV2,
+  ): Promise<ManifestUploadResponseDto> {
+    const { startDate, endDate, ...manifestData } = data;
+
+    const startBlock = Math.floor(startDate.getTime() / 1000);
+    const endBlock = Math.floor(endDate.getTime() / 1000);
+
+    const manifest = {
+      ...manifestData,
+      startBlock,
+      endBlock,
+      type: JOB_TYPE,
     };
 
     const uploadedFile = await this.storageService.uploadFile(manifest);
