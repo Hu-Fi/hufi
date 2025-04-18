@@ -1,7 +1,10 @@
 import { FC } from 'react';
 
+import { ChainId } from '@human-protocol/sdk';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+
+import { useCampaignsStats } from '../../hooks/useCampaigns';
 
 const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -39,6 +42,8 @@ const Info = styled(Box)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
+  const { data: campaignsStats } = useCampaignsStats(ChainId.POLYGON);
+  
   return (
     <Box component="section" display="flex" flexWrap="wrap">
       <Grid container spacing={2} justifyContent="center" width="100%">
@@ -52,7 +57,7 @@ const DashboardStats: FC = () => {
               <Title variant="subtitle2">Rewards Pool</Title>
               <Info>i</Info>
             </Box>
-            <Value>$7,372</Value>
+            <Value>${campaignsStats?.totalFundsUSD}</Value>
           </StatsCard>
         </Grid>
         <Grid size={3}>
@@ -91,7 +96,7 @@ const DashboardStats: FC = () => {
               <Title variant="subtitle2">Number of Active Campaigns</Title>
               <Info>i</Info>
             </Box>
-            <Value>381</Value>
+            <Value>{campaignsStats?.totalCampaigns}</Value>
           </StatsCard>
         </Grid>
       </Grid>

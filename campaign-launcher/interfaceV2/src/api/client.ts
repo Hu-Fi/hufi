@@ -457,6 +457,48 @@ export interface ManifestUploadRequestDto {
        * No description
        *
        * @tags campaign
+       * @name CampaignControllerGetCampaignsStats
+       * @summary Get campaigns stats for the given chain ID
+       * @request GET:/campaign
+       */
+      campaignControllerGetCampaignsStats: (
+        query?: {
+          /** Chain ID */
+          chainId?:
+            | -1
+            | 1
+            | 4
+            | 5
+            | 11155111
+            | 56
+            | 97
+            | 137
+            | 80001
+            | 80002
+            | 1284
+            | 1287
+            | 43113
+            | 43114
+            | 42220
+            | 44787
+            | 195
+            | 1338
+            | 196;
+        },
+        params: RequestParams = {}
+      ) =>
+        this.request<any[], void>({
+          path: `/campaign/stats`,
+          method: 'GET',
+          query: query,
+          format: 'json',
+          ...params,
+        }),
+        
+      /**
+       * No description
+       *
+       * @tags campaign
        * @name CampaignControllerGetCampaign
        * @summary Get the campaign data for the given chain Id and escrow address
        * @request GET:/campaign/{chainId}/{escrowAddress}

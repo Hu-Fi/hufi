@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api } from '../api';
 import { CampaignDataDto } from '../api/client';
+import { type CampaignsStats } from '../types';
 
 export type Campaign = CampaignDataDto;
 
@@ -46,5 +47,15 @@ export const useCampaign = (chainId: ChainId, address: string) => {
       api.campaign
         .campaignControllerGetCampaign(chainId, address)
         .then((res) => res.data),
+  });
+};
+
+export const useCampaignsStats = (chainId: ChainId) => {
+  return useQuery({
+    queryKey: ['campaignsStats', chainId],
+    queryFn: () =>
+      api.campaign
+        .campaignControllerGetCampaignsStats({ chainId })
+        .then((res) => res.data as unknown as CampaignsStats),
   });
 };

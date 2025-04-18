@@ -18,11 +18,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+
 import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
-
-import { ApiKeyGuard } from 'src/common/guards/api-key.guard';
-
 @ApiTags('campaign')
 @Controller('campaign')
 export class CampaignController {
