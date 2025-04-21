@@ -8,11 +8,7 @@ import { ErrorCampaign } from '../../common/constants/errors';
 import { ControlledError } from '../../common/errors/controlled';
 import { LiquidityScore } from '../../common/types/liquidity-score';
 import { isCenteralizedExchange } from '../../common/utils/exchange';
-import {
-  CampaignEntity,
-  LiquidityScoreEntity,
-  UserEntity,
-} from '../../database/entities';
+import { CampaignEntity, UserEntity } from '../../database/entities';
 import { CampaignService } from '../campaign/campaign.service';
 import { CCXTService } from '../exchange/ccxt.service';
 import { UniswapService } from '../exchange/uniswap.service';
@@ -20,56 +16,72 @@ import { RecordsService } from '../records/records.service';
 import { ExchangeAPIKeyRepository } from '../user/exchange-api-key.repository';
 
 import { LiquidityScoreCalculateRequestDto } from './liquidity-score.dto';
+import { LiquidityScoreCalculation } from './liquidity-score.model';
 import { LiquidityScoreRepository } from './liquidity-score.repository';
 
 @Injectable()
 export class LiquidityScoreService {
-  private logger: Logger = new Logger(LiquidityScoreService.name);
+  private readonly logger = new Logger(LiquidityScoreService.name);
 
   constructor(
-    @Inject(CampaignService)
-    private campaignService: CampaignService,
-    @Inject(PGPConfigService)
-    private pgpConfigService: PGPConfigService,
+    @Inject(CampaignService) private campaignService: CampaignService,
+    @Inject(PGPConfigService) private pgpConfigService: PGPConfigService,
     @InjectRepository(ExchangeAPIKeyRepository)
     private exchangeAPIKeyRepository: ExchangeAPIKeyRepository,
-    @Inject(CCXTService)
-    private ccxtService: CCXTService,
-    @Inject(UniswapService)
-    private uniswapService: UniswapService,
-    @Inject(RecordsService)
-    private recordsService: RecordsService,
+    @Inject(CCXTService) private ccxtService: CCXTService,
+    @Inject(UniswapService) private uniswapService: UniswapService,
+    @Inject(RecordsService) private recordsService: RecordsService,
     @InjectRepository(LiquidityScoreRepository)
     private liquidityScoreRepository: LiquidityScoreRepository,
   ) {}
 
+  /** Manual trigger */
   public async calculateLiquidityScore(
     payload: LiquidityScoreCalculateRequestDto,
   ): Promise<UploadFile | null> {
-    this.logger.debug(
-      `Calculating liquidity score for campaign ${payload.address}`,
-    );
-
-    this.logger.debug(
-      `Fetching campaign ${payload.address} from chain ${payload.chainId}`,
-    );
-    const campaign = await this.campaignService.getCampaign(
+    const campaign = await this._loadCampaignOrFail(
       payload.chainId,
       payload.address,
     );
 
+    const scores = await this._calculateCampaignLiquidityScore(campaign);
+
+    return this.recordsService.pushLiquidityScores(
+      campaign.address,
+      campaign.chainId,
+      scores,
+    );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async calculateScoresForCampaigns(): Promise<void> {
+    this.logger.log('Calculating liquidity scores for active campaigns');
+
+    for (const campaign of await this.campaignService.getAllActiveCampaigns()) {
+      try {
+        const scores = await this._calculateCampaignLiquidityScore(campaign);
+        await this.recordsService.pushLiquidityScores(
+          campaign.address,
+          campaign.chainId,
+          scores,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Liquidity‑score job failed for ${campaign.address}`,
+          err as any,
+        );
+      }
+    }
+
+    this.logger.log('Liquidity‑score job finished');
+  }
+
+  private async _loadCampaignOrFail(chainId: number, address: string) {
+    const campaign = await this.campaignService.getCampaign(chainId, address);
     if (!campaign) {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
     }
-
-    const campaignLiquidityScore =
-      await this._calculateCampaignLiquidityScore(campaign);
-
-    return await this.recordsService.pushLiquidityScores(
-      campaign.address,
-      campaign.chainId,
-      campaignLiquidityScore,
-    );
+    return campaign;
   }
 
   private async _calculateCampaignLiquidityScore(
@@ -82,58 +94,52 @@ export class LiquidityScoreService {
       );
     }
 
-    const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
+    const isCEX = isCenteralizedExchange(campaign.exchangeName);
+    const from = campaign.lastSyncedAt ?? campaign.createdAt ?? new Date(0);
+    const to =
+      campaign.endDate && campaign.endDate < new Date()
+        ? campaign.endDate
+        : new Date();
 
-    const campaignLiquidityScore: LiquidityScore[] = [];
-
-    const fromDate = campaign.lastSyncedAt;
-    let toDate = campaign.endDate;
-
-    if (new Date() < toDate) {
-      toDate = new Date();
-    }
+    const scores: LiquidityScore[] = [];
 
     for (const user of campaign.users) {
-      let liquidityScore;
+      let raw = 0;
 
-      if (isCEXCampaign) {
-        liquidityScore = await this._calculateCEXLiquidityScore(
-          campaign.exchangeName,
+      if (isCEX) {
+        raw = await this._calculateCEXLiquidityScore(
+          campaign.exchangeName.toLowerCase(),
           campaign.token,
           user,
-          fromDate,
-          toDate,
+          from,
+          to,
         );
       } else {
-        liquidityScore = await this._calculateDEXLiquidityScore(
-          campaign.exchangeName,
+        raw = await this._calculateDEXLiquidityScore(
+          campaign.exchangeName.toLowerCase(),
           campaign.chainId,
           campaign.token,
           user,
-          fromDate,
-          toDate,
+          from,
+          to,
         );
       }
 
-      // Round the Liquidity Score
-      liquidityScore = Math.round(liquidityScore);
+      if (!Number.isFinite(raw) || raw <= 0) continue;
 
-      if (liquidityScore === 0) {
-        continue;
-      }
+      const rounded = Math.round(raw);
 
-      await this._saveLiquidityScore(campaign, user, liquidityScore);
+      await this._saveLiquidityScore(campaign, user, rounded);
 
-      campaignLiquidityScore.push({
+      scores.push({
         chainId: campaign.chainId,
         liquidityProvider: user.evmAddress,
-        liquidityScore: liquidityScore.toString(),
+        liquidityScore: String(rounded),
       });
     }
 
-    await this.campaignService.updateLastSyncedAt(campaign, new Date());
-
-    return campaignLiquidityScore;
+    await this.campaignService.updateLastSyncedAt(campaign, to);
+    return scores;
   }
 
   private async _calculateCEXLiquidityScore(
@@ -144,35 +150,28 @@ export class LiquidityScoreService {
     to: Date,
   ): Promise<number> {
     try {
-      this.logger.debug(
-        `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
-      );
-
       const encryption = await Encryption.build(
         this.pgpConfigService.privateKey,
         this.pgpConfigService.passphrase,
       );
 
-      const exchangeAPIKey =
-        await this.exchangeAPIKeyRepository.findByUserAndExchange(
-          user,
-          exchangeName,
-        );
+      const creds = await this.exchangeAPIKeyRepository.findByUserAndExchange(
+        user,
+        exchangeName,
+      );
+      if (!creds) return 0;
 
-      if (!exchangeAPIKey) {
-        this.logger.warn(
-          `No API key found for user ${user.evmAddress} on exchange ${exchangeName}`,
-        );
-        return 0;
-      }
-
-      const apiKey = await encryption.decrypt(exchangeAPIKey.apiKey);
-      const secret = await encryption.decrypt(exchangeAPIKey.secret);
+      const apiKey = new TextDecoder().decode(
+        await encryption.decrypt(creds.apiKey),
+      );
+      const secret = new TextDecoder().decode(
+        await encryption.decrypt(creds.secret),
+      );
 
       const exchange = this.ccxtService.getExchangeInstance(
         exchangeName,
-        new TextDecoder().decode(apiKey),
-        new TextDecoder().decode(secret),
+        apiKey,
+        secret,
       );
 
       const trades = await this.ccxtService.fetchTrades(
@@ -180,31 +179,33 @@ export class LiquidityScoreService {
         symbol,
         since.getTime(),
       );
+
       const tradeVolume = trades
-        .filter((trade) => trade.timestamp < to.getTime())
-        .reduce((acc, trade) => acc + trade.cost, 0);
+        .filter((t) => t.timestamp < to.getTime())
+        .reduce((acc, t) => acc + t.cost, 0);
 
-      const { openOrderVolume, averageDuration, spread } =
-        await this.ccxtService.processOpenOrders(
-          exchange,
-          symbol,
-          since.getTime(),
-          to.getTime(),
-        );
+      const {
+        openOrderVolume = 0,
+        averageDuration = 0,
+        spread = 1,
+      } = await this.ccxtService.processOpenOrders(
+        exchange,
+        symbol,
+        since.getTime(),
+        to.getTime(),
+      );
 
-      const liquidityScoreCalculation = new LiquidityScoreCalculation(
+      return new LiquidityScoreCalculation(
         tradeVolume,
         openOrderVolume,
         averageDuration,
-        spread,
-      );
-
-      return liquidityScoreCalculation.calculate();
-    } catch (e) {
+        Math.max(spread, 1), // avoid ÷0
+      ).calculate();
+    } catch (err) {
       this.logger.error(
-        `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
+        `CEX liquidity‑score calc failed for ${user.evmAddress} @ ${exchangeName}`,
+        err as any,
       );
-
       return 0;
     }
   }
@@ -218,96 +219,45 @@ export class LiquidityScoreService {
     to: Date,
   ): Promise<number> {
     try {
-      let trades: number[] = [];
+      const trades =
+        exchangeName === 'uniswap'
+          ? await this.uniswapService.fetchTrades(
+              chainId,
+              user.evmAddress,
+              token,
+              from,
+              to,
+            )
+          : [];
 
-      switch (exchangeName) {
-        case 'uniswap':
-          trades = await this.uniswapService.fetchTrades(
-            chainId,
-            user.evmAddress,
-            token,
-            from,
-            to,
-          );
-          break;
-      }
+      const volume = trades.reduce((acc, v) => acc + v, 0);
 
-      const tradeVolume = trades.reduce((acc, trade) => acc + trade, 0);
-
-      const liquidityScoreCalculation = new LiquidityScoreCalculation(
-        tradeVolume,
-        // Open orders are not applicable for DEXs
-        0,
-        0,
-        1,
-      );
-
-      return liquidityScoreCalculation.calculate();
-    } catch (e) {
+      return new LiquidityScoreCalculation(volume, 0, 0, 1).calculate();
+    } catch (err) {
       this.logger.error(
-        `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for token ${token} from ${from} to ${to}`,
+        `DEX liquidity‑score calc failed for ${user.evmAddress} @ ${exchangeName}`,
+        err as any,
       );
       return 0;
     }
   }
 
-  public async _saveLiquidityScore(
+  private async _saveLiquidityScore(
     campaign: CampaignEntity,
     user: UserEntity,
     score: number,
   ) {
-    const liquidityScore = new LiquidityScoreEntity();
-
-    liquidityScore.campaign = campaign;
-    liquidityScore.user = user;
-    liquidityScore.score = score;
-    liquidityScore.calculatedAt = new Date();
-
-    await this.liquidityScoreRepository.createUnique(liquidityScore);
-  }
-
-  // Adjust the frequency as needed
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async calculateScoresForCampaigns(): Promise<void> {
-    this.logger.log('Calculating liquidity scores for all active campaigns');
-
-    const campaigns = await this.campaignService.getAllActiveCampaigns();
-
-    for (const campaign of campaigns) {
-      let campaignLiquidityScore = [];
-
-      try {
-        campaignLiquidityScore =
-          await this._calculateCampaignLiquidityScore(campaign);
-      } catch {
-        this.logger.error(
-          `Failed to calculate liquidity score for campaign ${campaign.address}`,
-        );
-      }
-
-      await this.recordsService.pushLiquidityScores(
-        campaign.address,
-        campaign.chainId,
-        campaignLiquidityScore,
-      );
-    }
-
-    this.logger.log('Finished calculating liquidity scores');
-  }
-}
-
-class LiquidityScoreCalculation {
-  constructor(
-    public readonly tradeVolume: number,
-    public readonly openOrderVolume: number,
-    public readonly orderDuration: number, // Duration in the order book in minutes
-    public readonly spread: number,
-  ) {}
-
-  calculate(): number {
-    return (
-      this.tradeVolume +
-      (0.1 * this.openOrderVolume * this.orderDuration) / this.spread
+    await this.liquidityScoreRepository.upsert(
+      {
+        campaign,
+        user,
+        score,
+        calculatedAt: new Date(),
+      },
+      {
+        conflictPaths: { campaign: true, user: true },
+        skipUpdateIfNoValuesChanged: true,
+      },
     );
   }
 }

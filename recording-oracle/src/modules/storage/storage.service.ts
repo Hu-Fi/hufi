@@ -10,19 +10,22 @@ import { S3ConfigService } from '../../common/config/s3-config.service';
 export class StorageService {
   public readonly minioClient: Minio.Client;
 
-  constructor(public readonly s3ConfigService: S3ConfigService) {
+  constructor(private readonly s3ConfigService: S3ConfigService) {
     this.minioClient = new Minio.Client({
-      endPoint: this.s3ConfigService.endPoint,
-      port: this.s3ConfigService.port,
-      accessKey: this.s3ConfigService.accessKey,
-      secretKey: this.s3ConfigService.secretKey,
-      useSSL: this.s3ConfigService.useSSL,
+      endPoint: s3ConfigService.endPoint,
+      port: s3ConfigService.port,
+      accessKey: s3ConfigService.accessKey,
+      secretKey: s3ConfigService.secretKey,
+      useSSL: s3ConfigService.useSSL,
     });
   }
+
   public getUrl(filename: string): string {
-    return `${this.s3ConfigService.useSSL ? 'https' : 'http'}://${
-      this.s3ConfigService.endPoint
-    }:${this.s3ConfigService.port}/${this.s3ConfigService.bucket}/${filename}`;
+    const ssl = this.s3ConfigService.useSSL ? 'https' : 'http';
+    const port = this.s3ConfigService.port
+      ? `:${this.s3ConfigService.port}`
+      : '';
+    return `${ssl}://${this.s3ConfigService.endPoint}${port}/${this.s3ConfigService.bucket}/${filename}`;
   }
 
   public async download(url: string): Promise<any> {
@@ -42,22 +45,19 @@ export class StorageService {
       throw new BadRequestException('Bucket not found');
     }
 
-    let content;
-    if (typeof data === 'string') {
-      content = data;
-    } else {
-      content = JSON.stringify(data);
-    }
+    const content = typeof data === 'string' ? data : JSON.stringify(data);
 
     try {
       const date = Date.now();
       const hash = crypto.createHash('sha1').update(content).digest('hex');
       const filename = `${escrowAddress}-${chainId}-${date}.json`;
+      const body = Buffer.from(content);
+
       await this.minioClient.putObject(
         this.s3ConfigService.bucket,
         filename,
-        JSON.stringify(content),
-        content.length,
+        body,
+        body.length,
         {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store',
@@ -69,7 +69,7 @@ export class StorageService {
         url: this.getUrl(filename),
         hash,
       };
-    } catch (e) {
+    } catch {
       throw new BadRequestException('File not uploaded');
     }
   }

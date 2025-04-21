@@ -3,20 +3,34 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthConfigService {
-  constructor(private configService: ConfigService) {}
+  constructor(private readonly config: ConfigService) {}
+
   get jwtPrivateKey(): string {
-    return this.configService.get<string>('JWT_PRIVATE_KEY', '');
+    return Buffer.from(
+      this.config.get<string>('JWT_PRIVATE_KEY', ''),
+      'base64',
+    ).toString();
   }
+
   get jwtPublicKey(): string {
-    return this.configService.get<string>('JWT_PUBLIC_KEY', '');
+    return Buffer.from(
+      this.config.get<string>('JWT_PUBLIC_KEY', ''),
+      'base64',
+    ).toString();
   }
+
+  /** Seconds (default 10 min). */
   get accessTokenExpiresIn(): number {
-    return +this.configService.get<number>('JWT_ACCESS_TOKEN_EXPIRES_IN', 600);
+    return Number(this.config.get('JWT_ACCESS_TOKEN_EXPIRES_IN', 600));
   }
+
+  /** Seconds (default 1 h). */
   get refreshTokenExpiresIn(): number {
-    return +this.configService.get<number>(
-      'JWT_REFRESH_TOKEN_EXPIRES_IN',
-      3600,
-    );
+    return Number(this.config.get('JWT_REFRESH_TOKEN_EXPIRES_IN', 3600));
+  }
+
+  /** Random salt for hashing refresh‑tokens. */
+  get tokenSalt(): string {
+    return this.config.get<string>('JWT_TOKEN_SALT', 'CHANGE_ME');
   }
 }

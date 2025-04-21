@@ -25,6 +25,8 @@ export enum ErrorWeb3 {
   NoValidNetworks = 'No valid networks found',
   InvalidChainId = 'Invalid chain id provided for the configured environment',
   GasPriceError = 'Error calculating gas price',
+  MissingPrivateKey = 'Missing Private Key',
+  SignerUnavailable = 'Signer Unavailable',
 }
 
 /**

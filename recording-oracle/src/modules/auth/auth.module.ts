@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthConfigService } from '../../common/config/auth-config.service';
 import { TokenEntity, UserEntity } from '../../database/entities';
 import { UserModule } from '../user/user.module';
-import { UserRepository } from '../user/user.repository';
 import { Web3Module } from '../web3/web3.module';
 
 import { AuthController } from './auth.controller';
@@ -16,20 +15,20 @@ import { TokenRepository } from './token.repository';
 @Module({
   imports: [
     UserModule,
+    Web3Module,
     JwtModule.registerAsync({
       inject: [AuthConfigService],
-      useFactory: (authConfigService: AuthConfigService) => ({
-        privateKey: authConfigService.jwtPrivateKey,
+      useFactory: (cfg: AuthConfigService) => ({
+        privateKey: cfg.jwtPrivateKey,
         signOptions: {
           algorithm: 'RS256',
-          expiresIn: authConfigService.accessTokenExpiresIn,
+          expiresIn: cfg.accessTokenExpiresIn,
         },
       }),
     }),
     TypeOrmModule.forFeature([TokenEntity, UserEntity]),
-    Web3Module,
   ],
-  providers: [JwtHttpStrategy, AuthService, TokenRepository, UserRepository],
+  providers: [JwtHttpStrategy, AuthService, TokenRepository],
   controllers: [AuthController],
   exports: [AuthService],
 })

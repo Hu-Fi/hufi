@@ -6,27 +6,25 @@ import { CampaignEntity } from '../../database/entities';
 
 @Injectable()
 export class CampaignRepository extends BaseRepository<CampaignEntity> {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(CampaignEntity, dataSource);
   }
 
-  async findAll(): Promise<CampaignEntity[]> {
+  findAll(): Promise<CampaignEntity[]> {
     return this.find({ relations: { users: true } });
   }
 
-  async findById(id: string): Promise<CampaignEntity | null> {
+  findById(id: string): Promise<CampaignEntity | null> {
     return this.findOne({ where: { id }, relations: { users: true } });
   }
 
-  public async findOneByChainIdAndAddress(
+  findOneByChainIdAndAddress(
     chainId: number,
     address: string,
   ): Promise<CampaignEntity | null> {
     return this.findOne({
-      where: { chainId, address },
-      relations: {
-        users: true,
-      },
+      where: { chainId, address: address.toLowerCase() },
+      relations: { users: true },
     });
   }
 }

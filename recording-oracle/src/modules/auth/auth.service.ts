@@ -9,7 +9,7 @@ import { TokenType } from '../../common/enums/token';
 import { SignatureType } from '../../common/enums/web3';
 import { ControlledError } from '../../common/errors/controlled';
 import { verifySignature } from '../../common/utils/signature';
-import { UserEntity, TokenEntity } from '../../database/entities';
+import { TokenEntity, UserEntity } from '../../database/entities';
 import { UserService } from '../user/user.service';
 
 import {
@@ -25,115 +25,90 @@ export class AuthService {
   private readonly salt: string;
 
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly userService: UserService,
-    private readonly tokenRepository: TokenRepository,
-    private readonly authConfigService: AuthConfigService,
-  ) {}
-
-  public async auth(userEntity: UserEntity): Promise<AuthDto> {
-    const refreshTokenEntity =
-      await this.tokenRepository.findOneByUserIdAndType(
-        userEntity.id,
-        TokenType.REFRESH,
-      );
-
-    const accessToken = await this.jwtService.signAsync(
-      {
-        userId: userEntity.id,
-        address: userEntity.evmAddress,
-      },
-      {
-        expiresIn: this.authConfigService.accessTokenExpiresIn,
-      },
-    );
-
-    if (refreshTokenEntity) {
-      await this.tokenRepository.deleteOne(refreshTokenEntity);
-    }
-
-    const newRefreshTokenEntity = new TokenEntity();
-    newRefreshTokenEntity.user = userEntity;
-    newRefreshTokenEntity.type = TokenType.REFRESH;
-    const date = new Date();
-    newRefreshTokenEntity.expiresAt = new Date(
-      date.getTime() + this.authConfigService.refreshTokenExpiresIn * 1000,
-    );
-
-    await this.tokenRepository.createUnique(newRefreshTokenEntity);
-
-    return { accessToken, refreshToken: newRefreshTokenEntity.id };
+    private readonly jwt: JwtService,
+    private readonly users: UserService,
+    private readonly tokens: TokenRepository,
+    authCfg: AuthConfigService,
+  ) {
+    this.salt = authCfg.tokenSalt;
   }
 
-  public async refreshToken(data: RefreshTokenDto): Promise<AuthDto> {
-    const tokenEntity = await this.tokenRepository.findOneById(
-      data.refreshToken,
-    );
+  private async issueTokens(user: UserEntity): Promise<AuthDto> {
+    // Create fresh refresh‑token row
+    await this.tokens.deleteOneByUserIdAndType(user.id, TokenType.REFRESH);
 
-    if (!tokenEntity) {
+    const refresh = new TokenEntity();
+    refresh.user = user;
+    refresh.type = TokenType.REFRESH;
+    refresh.expiresAt = new Date(Date.now() + authExpiry.refresh * 1_000);
+
+    await this.tokens.createUnique(refresh); // <- await!
+
+    const accessToken = await this.jwt.signAsync({
+      userId: user.id,
+      address: user.evmAddress,
+    });
+
+    return { accessToken, refreshToken: refresh.id };
+  }
+
+  auth(user: UserEntity): Promise<AuthDto> {
+    return this.issueTokens(user);
+  }
+
+  /** POST /auth/refresh‑token */
+  async refreshToken({ refreshToken }: RefreshTokenDto): Promise<AuthDto> {
+    const token = await this.tokens.findOneById(refreshToken);
+    if (!token) {
       throw new ControlledError(ErrorAuth.InvalidToken, HttpStatus.FORBIDDEN);
     }
-
-    if (new Date() > tokenEntity.expiresAt) {
+    if (token.expiresAt < new Date()) {
       throw new ControlledError(ErrorAuth.TokenExpired, HttpStatus.FORBIDDEN);
     }
-
-    return this.auth(tokenEntity.user);
+    return this.issueTokens(token.user);
   }
 
-  public async web3Signup(data: Web3SignUpDto): Promise<AuthDto> {
-    const preSignUpData = await this.userService.prepareSignatureBody(
+  async web3Signup(dto: Web3SignUpDto): Promise<AuthDto> {
+    const body = await this.users.prepareSignatureBody(
       SignatureType.SIGNUP,
-      data.address,
+      dto.address,
     );
-
-    const verified = verifySignature(preSignUpData, data.signature, [
-      data.address,
-    ]);
-
-    if (!verified) {
+    if (!verifySignature(body, dto.signature, [dto.address])) {
       throw new ControlledError(
         ErrorAuth.InvalidSignature,
         HttpStatus.UNAUTHORIZED,
       );
     }
-
-    const userEntity = await this.userService.createWeb3User(data.address);
-
-    return this.auth(userEntity);
+    return this.issueTokens(await this.users.createWeb3User(dto.address));
   }
 
-  public async web3Signin(data: Web3SignInDto): Promise<AuthDto> {
-    const userEntity = await this.userService.getByAddress(data.address);
-
-    const verified = verifySignature(
-      await this.userService.prepareSignatureBody(
-        SignatureType.SIGNIN,
-        data.address,
-      ),
-      data.signature,
-      [data.address],
+  async web3Signin(dto: Web3SignInDto): Promise<AuthDto> {
+    const user = await this.users.getByAddress(dto.address);
+    const body = await this.users.prepareSignatureBody(
+      SignatureType.SIGNIN,
+      dto.address,
     );
-
-    if (!verified) {
+    if (!verifySignature(body, dto.signature, [dto.address])) {
       throw new ControlledError(
         ErrorAuth.InvalidSignature,
         HttpStatus.UNAUTHORIZED,
       );
     }
-
-    await this.userService.updateNonce(userEntity);
-
-    return this.auth(userEntity);
+    await this.users.updateNonce(user);
+    return this.issueTokens(user);
   }
 
-  public hashToken(token: string): string {
-    const hash = createHash('sha256');
-    hash.update(token + this.salt);
-    return hash.digest('hex');
+  hashToken(token: string): string {
+    return createHash('sha256')
+      .update(token + this.salt)
+      .digest('hex');
   }
-
-  public compareToken(token: string, hashedToken: string): boolean {
-    return this.hashToken(token) === hashedToken;
+  compareToken(raw: string, hashed: string): boolean {
+    return this.hashToken(raw) === hashed;
   }
 }
+
+const authExpiry = {
+  access: 600, // seconds
+  refresh: 3600,
+};

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -22,26 +30,15 @@ export class MrMarketController {
 
   @Get('campaign')
   @UseGuards(ApiKeyGuard)
-  @ApiHeader({
-    name: 'x-api-key',
-    description: 'API key for authentication',
-  })
-  @ApiOperation({
-    summary: 'Check if Mr.Market is registered to the campaign',
-    description: 'Check if Mr.Market is registered to the campaign',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Mr.Market is registered to the campaign',
-    type: Boolean,
-  })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiHeader({ name: 'x-api-key', description: 'API key for authentication' })
+  @ApiOperation({ summary: 'Check campaign registration' })
+  @ApiResponse({ status: 200, type: Boolean })
   public async checkCampaignRegistration(
-    @Query('chainId') chainId: number,
+    @Query('chainId', ParseIntPipe) chainId: number,
     @Query('walletAddress') walletAddress: string,
     @Query('address') address: string,
   ): Promise<boolean> {
-    return await this.mrMarketService.checkCampaignRegistration(
+    return this.mrMarketService.checkCampaignRegistration(
       chainId,
       walletAddress,
       address,
@@ -50,25 +47,13 @@ export class MrMarketController {
 
   @Post('campaign')
   @UseGuards(ApiKeyGuard)
-  @ApiHeader({
-    name: 'x-api-key',
-    description: 'API key for authentication',
-  })
-  @ApiOperation({
-    summary: 'Register Mr.Market to the campaign',
-    description:
-      'Registers Mr.Market to the campaign. Exchange API key is required to be registered.',
-  })
+  @ApiHeader({ name: 'x-api-key', description: 'API key for authentication' })
+  @ApiOperation({ summary: 'Register Mr.Market to the campaign' })
   @ApiBody({
     type: CampaignRegisterRequestDto,
-    description: 'Wallet address, Campaign details, and Exchange API key.',
+    description: 'Wallet address, campaign details, exchange API key.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Registered Mr.Market to the campaign successfully.',
-    type: CampaignRegisterResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 200, type: CampaignRegisterResponseDto })
   public async registerForCampaign(
     @Body() data: CampaignRegisterRequestDto,
   ): Promise<CampaignRegisterResponseDto> {

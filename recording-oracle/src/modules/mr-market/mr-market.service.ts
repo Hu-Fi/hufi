@@ -19,34 +19,45 @@ export class MrMarketService {
   ) {}
 
   public async createOrGetMrMarketUser(address: string): Promise<UserEntity> {
+    const addr = address.toLowerCase();
+
     try {
-      await this.userService.createWeb3User(address);
-    } catch (e) {
-      if (e.message !== ErrorUser.AlreadyExists) {
+      await this.userService.createWeb3User(addr);
+    } catch (e: any) {
+      if (
+        !(e instanceof ControlledError) ||
+        e.message !== ErrorUser.AlreadyExists
+      ) {
         throw e;
       }
     }
-    return await this.userService.getByAddress(address);
+
+    return this.userService.getByAddress(addr);
   }
 
-  public async registerToCampaign(data: CampaignRegisterRequestDto) {
-    await this.createOrGetMrMarketUser(data.walletAddress);
+  public async registerToCampaign(
+    data: CampaignRegisterRequestDto,
+  ): Promise<void> {
+    const walletAddress = data.walletAddress.toLowerCase();
+
+    const user = await this.createOrGetMrMarketUser(walletAddress);
 
     try {
-      const user = await this.userService.getByAddress(data.walletAddress);
       await this.userService.createExchangeAPIKey(user, {
-        exchangeName: data.exchangeName,
+        exchangeName: data.exchangeName.toLowerCase(),
         apiKey: data.apiKey,
         secret: data.secret,
       });
-    } catch (e) {
-      if (e.message !== ErrorMrMarket.ExchangeAPIKeyExists) {
+    } catch (e: any) {
+      if (
+        !(e instanceof ControlledError) ||
+        e.message !== ErrorUser.ExchangeAPIKeyExists
+      ) {
         throw e;
       }
     }
 
     try {
-      const user = await this.userService.getByAddress(data.walletAddress);
       const campaign =
         await this.campaignService.createCampaignIfNotExists(data);
 
@@ -64,14 +75,15 @@ export class MrMarketService {
         );
       }
 
-      if (user.campaigns) {
-        user.campaigns.push(campaign);
-      } else {
-        user.campaigns = [campaign];
-      }
+      user.campaigns = user.campaigns
+        ? [...user.campaigns, campaign]
+        : [campaign];
       await user.save();
-    } catch (e) {
-      if (e.message !== ErrorMrMarket.CampaignAlreadyRegistered) {
+    } catch (e: any) {
+      if (
+        !(e instanceof ControlledError) ||
+        e.message !== ErrorMrMarket.CampaignAlreadyRegistered
+      ) {
         throw e;
       }
     }
@@ -81,13 +93,17 @@ export class MrMarketService {
     chainId: number,
     walletAddress: string,
     address: string,
-  ) {
-    const user = await this.createOrGetMrMarketUser(walletAddress);
+  ): Promise<boolean> {
+    const user = await this.createOrGetMrMarketUser(
+      walletAddress.toLowerCase(),
+    );
 
-    return user.campaigns?.some(
-      (c) =>
-        c.address.toLowerCase() === address.toLowerCase() &&
-        c.chainId === chainId,
+    return (
+      user.campaigns?.some(
+        (c) =>
+          c.address.toLowerCase() === address.toLowerCase() &&
+          c.chainId === chainId,
+      ) ?? false
     );
   }
 }

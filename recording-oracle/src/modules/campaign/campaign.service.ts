@@ -1,5 +1,5 @@
 import { EscrowUtils } from '@human-protocol/sdk';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 import { ErrorCampaign } from '../../common/constants/errors';
 import { ControlledError } from '../../common/errors/controlled';
@@ -7,87 +7,93 @@ import { CampaignEntity } from '../../database/entities';
 
 import { CampaignCreateRequestDto } from './campaign.dto';
 import { CampaignRepository } from './campaign.repository';
+
 @Injectable()
 export class CampaignService {
-  constructor(private campaignRepository: CampaignRepository) {}
+  private readonly logger = new Logger(CampaignService.name);
 
-  public async createCampaign(payload: CampaignCreateRequestDto) {
+  constructor(private readonly campaignRepo: CampaignRepository) {}
+
+  async createCampaign(payload: CampaignCreateRequestDto) {
+    const addr = payload.address.toLowerCase();
+
     if (
-      await this.campaignRepository.findOneByChainIdAndAddress(
-        payload.chainId,
-        payload.address,
-      )
+      await this.campaignRepo.findOneByChainIdAndAddress(payload.chainId, addr)
     ) {
       throw new ControlledError(
         ErrorCampaign.AlreadyExists,
         HttpStatus.CONFLICT,
       );
     }
-
-    return await this._createCampaign(payload.chainId, payload.address);
+    return this._createCampaign(payload.chainId, addr);
   }
 
-  public async createCampaignIfNotExists(
+  async createCampaignIfNotExists(
     payload: CampaignCreateRequestDto,
   ): Promise<CampaignEntity> {
-    const campaign = await this.campaignRepository.findOneByChainIdAndAddress(
+    const addr = payload.address.toLowerCase();
+    const existing = await this.campaignRepo.findOneByChainIdAndAddress(
       payload.chainId,
-      payload.address,
+      addr,
     );
-
-    if (campaign) {
-      return campaign;
-    }
-
-    return await this._createCampaign(payload.chainId, payload.address);
+    return existing ?? this._createCampaign(payload.chainId, addr);
   }
 
-  public async getCampaign(chainId: number, address: string) {
-    return await this.campaignRepository.findOneByChainIdAndAddress(
+  async getCampaign(chainId: number, address: string) {
+    return this.campaignRepo.findOneByChainIdAndAddress(
       chainId,
-      address,
+      address.toLowerCase(),
     );
   }
 
-  public async getAllActiveCampaigns() {
-    const campaigns = await this.campaignRepository.findAll();
-
-    return campaigns.filter(
-      async (campaign) => campaign.lastSyncedAt < campaign.endDate,
+  async getAllActiveCampaigns() {
+    /* active == endDate is in the future */
+    const now = new Date();
+    return (await this.campaignRepo.findAll()).filter(
+      (c) => c.endDate > now && c.lastSyncedAt < c.endDate,
     );
   }
 
-  public async updateLastSyncedAt(campaign: CampaignEntity, date: Date) {
-    campaign.lastSyncedAt = date;
-
-    return await campaign.save();
+  async updateLastSyncedAt(campaign: CampaignEntity, at: Date) {
+    campaign.lastSyncedAt = at;
+    return campaign.save();
   }
 
   private async _createCampaign(chainId: number, address: string) {
-    const campaignDetails = await EscrowUtils.getEscrow(chainId, address);
-    const campaignData = await fetch(campaignDetails.manifestUrl).then((res) =>
-      res.json(),
-    );
-
-    const campaign = new CampaignEntity();
-    campaign.chainId = chainId;
-    campaign.address = address;
-
-    if (!campaignData.exchangeName) {
+    let details;
+    try {
+      details = await EscrowUtils.getEscrow(chainId, address);
+    } catch (err) {
+      this.logger.error(
+        `Escrow fetch failed for ${chainId}:${address}`,
+        err as any,
+      );
       throw new ControlledError(
         ErrorCampaign.InvalidCampaignData,
         HttpStatus.BAD_REQUEST,
       );
     }
-    campaign.exchangeName = campaignData.exchangeName;
 
-    campaign.token = campaignData.token;
-    campaign.startDate = new Date(campaignData.startBlock * 1000);
-    campaign.endDate = new Date(campaignData.endBlock * 1000);
-    campaign.fundToken = campaignDetails.token;
-    campaign.fundAmount = campaignData.fundAmount;
-    campaign.lastSyncedAt = new Date(campaignData.startBlock * 1000);
+    const manifest = await fetch(details.manifestUrl).then((r) => r.json());
 
-    return await this.campaignRepository.createUnique(campaign);
+    if (!manifest.exchangeName) {
+      throw new ControlledError(
+        ErrorCampaign.InvalidCampaignData,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const c = new CampaignEntity();
+    c.chainId = chainId;
+    c.address = address;
+    c.exchangeName = manifest.exchangeName.toLowerCase();
+    c.token = manifest.token;
+    c.startDate = new Date(manifest.startBlock * 1000);
+    c.endDate = new Date(manifest.endBlock * 1000);
+    c.fundToken = details.token;
+    c.fundAmount = manifest.fundAmount;
+    c.lastSyncedAt = c.startDate;
+
+    return this.campaignRepo.createUnique(c);
   }
 }

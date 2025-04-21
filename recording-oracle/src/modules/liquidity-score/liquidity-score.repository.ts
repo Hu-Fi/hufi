@@ -15,7 +15,7 @@ export class LiquidityScoreRepository extends BaseRepository<LiquidityScoreEntit
   }
 
   async findAll(): Promise<LiquidityScoreEntity[]> {
-    return this.findAll();
+    return this.find();
   }
 
   async findById(id: string): Promise<LiquidityScoreEntity | null> {

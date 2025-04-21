@@ -17,11 +17,9 @@ export class UserRepository extends BaseRepository<UserEntity> {
     });
   }
 
-  public async findOneByEvmAddress(
-    evmAddress: string,
-  ): Promise<UserEntity | null> {
+  async findOneByEvmAddress(evmAddress: string): Promise<UserEntity | null> {
     return this.findOne({
-      where: { evmAddress },
+      where: { evmAddress: evmAddress.toLowerCase() },
       relations: { campaigns: true, exchangeAPIKeys: true },
     });
   }

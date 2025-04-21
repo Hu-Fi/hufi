@@ -17,7 +17,7 @@ export class ExchangeAPIKeyRepository extends BaseRepository<ExchangeAPIKeyEntit
     return this.findOne({
       where: {
         user,
-        exchangeName,
+        exchangeName: exchangeName.toLowerCase(),
       },
     });
   }

@@ -1,30 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as ccxt from 'ccxt';
 
 @Injectable()
 export class CCXTService {
-  constructor() {}
+  private readonly logger = new Logger(CCXTService.name);
 
-  public getExchangeInstance(
+  getExchangeInstance(
     exchangeName: string,
-    apiKey: string,
-    secret: string,
+    apiKey?: string,
+    secret?: string,
   ): ccxt.Exchange {
+    const name = exchangeName.toLowerCase();
+
     // eslint-disable-next-line import/namespace
-    const exchangeClass = ccxt.pro[exchangeName] || ccxt[exchangeName];
-    if (!exchangeClass) {
-      throw new Error(`Exchange ${exchangeName} not supported.`);
+    const ExchangeClass = (ccxt.pro as any)[name] ?? (ccxt as any)[name];
+    if (!ExchangeClass) {
+      throw new Error(`Exchange "${exchangeName}" is not supported by CCXT.`);
     }
-    return new exchangeClass({ apiKey, secret });
+
+    return new ExchangeClass({
+      apiKey,
+      secret,
+      enableRateLimit: true,
+    }) as ccxt.Exchange;
   }
 
-  public async fetchTradePairs(
-    exchange: ccxt.Exchange,
-  ): Promise<ccxt.Market[]> {
-    return exchange.loadMarkets();
+  async fetchTradePairs(exchange: ccxt.Exchange): Promise<ccxt.Market[]> {
+    const markets = await exchange.loadMarkets();
+    return Object.values(markets);
   }
 
-  public async fetchTrades(
+  async fetchTrades(
     exchange: ccxt.Exchange,
     symbol: string,
     since: number,
@@ -32,7 +38,7 @@ export class CCXTService {
     return exchange.fetchMyTrades(symbol, since);
   }
 
-  public async fetchOpenOrders(
+  async fetchOpenOrders(
     exchange: ccxt.Exchange,
     symbol: string,
     since: number,
@@ -40,7 +46,7 @@ export class CCXTService {
     return exchange.fetchOpenOrders(symbol, since);
   }
 
-  public async fetchOrderBook(
+  async fetchOrderBook(
     exchange: ccxt.Exchange,
     symbol: string,
   ): Promise<ccxt.OrderBook> {
@@ -53,7 +59,7 @@ export class CCXTService {
     return bid && ask ? ask - bid : 0;
   }
 
-  public async processOpenOrders(
+  async processOpenOrders(
     exchange: ccxt.Exchange,
     symbol: string,
     since: number,
@@ -70,13 +76,17 @@ export class CCXTService {
 
     const now = Date.now();
     let totalDuration = 0;
+
     const openOrderVolume = orders
-      .filter((order) => order.timestamp < to)
-      .reduce((acc, order) => {
-        const orderCreationTime = new Date(order.timestamp).getTime();
-        const duration = (now - orderCreationTime) / 1000; // Convert duration from milliseconds to seconds
+      .filter((o) => o.timestamp < to)
+      .reduce((acc, o) => {
+        const cost =
+          typeof o.cost === 'number' && Number.isFinite(o.cost)
+            ? o.cost
+            : (o.amount ?? 0) * (o.price ?? 0);
+        const duration = (now - (o.timestamp ?? now)) / 1000; // seconds
         totalDuration += duration;
-        return acc + order.cost;
+        return acc + cost;
       }, 0);
 
     const averageDuration = orders.length ? totalDuration / orders.length : 0;

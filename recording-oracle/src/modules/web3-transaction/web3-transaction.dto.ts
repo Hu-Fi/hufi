@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsEthereumAddress,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -23,8 +24,9 @@ export class Web3TransactionDto {
   method: string;
 
   @IsArray()
-  data: Array<any>;
+  data: unknown[];
 
+  @IsOptional()
   @IsEnum(Web3TransactionStatus)
-  status: Web3TransactionStatus;
+  status?: Web3TransactionStatus;
 }

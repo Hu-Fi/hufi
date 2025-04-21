@@ -7,40 +7,32 @@ import { TokenEntity } from '../../database/entities';
 
 @Injectable()
 export class TokenRepository extends BaseRepository<TokenEntity> {
-  constructor(private dataSource: DataSource) {
-    super(TokenEntity, dataSource);
+  constructor(ds: DataSource) {
+    super(TokenEntity, ds);
   }
 
-  public async findOneById(id: string): Promise<TokenEntity | null> {
-    return this.findOne({
-      where: {
-        id,
-      },
-      relations: ['user'],
-    });
+  findOneById(id: string): Promise<TokenEntity | null> {
+    return this.findOne({ where: { id }, relations: ['user'] });
   }
 
-  public async findOneByUserIdAndType(
+  findOneByUserIdAndType(
     userId: string,
     type: TokenType,
   ): Promise<TokenEntity | null> {
     return this.findOne({
-      where: {
-        userId,
-        type,
-      },
+      where: { user: { id: userId }, type },
       relations: ['user'],
     });
   }
 
-  public async deleteOne(token: TokenEntity): Promise<DeleteResult> {
+  deleteOne(token: TokenEntity): Promise<DeleteResult> {
     return this.delete({ id: token.id });
   }
 
-  public async deleteOneByUserIdAndType(
+  deleteOneByUserIdAndType(
     userId: string,
     type: TokenType,
   ): Promise<DeleteResult> {
-    return this.delete({ userId, type });
+    return this.delete({ user: { id: userId }, type });
   }
 }

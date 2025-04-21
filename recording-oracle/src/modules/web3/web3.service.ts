@@ -15,42 +15,105 @@ import { ControlledError } from '../../common/errors/controlled';
 
 @Injectable()
 export class Web3Service {
-  private signers: { [key: number]: Wallet } = {};
-  public readonly logger = new Logger(Web3Service.name);
+  private readonly logger = new Logger(Web3Service.name);
+
+  private readonly signers = new Map<number, Wallet>();
 
   constructor(
-    private readonly web3ConfigService: Web3ConfigService,
-    private readonly networkConfigService: NetworkConfigService,
+    private readonly web3Config: Web3ConfigService,
+    private readonly networkConfig: NetworkConfigService,
   ) {
-    const privateKey = this.web3ConfigService.privateKey;
+    this.bootstrapSigners();
+  }
+
+  private bootstrapSigners(): void {
+    const privateKey = this.web3Config.privateKey?.trim();
+    if (!privateKey) {
+      throw new ControlledError(
+        ErrorWeb3.MissingPrivateKey,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const validChains = this.getValidChains();
-    const validNetworks = this.networkConfigService.networks.filter((network) =>
-      validChains.includes(network.chainId),
+    const networks = this.networkConfig.networks.filter((n) =>
+      validChains.includes(n.chainId),
     );
 
-    if (!validNetworks.length) {
-      this.logger.log(ErrorWeb3.NoValidNetworks, Web3Service.name);
+    if (!networks.length) {
       throw new ControlledError(
         ErrorWeb3.NoValidNetworks,
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    for (const network of validNetworks) {
-      const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-      this.signers[network.chainId] = new Wallet(privateKey, provider);
+    for (const n of networks) {
+      try {
+        const provider = new ethers.JsonRpcProvider(n.rpcUrl);
+        const wallet = new Wallet(privateKey, provider);
+        this.signers.set(n.chainId, wallet);
+        this.logger.log(`Signer ready for chain ${n.chainId} (${n.rpcUrl})`);
+      } catch (err: any) {
+        this.logger.error(
+          `Failed to create signer for chain ${n.chainId}: ${err.message}`,
+        );
+      }
     }
   }
 
   public getSigner(chainId: number): Wallet {
     this.validateChainId(chainId);
-    return this.signers[chainId];
+    const signer = this.signers.get(chainId);
+    if (!signer) {
+      throw new ControlledError(
+        ErrorWeb3.SignerUnavailable,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return signer;
+  }
+
+  public async calculateGasPrice(chainId: number): Promise<bigint> {
+    const signer = this.getSigner(chainId);
+    const feeData = await signer.provider.getFeeData();
+    const base =
+      feeData.gasPrice ?? feeData.maxFeePerGas ?? feeData.maxPriorityFeePerGas;
+
+    if (base === null || base === undefined) {
+      throw new ControlledError(ErrorWeb3.GasPriceError, HttpStatus.CONFLICT);
+    }
+
+    // Fixed‑point multiplier
+    const multiplier = BigInt(
+      Math.round(this.web3Config.gasPriceMultiplier * 10_000),
+    );
+    return (base * multiplier) / 10_000n;
+  }
+
+  /**
+   * Return the operator’s address.
+   * If `chainId` is supplied we return the signer for that chain.
+   * Otherwise we return the first configured signer
+   */
+  public getOperatorAddress(chainId?: number): string {
+    if (chainId !== undefined) {
+      return this.getSigner(chainId).address;
+    }
+
+    const firstSigner = this.signers.values().next().value as
+      | Wallet
+      | undefined;
+    if (!firstSigner) {
+      throw new ControlledError(
+        ErrorWeb3.NoValidNetworks,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return firstSigner.address;
   }
 
   public validateChainId(chainId: number): void {
-    const validChainIds = this.getValidChains();
-    if (!validChainIds.includes(chainId)) {
-      this.logger.log(ErrorWeb3.InvalidChainId, Web3Service.name);
+    if (!this.getValidChains().includes(chainId)) {
       throw new ControlledError(
         ErrorWeb3.InvalidChainId,
         HttpStatus.BAD_REQUEST,
@@ -59,29 +122,14 @@ export class Web3Service {
   }
 
   public getValidChains(): ChainId[] {
-    switch (this.web3ConfigService.env) {
+    switch (this.web3Config.env) {
       case Web3Env.MAINNET:
         return MAINNET_CHAIN_IDS;
       case Web3Env.TESTNET:
         return TESTNET_CHAIN_IDS;
       case Web3Env.LOCALHOST:
-        return LOCALHOST_CHAIN_IDS;
       default:
         return LOCALHOST_CHAIN_IDS;
     }
-  }
-
-  public async calculateGasPrice(chainId: number): Promise<bigint> {
-    const signer = this.getSigner(chainId);
-    const multiplier = this.web3ConfigService.gasPriceMultiplier;
-    const gasPrice = (await signer.provider?.getFeeData())?.gasPrice;
-    if (gasPrice) {
-      return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
-    }
-    throw new ControlledError(ErrorWeb3.GasPriceError, HttpStatus.CONFLICT);
-  }
-
-  public getOperatorAddress(): string {
-    return Object.values(this.signers)[0].address;
   }
 }

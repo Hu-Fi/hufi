@@ -1,15 +1,16 @@
 export class LiquidityScoreCalculation {
   constructor(
-    public readonly tradeVolume: number,
-    public readonly openOrderVolume: number,
-    public readonly orderDuration: number, // Duration in the order book in minutes
-    public readonly spread: number,
+    private readonly tradeVolume: number,
+    private readonly openOrderVolume: number,
+    private readonly orderDuration: number,
+    private readonly spread: number,
   ) {}
 
   calculate(): number {
+    const safeSpread = Math.max(this.spread, 1);
     return (
       this.tradeVolume +
-      (0.1 * this.openOrderVolume * this.orderDuration) / this.spread
+      (0.1 * this.openOrderVolume * this.orderDuration) / safeSpread
     );
   }
 }

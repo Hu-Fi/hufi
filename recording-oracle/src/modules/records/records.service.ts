@@ -9,13 +9,11 @@ import { Web3TransactionService } from '../web3-transaction/web3-transaction.ser
 
 @Injectable()
 export class RecordsService {
-  private logger: Logger = new Logger(RecordsService.name);
+  private readonly logger = new Logger(RecordsService.name);
 
   constructor(
-    @Inject(Web3Service)
-    private readonly web3Service: Web3Service,
-    @Inject(StorageService)
-    private storageService: StorageService,
+    @Inject(Web3Service) private readonly web3Service: Web3Service,
+    @Inject(StorageService) private storageService: StorageService,
     @Inject(Web3TransactionService)
     private web3TransactionService: Web3TransactionService,
   ) {}
@@ -31,59 +29,48 @@ export class RecordsService {
     this.logger.log(
       `Uploading liquidity scores for escrow ${escrowAddress} on chain ${chainId}`,
     );
-    const saveLiquidityResult = await this.storageService.uploadEscrowResult(
+    const file = await this.storageService.uploadEscrowResult(
       escrowAddress,
       chainId,
       liquidityData,
     );
 
-    this.logger.log(
-      `Storing liquidity scores for escrow ${escrowAddress} on chain ${chainId}`,
-    );
-
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
-    await this.web3TransactionService.saveWeb3Transaction({
+    // save tx and keep its id
+    const tx = await this.web3TransactionService.saveWeb3Transaction({
       chainId,
       contract: 'escrow',
       address: escrowAddress,
       method: 'storeResults',
       data: [
-        saveLiquidityResult.url,
-        saveLiquidityResult.hash,
-        {
-          gasPrice,
-        },
+        file.url,
+        file.hash,
+        { gasPrice: gasPrice.toString() }, // stringify bigint for JSON column
       ],
       status: Web3TransactionStatus.PENDING,
     });
 
     try {
-      await escrowClient.storeResults(
-        escrowAddress,
-        saveLiquidityResult.url,
-        saveLiquidityResult.hash,
-        {
-          gasPrice,
-        },
-      );
+      await escrowClient.storeResults(escrowAddress, file.url, file.hash, {
+        gasPrice,
+      });
 
       await this.web3TransactionService.updateWeb3TransactionStatus(
-        escrowAddress,
+        tx.id,
         Web3TransactionStatus.SUCCESS,
       );
-    } catch (error) {
+    } catch (err) {
       this.logger.error(
         `Failed to store liquidity scores for escrow ${escrowAddress} on chain ${chainId}`,
-        error,
+        err,
       );
-
       await this.web3TransactionService.updateWeb3TransactionStatus(
-        escrowAddress,
+        tx.id,
         Web3TransactionStatus.FAILED,
       );
     }
 
-    return saveLiquidityResult;
+    return file;
   }
 }

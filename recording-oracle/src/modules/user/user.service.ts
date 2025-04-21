@@ -33,28 +33,27 @@ export class UserService {
   ) {}
 
   public async createWeb3User(address: string): Promise<UserEntity> {
-    const userEntity = await this.userRepository.findOneByEvmAddress(address);
-
-    if (userEntity) {
+    const normalized = address.toLowerCase();
+    if (await this.userRepository.findOneByEvmAddress(normalized)) {
       this.logger.log(ErrorUser.AlreadyExists, UserService.name);
       throw new ControlledError(ErrorUser.AlreadyExists, HttpStatus.CONFLICT);
     }
 
     const newUser = new UserEntity();
-    newUser.evmAddress = address;
+    newUser.evmAddress = normalized;
     newUser.nonce = generateNonce();
     newUser.status = UserStatus.ACTIVE;
 
-    return await this.userRepository.createUnique(newUser);
+    return this.userRepository.createUnique(newUser);
   }
 
   public async getByAddress(address: string): Promise<UserEntity> {
-    const userEntity = await this.userRepository.findOneByEvmAddress(address);
-
+    const userEntity = await this.userRepository.findOneByEvmAddress(
+      address.toLowerCase(),
+    );
     if (!userEntity) {
       throw new ControlledError(ErrorUser.NotFound, HttpStatus.NOT_FOUND);
     }
-
     return userEntity;
   }
 
@@ -71,7 +70,9 @@ export class UserService {
         break;
       case SignatureType.SIGNIN:
         content = 'signin';
-        nonce = (await this.userRepository.findOneByEvmAddress(address))?.nonce;
+        nonce = (
+          await this.userRepository.findOneByEvmAddress(address.toLowerCase())
+        )?.nonce;
         break;
       default:
         throw new ControlledError('Type not allowed', HttpStatus.BAD_REQUEST);
@@ -81,7 +82,7 @@ export class UserService {
       from: address,
       to: this.web3Service.getOperatorAddress(),
       contents: content,
-      nonce: nonce ?? undefined,
+      nonce,
     };
   }
 
@@ -95,52 +96,48 @@ export class UserService {
     exchangeName: string,
   ): Promise<boolean> {
     const user = await this.getByAddress(address);
-
     return !!(await this.exchangeAPIKeyRepository.findByUserAndExchange(
       user,
-      exchangeName,
+      exchangeName.toLowerCase(),
     ));
   }
 
   public async createExchangeAPIKey(
     user: UserEntity,
-    exchangeAPIKeyData: ExchangeAPIKeyCreateRequestDto,
-  ) {
-    const exchangeAPIKey =
+    data: ExchangeAPIKeyCreateRequestDto,
+  ): Promise<ExchangeAPIKeyEntity> {
+    if (
       await this.exchangeAPIKeyRepository.findByUserAndExchange(
         user,
-        exchangeAPIKeyData.exchangeName,
-      );
-
-    if (exchangeAPIKey) {
+        data.exchangeName.toLowerCase(),
+      )
+    ) {
       throw new ControlledError(
         ErrorUser.ExchangeAPIKeyExists,
         HttpStatus.CONFLICT,
       );
     }
 
-    const encryptedApiKey = await EncryptionUtils.encrypt(
-      exchangeAPIKeyData.apiKey,
-      [this.pgpConfigService.publicKey],
-    );
-    const encryptedSecret = await EncryptionUtils.encrypt(
-      exchangeAPIKeyData.secret,
-      [this.pgpConfigService.publicKey],
-    );
+    const encryptedApiKey = await EncryptionUtils.encrypt(data.apiKey, [
+      this.pgpConfigService.publicKey,
+    ]);
+    const encryptedSecret = await EncryptionUtils.encrypt(data.secret, [
+      this.pgpConfigService.publicKey,
+    ]);
 
-    const newExchangeAPIKey = new ExchangeAPIKeyEntity();
-    newExchangeAPIKey.user = user;
-    newExchangeAPIKey.exchangeName = exchangeAPIKeyData.exchangeName;
-    newExchangeAPIKey.apiKey = encryptedApiKey;
-    newExchangeAPIKey.secret = encryptedSecret;
+    const key = new ExchangeAPIKeyEntity();
+    key.user = user;
+    key.exchangeName = data.exchangeName.toLowerCase();
+    key.apiKey = encryptedApiKey;
+    key.secret = encryptedSecret;
 
-    return await this.exchangeAPIKeyRepository.createUnique(newExchangeAPIKey);
+    return this.exchangeAPIKeyRepository.createUnique(key);
   }
 
   public async registerToCampaign(
     user: UserEntity,
     data: CampaignRegisterRequestDto,
-  ) {
+  ): Promise<void> {
     const campaign = await this.campaignService.createCampaignIfNotExists(data);
 
     if (user.campaigns?.some((c) => c.id === campaign.id)) {
@@ -153,7 +150,7 @@ export class UserService {
     const exchangeAPIKey =
       await this.exchangeAPIKeyRepository.findByUserAndExchange(
         user,
-        campaign.exchangeName,
+        campaign.exchangeName.toLowerCase(),
       );
 
     if (isCenteralizedExchange(campaign.exchangeName) && !exchangeAPIKey) {
@@ -163,21 +160,24 @@ export class UserService {
       );
     }
 
-    if (user.campaigns) {
-      user.campaigns.push(campaign);
-    } else {
-      user.campaigns = [campaign];
-    }
+    user.campaigns = user.campaigns
+      ? [...user.campaigns, campaign]
+      : [campaign];
     await user.save();
   }
 
-  public async checkCampaignRegistration(user: UserEntity, address: string) {
+  public async checkCampaignRegistration(
+    user: UserEntity,
+    address: string,
+  ): Promise<boolean> {
     return user.campaigns?.some(
       (c) => c.address.toLowerCase() === address.toLowerCase(),
     );
   }
 
   public async checkUserExists(address: string): Promise<boolean> {
-    return !!(await this.userRepository.findOneByEvmAddress(address));
+    return !!(await this.userRepository.findOneByEvmAddress(
+      address.toLowerCase(),
+    ));
   }
 }

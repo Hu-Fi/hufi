@@ -1,43 +1,46 @@
 import { ChainId } from '@human-protocol/sdk';
 import { Injectable, Logger } from '@nestjs/common';
+import type { RequestDocument, Variables } from 'graphql-request';
 
 import { Web3ConfigService } from '../../common/config/web3-config.service';
 import { UNISWAP_V3_SUBGRAPH_ID } from '../../common/constants/subgraph';
 
 @Injectable()
 export class UniswapService {
-  private logger: Logger = new Logger(UniswapService.name);
-  private subgraphBaseURL =
+  private readonly logger = new Logger(UniswapService.name);
+  private readonly graphql = import('graphql-request');
+  private readonly subgraphBase =
     'https://gateway-arbitrum.network.thegraph.com/api/';
 
-  constructor(private web3ConfigService: Web3ConfigService) {}
-
+  constructor(private readonly web3Config: Web3ConfigService) {}
   public async fetchTrades(
     chainId: number,
     operator: string,
     token: string,
     from: Date,
     to: Date,
-  ) {
-    this.logger.log(
-      `Fetching trades for ${operator} on ${token} from ${from.toISOString()} to ${to.toISOString()}`,
+  ): Promise<number[]> {
+    this.logger.debug(
+      `Uniswap fetchTrades ${operator} ${token} ${from.toISOString()} → ${to.toISOString()}`,
     );
 
-    const { gql } = await this._importGraphQLRequest();
-    const fromTimestamp = Math.floor(from.getTime() / 1000);
-    const toTimestamp = Math.floor(to.getTime() / 1000);
+    const url = this._getSubgraphURL(chainId);
+    if (!url) {
+      this.logger.warn(`No subgraph configured for chain ${chainId}`);
+      return [];
+    }
 
-    const sellTrades = await this._fetchSubgraph<{
-      swaps: Array<{ amount0: string }>;
+    const fromTs = Math.floor(from.getTime() / 1000);
+    const toTs = Math.floor(to.getTime() / 1000);
+    const origin = operator.toLowerCase();
+    const tok = token.toLowerCase();
+
+    const sell = await this._querySubgraph<{
+      swaps: { amount0: string }[];
     }>(
-      chainId,
-      gql`
-        query getSwaps(
-          $origin: String!
-          $token: String!
-          $from: Int!
-          $to: Int!
-        ) {
+      url,
+      /* GraphQL */ `
+        query ($origin: String!, $token: String!, $from: Int!, $to: Int!) {
           swaps(
             where: {
               origin: $origin
@@ -50,84 +53,61 @@ export class UniswapService {
           }
         }
       `,
-      {
-        origin: operator.toLowerCase(),
-        token: token.toLowerCase(),
-        from: fromTimestamp,
-        to: toTimestamp,
-      },
+      { origin, token: tok, from: fromTs, to: toTs },
     );
 
-    const buyTrades = await this._fetchSubgraph<{
-      swaps: Array<{ amount1: string }>;
+    const buy = await this._querySubgraph<{
+      swaps: { amount1: string }[];
     }>(
-      chainId,
-      gql`
-        query getSwaps(
-          $origin: String!
-          $token: String!
-          $from: Int!
-          $to: Int!
-        ) {
+      url,
+      /* GraphQL */ `
+        query ($origin: String!, $token: String!, $from: Int!, $to: Int!) {
           swaps(
             where: {
               origin: $origin
               token1: $token
               timestamp_gt: $from
-              timstamp_lt: $to
+              timestamp_lt: $to
             }
           ) {
             amount1
           }
         }
       `,
-      {
-        origin: operator.toLowerCase(),
-        token: token.toLowerCase(),
-        from: fromTimestamp,
-        to: toTimestamp,
-      },
+      { origin, token: tok, from: fromTs, to: toTs },
     );
 
     return [
-      ...sellTrades.swaps.map((trade: any) => Math.abs(+trade.amount0)),
-      ...buyTrades.swaps.map((trade: any) => Math.abs(+trade.amount1)),
+      ...sell.swaps.map((s) => Math.abs(+s.amount0)),
+      ...buy.swaps.map((b) => Math.abs(+b.amount1)),
     ];
   }
 
-  private async _importGraphQLRequest() {
-    return await import('graphql-request');
-  }
-
-  private async _fetchSubgraph<T>(
-    chainId: number,
-    document: string,
-    variables?: any,
+  private async _querySubgraph<T>(
+    url: string,
+    document: RequestDocument,
+    variables?: Variables,
   ): Promise<T> {
-    const { request } = await this._importGraphQLRequest();
-
-    return await request<T>(this._getSubgraphURL(chainId), document, variables);
+    const { request } = await this.graphql;
+    return request<T>(url, document, variables);
   }
 
-  private _getSubgraphURL(chainId: number) {
+  private _getSubgraphURL(chainId: number): string | undefined {
     switch (chainId) {
       case ChainId.MAINNET:
       case ChainId.POLYGON:
       case ChainId.BSC_MAINNET:
-        return this._getSubgraphURLFromId(UNISWAP_V3_SUBGRAPH_ID[chainId]);
+        return this._fromId(UNISWAP_V3_SUBGRAPH_ID[chainId]);
       case ChainId.SEPOLIA:
         return 'https://api.studio.thegraph.com/query/37613/human-uniswap-v3/version/latest';
       default:
-        return '';
+        return undefined;
     }
   }
 
-  private _getSubgraphURLFromId(id: string) {
-    return (
-      this.subgraphBaseURL +
-      this.web3ConfigService.subgraphAPIKey +
-      '/subgraphs/id/' +
-      id
-    );
+  private _fromId(id: string | undefined): string | undefined {
+    return id
+      ? `${this.subgraphBase}${this.web3Config.subgraphAPIKey}/subgraphs/id/${id}`
+      : undefined;
   }
 }
