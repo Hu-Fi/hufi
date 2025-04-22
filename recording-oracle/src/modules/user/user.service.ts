@@ -186,14 +186,13 @@ export class UserService {
   }
 
   public async getUserJoinedCampaigns(
-    address: string,
+    user: UserEntity,
+    chainId: number,
   ): Promise<CampaignEntity[]> {
-    const user = await this.userRepository.findOneByEvmAddress(address);
-
     if (!user || !user.campaigns) {
       return [];
     }
 
-    return user.campaigns;
+    return user.campaigns.filter((c) => c.chainId === chainId);
   }
 }

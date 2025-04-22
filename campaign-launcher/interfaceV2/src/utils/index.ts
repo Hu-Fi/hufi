@@ -1,6 +1,6 @@
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
 
-import { USDT_CONTRACT_ADDRESS } from '../constants/husd';
+import { USDT_CONTRACT_ADDRESS } from '../constants';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';

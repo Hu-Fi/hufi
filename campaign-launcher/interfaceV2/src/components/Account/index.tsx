@@ -4,18 +4,25 @@ import { Avatar, Button, Popover, Typography } from '@mui/material';
 import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from 'wagmi';
 
 import { AvatarIcon, ArrowDownIcon, PowerIcon } from '../../icons';
+import { useAuthentication } from '../../providers/AuthProvider';
 import { formatAddress } from '../../utils';
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
+  const { signOut } = useAuthentication();
   const { data: ensName } = useEnsName({ address });
   const { data: ensAvatar } = useEnsAvatar({ name: ensName! });
 
   const formattedAddress = formatAddress(address);
 
   const handleClosePopover = () => setAnchorEl(null);
+
+  const handleDisconnect = () => {
+    disconnect();
+    signOut();
+  };
 
   return (
     <>
@@ -89,7 +96,7 @@ const Account: FC = () => {
         }}
       >
         <Button
-          onClick={() => disconnect()}
+          onClick={handleDisconnect}
           sx={{
             color: 'primary.light',
             paddingY: 1,

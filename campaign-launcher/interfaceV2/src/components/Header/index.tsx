@@ -11,6 +11,7 @@ import CampaignsMenu from '../CampaignsMenu';
 import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
+import NetworkSwitcher from '../NetworkSwitcher';
 
 const Header: FC = () => {
   const { isConnected } = useAccount();
@@ -69,6 +70,7 @@ const Header: FC = () => {
                 Stake HMT
               </Button>
             </MuiLink>
+            <NetworkSwitcher />
             <LaunchCampaign variant="outlined" />
             {!isConnected && <ConnectWallet />}
             {isConnected && <Account />}

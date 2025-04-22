@@ -8,7 +8,7 @@ import { useAccount } from 'wagmi';
 import useClientToSigner from './useClientToSigner';
 import ERC20ABI from '../abi/ERC20.json';
 import { ManifestUploadRequestDto } from '../api/client';
-import { oracles } from '../constants/oracles';
+import { oracles } from '../constants';
 import { getTokenAddress } from '../utils';
 import { useUploadManifest } from './useUploadManifest';
 

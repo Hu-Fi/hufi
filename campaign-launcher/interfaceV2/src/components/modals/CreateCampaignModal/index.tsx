@@ -83,24 +83,28 @@ const slotProps = {
     elevation: 4,
     sx: {
       bgcolor: 'background.default',
-    }
-  }
+    },
+  },
 };
 
 const menuProps = {
   PaperProps: {
     elevation: 4,
     sx: {
-      bgcolor: 'background.default'
-    }
-  }
-}
+      bgcolor: 'background.default',
+    },
+  },
+};
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [activeStep] = useState(0);
   const { data: exchanges } = useExchanges();
   const account = useAccount();
-  const { isLoading: isCreatingEscrow, createEscrow, stepsCompleted } = useCreateEscrow();
+  const {
+    isLoading: isCreatingEscrow,
+    createEscrow,
+    stepsCompleted,
+  } = useCreateEscrow();
 
   const {
     control,
@@ -164,15 +168,18 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                   <StepLabel
                     slotProps={{
                       stepIcon: {
-                        icon: isCreatingEscrow && idx === stepsCompleted ? (
-                          <CircularProgress size={24} />
-                        ) : idx + 1,
+                        icon:
+                          isCreatingEscrow && idx === stepsCompleted ? (
+                            <CircularProgress size={24} />
+                          ) : (
+                            idx + 1
+                          ),
                         sx: {
                           '&.Mui-completed': {
                             color: 'success.main',
                           },
                         },
-                      }
+                      },
                     }}
                     sx={{
                       '& .MuiStepLabel-label': {
@@ -183,7 +190,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     {isAllCompleted ? 'Completed' : step}
                   </StepLabel>
                 </Step>
-              )
+              );
             })}
           </Stepper>
           <Box
@@ -396,26 +403,24 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                 )}
               </FormControl>
             </Box>
-            {
-              stepsCompleted < 4 ? (
-                <Button
-                  variant="contained"
-                  type="submit"
-                  sx={{ width: '185px', mx: 'auto' }}
-                  disabled={!account.isConnected || isCreatingEscrow}
-                >
-                  Create Campaign
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  sx={{ width: '185px', mx: 'auto' }}
-                  onClick={onClose}
-                >
-                  Finish
-                </Button>
-              )
-            }
+            {stepsCompleted < 4 ? (
+              <Button
+                variant="contained"
+                type="submit"
+                sx={{ width: '185px', mx: 'auto' }}
+                disabled={!account.isConnected || isCreatingEscrow}
+              >
+                Create Campaign
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                sx={{ width: '185px', mx: 'auto' }}
+                onClick={onClose}
+              >
+                Finish
+              </Button>
+            )}
           </Box>
         </Box>
       </form>

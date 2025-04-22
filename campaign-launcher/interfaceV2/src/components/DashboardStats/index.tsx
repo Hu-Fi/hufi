@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { ChainId } from '@human-protocol/sdk';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import { useAccount } from 'wagmi';
 
 import { useCampaignsStats } from '../../hooks/useCampaigns';
 
@@ -42,8 +43,9 @@ const Info = styled(Box)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
-  const { data: campaignsStats } = useCampaignsStats(ChainId.POLYGON);
-  
+  const { chain } = useAccount();
+  const { data: campaignsStats } = useCampaignsStats(chain?.id as ChainId);
+
   return (
     <Box component="section" display="flex" flexWrap="wrap">
       <Grid container spacing={2} justifyContent="center" width="100%">

@@ -42,6 +42,7 @@ const getStyles = (size: 'small' | 'medium' | 'large') => {
         text: {
           fontWeight: 800,
           fontSize: 30,
+          lineHeight: '35px',
         },
       };
     default:
@@ -50,9 +51,12 @@ const getStyles = (size: 'small' | 'medium' | 'large') => {
         border: '1px solid white',
       };
   }
-}
+};
 
-export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({ symbol, size = 'small' }) => {
+export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({
+  symbol,
+  size = 'small',
+}) => {
   const [base, quote] = symbol.split('/');
 
   const { icon: baseIcon, label: baseLabel } = TOKENS.find(
@@ -63,23 +67,41 @@ export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({ symbol, size = 'sm
     (token) => token.name.toLowerCase() === quote.toLowerCase()
   ) || { label: quote };
 
+  const isLarge = size === 'large';
+
   return (
-    <Box display="flex" alignItems="center" gap={1}>
+    <Box display="flex" alignItems="center" gap={isLarge ? 2 : 1}>
       {baseIcon && quoteIcon && (
         <>
-          <Box component="img" src={baseIcon} alt={baseLabel} borderRadius="100%" {...getStyles(size).image}  />
+          <Box
+            component="img"
+            src={baseIcon}
+            alt={baseLabel}
+            borderRadius="100%"
+            {...getStyles(size).image}
+          />
           <Box
             component="img"
             src={quoteIcon}
             alt={quoteLabel}
-            marginLeft={-2}
+            marginLeft={isLarge ? -4 : -2}
             borderRadius="100%"
             {...getStyles(size).image}
           />
         </>
       )}
       <Typography color="primary" {...getStyles(size).text}>
-        {baseLabel ?? base}/{quoteLabel ?? quote}
+        {isLarge ? (
+          <>
+            {baseLabel ?? base}
+            <br />
+            {quoteLabel ?? quote}
+          </>
+        ) : (
+          <>
+            {baseLabel ?? base}/{quoteLabel ?? quote}
+          </>
+        )}
       </Typography>
     </Box>
   );

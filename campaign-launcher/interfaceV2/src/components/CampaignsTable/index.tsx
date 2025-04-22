@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { Button, IconButton, Typography, Box } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { formatEther } from 'ethers';
+import { useNavigate } from 'react-router-dom';
 
 import { CampaignDataDto } from '../../api/client';
 import { OpenInNewIcon } from '../../icons';
@@ -12,7 +13,9 @@ import { CryptoPairEntity } from '../CryptoPairEntity';
 
 type Props = {
   data: CampaignDataDto[];
-  withPagination?: boolean;
+  showPagination?: boolean;
+  showAllCampaigns?: boolean;
+  onViewAllClick?: () => void;
 };
 
 const getSuffix = (day: number) => {
@@ -37,9 +40,11 @@ const formatDate = (block: number) => {
   return `${day}${getSuffix(day)} ${month} ${year}`;
 };
 
-const CustomPagination: FC<{ withPagination: boolean }> = ({
-  withPagination,
-}) => {
+const CustomPagination: FC<{
+  showPagination: boolean;
+  showAllCampaigns: boolean;
+  onViewAllClick?: () => void;
+}> = ({ showPagination, showAllCampaigns, onViewAllClick }) => {
   return (
     <Box
       display="flex"
@@ -47,20 +52,32 @@ const CustomPagination: FC<{ withPagination: boolean }> = ({
       justifyContent="space-between"
       width="100%"
     >
-      <Button
-        variant="contained"
-        size="medium"
-        sx={{ color: 'primary.contrast', fontWeight: 600 }}
-      >
-        View All
-      </Button>
-      {withPagination && <GridPagination />}
+      {!showAllCampaigns && (
+        <Button
+          variant="contained"
+          size="medium"
+          sx={{ color: 'primary.contrast', fontWeight: 600 }}
+          onClick={onViewAllClick}
+        >
+          View All
+        </Button>
+      )}
+      {showPagination && <GridPagination />}
     </Box>
   );
 };
 
-const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
+const CampaignsTable: FC<Props> = ({
+  data,
+  onViewAllClick,
+  showPagination = false,
+  showAllCampaigns = true,
+}) => {
   const { exchanges } = useExchangesContext();
+  const navigate = useNavigate();
+
+  const campaigns =
+    showAllCampaigns || showPagination ? data : data.slice(0, 3);
 
   const handleAddressClick = (address: string) => {
     window.open(`https://polygonscan.com/address/${address}`, '_blank');
@@ -152,11 +169,10 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
       headerName: 'Status',
       flex: 1,
       renderCell: (params) => {
-        const isActive = params.row.status === 'Pending' || params.row.status === 'Partial';
+        const isActive =
+          params.row.status === 'Pending' || params.row.status === 'Partial';
         return (
-          <Typography
-            color={isActive ? 'success.main' : 'error.main'}
-          >
+          <Typography color={isActive ? 'success.main' : 'error.main'}>
             {isActive ? 'Active' : params.row.status}
           </Typography>
         );
@@ -166,7 +182,7 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
 
   return (
     <DataGrid
-      rows={data}
+      rows={campaigns}
       columns={columns}
       columnHeaderHeight={48}
       rowHeight={114}
@@ -185,8 +201,19 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
           },
         },
       }}
+      onRowClick={(params) => {
+        navigate(
+          `/campaign-detail/${params.row.chainId}/${params.row.address}`
+        );
+      }}
       slots={{
-        pagination: () => <CustomPagination withPagination={withPagination} />,
+        pagination: () => (
+          <CustomPagination
+            showPagination={showPagination}
+            showAllCampaigns={showAllCampaigns}
+            onViewAllClick={onViewAllClick}
+          />
+        ),
       }}
       sx={{
         border: 'none',

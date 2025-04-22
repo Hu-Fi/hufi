@@ -9,8 +9,8 @@ import {
 
 import { useAccount, useSignMessage } from 'wagmi';
 
-import { request } from './api';
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from './constants';
+import { request } from '../api/recordingApi';
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../constants';
 
 type AuthenticationContextType = {
   isAuthenticated: boolean;

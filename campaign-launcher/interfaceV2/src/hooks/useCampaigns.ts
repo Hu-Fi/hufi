@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api } from '../api';
 import { CampaignDataDto } from '../api/client';
-import { type CampaignsStats } from '../types';
+import { CampaignsStats } from '../types';
 
 export type Campaign = CampaignDataDto;
 
@@ -32,14 +32,6 @@ export const useMyCampaigns = (chainId: ChainId, launcher?: string) => {
   });
 };
 
-export const useJoinedCampaigns = (chainId: ChainId) => {
-  return useQuery({
-    queryKey: ['joinedCampaigns', chainId],
-    queryFn: () =>
-      api.campaign.campaignControllerGetCampaigns({ chainId }).then(() => []), // TODO: add treatment for joined campaigns
-  });
-};
-
 export const useCampaign = (chainId: ChainId, address: string) => {
   return useQuery({
     queryKey: ['campaign', chainId, address],
@@ -56,6 +48,6 @@ export const useCampaignsStats = (chainId: ChainId) => {
     queryFn: () =>
       api.campaign
         .campaignControllerGetCampaignsStats({ chainId })
-        .then((res) => res.data as unknown as CampaignsStats),
+        .then((res) => (res.data as unknown) as CampaignsStats),
   });
 };

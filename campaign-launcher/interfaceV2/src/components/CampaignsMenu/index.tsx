@@ -1,14 +1,22 @@
 import { FC, useState } from 'react';
 
 import { Button, Menu, MenuItem } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 import { ChevronIcon } from '../../icons';
 
 const CampaignsMenu: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const navigate = useNavigate();
+
   const open = !!anchorEl;
 
   const handleClose = () => setAnchorEl(null);
+
+  const handleMenuItemClick = (path: string) => {
+    handleClose();
+    navigate(path);
+  };
 
   return (
     <>
@@ -55,9 +63,15 @@ const CampaignsMenu: FC = () => {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>All Campaigns</MenuItem>
-        <MenuItem onClick={handleClose}>My Campaigns</MenuItem>
-        <MenuItem onClick={handleClose}>Joined Campaigns</MenuItem>
+        <MenuItem onClick={() => handleMenuItemClick('/all-campaigns')}>
+          All Campaigns
+        </MenuItem>
+        <MenuItem onClick={() => handleMenuItemClick('/my-campaigns')}>
+          My Campaigns
+        </MenuItem>
+        <MenuItem onClick={() => handleMenuItemClick('/joined-campaigns')}>
+          Joined Campaigns
+        </MenuItem>
       </Menu>
     </>
   );

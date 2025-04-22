@@ -1,5 +1,25 @@
 import { ChainId } from '@human-protocol/sdk';
 
+export const ROUTES = {
+  DASHBOARD: '/',
+  CAMPAIGN_DETAIL: '/campaign-detail/:chainId/:address',
+  ALL_CAMPAIGNS: '/all-campaigns',
+  MY_CAMPAIGNS: '/my-campaigns',
+  JOINED_CAMPAIGNS: '/joined-campaigns',
+};
+
+export const ACCESS_TOKEN_KEY = 'ro-access-token';
+export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
+
+export const oracles = {
+  exchangeOracle: import.meta.env.VITE_APP_EXCHANGE_ORACLE_ADDRESS,
+  exchangeOracleFee: BigInt(import.meta.env.VITE_APP_EXCHANGE_ORACLE_FEE),
+  recordingOracle: import.meta.env.VITE_APP_RECORDING_ORACLE_ADDRESS,
+  recordingOracleFee: BigInt(import.meta.env.VITE_APP_RECORDING_ORACLE_FEE),
+  reputationOracle: import.meta.env.VITE_APP_REPUTATION_ORACLE_ADDRESS,
+  reputationOracleFee: BigInt(import.meta.env.VITE_APP_REPUTATION_ORACLE_FEE),
+};
+
 // TODO: Read USDT contract address from Human Protocol SDK
 export const USDT_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
   [ChainId.LOCALHOST]: '0xc5a5C42992dECbae36851359345FE25997F5C42d',

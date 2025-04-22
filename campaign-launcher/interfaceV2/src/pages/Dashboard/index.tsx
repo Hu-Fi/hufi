@@ -13,9 +13,9 @@ const Dashboard: FC = () => {
     <PageWrapper>
       <PageTitle title="Dashboard" />
       <DashboardStats />
-      <MyCampaigns />
-      <JoinedCampaigns />
-      <AllCampaigns />
+      <MyCampaigns showAllCampaigns={false} />
+      <JoinedCampaigns showAllCampaigns={false} />
+      <AllCampaigns showAllCampaigns={false} showPagination={true} />
       <HowToLaunch />
     </PageWrapper>
   );
