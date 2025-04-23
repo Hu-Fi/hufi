@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, MouseEvent } from 'react';
 
 import { Button, IconButton, Typography, Box } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
@@ -79,7 +79,8 @@ const CampaignsTable: FC<Props> = ({
   const campaigns =
     showAllCampaigns || showPagination ? data : data.slice(0, 3);
 
-  const handleAddressClick = (address: string) => {
+  const handleAddressClick = (e: MouseEvent<HTMLButtonElement>, address: string) => {
+    e.stopPropagation();
     window.open(`https://polygonscan.com/address/${address}`, '_blank');
   };
 
@@ -124,7 +125,7 @@ const CampaignsTable: FC<Props> = ({
           <Typography display="flex" alignItems="center">
             {formatAddress(params.row.address)}
             <IconButton
-              onClick={() => handleAddressClick(params.row.address)}
+              onClick={(e) => handleAddressClick(e,params.row.address)}
               sx={{
                 color: 'text.secondary',
                 ml: 1,
