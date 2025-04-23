@@ -86,7 +86,7 @@ export class Web3TransactionService {
           : JSON.parse(String(tx.data));
 
         this.logger.log(
-          `⟳  TX ${tx.id}: ${tx.contract}.${tx.method} → ${tx.address} (${tx.chainId})`,
+          `TX ${tx.id}: ${tx.contract}.${tx.method} → ${tx.address} (${tx.chainId})`,
         );
 
         if (tx.contract === 'escrow') {
@@ -114,9 +114,7 @@ export class Web3TransactionService {
           tx.id,
           Web3TransactionStatus.FAILED,
         );
-        this.logger.error(
-          `✘  TX ${tx.id} failed again: ${err?.message ?? err}`,
-        );
+        this.logger.error(`TX ${tx.id} failed again: ${err?.message ?? err}`);
       }
     }
 

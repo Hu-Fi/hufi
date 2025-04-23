@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthConfigService } from '../../common/config/auth-config.service';
 import { TokenEntity, UserEntity } from '../../database/entities';
 import { UserModule } from '../user/user.module';
+import { UserRepository } from '../user/user.repository';
 import { Web3Module } from '../web3/web3.module';
 
 import { AuthController } from './auth.controller';
@@ -28,7 +29,7 @@ import { TokenRepository } from './token.repository';
     }),
     TypeOrmModule.forFeature([TokenEntity, UserEntity]),
   ],
-  providers: [JwtHttpStrategy, AuthService, TokenRepository],
+  providers: [JwtHttpStrategy, AuthService, TokenRepository, UserRepository],
   controllers: [AuthController],
   exports: [AuthService],
 })
