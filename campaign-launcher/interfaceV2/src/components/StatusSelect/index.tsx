@@ -9,7 +9,7 @@ const statuses = [
   },
   {
     label: 'Active',
-    value: 'active',
+    value: 'Pending',
   },
   {
     label: 'Running',

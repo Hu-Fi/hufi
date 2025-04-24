@@ -86,9 +86,15 @@ const CampaignsTable: FC<Props> = ({
 
   const columns: GridColDef[] = [
     {
+      field: 'paddingLeft',
+      headerName: '',
+      flex: 1,
+      maxWidth: 32,
+    },
+    {
       field: 'pair',
       headerName: 'Pair',
-      flex: 1.25,
+      flex: 3,
       renderCell: (params) => {
         return (
           <Typography textTransform="uppercase" fontSize={20} fontWeight={700}>
@@ -100,7 +106,7 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 1.25,
+      flex: 2,
       renderCell: (params) => {
         const exchangeLogo = exchanges?.find(
           (exchange) => exchange.name === params.row.exchangeName
@@ -110,7 +116,7 @@ const CampaignsTable: FC<Props> = ({
         )?.displayName;
         return (
           <Typography display="flex" alignItems="center" gap={1}>
-            <img src={exchangeLogo} alt={exchangeName} />
+            <img src={exchangeLogo} alt={exchangeName} width={85} height={25} />
             {exchangeName}
           </Typography>
         );
@@ -119,10 +125,10 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'address',
       headerName: 'Address',
-      flex: 1.25,
+      flex: 2,
       renderCell: (params) => {
         return (
-          <Typography display="flex" alignItems="center">
+          <Typography variant="subtitle2" display="flex" alignItems="center">
             {formatAddress(params.row.address)}
             <IconButton
               onClick={(e) => handleAddressClick(e,params.row.address)}
@@ -142,26 +148,26 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'startDate',
       headerName: 'Start Date',
-      flex: 1,
+      flex: 2,
       renderCell: (params) => {
-        return <Typography>{formatDate(params.row.startBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.startBlock)}</Typography>;
       },
     },
     {
       field: 'endDate',
       headerName: 'End Date',
-      flex: 1,
+      flex: 2,
       renderCell: (params) => {
-        return <Typography>{formatDate(params.row.endBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.endBlock)}</Typography>;
       },
     },
     {
       field: 'fundAmount',
       headerName: 'Fund Amount',
-      flex: 1,
+      flex: 2,
       renderCell: (params) => {
         return (
-          <Typography>{formatEther(params.row.fundAmount)} HMT</Typography>
+          <Typography variant="subtitle2">{formatEther(params.row.fundAmount)} HMT</Typography>
         );
       },
     },
@@ -173,11 +179,17 @@ const CampaignsTable: FC<Props> = ({
         const isActive =
           params.row.status === 'Pending' || params.row.status === 'Partial';
         return (
-          <Typography color={isActive ? 'success.main' : 'error.main'}>
+          <Typography variant="subtitle2" color={isActive ? 'success.main' : 'error.main'} textTransform="uppercase">
             {isActive ? 'Active' : params.row.status}
           </Typography>
         );
       },
+    },
+    {
+      field: 'paddingRight',
+      headerName: '',
+      flex: 1,
+      maxWidth: 32,
     },
   ];
 
@@ -229,7 +241,6 @@ const CampaignsTable: FC<Props> = ({
         },
         '& .MuiDataGrid-topContainer': {
           mb: 1,
-          px: 4,
         },
         '& .MuiDataGrid-columnHeaders': {
           '& > div[role="row"]': {
@@ -242,13 +253,16 @@ const CampaignsTable: FC<Props> = ({
           cursor: 'default',
           fontWeight: 500,
           fontSize: '16px',
+          '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
+            justifyContent: 'flex-end',
+          },
         },
         '& .MuiDataGrid-row': {
           display: 'flex',
           alignItems: 'center',
           cursor: 'pointer',
           mb: 1,
-          p: 4,
+          py: 4,
           bgcolor: 'background.default',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '16px',
@@ -265,6 +279,9 @@ const CampaignsTable: FC<Props> = ({
           p: 0,
           '& > p': {
             fontWeight: 600,
+          },
+          '&[data-field="status"]': {
+            justifyContent: 'flex-end',
           },
         },
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {
