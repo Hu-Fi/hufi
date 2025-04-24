@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddWindowToLiquidityScores1745497565934 implements MigrationInterface {
+export class AddWindowToLiquidityScores1745497565934
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       -- 1. Add new columns as nullable
