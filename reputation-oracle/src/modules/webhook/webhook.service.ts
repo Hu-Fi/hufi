@@ -155,8 +155,7 @@ export class WebhookService {
             intermediateResults,
           );
 
-          // Extract recipients
-          const recipients = this.getRecipients(intermediateResults);
+          const recipientsOriginal = this.getRecipients(intermediateResults);
 
           // Check how much the contract has
           const totalAmount = await escrowClient.getBalance(escrowAddress);
@@ -216,12 +215,31 @@ export class WebhookService {
           }
 
           // 3) Calculate each user's portion
-          const amounts = this.calculateCampaignPayoutAmounts(
+          const amountsOriginal = this.calculateCampaignPayoutAmounts(
             amountForDay,
             intermediateResults,
           );
 
-          // Double-check that sum(amounts) <= totalAmount
+          // filter out zero amount payouts
+          const filtered = recipientsOriginal
+            .map((addr, i) => ({ addr, amt: amountsOriginal[i] }))
+            .filter(({ amt }) => amt > 0n);
+
+          if (filtered.length === 0) {
+            this.logger.warn(
+              'No non-zero payouts, skipping bulkPayOut',
+              WebhookService.name,
+            );
+            await this.webhookRepository.updateOne(
+              { id: webhookEntity.id },
+              { checkPassed: true, status: WebhookStatus.PAID },
+            );
+            continue;
+          }
+
+          const recipients = filtered.map(({ addr }) => addr);
+          const amounts = filtered.map(({ amt }) => amt);
+
           const sumOfAmounts = amounts.reduce((acc, val) => acc + val, 0n);
           if (sumOfAmounts > totalAmount) {
             throw new Error(
