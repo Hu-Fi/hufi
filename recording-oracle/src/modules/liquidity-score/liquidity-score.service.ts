@@ -60,19 +60,28 @@ export class LiquidityScoreService {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
     }
 
-    const campaignLiquidityScore =
+    const { scores: campaignLiquidityScore, windowEnd } =
       await this._calculateCampaignLiquidityScore(campaign);
 
-    return await this.recordsService.pushLiquidityScores(
+    if (campaignLiquidityScore.length === 0) {
+      this.logger.warn(`No scores for campaign ${campaign.address}`);
+      return null;
+    }
+
+    const scoresFile = await this.recordsService.pushLiquidityScores(
       campaign.address,
       campaign.chainId,
       campaignLiquidityScore,
     );
+
+    await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+
+    return scoresFile;
   }
 
   private async _calculateCampaignLiquidityScore(
     campaign: CampaignEntity,
-  ): Promise<LiquidityScore[]> {
+  ): Promise<{ scores: LiquidityScore[]; windowEnd: Date }> {
     if (!campaign.exchangeName) {
       throw new ControlledError(
         ErrorCampaign.InvalidCampaignData,
@@ -85,7 +94,6 @@ export class LiquidityScoreService {
     const windowStart = new Date(windowEnd.getTime() - 24 * 60 * 60 * 1000);
 
     const scores: LiquidityScore[] = [];
-    let allUsersSucceeded = true;
 
     for (const user of campaign.users) {
       const liquidityScore = isCEXCampaign
@@ -105,19 +113,15 @@ export class LiquidityScoreService {
             windowEnd,
           );
 
-      if (liquidityScore === null) {
-        allUsersSucceeded = false;
-        continue;
-      }
-
-      if (!Number.isFinite(liquidityScore) || liquidityScore <= 0) continue;
-
-      const rounded = Math.round(liquidityScore);
+      const scoreToUpload =
+        liquidityScore && Number.isFinite(liquidityScore) && liquidityScore > 0
+          ? Math.round(liquidityScore)
+          : 0;
 
       await this._saveLiquidityScore(
         campaign,
         user,
-        rounded,
+        scoreToUpload,
         windowStart,
         windowEnd,
       );
@@ -125,15 +129,11 @@ export class LiquidityScoreService {
       scores.push({
         chainId: campaign.chainId,
         liquidityProvider: user.evmAddress,
-        liquidityScore: String(rounded),
+        liquidityScore: String(scoreToUpload),
       });
     }
 
-    if (allUsersSucceeded) {
-      await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
-    }
-
-    return scores;
+    return { scores, windowEnd };
   }
 
   private async _calculateCEXLiquidityScore(
@@ -304,24 +304,30 @@ export class LiquidityScoreService {
     const campaigns = await this.campaignService.getAllActiveCampaigns();
 
     for (const campaign of campaigns) {
-      let campaignLiquidityScore = [];
-
       try {
-        campaignLiquidityScore =
+        const { scores: campaignLiquidityScore, windowEnd } =
           await this._calculateCampaignLiquidityScore(campaign);
-      } catch {
+
+        if (campaignLiquidityScore.length === 0) {
+          this.logger.warn(`No scores for ${campaign.address}`);
+          continue;
+        }
+
+        await this.recordsService.pushLiquidityScores(
+          campaign.address,
+          campaign.chainId,
+          campaignLiquidityScore,
+        );
+
+        await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+
+        this.logger.log('Finished calculating liquidity scores');
+      } catch (error) {
         this.logger.error(
           `Failed to calculate liquidity score for campaign ${campaign.address}`,
+          error,
         );
       }
-
-      await this.recordsService.pushLiquidityScores(
-        campaign.address,
-        campaign.chainId,
-        campaignLiquidityScore,
-      );
     }
-
-    this.logger.log('Finished calculating liquidity scores');
   }
 }
