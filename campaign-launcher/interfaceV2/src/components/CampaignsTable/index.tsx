@@ -15,6 +15,7 @@ type Props = {
   data: CampaignDataDto[];
   showPagination?: boolean;
   showAllCampaigns?: boolean;
+  isJoinedCampaigns?: boolean;
   onViewAllClick?: () => void;
 };
 
@@ -72,6 +73,7 @@ const CampaignsTable: FC<Props> = ({
   onViewAllClick,
   showPagination = false,
   showAllCampaigns = true,
+  isJoinedCampaigns = false,
 }) => {
   const { exchanges } = useExchangesContext();
   const navigate = useNavigate();
@@ -197,6 +199,9 @@ const CampaignsTable: FC<Props> = ({
     <DataGrid
       rows={campaigns}
       columns={columns}
+      columnVisibilityModel={{
+        status: !isJoinedCampaigns,
+      }}
       columnHeaderHeight={48}
       rowHeight={114}
       disableColumnMenu
@@ -253,6 +258,9 @@ const CampaignsTable: FC<Props> = ({
           cursor: 'default',
           fontWeight: 500,
           fontSize: '16px',
+          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
+            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
+          },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: 'flex-end',
           },
@@ -279,6 +287,9 @@ const CampaignsTable: FC<Props> = ({
           p: 0,
           '& > p': {
             fontWeight: 600,
+          },
+          '&[data-field="fundAmount"]': {
+            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
           '&[data-field="status"]': {
             justifyContent: 'flex-end',

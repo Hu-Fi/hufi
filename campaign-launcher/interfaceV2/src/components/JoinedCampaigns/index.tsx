@@ -65,6 +65,7 @@ const JoinedCampaigns: FC<Props> = ({
           data={campaigns}
           showPagination={showPagination}
           showAllCampaigns={showAllCampaigns}
+          isJoinedCampaigns={true}
           onViewAllClick={onViewAllClick}
         />
       )}
