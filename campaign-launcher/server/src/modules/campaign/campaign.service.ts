@@ -125,7 +125,7 @@ export class CampaignService {
 
     this.logger.log(`Setting up escrow with manifest`);
     const escrowConfig = {
-      exchangeOracle: signer.address, 
+      exchangeOracle: signer.address,
       exchangeOracleFee: BigInt(this.web3Service.getExchangeOracleFee()),
       recordingOracle: this.web3Service.getRecordingOracle(),
       recordingOracleFee: BigInt(this.web3Service.getRecordingOracleFee()),
