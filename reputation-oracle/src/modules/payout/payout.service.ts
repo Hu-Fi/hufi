@@ -166,7 +166,7 @@ export class PayoutService {
                 method: 'complete',
                 data: [
                   {
-                    gasPrice:gasPrice.toString(),
+                    gasPrice: gasPrice.toString(),
                   },
                 ],
                 status: Web3TransactionStatus.PENDING,
@@ -210,7 +210,7 @@ export class PayoutService {
                 method: 'cancel',
                 data: [
                   {
-                    gasPrice:gasPrice.toString(),
+                    gasPrice: gasPrice.toString(),
                   },
                 ],
                 status: Web3TransactionStatus.PENDING,
