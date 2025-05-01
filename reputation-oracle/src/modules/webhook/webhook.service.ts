@@ -406,7 +406,7 @@ export class WebhookService {
    * For certain campaigns, calculates how much to pay out in total each day based on volume.
    * Example: If manifest says “xin/usdt” and your token is indeed USDT or HMT,
    * implement logic to convert the totalVolume of liquidity into a daily payout.
-   * Note: Hardcoded now, but ratios should be configurable through campaign parameters. 
+   * Note: Hardcoded now, but ratios should be configurable through campaign parameters.
    */
   private getTotalAmountByVolume(
     chainId: ChainId,
