@@ -40,7 +40,7 @@ const Header: FC = () => {
             py: 3,
           }}
         >
-          <Link to="/">
+          <Link to={ROUTES.DASHBOARD}>
             <img src={logo} alt="HuFi" width={87} height={32} />
           </Link>
           <Box display="flex" gap={2} alignItems="center" height="100%">

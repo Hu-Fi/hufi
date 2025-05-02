@@ -17,8 +17,8 @@ const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
     <Box minHeight="100dvh" width="100%" bgcolor="background.default">
       <Header />
-      <Container>
-        <main>{children}</main>
+      <Container component="main">
+        {children}
       </Container>
       <Footer />
     </Box>
