@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid2';
 import { useAccount } from 'wagmi';
 
 import { useCampaignsStats } from '../../hooks/useCampaigns';
+import useGetLiquidityScore from '../../hooks/useGetLiquidityScore';
 
 const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -29,6 +30,7 @@ const Value = styled(Typography)(({ theme }) => ({
 const DashboardStats: FC = () => {
   const { chain } = useAccount();
   const { data: campaignsStats } = useCampaignsStats(chain?.id as ChainId);
+  const { data: liquidityScore } = useGetLiquidityScore();
 
   return (
     <Box component="section" display="flex" flexWrap="wrap">
@@ -36,19 +38,19 @@ const DashboardStats: FC = () => {
         <Grid size={4}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
-            <Value>${campaignsStats?.totalFundsUSD}</Value>
+            <Value>${campaignsStats?.totalFundsUSD || 0}</Value>
           </StatsCard>
         </Grid>
         <Grid size={4}>
           <StatsCard>
             <Typography variant="subtitle2">Total Liquidity Provided</Typography>
-            <Value>$7,372,989</Value>
+            <Value>${liquidityScore?.total || 0}</Value>
           </StatsCard>
         </Grid>
         <Grid size={4}>
           <StatsCard>
             <Typography variant="subtitle2">Number of Active Campaigns</Typography>
-            <Value>{campaignsStats?.totalCampaigns}</Value>
+            <Value>{campaignsStats?.totalCampaigns || 0}</Value>
           </StatsCard>
         </Grid>
       </Grid>
