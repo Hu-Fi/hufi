@@ -24,19 +24,18 @@ export class Web3TransactionService {
     payload: Web3TransactionDto,
   ): Promise<Web3TransactionEntity> {
     this.logger.debug(
-      `Saving web3 transaction record for ${payload.contract} at ${payload.address} on chain ${payload.chainId}`,
+      `Saving web3 transaction for ${payload.contract} at ${payload.address} on chain ${payload.chainId}`,
     );
 
     const web3Transaction = new Web3TransactionEntity();
-
     web3Transaction.chainId = payload.chainId;
     web3Transaction.contract = payload.contract;
     web3Transaction.address = payload.address;
     web3Transaction.method = payload.method;
     web3Transaction.data = payload.data;
+    web3Transaction.status = Web3TransactionStatus.PENDING;
 
     await this.web3TransactionRepository.createUnique(web3Transaction);
-
     return web3Transaction;
   }
 
@@ -44,7 +43,7 @@ export class Web3TransactionService {
     id: number,
     status: Web3TransactionStatus,
   ): Promise<Web3TransactionEntity> {
-    this.logger.debug(`Updating web3 transaction status ${id}`);
+    this.logger.debug(`Updating web3 transaction status for id: ${id}`);
 
     const web3Transaction = await this.web3TransactionRepository.findOne({
       where: { id },
@@ -58,11 +57,9 @@ export class Web3TransactionService {
     }
 
     web3Transaction.status = status;
-
     return this.web3TransactionRepository.save(web3Transaction);
   }
 
-  // Adjust the frequency as needed
   @Cron(CronExpression.EVERY_5_MINUTES)
   async retryFailedWeb3Transactions(): Promise<void> {
     this.logger.log('Retrying failed web3 transactions');
@@ -72,12 +69,12 @@ export class Web3TransactionService {
     });
 
     for (const transaction of failedTransactions) {
-      const signer = this.web3Service.getSigner(transaction.chainId);
-      const escrowClient = await EscrowClient.build(signer);
-
       try {
+        const signer = this.web3Service.getSigner(transaction.chainId);
+        const escrowClient = await EscrowClient.build(signer);
+
         this.logger.log(
-          `Retrying transaction ${transaction.id} for ${transaction.contract} at ${transaction.address} on chain ${transaction.chainId}`,
+          `Retrying transaction ${transaction.id} for ${transaction.contract} at ${transaction.address}`,
         );
 
         switch (transaction.contract) {
