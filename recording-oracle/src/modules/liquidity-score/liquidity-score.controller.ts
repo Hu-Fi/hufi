@@ -44,15 +44,10 @@ export class LiquidityScoreController {
     return await this.liquidityScoreService.calculateLiquidityScore(payload);
   }
 
-  @UseGuards(ApiKeyGuard)
   @Get('total')
   @ApiOperation({
     summary: 'Get total liquidity score of all campaigns',
     description: 'Returns the sum of all liquidity scores across campaigns.',
-  })
-  @ApiHeader({
-    name: 'x-api-key',
-    description: 'API key for authentication',
   })
   @ApiResponse({ status: 200, description: 'Total liquidity score' })
   async getTotalLiquidityScore(): Promise<{ total: number }> {
