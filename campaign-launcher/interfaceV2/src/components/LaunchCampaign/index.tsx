@@ -1,11 +1,11 @@
 import { FC, useState } from 'react';
 
 import { Button, SxProps } from '@mui/material';
+import { useAccount } from 'wagmi';
 
 import useLeader from '../../hooks/useLeader';
 import CreateCampaignMenuModal from '../modals/CreateCampaignMenuModal';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
-
 interface Props {
   variant: 'outlined' | 'contained';
   sx?: SxProps;
@@ -17,6 +17,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
     openCreateCampaignMenuModal,
     setOpenCreateCampaignMenuModal,
   ] = useState(false);
+  const { isConnected } = useAccount();
   const { data: leader, refetch } = useLeader({ enabled: false });
 
   const handleCloseCreateCampaignMenuModal = () => {
@@ -47,6 +48,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
           fontWeight: 600,
           ...sx,
         }}
+        disabled={!isConnected}
         onClick={onClick}
       >
         Launch Campaign

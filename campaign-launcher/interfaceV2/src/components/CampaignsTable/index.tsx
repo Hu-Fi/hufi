@@ -1,8 +1,9 @@
-import { FC } from 'react';
+import { FC, MouseEvent } from 'react';
 
 import { Button, IconButton, Typography, Box } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { formatEther } from 'ethers';
+import { useNavigate } from 'react-router-dom';
 
 import { CampaignDataDto } from '../../api/client';
 import { OpenInNewIcon } from '../../icons';
@@ -12,7 +13,10 @@ import { CryptoPairEntity } from '../CryptoPairEntity';
 
 type Props = {
   data: CampaignDataDto[];
-  withPagination?: boolean;
+  showPagination?: boolean;
+  showAllCampaigns?: boolean;
+  isJoinedCampaigns?: boolean;
+  onViewAllClick?: () => void;
 };
 
 const getSuffix = (day: number) => {
@@ -37,9 +41,11 @@ const formatDate = (block: number) => {
   return `${day}${getSuffix(day)} ${month} ${year}`;
 };
 
-const CustomPagination: FC<{ withPagination: boolean }> = ({
-  withPagination,
-}) => {
+const CustomPagination: FC<{
+  showPagination: boolean;
+  showAllCampaigns: boolean;
+  onViewAllClick?: () => void;
+}> = ({ showPagination, showAllCampaigns, onViewAllClick }) => {
   return (
     <Box
       display="flex"
@@ -47,30 +53,50 @@ const CustomPagination: FC<{ withPagination: boolean }> = ({
       justifyContent="space-between"
       width="100%"
     >
-      <Button
-        variant="contained"
-        size="medium"
-        sx={{ color: 'primary.contrast', fontWeight: 600 }}
-      >
-        View All
-      </Button>
-      {withPagination && <GridPagination />}
+      {!showAllCampaigns && (
+        <Button
+          variant="contained"
+          size="medium"
+          sx={{ color: 'primary.contrast', fontWeight: 600 }}
+          onClick={onViewAllClick}
+        >
+          View All
+        </Button>
+      )}
+      {showPagination && <GridPagination />}
     </Box>
   );
 };
 
-const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
+const CampaignsTable: FC<Props> = ({
+  data,
+  onViewAllClick,
+  showPagination = false,
+  showAllCampaigns = true,
+  isJoinedCampaigns = false,
+}) => {
   const { exchanges } = useExchangesContext();
+  const navigate = useNavigate();
 
-  const handleAddressClick = (address: string) => {
+  const campaigns =
+    showAllCampaigns || showPagination ? data : data.slice(0, 3);
+
+  const handleAddressClick = (e: MouseEvent<HTMLButtonElement>, address: string) => {
+    e.stopPropagation();
     window.open(`https://polygonscan.com/address/${address}`, '_blank');
   };
 
   const columns: GridColDef[] = [
     {
+      field: 'paddingLeft',
+      headerName: '',
+      flex: 1,
+      maxWidth: 32,
+    },
+    {
       field: 'pair',
       headerName: 'Pair',
-      flex: 1.25,
+      flex: 3,
       renderCell: (params) => {
         return (
           <Typography textTransform="uppercase" fontSize={20} fontWeight={700}>
@@ -82,7 +108,7 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 1.25,
+      flex: 2,
       renderCell: (params) => {
         const exchangeLogo = exchanges?.find(
           (exchange) => exchange.name === params.row.exchangeName
@@ -92,7 +118,7 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
         )?.displayName;
         return (
           <Typography display="flex" alignItems="center" gap={1}>
-            <img src={exchangeLogo} alt={exchangeName} />
+            <img src={exchangeLogo} alt={exchangeName} width={85} height={25} />
             {exchangeName}
           </Typography>
         );
@@ -101,13 +127,13 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
     {
       field: 'address',
       headerName: 'Address',
-      flex: 1.25,
+      flex: 2,
       renderCell: (params) => {
         return (
-          <Typography display="flex" alignItems="center">
+          <Typography variant="subtitle2" display="flex" alignItems="center">
             {formatAddress(params.row.address)}
             <IconButton
-              onClick={() => handleAddressClick(params.row.address)}
+              onClick={(e) => handleAddressClick(e,params.row.address)}
               sx={{
                 color: 'text.secondary',
                 ml: 1,
@@ -124,26 +150,26 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
     {
       field: 'startDate',
       headerName: 'Start Date',
-      flex: 1,
+      flex: 2,
       renderCell: (params) => {
-        return <Typography>{formatDate(params.row.startBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.startBlock)}</Typography>;
       },
     },
     {
       field: 'endDate',
       headerName: 'End Date',
-      flex: 1,
+      flex: 2,
       renderCell: (params) => {
-        return <Typography>{formatDate(params.row.endBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.endBlock)}</Typography>;
       },
     },
     {
       field: 'fundAmount',
       headerName: 'Fund Amount',
-      flex: 1,
+      flex: 2,
       renderCell: (params) => {
         return (
-          <Typography>{formatEther(params.row.fundAmount)} HMT</Typography>
+          <Typography variant="subtitle2">{formatEther(params.row.fundAmount)} HMT</Typography>
         );
       },
     },
@@ -152,22 +178,30 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
       headerName: 'Status',
       flex: 1,
       renderCell: (params) => {
-        const isActive = params.row.status === 'Pending' || params.row.status === 'Partial';
+        const isActive =
+          params.row.status === 'Pending' || params.row.status === 'Partial';
         return (
-          <Typography
-            color={isActive ? 'success.main' : 'error.main'}
-          >
+          <Typography variant="subtitle2" color={isActive ? 'success.main' : 'error.main'} textTransform="uppercase">
             {isActive ? 'Active' : params.row.status}
           </Typography>
         );
       },
     },
+    {
+      field: 'paddingRight',
+      headerName: '',
+      flex: 1,
+      maxWidth: 32,
+    },
   ];
 
   return (
     <DataGrid
-      rows={data}
+      rows={campaigns}
       columns={columns}
+      columnVisibilityModel={{
+        status: !isJoinedCampaigns,
+      }}
       columnHeaderHeight={48}
       rowHeight={114}
       disableColumnMenu
@@ -185,8 +219,19 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
           },
         },
       }}
+      onRowClick={(params) => {
+        navigate(
+          `/campaign-detail/${params.row.chainId}/${params.row.address}`
+        );
+      }}
       slots={{
-        pagination: () => <CustomPagination withPagination={withPagination} />,
+        pagination: () => (
+          <CustomPagination
+            showPagination={showPagination}
+            showAllCampaigns={showAllCampaigns}
+            onViewAllClick={onViewAllClick}
+          />
+        ),
       }}
       sx={{
         border: 'none',
@@ -201,7 +246,6 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
         },
         '& .MuiDataGrid-topContainer': {
           mb: 1,
-          px: 4,
         },
         '& .MuiDataGrid-columnHeaders': {
           '& > div[role="row"]': {
@@ -214,13 +258,19 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
           cursor: 'default',
           fontWeight: 500,
           fontSize: '16px',
+          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
+            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
+          },
+          '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
+            justifyContent: 'flex-end',
+          },
         },
         '& .MuiDataGrid-row': {
           display: 'flex',
           alignItems: 'center',
           cursor: 'pointer',
           mb: 1,
-          p: 4,
+          py: 4,
           bgcolor: 'background.default',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '16px',
@@ -237,6 +287,12 @@ const CampaignsTable: FC<Props> = ({ data, withPagination = false }) => {
           p: 0,
           '& > p': {
             fontWeight: 600,
+          },
+          '&[data-field="fundAmount"]': {
+            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
+          },
+          '&[data-field="status"]': {
+            justifyContent: 'flex-end',
           },
         },
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {

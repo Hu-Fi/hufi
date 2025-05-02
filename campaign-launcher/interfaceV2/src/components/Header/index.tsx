@@ -11,6 +11,7 @@ import CampaignsMenu from '../CampaignsMenu';
 import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
+import NetworkSwitcher from '../NetworkSwitcher';
 
 const Header: FC = () => {
   const { isConnected } = useAccount();
@@ -39,7 +40,7 @@ const Header: FC = () => {
             py: 3,
           }}
         >
-          <Link to="/">
+          <Link to={ROUTES.DASHBOARD}>
             <img src={logo} alt="HuFi" width={87} height={32} />
           </Link>
           <Box display="flex" gap={2} alignItems="center" height="100%">
@@ -69,6 +70,7 @@ const Header: FC = () => {
                 Stake HMT
               </Button>
             </MuiLink>
+            <NetworkSwitcher />
             <LaunchCampaign variant="outlined" />
             {!isConnected && <ConnectWallet />}
             {isConnected && <Account />}

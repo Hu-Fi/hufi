@@ -2,6 +2,8 @@ import { FC, useState } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import { useCampaigns } from '../../hooks/useCampaigns';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
@@ -10,17 +12,28 @@ import ExchangeSelect from '../ExchangeSelect';
 import LaunchCampaign from '../LaunchCampaign';
 import StatusSelect from '../StatusSelect';
 
-const AllCampaigns: FC = () => {
+type Props = {
+  showPagination?: boolean;
+  showAllCampaigns?: boolean;
+};
+
+const AllCampaigns: FC<Props> = ({
+  showPagination = false,
+  showAllCampaigns = true,
+}) => {
   const [status, setStatus] = useState('all');
   const [exchange, setExchange] = useState('all');
   const { exchanges } = useExchangesContext();
+  const { chain } = useAccount();
+  const navigate = useNavigate();
+
   const { data: campaigns, isPending } = useCampaigns(
-    ChainId.POLYGON,
+    chain?.id as ChainId,
     status,
     exchange
   );
 
-  const isCampaignsExist = !isPending && campaigns && campaigns.length > 0;
+  const isCampaignsExist = campaigns && campaigns.length > 0;
 
   const handleStatusChange = (value: string) => {
     setStatus(value);
@@ -28,6 +41,10 @@ const AllCampaigns: FC = () => {
 
   const handleExchangeChange = (value: string) => {
     setExchange(value);
+  };
+
+  const onViewAllClick = () => {
+    navigate('/all-campaigns');
   };
 
   return (
@@ -43,7 +60,14 @@ const AllCampaigns: FC = () => {
         <LaunchCampaign variant="contained" sx={{ ml: 'auto' }} />
       </Box>
       {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}
-      {isCampaignsExist && <CampaignsTable data={campaigns} withPagination />}
+      {isCampaignsExist && (
+        <CampaignsTable
+          data={campaigns}
+          showPagination={showPagination}
+          showAllCampaigns={showAllCampaigns}
+          onViewAllClick={onViewAllClick}
+        />
+      )}
     </Box>
   );
 };

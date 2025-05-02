@@ -1,18 +1,30 @@
 import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
 import { CircularProgress, Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
-import { useJoinedCampaigns } from '../../hooks/useCampaigns';
+import { useGetUserJoinedCampaigns } from '../../hooks/recording-oracle/campaign';
 import CampaignsTable from '../CampaignsTable';
 
-const JoinedCampaigns: FC = () => {
-  const { isConnected } = useAccount();
+type Props = {
+  showPagination?: boolean;
+  showAllCampaigns?: boolean;
+};
 
-  const { data: campaigns, isPending } = useJoinedCampaigns(ChainId.POLYGON);
+const JoinedCampaigns: FC<Props> = ({
+  showPagination = false,
+  showAllCampaigns = true,
+}) => {
+  const { isConnected, chainId } = useAccount();
+  const navigate = useNavigate();
+  const { data: campaigns, isPending } = useGetUserJoinedCampaigns(chainId);
 
-  const isCampaignsExist = !isPending && campaigns && campaigns.length > 0;
+  const isCampaignsExist = campaigns && campaigns.length > 0;
+
+  const onViewAllClick = () => {
+    navigate('/joined-campaigns');
+  };
 
   if (!isConnected) {
     return null;
@@ -25,8 +37,12 @@ const JoinedCampaigns: FC = () => {
           Joined Campaigns
         </Typography>
       </Box>
-      {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}
-      {!isCampaignsExist && (
+      {isPending && (
+        <CircularProgress
+          sx={{ width: '40px', height: '40px', my: 3, mx: 'auto' }}
+        />
+      )}
+      {!isPending && !isCampaignsExist && (
         <Box
           display="flex"
           alignItems="center"
@@ -44,7 +60,15 @@ const JoinedCampaigns: FC = () => {
           </Typography>
         </Box>
       )}
-      {isCampaignsExist && <CampaignsTable data={campaigns} />}
+      {isCampaignsExist && (
+        <CampaignsTable
+          data={campaigns}
+          showPagination={showPagination}
+          showAllCampaigns={showAllCampaigns}
+          isJoinedCampaigns={true}
+          onViewAllClick={onViewAllClick}
+        />
+      )}
     </Box>
   );
 };

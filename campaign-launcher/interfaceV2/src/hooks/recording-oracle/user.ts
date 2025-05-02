@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 
-import { request, requestWithAuth } from './api';
-import { useAuthentication } from './auth';
+import { request, requestWithAuth } from '../../api/recordingApi';
+import { useAuthentication } from '../../providers/AuthProvider';
 
 type RegisterExchangeAPIKeyOptions = {
   onSuccess?: () => void;

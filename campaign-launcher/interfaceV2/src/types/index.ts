@@ -1,4 +1,4 @@
-import { ChainId } from "@human-protocol/sdk";
+import { ChainId } from '@human-protocol/sdk';
 
 export enum ExchangeType {
   CEX = 'cex',
@@ -24,4 +24,4 @@ export type CampaignsStats = {
   totalFundsUSD: number;
   averageFundingUSD: number;
   chains: Chain[];
-} 
+};

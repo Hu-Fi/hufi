@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 
+import { useQuery } from '@tanstack/react-query';
 import { getAddress } from 'ethers';
 import { useAccount } from 'wagmi';
 
-import { requestWithAuth } from './api';
-import { useAuthentication } from './auth';
+import { requestWithAuth } from '../../api/recordingApi';
+import { useAuthentication } from '../../providers/AuthProvider';
 
 type JoinCampaignOptions = {
   onSuccess?: () => void;
@@ -99,4 +100,42 @@ export const useUserCampaignStatus = (address: string) => {
     isLoading,
     fetchUserCampaignStatus,
   };
+};
+
+type JoinedCampaign = {
+  id: string;
+  address: string;
+  chain_id: number;
+  symbol: string;
+  exchange_name: string;
+  token: string;
+  start_date: Date;
+  end_date: Date;
+  fund_token: string;
+  fund_amount: string;
+};
+
+export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
+  const { isAuthenticated } = useAuthentication();
+
+  return useQuery({
+    queryKey: ['user-joined-campaigns', chainId],
+    queryFn: () =>
+      requestWithAuth(`/user/joined-campaigns/${chainId}`, {
+        method: 'GET',
+      }),
+    select: (data) =>
+      data?.map((campaign: JoinedCampaign) => ({
+        id: campaign.id,
+        address: campaign.address,
+        chainId: campaign.chain_id,
+        symbol: campaign.token,
+        exchangeName: campaign.exchange_name,
+        startBlock: new Date(campaign.start_date).getTime() / 1000,
+        endBlock: new Date(campaign.end_date).getTime() / 1000,
+        fundAmount: campaign.fund_amount,
+        status: 'Pending',
+      })),
+    enabled: !!chainId && isAuthenticated,
+  });
 };

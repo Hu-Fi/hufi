@@ -147,7 +147,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':address/joined-campaigns')
+  @Get('joined-campaigns/:chainId')
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get all campaigns for a user',
@@ -161,8 +161,9 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'User not found' })
   public async getUserJoinedCampaigns(
-    @Param('address') address: string,
+    @Req() request: RequestWithUser,
+    @Param('chainId') chainId: number,
   ): Promise<CampaignEntity[]> {
-    return await this.userService.getUserJoinedCampaigns(address);
+    return await this.userService.getUserJoinedCampaigns(request.user, chainId);
   }
 }

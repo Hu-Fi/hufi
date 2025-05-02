@@ -1,12 +1,8 @@
 import { FC, PropsWithChildren } from 'react';
 
-import { Container as MuiContainer, SxProps } from '@mui/material';
+import { Container as MuiContainer, ContainerProps } from '@mui/material';
 
-type Props = {
-  sx?: SxProps;
-};
-
-const Container: FC<PropsWithChildren<Props>> = ({ sx, children }) => {
+const Container: FC<PropsWithChildren<ContainerProps>> = ({ sx, children }) => {
   return (
     <MuiContainer
       maxWidth={false}
