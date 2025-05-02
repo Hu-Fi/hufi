@@ -8,6 +8,7 @@ import { deserialize, serialize } from 'wagmi';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      refetchOnWindowFocus: false,
       gcTime: 1_000 * 60 * 60 * 24, // 24 hours
     },
   },
@@ -19,7 +20,7 @@ const persister = createSyncStoragePersister({
   deserialize,
 });
 
-export const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
+const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
   return (
     <PersistQueryClientProvider
       client={queryClient}
@@ -29,3 +30,5 @@ export const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
     </PersistQueryClientProvider>
   );
 };
+
+export default QueryClientProvider;

@@ -10,6 +10,7 @@ import Account from '../Account';
 import CampaignsMenu from '../CampaignsMenu';
 import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
+import LaunchCampaign from '../LaunchCampaign';
 
 const Header: FC = () => {
   const { isConnected } = useAccount();
@@ -55,20 +56,20 @@ const Header: FC = () => {
               Dashboard
             </MuiLink>
             <CampaignsMenu />
-            <Button
-              variant="text"
-              size="medium"
-              sx={{ color: 'primary.main', fontWeight: 600, height: '100%' }}
+            <MuiLink
+              to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
+              target="_blank"
+              component={Link}
             >
-              Stake HMT
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              sx={{ color: 'primary.main', height: '42px', fontWeight: 600 }}
-            >
-              Launch Campaign
-            </Button>
+              <Button
+                variant="text"
+                size="medium"
+                sx={{ color: 'primary.main', fontWeight: 600, height: '100%' }}
+              >
+                Stake HMT
+              </Button>
+            </MuiLink>
+            <LaunchCampaign variant="outlined" />
             {!isConnected && <ConnectWallet />}
             {isConnected && <Account />}
           </Box>

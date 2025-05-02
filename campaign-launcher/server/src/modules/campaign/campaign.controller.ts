@@ -18,11 +18,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+
 import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
-
-import { ApiKeyGuard } from 'src/common/guards/api-key.guard';
-
 @ApiTags('campaign')
 @Controller('campaign')
 export class CampaignController {
@@ -36,14 +35,34 @@ export class CampaignController {
     enum: ChainId,
     description: 'Chain ID',
   })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by campaign status',
+  })
+  @ApiQuery({
+    name: 'exchangeName',
+    required: false,
+    description: 'Filter by exchange name',
+  })
   @ApiResponse({
     status: 200,
     description: 'Campaigns list',
     type: Array<CampaignDataDto>,
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
-  async getCampaigns(@Query('chainId') chainId: ChainId) {
-    return this.campaignService.getCampaigns(chainId);
+  async getCampaigns(
+    @Query('chainId') chainId: ChainId,
+    @Query('status') status?: string,
+    @Query('exchangeName') exchangeName?: string,
+    @Query('launcher') launcher?: string,
+  ) {
+    return this.campaignService.getCampaigns(
+      chainId,
+      status,
+      exchangeName,
+      launcher,
+    );
   }
 
   @Get('/:chainId/:escrowAddress')
