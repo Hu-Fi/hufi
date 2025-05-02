@@ -406,6 +406,7 @@ export class WebhookService {
    * For certain campaigns, calculates how much to pay out in total each day based on volume.
    * Example: If manifest says “xin/usdt” and your token is indeed USDT or HMT,
    * implement logic to convert the totalVolume of liquidity into a daily payout.
+   * Note: Hardcoded now, but ratios should be configurable through campaign parameters.
    */
   private getTotalAmountByVolume(
     chainId: ChainId,
@@ -413,29 +414,24 @@ export class WebhookService {
     token: string,
     totalVolume: bigint,
   ): bigint | null {
-    if (manifest?.token?.toLowerCase() === 'xin/usdt') {
-      // Example: 100 USDT for 100K volume => 1 USDT per 1K volume
+    this.logger.debug(
+      'Calculating total amount to be paid for the volume provided to: ',
+      manifest?.token?.toLowerCase(),
+    );
 
-      let amount: bigint;
+    let cap: bigint;
 
-      if (
-        token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()
-      ) {
-        // 100 USDT in 6 decimals
-        amount = ethers.parseUnits('100', 6);
-      } else if (
-        token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
-      ) {
-        // For demonstration, assume 1 HMT = ~0.025 USDT => 100 USDT => ~4000 HMT
-        amount = ethers.parseUnits('4000', 18);
-      } else {
-        return null;
-      }
-
-      // Scale the “amount” according to totalVolume over 100,000
-      return (amount * totalVolume) / ethers.parseEther('100000');
+    if (token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()) {
+      cap = ethers.parseUnits('100', 6);
+    } else if (
+      token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
+    ) {
+      cap = ethers.parseUnits('4000', 18);
+    } else {
+      return null;
     }
 
-    return null;
+    const scaled = (cap * totalVolume) / ethers.parseEther('100000');
+    return scaled > cap ? cap : scaled;
   }
 }
