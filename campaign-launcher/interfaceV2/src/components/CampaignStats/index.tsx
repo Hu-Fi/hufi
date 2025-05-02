@@ -122,7 +122,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
         >
           <Box display="flex" flexDirection="column">
             <Title variant="subtitle2" sx={{ mb: 1 }}>
-              Daily amounts paid
+              Daily amounts paid (24h)
             </Title>
             <Typography
               color="primary.violet"

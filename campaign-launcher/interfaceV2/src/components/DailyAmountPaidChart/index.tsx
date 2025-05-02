@@ -171,7 +171,7 @@ const DailyAmountPaidChart: FC = () => {
 
   return (
     <Box
-      width="75%"
+      width="70%"
       height="100%"
       bgcolor="background.default"
       overflow="hidden"
