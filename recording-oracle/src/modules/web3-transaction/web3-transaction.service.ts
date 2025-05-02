@@ -1,6 +1,7 @@
 import { EscrowClient } from '@human-protocol/sdk';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { In } from 'typeorm';
 
 import { ErrorWeb3Transaction } from '../../common/constants/errors';
 import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
@@ -13,7 +14,7 @@ import { Web3TransactionRepository } from './web3-transaction.repository';
 
 @Injectable()
 export class Web3TransactionService {
-  private logger: Logger = new Logger(Web3TransactionService.name);
+  private logger = new Logger(Web3TransactionService.name);
 
   constructor(
     private web3TransactionRepository: Web3TransactionRepository,
@@ -23,17 +24,18 @@ export class Web3TransactionService {
   public async saveWeb3Transaction(
     payload: Web3TransactionDto,
   ): Promise<Web3TransactionEntity> {
+    const web3Transaction = this.web3TransactionRepository.create({
+      chainId: payload.chainId,
+      contract: payload.contract.toLowerCase(),
+      address: payload.address.toLowerCase(),
+      method: payload.method,
+      data: payload.data ?? [],
+      status: payload.status ?? Web3TransactionStatus.PENDING,
+    });
+
     this.logger.debug(
       `Saving web3 transaction record for ${payload.contract} at ${payload.address} on chain ${payload.chainId}`,
     );
-
-    const web3Transaction = new Web3TransactionEntity();
-
-    web3Transaction.chainId = payload.chainId;
-    web3Transaction.contract = payload.contract;
-    web3Transaction.address = payload.address;
-    web3Transaction.method = payload.method;
-    web3Transaction.data = payload.data;
 
     return this.web3TransactionRepository.createUnique(web3Transaction);
   }
@@ -43,7 +45,6 @@ export class Web3TransactionService {
     status: Web3TransactionStatus,
   ): Promise<Web3TransactionEntity> {
     this.logger.debug(`Updating web3 transaction status ${id}`);
-
     const web3Transaction = await this.web3TransactionRepository.findOne({
       where: { id },
     });
@@ -56,40 +57,52 @@ export class Web3TransactionService {
     }
 
     web3Transaction.status = status;
-
     return this.web3TransactionRepository.save(web3Transaction);
   }
 
-  // Adjust the frequency as needed
   @Cron(CronExpression.EVERY_5_MINUTES)
   async retryFailedWeb3Transactions(): Promise<void> {
     this.logger.log('Retrying failed web3 transactions');
 
-    const failedTransactions = await this.web3TransactionRepository.find({
-      where: { status: Web3TransactionStatus.FAILED },
+    const candidates = await this.web3TransactionRepository.find({
+      where: {
+        status: In([Web3TransactionStatus.FAILED]),
+      },
     });
 
-    for (const transaction of failedTransactions) {
-      const signer = this.web3Service.getSigner(transaction.chainId);
-      const escrowClient = await EscrowClient.build(signer);
-
+    for (const transaction of candidates) {
       try {
+        // lock the web3Transaction so parallel workers don’t pick it up
+        await this.updateWeb3TransactionStatus(
+          transaction.id,
+          Web3TransactionStatus.PENDING,
+        );
+
+        const signer = this.web3Service.getSigner(transaction.chainId);
+        const escrowClient = await EscrowClient.build(signer);
+
+        const args: unknown[] = Array.isArray(transaction.data)
+          ? transaction.data
+          : JSON.parse(String(transaction.data));
+
         this.logger.log(
           `Retrying transaction ${transaction.id} for ${transaction.contract} at ${transaction.address} on chain ${transaction.chainId}`,
         );
 
-        switch (transaction.contract) {
-          case 'escrow':
-            await escrowClient[transaction.method](
-              transaction.address,
-              ...transaction.data,
-            );
-            break;
-          default:
+        if (transaction.contract === 'escrow') {
+          const fn = (escrowClient as any)[transaction.method];
+          if (typeof fn !== 'function') {
             throw new ControlledError(
               ErrorWeb3Transaction.InvalidContract,
               HttpStatus.BAD_REQUEST,
             );
+          }
+          await fn(transaction.address, ...args);
+        } else {
+          throw new ControlledError(
+            ErrorWeb3Transaction.InvalidContract,
+            HttpStatus.BAD_REQUEST,
+          );
         }
 
         await this.updateWeb3TransactionStatus(
@@ -97,6 +110,10 @@ export class Web3TransactionService {
           Web3TransactionStatus.SUCCESS,
         );
       } catch (error) {
+        await this.updateWeb3TransactionStatus(
+          transaction.id,
+          Web3TransactionStatus.FAILED,
+        );
         this.logger.error(
           `Failed to retry transaction ${transaction.id}: ${error.message}`,
         );
