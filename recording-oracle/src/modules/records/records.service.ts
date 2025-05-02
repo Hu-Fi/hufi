@@ -9,13 +9,11 @@ import { Web3TransactionService } from '../web3-transaction/web3-transaction.ser
 
 @Injectable()
 export class RecordsService {
-  private logger: Logger = new Logger(RecordsService.name);
+  private readonly logger = new Logger(RecordsService.name);
 
   constructor(
-    @Inject(Web3Service)
-    private readonly web3Service: Web3Service,
-    @Inject(StorageService)
-    private storageService: StorageService,
+    @Inject(Web3Service) private readonly web3Service: Web3Service,
+    @Inject(StorageService) private storageService: StorageService,
     @Inject(Web3TransactionService)
     private web3TransactionService: Web3TransactionService,
   ) {}
@@ -43,20 +41,20 @@ export class RecordsService {
 
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
-    await this.web3TransactionService.saveWeb3Transaction({
-      chainId,
-      contract: 'escrow',
-      address: escrowAddress,
-      method: 'storeResults',
-      data: [
-        saveLiquidityResult.url,
-        saveLiquidityResult.hash,
-        {
-          gasPrice,
-        },
-      ],
-      status: Web3TransactionStatus.PENDING,
-    });
+    // save web3Transaction and keep its id
+    const web3Transaction =
+      await this.web3TransactionService.saveWeb3Transaction({
+        chainId,
+        contract: 'escrow',
+        address: escrowAddress,
+        method: 'storeResults',
+        data: [
+          saveLiquidityResult.url,
+          saveLiquidityResult.hash,
+          { gasPrice: gasPrice.toString() },
+        ],
+        status: Web3TransactionStatus.PENDING,
+      });
 
     try {
       await escrowClient.storeResults(
@@ -69,7 +67,7 @@ export class RecordsService {
       );
 
       await this.web3TransactionService.updateWeb3TransactionStatus(
-        escrowAddress,
+        web3Transaction.id,
         Web3TransactionStatus.SUCCESS,
       );
     } catch (error) {
@@ -77,9 +75,8 @@ export class RecordsService {
         `Failed to store liquidity scores for escrow ${escrowAddress} on chain ${chainId}`,
         error,
       );
-
       await this.web3TransactionService.updateWeb3TransactionStatus(
-        escrowAddress,
+        web3Transaction.id,
         Web3TransactionStatus.FAILED,
       );
     }
