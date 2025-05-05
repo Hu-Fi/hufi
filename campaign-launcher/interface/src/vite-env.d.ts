@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_WALLETCONNECT_PROJECT_ID: string;
   readonly VITE_APP_WEB3_ENV: string;
 
+  readonly VITE_APP_EXCHANGE_ORACLE_FEE: number;
   readonly VITE_APP_RECORDING_ORACLE_ADDRESS: string;
   readonly VITE_APP_RECORDING_ORACLE_FEE: number;
   readonly VITE_APP_REPUTATION_ORACLE_ADDRESS: string;
