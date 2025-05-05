@@ -73,7 +73,6 @@ export const useCreateEscrow = () => {
       const escrowConfig = {
         ...oracles,
         exchangeOracle:signer.address,
-        exchangeOracleFee:oracles.recordingOracleFee,
         manifestUrl: manifest.url,
         manifestHash: manifest.hash,
       };
