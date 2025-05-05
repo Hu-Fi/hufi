@@ -97,13 +97,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'pair',
       headerName: 'Pair',
       flex: 3,
-      renderCell: (params) => {
-        return (
-          <Typography textTransform="uppercase" fontSize={20} fontWeight={700}>
-            <CryptoPairEntity symbol={params.row.symbol} size="medium" />
-          </Typography>
-        );
-      },
+      renderCell: (params) => <CryptoPairEntity symbol={params.row.symbol} size="medium" />,
     },
     {
       field: 'exchange',

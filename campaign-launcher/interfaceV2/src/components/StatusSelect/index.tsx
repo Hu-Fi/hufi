@@ -5,7 +5,7 @@ import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 const statuses = [
   {
     label: 'All',
-    value: 'all',
+    value: 'All',
   },
   {
     label: 'Active',
@@ -13,11 +13,11 @@ const statuses = [
   },
   {
     label: 'Running',
-    value: 'running',
+    value: 'Running',
   },
   {
     label: 'Ended',
-    value: 'ended',
+    value: 'Ended',
   },
 ] as const;
 

@@ -29,18 +29,16 @@ const Account: FC = () => {
       <Button
         aria-describedby="account-popover"
         onClick={(event) => setAnchorEl(event.currentTarget)}
+        disableRipple
         sx={{
           bgcolor: 'primary.main',
           borderRadius: '4px',
           height: '42px',
           width: '190px',
-          paddingX: { md: 0.5, lg: 1 },
+          paddingX: 1,
           fontWeight: 600,
           borderBottomLeftRadius: anchorEl ? 0 : 4,
           borderBottomRightRadius: anchorEl ? 0 : 4,
-          '& .MuiTouchRipple-root': {
-            display: 'none',
-          },
         }}
       >
         {ensAvatar ? (
@@ -53,11 +51,10 @@ const Account: FC = () => {
           <AvatarIcon />
         )}
         <Typography
-          variant="body2"
           color="primary.light"
+          fontSize="14px"
           fontWeight={600}
-          paddingX={1}
-          sx={{ fontSize: { md: '12px', lg: '14px' } }}
+          px={1}
         >
           {formattedAddress}
         </Typography>
@@ -77,15 +74,11 @@ const Account: FC = () => {
           vertical: 'bottom',
           horizontal: 'left',
         }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
         slotProps={{
           paper: {
             elevation: 0,
             sx: {
-              backgroundColor: 'primary.main',
+              bgcolor: 'primary.main',
               width: anchorEl?.getBoundingClientRect().width,
               minWidth: 'fit-content',
               borderTopLeftRadius: 0,
@@ -99,8 +92,7 @@ const Account: FC = () => {
           onClick={handleDisconnect}
           sx={{
             color: 'primary.light',
-            paddingY: 1,
-            paddingX: { md: 0.5, lg: 1 },
+            p: 1,
             width: '100%',
             fontWeight: 600,
             justifyContent: 'flex-start',
