@@ -16,4 +16,7 @@ export class Web3ConfigService {
   get recordingOracle(): string {
     return this.configService.get<string>('RECORDING_ORACLE', '');
   }
+  get reputationOracle(): string {
+    return this.configService.get<string>('REPUTATION_ORACLE', '');
+  }
 }
