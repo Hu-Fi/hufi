@@ -1,7 +1,7 @@
 import { ChainId } from '@human-protocol/sdk';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
-import { ethers, Wallet } from 'ethers';
+import { ethers, JsonRpcProvider } from 'ethers';
 
 import { NetworkConfigService } from '../../common/config/network-config.service';
 import { Web3ConfigService } from '../../common/config/web3-config.service';
@@ -16,14 +16,13 @@ import { ControlledError } from '../../common/errors/controlled';
 
 @Injectable()
 export class Web3Service {
-  private signers: { [key: number]: Wallet } = {};
+  private providers: { [key: number]: JsonRpcProvider } = {};
   public readonly logger = new Logger(Web3Service.name);
 
   constructor(
     private readonly web3ConfigService: Web3ConfigService,
     private readonly networkConfigService: NetworkConfigService,
   ) {
-    const privateKey = this.web3ConfigService.privateKey;
     const validChains = this.getValidChains();
     const validNetworks = this.networkConfigService.networks.filter((network) =>
       validChains.includes(network.chainId),
@@ -38,8 +37,9 @@ export class Web3Service {
     }
 
     for (const network of validNetworks) {
-      const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-      this.signers[network.chainId] = new Wallet(privateKey, provider);
+      this.providers[network.chainId] = new ethers.JsonRpcProvider(
+        network.rpcUrl,
+      );
     }
   }
 
@@ -56,33 +56,17 @@ export class Web3Service {
     }
   }
 
-  public getExchangeOracle(): string {
-    return this.web3ConfigService.exchangeOracle;
-  }
-
-  public getExchangeOracleFee(): number {
-    return this.web3ConfigService.exchangeOracleFee;
-  }
-
   public getRecordingOracle(): string {
     return this.web3ConfigService.recordingOracle;
-  }
-
-  public getRecordingOracleFee(): number {
-    return this.web3ConfigService.recordingOracleFee;
   }
 
   public getReputationOracle(): string {
     return this.web3ConfigService.reputationOracle;
   }
 
-  public getReputationOracleFee(): number {
-    return this.web3ConfigService.reputationOracleFee;
-  }
-
-  public getSigner(chainId: number): Wallet {
+  public getProvider(chainId: number): JsonRpcProvider {
     this.validateChainId(chainId);
-    return this.signers[chainId];
+    return this.providers[chainId];
   }
 
   public validateChainId(chainId: number): void {
@@ -94,20 +78,6 @@ export class Web3Service {
         HttpStatus.BAD_REQUEST,
       );
     }
-  }
-
-  public async calculateGasPrice(chainId: number): Promise<bigint> {
-    const signer = this.getSigner(chainId);
-    const multiplier = this.web3ConfigService.gasPriceMultiplier;
-    const gasPrice = (await signer.provider?.getFeeData())?.gasPrice;
-    if (gasPrice) {
-      return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
-    }
-    throw new ControlledError(ErrorWeb3.GasPriceError, HttpStatus.CONFLICT);
-  }
-
-  public getOperatorAddress(): string {
-    return Object.values(this.signers)[0].address;
   }
 
   public async getTokenPriceUSD(
@@ -194,7 +164,7 @@ export class Web3Service {
     // Fallback: On-chain lookup for unknown tokens
     try {
       const abi = ['function decimals() view returns (uint8)'];
-      const provider = this.getSigner(chainId).provider!;
+      const provider = this.getProvider(chainId);
       const contract = new ethers.Contract(tokenAddress, abi, provider);
       const decimals: number = await contract.decimals();
       return decimals;
