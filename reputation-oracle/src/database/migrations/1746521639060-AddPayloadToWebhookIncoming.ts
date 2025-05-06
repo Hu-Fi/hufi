@@ -8,7 +8,7 @@ export class AddPayloadToWebhookIncoming1746521639060
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE "hufi"."webhook_incoming"
-      ADD COLUMN "payload" varchar NOT NULL;
+      ADD COLUMN "payload" varchar;
     `);
 
     await queryRunner.query(`

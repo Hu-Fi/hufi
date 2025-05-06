@@ -35,6 +35,6 @@ export class WebhookIncomingEntity extends BaseEntity {
   })
   public status: WebhookStatus;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   public payload: string;
 }

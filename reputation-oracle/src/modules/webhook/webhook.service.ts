@@ -339,17 +339,20 @@ export class WebhookService {
    * @param payload - The webhook payload which is the link to intermediate results
    * @returns {boolean} - Returns `true` if at least one matching record is found, otherwise `false`.
    */
-  public async checkIdxExists(
+  public async checkIfExists(
     chainId: ChainId,
     escrowAddress: string,
     payload: string,
   ): Promise<boolean> {
-    const rows = await this.webhookRepository.find(
-      { chainId, escrowAddress, payload },
-      { take: 1 },
-    );
-    return rows.length > 0;
+    const row = await this.webhookRepository.findOne({
+      chainId,
+      escrowAddress,
+      payload,
+    });
+  
+    return !!row;
   }
+  
 
   /**
    * Given a total payout amount and an array of liquidity result objects,
