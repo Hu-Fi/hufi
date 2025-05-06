@@ -24,6 +24,10 @@ export class WebhookIncomingDto {
   @ApiProperty()
   @IsString()
   public escrowAddress: string;
+
+  @ApiProperty()
+  @IsString()
+  public payload: string;
 }
 
 export class WebhookIncomingCreateDto {
@@ -41,6 +45,9 @@ export class WebhookIncomingCreateDto {
 
   @IsNumber()
   public retriesCount: number;
+
+  @IsString()
+  public payload: string;
 }
 
 export class WebhookIncomingUpdateDto {
@@ -73,6 +80,10 @@ export class WebhookIncomingUpdateDto {
   @ApiPropertyOptional()
   @IsDate()
   public waitUntil: Date;
+
+  @ApiPropertyOptional()
+  @IsString()
+  public payload: string;
 }
 
 export class CampaignManifestDto {

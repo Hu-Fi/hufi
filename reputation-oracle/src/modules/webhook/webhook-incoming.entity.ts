@@ -1,11 +1,12 @@
 import { ChainId } from '@human-protocol/sdk';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 
 import { NS } from '../../common/constants';
 import { WebhookStatus } from '../../common/enums';
 import { BaseEntity } from '../../database/base.entity';
 
 @Entity({ schema: NS, name: 'webhook_incoming' })
+@Index(['chainId', 'escrowAddress', 'payload'], { unique: true })
 export class WebhookIncomingEntity extends BaseEntity {
   @Column({ type: 'int' })
   public chainId: ChainId;
@@ -33,4 +34,7 @@ export class WebhookIncomingEntity extends BaseEntity {
     enum: WebhookStatus,
   })
   public status: WebhookStatus;
+
+  @Column({ type: 'varchar' })
+  public payload: string;
 }

@@ -88,10 +88,13 @@ export class PayoutService {
   /**
    * Cron job to process the campaign payouts.
    */
-  @Cron(CronExpression.EVERY_DAY_AT_8AM)
+  @Cron('*/15 * * * *') // 15 minutes.
   // Process the payouts (used by both cron and manual methods)
   async processPayouts(chainId = ChainId.ALL): Promise<void> {
     this.logger.log('Processing payouts for campaigns.');
+
+    const signer = this.web3Service.getSigner(chainId);
+    const escrowClient = await EscrowClient.build(signer);
 
     // Ensure campaigns are fetched before executing cron job
     await this.fetchCampaigns(chainId);
@@ -103,10 +106,36 @@ export class PayoutService {
         continue;
       }
 
+      this.logger.log(
+        `Processing escrow address: ${campaign.escrowAddress}`,
+        WebhookService.name,
+      );
+
+      // Get the intermediateResultsUrl from the escrow
+      const intermediateResultsUrl =
+        await escrowClient.getIntermediateResultsUrl(campaign.escrowAddress);
+
+      if (!intermediateResultsUrl) {
+        throw new Error('Intermediate result URL not found');
+      }
+
+      if (
+        await this.webhookService.checkIdxExists(
+          campaign.chainId,
+          campaign.escrowAddress,
+          intermediateResultsUrl,
+        )
+      ) {
+        this.logger.warn(
+          `An Incoming Webhook for the results of ${campaign.escrowAddress} on chain id ${campaign.chainId} save in url ${intermediateResultsUrl} Already Exists `,
+        );
+        continue;
+      }
       const data: WebhookIncomingDto = {
         chainId: campaign.chainId,
         eventType: EventType.CAMPAIGN_PAYOUT,
         escrowAddress: campaign.escrowAddress,
+        payload: intermediateResultsUrl,
       };
 
       try {
