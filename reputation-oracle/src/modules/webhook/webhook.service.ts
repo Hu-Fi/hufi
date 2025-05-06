@@ -349,10 +349,9 @@ export class WebhookService {
       escrowAddress,
       payload,
     });
-  
+
     return !!row;
   }
-  
 
   /**
    * Given a total payout amount and an array of liquidity result objects,

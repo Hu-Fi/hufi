@@ -116,7 +116,9 @@ export class PayoutService {
         await escrowClient.getIntermediateResultsUrl(campaign.escrowAddress);
 
       if (!intermediateResultsUrl) {
-        this.logger.warn(`Intermediate result URL not found for ${campaign.escrowAddress}`);
+        this.logger.warn(
+          `Intermediate result URL not found for ${campaign.escrowAddress}`,
+        );
         continue;
       }
 
