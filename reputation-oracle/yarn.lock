@@ -577,7 +577,7 @@
   resolved "https://registry.yarnpkg.com/@human-protocol/core/-/core-4.0.3.tgz#8ec9ea02461580068bb2fa922f7dd1a7f131d1da"
   integrity sha512-y6LJNKXlfkzZPdeURLaZkGPtPlW9hSQPFMSSnV3AY79igvMg+Ih+ag0zXKy8jHsaB5ZmDOh5AKETwuTaZTM95w==
 
-"@human-protocol/sdk@^4.0.0":
+"@human-protocol/sdk@4.0.3":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@human-protocol/sdk/-/sdk-4.0.3.tgz#1e72baccba482b0dd7b6a9f0720ae84d6726b048"
   integrity sha512-RLY7JvXznUrsbDVljetDT0PRG440A/NzmMGMcPG6JhtwQsI8Kgl0Yi5oZGtjTGfFS7S5VXG4nOrNPkgNS7KJWQ==
