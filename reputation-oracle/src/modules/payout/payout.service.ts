@@ -44,7 +44,7 @@ export class PayoutService {
       try {
         const campaigns = await EscrowUtils.getEscrows({
           chainId: supportedChainId,
-          reputationOracle: this.web3ConfigService.reputationOracle,
+          reputationOracle: this.web3Service.getOperatorAddress(),
         });
 
         const campaignsWithManifest: Array<CampaignWithManifest> =
