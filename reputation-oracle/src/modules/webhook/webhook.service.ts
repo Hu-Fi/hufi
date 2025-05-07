@@ -59,6 +59,7 @@ export class WebhookService {
         status: WebhookStatus.PENDING,
         waitUntil: new Date(),
         retriesCount: 0,
+        payload: dto.payload,
       });
 
       if (!webhookEntity) {
@@ -103,14 +104,7 @@ export class WebhookService {
             `Processing escrow address: ${escrowAddress}`,
             WebhookService.name,
           );
-
-          // Get the intermediateResultsUrl from the escrow
-          const intermediateResultsUrl =
-            await escrowClient.getIntermediateResultsUrl(escrowAddress);
-
-          if (!intermediateResultsUrl) {
-            throw new Error('Intermediate result URL not found');
-          }
+          const intermediateResultsUrl = webhookEntity.payload;
 
           // Attempt to download and parse intermediate results
           let intermediateResultContent: string | null;
@@ -335,6 +329,28 @@ export class WebhookService {
    */
   private getRecipients(finalResults: LiquidityDto[]): string[] {
     return finalResults.map((item) => item.liquidityProvider);
+  }
+
+  /**
+   * Checks whether a webhook record already exists that matches the given
+   * {@link chainId}, {@link escrowAddress}, and {@link payload}.
+   * @param chainId - chain Id
+   * @param escrowAddress - The address of the escrow.
+   * @param payload - The webhook payload which is the link to intermediate results
+   * @returns {boolean} - Returns `true` if at least one matching record is found, otherwise `false`.
+   */
+  public async checkIfExists(
+    chainId: ChainId,
+    escrowAddress: string,
+    payload: string,
+  ): Promise<boolean> {
+    const row = await this.webhookRepository.findOne({
+      chainId,
+      escrowAddress,
+      payload,
+    });
+
+    return !!row;
   }
 
   /**
