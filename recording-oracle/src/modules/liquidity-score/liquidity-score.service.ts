@@ -43,7 +43,7 @@ export class LiquidityScoreService {
 
   public async calculateLiquidityScore(
     payload: LiquidityScoreCalculateRequestDto,
-  ): Promise<UploadFile | null> {
+  ): Promise<UploadFile[] | null> {
     this.logger.debug(
       `Calculating liquidity score for campaign ${payload.address}`,
     );
@@ -60,28 +60,12 @@ export class LiquidityScoreService {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
     }
 
-    const { scores: campaignLiquidityScore, windowEnd } =
-      await this._calculateCampaignLiquidityScore(campaign);
-
-    if (campaignLiquidityScore.length === 0) {
-      this.logger.warn(`No scores for campaign ${campaign.address}`);
-      return null;
-    }
-
-    const scoresFile = await this.recordsService.pushLiquidityScores(
-      campaign.address,
-      campaign.chainId,
-      campaignLiquidityScore,
-    );
-
-    await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
-
-    return scoresFile;
+    return await this.calculatePendingCampaignLiquidityScores(campaign);
   }
 
-  private async _calculateCampaignLiquidityScore(
+  private async calculatePendingCampaignLiquidityScores(
     campaign: CampaignEntity,
-  ): Promise<{ scores: LiquidityScore[]; windowEnd: Date }> {
+  ): Promise<UploadFile[] | null> {
     if (!campaign.exchangeName) {
       throw new ControlledError(
         ErrorCampaign.InvalidCampaignData,
@@ -89,51 +73,82 @@ export class LiquidityScoreService {
       );
     }
 
-    const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
-    const windowEnd = new Date();
-    const windowStart = new Date(windowEnd.getTime() - 24 * 60 * 60 * 1000);
+    const lastScore = await this.liquidityScoreRepository.findLastByCampaignId(
+      campaign.id,
+    );
 
-    const scores: LiquidityScore[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const startDate = lastScore.windowEnd ?? yesterday;
 
-    for (const user of campaign.users) {
-      const liquidityScore = isCEXCampaign
-        ? await this._calculateCEXLiquidityScore(
-            campaign.exchangeName.toLowerCase(),
-            campaign.token,
-            user,
-            windowStart,
-            windowEnd,
-          )
-        : await this._calculateDEXLiquidityScore(
-            campaign.exchangeName.toLowerCase(),
-            campaign.chainId,
-            campaign.token,
-            user,
-            windowStart,
-            windowEnd,
-          );
+    const scoresFiles: UploadFile[] = [];
 
-      const scoreToUpload =
-        liquidityScore && Number.isFinite(liquidityScore) && liquidityScore > 0
-          ? Math.round(liquidityScore)
-          : 0;
+    while (startDate < yesterday) {
+      startDate.setDate(startDate.getDate() + 1);
 
-      await this._saveLiquidityScore(
-        campaign,
-        user,
-        scoreToUpload,
-        windowStart,
-        windowEnd,
-      );
+      const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
+      const windowEnd = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
 
-      scores.push({
-        chainId: campaign.chainId,
-        liquidityProvider: user.evmAddress,
-        liquidityScore: String(scoreToUpload),
-      });
+      const scores: LiquidityScore[] = [];
+
+      for (const user of campaign.users) {
+        const liquidityScore = isCEXCampaign
+          ? await this._calculateCEXLiquidityScore(
+              campaign.exchangeName.toLowerCase(),
+              campaign.token,
+              user,
+              startDate,
+              windowEnd,
+            )
+          : await this._calculateDEXLiquidityScore(
+              campaign.exchangeName.toLowerCase(),
+              campaign.chainId,
+              campaign.token,
+              user,
+              startDate,
+              windowEnd,
+            );
+
+        const scoreToUpload =
+          liquidityScore &&
+          Number.isFinite(liquidityScore) &&
+          liquidityScore > 0
+            ? Math.round(liquidityScore)
+            : 0;
+
+        await this._saveLiquidityScore(
+          campaign,
+          user,
+          scoreToUpload,
+          startDate,
+          windowEnd,
+        );
+
+        scores.push({
+          chainId: campaign.chainId,
+          liquidityProvider: user.evmAddress,
+          liquidityScore: String(scoreToUpload),
+        });
+
+        if (scores.length === 0) {
+          this.logger.warn(`No scores for campaign ${campaign.address}`);
+          return null;
+        }
+
+        const scoresFile = await this.recordsService.pushLiquidityScores(
+          campaign.address,
+          campaign.chainId,
+          scores,
+        );
+
+        await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+
+        scoresFiles.push(scoresFile);
+      }
     }
 
-    return { scores, windowEnd };
+    return scoresFiles;
   }
 
   private async _calculateCEXLiquidityScore(
@@ -313,21 +328,7 @@ export class LiquidityScoreService {
 
     for (const campaign of campaigns) {
       try {
-        const { scores: campaignLiquidityScore, windowEnd } =
-          await this._calculateCampaignLiquidityScore(campaign);
-
-        if (campaignLiquidityScore.length === 0) {
-          this.logger.warn(`No scores for ${campaign.address}`);
-          continue;
-        }
-
-        await this.recordsService.pushLiquidityScores(
-          campaign.address,
-          campaign.chainId,
-          campaignLiquidityScore,
-        );
-
-        await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+        await this.calculatePendingCampaignLiquidityScores(campaign);
 
         this.logger.log('Finished calculating liquidity scores');
       } catch (error) {
