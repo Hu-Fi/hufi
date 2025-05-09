@@ -80,18 +80,17 @@ export class LiquidityScoreService {
       );
     }
 
-    const lastScore = await this.liquidityScoreRepository.findLastByCampaignId(
-      campaign.id,
-    );
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    let startDate = lastScore?.windowEnd ?? campaign.startDate;
+    let startDate =
+      campaign.lastSyncedAt < campaign.startDate
+        ? campaign.startDate
+        : campaign.lastSyncedAt;
 
     const scoresFiles: UploadFile[] = [];
 
-    while (startDate < yesterday) {
+    while (startDate <= yesterday) {
       const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
       let windowEnd = startDate;
       windowEnd.setHours(0, 0, 0, 0);
