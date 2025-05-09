@@ -15,7 +15,6 @@ import { LessThanOrEqual } from 'typeorm';
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
 import { ErrorWebhook } from '../../common/constants/errors';
 import { EventType, SortDirection, WebhookStatus } from '../../common/enums';
-import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { USDT_CONTRACT_ADDRESS } from '../../constants/token';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
