@@ -40,7 +40,7 @@ export class LiquidityScoreController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async calculateLiquidityScore(
     @Body() payload: LiquidityScoreCalculateRequestDto,
-  ): Promise<UploadFile | null> {
+  ): Promise<UploadFile[] | null> {
     return await this.liquidityScoreService.calculateLiquidityScore(payload);
   }
 
