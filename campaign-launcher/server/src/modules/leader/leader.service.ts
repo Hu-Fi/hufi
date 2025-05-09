@@ -10,6 +10,6 @@ export class LeaderService {
   constructor(public readonly web3Service: Web3Service) {}
 
   public async getLeader(chainId: ChainId, address: string) {
-    return await OperatorUtils.getLeader(chainId, address);
+    return await OperatorUtils.getOperator(chainId, address);
   }
 }

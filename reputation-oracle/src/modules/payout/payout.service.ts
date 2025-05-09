@@ -15,13 +15,13 @@ import { WebhookService } from '../webhook/webhook.service';
 
 interface CampaignWithManifest extends Manifest {
   escrowAddress: string;
+  intermediateResutlsUrl?: string;
   status: string;
 }
 
 @Injectable()
 export class PayoutService {
   private readonly logger = new Logger(PayoutService.name);
-  private campaigns: Array<CampaignWithManifest> = [];
 
   constructor(
     private web3ConfigService: Web3ConfigService,
@@ -31,7 +31,7 @@ export class PayoutService {
     private web3TransactionService: Web3TransactionService,
   ) {}
 
-  async fetchCampaigns(chainId: number): Promise<void> {
+  async fetchCampaigns(chainId: number): Promise<CampaignWithManifest[]> {
     let supportedChainIds = [chainId];
 
     if (chainId === ChainId.ALL) {
@@ -44,7 +44,7 @@ export class PayoutService {
       try {
         const campaigns = await EscrowUtils.getEscrows({
           chainId: supportedChainId,
-          recordingOracle: this.web3ConfigService.recordingOracle,
+          reputationOracle: this.web3Service.getOperatorAddress(),
         });
 
         const campaignsWithManifest: Array<CampaignWithManifest> =
@@ -68,6 +68,7 @@ export class PayoutService {
               return {
                 ...manifest,
                 escrowAddress: campaign.address,
+                intermediateResutlsUrl: campaign.intermediateResultsUrl,
                 chainId: campaign.chainId,
                 status: campaign.status,
               } as CampaignWithManifest;
@@ -82,31 +83,59 @@ export class PayoutService {
       }
     }
 
-    this.campaigns = allCampaigns;
+    return allCampaigns;
   }
 
   /**
    * Cron job to process the campaign payouts.
    */
-  @Cron(CronExpression.EVERY_DAY_AT_8AM)
+  @Cron('*/15 * * * *') // 15 minutes.
   // Process the payouts (used by both cron and manual methods)
   async processPayouts(chainId = ChainId.ALL): Promise<void> {
     this.logger.log('Processing payouts for campaigns.');
 
     // Ensure campaigns are fetched before executing cron job
-    await this.fetchCampaigns(chainId);
+    const campaigns = await this.fetchCampaigns(chainId);
 
     // Iterate over each campaign and create a webhook
-    for (const campaign of this.campaigns) {
+    for (const campaign of campaigns) {
       // Only Pending or Partial
       if (campaign.status !== 'Pending' && campaign.status !== 'Partial') {
         continue;
       }
 
+      this.logger.log(
+        `Processing escrow address: ${campaign.escrowAddress}`,
+        WebhookService.name,
+      );
+
+      // Get the intermediateResultsUrl from the escrow
+      const intermediateResultsUrl = campaign.intermediateResutlsUrl;
+
+      if (!intermediateResultsUrl) {
+        this.logger.warn(
+          `Intermediate result URL not found for ${campaign.escrowAddress}`,
+        );
+        continue;
+      }
+
+      if (
+        await this.webhookService.checkIfExists(
+          campaign.chainId,
+          campaign.escrowAddress,
+          intermediateResultsUrl,
+        )
+      ) {
+        this.logger.warn(
+          `An Incoming Webhook for the results of ${campaign.escrowAddress} on chain id ${campaign.chainId} save in url ${intermediateResultsUrl} Already Exists `,
+        );
+        continue;
+      }
       const data: WebhookIncomingDto = {
         chainId: campaign.chainId,
         eventType: EventType.CAMPAIGN_PAYOUT,
         escrowAddress: campaign.escrowAddress,
+        payload: intermediateResultsUrl,
       };
 
       try {
@@ -133,10 +162,10 @@ export class PayoutService {
     this.logger.log('Checking expired campaigns.');
 
     // Ensure campaigns are fetched before executing cron job
-    await this.fetchCampaigns(ChainId.ALL);
+    const campaigns = await this.fetchCampaigns(ChainId.ALL);
 
     // Iterate over each campaign and finalize it
-    for (const campaign of this.campaigns) {
+    for (const campaign of campaigns) {
       try {
         const signer = this.web3Service.getSigner(campaign.chainId);
         const escrowClient = await EscrowClient.build(signer);
