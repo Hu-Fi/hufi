@@ -34,8 +34,8 @@ async function bootstrap() {
   app.use(urlencoded({ limit: '5mb', extended: true }));
 
   const config = new DocumentBuilder()
-    .setTitle('HuFi Recording Oracle API')
-    .setDescription('HuFi Recording Oracle API Swagger Documentation')
+    .setTitle('HuFi Reputation Oracle API')
+    .setDescription('HuFi Reputation Oracle API Swagger Documentation')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

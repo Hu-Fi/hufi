@@ -10,10 +10,14 @@ export abstract class BaseEntity extends OrmBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   public id: string;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   public createdAt: Date;
 
-  @Column({ type: 'timestamptz' })
+  @Column({
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   public updatedAt: Date;
 
   @BeforeInsert()

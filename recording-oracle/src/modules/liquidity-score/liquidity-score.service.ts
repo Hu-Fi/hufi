@@ -296,6 +296,14 @@ export class LiquidityScoreService {
     return this.encryption;
   }
 
+  public async getTotalLiquidityScore(): Promise<number> {
+    const { total } = await this.liquidityScoreRepository
+      .createQueryBuilder('T')
+      .select('COALESCE(SUM(T.score),0)', 'total')
+      .getRawOne();
+    return Number(Number(total).toFixed(2));
+  }
+
   // Adjust the frequency as needed
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async calculateScoresForCampaigns(): Promise<void> {
