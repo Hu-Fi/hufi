@@ -80,7 +80,7 @@ export class LiquidityScoreService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const startDate = lastScore.windowEnd ?? yesterday;
+    const startDate = lastScore?.windowEnd ?? yesterday;
 
     const scoresFiles: UploadFile[] = [];
 
