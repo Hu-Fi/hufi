@@ -15,7 +15,6 @@ import { LessThanOrEqual } from 'typeorm';
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
 import { ErrorWebhook } from '../../common/constants/errors';
 import { EventType, SortDirection, WebhookStatus } from '../../common/enums';
-import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { USDT_CONTRACT_ADDRESS } from '../../constants/token';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
@@ -255,28 +254,6 @@ export class WebhookService {
             WebhookService.name,
           );
 
-          // Convert BigInts to strings before saving Web3Transaction to avoid JSON issues
-          const amountsAsStrings = amounts.map((a) => a.toString());
-          const gasPriceString = gasPrice.toString();
-
-          // 4) Save the web3 transaction record BEFORE making the on-chain call
-          const newTx = await this.web3TransactionService.saveWeb3Transaction({
-            chainId,
-            contract: 'escrow',
-            address: escrowAddress,
-            method: 'bulkPayOut',
-            data: [
-              recipients,
-              amountsAsStrings,
-              url,
-              hash,
-              1,
-              false,
-              { gasPrice: gasPriceString },
-            ],
-            status: Web3TransactionStatus.PENDING,
-          });
-
           // 5) Attempt the actual transaction on-chain
           await escrowClient.bulkPayOut(
             escrowAddress,
@@ -293,10 +270,6 @@ export class WebhookService {
           this.logger.log(
             `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
             WebhookService.name,
-          );
-          await this.web3TransactionService.updateWeb3TransactionStatus(
-            newTx.id,
-            Web3TransactionStatus.SUCCESS,
           );
 
           // Mark the webhook as paid
