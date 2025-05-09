@@ -60,6 +60,13 @@ export class LiquidityScoreService {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
     }
 
+    if (campaign.endDate < new Date()) {
+      throw new ControlledError(
+        ErrorCampaign.CampaignEnded,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     return await this.calculatePendingCampaignLiquidityScores(campaign);
   }
 
@@ -80,15 +87,16 @@ export class LiquidityScoreService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const startDate = lastScore?.windowEnd ?? yesterday;
+    let startDate = lastScore?.windowEnd ?? campaign.startDate;
 
     const scoresFiles: UploadFile[] = [];
 
     while (startDate < yesterday) {
-      startDate.setDate(startDate.getDate() + 1);
-
       const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
-      const windowEnd = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+      let windowEnd = startDate;
+      windowEnd.setHours(0, 0, 0, 0);
+      windowEnd = new Date(windowEnd.getTime() + 24 * 60 * 60 * 1000);
+      windowEnd = windowEnd > campaign.endDate ? campaign.endDate : windowEnd;
 
       const scores: LiquidityScore[] = [];
 
@@ -145,6 +153,7 @@ export class LiquidityScoreService {
         await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
 
         scoresFiles.push(scoresFile);
+        startDate = windowEnd;
       }
     }
 
