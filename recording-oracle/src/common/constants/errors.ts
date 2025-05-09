@@ -43,6 +43,7 @@ export enum ErrorCampaign {
   AlreadyExists = 'Campaign already exists',
   InvalidChainId = 'Invalid chain id',
   InvalidCampaignData = 'Invalid campaign data',
+  CampaignEnded = 'Campaign has ended',
 }
 
 export enum ErrorMrMarket {
