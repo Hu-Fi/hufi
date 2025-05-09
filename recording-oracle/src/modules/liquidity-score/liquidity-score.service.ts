@@ -60,7 +60,7 @@ export class LiquidityScoreService {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
     }
 
-    if (campaign.endDate < new Date()) {
+    if (!(campaign.lastSyncedAt < campaign.endDate)) {
       throw new ControlledError(
         ErrorCampaign.CampaignEnded,
         HttpStatus.BAD_REQUEST,
