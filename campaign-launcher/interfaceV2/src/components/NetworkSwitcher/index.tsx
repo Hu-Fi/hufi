@@ -8,7 +8,7 @@ import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { ChevronIcon } from '../../icons';
 
 const getChainIcon = (id?: number) => {
-  if (!id) return CHAIN_ICONS[ChainId.ALL];
+  if (!id) return null;
   return CHAIN_ICONS[id as ChainId] || null;
 };
 
@@ -56,7 +56,10 @@ const NetworkSwitcher: FC = () => {
           fontWeight: 600,
         }}
       >
-        {getChainIcon(chain?.id)}
+        <Typography variant="body2" fontWeight={600}>
+          {getChainIcon(chain?.id)}
+          {chain?.name ? null : 'Select Network'}
+        </Typography>
       </Button>
 
       <Menu

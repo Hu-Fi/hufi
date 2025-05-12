@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -18,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { Controller, useForm } from 'react-hook-form';
 import { useAccount } from 'wagmi';
@@ -105,6 +106,15 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     createEscrow,
     stepsCompleted,
   } = useCreateEscrow();
+  const queryClient = useQueryClient();
+
+  const isCampaignCreated = stepsCompleted === 4;
+
+  useEffect(() => {
+    if (isCampaignCreated) {
+      queryClient.invalidateQueries({ queryKey: ['myCampaigns'] });
+    }
+  }, [isCampaignCreated]);
 
   const {
     control,
