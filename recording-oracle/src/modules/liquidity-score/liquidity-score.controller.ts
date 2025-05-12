@@ -1,5 +1,5 @@
 import { UploadFile } from '@human-protocol/sdk';
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -40,7 +40,18 @@ export class LiquidityScoreController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async calculateLiquidityScore(
     @Body() payload: LiquidityScoreCalculateRequestDto,
-  ): Promise<UploadFile | null> {
+  ): Promise<UploadFile[] | null> {
     return await this.liquidityScoreService.calculateLiquidityScore(payload);
+  }
+
+  @Get('total')
+  @ApiOperation({
+    summary: 'Get total liquidity score of all campaigns',
+    description: 'Returns the sum of all liquidity scores across campaigns.',
+  })
+  @ApiResponse({ status: 200, description: 'Total liquidity score' })
+  async getTotalLiquidityScore(): Promise<{ total: number }> {
+    const total = await this.liquidityScoreService.getTotalLiquidityScore();
+    return { total };
   }
 }

@@ -15,7 +15,6 @@ import { LessThanOrEqual } from 'typeorm';
 import { RETRIES_COUNT_THRESHOLD } from '../../common/constants';
 import { ErrorWebhook } from '../../common/constants/errors';
 import { EventType, SortDirection, WebhookStatus } from '../../common/enums';
-import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { USDT_CONTRACT_ADDRESS } from '../../constants/token';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
@@ -59,6 +58,7 @@ export class WebhookService {
         status: WebhookStatus.PENDING,
         waitUntil: new Date(),
         retriesCount: 0,
+        payload: dto.payload,
       });
 
       if (!webhookEntity) {
@@ -103,14 +103,7 @@ export class WebhookService {
             `Processing escrow address: ${escrowAddress}`,
             WebhookService.name,
           );
-
-          // Get the intermediateResultsUrl from the escrow
-          const intermediateResultsUrl =
-            await escrowClient.getIntermediateResultsUrl(escrowAddress);
-
-          if (!intermediateResultsUrl) {
-            throw new Error('Intermediate result URL not found');
-          }
+          const intermediateResultsUrl = webhookEntity.payload;
 
           // Attempt to download and parse intermediate results
           let intermediateResultContent: string | null;
@@ -261,28 +254,6 @@ export class WebhookService {
             WebhookService.name,
           );
 
-          // Convert BigInts to strings before saving Web3Transaction to avoid JSON issues
-          const amountsAsStrings = amounts.map((a) => a.toString());
-          const gasPriceString = gasPrice.toString();
-
-          // 4) Save the web3 transaction record BEFORE making the on-chain call
-          const newTx = await this.web3TransactionService.saveWeb3Transaction({
-            chainId,
-            contract: 'escrow',
-            address: escrowAddress,
-            method: 'bulkPayOut',
-            data: [
-              recipients,
-              amountsAsStrings,
-              url,
-              hash,
-              1,
-              false,
-              { gasPrice: gasPriceString },
-            ],
-            status: Web3TransactionStatus.PENDING,
-          });
-
           // 5) Attempt the actual transaction on-chain
           await escrowClient.bulkPayOut(
             escrowAddress,
@@ -299,10 +270,6 @@ export class WebhookService {
           this.logger.log(
             `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
             WebhookService.name,
-          );
-          await this.web3TransactionService.updateWeb3TransactionStatus(
-            newTx.id,
-            Web3TransactionStatus.SUCCESS,
           );
 
           // Mark the webhook as paid
@@ -335,6 +302,28 @@ export class WebhookService {
    */
   private getRecipients(finalResults: LiquidityDto[]): string[] {
     return finalResults.map((item) => item.liquidityProvider);
+  }
+
+  /**
+   * Checks whether a webhook record already exists that matches the given
+   * {@link chainId}, {@link escrowAddress}, and {@link payload}.
+   * @param chainId - chain Id
+   * @param escrowAddress - The address of the escrow.
+   * @param payload - The webhook payload which is the link to intermediate results
+   * @returns {boolean} - Returns `true` if at least one matching record is found, otherwise `false`.
+   */
+  public async checkIfExists(
+    chainId: ChainId,
+    escrowAddress: string,
+    payload: string,
+  ): Promise<boolean> {
+    const row = await this.webhookRepository.findOne({
+      chainId,
+      escrowAddress,
+      payload,
+    });
+
+    return !!row;
   }
 
   /**
@@ -406,6 +395,7 @@ export class WebhookService {
    * For certain campaigns, calculates how much to pay out in total each day based on volume.
    * Example: If manifest says “xin/usdt” and your token is indeed USDT or HMT,
    * implement logic to convert the totalVolume of liquidity into a daily payout.
+   * Note: Hardcoded now, but ratios should be configurable through campaign parameters.
    */
   private getTotalAmountByVolume(
     chainId: ChainId,
@@ -413,29 +403,24 @@ export class WebhookService {
     token: string,
     totalVolume: bigint,
   ): bigint | null {
-    if (manifest?.token?.toLowerCase() === 'xin/usdt') {
-      // Example: 100 USDT for 100K volume => 1 USDT per 1K volume
+    this.logger.debug(
+      'Calculating total amount to be paid for the volume provided to: ',
+      manifest?.token?.toLowerCase(),
+    );
 
-      let amount: bigint;
+    let cap: bigint;
 
-      if (
-        token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()
-      ) {
-        // 100 USDT in 6 decimals
-        amount = ethers.parseUnits('100', 6);
-      } else if (
-        token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
-      ) {
-        // For demonstration, assume 1 HMT = ~0.025 USDT => 100 USDT => ~4000 HMT
-        amount = ethers.parseUnits('4000', 18);
-      } else {
-        return null;
-      }
-
-      // Scale the “amount” according to totalVolume over 100,000
-      return (amount * totalVolume) / ethers.parseEther('100000');
+    if (token.toLowerCase() === USDT_CONTRACT_ADDRESS[chainId].toLowerCase()) {
+      cap = ethers.parseUnits('100', 6);
+    } else if (
+      token.toLowerCase() === NETWORKS[chainId].hmtAddress.toLowerCase()
+    ) {
+      cap = ethers.parseUnits('4000', 18);
+    } else {
+      return null;
     }
 
-    return null;
+    const scaled = (cap * totalVolume) / ethers.parseEther('100000');
+    return scaled > cap ? cap : scaled;
   }
 }
