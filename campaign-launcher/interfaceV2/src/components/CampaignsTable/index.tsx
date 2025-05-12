@@ -96,13 +96,13 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'pair',
       headerName: 'Pair',
-      flex: 3,
+      flex: 2.5,
       renderCell: (params) => <CryptoPairEntity symbol={params.row.symbol} size="medium" />,
     },
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 2,
+      flex: 2.5,
       renderCell: (params) => {
         const exchangeLogo = exchanges?.find(
           (exchange) => exchange.name === params.row.exchangeName

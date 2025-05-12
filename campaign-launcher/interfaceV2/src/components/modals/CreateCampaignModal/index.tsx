@@ -77,7 +77,7 @@ const validationSchema = yup.object({
   fundAmount: yup.number().required('Required'),
 });
 
-const steps = ['Create Escrow', 'Approve Token', 'Fund Escrow', 'Setup Escrow'];
+const steps = ['Create Escrow', 'Fund Escrow', 'Setup Escrow'];
 
 const slotProps = {
   paper: {
@@ -108,7 +108,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   } = useCreateEscrow();
   const queryClient = useQueryClient();
 
-  const isCampaignCreated = stepsCompleted === 4;
+  const isCampaignCreated = stepsCompleted === steps.length;
 
   useEffect(() => {
     if (isCampaignCreated) {
