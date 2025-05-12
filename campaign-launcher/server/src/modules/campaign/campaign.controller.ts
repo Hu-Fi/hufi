@@ -34,6 +34,11 @@ export class CampaignController {
     required: false,
     description: 'Filter by exchange name',
   })
+  @ApiQuery({
+    name: 'launcher',
+    required: false,
+    description: 'Filter by launcher address',
+  })
   @ApiResponse({
     status: 200,
     description: 'Campaigns list',

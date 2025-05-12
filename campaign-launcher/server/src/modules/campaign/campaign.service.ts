@@ -74,7 +74,10 @@ export class CampaignService {
     }
 
     return allCampaigns.filter((campaign) => {
-      if (launcher && campaign.launcher !== launcher) {
+      if (
+        launcher &&
+        campaign.launcher.toLowerCase() !== launcher.toLowerCase()
+      ) {
         return false;
       }
       if (status && status !== 'all' && campaign.status !== status) {
