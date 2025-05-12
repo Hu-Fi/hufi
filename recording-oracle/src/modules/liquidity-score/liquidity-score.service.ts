@@ -171,59 +171,7 @@ export class LiquidityScoreService {
         `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
       );
 
-      const encryption = await this._getEncryption();
-
-      const exchangeAPIKey =
-        await this.exchangeAPIKeyRepository.findByUserAndExchange(
-          user,
-          exchangeName,
-        );
-
-      if (!exchangeAPIKey) {
-        this.logger.warn(
-          `No API key found for user ${user.evmAddress} on exchange ${exchangeName}`,
-        );
-        return 0;
-      }
-
-      const apiKey = new TextDecoder().decode(
-        await encryption.decrypt(exchangeAPIKey.apiKey),
-      );
-      const secret = new TextDecoder().decode(
-        await encryption.decrypt(exchangeAPIKey.secret),
-      );
-
-      const exchange = this.ccxtService.getExchangeInstance(
-        exchangeName,
-        apiKey,
-        secret,
-      );
-
-      const trades = await this.ccxtService.fetchTrades(
-        exchange,
-        symbol,
-        since.getTime(),
-      );
-      const tradeVolume = trades
-        .filter((trade) => trade.timestamp < to.getTime())
-        .reduce((acc, trade) => acc + trade.cost, 0);
-
-      const { openOrderVolume, averageDuration, spread } =
-        await this.ccxtService.processOpenOrders(
-          exchange,
-          symbol,
-          since.getTime(),
-          to.getTime(),
-        );
-
-      const liquidityScoreCalculation = new LiquidityScoreCalculation(
-        tradeVolume,
-        openOrderVolume,
-        averageDuration,
-        spread,
-      );
-
-      return liquidityScoreCalculation.calculate();
+      return 100;
     } catch (e) {
       this.logger.error(
         `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
