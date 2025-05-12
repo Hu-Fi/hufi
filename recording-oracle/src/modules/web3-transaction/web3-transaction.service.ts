@@ -81,23 +81,21 @@ export class Web3TransactionService {
         const signer = this.web3Service.getSigner(transaction.chainId);
         const escrowClient = await EscrowClient.build(signer);
 
-        const args: unknown[] = Array.isArray(transaction.data)
-          ? transaction.data
-          : JSON.parse(String(transaction.data));
+        const args: string[] = Array.isArray(transaction.data)
+          ? transaction.data.map(String)
+          : JSON.parse(String(transaction.data)).map(String);
+        this.logger.error(`ARGS: ${args}`);
 
         this.logger.log(
           `Retrying transaction ${transaction.id} for ${transaction.contract} at ${transaction.address} on chain ${transaction.chainId}`,
         );
 
         if (transaction.contract === 'escrow') {
-          const fn = (escrowClient as any)[transaction.method];
-          if (typeof fn !== 'function') {
-            throw new ControlledError(
-              ErrorWeb3Transaction.InvalidContract,
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-          await fn(transaction.address, ...args);
+          await escrowClient.storeResults(
+            transaction.address,
+            args[0],
+            args[1],
+          );
         } else {
           throw new ControlledError(
             ErrorWeb3Transaction.InvalidContract,

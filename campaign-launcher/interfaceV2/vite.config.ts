@@ -15,7 +15,7 @@ export default defineConfig(() => {
       }),
     ],
     build: {
-      outDir: 'distV2',
+      outDir: 'dist',
       sourcemap: true,
       commonjsOptions: {
         transformMixedEsModules: true,

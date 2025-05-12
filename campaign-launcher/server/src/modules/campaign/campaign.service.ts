@@ -1,12 +1,10 @@
-import { ChainId, EscrowClient, EscrowUtils } from '@human-protocol/sdk';
+import { ChainId, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable, Logger } from '@nestjs/common';
 import { ethers } from 'ethers';
-import { v4 as uuidV4 } from 'uuid';
 
 import { Web3Service } from '../web3/web3.service';
 
-import { CampaignDataDto, CreateCampaignDto } from './campaign.dto';
-import ERC20ABI from './ERC20.json';
+import { CampaignDataDto } from './campaign.dto';
 
 @Injectable()
 export class CampaignService {
@@ -20,10 +18,11 @@ export class CampaignService {
     exchangeName?: string,
     launcher?: string,
   ): Promise<CampaignDataDto[]> {
-    let supportedChainIds = [chainId];
+    let supportedChainIds = this.web3Service.getValidChains();
 
-    if (chainId === ChainId.ALL) {
-      supportedChainIds = this.web3Service.getValidChains();
+    if (chainId !== ChainId.ALL) {
+      this.web3Service.validateChainId(chainId);
+      supportedChainIds = [chainId];
     }
 
     const allCampaigns: CampaignDataDto[] = [];
@@ -120,48 +119,6 @@ export class CampaignService {
       this.logger.error(`Failed to fetch campaign or manifest`, err);
       return undefined;
     }
-  }
-
-  public async createCampaign(
-    campaignData: CreateCampaignDto,
-  ): Promise<string> {
-    const { chainId, tokenAddress, fundAmount, manifestUrl, manifestHash } =
-      campaignData;
-
-    const signer = this.web3Service.getSigner(chainId);
-    const escrowClient = await EscrowClient.build(signer);
-
-    this.logger.log(`Creating escrow on chain: ${chainId}`);
-    const escrowAddress = await escrowClient.createEscrow(
-      tokenAddress,
-      [signer.address],
-      uuidV4(),
-    );
-    this.logger.log(`Escrow created at address: ${escrowAddress}`);
-
-    const fundAmountBigInt = ethers.parseUnits(fundAmount, 'ether');
-
-    this.logger.log(`Approving and funding escrow with ${fundAmount} tokens`);
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
-    await (await tokenContract.approve(escrowAddress, fundAmountBigInt)).wait();
-    await escrowClient.fund(escrowAddress, fundAmountBigInt);
-
-    this.logger.log(`Setting up escrow with manifest`);
-    const escrowConfig = {
-      exchangeOracle: this.web3Service.getExchangeOracle(),
-      exchangeOracleFee: BigInt(this.web3Service.getExchangeOracleFee()),
-      recordingOracle: this.web3Service.getRecordingOracle(),
-      recordingOracleFee: BigInt(this.web3Service.getRecordingOracleFee()),
-      reputationOracle: this.web3Service.getReputationOracle(),
-      reputationOracleFee: BigInt(this.web3Service.getReputationOracleFee()),
-      manifestUrl,
-      manifestHash,
-    };
-
-    await escrowClient.setup(escrowAddress, escrowConfig);
-    this.logger.log(`Escrow setup complete`);
-
-    return escrowAddress;
   }
 
   public async getCampaignStats(chainId = ChainId.ALL): Promise<{

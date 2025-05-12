@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 import { BaseRepository } from '../../database/base.repository';
-import {
-  CampaignEntity,
-  LiquidityScoreEntity,
-  UserEntity,
-} from '../../database/entities';
+import { LiquidityScoreEntity, UserEntity } from '../../database/entities';
 
 @Injectable()
 export class LiquidityScoreRepository extends BaseRepository<LiquidityScoreEntity> {
@@ -26,9 +22,12 @@ export class LiquidityScoreRepository extends BaseRepository<LiquidityScoreEntit
     return this.find({ where: { user } });
   }
 
-  async findByCampaign(
-    campaign: CampaignEntity,
-  ): Promise<LiquidityScoreEntity[]> {
-    return this.find({ where: { campaign } });
+  async findLastByCampaignId(
+    campaignId: string,
+  ): Promise<LiquidityScoreEntity | null> {
+    return this.findOne({
+      where: { campaignId },
+      order: { windowEnd: 'DESC' },
+    });
   }
 }
