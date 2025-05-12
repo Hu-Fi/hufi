@@ -90,7 +90,14 @@ export class LiquidityScoreService {
 
     const scoresFiles: UploadFile[] = [];
 
-    while (startDate <= yesterday && startDate < campaign.endDate) {
+    while (
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate(),
+      ) <= yesterday &&
+      startDate < campaign.endDate
+    ) {
       const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
       let windowEnd = new Date(startDate.getTime());
       windowEnd.setHours(0, 0, 0, 0);
