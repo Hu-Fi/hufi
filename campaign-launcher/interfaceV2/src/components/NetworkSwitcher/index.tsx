@@ -6,6 +6,7 @@ import { useAccount, useSwitchChain, useConfig } from 'wagmi';
 
 import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { ChevronIcon } from '../../icons';
+import { getSupportedChainIds } from '../../utils';
 
 const getChainIcon = (id?: number) => {
   if (!id) return null;
@@ -86,17 +87,20 @@ const NetworkSwitcher: FC = () => {
           },
         }}
       >
-        {chains.map((c) => (
-          <MenuItem
-            key={c.id}
-            onClick={() => handleSelect(c.id)}
-            selected={c.id === chain?.id}
-          >
-            <Typography variant="body2" fontWeight={600}>
-              {c.name}
-            </Typography>
-          </MenuItem>
-        ))}
+        {chains.map((c) => {
+          if (!getSupportedChainIds().includes(c.id as ChainId)) return null;
+          return (
+            <MenuItem
+              key={c.id}
+              onClick={() => handleSelect(c.id)}
+              selected={c.id === chain?.id}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                {c.name}
+              </Typography>
+            </MenuItem>
+          )
+        })}
       </Menu>
     </>
   );

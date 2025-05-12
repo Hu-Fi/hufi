@@ -18,7 +18,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
     setOpenCreateCampaignMenuModal,
   ] = useState(false);
   const { isConnected } = useAccount();
-  const { data: leader, refetch } = useLeader({ enabled: false });
+  const { refetch } = useLeader({ enabled: false });
 
   const handleCloseCreateCampaignMenuModal = () => {
     setOpenCreateCampaignMenuModal(false);
@@ -29,8 +29,8 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   };
 
   const onClick = async () => {
-    await refetch();
-    if (+(leader?.amountStaked ?? '0') > 0) {
+    const { data } = await refetch();
+    if (+(data?.amountStaked ?? '0') > 0) {
       setOpenCreateCampaignModal(true);
     } else {
       setOpenCreateCampaignMenuModal(true);
