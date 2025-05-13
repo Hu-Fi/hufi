@@ -25,6 +25,10 @@ const Card = styled(Paper)(({ theme }) => ({
   border: '1px solid rgba(255, 255, 255, 0.1)',
   boxShadow: 'none',
   width: '100%',
+  [theme.breakpoints.down('md')]: {
+    paddingLeft: '24px',
+    justifyContent: 'flex-start',
+  },
 }));
 
 const Text = styled(Typography)(({ theme }) => ({
@@ -33,6 +37,10 @@ const Text = styled(Typography)(({ theme }) => ({
   fontWeight: 800,
   lineHeight: '100%',
   letterSpacing: '-0.5px',
+
+  [theme.breakpoints.down('md')]: {
+    fontSize: '24px',
+  },
 }));
 
 const HowToLaunch = () => {
@@ -42,7 +50,7 @@ const HowToLaunch = () => {
         Easy and fast. How to launch a market making campaign.
       </Typography>
       <Grid container spacing={2} justifyContent="center">
-        <Grid size={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <Circle>1</Circle>
             <Text>
@@ -52,7 +60,7 @@ const HowToLaunch = () => {
             </Text>
           </Card>
         </Grid>
-        <Grid size={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <Circle>2</Circle>
             <Text>
@@ -62,7 +70,7 @@ const HowToLaunch = () => {
             </Text>
           </Card>
         </Grid>
-        <Grid size={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <Circle>3</Circle>
             <Text>

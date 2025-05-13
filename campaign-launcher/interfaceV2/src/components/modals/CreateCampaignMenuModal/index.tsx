@@ -36,10 +36,10 @@ const CreateCampaignMenuModal: FC<Props> = ({
         justifyContent: 'center',
       }}
     >
-      <Typography variant="h4" color="text.primary" mb={7}>
+      <Typography variant="h4" color="text.primary" mb={{ xs: 3, md: 7 }}>
         Create Campaign
       </Typography>
-      <Box display="flex" flexDirection="column" alignItems="center" px={10}>
+      <Box display="flex" flexDirection="column" alignItems="center" px={{ xs: 2, md: 10 }}>
         <Typography
           component="p"
           variant="h5"

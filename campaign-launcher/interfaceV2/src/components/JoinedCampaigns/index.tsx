@@ -49,10 +49,12 @@ const JoinedCampaigns: FC<Props> = ({
           justifyContent="center"
           gap={5}
           py="20px"
+          px={{ xs: 2, md: 0 }}
           bgcolor="background.default"
           borderRadius="16px"
           border="1px solid"
           borderColor="divider"
+          textAlign={{ xs: 'center', md: 'unset' }}
         >
           <Typography component="p" variant="subtitle2" color="text.secondary">
             At the moment you are not participating in any campaign, please see

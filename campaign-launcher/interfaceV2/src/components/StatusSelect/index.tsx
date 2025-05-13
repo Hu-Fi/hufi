@@ -27,7 +27,14 @@ type Props = {
 
 const StatusSelect: FC<Props> = ({ onChange }) => {
   return (
-    <FormControl variant="standard" sx={{ minWidth: 256 }}>
+    <FormControl 
+      variant="standard" 
+      sx={{ 
+        width: { xs: '100%', md: 'auto' }, 
+        minWidth: 256, 
+        order: { xs: 3, md: 2 } 
+      }}
+    >
       <InputLabel id="status-select-label">Sort by Status</InputLabel>
       <Select
         labelId="status-select-label"

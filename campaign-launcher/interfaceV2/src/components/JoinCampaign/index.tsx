@@ -95,7 +95,7 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
       <Button
         variant="contained"
         size="large"
-        sx={{ ml: 'auto', color: 'primary.contrast', fontWeight: 600 }}
+        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast', fontWeight: 600 }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
       >

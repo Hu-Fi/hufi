@@ -50,8 +50,8 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
             p: 0,
             color: 'text.primary',
             position: 'absolute',
-            top: '40px',
-            right: '32px',
+            top: { xs: '16px', md: '40px' },
+            right: { xs: '16px', md: '32px' },
             '&:hover': {
               bgcolor: 'unset',
             },

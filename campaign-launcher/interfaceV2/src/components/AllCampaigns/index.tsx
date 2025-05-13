@@ -49,13 +49,13 @@ const AllCampaigns: FC<Props> = ({
 
   return (
     <Box component="section" display="flex" flexDirection="column" gap={4}>
-      <Box display="flex" alignItems="center" gap={6}>
-        <Typography component="h3" variant="h5" color="text.primary">
+      <Box display="flex" alignItems="center" gap={{ xs: 3, md: 6 }} flexWrap={{ xs: 'wrap', md: 'nowrap' }}>
+        <Typography component="h3" variant="h5" color="text.primary" order={{ xs: 1, md: 1 }}>
           All Campaigns
         </Typography>
         <StatusSelect onChange={handleStatusChange} />
         <ExchangeSelect data={exchanges} onChange={handleExchangeChange} />
-        <LaunchCampaign variant="contained" sx={{ ml: 'auto' }} />
+        <LaunchCampaign variant="contained" sx={{ ml: { xs: 0, md:'auto' }, order: { xs: 2, md: 4 } }} />
       </Box>
       {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}
       {isCampaignsExist && (

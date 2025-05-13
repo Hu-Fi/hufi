@@ -1,12 +1,13 @@
 import { FC, MouseEvent } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { Button, IconButton, Typography, Box } from '@mui/material';
+import { Button, IconButton, Typography, Box, useMediaQuery } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { formatEther } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 
 import { CampaignDataDto } from '../../api/client';
+import { MQ_MOBILE } from '../../constants';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatAddress, getExplorerUrl } from '../../utils';
@@ -78,6 +79,7 @@ const CampaignsTable: FC<Props> = ({
 }) => {
   const { exchanges } = useExchangesContext();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(MQ_MOBILE);
 
   const campaigns =
     showAllCampaigns || showPagination ? data : data.slice(0, 3);
@@ -96,7 +98,11 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'paddingLeft',
       headerName: '',
-      width: 32,
+      minWidth: isMobile ? 16 : 32,
+      maxWidth: isMobile ? 16 : 32,
+      width: isMobile ? 16 : 32,
+      renderCell: () => null,
+      renderHeader: () => null,
     },
     {
       field: 'pair',
@@ -198,7 +204,11 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'paddingRight',
       headerName: '',
-      width: 32,
+      minWidth: isMobile ? 16 : 32,
+      maxWidth: isMobile ? 16 : 32,
+      width: isMobile ? 16 : 32,
+      renderCell: () => null,
+      renderHeader: () => null,
     },
   ];
 

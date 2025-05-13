@@ -41,3 +41,5 @@ export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in secon
 export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
 export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
+
+export const MQ_MOBILE = 'screen and (max-width: 600px)';

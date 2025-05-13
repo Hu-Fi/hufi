@@ -39,7 +39,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
         justifyContent="center"
         width="185px"
         py={1}
-        ml={2}
+        ml={{ xs: 0, md: 2 }}
         color="primary.contrast"
         bgcolor={isActiveCampaign ? 'success.main' : 'error.main'}
         fontSize="15px"
@@ -48,7 +48,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
       >
         {isActiveCampaign ? 'Active' : campaign?.status}
       </Box>
-      <Box display="flex" alignItems="center" gap={1} ml={2}>
+      <Box display="flex" alignItems="center" gap={1} ml={{ xs: 0, md: 2 }}>
         {campaign?.startBlock && campaign?.endBlock && (
           <>
             <CalendarIcon />
@@ -60,7 +60,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
           </>
         )}
       </Box>
-      <JoinCampaign campaign={campaign} />
+      <JoinCampaign campaign={campaign}  />
     </>
   );
 };

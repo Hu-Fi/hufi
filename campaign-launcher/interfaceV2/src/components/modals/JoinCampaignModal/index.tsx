@@ -50,7 +50,7 @@ const JoinCampaignModal: FC<Props> = ({ open, onClose, handleSubmitKeys }) => {
       sx={{
         textAlign: 'center',
         color: 'text.primary',
-        px: 14,
+        px: { xs: 3, md: 14 },
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>

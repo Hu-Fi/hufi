@@ -35,19 +35,19 @@ const DashboardStats: FC = () => {
   return (
     <Box component="section" display="flex" flexWrap="wrap">
       <Grid container spacing={2} justifyContent="center" width="100%">
-        <Grid size={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
             <Value>${campaignsStats?.totalFundsUSD || 0}</Value>
           </StatsCard>
         </Grid>
-        <Grid size={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Total Liquidity Provided</Typography>
             <Value>${liquidityScore?.total || 0}</Value>
           </StatsCard>
         </Grid>
-        <Grid size={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Number of Active Campaigns</Typography>
             <Value>{campaignsStats?.totalCampaigns || 0}</Value>

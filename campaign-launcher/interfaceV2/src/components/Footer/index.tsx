@@ -42,10 +42,12 @@ const Footer: FC = () => {
         <Box
           display="flex"
           justifyContent="space-between"
+          flexDirection={{ xs: 'column-reverse', md: 'row' }}
           alignItems="center"
           py={4}
+          gap={{ xs: 2, md: 0 }}
         >
-          <Box display="flex" flexDirection="column" gap="18px">
+          <Box display="flex" flexDirection="column" gap={2}>
             <Box display="flex" alignItems="center" gap={3}>
               <StyledLink
                 href="https://www.humanprotocol.org/privacy-policy"
@@ -73,7 +75,7 @@ const Footer: FC = () => {
               © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
             </Typography>
           </Box>
-          <Box display="flex" alignItems="center" gap="30px">
+          <Box display="flex" alignItems="center" gap="30px" width={{ xs: '100%', md: 'auto' }} justifyContent={{ xs: 'space-between', md: 'center' }}>
             <SocialMediaIconButton aria-label="GitHub">
               <GitHubIcon />
             </SocialMediaIconButton>

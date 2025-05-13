@@ -17,7 +17,15 @@ type Props = {
 
 const ExchangeSelect: FC<Props> = ({ data, onChange }) => {
   return (
-    <FormControl variant="standard" sx={{ minWidth: 256, height: '48px' }}>
+    <FormControl 
+      variant="standard" 
+      sx={{ 
+        width: { xs: '100%', md: 'auto' }, 
+        minWidth: 256, 
+        height: '48px', 
+        order: { xs: 4, md: 3 } 
+      }}
+    >
       <InputLabel id="exchange-select-label">Sort by Exchange</InputLabel>
       <Select
         labelId="exchange-select-label"

@@ -10,9 +10,9 @@ type Props = {
 
 const PageTitle: FC<PropsWithChildren<Props>> = ({ title, children }) => {
   return (
-    <Box display="flex" alignItems="center" gap={2}>
+    <Box display="flex" alignItems="center" gap={2} flexWrap={{ xs: 'wrap', md: 'nowrap' }}>
       <JobsIcon sx={{ width: 66, height: 66 }} />
-      <Typography component="h1" variant="h3">
+      <Typography component="h1" variant="h3" fontSize={{ xs: '2.5rem', md: '3rem' }}>
         {title}
       </Typography>
       {children}

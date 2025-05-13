@@ -45,7 +45,7 @@ const InfoTitle = styled(Typography)(({ theme }) => ({
   marginBottom: '32px',
 }));
 
-const FlexGrid = styled(Box)({
+const FlexGrid = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '16px',
@@ -53,7 +53,13 @@ const FlexGrid = styled(Box)({
   '& > *': {
     flexBasis: 'calc(50% - 8px)',
   },
-});
+
+  [theme.breakpoints.down('md')]: {
+    '& > *': {
+      flexBasis: '100%',
+    },
+  },
+}));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
   const { exchanges } = useExchangesContext();
@@ -69,7 +75,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
 
   return (
     <Grid container spacing={2} width="100%">
-      <Grid size={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FlexGrid>
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
@@ -110,10 +116,11 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           </StatsCard>
         </FlexGrid>
       </Grid>
-      <Grid size={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Box
           display="flex"
           justifyContent="space-between"
+          flexDirection={{ xs: 'column', md: 'row' }}
           bgcolor="background.default"
           borderRadius="16px"
           border="1px solid rgba(255, 255, 255, 0.1)"
