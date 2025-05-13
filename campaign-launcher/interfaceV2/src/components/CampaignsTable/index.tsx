@@ -90,19 +90,20 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'paddingLeft',
       headerName: '',
-      flex: 1,
-      maxWidth: 32,
+      width: 32,
     },
     {
       field: 'pair',
       headerName: 'Pair',
-      flex: 2.5,
+      flex: 2,
+      minWidth: 200,
       renderCell: (params) => <CryptoPairEntity symbol={params.row.symbol} size="medium" />,
     },
     {
       field: 'exchange',
       headerName: 'Exchange',
       flex: 2.5,
+      minWidth: 250,
       renderCell: (params) => {
         const exchangeLogo = exchanges?.find(
           (exchange) => exchange.name === params.row.exchangeName
@@ -122,6 +123,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'address',
       headerName: 'Address',
       flex: 2,
+      minWidth: 175,
       renderCell: (params) => {
         return (
           <Typography variant="subtitle2" display="flex" alignItems="center">
@@ -145,6 +147,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'startDate',
       headerName: 'Start Date',
       flex: 2,
+      minWidth: 125,
       renderCell: (params) => {
         return <Typography variant="subtitle2">{formatDate(params.row.startBlock)}</Typography>;
       },
@@ -153,6 +156,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'endDate',
       headerName: 'End Date',
       flex: 2,
+      minWidth: 125,
       renderCell: (params) => {
         return <Typography variant="subtitle2">{formatDate(params.row.endBlock)}</Typography>;
       },
@@ -161,6 +165,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'fundAmount',
       headerName: 'Fund Amount',
       flex: 2,
+      minWidth: 150,
       renderCell: (params) => {
         return (
           <Typography variant="subtitle2">{formatEther(params.row.fundAmount)} HMT</Typography>
@@ -171,6 +176,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'status',
       headerName: 'Status',
       flex: 1,
+      minWidth: 100,
       renderCell: (params) => {
         const isActive =
           params.row.status === 'Pending' || params.row.status === 'Partial';
@@ -184,8 +190,7 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'paddingRight',
       headerName: '',
-      flex: 1,
-      maxWidth: 32,
+      width: 32,
     },
   ];
 
