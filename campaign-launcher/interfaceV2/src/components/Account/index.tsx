@@ -34,7 +34,7 @@ const Account: FC = () => {
           bgcolor: 'primary.main',
           borderRadius: '4px',
           height: '42px',
-          width: '190px',
+          width: '195px',
           paddingX: 1,
           fontWeight: 600,
           borderBottomLeftRadius: anchorEl ? 0 : 4,

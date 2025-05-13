@@ -12,7 +12,6 @@ export const ACCESS_TOKEN_KEY = 'ro-access-token';
 export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
 
 export const oracles = {
-  exchangeOracle: import.meta.env.VITE_APP_EXCHANGE_ORACLE_ADDRESS,
   exchangeOracleFee: BigInt(import.meta.env.VITE_APP_EXCHANGE_ORACLE_FEE),
   recordingOracle: import.meta.env.VITE_APP_RECORDING_ORACLE_ADDRESS,
   recordingOracleFee: BigInt(import.meta.env.VITE_APP_RECORDING_ORACLE_FEE),
@@ -38,3 +37,7 @@ export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 // TODO: Make these values configurable
 export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['uniswap'];
 export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds
+
+export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
+export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
+export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];

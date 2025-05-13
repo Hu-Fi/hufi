@@ -55,13 +55,12 @@ const useCreateEscrow = () => {
       );
       setStepsCompleted((prev) => prev + 1);
 
-      await (await tokenContract.approve(escrowAddress, fundAmount)).wait();
-      setStepsCompleted((prev) => prev + 1);
       await escrowClient.fund(escrowAddress, fundAmount);
       setStepsCompleted((prev) => prev + 1);
 
       const escrowConfig = {
         ...oracles,
+        exchangeOracle: signer.address,
         manifestUrl: manifest.url,
         manifestHash: manifest.hash,
       };

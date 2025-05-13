@@ -29,7 +29,7 @@ const Value = styled(Typography)(({ theme }) => ({
 
 const DashboardStats: FC = () => {
   const { chain } = useAccount();
-  const { data: campaignsStats } = useCampaignsStats(chain?.id as ChainId);
+  const { data: campaignsStats } = useCampaignsStats((chain?.id || ChainId.ALL) as ChainId);
   const { data: liquidityScore } = useGetLiquidityScore();
 
   return (

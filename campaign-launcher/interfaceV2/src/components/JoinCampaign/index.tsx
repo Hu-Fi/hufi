@@ -1,6 +1,7 @@
 import { FC, useState } from 'react';
 
 import { Button } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 
 import type { CampaignDataDto } from '../../api/client';
@@ -22,6 +23,7 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const { address, isConnected } = useAccount();
   const { exchanges } = useExchangesContext();
+  const queryClient = useQueryClient();
 
   const exchange = exchanges?.find(
     (exchange) =>
@@ -39,6 +41,7 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
   } = useJoinCampaign({
     onSuccess: () => {
       fetchUserCampaignStatus();
+      queryClient.invalidateQueries({ queryKey: ['user-joined-campaigns'] });
     },
   });
 

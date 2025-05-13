@@ -28,7 +28,7 @@ const AllCampaigns: FC<Props> = ({
   const navigate = useNavigate();
 
   const { data: campaigns, isPending } = useCampaigns(
-    chain?.id as ChainId,
+    (chain?.id || ChainId.ALL) as ChainId,
     status,
     exchange
   );
@@ -53,10 +53,8 @@ const AllCampaigns: FC<Props> = ({
         <Typography component="h3" variant="h5" color="text.primary">
           All Campaigns
         </Typography>
-        <Box display="flex" alignItems="center" gap={6}>
-          <StatusSelect onChange={handleStatusChange} />
-          <ExchangeSelect data={exchanges} onChange={handleExchangeChange} />
-        </Box>
+        <StatusSelect onChange={handleStatusChange} />
+        <ExchangeSelect data={exchanges} onChange={handleExchangeChange} />
         <LaunchCampaign variant="contained" sx={{ ml: 'auto' }} />
       </Box>
       {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}

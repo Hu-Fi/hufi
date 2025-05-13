@@ -193,6 +193,11 @@ export class UserService {
       return [];
     }
 
-    return user.campaigns.filter((c) => c.chainId === chainId);
+    return user.campaigns
+      .filter((c) => c.chainId === chainId)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }
 }
