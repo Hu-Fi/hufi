@@ -34,3 +34,20 @@ export const getSupportedChainIds = (): ChainId[] => {
       return LOCALHOST_CHAIN_IDS;
   }
 };
+
+export const explorerBaseUrls: Partial<Record<ChainId, string>> = {
+  1: 'https://etherscan.io',
+  137: 'https://polygonscan.com',
+  80002: 'https://amoy.polygonscan.com',
+  11155111: 'https://sepolia.etherscan.io',
+};
+
+export const getExplorerUrl = (chainId: ChainId, address: string): string => {
+  const baseUrl = explorerBaseUrls[chainId];
+  
+  if (baseUrl) {
+    return `${baseUrl}/address/${address}`;
+  }
+
+  return `https://polygonscan.com/address/${address}`;
+};

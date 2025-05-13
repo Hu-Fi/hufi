@@ -16,8 +16,8 @@ const statuses = [
     value: 'Running',
   },
   {
-    label: 'Ended',
-    value: 'Ended',
+    label: 'Completed',
+    value: 'Complete',
   },
 ] as const;
 

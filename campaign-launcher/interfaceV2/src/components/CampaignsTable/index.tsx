@@ -1,5 +1,6 @@
 import { FC, MouseEvent } from 'react';
 
+import { ChainId } from '@human-protocol/sdk';
 import { Button, IconButton, Typography, Box } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { formatEther } from 'ethers';
@@ -8,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { CampaignDataDto } from '../../api/client';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatAddress } from '../../utils';
+import { formatAddress, getExplorerUrl } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 
 type Props = {
@@ -81,9 +82,14 @@ const CampaignsTable: FC<Props> = ({
   const campaigns =
     showAllCampaigns || showPagination ? data : data.slice(0, 3);
 
-  const handleAddressClick = (e: MouseEvent<HTMLButtonElement>, address: string) => {
+  const handleAddressClick = (
+    e: MouseEvent<HTMLButtonElement>,
+    chainId: ChainId,
+    address: string
+  ) => {
     e.stopPropagation();
-    window.open(`https://polygonscan.com/address/${address}`, '_blank');
+    const explorerUrl = getExplorerUrl(chainId, address);
+    window.open(explorerUrl, '_blank');
   };
 
   const columns: GridColDef[] = [
@@ -129,7 +135,9 @@ const CampaignsTable: FC<Props> = ({
           <Typography variant="subtitle2" display="flex" alignItems="center">
             {formatAddress(params.row.address)}
             <IconButton
-              onClick={(e) => handleAddressClick(e,params.row.address)}
+              onClick={(e) =>
+                handleAddressClick(e, params.row.chainId, params.row.address)
+              }
               sx={{
                 color: 'text.secondary',
                 ml: 1,
