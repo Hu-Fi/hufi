@@ -55,6 +55,7 @@ export class LiquidityScoreService {
       payload.chainId,
       payload.address,
     );
+    this.logger.debug(`This is the campaigns ${campaign.address}`)
 
     if (!campaign) {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
@@ -66,7 +67,7 @@ export class LiquidityScoreService {
         HttpStatus.BAD_REQUEST,
       );
     }
-
+    this.logger.debug(`Starting the calculation of scores for campaign ${campaign.address}`)
     return await this.calculatePendingCampaignLiquidityScores(campaign);
   }
 
@@ -89,6 +90,19 @@ export class LiquidityScoreService {
         : campaign.lastSyncedAt;
 
     const scoresFiles: UploadFile[] = [];
+
+    if(!(
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate(),
+      ) <= yesterday
+    )){
+      this.logger.debug(`Cannot calculate score now for ${campaign.address}, 24 hours have not passed yet since the last calculation.`);
+    }
+    if (startDate > campaign.endDate){
+      this.logger.debug(`Cannot calculate score now for ${campaign.address}, campaign has already ended.`);
+    }
 
     while (
       new Date(
@@ -144,23 +158,22 @@ export class LiquidityScoreService {
           liquidityProvider: user.evmAddress,
           liquidityScore: String(scoreToUpload),
         });
-
-        if (scores.length === 0) {
-          this.logger.warn(`No scores for campaign ${campaign.address}`);
-          return null;
-        }
-
-        const scoresFile = await this.recordsService.pushLiquidityScores(
-          campaign.address,
-          campaign.chainId,
-          scores,
-        );
-
-        await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
-
-        scoresFiles.push(scoresFile);
-        startDate = windowEnd;
       }
+      if (scores.length === 0) {
+        this.logger.warn(`No scores for campaign ${campaign.address}`);
+        return null;
+      }
+
+      const scoresFile = await this.recordsService.pushLiquidityScores(
+        campaign.address,
+        campaign.chainId,
+        scores,
+      );
+
+      await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+
+      scoresFiles.push(scoresFile);
+      startDate = windowEnd;
     }
 
     return scoresFiles;

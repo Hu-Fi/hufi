@@ -7,9 +7,9 @@ export class LiquidityScoreCalculation {
   ) {}
 
   calculate(): number {
-    return (
-      this.tradeVolume +
-      (0.1 * this.openOrderVolume * this.orderDuration) / this.spread
-    );
+    const safeSpread = this.spread > 0 ? this.spread : 1;
+    const orderBookValue =
+      (this.openOrderVolume * this.orderDuration) / safeSpread;
+    return this.tradeVolume + 0.1 * orderBookValue;
   }
 }
