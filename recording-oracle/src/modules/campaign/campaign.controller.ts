@@ -8,10 +8,10 @@ import {
 } from '@nestjs/swagger';
 
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+import { CampaignEntity } from '../../database/entities';
 
 import { CampaignCreateRequestDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
-import { CampaignEntity } from '../../database/entities';
 
 @ApiTags('Campaign')
 @Controller('campaign')
