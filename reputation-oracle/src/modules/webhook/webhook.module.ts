@@ -3,6 +3,7 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { DatabaseModule } from '../../database/database.module';
 import { StorageModule } from '../storage/storage.module';
 import { Web3Module } from '../web3/web3.module';
 import { Web3TransactionModule } from '../web3-transaction/web3-transaction.module';
@@ -21,6 +22,7 @@ import { WebhookService } from './webhook.service';
     StorageModule,
     HttpModule,
     Web3TransactionModule,
+    DatabaseModule,
   ],
   controllers: [WebhookController],
   providers: [

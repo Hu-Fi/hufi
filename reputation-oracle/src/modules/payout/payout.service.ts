@@ -4,7 +4,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { lastValueFrom } from 'rxjs';
 
-import { Web3ConfigService } from '../../common/config/web3-config.service';
 import { EventType } from '../../common/enums';
 import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { Manifest } from '../../common/interfaces/manifest';
@@ -24,7 +23,6 @@ export class PayoutService {
   private readonly logger = new Logger(PayoutService.name);
 
   constructor(
-    private web3ConfigService: Web3ConfigService,
     private web3Service: Web3Service,
     private httpService: HttpService,
     private webhookService: WebhookService, // Inject WebhookService
