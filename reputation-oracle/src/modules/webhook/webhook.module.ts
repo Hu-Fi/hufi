@@ -4,10 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DatabaseModule } from '../../database/database.module';
+import { PgLockService } from '../../database/pg-lock.service';
 import { StorageModule } from '../storage/storage.module';
 import { Web3Module } from '../web3/web3.module';
-import { Web3TransactionModule } from '../web3-transaction/web3-transaction.module';
-import { Web3TransactionService } from '../web3-transaction/web3-transaction.service';
 
 import { WebhookIncomingEntity } from './webhook-incoming.entity';
 import { WebhookController } from './webhook.controller';
@@ -21,16 +20,10 @@ import { WebhookService } from './webhook.service';
     Web3Module,
     StorageModule,
     HttpModule,
-    Web3TransactionModule,
     DatabaseModule,
   ],
   controllers: [WebhookController],
-  providers: [
-    Logger,
-    WebhookService,
-    WebhookRepository,
-    Web3TransactionService,
-  ],
+  providers: [Logger, WebhookService, WebhookRepository, PgLockService],
   exports: [WebhookService],
 })
 export class WebhookModule {}
