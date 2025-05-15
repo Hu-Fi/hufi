@@ -8,7 +8,6 @@ import { Web3TransactionModule } from '../web3-transaction/web3-transaction.modu
 import { WebhookIncomingEntity } from '../webhook/webhook-incoming.entity';
 import { WebhookModule } from '../webhook/webhook.module';
 import { WebhookRepository } from '../webhook/webhook.repository';
-import { WebhookService } from '../webhook/webhook.service';
 
 import { PayoutController } from './payout.controller';
 import { PayoutService } from './payout.service';
@@ -21,13 +20,7 @@ import { PayoutService } from './payout.service';
     Web3TransactionModule,
   ],
   controllers: [PayoutController],
-  providers: [
-    PayoutService,
-    StorageService,
-    Web3Service,
-    WebhookRepository,
-    WebhookService,
-  ],
+  providers: [PayoutService, StorageService, Web3Service, WebhookRepository],
   exports: [PayoutService],
 })
 export class PayoutModule {}
