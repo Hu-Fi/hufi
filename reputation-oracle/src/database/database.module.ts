@@ -67,6 +67,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
       },
     }),
   ],
+  providers: [PgLockService],
   exports: [PgLockService],
 })
 export class DatabaseModule {}
