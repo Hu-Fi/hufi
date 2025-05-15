@@ -15,25 +15,23 @@ export class PgLockService {
    * @returns    Whatever `fn` returns, or `null` if another node is working
    */
   async withLock<T>(key: string, fn: () => Promise<T>): Promise<T | null> {
-    const runner = this.dataSource.createQueryRunner(); // gets its own dedicated connection
+    const runner = this.dataSource.createQueryRunner();
     await runner.connect();
 
-    // hashtext() → BIGINT so we can map strings to the advisory-lock API
     const [{ locked }] = await runner.query(
       'SELECT pg_try_advisory_lock(hashtext($1)) AS locked',
       [key],
     );
 
     if (!locked) {
-      await runner.release(); // somebody else holds the lock
+      await runner.release();
       this.logger.debug(`Skipped - lock "${key}" is busy`);
       return null;
     }
 
     try {
-      return await fn(); // we are the owner
+      return await fn();
     } finally {
-      // always release before giving the connection back
       await runner.query('SELECT pg_advisory_unlock(hashtext($1))', [key]);
       await runner.release();
     }
