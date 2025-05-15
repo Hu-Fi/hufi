@@ -55,7 +55,7 @@ export class LiquidityScoreService {
       payload.chainId,
       payload.address,
     );
-    this.logger.debug(`This is the campaigns ${campaign.address}`);
+    this.logger.debug(`This is the campaign ${campaign.address}`);
 
     if (!campaign) {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
