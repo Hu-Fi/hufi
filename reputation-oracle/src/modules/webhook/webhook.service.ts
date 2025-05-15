@@ -78,6 +78,10 @@ export class WebhookService {
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   public async processPendingWebhooks(): Promise<void> {
+    this.logger.log(
+      `Fired in PID ${process.pid} - instance ${this as any}`,
+      WebhookService.name,
+    );
     try {
       // Find all webhook entries that are still pending, haven't exceeded retries, and are due for processing.
       const webhookEntities = await this.webhookRepository.find(
