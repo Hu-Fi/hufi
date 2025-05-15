@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { DatabaseModule } from '../../database/database.module';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
 import { Web3TransactionModule } from '../web3-transaction/web3-transaction.module';
@@ -18,6 +19,7 @@ import { PayoutService } from './payout.service';
     WebhookModule,
     TypeOrmModule.forFeature([WebhookIncomingEntity]),
     Web3TransactionModule,
+    DatabaseModule,
   ],
   controllers: [PayoutController],
   providers: [PayoutService, StorageService, Web3Service, WebhookRepository],

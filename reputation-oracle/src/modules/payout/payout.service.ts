@@ -7,6 +7,7 @@ import { lastValueFrom } from 'rxjs';
 import { EventType } from '../../common/enums';
 import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { Manifest } from '../../common/interfaces/manifest';
+import { PgLockService } from '../../database/pg-lock.service';
 import { Web3Service } from '../web3/web3.service';
 import { Web3TransactionService } from '../web3-transaction/web3-transaction.service';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
@@ -25,8 +26,9 @@ export class PayoutService {
   constructor(
     private web3Service: Web3Service,
     private httpService: HttpService,
-    private webhookService: WebhookService, // Inject WebhookService
+    private webhookService: WebhookService,
     private web3TransactionService: Web3TransactionService,
+    private readonly pgLockService: PgLockService,
   ) {}
 
   async fetchCampaigns(chainId: number): Promise<CampaignWithManifest[]> {
@@ -87,69 +89,70 @@ export class PayoutService {
   /**
    * Cron job to process the campaign payouts.
    */
-  @Cron('*/15 * * * *') // 15 minutes.
+  @Cron(CronExpression.EVERY_30_MINUTES)
   // Process the payouts (used by both cron and manual methods)
   async processPayouts(chainId = ChainId.ALL): Promise<void> {
-    this.logger.log('Processing payouts for campaigns.');
+    this.logger.log(`Processing payouts for campaigns.  - PID: ${process.pid}`);
+    await this.pgLockService.withLock('cron:processPayouts', async () => {
+      // Ensure campaigns are fetched before executing cron job
+      const campaigns = await this.fetchCampaigns(chainId);
 
-    // Ensure campaigns are fetched before executing cron job
-    const campaigns = await this.fetchCampaigns(chainId);
+      // Iterate over each campaign and create a webhook
+      for (const campaign of campaigns) {
+        // Only Pending or Partial
+        if (campaign.status !== 'Pending' && campaign.status !== 'Partial') {
+          continue;
+        }
 
-    // Iterate over each campaign and create a webhook
-    for (const campaign of campaigns) {
-      // Only Pending or Partial
-      if (campaign.status !== 'Pending' && campaign.status !== 'Partial') {
-        continue;
-      }
-
-      this.logger.log(
-        `Processing escrow address: ${campaign.escrowAddress}`,
-        WebhookService.name,
-      );
-
-      // Get the intermediateResultsUrl from the escrow
-      const intermediateResultsUrl = campaign.intermediateResutlsUrl;
-
-      if (!intermediateResultsUrl) {
-        this.logger.warn(
-          `Intermediate result URL not found for ${campaign.escrowAddress}`,
-        );
-        continue;
-      }
-
-      if (
-        await this.webhookService.checkIfExists(
-          campaign.chainId,
-          campaign.escrowAddress,
-          intermediateResultsUrl,
-        )
-      ) {
-        this.logger.warn(
-          `An Incoming Webhook for the results of ${campaign.escrowAddress} on chain id ${campaign.chainId} save in url ${intermediateResultsUrl} Already Exists `,
-        );
-        continue;
-      }
-      const data: WebhookIncomingDto = {
-        chainId: campaign.chainId,
-        eventType: EventType.CAMPAIGN_PAYOUT,
-        escrowAddress: campaign.escrowAddress,
-        payload: intermediateResultsUrl,
-      };
-
-      try {
-        await this.webhookService.createIncomingWebhook(data);
         this.logger.log(
-          'Webhook created for campaign:',
-          campaign.escrowAddress,
+          `Processing escrow address: ${campaign.escrowAddress}`,
+          WebhookService.name,
         );
-      } catch (error) {
-        this.logger.error(
-          'Error creating webhook for campaign:',
-          campaign.escrowAddress,
-          error,
-        );
+
+        // Get the intermediateResultsUrl from the escrow
+        const intermediateResultsUrl = campaign.intermediateResutlsUrl;
+
+        if (!intermediateResultsUrl) {
+          this.logger.warn(
+            `Intermediate result URL not found for ${campaign.escrowAddress}`,
+          );
+          continue;
+        }
+
+        if (
+          await this.webhookService.checkIfExists(
+            campaign.chainId,
+            campaign.escrowAddress,
+            intermediateResultsUrl,
+          )
+        ) {
+          this.logger.warn(
+            `An Incoming Webhook for the results of ${campaign.escrowAddress} on chain id ${campaign.chainId} save in url ${intermediateResultsUrl} Already Exists `,
+          );
+          continue;
+        }
+        const data: WebhookIncomingDto = {
+          chainId: campaign.chainId,
+          eventType: EventType.CAMPAIGN_PAYOUT,
+          escrowAddress: campaign.escrowAddress,
+          payload: intermediateResultsUrl,
+        };
+
+        try {
+          await this.webhookService.createIncomingWebhook(data);
+          this.logger.log(
+            'Webhook created for campaign:',
+            campaign.escrowAddress,
+          );
+        } catch (error) {
+          this.logger.error(
+            'Error creating webhook for campaign:',
+            campaign.escrowAddress,
+            error,
+          );
+        }
       }
-    }
+    });
   }
 
   /**
@@ -157,119 +160,120 @@ export class PayoutService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_4PM)
   async finalizeCampaigns(): Promise<void> {
-    this.logger.log('Checking expired campaigns.');
+    this.logger.log(`Checking expired campaigns.  - PID: ${process.pid}`);
+    await this.pgLockService.withLock('cron:finalizeCampaigns', async () => {
+      // Ensure campaigns are fetched before executing cron job
+      const campaigns = await this.fetchCampaigns(ChainId.ALL);
 
-    // Ensure campaigns are fetched before executing cron job
-    const campaigns = await this.fetchCampaigns(ChainId.ALL);
+      // Iterate over each campaign and finalize it
+      for (const campaign of campaigns) {
+        try {
+          const signer = this.web3Service.getSigner(campaign.chainId);
+          const escrowClient = await EscrowClient.build(signer);
 
-    // Iterate over each campaign and finalize it
-    for (const campaign of campaigns) {
-      try {
-        const signer = this.web3Service.getSigner(campaign.chainId);
-        const escrowClient = await EscrowClient.build(signer);
+          const escrow = await EscrowUtils.getEscrow(
+            campaign.chainId,
+            campaign.escrowAddress,
+          );
 
-        const escrow = await EscrowUtils.getEscrow(
-          campaign.chainId,
-          campaign.escrowAddress,
-        );
+          const balance = BigInt(escrow.balance);
 
-        const balance = BigInt(escrow.balance);
-
-        if (balance === 0n) {
-          if (campaign.status === 'Paid') {
-            this.logger.log(
-              `Completing campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
-            );
-
-            const gasPrice = await this.web3Service.calculateGasPrice(
-              campaign.chainId,
-            );
-
-            const web3Txn =
-              await this.web3TransactionService.saveWeb3Transaction({
-                chainId: campaign.chainId,
-                contract: 'escrow',
-                address: campaign.escrowAddress,
-                method: 'complete',
-                data: [
-                  {
-                    gasPrice: gasPrice.toString(),
-                  },
-                ],
-                status: Web3TransactionStatus.PENDING,
-              });
-
-            try {
-              await escrowClient.complete(campaign.escrowAddress, {
-                gasPrice,
-              });
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.SUCCESS,
-              );
-            } catch {
-              this.logger.error(
-                `Failed to complete campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
+          if (balance === 0n) {
+            if (campaign.status === 'Paid') {
+              this.logger.log(
+                `Completing campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
               );
 
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.FAILED,
+              const gasPrice = await this.web3Service.calculateGasPrice(
+                campaign.chainId,
               );
+
+              const web3Txn =
+                await this.web3TransactionService.saveWeb3Transaction({
+                  chainId: campaign.chainId,
+                  contract: 'escrow',
+                  address: campaign.escrowAddress,
+                  method: 'complete',
+                  data: [
+                    {
+                      gasPrice: gasPrice.toString(),
+                    },
+                  ],
+                  status: Web3TransactionStatus.PENDING,
+                });
+
+              try {
+                await escrowClient.complete(campaign.escrowAddress, {
+                  gasPrice,
+                });
+
+                await this.web3TransactionService.updateWeb3TransactionStatus(
+                  web3Txn.id,
+                  Web3TransactionStatus.SUCCESS,
+                );
+              } catch {
+                this.logger.error(
+                  `Failed to complete campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
+                );
+
+                await this.web3TransactionService.updateWeb3TransactionStatus(
+                  web3Txn.id,
+                  Web3TransactionStatus.FAILED,
+                );
+              }
+            }
+          } else {
+            if (campaign.endBlock * 1000 < new Date().getTime()) {
+              this.logger.log(
+                `Cancelling campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
+              );
+
+              const gasPrice = await this.web3Service.calculateGasPrice(
+                campaign.chainId,
+              );
+
+              const web3Txn =
+                await this.web3TransactionService.saveWeb3Transaction({
+                  chainId: campaign.chainId,
+                  contract: 'escrow',
+                  address: campaign.escrowAddress,
+                  method: 'cancel',
+                  data: [
+                    {
+                      gasPrice: gasPrice.toString(),
+                    },
+                  ],
+                  status: Web3TransactionStatus.PENDING,
+                });
+
+              try {
+                await escrowClient.cancel(campaign.escrowAddress, {
+                  gasPrice: await this.web3Service.calculateGasPrice(
+                    campaign.chainId,
+                  ),
+                });
+
+                await this.web3TransactionService.updateWeb3TransactionStatus(
+                  web3Txn.id,
+                  Web3TransactionStatus.SUCCESS,
+                );
+              } catch (error) {
+                this.logger.error(
+                  `Failed to cancel campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
+                  error,
+                );
+
+                await this.web3TransactionService.updateWeb3TransactionStatus(
+                  web3Txn.id,
+                  Web3TransactionStatus.FAILED,
+                );
+              }
             }
           }
-        } else {
-          if (campaign.endBlock * 1000 < new Date().getTime()) {
-            this.logger.log(
-              `Cancelling campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
-            );
-
-            const gasPrice = await this.web3Service.calculateGasPrice(
-              campaign.chainId,
-            );
-
-            const web3Txn =
-              await this.web3TransactionService.saveWeb3Transaction({
-                chainId: campaign.chainId,
-                contract: 'escrow',
-                address: campaign.escrowAddress,
-                method: 'cancel',
-                data: [
-                  {
-                    gasPrice: gasPrice.toString(),
-                  },
-                ],
-                status: Web3TransactionStatus.PENDING,
-              });
-
-            try {
-              await escrowClient.cancel(campaign.escrowAddress, {
-                gasPrice: await this.web3Service.calculateGasPrice(
-                  campaign.chainId,
-                ),
-              });
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.SUCCESS,
-              );
-            } catch (error) {
-              this.logger.error(
-                `Failed to cancel campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
-                error,
-              );
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.FAILED,
-              );
-            }
-          }
+        } catch (error) {
+          this.logger.error('Error finalizing campaign:', error);
         }
-      } catch (error) {
-        this.logger.error('Error finalizing campaign:', error);
       }
-    }
+    });
   }
 }

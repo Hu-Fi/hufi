@@ -34,7 +34,7 @@ export class WebhookService {
     private readonly storageService: StorageService,
     private readonly webhookRepository: WebhookRepository,
     private readonly httpService: HttpService,
-    private readonly pgLock: PgLockService,
+    private readonly pgLockService: PgLockService,
   ) {}
 
   /**
@@ -78,228 +78,231 @@ export class WebhookService {
    */
   @Cron(CronExpression.EVERY_2_HOURS)
   public async processPendingWebhooks(): Promise<void> {
-    this.logger.log(
-      `Fired in PID ${process.pid} - instance ${this as any}`,
-      WebhookService.name,
-    );
-    await this.pgLock.withLock('cron:processPendingWebhooks', async () => {
-      try {
-        // Find all webhook entries that are still pending, haven't exceeded retries, and are due for processing.
-        const webhookEntities = await this.webhookRepository.find(
-          {
-            status: WebhookStatus.PENDING,
-            retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
-            waitUntil: LessThanOrEqual(new Date()),
-          },
-          {
-            order: {
-              waitUntil: SortDirection.ASC,
+    this.logger.log(`Processing pending webhooks - PID: ${process.pid}`);
+    await this.pgLockService.withLock(
+      'cron:processPendingWebhooks',
+      async () => {
+        try {
+          // Find all webhook entries that are still pending, haven't exceeded retries, and are due for processing.
+          const webhookEntities = await this.webhookRepository.find(
+            {
+              status: WebhookStatus.PENDING,
+              retriesCount: LessThanOrEqual(RETRIES_COUNT_THRESHOLD),
+              waitUntil: LessThanOrEqual(new Date()),
             },
-          },
-        );
+            {
+              order: {
+                waitUntil: SortDirection.ASC,
+              },
+            },
+          );
 
-        for (const webhookEntity of webhookEntities) {
-          try {
-            const { chainId, escrowAddress } = webhookEntity;
-            const signer = this.web3Service.getSigner(chainId);
-            const escrowClient = await EscrowClient.build(signer);
-
-            this.logger.log(
-              `Processing escrow address: ${escrowAddress}`,
-              WebhookService.name,
-            );
-            const intermediateResultsUrl = webhookEntity.payload;
-
-            // Attempt to download and parse intermediate results
-            let intermediateResultContent: string | null;
+          for (const webhookEntity of webhookEntities) {
             try {
-              intermediateResultContent = await this.storageService.download(
-                intermediateResultsUrl,
-              );
-            } catch (downloadErr) {
-              this.logger.warn(
-                `Failed to download intermediate results: ${downloadErr.message}`,
+              const { chainId, escrowAddress } = webhookEntity;
+              const signer = this.web3Service.getSigner(chainId);
+              const escrowClient = await EscrowClient.build(signer);
+
+              this.logger.log(
+                `Processing escrow address: ${escrowAddress}`,
                 WebhookService.name,
               );
-              intermediateResultContent = null;
-            }
+              const intermediateResultsUrl = webhookEntity.payload;
 
-            if (!intermediateResultContent) {
-              throw new Error('Invalid intermediate results (empty content)');
-            }
-
-            let intermediateResults: LiquidityDto[];
-            try {
-              intermediateResults = JSON.parse(intermediateResultContent);
-            } catch (parseErr) {
-              throw new Error(
-                `Invalid JSON in intermediate results: ${parseErr}`,
-              );
-            }
-
-            if (
-              !Array.isArray(intermediateResults) ||
-              !intermediateResults.length
-            ) {
-              throw new Error(
-                'No liquidity providers found - intermediate results array is empty or invalid',
-              );
-            }
-
-            // Upload results (for example, as "proof" or record)
-            const { url, hash } = await this.storageService.uploadLiquidities(
-              escrowAddress,
-              chainId,
-              intermediateResults,
-            );
-
-            const recipientsOriginal = this.getRecipients(intermediateResults);
-
-            // Check how much the contract has
-            const totalAmount = await escrowClient.getBalance(escrowAddress);
-            this.logger.debug(
-              `Escrow contract balance: ${totalAmount.toString()}`,
-              WebhookService.name,
-            );
-
-            if (totalAmount === 0n) {
-              throw new Error('No funds to distribute in escrow');
-            }
-
-            // Get manifest and relevant info
-            const manifestUrl =
-              await escrowClient.getManifestUrl(escrowAddress);
-            const fundToken = await escrowClient.getTokenAddress(escrowAddress);
-
-            let manifest: any;
-            try {
-              const response = await lastValueFrom(
-                this.httpService.get(manifestUrl),
-              );
-              manifest = response.data;
-            } catch (manifestErr) {
-              throw new Error(
-                `Failed to download or parse manifest: ${manifestErr.message}`,
-              );
-            }
-
-            // 1) Compute totalVolume from intermediate results
-            const totalVolume = intermediateResults.reduce((acc, item) => {
-              return acc + ethers.parseEther(item.liquidityScore);
-            }, 0n);
-
-            // 2) Possibly override daily amount if there's a volume-based calculation
-            let amountForDay = this.getTotalAmountByVolume(
-              chainId,
-              manifest,
-              fundToken,
-              totalVolume,
-            );
-
-            if (amountForDay) {
-              // If the escrow has less than that daily amount, just use the entire escrow
-              if (totalAmount < amountForDay) {
-                amountForDay = totalAmount;
+              // Attempt to download and parse intermediate results
+              let intermediateResultContent: string | null;
+              try {
+                intermediateResultContent = await this.storageService.download(
+                  intermediateResultsUrl,
+                );
+              } catch (downloadErr) {
+                this.logger.warn(
+                  `Failed to download intermediate results: ${downloadErr.message}`,
+                  WebhookService.name,
+                );
+                intermediateResultContent = null;
               }
-            } else {
-              // fallback if no volume-based approach
-              const endBlock = manifest.endBlock;
-              let remainingDays = Math.floor(
-                (endBlock - Math.floor(Date.now() / 1000)) / 86400,
-              );
-              if (remainingDays < 1) {
-                remainingDays = 1;
+
+              if (!intermediateResultContent) {
+                throw new Error('Invalid intermediate results (empty content)');
               }
-              amountForDay = totalAmount / BigInt(remainingDays);
-            }
 
-            // 3) Calculate each user's portion
-            const amountsOriginal = this.calculateCampaignPayoutAmounts(
-              amountForDay,
-              intermediateResults,
-            );
+              let intermediateResults: LiquidityDto[];
+              try {
+                intermediateResults = JSON.parse(intermediateResultContent);
+              } catch (parseErr) {
+                throw new Error(
+                  `Invalid JSON in intermediate results: ${parseErr}`,
+                );
+              }
 
-            // filter out zero amount payouts
-            const filtered = recipientsOriginal
-              .map((addr, i) => ({ addr, amt: amountsOriginal[i] }))
-              .filter(({ amt }) => amt > 0n);
+              if (
+                !Array.isArray(intermediateResults) ||
+                !intermediateResults.length
+              ) {
+                throw new Error(
+                  'No liquidity providers found - intermediate results array is empty or invalid',
+                );
+              }
 
-            if (filtered.length === 0) {
-              this.logger.warn(
-                'No non-zero payouts, skipping bulkPayOut',
+              // Upload results (for example, as "proof" or record)
+              const { url, hash } = await this.storageService.uploadLiquidities(
+                escrowAddress,
+                chainId,
+                intermediateResults,
+              );
+
+              const recipientsOriginal =
+                this.getRecipients(intermediateResults);
+
+              // Check how much the contract has
+              const totalAmount = await escrowClient.getBalance(escrowAddress);
+              this.logger.debug(
+                `Escrow contract balance: ${totalAmount.toString()}`,
                 WebhookService.name,
               );
+
+              if (totalAmount === 0n) {
+                throw new Error('No funds to distribute in escrow');
+              }
+
+              // Get manifest and relevant info
+              const manifestUrl =
+                await escrowClient.getManifestUrl(escrowAddress);
+              const fundToken =
+                await escrowClient.getTokenAddress(escrowAddress);
+
+              let manifest: any;
+              try {
+                const response = await lastValueFrom(
+                  this.httpService.get(manifestUrl),
+                );
+                manifest = response.data;
+              } catch (manifestErr) {
+                throw new Error(
+                  `Failed to download or parse manifest: ${manifestErr.message}`,
+                );
+              }
+
+              // 1) Compute totalVolume from intermediate results
+              const totalVolume = intermediateResults.reduce((acc, item) => {
+                return acc + ethers.parseEther(item.liquidityScore);
+              }, 0n);
+
+              // 2) Possibly override daily amount if there's a volume-based calculation
+              let amountForDay = this.getTotalAmountByVolume(
+                chainId,
+                manifest,
+                fundToken,
+                totalVolume,
+              );
+
+              if (amountForDay) {
+                // If the escrow has less than that daily amount, just use the entire escrow
+                if (totalAmount < amountForDay) {
+                  amountForDay = totalAmount;
+                }
+              } else {
+                // fallback if no volume-based approach
+                const endBlock = manifest.endBlock;
+                let remainingDays = Math.floor(
+                  (endBlock - Math.floor(Date.now() / 1000)) / 86400,
+                );
+                if (remainingDays < 1) {
+                  remainingDays = 1;
+                }
+                amountForDay = totalAmount / BigInt(remainingDays);
+              }
+
+              // 3) Calculate each user's portion
+              const amountsOriginal = this.calculateCampaignPayoutAmounts(
+                amountForDay,
+                intermediateResults,
+              );
+
+              // filter out zero amount payouts
+              const filtered = recipientsOriginal
+                .map((addr, i) => ({ addr, amt: amountsOriginal[i] }))
+                .filter(({ amt }) => amt > 0n);
+
+              if (filtered.length === 0) {
+                this.logger.warn(
+                  'No non-zero payouts, skipping bulkPayOut',
+                  WebhookService.name,
+                );
+                await this.webhookRepository.updateOne(
+                  { id: webhookEntity.id },
+                  { checkPassed: true, status: WebhookStatus.PAID },
+                );
+                continue;
+              }
+
+              const recipients = filtered.map(({ addr }) => addr);
+              const amounts = filtered.map(({ amt }) => amt);
+
+              const sumOfAmounts = amounts.reduce((acc, val) => acc + val, 0n);
+              if (sumOfAmounts > totalAmount) {
+                throw new Error(
+                  `Calculated payout total (${sumOfAmounts.toString()}) exceeds escrow balance (${totalAmount.toString()})`,
+                );
+              }
+
+              this.logger.debug(
+                `Computed individual amounts: ${JSON.stringify(
+                  amounts.map((bn) => bn.toString()),
+                )}`,
+                WebhookService.name,
+              );
+
+              // Prepare gas price
+              const gasPrice =
+                await this.web3Service.calculateGasPrice(chainId);
+              this.logger.debug(
+                `Calculated gas price: ${gasPrice.toString()}`,
+                WebhookService.name,
+              );
+
+              // 5) Attempt the actual transaction on-chain
+              await escrowClient.bulkPayOut(
+                escrowAddress,
+                recipients,
+                amounts,
+                url,
+                hash,
+                1,
+                false,
+                { gasPrice },
+              );
+
+              // If we reach here, transaction succeeded
+              this.logger.log(
+                `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
+                WebhookService.name,
+              );
+
+              // Mark the webhook as paid
               await this.webhookRepository.updateOne(
                 { id: webhookEntity.id },
-                { checkPassed: true, status: WebhookStatus.PAID },
+                {
+                  resultsUrl: url,
+                  checkPassed: true,
+                  status: WebhookStatus.PAID,
+                },
               );
-              continue;
+            } catch (err) {
+              // If any error occurs, handle retries & logging
+              await this.handleWebhookError(webhookEntity, err);
             }
-
-            const recipients = filtered.map(({ addr }) => addr);
-            const amounts = filtered.map(({ amt }) => amt);
-
-            const sumOfAmounts = amounts.reduce((acc, val) => acc + val, 0n);
-            if (sumOfAmounts > totalAmount) {
-              throw new Error(
-                `Calculated payout total (${sumOfAmounts.toString()}) exceeds escrow balance (${totalAmount.toString()})`,
-              );
-            }
-
-            this.logger.debug(
-              `Computed individual amounts: ${JSON.stringify(
-                amounts.map((bn) => bn.toString()),
-              )}`,
-              WebhookService.name,
-            );
-
-            // Prepare gas price
-            const gasPrice = await this.web3Service.calculateGasPrice(chainId);
-            this.logger.debug(
-              `Calculated gas price: ${gasPrice.toString()}`,
-              WebhookService.name,
-            );
-
-            // 5) Attempt the actual transaction on-chain
-            await escrowClient.bulkPayOut(
-              escrowAddress,
-              recipients,
-              amounts,
-              url,
-              hash,
-              1,
-              false,
-              { gasPrice },
-            );
-
-            // If we reach here, transaction succeeded
-            this.logger.log(
-              `Successfully paid out campaign: chainId=${chainId}, escrow=${escrowAddress}`,
-              WebhookService.name,
-            );
-
-            // Mark the webhook as paid
-            await this.webhookRepository.updateOne(
-              { id: webhookEntity.id },
-              {
-                resultsUrl: url,
-                checkPassed: true,
-                status: WebhookStatus.PAID,
-              },
-            );
-          } catch (err) {
-            // If any error occurs, handle retries & logging
-            await this.handleWebhookError(webhookEntity, err);
           }
+        } catch (outerErr) {
+          // Catch any outer error from the cron job itself
+          this.logger.error(
+            `processPendingWebhooks encountered an error: ${outerErr.message}`,
+            outerErr.stack,
+          );
         }
-      } catch (outerErr) {
-        // Catch any outer error from the cron job itself
-        this.logger.error(
-          `processPendingWebhooks encountered an error: ${outerErr.message}`,
-          outerErr.stack,
-        );
-      }
-    });
+      },
+    );
   }
 
   /**
