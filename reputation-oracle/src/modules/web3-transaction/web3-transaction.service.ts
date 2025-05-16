@@ -5,6 +5,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ErrorWeb3Transaction } from '../../common/constants/errors';
 import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { ControlledError } from '../../common/errors/controlled';
+import { PgLockService } from '../../database/pg-lock.service';
 import { Web3Service } from '../web3/web3.service';
 
 import { Web3TransactionDto } from './web3-transaction.dto';
@@ -18,6 +19,7 @@ export class Web3TransactionService {
   constructor(
     private web3TransactionRepository: Web3TransactionRepository,
     private web3Service: Web3Service,
+    private readonly pgLockService: PgLockService,
   ) {}
 
   public async saveWeb3Transaction(
@@ -62,46 +64,50 @@ export class Web3TransactionService {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async retryFailedWeb3Transactions(): Promise<void> {
-    this.logger.log('Retrying failed web3 transactions');
+    this.logger.log(`Retrying failed web3 transactions  - PID: ${process.pid}`);
+    await this.pgLockService.withLock(
+      'cron:retryFailedWeb3Transactions',
+      async () => {
+        const failedTransactions = await this.web3TransactionRepository.find({
+          where: { status: Web3TransactionStatus.FAILED },
+        });
 
-    const failedTransactions = await this.web3TransactionRepository.find({
-      where: { status: Web3TransactionStatus.FAILED },
-    });
+        for (const transaction of failedTransactions) {
+          try {
+            const signer = this.web3Service.getSigner(transaction.chainId);
+            const escrowClient = await EscrowClient.build(signer);
 
-    for (const transaction of failedTransactions) {
-      try {
-        const signer = this.web3Service.getSigner(transaction.chainId);
-        const escrowClient = await EscrowClient.build(signer);
-
-        this.logger.log(
-          `Retrying transaction ${transaction.id} for ${transaction.contract} at ${transaction.address}`,
-        );
-
-        switch (transaction.contract) {
-          case 'escrow':
-            await escrowClient[transaction.method](
-              transaction.address,
-              ...transaction.data,
+            this.logger.log(
+              `Retrying transaction ${transaction.id} for ${transaction.contract} at ${transaction.address}`,
             );
-            break;
-          default:
-            throw new ControlledError(
-              ErrorWeb3Transaction.InvalidContract,
-              HttpStatus.BAD_REQUEST,
+
+            switch (transaction.contract) {
+              case 'escrow':
+                await escrowClient[transaction.method](
+                  transaction.address,
+                  ...transaction.data,
+                );
+                break;
+              default:
+                throw new ControlledError(
+                  ErrorWeb3Transaction.InvalidContract,
+                  HttpStatus.BAD_REQUEST,
+                );
+            }
+
+            await this.updateWeb3TransactionStatus(
+              transaction.id,
+              Web3TransactionStatus.SUCCESS,
             );
+          } catch (error) {
+            this.logger.error(
+              `Failed to retry transaction ${transaction.id}: ${error.message}`,
+            );
+          }
         }
 
-        await this.updateWeb3TransactionStatus(
-          transaction.id,
-          Web3TransactionStatus.SUCCESS,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Failed to retry transaction ${transaction.id}: ${error.message}`,
-        );
-      }
-    }
-
-    this.logger.log('Finished retrying failed web3 transactions');
+        this.logger.log('Finished retrying failed web3 transactions');
+      },
+    );
   }
 }
