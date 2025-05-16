@@ -106,7 +106,7 @@ export class LiquidityScoreService {
         `Cannot calculate score now for ${campaign.address}, 24 hours have not passed yet since the last calculation.`,
       );
     }
-    if (startDate > campaign.endDate) {
+    if (startDate >= campaign.endDate) {
       this.logger.debug(
         `Cannot calculate score now for ${campaign.address}, campaign has already ended.`,
       );
