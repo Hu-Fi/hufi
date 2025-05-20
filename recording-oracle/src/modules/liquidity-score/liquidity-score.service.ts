@@ -9,6 +9,7 @@ import { ControlledError } from '../../common/errors/controlled';
 import { LiquidityScore } from '../../common/types/liquidity-score';
 import { isCenteralizedExchange } from '../../common/utils/exchange';
 import { CampaignEntity, UserEntity } from '../../database/entities';
+import { PgLockService } from '../../database/pg-lock.service';
 import { CampaignService } from '../campaign/campaign.service';
 import { CCXTService } from '../exchange/ccxt.service';
 import { UniswapService } from '../exchange/uniswap.service';
@@ -39,6 +40,7 @@ export class LiquidityScoreService {
     private recordsService: RecordsService,
     @InjectRepository(LiquidityScoreRepository)
     private liquidityScoreRepository: LiquidityScoreRepository,
+    private readonly pgLockService: PgLockService,
   ) {}
 
   public async calculateLiquidityScore(
@@ -55,7 +57,6 @@ export class LiquidityScoreService {
       payload.chainId,
       payload.address,
     );
-    this.logger.debug(`This is the campaign ${campaign.address}`);
 
     if (!campaign) {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
@@ -67,9 +68,7 @@ export class LiquidityScoreService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    this.logger.debug(
-      `Starting the calculation of scores for campaign ${campaign.address}`,
-    );
+
     return await this.calculatePendingCampaignLiquidityScores(campaign);
   }
 
@@ -92,25 +91,6 @@ export class LiquidityScoreService {
         : campaign.lastSyncedAt;
 
     const scoresFiles: UploadFile[] = [];
-
-    if (
-      !(
-        new Date(
-          startDate.getFullYear(),
-          startDate.getMonth(),
-          startDate.getDate(),
-        ) <= yesterday
-      )
-    ) {
-      this.logger.debug(
-        `Cannot calculate score now for ${campaign.address}, 24 hours have not passed yet since the last calculation.`,
-      );
-    }
-    if (startDate >= campaign.endDate) {
-      this.logger.debug(
-        `Cannot calculate score now for ${campaign.address}, campaign has already ended.`,
-      );
-    }
 
     while (
       new Date(
@@ -166,22 +146,23 @@ export class LiquidityScoreService {
           liquidityProvider: user.evmAddress,
           liquidityScore: String(scoreToUpload),
         });
+
+        if (scores.length === 0) {
+          this.logger.warn(`No scores for campaign ${campaign.address}`);
+          return null;
+        }
+
+        const scoresFile = await this.recordsService.pushLiquidityScores(
+          campaign.address,
+          campaign.chainId,
+          scores,
+        );
+
+        await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+
+        scoresFiles.push(scoresFile);
+        startDate = windowEnd;
       }
-      if (scores.length === 0) {
-        this.logger.warn(`No scores for campaign ${campaign.address}`);
-        return null;
-      }
-
-      const scoresFile = await this.recordsService.pushLiquidityScores(
-        campaign.address,
-        campaign.chainId,
-        scores,
-      );
-
-      await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
-
-      scoresFiles.push(scoresFile);
-      startDate = windowEnd;
     }
 
     return scoresFiles;
@@ -359,20 +340,24 @@ export class LiquidityScoreService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async calculateScoresForCampaigns(): Promise<void> {
     this.logger.log('Calculating liquidity scores for all active campaigns');
+    await this.pgLockService.withLock(
+      'cron:calculateScoresForCampaigns',
+      async () => {
+        const campaigns = await this.campaignService.getAllActiveCampaigns();
 
-    const campaigns = await this.campaignService.getAllActiveCampaigns();
+        for (const campaign of campaigns) {
+          try {
+            await this.calculatePendingCampaignLiquidityScores(campaign);
 
-    for (const campaign of campaigns) {
-      try {
-        await this.calculatePendingCampaignLiquidityScores(campaign);
-
-        this.logger.log('Finished calculating liquidity scores');
-      } catch (error) {
-        this.logger.error(
-          `Failed to calculate liquidity score for campaign ${campaign.address}`,
-          error,
-        );
-      }
-    }
+            this.logger.log('Finished calculating liquidity scores');
+          } catch (error) {
+            this.logger.error(
+              `Failed to calculate liquidity score for campaign ${campaign.address}`,
+              error,
+            );
+          }
+        }
+      },
+    );
   }
 }
