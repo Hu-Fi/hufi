@@ -13,3 +13,8 @@ export class LiquidityScoreCalculation {
     return this.tradeVolume + 0.1 * orderBookValue;
   }
 }
+
+export interface CalculatedScore {
+  score: number;
+  lastTradeId?: string;
+}
