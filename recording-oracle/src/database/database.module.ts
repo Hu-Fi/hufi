@@ -19,6 +19,7 @@ import {
   Web3TransactionEntity,
 } from './entities';
 import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
+import { PgLockService } from './pg-lock.service';
 
 @Module({
   imports: [
@@ -77,5 +78,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
       },
     }),
   ],
+  providers: [PgLockService],
+  exports: [PgLockService],
 })
 export class DatabaseModule {}

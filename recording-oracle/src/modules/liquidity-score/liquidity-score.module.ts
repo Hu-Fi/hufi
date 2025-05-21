@@ -12,9 +12,10 @@ import { Web3TransactionModule } from '../web3-transaction/web3-transaction.modu
 import { LiquidityScoreController } from './liquidity-score.controller';
 import { LiquidityScoreRepository } from './liquidity-score.repository';
 import { LiquidityScoreService } from './liquidity-score.service';
+import { DatabaseModule } from '../../database/database.module';
 
 @Module({
-  imports: [CampaignModule, ExchangeModule, Web3TransactionModule],
+  imports: [CampaignModule, ExchangeModule, Web3TransactionModule, DatabaseModule],
   providers: [
     LiquidityScoreService,
     PGPConfigService,
