@@ -9,6 +9,7 @@ import { ControlledError } from '../../common/errors/controlled';
 import { LiquidityScore } from '../../common/types/liquidity-score';
 import { isCenteralizedExchange } from '../../common/utils/exchange';
 import { CampaignEntity, UserEntity } from '../../database/entities';
+import { PgLockService } from '../../database/pg-lock.service';
 import { CampaignService } from '../campaign/campaign.service';
 import { CCXTService } from '../exchange/ccxt.service';
 import { UniswapService } from '../exchange/uniswap.service';
@@ -39,6 +40,7 @@ export class LiquidityScoreService {
     private recordsService: RecordsService,
     @InjectRepository(LiquidityScoreRepository)
     private liquidityScoreRepository: LiquidityScoreRepository,
+    private readonly pgLockService: PgLockService,
   ) {}
 
   public async calculateLiquidityScore(
@@ -359,20 +361,24 @@ export class LiquidityScoreService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async calculateScoresForCampaigns(): Promise<void> {
     this.logger.log('Calculating liquidity scores for all active campaigns');
+    await this.pgLockService.withLock(
+      'cron:calculateScoresForCampaigns',
+      async () => {
+        const campaigns = await this.campaignService.getAllActiveCampaigns();
 
-    const campaigns = await this.campaignService.getAllActiveCampaigns();
+        for (const campaign of campaigns) {
+          try {
+            await this.calculatePendingCampaignLiquidityScores(campaign);
 
-    for (const campaign of campaigns) {
-      try {
-        await this.calculatePendingCampaignLiquidityScores(campaign);
-
-        this.logger.log('Finished calculating liquidity scores');
-      } catch (error) {
-        this.logger.error(
-          `Failed to calculate liquidity score for campaign ${campaign.address}`,
-          error,
-        );
-      }
-    }
+            this.logger.log('Finished calculating liquidity scores');
+          } catch (error) {
+            this.logger.error(
+              `Failed to calculate liquidity score for campaign ${campaign.address}`,
+              error,
+            );
+          }
+        }
+      },
+    );
   }
 }
