@@ -151,16 +151,17 @@ export class LiquidityScoreService {
 
         const scoreToUpload =
           Number.isFinite(rawScore) && rawScore > 0 ? rawScore : 0;
-        const fingerprint = `${scoreToUpload}-${lastTradeId ?? 'NA'}`;
         // If someone else already got paid for this exact volume & lastTradeId
-        if (tradeFingerprints.has(fingerprint)) {
-          this.logger.warn(
-            `Duplicate score detected (fingerprint=${fingerprint}); skipping user ${user.evmAddress}`,
-          );
-          continue;
+        if (isCEXCampaign && scoreToUpload > 0 && lastTradeId) {
+          const fingerprint = `${scoreToUpload}-${lastTradeId}`;
+          if (tradeFingerprints.has(fingerprint)) {
+            this.logger.warn(
+              `Duplicate CEX score detected (fingerprint=${fingerprint}); skipping user ${user.evmAddress}`,
+            );
+            continue;
+          }
+          tradeFingerprints.add(fingerprint);
         }
-        tradeFingerprints.add(fingerprint);
-
         await this._saveLiquidityScore(
           campaign,
           user,
