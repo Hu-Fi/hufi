@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PGPConfigService } from '../../common/config/pgp-config.service';
+import { DatabaseModule } from '../../database/database.module';
 import { CampaignModule } from '../campaign/campaign.module';
 import { ExchangeModule } from '../exchange/exchange.module';
 import { RecordsService } from '../records/records.service';
@@ -12,10 +13,14 @@ import { Web3TransactionModule } from '../web3-transaction/web3-transaction.modu
 import { LiquidityScoreController } from './liquidity-score.controller';
 import { LiquidityScoreRepository } from './liquidity-score.repository';
 import { LiquidityScoreService } from './liquidity-score.service';
-import { DatabaseModule } from '../../database/database.module';
 
 @Module({
-  imports: [CampaignModule, ExchangeModule, Web3TransactionModule, DatabaseModule],
+  imports: [
+    CampaignModule,
+    ExchangeModule,
+    Web3TransactionModule,
+    DatabaseModule,
+  ],
   providers: [
     LiquidityScoreService,
     PGPConfigService,

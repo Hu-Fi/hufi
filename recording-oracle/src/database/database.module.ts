@@ -18,8 +18,8 @@ import {
   UserEntity,
   Web3TransactionEntity,
 } from './entities';
-import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
 import { PgLockService } from './pg-lock.service';
+import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
 
 @Module({
   imports: [
