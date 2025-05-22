@@ -18,59 +18,34 @@ const MyCampaigns: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
 }) => {
-  const { isConnected, address, chain } = useAccount();
+  const { address, chain } = useAccount();
   const navigate = useNavigate();
 
-  const { data: campaigns, isPending } = useMyCampaigns(
+  const { data: campaigns, isLoading } = useMyCampaigns(
     chain?.id as ChainId,
-    address?.toLowerCase()
+    address?.toLowerCase(),
   );
-
-  const isCampaignsExist = campaigns && campaigns.length > 0;
 
   const onViewAllClick = () => {
     navigate('/my-campaigns');
   };
 
-  if (!isConnected) {
-    return null;
-  }
-
   return (
-    <Box component="section" display="flex" flexDirection="column" gap={3}>
+    <Box component="section" display="flex" flexDirection="column" gap={4}>
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Typography component="h3" variant="h5" color="text.primary">
           My Campaigns
         </Typography>
-        {isCampaignsExist && <LaunchCampaign variant="contained" />}
+        <LaunchCampaign variant="contained" />
       </Box>
-      {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}
-      {!isPending && !isCampaignsExist && (
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          flexDirection={{ xs: 'column', md: 'row' }}
-          gap={5}
-          py="20px"
-          px={{ xs: 2, md: 0 }}
-          bgcolor="background.default"
-          borderRadius="16px"
-          border="1px solid"
-          borderColor="divider"
-        >
-          <Typography component="p" variant="subtitle2" color="text.secondary">
-            At the moment you are not running any campaign.
-          </Typography>
-          <LaunchCampaign variant="contained" />
-        </Box>
-      )}
-      {isCampaignsExist && (
+      {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
+      {!isLoading && (
         <CampaignsTable
           data={campaigns}
           showPagination={showPagination}
           showAllCampaigns={showAllCampaigns}
           onViewAllClick={onViewAllClick}
+          isMyCampaigns={true}
         />
       )}
     </Box>

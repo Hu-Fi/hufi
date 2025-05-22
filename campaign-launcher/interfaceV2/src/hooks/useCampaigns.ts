@@ -1,5 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
+import { useAccount } from 'wagmi';
 
 import { api } from '../api';
 import { CampaignDataDto } from '../api/client';
@@ -22,13 +23,15 @@ export const useCampaigns = (
 };
 
 export const useMyCampaigns = (chainId: ChainId, launcher?: string) => {
+  const { isConnected } = useAccount();
+
   return useQuery({
     queryKey: ['myCampaigns', chainId, launcher],
     queryFn: () =>
       api.campaign
         .campaignControllerGetCampaigns({ chainId, launcher })
         .then((res) => res.data),
-    enabled: !!chainId && !!launcher,
+    enabled: !!chainId && !!launcher && !!isConnected,
   });
 };
 

@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import { useAccount } from 'wagmi';
+
 import AllCampaigns from '../../components/AllCampaigns';
 import DashboardStats from '../../components/DashboardStats';
 import HowToLaunch from '../../components/HowToLaunch';
@@ -8,13 +10,16 @@ import MyCampaigns from '../../components/MyCampaigns';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
 
+
 const Dashboard: FC = () => {
+  const { isConnected } = useAccount();
+
   return (
     <PageWrapper>
       <PageTitle title="Dashboard" />
       <DashboardStats />
-      <MyCampaigns showAllCampaigns={false} />
-      <JoinedCampaigns showAllCampaigns={false} />
+      {isConnected && <MyCampaigns showAllCampaigns={false} />}
+      {isConnected && <JoinedCampaigns showAllCampaigns={false} />}
       <AllCampaigns showAllCampaigns={false} showPagination={true} />
       <HowToLaunch />
     </PageWrapper>

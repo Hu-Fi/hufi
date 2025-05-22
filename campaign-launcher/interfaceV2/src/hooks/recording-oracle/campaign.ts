@@ -116,6 +116,7 @@ type JoinedCampaign = {
 };
 
 export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
+  const { isConnected } = useAccount();
   const { isAuthenticated } = useAuthentication();
 
   return useQuery({
@@ -136,6 +137,6 @@ export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
         fundAmount: campaign.fund_amount,
         status: 'Pending',
       })),
-    enabled: !!chainId && isAuthenticated,
+    enabled: !!chainId && isAuthenticated && isConnected,
   });
 };

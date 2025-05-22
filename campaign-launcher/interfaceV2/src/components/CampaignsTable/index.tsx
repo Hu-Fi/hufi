@@ -5,19 +5,23 @@ import { Button, IconButton, Typography, Box, useMediaQuery } from '@mui/materia
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { formatEther } from 'ethers';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import { CampaignDataDto } from '../../api/client';
 import { MQ_MOBILE } from '../../constants';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatAddress, getExplorerUrl } from '../../utils';
+import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
+import LaunchCampaign from '../LaunchCampaign';
 
 type Props = {
-  data: CampaignDataDto[];
+  data: CampaignDataDto[] | undefined;
   showPagination?: boolean;
   showAllCampaigns?: boolean;
   isJoinedCampaigns?: boolean;
+  isMyCampaigns?: boolean;
   onViewAllClick?: () => void;
 };
 
@@ -42,6 +46,54 @@ const formatDate = (block: number) => {
   const year = date.getFullYear();
   return `${day}${getSuffix(day)} ${month} ${year}`;
 };
+
+const MyCampaignsNoRows: FC = () => {
+  const { isConnected } = useAccount();
+
+  if (isConnected) {
+    return (
+      <>
+        <Typography variant="subtitle2" component="p">
+          At the moment you are not running any campaign.
+        </Typography>
+        <LaunchCampaign variant="contained" />
+      </>
+    )
+  }
+
+  return (
+    <>
+      <Typography variant="subtitle2" component="p">
+        To see your campaigns please connect your wallet
+      </Typography>
+      <ConnectWallet />
+    </>
+  )
+}
+
+const JoinedCampaignsNoRows: FC = () => {
+  const { isConnected } = useAccount();
+
+  if (isConnected) {
+    return (
+      <>
+        <Typography variant="subtitle2" component="p">
+          At the moment you are not participating in any campaign, please see all campaigns to participate.
+        </Typography>
+        <LaunchCampaign variant="contained" />
+      </>
+    )
+  }
+  
+  return (
+    <>
+      <Typography variant="subtitle2" component="p">
+        To see joined campaigns please connect your wallet
+      </Typography>
+      <ConnectWallet />
+    </>
+  )
+}
 
 const CustomPagination: FC<{
   showPagination: boolean;
@@ -76,13 +128,16 @@ const CampaignsTable: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
   isJoinedCampaigns = false,
+  isMyCampaigns = false,
 }) => {
   const { exchanges } = useExchangesContext();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(MQ_MOBILE);
 
+  const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
+
   const campaigns =
-    showAllCampaigns || showPagination ? data : data.slice(0, 3);
+    showAllCampaigns || showPagination ? data : data?.slice(0, 3);
 
   const handleAddressClick = (
     e: MouseEvent<HTMLButtonElement>,
@@ -220,7 +275,7 @@ const CampaignsTable: FC<Props> = ({
         status: !isJoinedCampaigns,
       }}
       columnHeaderHeight={48}
-      rowHeight={114}
+      rowHeight={data && data.length > 0 ? 114 : 95}
       disableColumnMenu
       disableColumnSelector
       disableColumnFilter
@@ -229,6 +284,7 @@ const CampaignsTable: FC<Props> = ({
       disableRowSelectionOnClick
       getRowSpacing={({ isLastVisible }) => ({ bottom: isLastVisible ? 0 : 8 })}
       pageSizeOptions={[5, 25, 50]}
+      disableVirtualization={!data}
       initialState={{
         pagination: {
           paginationModel: {
@@ -242,12 +298,33 @@ const CampaignsTable: FC<Props> = ({
         );
       }}
       slots={{
-        pagination: () => (
+        pagination: data && data.length > 0 ? () => (
           <CustomPagination
             showPagination={showPagination}
             showAllCampaigns={showAllCampaigns}
             onViewAllClick={onViewAllClick}
           />
+        ) : null,
+        noRowsOverlay: () => (
+          <Box 
+            display="flex" 
+            width="100%"
+            height="190px"
+            alignItems="center"
+            justifyContent="center"
+            flexDirection={{ xs: "column", md: "row" }}
+            textAlign="center"
+            py={{ xs: 2, md: 8 }}
+            px={2}
+            gap={5}
+            borderRadius="16px"
+            bgcolor="background.default"
+            border="1px solid rgba(255, 255, 255, 0.1)"
+          >
+            {isMyCampaigns && <MyCampaignsNoRows />}
+            {isJoinedCampaigns && <JoinedCampaignsNoRows />}
+            {isAllCampaigns && <Typography variant="subtitle2" component="p">No campaigns found</Typography>}
+          </Box>
         ),
       }}
       sx={{
@@ -260,6 +337,9 @@ const CampaignsTable: FC<Props> = ({
         },
         '& .MuiDataGrid-filler': {
           display: 'none',
+        },
+        '& .MuiDataGrid-overlayWrapperInner': {
+          height: '190px !important',
         },
         '& .MuiDataGrid-topContainer': {
           mb: 1,
@@ -319,6 +399,7 @@ const CampaignsTable: FC<Props> = ({
           outline: 'none',
         },
         '& .MuiDataGrid-footerContainer': {
+          display: data && data.length > 0 ? 'flex' : 'none',
           mt: '15px',
         },
       }}
