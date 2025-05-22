@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
 import {
   ApiBody,
   ApiHeader,
@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+import { CampaignEntity } from '../../database/entities';
 
 import { CampaignCreateRequestDto } from './campaign.dto';
 import { CampaignService } from './campaign.service';
@@ -39,5 +40,27 @@ export class CampaignController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createCampaign(@Body() body: CampaignCreateRequestDto) {
     return await this.campaignService.createCampaign(body);
+  }
+
+  @Get('/active')
+  @UseGuards(ApiKeyGuard)
+  @ApiOperation({
+    summary: 'List active campaigns',
+    description:
+      'Returns every campaign whose on-chain escrow status is **Pending** or **Partial** and whose endDate is in the future.',
+  })
+  @ApiHeader({
+    name: 'x-api-key',
+    description: 'API key for authentication',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of active campaigns',
+    type: CampaignEntity,
+    isArray: true,
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async getActiveCampaigns(): Promise<CampaignEntity[]> {
+    return await this.campaignService.getAllActiveCampaigns();
   }
 }
