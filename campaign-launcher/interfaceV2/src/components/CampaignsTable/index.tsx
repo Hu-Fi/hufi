@@ -74,7 +74,7 @@ const MyCampaignsNoRows: FC = () => {
 const JoinedCampaignsNoRows: FC = () => {
   const { isConnected } = useAccount();
   const navigate = useNavigate();
-  
+
   if (isConnected) {
     return (
       <>
@@ -97,7 +97,7 @@ const JoinedCampaignsNoRows: FC = () => {
       </>
     )
   }
-  console.log('1');
+
   return (
     <>
       <Typography variant="subtitle2" component="p">
