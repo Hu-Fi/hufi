@@ -73,18 +73,31 @@ const MyCampaignsNoRows: FC = () => {
 
 const JoinedCampaignsNoRows: FC = () => {
   const { isConnected } = useAccount();
-
+  const navigate = useNavigate();
+  
   if (isConnected) {
     return (
       <>
         <Typography variant="subtitle2" component="p">
           At the moment you are not participating in any campaign, please see all campaigns to participate.
         </Typography>
-        <LaunchCampaign variant="contained" />
+        <Button
+          variant="contained"
+          size="medium"
+          sx={{ 
+            height: '42px',
+            bgcolor: 'primary.main',
+            color: 'primary.contrast', 
+            fontWeight: 600,
+          }}
+          onClick={() => navigate('/all-campaigns')}
+        >
+          All Campaigns
+        </Button>
       </>
     )
   }
-  
+  console.log('1');
   return (
     <>
       <Typography variant="subtitle2" component="p">
