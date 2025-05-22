@@ -57,7 +57,7 @@ const AllCampaigns: FC<Props> = ({
         <ExchangeSelect data={exchanges} onChange={handleExchangeChange} />
         <LaunchCampaign variant="contained" sx={{ ml: { xs: 0, md:'auto' }, order: { xs: 2, md: 4 } }} />
       </Box>
-      {isPending && <CircularProgress sx={{ width: '40px', height: '40px' }} />}
+      {isPending && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {isCampaignsExist && (
         <CampaignsTable
           data={campaigns}
