@@ -189,8 +189,7 @@ const CampaignsTable: FC<Props> = ({
           (exchange) => exchange.name === params.row.exchangeName
         )?.displayName;
         return (
-          <Typography display="flex" alignItems="center" gap={1}>
-            {/* <img src={exchangeLogo} alt={exchangeName} width={85} height={25} /> */}
+          <Typography>
             {exchangeName}
           </Typography>
         );
