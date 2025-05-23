@@ -176,24 +176,21 @@ const CampaignsTable: FC<Props> = ({
       field: 'pair',
       headerName: 'Pair',
       flex: 2,
-      minWidth: 200,
+      minWidth: 250,
       renderCell: (params) => <CryptoPairEntity symbol={params.row.symbol} size="medium" />,
     },
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 2.5,
-      minWidth: 250,
+      flex: 1.5,
+      minWidth: 170,
       renderCell: (params) => {
-        const exchangeLogo = exchanges?.find(
-          (exchange) => exchange.name === params.row.exchangeName
-        )?.logo;
         const exchangeName = exchanges?.find(
           (exchange) => exchange.name === params.row.exchangeName
         )?.displayName;
         return (
           <Typography display="flex" alignItems="center" gap={1}>
-            <img src={exchangeLogo} alt={exchangeName} width={85} height={25} />
+            {/* <img src={exchangeLogo} alt={exchangeName} width={85} height={25} /> */}
             {exchangeName}
           </Typography>
         );
@@ -202,7 +199,7 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'address',
       headerName: 'Address',
-      flex: 2,
+      flex: 1.5,
       minWidth: 175,
       renderCell: (params) => {
         return (
@@ -289,6 +286,7 @@ const CampaignsTable: FC<Props> = ({
       }}
       columnHeaderHeight={48}
       rowHeight={data && data.length > 0 ? 114 : 95}
+      scrollbarSize={0}
       disableColumnMenu
       disableColumnSelector
       disableColumnFilter

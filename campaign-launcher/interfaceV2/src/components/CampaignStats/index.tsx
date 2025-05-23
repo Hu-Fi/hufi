@@ -42,7 +42,7 @@ const Value = styled(Typography)(({ theme }) => ({
 
 const InfoTitle = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.primary,
-  marginBottom: '32px',
+  marginBottom: '56px',
 }));
 
 const FlexGrid = styled(Box)(({ theme }) => ({
@@ -67,7 +67,6 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
     (exchange) => exchange.name === campaign?.exchangeName
   );
   const exchangeName = exchange?.displayName;
-  const exchangeLogo = exchange?.logo;
 
   if (!campaign) {
     return null;
@@ -91,24 +90,14 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           </StatsCard>
           <StatsCard>
             <InfoTitle variant="subtitle2">Exchange</InfoTitle>
-            <Box display="flex" alignItems="center" gap={2} height="72px">
-              <img
-                src={exchangeLogo}
-                alt={exchangeName}
-                width="100px"
-                height="40px"
-              />
-              <Typography
-                color="primary"
-                fontSize="30px"
-                fontWeight={800}
-                letterSpacing="-0.5px"
-                lineHeight="100%"
-                maxWidth="140px"
-              >
-                {exchangeName}
-              </Typography>
-            </Box>
+            <Typography
+              fontSize="30px"
+              fontWeight={800}
+              letterSpacing="-0.5px"
+              lineHeight="100%"
+            >
+              {exchangeName}
+            </Typography>
           </StatsCard>
           <StatsCard>
             <InfoTitle variant="subtitle2">Pair</InfoTitle>
