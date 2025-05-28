@@ -19,6 +19,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: yarn
+          cache-dependency-path: '**/yarn.lock'
       - name: Install root dependencies
         run: yarn
       - name: Run setup
