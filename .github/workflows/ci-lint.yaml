@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: yarn setup
-        name: Install dependencies
-      - run: yarn lint
-        working-directory: ./scripts
-        name: Run lint
+      - name: Install dependencies
+        run: yarn setup
+      - name: Run lint
+        run: yarn lint
