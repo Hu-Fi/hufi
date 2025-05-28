@@ -1,14 +1,14 @@
 import { FC, MouseEvent } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { Button, IconButton, Typography, Box, useMediaQuery } from '@mui/material';
+import { Button, IconButton, Typography, Box } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { formatEther } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { CampaignDataDto } from '../../api/client';
-import { MQ_MOBILE } from '../../constants';
+import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatAddress, getExplorerUrl } from '../../utils';
@@ -145,14 +145,17 @@ const CampaignsTable: FC<Props> = ({
 }) => {
   const { exchanges } = useExchangesContext();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(MQ_MOBILE);
+  const isLg = useIsLgDesktop();
+  const isXl = useIsXlDesktop();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
 
   const campaigns =
     showAllCampaigns || showPagination ? data : data?.slice(0, 3);
 
-  const handleAddressClick = (
+  const noRows = !(data && data.length > 0);
+  
+    const handleAddressClick = (
     e: MouseEvent<HTMLButtonElement>,
     chainId: ChainId,
     address: string
@@ -166,9 +169,9 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'paddingLeft',
       headerName: '',
-      minWidth: isMobile ? 16 : 32,
-      maxWidth: isMobile ? 16 : 32,
-      width: isMobile ? 16 : 32,
+      minWidth: isXl ? 32 : 16,
+      maxWidth: isXl ? 32 : 16,
+      width: isXl ? 32 : 16,
       renderCell: () => null,
       renderHeader: () => null,
     },
@@ -268,9 +271,9 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'paddingRight',
       headerName: '',
-      minWidth: isMobile ? 16 : 32,
-      maxWidth: isMobile ? 16 : 32,
-      width: isMobile ? 16 : 32,
+      minWidth: isXl ? 32 : 16,
+      maxWidth: isXl ? 32 : 16,
+      width: isXl ? 32 : 16,
       renderCell: () => null,
       renderHeader: () => null,
     },
@@ -284,7 +287,7 @@ const CampaignsTable: FC<Props> = ({
         status: !isJoinedCampaigns,
       }}
       columnHeaderHeight={48}
-      rowHeight={data && data.length > 0 ? 114 : 95}
+      rowHeight={noRows ? (isLg ? 50 : 95) : (isXl ? 114 : 95)}
       scrollbarSize={0}
       disableColumnMenu
       disableColumnSelector
@@ -308,7 +311,7 @@ const CampaignsTable: FC<Props> = ({
         );
       }}
       slots={{
-        pagination: data && data.length > 0 ? () => (
+        pagination: !noRows ? () => (
           <CustomPagination
             showPagination={showPagination}
             showAllCampaigns={showAllCampaigns}
@@ -319,12 +322,12 @@ const CampaignsTable: FC<Props> = ({
           <Box 
             display="flex" 
             width="100%"
-            height="190px"
+            height={{ xs: '190px', lg: '100px', xl: '190px' }}
             alignItems="center"
             justifyContent="center"
             flexDirection={{ xs: "column", md: "row" }}
             textAlign="center"
-            py={{ xs: 2, md: 8 }}
+            py={{ xs: 4, xl: 8 }}
             px={2}
             gap={5}
             borderRadius="16px"
@@ -349,7 +352,7 @@ const CampaignsTable: FC<Props> = ({
           display: 'none',
         },
         '& .MuiDataGrid-overlayWrapperInner': {
-          height: '190px !important',
+          height: isLg ? '100px !important' : '190px !important',
         },
         '& .MuiDataGrid-topContainer': {
           mb: 1,
@@ -360,7 +363,8 @@ const CampaignsTable: FC<Props> = ({
           },
         },
         '& .MuiDataGrid-columnHeader': {
-          p: 0,
+          py: 0,
+          px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
           fontWeight: 500,
@@ -377,7 +381,7 @@ const CampaignsTable: FC<Props> = ({
           alignItems: 'center',
           cursor: 'pointer',
           mb: 1,
-          py: 4,
+          py: isXl ? 4 : 2,
           bgcolor: 'background.default',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '16px',
@@ -391,7 +395,8 @@ const CampaignsTable: FC<Props> = ({
           alignItems: 'center',
           outline: 'none',
           height: '48px',
-          p: 0,
+          py: 0,
+          px: isXl ? 0 : 1,
           '& > p': {
             fontWeight: 600,
           },
@@ -409,7 +414,7 @@ const CampaignsTable: FC<Props> = ({
           outline: 'none',
         },
         '& .MuiDataGrid-footerContainer': {
-          display: data && data.length > 0 ? 'flex' : 'none',
+          display: noRows ? 'none' : 'flex',
           mt: '15px',
         },
       }}

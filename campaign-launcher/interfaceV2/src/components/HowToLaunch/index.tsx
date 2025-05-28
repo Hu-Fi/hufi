@@ -1,18 +1,7 @@
 import { Box, Paper, Typography, styled } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-const Circle = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '64px',
-  height: '64px',
-  borderRadius: '50%',
-  backgroundColor: theme.palette.text.disabled,
-  color: theme.palette.text.primary,
-  fontSize: '28px',
-  fontWeight: 600,
-}));
+import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 
 const Card = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -25,9 +14,31 @@ const Card = styled(Paper)(({ theme }) => ({
   border: '1px solid rgba(255, 255, 255, 0.1)',
   boxShadow: 'none',
   width: '100%',
+  [theme.breakpoints.down('xl')]: {
+    padding: '32px 0px',
+  },
   [theme.breakpoints.down('md')]: {
     paddingLeft: '24px',
     justifyContent: 'flex-start',
+  },
+}));
+
+const Circle = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '64px',
+  height: '64px',
+  borderRadius: '50%',
+  backgroundColor: theme.palette.text.disabled,
+  color: theme.palette.text.primary,
+  fontSize: '28px',
+  fontWeight: 600,
+
+  [theme.breakpoints.down('xl')]: {
+    width: '56px',
+    height: '56px',
+    fontSize: '24px',
   },
 }));
 
@@ -38,15 +49,20 @@ const Text = styled(Typography)(({ theme }) => ({
   lineHeight: '100%',
   letterSpacing: '-0.5px',
 
-  [theme.breakpoints.down('md')]: {
+  [theme.breakpoints.down('xl')]: {
     fontSize: '24px',
+    fontWeight: 700,
+    lineHeight: '120%',
+    letterSpacing: '0.25px',
   },
 }));
 
 const HowToLaunch = () => {
+  const isXl = useIsXlDesktop();
+
   return (
-    <Box component="section" display="flex" flexDirection="column" gap={6.5}>
-      <Typography variant="h5" textAlign="center">
+    <Box component="section" display="flex" flexDirection="column" gap={{ xs: 4, xl: 6.5 }}>
+      <Typography variant={isXl ? 'h5' : 'h6'} textAlign="center">
         Easy and fast. How to launch a market making campaign.
       </Typography>
       <Grid container spacing={2} justifyContent="center">
@@ -55,7 +71,7 @@ const HowToLaunch = () => {
             <Circle>1</Circle>
             <Text>
               Stake
-              <br />
+              {isXl ? <br /> : ' '}
               HMT
             </Text>
           </Card>
@@ -65,7 +81,7 @@ const HowToLaunch = () => {
             <Circle>2</Circle>
             <Text>
               Launch
-              <br />
+              {isXl ? <br /> : ' '}
               Campaign
             </Text>
           </Card>

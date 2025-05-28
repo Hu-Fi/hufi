@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid2';
 import { formatEther } from 'ethers';
 
 import { CampaignDataDto } from '../../api/client';
+import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
@@ -21,11 +22,20 @@ const StatsCard = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
   borderRadius: '16px',
   border: '1px solid rgba(255, 255, 255, 0.1)',
+
+  [theme.breakpoints.down('xl')]: {
+    height: '125px',
+    padding: '16px 32px 24px',
+  },
 }));
 
 const Title = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.primary,
   marginBottom: '56px',
+
+  [theme.breakpoints.down('xl')]: {
+    marginBottom: '16px',
+  },
 }));
 
 const Value = styled(Typography)(({ theme }) => ({
@@ -38,11 +48,6 @@ const Value = styled(Typography)(({ theme }) => ({
   '& > span': {
     fontSize: '30px',
   },
-}));
-
-const InfoTitle = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.primary,
-  marginBottom: '56px',
 }));
 
 const FlexGrid = styled(Box)(({ theme }) => ({
@@ -62,6 +67,7 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 }));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
+  const isXl = useIsXlDesktop();
   const { exchanges } = useExchangesContext();
   const exchange = exchanges?.find(
     (exchange) => exchange.name === campaign?.exchangeName
@@ -89,19 +95,17 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
             </Value>
           </StatsCard>
           <StatsCard>
-            <InfoTitle variant="subtitle2">Exchange</InfoTitle>
-            <Typography
-              fontSize="30px"
-              fontWeight={800}
-              letterSpacing="-0.5px"
-              lineHeight="100%"
-            >
+            <Title variant="subtitle2">Exchange</Title>
+            <Typography variant={isXl ? 'h4' : 'h6-mobile'}>
               {exchangeName}
             </Typography>
           </StatsCard>
           <StatsCard>
-            <InfoTitle variant="subtitle2">Pair</InfoTitle>
-            <CryptoPairEntity symbol={campaign.symbol} size="large" />
+            <Title variant="subtitle2">Pair</Title>
+            <CryptoPairEntity
+              symbol={campaign.symbol}
+              size={isXl ? 'large' : 'medium'}
+            />
           </StatsCard>
         </FlexGrid>
       </Grid>
@@ -122,7 +126,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
             </Title>
             <Typography
               color="primary.violet"
-              fontSize="80px"
+              fontSize={{ xs: '40px', xl: '80px' }}
               fontWeight={800}
               lineHeight={7 / 6}
             >

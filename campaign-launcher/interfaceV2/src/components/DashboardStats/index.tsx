@@ -17,6 +17,10 @@ const StatsCard = styled(Box)(({ theme }) => ({
   borderRadius: '16px',
   border: '1px solid rgba(255, 255, 255, 0.1)',
   padding: '16px 24px',
+
+  [theme.breakpoints.down('xl')]: {
+    height: '112px',
+  }
 }));
 
 const Value = styled(Typography)(({ theme }) => ({

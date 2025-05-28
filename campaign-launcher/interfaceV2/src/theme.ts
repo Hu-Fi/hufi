@@ -17,6 +17,21 @@ declare module '@mui/material/styles' {
   interface PaletteColor {
     violet?: string;
   }
+  interface TypographyVariants {
+    'h4-mobile': React.CSSProperties;
+    'h6-mobile': React.CSSProperties;
+  }
+  interface TypographyVariantsOptions {
+    'h4-mobile'?: React.CSSProperties;
+    'h6-mobile'?: React.CSSProperties;
+  }
+}
+
+declare module '@mui/material/Typography' {
+  interface TypographyPropsVariantOverrides {
+    'h4-mobile': true;
+    'h6-mobile': true;
+  }
 }
 
 const createAppTheme = (mode: PaletteMode) => {
@@ -95,10 +110,28 @@ const createAppTheme = (mode: PaletteMode) => {
         lineHeight: '42px',
         letterSpacing: '0.25px',
       },
+      'h4-mobile': {
+        fontSize: '28px',
+        fontWeight: 600,
+        lineHeight: '34.5px',
+        letterSpacing: '0.25px',
+      },
       h5: {
         fontSize: '1.5rem',
         fontWeight: 400,
         lineHeight: '2.25rem',
+      },
+      h6: {
+        fontSize: '1.25rem',
+        fontWeight: 500,
+        lineHeight: '160%',
+        letterSpacing: '0.15px',
+      },
+      'h6-mobile': {
+        fontSize: '20px',
+        fontWeight: 500,
+        lineHeight: '160%',
+        letterSpacing: '0.15px',
       },
       caption: {
         fontSize: '0.75rem',

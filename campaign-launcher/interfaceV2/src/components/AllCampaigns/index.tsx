@@ -5,6 +5,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
+import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useCampaigns } from '../../hooks/useCampaigns';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import CampaignsTable from '../CampaignsTable';
@@ -26,6 +27,7 @@ const AllCampaigns: FC<Props> = ({
   const { exchanges } = useExchangesContext();
   const { chain } = useAccount();
   const navigate = useNavigate();
+  const isXl = useIsXlDesktop();
 
   const { data: campaigns, isPending } = useCampaigns(
     (chain?.id || ChainId.ALL) as ChainId,
@@ -50,7 +52,7 @@ const AllCampaigns: FC<Props> = ({
   return (
     <Box component="section" display="flex" flexDirection="column" gap={4}>
       <Box display="flex" alignItems="center" gap={{ xs: 3, md: 6 }} flexWrap={{ xs: 'wrap', md: 'nowrap' }}>
-        <Typography component="h3" variant="h5" color="text.primary" order={{ xs: 1, md: 1 }}>
+        <Typography component="h3" variant={isXl ? 'h5' : 'h6'} color="text.primary" order={{ xs: 1, md: 1 }}>
           All Campaigns
         </Typography>
         <StatusSelect onChange={handleStatusChange} />

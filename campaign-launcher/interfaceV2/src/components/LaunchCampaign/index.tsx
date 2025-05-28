@@ -3,6 +3,7 @@ import { FC, useState } from 'react';
 import { Button, SxProps } from '@mui/material';
 import { useAccount } from 'wagmi';
 
+import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import useLeader from '../../hooks/useLeader';
 import CreateCampaignMenuModal from '../modals/CreateCampaignMenuModal';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
@@ -19,6 +20,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   ] = useState(false);
   const { isConnected } = useAccount();
   const { refetch } = useLeader({ enabled: false });
+  const isXl = useIsXlDesktop();
 
   const handleCloseCreateCampaignMenuModal = () => {
     setOpenCreateCampaignMenuModal(false);
@@ -41,7 +43,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
     <>
       <Button
         variant={variant}
-        size="large"
+        size={isXl ? 'large' : 'medium'}
         sx={{
           color: variant === 'outlined' ? 'primary.main' : 'primary.contrast',
           height: '42px',
