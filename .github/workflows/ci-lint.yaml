@@ -13,8 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: yarn setup
-        name: Install dependencies
-      - run: yarn lint
-        working-directory: ./scripts
-        name: Run lint
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+          cache-dependency-path: '**/yarn.lock'
+      - name: Install root dependencies
+        run: yarn
+      - name: Run setup
+        run: yarn setup
+      - name: Run lint
+        run: yarn lint
