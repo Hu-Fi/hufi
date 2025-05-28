@@ -1,3 +1,13 @@
 .vscode
 node_modules
 .DS_Store
+
+# Modern Yarn files
+.pnp.*
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
