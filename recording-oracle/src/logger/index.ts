@@ -14,7 +14,7 @@ const defaultLogger = createLogger(
   },
   {
     environment: Environment.name,
-    service: 'reputation-oracle',
+    service: 'hufi-recording-oracle',
   },
 );
 
