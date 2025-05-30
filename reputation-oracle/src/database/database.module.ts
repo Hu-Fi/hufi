@@ -28,7 +28,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
         typeOrmLoggerService.setOptions(
           loggerOptions && loggerOptions[0] === 'all'
             ? 'all'
-            : ((loggerOptions as LoggerOptions) ?? false),
+            : (loggerOptions as LoggerOptions) ?? false,
         );
 
         return {
