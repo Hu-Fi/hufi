@@ -18,7 +18,6 @@ import { EventType, SortDirection, WebhookStatus } from '../../common/enums';
 import { USDT_CONTRACT_ADDRESS } from '../../constants/token';
 import { StorageService } from '../storage/storage.service';
 import { Web3Service } from '../web3/web3.service';
-import { Web3TransactionService } from '../web3-transaction/web3-transaction.service';
 
 import { WebhookIncomingEntity } from './webhook-incoming.entity';
 import { WebhookIncomingDto, LiquidityDto } from './webhook.dto';
@@ -34,7 +33,6 @@ export class WebhookService {
     private readonly storageService: StorageService,
     private readonly webhookRepository: WebhookRepository,
     private readonly httpService: HttpService,
-    private web3TransactionService: Web3TransactionService,
   ) {}
 
   /**

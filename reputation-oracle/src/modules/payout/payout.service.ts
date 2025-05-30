@@ -6,10 +6,8 @@ import { lastValueFrom } from 'rxjs';
 
 import { Web3ConfigService } from '../../common/config/web3-config.service';
 import { EventType } from '../../common/enums';
-import { Web3TransactionStatus } from '../../common/enums/web3-transaction';
 import { Manifest } from '../../common/interfaces/manifest';
 import { Web3Service } from '../web3/web3.service';
-import { Web3TransactionService } from '../web3-transaction/web3-transaction.service';
 import { WebhookIncomingDto } from '../webhook/webhook.dto';
 import { WebhookService } from '../webhook/webhook.service';
 
@@ -28,7 +26,6 @@ export class PayoutService {
     private web3Service: Web3Service,
     private httpService: HttpService,
     private webhookService: WebhookService, // Inject WebhookService
-    private web3TransactionService: Web3TransactionService,
   ) {}
 
   async fetchCampaigns(chainId: number): Promise<CampaignWithManifest[]> {
@@ -187,37 +184,13 @@ export class PayoutService {
               campaign.chainId,
             );
 
-            const web3Txn =
-              await this.web3TransactionService.saveWeb3Transaction({
-                chainId: campaign.chainId,
-                contract: 'escrow',
-                address: campaign.escrowAddress,
-                method: 'complete',
-                data: [
-                  {
-                    gasPrice: gasPrice.toString(),
-                  },
-                ],
-                status: Web3TransactionStatus.PENDING,
-              });
-
             try {
               await escrowClient.complete(campaign.escrowAddress, {
                 gasPrice,
               });
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.SUCCESS,
-              );
             } catch {
               this.logger.error(
                 `Failed to complete campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
-              );
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.FAILED,
               );
             }
           }
@@ -231,40 +204,14 @@ export class PayoutService {
               campaign.chainId,
             );
 
-            const web3Txn =
-              await this.web3TransactionService.saveWeb3Transaction({
-                chainId: campaign.chainId,
-                contract: 'escrow',
-                address: campaign.escrowAddress,
-                method: 'cancel',
-                data: [
-                  {
-                    gasPrice: gasPrice.toString(),
-                  },
-                ],
-                status: Web3TransactionStatus.PENDING,
-              });
-
             try {
               await escrowClient.cancel(campaign.escrowAddress, {
-                gasPrice: await this.web3Service.calculateGasPrice(
-                  campaign.chainId,
-                ),
+                gasPrice: gasPrice,
               });
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.SUCCESS,
-              );
             } catch (error) {
               this.logger.error(
                 `Failed to cancel campaign: ${campaign.chainId} - ${campaign.escrowAddress}`,
                 error,
-              );
-
-              await this.web3TransactionService.updateWeb3TransactionStatus(
-                web3Txn.id,
-                Web3TransactionStatus.FAILED,
               );
             }
           }
