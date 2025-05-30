@@ -16,7 +16,6 @@ import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './modules/health/health.module';
 import { PayoutModule } from './modules/payout/payout.module';
 import { Web3Module } from './modules/web3/web3.module';
-import { Web3TransactionModule } from './modules/web3-transaction/web3-transaction.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 
 @Module({
@@ -51,7 +50,6 @@ import { WebhookModule } from './modules/webhook/webhook.module';
     }),
     EnvConfigModule,
     ScheduleModule.forRoot(),
-    Web3TransactionModule,
   ],
   controllers: [AppController],
 })

@@ -49,12 +49,29 @@ export class CampaignService {
     );
   }
 
-  public async getAllActiveCampaigns() {
+  public async getAllActiveCampaigns(): Promise<CampaignEntity[]> {
     const campaigns = await this.campaignRepository.findAll();
 
-    return campaigns.filter(
-      async (campaign) => campaign.lastSyncedAt < campaign.endDate,
+    const activeFlags = await Promise.all(
+      campaigns.map(async (campaign) => {
+        try {
+          const escrow = await EscrowUtils.getEscrow(
+            campaign.chainId,
+            campaign.address,
+          );
+          // “Active” if status is Pending or Partial and endDate is in the future
+          return (
+            (escrow.status === 'Pending' || escrow.status === 'Partial') &&
+            new Date() < campaign.endDate
+          );
+        } catch {
+          // if the escrow call fails treat campaign as inactive
+          return false;
+        }
+      }),
     );
+
+    return campaigns.filter((_, idx) => activeFlags[idx]);
   }
 
   public async updateLastSyncedAt(campaign: CampaignEntity, date: Date) {

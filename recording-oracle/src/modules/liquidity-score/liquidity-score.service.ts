@@ -9,6 +9,7 @@ import { ControlledError } from '../../common/errors/controlled';
 import { LiquidityScore } from '../../common/types/liquidity-score';
 import { isCenteralizedExchange } from '../../common/utils/exchange';
 import { CampaignEntity, UserEntity } from '../../database/entities';
+import { PgLockService } from '../../database/pg-lock.service';
 import { CampaignService } from '../campaign/campaign.service';
 import { CCXTService } from '../exchange/ccxt.service';
 import { UniswapService } from '../exchange/uniswap.service';
@@ -16,7 +17,10 @@ import { RecordsService } from '../records/records.service';
 import { ExchangeAPIKeyRepository } from '../user/exchange-api-key.repository';
 
 import { LiquidityScoreCalculateRequestDto } from './liquidity-score.dto';
-import { LiquidityScoreCalculation } from './liquidity-score.model';
+import {
+  CalculatedScore,
+  LiquidityScoreCalculation,
+} from './liquidity-score.model';
 import { LiquidityScoreRepository } from './liquidity-score.repository';
 
 @Injectable()
@@ -39,6 +43,7 @@ export class LiquidityScoreService {
     private recordsService: RecordsService,
     @InjectRepository(LiquidityScoreRepository)
     private liquidityScoreRepository: LiquidityScoreRepository,
+    private readonly pgLockService: PgLockService,
   ) {}
 
   public async calculateLiquidityScore(
@@ -55,6 +60,7 @@ export class LiquidityScoreService {
       payload.chainId,
       payload.address,
     );
+    this.logger.debug(`This is the campaign ${campaign.address}`);
 
     if (!campaign) {
       throw new ControlledError(ErrorCampaign.NotFound, HttpStatus.NOT_FOUND);
@@ -66,7 +72,9 @@ export class LiquidityScoreService {
         HttpStatus.BAD_REQUEST,
       );
     }
-
+    this.logger.debug(
+      `Starting the calculation of scores for campaign ${campaign.address}`,
+    );
     return await this.calculatePendingCampaignLiquidityScores(campaign);
   }
 
@@ -90,6 +98,25 @@ export class LiquidityScoreService {
 
     const scoresFiles: UploadFile[] = [];
 
+    if (
+      !(
+        new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          startDate.getDate(),
+        ) <= yesterday
+      )
+    ) {
+      this.logger.debug(
+        `Cannot calculate score now for ${campaign.address}, 24 hours have not passed yet since the last calculation.`,
+      );
+    }
+    if (startDate >= campaign.endDate) {
+      this.logger.debug(
+        `Cannot calculate score now for ${campaign.address}, campaign has already ended.`,
+      );
+    }
+
     while (
       new Date(
         startDate.getFullYear(),
@@ -105,9 +132,9 @@ export class LiquidityScoreService {
       windowEnd = windowEnd > campaign.endDate ? campaign.endDate : windowEnd;
 
       const scores: LiquidityScore[] = [];
-
+      const tradeFingerprints = new Set<string>();
       for (const user of campaign.users) {
-        const liquidityScore = isCEXCampaign
+        const { score: rawScore, lastTradeId } = isCEXCampaign
           ? await this._calculateCEXLiquidityScore(
               campaign.exchangeName.toLowerCase(),
               campaign.token,
@@ -125,12 +152,18 @@ export class LiquidityScoreService {
             );
 
         const scoreToUpload =
-          liquidityScore &&
-          Number.isFinite(liquidityScore) &&
-          liquidityScore > 0
-            ? Math.round(liquidityScore)
-            : 0;
-
+          Number.isFinite(rawScore) && rawScore > 0 ? rawScore : 0;
+        // If someone else already got paid for this exact volume & lastTradeId
+        if (isCEXCampaign && scoreToUpload > 0 && lastTradeId) {
+          const fingerprint = `${scoreToUpload}-${lastTradeId}`;
+          if (tradeFingerprints.has(fingerprint)) {
+            this.logger.warn(
+              `Duplicate CEX score detected (fingerprint=${fingerprint}); skipping user ${user.evmAddress}`,
+            );
+            continue;
+          }
+          tradeFingerprints.add(fingerprint);
+        }
         await this._saveLiquidityScore(
           campaign,
           user,
@@ -144,23 +177,22 @@ export class LiquidityScoreService {
           liquidityProvider: user.evmAddress,
           liquidityScore: String(scoreToUpload),
         });
-
-        if (scores.length === 0) {
-          this.logger.warn(`No scores for campaign ${campaign.address}`);
-          return null;
-        }
-
-        const scoresFile = await this.recordsService.pushLiquidityScores(
-          campaign.address,
-          campaign.chainId,
-          scores,
-        );
-
-        await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
-
-        scoresFiles.push(scoresFile);
-        startDate = windowEnd;
       }
+      if (scores.length === 0) {
+        this.logger.warn(`No scores for campaign ${campaign.address}`);
+        return null;
+      }
+
+      const scoresFile = await this.recordsService.pushLiquidityScores(
+        campaign.address,
+        campaign.chainId,
+        scores,
+      );
+
+      await this.campaignService.updateLastSyncedAt(campaign, windowEnd);
+
+      scoresFiles.push(scoresFile);
+      startDate = windowEnd;
     }
 
     return scoresFiles;
@@ -172,7 +204,7 @@ export class LiquidityScoreService {
     user: UserEntity,
     since: Date,
     to: Date,
-  ): Promise<number> {
+  ): Promise<CalculatedScore> {
     try {
       this.logger.debug(
         `Calculating liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
@@ -190,7 +222,7 @@ export class LiquidityScoreService {
         this.logger.warn(
           `No API key found for user ${user.evmAddress} on exchange ${exchangeName}`,
         );
-        return 0;
+        return { score: 0, lastTradeId: null };
       }
 
       const apiKey = new TextDecoder().decode(
@@ -206,14 +238,14 @@ export class LiquidityScoreService {
         secret,
       );
 
-      const trades = await this.ccxtService.fetchTrades(
-        exchange,
-        symbol,
-        since.getTime(),
-      );
-      const tradeVolume = trades
-        .filter((trade) => trade.timestamp < to.getTime())
-        .reduce((acc, trade) => acc + trade.cost, 0);
+      const trades = await this.ccxtService
+        .fetchTrades(exchange, symbol, since.getTime())
+        .then((ts) => ts.filter((t) => t.timestamp < to.getTime()));
+
+      const lastTradeId = trades.length
+        ? trades[trades.length - 1].id
+        : undefined;
+      const tradeVolume = trades.reduce((acc, t) => acc + t.cost, 0);
 
       const { openOrderVolume, averageDuration, spread } =
         await this.ccxtService.processOpenOrders(
@@ -223,20 +255,20 @@ export class LiquidityScoreService {
           to.getTime(),
         );
 
-      const liquidityScoreCalculation = new LiquidityScoreCalculation(
+      const score = new LiquidityScoreCalculation(
         tradeVolume,
         openOrderVolume,
         averageDuration,
         spread,
-      );
+      ).calculate();
 
-      return liquidityScoreCalculation.calculate();
+      return { score: Math.round(score), lastTradeId };
     } catch (e) {
       this.logger.error(
         `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for symbol ${symbol} from ${since} to ${to}`,
       );
 
-      return 0;
+      return { score: 0, lastTradeId: null };
     }
   }
 
@@ -247,7 +279,7 @@ export class LiquidityScoreService {
     user: UserEntity,
     from: Date,
     to: Date,
-  ): Promise<number> {
+  ): Promise<CalculatedScore> {
     try {
       let trades: number[] = [];
 
@@ -263,22 +295,23 @@ export class LiquidityScoreService {
           break;
       }
 
-      const tradeVolume = trades.reduce((acc, trade) => acc + trade, 0);
-
-      const liquidityScoreCalculation = new LiquidityScoreCalculation(
+      const lastTradeId = trades.length
+        ? trades[trades.length - 1].toString()
+        : undefined;
+      const tradeVolume = trades.reduce((acc, v) => acc + v, 0);
+      const score = new LiquidityScoreCalculation(
         tradeVolume,
-        // Open orders are not applicable for DEXs
         0,
         0,
         1,
-      );
+      ).calculate();
 
-      return liquidityScoreCalculation.calculate();
+      return { score: Math.round(score), lastTradeId };
     } catch (e) {
       this.logger.error(
         `Failed to calculate liquidity score for user ${user.evmAddress} on exchange ${exchangeName} for token ${token} from ${from} to ${to}`,
       );
-      return 0;
+      return { score: 0, lastTradeId: null };
     }
   }
 
@@ -338,20 +371,24 @@ export class LiquidityScoreService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async calculateScoresForCampaigns(): Promise<void> {
     this.logger.log('Calculating liquidity scores for all active campaigns');
+    await this.pgLockService.withLock(
+      'cron:calculateScoresForCampaigns',
+      async () => {
+        const campaigns = await this.campaignService.getAllActiveCampaigns();
 
-    const campaigns = await this.campaignService.getAllActiveCampaigns();
+        for (const campaign of campaigns) {
+          try {
+            await this.calculatePendingCampaignLiquidityScores(campaign);
 
-    for (const campaign of campaigns) {
-      try {
-        await this.calculatePendingCampaignLiquidityScores(campaign);
-
-        this.logger.log('Finished calculating liquidity scores');
-      } catch (error) {
-        this.logger.error(
-          `Failed to calculate liquidity score for campaign ${campaign.address}`,
-          error,
-        );
-      }
-    }
+            this.logger.log('Finished calculating liquidity scores');
+          } catch (error) {
+            this.logger.error(
+              `Failed to calculate liquidity score for campaign ${campaign.address}`,
+              error,
+            );
+          }
+        }
+      },
+    );
   }
 }

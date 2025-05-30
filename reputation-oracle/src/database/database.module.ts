@@ -7,9 +7,9 @@ import { LoggerOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { NS } from '../common/constants';
-import { Web3TransactionEntity } from '../modules/web3-transaction/web3-transaction.entity';
 import { WebhookIncomingEntity } from '../modules/webhook/webhook-incoming.entity';
 
+import { PgLockService } from './pg-lock.service';
 import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
 
 @Module({
@@ -34,7 +34,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
         return {
           name: 'default',
           type: 'postgres',
-          entities: [WebhookIncomingEntity, Web3TransactionEntity],
+          entities: [WebhookIncomingEntity],
           // We are using migrations, synchronize should be set to false.
           synchronize: false,
           // Run migrations automatically,
@@ -66,5 +66,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from './typeorm';
       },
     }),
   ],
+  providers: [PgLockService],
+  exports: [PgLockService],
 })
 export class DatabaseModule {}
