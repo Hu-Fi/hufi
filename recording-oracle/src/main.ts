@@ -5,10 +5,12 @@ import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 import { ServerConfigService } from './config';
+import logger, { nestLoggerOverride } from './logger';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     cors: true,
+    logger: nestLoggerOverride,
   });
   app.enableShutdownHooks();
 
@@ -29,7 +31,7 @@ async function bootstrap(): Promise<void> {
   const port = serverConfigService.port;
 
   await app.listen(port, host, async () => {
-    console.log(`API server is running on http://${host}:${port}`);
+    logger.info(`API server is running on http://${host}:${port}`);
   });
 }
 

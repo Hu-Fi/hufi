@@ -4,15 +4,16 @@ import { LogLevel } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DatabaseConfigService } from '../config';
+import Environment from '../utils/environment';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
       inject: [DatabaseConfigService],
       useFactory: (databaseConfigService: DatabaseConfigService) => {
-        const logLevels = databaseConfigService.logging.split(
-          ',',
-        ) as LogLevel[];
+        const shouldEnableLogging =
+          Environment.isDevelopment() &&
+          databaseConfigService.logLevels.length > 0;
 
         return {
           type: 'postgres',
@@ -41,8 +42,10 @@ import { DatabaseConfigService } from '../config';
           migrationsRun: false,
           entities: [],
 
-          logging: logLevels.length > 0 ? logLevels : false,
-          logger: 'formatted-console',
+          logging: shouldEnableLogging
+            ? (databaseConfigService.logLevels as LogLevel[])
+            : false,
+          logger: 'advanced-console',
         };
       },
     }),

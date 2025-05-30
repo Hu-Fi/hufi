@@ -13,4 +13,5 @@ module.exports = {
   testEnvironment: 'node',
   testRegex: '.*\\.spec\\.ts$',
   moduleNameMapper: {},
+  clearMocks: true,
 };

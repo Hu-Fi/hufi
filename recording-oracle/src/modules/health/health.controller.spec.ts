@@ -10,6 +10,7 @@ import { Test } from '@nestjs/testing';
 
 import { HealthController } from './health.controller';
 import { ServerConfigService } from '../../config';
+import { nestLoggerOverride } from '../../logger';
 
 const mockServerConfigService = {
   gitHash: faker.git.commitSha(),
@@ -48,6 +49,12 @@ describe('HealthController', () => {
         },
       ],
     });
+
+    /**
+     * Terminus uses nest logger internaly,
+     * so override to omit logs in tests
+     */
+    moduleBuilder.setLogger(nestLoggerOverride);
 
     const moduleRef = await moduleBuilder.compile();
 

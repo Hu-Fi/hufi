@@ -61,10 +61,15 @@ export class DatabaseConfigService {
   }
 
   /**
-   * The logging level for PostgreSQL operations (e.g., 'debug', 'info').
-   * Default: 'log,info,warn,error'
+   * The logging levels for TypeORM PostgreSQL operations.
+   * Available values are: "query" | "schema" | "error" | "warn" | "info" | "log"
+   * Default: ''
    */
-  get logging(): string {
-    return this.configService.get('POSTGRES_LOGGING', 'log,info,warn,error');
+  get logLevels(): string[] {
+    const levelsString = this.configService.get('POSTGRES_LOGGING', '');
+    if (!levelsString) {
+      return [];
+    }
+    return levelsString.split(',');
   }
 }
