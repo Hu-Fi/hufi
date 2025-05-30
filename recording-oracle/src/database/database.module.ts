@@ -15,7 +15,6 @@ import { DatabaseConfigService } from '../config';
         ) as LogLevel[];
 
         return {
-          name: 'default-connection',
           type: 'postgres',
           useUTC: true,
 

@@ -24,7 +24,10 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.0",
+    "@nestjs/terminus": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
+    "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
@@ -34,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
+    "@faker-js/faker": "^9.8.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",

@@ -1,5 +1,7 @@
 import { createDefaultPreset } from 'ts-jest';
 
+process.env['GIT_HASH'] = 'test_value_hardcoded_in_jest_config';
+
 const jestTsPreset = createDefaultPreset({});
 
 module.exports = {

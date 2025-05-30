@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './database';
+import { HealthModule } from './modules/health';
 import Environment from './utils/environment';
 
 @Module({
@@ -18,6 +19,7 @@ import Environment from './utils/environment';
     }),
     DatabaseModule,
     EnvConfigModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
