@@ -14,5 +14,6 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
+    "isolatedModules": true,
   }
 }
