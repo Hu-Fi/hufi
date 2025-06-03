@@ -5,6 +5,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DatabaseConfigService } from '@/config';
 import { RefreshTokenEntity } from '@/modules/auth';
+import { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
 import { UserEntity } from '@/modules/users';
 import Environment from '@/utils/environment';
 
@@ -42,7 +43,7 @@ import Environment from '@/utils/environment';
            */
           synchronize: false,
           migrationsRun: false,
-          entities: [RefreshTokenEntity, UserEntity],
+          entities: [ExchangeApiKeyEntity, RefreshTokenEntity, UserEntity],
 
           logging: shouldEnableLogging
             ? (databaseConfigService.logLevels as LogLevel[])

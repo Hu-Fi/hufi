@@ -41,7 +41,11 @@ export class UsersRepository extends Repository<UserEntity> {
 
       return result.affected > 0;
     } catch (error) {
-      throw handleDbError(error);
+      throw handleDbError(error as Error);
     }
+  }
+
+  async existsById(userId: string): Promise<boolean> {
+    return this.existsBy({ id: userId });
   }
 }
