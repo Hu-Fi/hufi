@@ -1,6 +1,6 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
-import { DATABASE_SCHEMA_NAME } from '../../common/constants';
+import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'users' })
 @Index(['evmAddress'], { unique: true })

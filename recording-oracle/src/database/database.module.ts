@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LogLevel } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-import { DatabaseConfigService } from '../config';
-import { UserEntity } from '../modules/users';
-import Environment from '../utils/environment';
+import { DatabaseConfigService } from '@/config';
+import { UserEntity } from '@/modules/users';
+import Environment from '@/utils/environment';
 
 @Module({
   imports: [

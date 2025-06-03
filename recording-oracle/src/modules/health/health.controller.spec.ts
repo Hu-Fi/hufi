@@ -9,8 +9,9 @@ import {
 import { Test } from '@nestjs/testing';
 
 import { HealthController } from './health.controller';
-import { ServerConfigService } from '../../config';
-import { nestLoggerOverride } from '../../logger';
+
+import { ServerConfigService } from '@/config';
+import { nestLoggerOverride } from '@/logger';
 
 const mockServerConfigService = {
   gitHash: faker.git.commitSha(),

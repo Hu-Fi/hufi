@@ -1,7 +1,8 @@
 import NestLogger from './nest-logger';
 import { createLogger } from './pino-logger';
 import { LogLevel } from './types';
-import Environment from '../utils/environment';
+
+import Environment from '@/utils/environment';
 
 const isDevelopment = Environment.isDevelopment();
 

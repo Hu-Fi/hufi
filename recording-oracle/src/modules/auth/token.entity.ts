@@ -6,8 +6,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { DATABASE_SCHEMA_NAME } from '../../common/constants';
-import type { UserEntity } from '../users';
+import { DATABASE_SCHEMA_NAME } from '@/common/constants';
+import type { UserEntity } from '@/modules/users';
 
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'refresh_tokens' })
 @Index(['userId'], { unique: true })
