@@ -4,6 +4,7 @@ import { LogLevel } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DatabaseConfigService } from '../config';
+import { UserEntity } from '../modules/users';
 import Environment from '../utils/environment';
 
 @Module({
@@ -40,7 +41,7 @@ import Environment from '../utils/environment';
            */
           synchronize: false,
           migrationsRun: false,
-          entities: [],
+          entities: [UserEntity],
 
           logging: shouldEnableLogging
             ? (databaseConfigService.logLevels as LogLevel[])
