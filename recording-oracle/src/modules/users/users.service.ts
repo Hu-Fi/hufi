@@ -3,11 +3,11 @@ import crypto from 'crypto';
 import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 
-import { UserEntity } from './user.entity';
-import { UsersRepository } from './users.repository';
-
 import { DEFAULT_NONCE } from '@/common/constants';
 import * as web3Utils from '@/utils/web3';
+
+import { UserEntity } from './user.entity';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {

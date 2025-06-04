@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+import logger from '@/logger';
+
 import { AuthError } from './auth.error';
-import logger from '../../logger';
 
 @Catch(AuthError)
 export class AuthControllerErrorsFilter implements ExceptionFilter {

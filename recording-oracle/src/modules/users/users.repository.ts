@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 
+import { DatabaseError, handleDbError } from '@/common/errors/database';
+
 import { UserEntity } from './user.entity';
-import { DatabaseError, handleDbError } from '../../common/errors/database';
 
 @Injectable()
 export class UsersRepository extends Repository<UserEntity> {

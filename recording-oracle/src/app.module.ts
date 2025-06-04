@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { JwtAuthGuard } from './common/guards';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './database';
 import { AuthModule } from './modules/auth';
@@ -11,6 +12,12 @@ import { UsersModule } from './modules/users';
 import Environment from './utils/environment';
 
 @Module({
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
   imports: [
     ConfigModule.forRoot({
       /**
@@ -26,6 +33,5 @@ import Environment from './utils/environment';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

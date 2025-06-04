@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
+import { AuthConfigService } from '@/config';
+import { UsersModule } from '@/modules/users';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtHttpStrategy } from './jwt-http-strategy';
 import { TokenRepository } from './token.repository';
-import { AuthConfigService } from '../../config';
-import { UsersModule } from '../users';
 
 @Module({
   imports: [
@@ -21,7 +23,7 @@ import { UsersModule } from '../users';
     }),
     UsersModule,
   ],
-  providers: [AuthService, TokenRepository],
+  providers: [AuthService, JwtHttpStrategy, TokenRepository],
   controllers: [AuthController],
   exports: [TokenRepository],
 })

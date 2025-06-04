@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress, IsString, Matches } from 'class-validator';
+import { IsEthereumAddress, IsString, IsUUID, Matches } from 'class-validator';
 
 export class AuthDto {
   @ApiProperty()
@@ -33,4 +33,10 @@ export class NonceSuccessDto {
   @ApiProperty()
   @IsString()
   nonce: string;
+}
+
+export class RefreshDto {
+  @ApiProperty({ name: 'refresh_token' })
+  @IsUUID()
+  refreshToken: string;
 }

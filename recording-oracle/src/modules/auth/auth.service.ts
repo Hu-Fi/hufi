@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { AuthConfigService } from '../../config';
-import logger from '../../logger';
-import * as web3Utils from '../../utils/web3';
-import { UserEntity, UsersRepository, UsersService } from '../users';
+import { DEFAULT_NONCE } from '@/common/constants';
+import { AuthConfigService } from '@/config';
+import logger from '@/logger';
+import { UserEntity, UsersRepository, UsersService } from '@/modules/users';
+import * as web3Utils from '@/utils/web3';
+
 import { AuthError, AuthErrorMessage } from './auth.error';
 import { RefreshTokenEntity } from './token.entity';
 import { TokenRepository } from './token.repository';
 import type { AuthTokens } from './types';
-import { DEFAULT_NONCE } from '../../common/constants';
 
 @Injectable()
 export class AuthService {
@@ -88,5 +89,30 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken: newRefreshTokenEntity.id };
+  }
+
+  async refresh(refreshToken: string): Promise<AuthTokens> {
+    const tokenEntity = await this.tokenRepository.findOneById(refreshToken, {
+      relations: {
+        user: true,
+      },
+    });
+
+    if (!tokenEntity) {
+      throw new AuthError(AuthErrorMessage.INVALID_REFRESH_TOKEN);
+    }
+
+    if (new Date() > tokenEntity.expiresAt) {
+      throw new AuthError(AuthErrorMessage.REFRESH_TOKEN_EXPIRED);
+    }
+
+    if (!tokenEntity.user) {
+      this.logger.warn('User not found during token refresh', {
+        userId: tokenEntity.userId,
+      });
+      throw new AuthError(AuthErrorMessage.INVALID_REFRESH_TOKEN);
+    }
+
+    return this.generateTokens(tokenEntity.user);
   }
 }

@@ -1,11 +1,33 @@
-import { Body, Controller, HttpCode, Post, UseFilters } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  UseFilters,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
-import { AuthDto, NonceDto, NonceSuccessDto, SuccessAuthDto } from './auth.dto';
+import { Public } from '@/common/decorators';
+import type { RequestWithUser } from '@/common/types';
+import { UsersService } from '@/modules/users';
+
+import {
+  AuthDto,
+  NonceDto,
+  NonceSuccessDto,
+  RefreshDto,
+  SuccessAuthDto,
+} from './auth.dto';
 import { AuthControllerErrorsFilter } from './auth.error-filter';
 import { AuthService } from './auth.service';
-import { Public } from '../../common/decorators';
-import { UsersService } from '../users';
+import { TokenRepository } from './token.repository';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -14,6 +36,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    private readonly tokenRepository: TokenRepository,
   ) {}
 
   @Public()
@@ -53,5 +76,38 @@ export class AuthController {
       data.address,
     );
     return authTokens;
+  }
+
+  @ApiBody({ type: RefreshDto })
+  @ApiOperation({
+    summary: 'Refresh token',
+    description: 'Endpoint to refresh the authentication token.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Token refreshed successfully',
+    type: SuccessAuthDto,
+  })
+  @Public()
+  @Post('/refresh')
+  @HttpCode(200)
+  async refreshToken(@Body() data: RefreshDto): Promise<SuccessAuthDto> {
+    const authTokens = await this.authService.refresh(data.refreshToken);
+    return authTokens;
+  }
+
+  @ApiOperation({
+    summary: 'User logout',
+    description: 'Endpoint to log out the user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User logged out successfully',
+  })
+  @ApiBearerAuth()
+  @Post('/logout')
+  @HttpCode(200)
+  async logout(@Req() request: RequestWithUser): Promise<void> {
+    await this.tokenRepository.deleteByUserId(request.user.id);
   }
 }

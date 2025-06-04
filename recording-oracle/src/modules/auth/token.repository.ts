@@ -13,6 +13,16 @@ export class TokenRepository extends Repository<RefreshTokenEntity> {
     super(RefreshTokenEntity, dataSource.createEntityManager());
   }
 
+  async findOneById(
+    id: string,
+    options: FindOptions = {},
+  ): Promise<RefreshTokenEntity | null> {
+    return this.findOne({
+      where: { id },
+      relations: options.relations,
+    });
+  }
+
   async findOneByUserId(
     userId: string,
     options: FindOptions = {},
@@ -23,5 +33,9 @@ export class TokenRepository extends Repository<RefreshTokenEntity> {
       },
       relations: options.relations,
     });
+  }
+
+  async deleteByUserId(userId: string): Promise<void> {
+    await this.delete({ userId });
   }
 }
