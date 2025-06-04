@@ -5,7 +5,8 @@ import { ethers } from 'ethers';
 
 import { UserEntity } from './user.entity';
 import { UsersRepository } from './users.repository';
-import * as web3Utils from '../../utils/web3';
+
+import * as web3Utils from '@/utils/web3';
 
 @Injectable()
 export class UsersService {
