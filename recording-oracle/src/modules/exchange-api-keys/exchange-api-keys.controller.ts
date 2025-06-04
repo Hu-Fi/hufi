@@ -6,19 +6,28 @@ import {
   HttpCode,
   Param,
   Post,
+  Req,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import type { RequestWithUser } from '@/common/types';
 
 import {
+  EncrollExchangeApiKeysParamsDto,
   EnrollExchangeApiKeysDto,
   EnrollExchangeApiKeysResponseDto,
 } from './exchange-api-key.dto';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 import { ExchangeApiKeysService } from './exchange-api-keys.service';
 
-const TEST_USER_ID = 'e83d7dc4-4b3d-4cca-8a3b-a96d887298d8';
-
 @ApiTags('Exchange API Keys')
+@ApiBearerAuth()
 @Controller('exchange-api-keys')
 export class ExchangeApiKeysController {
   constructor(
@@ -37,9 +46,11 @@ export class ExchangeApiKeysController {
     isArray: true,
   })
   @Get('/')
-  async list(): Promise<unknown> {
+  async list(@Req() request: RequestWithUser): Promise<unknown> {
+    const userId = request.user.id;
+
     const exchanges =
-      await this.exchangeApiKeysRepository.listExchangesByUserId(TEST_USER_ID);
+      await this.exchangeApiKeysRepository.listExchangesByUserId(userId);
 
     return exchanges;
   }
@@ -58,11 +69,16 @@ export class ExchangeApiKeysController {
   @HttpCode(200)
   @Post('/:exchange_name')
   async enroll(
-    @Param('exchange_name') exchangeName: string,
+    @Req() request: RequestWithUser,
+    @Param() params: EncrollExchangeApiKeysParamsDto,
     @Body() data: EnrollExchangeApiKeysDto,
   ): Promise<EnrollExchangeApiKeysResponseDto> {
+    const userId = request.user.id;
+    const exchangeName = params.exchangeName;
+
+    console.log('dataaaaaaa', data, exchangeName);
     const key = await this.exchangeApiKeysService.enroll({
-      userId: TEST_USER_ID,
+      userId,
       exchangeName,
       apiKey: data.apiKey,
       secretKey: data.secretKey,
@@ -80,9 +96,15 @@ export class ExchangeApiKeysController {
   })
   @HttpCode(204)
   @Delete('/:exchange_name')
-  async delete(@Param('exchange_name') exchangeName: string): Promise<void> {
+  async delete(
+    @Req() request: RequestWithUser,
+    @Param() params: EncrollExchangeApiKeysParamsDto,
+  ): Promise<void> {
+    const userId = request.user.id;
+    const exchangeName = params.exchangeName;
+
     await this.exchangeApiKeysRepository.deleteByExchangeAndUser(
-      TEST_USER_ID,
+      userId,
       exchangeName,
     );
   }

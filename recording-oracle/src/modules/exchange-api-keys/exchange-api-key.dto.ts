@@ -1,19 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-/**
- * TODO:
- * - add validation using `class-validator`
- * - update swagger names to use snake_case
- */
 export class EnrollExchangeApiKeysDto {
-  @ApiProperty({ name: 'apiKey' })
+  @ApiProperty({ name: 'api_key' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
   apiKey: string;
 
-  @ApiProperty({ name: 'secretKey' })
+  @ApiProperty({ name: 'secret_key' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
   secretKey: string;
 }
+
+class ExchangeNameParamDto {
+  @ApiProperty({ name: 'exchange_name' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  exchangeName: string;
+}
+export class EncrollExchangeApiKeysParamsDto extends ExchangeNameParamDto {}
 
 export class EnrollExchangeApiKeysResponseDto {
   @ApiProperty()
   id: string;
 }
+
+export class DeleteExchangeApiKeysParamsDto extends ExchangeNameParamDto {}
