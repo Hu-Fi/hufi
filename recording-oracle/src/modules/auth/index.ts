@@ -1,3 +1,3 @@
-export { RefreshTokenEntity } from './token.entity';
+export { RefreshTokenEntity } from './refresh-token.entity';
 
 export { AuthModule } from './auth.module';

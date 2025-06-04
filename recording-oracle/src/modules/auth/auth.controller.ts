@@ -20,14 +20,14 @@ import { UsersService } from '@/modules/users';
 
 import {
   AuthDto,
-  NonceDto,
-  NonceSuccessDto,
+  ObtainNonceDto,
+  ObtainNonceSuccessDto,
   RefreshDto,
   SuccessAuthDto,
 } from './auth.dto';
 import { AuthControllerErrorsFilter } from './auth.error-filter';
 import { AuthService } from './auth.service';
-import { TokenRepository } from './token.repository';
+import { RefreshTokenRepository } from './refresh-token.repository';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -36,7 +36,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-    private readonly tokenRepository: TokenRepository,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
 
   @Public()
@@ -46,13 +46,15 @@ export class AuthController {
     summary: 'Web3 signature body',
     description: 'Endpoint for retrieving the nonce used for signing.',
   })
-  @ApiBody({ type: NonceDto })
+  @ApiBody({ type: ObtainNonceDto })
   @ApiResponse({
     status: 200,
     description: 'Nonce retrieved successfully',
-    type: NonceSuccessDto,
+    type: ObtainNonceSuccessDto,
   })
-  public async getNonce(@Body() data: NonceDto): Promise<NonceSuccessDto> {
+  public async getNonce(
+    @Body() data: ObtainNonceDto,
+  ): Promise<ObtainNonceSuccessDto> {
     const nonce = await this.usersService.getNonce(data.address);
     return { nonce };
   }
@@ -68,7 +70,7 @@ export class AuthController {
     type: SuccessAuthDto,
   })
   @Public()
-  @Post('/auth')
+  @Post('/')
   @HttpCode(200)
   async auth(@Body() data: AuthDto): Promise<SuccessAuthDto | undefined> {
     const authTokens = await this.authService.auth(
@@ -106,8 +108,8 @@ export class AuthController {
   })
   @ApiBearerAuth()
   @Post('/logout')
-  @HttpCode(200)
+  @HttpCode(204)
   async logout(@Req() request: RequestWithUser): Promise<void> {
-    await this.tokenRepository.deleteByUserId(request.user.id);
+    await this.refreshTokenRepository.deleteByUserId(request.user.id);
   }
 }

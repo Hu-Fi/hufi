@@ -16,7 +16,6 @@ export class AuthControllerErrorsFilter implements ExceptionFilter {
     context: AuthControllerErrorsFilter.name,
   });
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   catch(exception: AuthError, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

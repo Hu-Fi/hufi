@@ -8,8 +8,8 @@ import { UserEntity, UsersRepository, UsersService } from '@/modules/users';
 import * as web3Utils from '@/utils/web3';
 
 import { AuthError, AuthErrorMessage } from './auth.error';
-import { RefreshTokenEntity } from './token.entity';
-import { TokenRepository } from './token.repository';
+import { RefreshTokenEntity } from './refresh-token.entity';
+import { RefreshTokenRepository } from './refresh-token.repository';
 import type { AuthTokens } from './types';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class AuthService {
     private readonly authConfigService: AuthConfigService,
     private readonly jwtService: JwtService,
 
-    private readonly tokenRepository: TokenRepository,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
     private readonly usersRepository: UsersRepository,
     private readonly usersService: UsersService,
   ) {}
@@ -50,9 +50,7 @@ export class AuthService {
     if (user) {
       const nonce = web3Utils.generateNonce();
       await this.usersRepository.updateOneById(user.id, { nonce });
-    }
-
-    if (!user) {
+    } else {
       user = await this.usersService.create(address);
     }
 
@@ -60,12 +58,11 @@ export class AuthService {
   }
 
   async generateTokens(user: UserEntity): Promise<AuthTokens> {
-    const refreshTokenEntity = await this.tokenRepository.findOneByUserId(
-      user.id,
-    );
+    const refreshTokenEntity =
+      await this.refreshTokenRepository.findOneByUserId(user.id);
 
     if (refreshTokenEntity) {
-      await this.tokenRepository.remove(refreshTokenEntity);
+      await this.refreshTokenRepository.remove(refreshTokenEntity);
     }
 
     const newRefreshTokenEntity = new RefreshTokenEntity();
@@ -75,26 +72,27 @@ export class AuthService {
       date.getTime() + this.authConfigService.refreshTokenExpiresIn,
     );
 
-    await this.tokenRepository.insert(newRefreshTokenEntity);
+    await this.refreshTokenRepository.insert(newRefreshTokenEntity);
 
     const jwtPayload = {
       user_id: user.id,
       wallet_address: user.evmAddress,
     };
 
-    const accessToken = await this.jwtService.signAsync(jwtPayload, {
-      expiresIn: this.authConfigService.accessTokenExpiresIn,
-    });
+    const accessToken = await this.jwtService.signAsync(jwtPayload);
 
     return { accessToken, refreshToken: newRefreshTokenEntity.id };
   }
 
   async refresh(refreshToken: string): Promise<AuthTokens> {
-    const tokenEntity = await this.tokenRepository.findOneById(refreshToken, {
-      relations: {
-        user: true,
+    const tokenEntity = await this.refreshTokenRepository.findOneById(
+      refreshToken,
+      {
+        relations: {
+          user: true,
+        },
       },
-    });
+    );
 
     if (!tokenEntity) {
       throw new AuthError(AuthErrorMessage.INVALID_REFRESH_TOKEN);
@@ -105,7 +103,7 @@ export class AuthService {
     }
 
     if (!tokenEntity.user) {
-      this.logger.warn('User not found during token refresh', {
+      this.logger.error('User not found during token refresh', {
         userId: tokenEntity.userId,
       });
       throw new AuthError(AuthErrorMessage.INVALID_REFRESH_TOKEN);

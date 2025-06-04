@@ -23,13 +23,13 @@ export class SuccessAuthDto {
   refreshToken: string;
 }
 
-export class NonceDto {
+export class ObtainNonceDto {
   @ApiProperty()
   @IsEthereumAddress()
   address: string;
 }
 
-export class NonceSuccessDto {
+export class ObtainNonceSuccessDto {
   @ApiProperty()
   @IsString()
   nonce: string;
@@ -38,5 +38,5 @@ export class NonceSuccessDto {
 export class RefreshDto {
   @ApiProperty({ name: 'refresh_token' })
   @IsUUID()
-  refresh_token: string;
+  refreshToken: string;
 }

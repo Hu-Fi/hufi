@@ -37,8 +37,6 @@ export class UsersService {
   }
 
   async getNonce(address: string): Promise<string> {
-    web3Utils.assertValidEvmAddress(address);
-
     const user = await this.findOneByEvmAddress(address);
     if (!user) {
       return DEFAULT_NONCE;

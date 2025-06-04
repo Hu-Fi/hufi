@@ -25,6 +25,6 @@ export const envValidator = Joi.object({
     .required()
     .pattern(/^-----BEGIN PUBLIC KEY-----[\s\S]+-----END PUBLIC KEY-----$/)
     .message('Invalid JWT_PUBLIC_KEY format (expecting PEM)'),
-  JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().integer().min(1),
-  JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().integer().min(1),
+  JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
+  JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
 });

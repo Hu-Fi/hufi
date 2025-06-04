@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, FindManyOptions, Repository } from 'typeorm';
 
-import { RefreshTokenEntity } from './token.entity';
+import { RefreshTokenEntity } from './refresh-token.entity';
 
 type FindOptions = {
   relations?: FindManyOptions<RefreshTokenEntity>['relations'];
 };
 
 @Injectable()
-export class TokenRepository extends Repository<RefreshTokenEntity> {
+export class RefreshTokenRepository extends Repository<RefreshTokenEntity> {
   constructor(dataSource: DataSource) {
     super(RefreshTokenEntity, dataSource.createEntityManager());
   }
