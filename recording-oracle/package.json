@@ -13,11 +13,17 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "migration:create": "yarn typeorm migration:create",
+    "migration:generate": "yarn typeorm migration:generate -d typeorm-migrations-datasource.ts",
+    "migration:revert": "yarn typeorm migration:revert -d typeorm-migrations-datasource.ts",
+    "migration:run": "yarn typeorm migration:run -d typeorm-migrations-datasource.ts",
+    "migration:show": "yarn typeorm migration:show -d typeorm-migrations-datasource.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
