@@ -12,7 +12,7 @@ import * as CaseConverter from '../../utils/case-converter';
 
 @Injectable()
 export class TransformInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
 
     if (request.body) {
@@ -21,6 +21,7 @@ export class TransformInterceptor implements NestInterceptor {
 
     if (request.query) {
       const transformedQuery = this.transformRequestData(request.query);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       for (const key of Object.keys(request.query)) {
         delete request.query[key];
       }

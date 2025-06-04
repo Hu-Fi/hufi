@@ -15,7 +15,7 @@ import { transformKeysFromCamelToSnake } from '@/utils/case-converter';
 export class ExceptionFilter implements IExceptionFilter {
   private readonly logger = logger.child({ context: ExceptionFilter.name });
 
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
