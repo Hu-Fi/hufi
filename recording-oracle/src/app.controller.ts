@@ -1,11 +1,13 @@
-import { Controller, Get, Redirect } from '@nestjs/common';
-import { ApiTags, ApiExcludeController } from '@nestjs/swagger';
+import { Controller, Get } from '@nestjs/common';
 
-@Controller('/')
-@ApiExcludeController()
-@ApiTags('Main')
+import { AppService } from './app.service';
+
+@Controller()
 export class AppController {
-  @Get('/')
-  @Redirect('/swagger', 301)
-  public redirect(): void {}
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
 }
