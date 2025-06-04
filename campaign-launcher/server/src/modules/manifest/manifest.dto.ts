@@ -38,6 +38,38 @@ export class ManifestUploadRequestDto {
   additionalData?: string;
 }
 
+export class ManifestUploadRequestDtoV2 {
+  @ApiProperty()
+  @IsNumber()
+  chainId: number;
+
+  @ApiProperty()
+  @IsString()
+  requesterAddress: string;
+
+  @ApiProperty()
+  @IsString()
+  exchangeName: string;
+
+  @ApiProperty()
+  @IsString()
+  token: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  startDate: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  endDate: Date;
+
+  @ApiProperty()
+  @IsString()
+  fundAmount: string;
+}
+
 export class ManifestUploadResponseDto {
   @ApiProperty()
   @IsString()

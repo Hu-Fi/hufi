@@ -12,7 +12,12 @@ export class CampaignService {
 
   constructor(public readonly web3Service: Web3Service) {}
 
-  public async getCampaigns(chainId = ChainId.ALL): Promise<CampaignDataDto[]> {
+  public async getCampaigns(
+    chainId = ChainId.ALL,
+    status?: string,
+    exchangeName?: string,
+    launcher?: string,
+  ): Promise<CampaignDataDto[]> {
     let supportedChainIds = this.web3Service.getValidChains();
 
     if (chainId !== ChainId.ALL) {
@@ -68,7 +73,25 @@ export class CampaignService {
       }
     }
 
-    return allCampaigns;
+    return allCampaigns.filter((campaign) => {
+      if (
+        launcher &&
+        campaign.launcher.toLowerCase() !== launcher.toLowerCase()
+      ) {
+        return false;
+      }
+      if (status && status !== 'all' && campaign.status !== status) {
+        return false;
+      }
+      if (
+        exchangeName &&
+        exchangeName !== 'all' &&
+        campaign.exchangeName !== exchangeName
+      ) {
+        return false;
+      }
+      return true;
+    });
   }
 
   public async getCampaign(
