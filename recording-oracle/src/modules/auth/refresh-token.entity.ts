@@ -2,7 +2,8 @@ import {
   Column,
   Entity,
   Index,
-  ManyToOne,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -15,7 +16,8 @@ export class RefreshTokenEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
+  @JoinColumn()
+  @OneToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
   user?: UserEntity;
 
   @Column()

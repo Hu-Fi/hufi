@@ -3,10 +3,11 @@ import crypto from 'crypto';
 import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 
+import { DEFAULT_NONCE } from '@/common/constants';
+import * as web3Utils from '@/utils/web3';
+
 import { UserEntity } from './user.entity';
 import { UsersRepository } from './users.repository';
-
-import * as web3Utils from '@/utils/web3';
 
 @Injectable()
 export class UsersService {
@@ -33,5 +34,14 @@ export class UsersService {
     const checksummedAddress = ethers.getAddress(address);
 
     return this.usersRepository.findOneByEvmAddress(checksummedAddress);
+  }
+
+  async getNonce(address: string): Promise<string> {
+    const user = await this.findOneByEvmAddress(address);
+    if (!user) {
+      return DEFAULT_NONCE;
+    }
+
+    return user.nonce;
   }
 }
