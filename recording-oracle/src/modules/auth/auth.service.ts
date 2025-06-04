@@ -39,7 +39,6 @@ export class AuthService {
       signedData = { nonce: user.nonce };
     }
 
-    logger.info(JSON.stringify(signedData));
     const isValidSignature = web3Utils.verifySignature(signedData, signature, [
       address,
     ]);
@@ -51,14 +50,13 @@ export class AuthService {
     if (user) {
       const nonce = web3Utils.generateNonce();
       await this.usersRepository.updateOneById(user.id, { nonce });
-
-      return this.generateTokens(user);
     }
 
     if (!user) {
       user = await this.usersService.create(address);
-      return this.generateTokens(user);
     }
+
+    return this.generateTokens(user);
   }
 
   async generateTokens(user: UserEntity): Promise<AuthTokens> {

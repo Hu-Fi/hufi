@@ -38,5 +38,5 @@ export class NonceSuccessDto {
 export class RefreshDto {
   @ApiProperty({ name: 'refresh_token' })
   @IsUUID()
-  refreshToken: string;
+  refresh_token: string;
 }
