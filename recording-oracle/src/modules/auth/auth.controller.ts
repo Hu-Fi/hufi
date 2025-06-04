@@ -40,7 +40,7 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Post('/prepare-signature')
+  @Post('/nonce')
   @HttpCode(200)
   @ApiOperation({
     summary: 'Web3 signature body',

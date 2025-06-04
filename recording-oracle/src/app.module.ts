@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 import { AppController } from './app.controller';
 import { JwtAuthGuard } from './common/guards';
+import { HttpValidationPipe } from './common/pipes';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './database';
 import { AuthModule } from './modules/auth';
@@ -16,6 +17,10 @@ import Environment from './utils/environment';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_PIPE,
+      useClass: HttpValidationPipe,
     },
   ],
   imports: [
