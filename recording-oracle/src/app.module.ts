@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './database';
+import { AuthModule } from './modules/auth';
 import { HealthModule } from './modules/health';
 import { UsersModule } from './modules/users';
 import Environment from './utils/environment';
@@ -18,6 +19,7 @@ import Environment from './utils/environment';
       envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
       validationSchema: envValidator,
     }),
+    AuthModule,
     DatabaseModule,
     EnvConfigModule,
     HealthModule,
