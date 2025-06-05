@@ -59,7 +59,10 @@ export class CampaignService {
                 const date = new Date(Number(tx.timestamp) * 1000)
                   .toISOString()
                   .slice(0, 10);
-                if (Array.isArray(tx.internalTransactions)) {
+                if (
+                  Array.isArray(tx.internalTransactions) &&
+                  tx.method === 'bulkTransfer'
+                ) {
                   for (const internalTx of tx.internalTransactions) {
                     if (internalTx?.value) {
                       const prev = dailyMap.get(date) || 0n;
