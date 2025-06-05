@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
-import { UsersRepository } from '@/modules/users';
+import { UsersService } from '@/modules/users';
 
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { ExchangeApiKeyNotFoundError } from './exchange-api-key.error';
@@ -12,7 +12,7 @@ import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 export class ExchangeApiKeysService {
   constructor(
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
-    private readonly usersRepository: UsersRepository,
+    private readonly userService: UsersService,
     private readonly aesEncryptionService: AesEncryptionService,
   ) {}
 
@@ -32,10 +32,7 @@ export class ExchangeApiKeysService {
       throw new Error('Exchange name is not valid');
     }
 
-    const userExists = await this.usersRepository.existsById(userId);
-    if (!userExists) {
-      throw new Error('422: user does not exist');
-    }
+    await this.userService.assertUserExistsById(userId);
 
     const enrolledKey = new ExchangeApiKeyEntity();
     enrolledKey.userId = userId;

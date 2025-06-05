@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Req,
+  UseFilters,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -23,11 +24,13 @@ import {
   EnrollExchangeApiKeysDto,
   EnrollExchangeApiKeysResponseDto,
 } from './exchange-api-key.dto';
+import { ExchangeApiKeysControllerErrorsFilter } from './exchange-api-keys.error-filter';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 import { ExchangeApiKeysService } from './exchange-api-keys.service';
 
 @ApiTags('Exchange API Keys')
 @ApiBearerAuth()
+@UseFilters(ExchangeApiKeysControllerErrorsFilter)
 @Controller('exchange-api-keys')
 export class ExchangeApiKeysController {
   constructor(

@@ -7,6 +7,7 @@ import { DEFAULT_NONCE } from '@/common/constants';
 import * as web3Utils from '@/utils/web3';
 
 import { UserEntity } from './user.entity';
+import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
@@ -43,5 +44,12 @@ export class UsersService {
     }
 
     return user.nonce;
+  }
+
+  async assertUserExistsById(userId: string): Promise<void> {
+    const userExists = await this.usersRepository.existsById(userId);
+    if (!userExists) {
+      throw new UserNotFoundError(userId);
+    }
   }
 }
