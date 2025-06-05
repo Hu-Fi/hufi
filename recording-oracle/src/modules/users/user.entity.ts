@@ -1,14 +1,13 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'users' })
-@Index(['evmAddress'], { unique: true })
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('varchar', { length: 42 })
+  @Column('varchar', { length: 42, unique: true })
   evmAddress: string;
 
   @Column('varchar', { length: 32 })

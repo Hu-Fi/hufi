@@ -3,12 +3,23 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AuthConfigService } from './auth-config.service';
 import { DatabaseConfigService } from './database-config.service';
+import { EncryptionConfigService } from './encryption-config.service';
 import { ServerConfigService } from './server-config.service';
 
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [AuthConfigService, DatabaseConfigService, ServerConfigService],
-  exports: [AuthConfigService, DatabaseConfigService, ServerConfigService],
+  providers: [
+    AuthConfigService,
+    DatabaseConfigService,
+    EncryptionConfigService,
+    ServerConfigService,
+  ],
+  exports: [
+    AuthConfigService,
+    DatabaseConfigService,
+    EncryptionConfigService,
+    ServerConfigService,
+  ],
 })
 export class EnvConfigModule {}

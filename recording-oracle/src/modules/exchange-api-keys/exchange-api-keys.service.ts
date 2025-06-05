@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+import { AesEncryptionService } from '@/modules/encryption';
 import { UsersRepository } from '@/modules/users';
 
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
+import { ExchangeApiKeyNotFoundError } from './exchange-api-key.error';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 
 @Injectable()
@@ -10,6 +12,7 @@ export class ExchangeApiKeysService {
   constructor(
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly aesEncryptionService: AesEncryptionService,
   ) {}
 
   async enroll(input: {
@@ -28,8 +31,13 @@ export class ExchangeApiKeysService {
     const enrolledKey = new ExchangeApiKeyEntity();
     enrolledKey.userId = userId;
     enrolledKey.exchangeName = exchangeName;
-    enrolledKey.apiKey = apiKey;
-    enrolledKey.secretKey = secretKey;
+
+    const [encryptedApiKey, encryptedSecretKey] = await Promise.all([
+      this.aesEncryptionService.encrypt(Buffer.from(apiKey)),
+      this.aesEncryptionService.encrypt(Buffer.from(secretKey)),
+    ]);
+    enrolledKey.apiKey = encryptedApiKey;
+    enrolledKey.secretKey = encryptedSecretKey;
     enrolledKey.updatedAt = new Date();
 
     await this.exchangeApiKeysRepository.upsert(enrolledKey, [
@@ -38,5 +46,29 @@ export class ExchangeApiKeysService {
     ]);
 
     return enrolledKey;
+  }
+
+  async retrieve(
+    userId: string,
+    exchangeName: string,
+  ): Promise<{ apiKey: string; secretKey: string }> {
+    const entity =
+      await this.exchangeApiKeysRepository.findOneByUserAndExchange(
+        userId,
+        exchangeName,
+      );
+    if (!entity) {
+      throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
+    }
+
+    const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
+      this.aesEncryptionService.decrypt(entity.apiKey),
+      this.aesEncryptionService.decrypt(entity.secretKey),
+    ]);
+
+    return {
+      apiKey: decryptedApiKey.toString(),
+      secretKey: decryptedSecretKey.toString(),
+    };
   }
 }

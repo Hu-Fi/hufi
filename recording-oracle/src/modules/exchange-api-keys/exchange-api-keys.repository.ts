@@ -10,6 +10,10 @@ export class ExchangeApiKeysRepository extends Repository<ExchangeApiKeyEntity> 
   }
 
   async listExchangesByUserId(userId: string): Promise<string[]> {
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+
     const results: Array<Pick<ExchangeApiKeyEntity, 'exchangeName'>> =
       await this.find({
         where: {
@@ -23,10 +27,34 @@ export class ExchangeApiKeysRepository extends Repository<ExchangeApiKeyEntity> 
     return results.map((r) => r.exchangeName);
   }
 
-  async deleteByExchangeAndUser(
+  async deleteByUserAndExchange(
     userId: string,
     exchangeName: string,
   ): Promise<void> {
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+    if (!exchangeName) {
+      throw new Error('exchangeName is required');
+    }
+
     await this.delete({ userId, exchangeName });
+  }
+
+  async findOneByUserAndExchange(
+    userId: string,
+    exchangeName: string,
+  ): Promise<ExchangeApiKeyEntity | null> {
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+    if (!exchangeName) {
+      throw new Error('exchangeName is required');
+    }
+
+    return this.findOneBy({
+      userId,
+      exchangeName,
+    });
   }
 }

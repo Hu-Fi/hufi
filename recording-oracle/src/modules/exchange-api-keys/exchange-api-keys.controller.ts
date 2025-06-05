@@ -76,7 +76,6 @@ export class ExchangeApiKeysController {
     const userId = request.user.id;
     const exchangeName = params.exchangeName;
 
-    console.log('dataaaaaaa', data, exchangeName);
     const key = await this.exchangeApiKeysService.enroll({
       userId,
       exchangeName,
@@ -103,9 +102,22 @@ export class ExchangeApiKeysController {
     const userId = request.user.id;
     const exchangeName = params.exchangeName;
 
-    await this.exchangeApiKeysRepository.deleteByExchangeAndUser(
+    await this.exchangeApiKeysRepository.deleteByUserAndExchange(
       userId,
       exchangeName,
     );
+  }
+
+  @ApiOperation({
+    summary: 'Retreive API keys for exchange',
+  })
+  @Get('/:exchange_name')
+  async retrieve(
+    @Req() request: RequestWithUser,
+    @Param('exchangeName') exchangeName: string,
+  ): Promise<unknown> {
+    const userId = request.user.id;
+
+    return this.exchangeApiKeysService.retrieve(userId, exchangeName);
   }
 }

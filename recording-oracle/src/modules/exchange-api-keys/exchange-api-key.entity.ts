@@ -11,6 +11,13 @@ import {
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 import { UserEntity } from '@/modules/users';
 
+/**
+ * We expect keys to be <=200 charactes, so after encryption
+ * the string should be less than 500 chars. However,
+ * we provide some reasonably high length limit for DB column
+ * to have some space for manoeuvre.
+ */
+
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'exchange_api_keys' })
 @Index(['userId', 'exchangeName'], { unique: true })
 export class ExchangeApiKeyEntity {
@@ -20,12 +27,10 @@ export class ExchangeApiKeyEntity {
   @Column('varchar', { length: 20 })
   exchangeName: string;
 
-  // TODO: estimate max length when encrypted
-  @Column('varchar', { length: 200 })
+  @Column('varchar', { length: 1000 })
   apiKey: string;
 
-  // TODO: estimate max length when encrypted
-  @Column('varchar', { length: 200 })
+  @Column('varchar', { length: 1000 })
   secretKey: string;
 
   @ManyToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
