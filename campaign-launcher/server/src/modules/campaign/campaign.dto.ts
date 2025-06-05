@@ -1,6 +1,12 @@
 import { ChainId } from '@human-protocol/sdk';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CampaignDataDto {
   @ApiProperty()
@@ -128,6 +134,20 @@ export class CampaignDataDto {
   @ApiProperty()
   @IsString()
   createdAt: string;
+
+  @ApiProperty()
+  @IsArray()
+  dailyAmountPaid: DailyAmountPaid[];
+}
+
+export class DailyAmountPaid {
+  @ApiProperty()
+  @IsString()
+  date: string;
+
+  @ApiProperty()
+  @IsNumber()
+  totalAmountPaid: string;
 }
 
 export class CreateCampaignDto {
