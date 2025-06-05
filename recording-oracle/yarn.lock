@@ -3285,6 +3285,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ccxt@npm:^4.4.88":
+  version: 4.4.88
+  resolution: "ccxt@npm:4.4.88"
+  dependencies:
+    ws: "npm:^8.8.1"
+  bin:
+    ccxt: examples/js/cli.js
+  checksum: 10c0/6804eb8772398c6eed404376dd0f1c40c08fa91ae5160b0a7df71581b8d67dafe0569f5e8c150efb1fc7baeb490452140c4644a8281af60bc2e6792dab501d98
+  languageName: node
+  linkType: hard
+
 "chalk@npm:^4.0.0, chalk@npm:^4.0.2, chalk@npm:^4.1.0, chalk@npm:^4.1.2":
   version: 4.1.2
   resolution: "chalk@npm:4.1.2"
@@ -7857,6 +7868,7 @@ __metadata:
     "@types/passport-jwt": "npm:^4"
     "@types/pg": "npm:^8"
     "@types/supertest": "npm:^6.0.2"
+    ccxt: "npm:^4.4.88"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.2"
     eslint: "npm:^9.27.0"
@@ -9695,6 +9707,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/f4a49064afae4500be772abdc2211c8518f39e1c959640457dcee15d4488628620625c783902a52af2dd02f68558da2868fd06e6fd0e67ebcd09e6881b1b5bfe
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.8.1":
+  version: 8.18.2
+  resolution: "ws@npm:8.18.2"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10c0/4b50f67931b8c6943c893f59c524f0e4905bbd183016cfb0f2b8653aa7f28dad4e456b9d99d285bbb67cca4fedd9ce90dfdfaa82b898a11414ebd66ee99141e4
   languageName: node
   linkType: hard
 
