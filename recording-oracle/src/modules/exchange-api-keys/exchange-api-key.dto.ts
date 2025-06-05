@@ -1,5 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import ccxt from 'ccxt';
+import { IsNotEmpty, IsString, MaxLength, Validate } from 'class-validator';
+
+import { ExchangeNameValidator } from '@/common/validators';
 
 export class EnrollExchangeApiKeysDto {
   @ApiProperty({ name: 'api_key' })
@@ -16,10 +19,11 @@ export class EnrollExchangeApiKeysDto {
 }
 
 class ExchangeNameParamDto {
-  @ApiProperty({ name: 'exchange_name' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(20)
+  @ApiProperty({
+    name: 'exchange_name',
+    enum: ccxt.exchanges,
+  })
+  @Validate(ExchangeNameValidator)
   exchangeName: string;
 }
 export class EncrollExchangeApiKeysParamsDto extends ExchangeNameParamDto {}

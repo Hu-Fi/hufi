@@ -114,9 +114,10 @@ export class ExchangeApiKeysController {
   @Get('/:exchange_name')
   async retrieve(
     @Req() request: RequestWithUser,
-    @Param('exchangeName') exchangeName: string,
+    @Param() params: EncrollExchangeApiKeysParamsDto,
   ): Promise<unknown> {
     const userId = request.user.id;
+    const exchangeName = params.exchangeName;
 
     return this.exchangeApiKeysService.retrieve(userId, exchangeName);
   }

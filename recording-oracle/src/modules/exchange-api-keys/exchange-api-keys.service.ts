@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
 import { UsersRepository } from '@/modules/users';
 
@@ -22,6 +23,14 @@ export class ExchangeApiKeysService {
     secretKey: string;
   }): Promise<ExchangeApiKeyEntity> {
     const { userId, exchangeName, apiKey, secretKey } = input;
+
+    if (!userId || !apiKey || !secretKey) {
+      throw new Error('Invalid arguments');
+    }
+
+    if (!isValidExchangeName(exchangeName)) {
+      throw new Error('Exchange name is not valid');
+    }
 
     const userExists = await this.usersRepository.existsById(userId);
     if (!userExists) {
