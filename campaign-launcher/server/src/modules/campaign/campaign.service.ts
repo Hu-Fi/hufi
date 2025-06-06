@@ -1,4 +1,4 @@
-import { ChainId, EscrowUtils } from '@human-protocol/sdk';
+import { ChainId, EscrowUtils, TransactionUtils } from '@human-protocol/sdk';
 import { Injectable, Logger } from '@nestjs/common';
 import { ethers } from 'ethers';
 
@@ -109,10 +109,40 @@ export class CampaignService {
       if (!url) return undefined;
 
       const manifest = await fetch(url).then((res) => res.json());
+      const transactions = await TransactionUtils.getTransactions({
+        chainId: chainId,
+        fromAddress: escrowAddress,
+        toAddress: escrowAddress,
+      });
+
+      const dailyMap = new Map<string, bigint>();
+      transactions.forEach((tx) => {
+        const date = new Date(Number(tx.timestamp) * 1000)
+          .toISOString()
+          .slice(0, 10);
+        if (
+          Array.isArray(tx.internalTransactions) &&
+          tx.method === 'bulkTransfer'
+        ) {
+          for (const internalTx of tx.internalTransactions) {
+            if (internalTx?.value) {
+              const prev = dailyMap.get(date) || 0n;
+              dailyMap.set(date, prev + BigInt(internalTx.value));
+            }
+          }
+        }
+      });
+      const dailyArray = Array.from(dailyMap.entries()).map(
+        ([date, totalAmountPaid]) => ({
+          date,
+          totalAmountPaid: totalAmountPaid.toString(),
+        }),
+      );
 
       return {
         ...manifest,
         ...campaign,
+        dailyAmountPaid: dailyArray,
         symbol: manifest.token.toLowerCase(),
       };
     } catch (err) {
