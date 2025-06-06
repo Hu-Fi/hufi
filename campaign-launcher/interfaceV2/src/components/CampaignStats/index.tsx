@@ -7,7 +7,7 @@ import { formatEther } from 'ethers';
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatHmtAmount } from '../../utils';
+import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
 
@@ -95,13 +95,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatHmtAmount(formatEther(campaign.totalFundedAmount))} <span>HMT</span>
+              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>HMT</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatHmtAmount(formatEther(campaign.amountPaid))} <span>HMT</span>
+              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>HMT</span>
             </Value>
           </StatsCard>
           <StatsCard>

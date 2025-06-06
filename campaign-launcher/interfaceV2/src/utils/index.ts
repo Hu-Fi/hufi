@@ -52,7 +52,7 @@ export const getExplorerUrl = (chainId: ChainId, address: string): string => {
   return `https://polygonscan.com/address/${address}`;
 };
 
-export const formatHmtAmount = (amount: string | number): string | number => {
+export const formatTokenAmount = (amount: string | number): string | number => {
   const _amount = Number(amount);
   if (_amount >= 1000) {
     return Math.round(_amount);
