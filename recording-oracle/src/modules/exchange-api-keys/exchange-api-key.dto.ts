@@ -14,7 +14,7 @@ export class EnrollExchangeApiKeysDto {
   @ApiProperty({ name: 'secret_key' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(200)
+  @MaxLength(5000)
   secretKey: string;
 }
 
