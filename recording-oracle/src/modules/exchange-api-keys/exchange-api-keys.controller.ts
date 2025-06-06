@@ -110,4 +110,18 @@ export class ExchangeApiKeysController {
       exchangeName,
     );
   }
+
+  @ApiOperation({
+    summary: 'Retreive API keys for exchange',
+  })
+  @Get('/:exchange_name')
+  async retrieve(
+    @Req() request: RequestWithUser,
+    @Param() params: EncrollExchangeApiKeysParamsDto,
+  ): Promise<unknown> {
+    const userId = request.user.id;
+    const exchangeName = params.exchangeName;
+
+    return this.exchangeApiKeysService.retrieve(userId, exchangeName);
+  }
 }
