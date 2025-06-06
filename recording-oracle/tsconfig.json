@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "module": "Node18",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
     "sourceMap": true,
-    "moduleResolution": "node16",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+    "target": "es2024",
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
@@ -18,6 +19,7 @@
     "isolatedModules": true,
     "paths": {
       "@/*": ["src/*"],
+      "ccxt": ["node_modules/ccxt/js/ccxt.d.ts"]
     }
   },
   "ts-node": {
