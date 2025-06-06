@@ -1,11 +1,13 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { formatEther } from 'ethers';
+import { formatEther, ethers } from 'ethers';
 
+import ERC20_ABI from '../../abi/ERC20.json';
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
+import useClientToSigner from '../../hooks/useClientToSigner';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
@@ -77,12 +79,32 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 }));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
-  const isXl = useIsXlDesktop();
+  const [tokenSymbol, setTokenSymbol] = useState('');
   const { exchanges } = useExchangesContext();
+  const { signer } = useClientToSigner();
+  const isXl = useIsXlDesktop();
+
   const exchange = exchanges?.find(
     (exchange) => exchange.name === campaign?.exchangeName
   );
   const exchangeName = exchange?.displayName;
+
+  useEffect(() => {
+    const getTokenInfo = async () => {
+      if (!campaign?.token || !campaign?.chainId || !signer) return;
+
+      try {
+        const contract = new ethers.Contract(campaign.token, ERC20_ABI, signer);
+        const symbol = await contract.symbol();
+        setTokenSymbol(symbol);
+      } catch (error) {
+        console.error('Error getting token symbol:', error);
+        setTokenSymbol('HMT');
+      }
+    };
+
+    getTokenInfo();
+  }, [campaign?.token, campaign?.chainId, signer]);
 
   if (!campaign) {
     return null;
@@ -95,13 +117,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>HMT</span>
+              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>{tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>HMT</span>
+              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>{tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
