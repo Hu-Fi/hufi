@@ -7,9 +7,20 @@ import {
 import { Request, Response } from 'express';
 
 import logger from '@/logger';
+import { ExchangeApiClientError } from '@/modules/exchange/errors';
 import { UserNotFoundError } from '@/modules/users';
 
-@Catch(UserNotFoundError)
+import {
+  IncompleteKeySuppliedError,
+  KeyAuthorizationError,
+} from './exchange-api-key.error';
+
+@Catch(
+  UserNotFoundError,
+  IncompleteKeySuppliedError,
+  KeyAuthorizationError,
+  ExchangeApiClientError,
+)
 export class ExchangeApiKeysControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
     context: ExchangeApiKeysControllerErrorsFilter.name,
@@ -23,6 +34,13 @@ export class ExchangeApiKeysControllerErrorsFilter implements ExceptionFilter {
 
     if (exception instanceof UserNotFoundError) {
       status = HttpStatus.UNPROCESSABLE_ENTITY;
+    } else if (
+      exception instanceof IncompleteKeySuppliedError ||
+      exception instanceof KeyAuthorizationError
+    ) {
+      status = HttpStatus.BAD_REQUEST;
+    } else if (exception instanceof ExchangeApiClientError) {
+      status = HttpStatus.SERVICE_UNAVAILABLE;
     }
 
     return response.status(status).json({

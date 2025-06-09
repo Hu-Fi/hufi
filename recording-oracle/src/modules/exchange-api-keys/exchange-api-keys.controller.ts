@@ -23,6 +23,7 @@ import {
   EncrollExchangeApiKeysParamsDto,
   EnrollExchangeApiKeysDto,
   EnrollExchangeApiKeysResponseDto,
+  ExchangeNameParamDto,
 } from './exchange-api-key.dto';
 import { ExchangeApiKeysControllerErrorsFilter } from './exchange-api-keys.error-filter';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
@@ -117,7 +118,7 @@ export class ExchangeApiKeysController {
   @Get('/:exchange_name')
   async retrieve(
     @Req() request: RequestWithUser,
-    @Param() params: EncrollExchangeApiKeysParamsDto,
+    @Param() params: ExchangeNameParamDto,
   ): Promise<unknown> {
     const userId = request.user.id;
     const exchangeName = params.exchangeName;

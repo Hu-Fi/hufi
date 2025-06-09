@@ -5,8 +5,13 @@ import { AesEncryptionService } from '@/modules/encryption';
 import { UsersService } from '@/modules/users';
 
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
-import { ExchangeApiKeyNotFoundError } from './exchange-api-key.error';
+import {
+  ExchangeApiKeyNotFoundError,
+  IncompleteKeySuppliedError,
+  KeyAuthorizationError,
+} from './exchange-api-key.error';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
+import { ExchangeApiClientFactory } from '../exchange/exchange-api-client-factory';
 
 @Injectable()
 export class ExchangeApiKeysService {
@@ -14,6 +19,7 @@ export class ExchangeApiKeysService {
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly userService: UsersService,
     private readonly aesEncryptionService: AesEncryptionService,
+    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
   ) {}
 
   async enroll(input: {
@@ -30,6 +36,20 @@ export class ExchangeApiKeysService {
 
     if (!isValidExchangeName(exchangeName)) {
       throw new Error('Exchange name is not valid');
+    }
+
+    const exchangeApiClient = this.exchangeApiClientFactory.create(
+      exchangeName,
+      { apiKey, secret: secretKey },
+    );
+
+    if (!exchangeApiClient.checkRequiredCredentials()) {
+      throw new IncompleteKeySuppliedError(exchangeName);
+    }
+
+    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
+    if (!hasRequiredAccess) {
+      throw new KeyAuthorizationError(exchangeName);
     }
 
     await this.userService.assertUserExistsById(userId);

@@ -84,5 +84,6 @@
       "prettier --write",
       "eslint --fix"
     ]
-  }
+  },
+  "packageManager": "yarn@4.9.1"
 }
