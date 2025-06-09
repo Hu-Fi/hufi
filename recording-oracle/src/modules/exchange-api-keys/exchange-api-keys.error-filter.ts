@@ -11,6 +11,7 @@ import { ExchangeApiClientError } from '@/modules/exchange/errors';
 import { UserNotFoundError } from '@/modules/users';
 
 import {
+  ExchangeApiKeyNotFoundError,
   IncompleteKeySuppliedError,
   KeyAuthorizationError,
 } from './exchange-api-key.error';
@@ -20,6 +21,7 @@ import {
   IncompleteKeySuppliedError,
   KeyAuthorizationError,
   ExchangeApiClientError,
+  ExchangeApiKeyNotFoundError,
 )
 export class ExchangeApiKeysControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
@@ -41,6 +43,8 @@ export class ExchangeApiKeysControllerErrorsFilter implements ExceptionFilter {
       status = HttpStatus.BAD_REQUEST;
     } else if (exception instanceof ExchangeApiClientError) {
       status = HttpStatus.SERVICE_UNAVAILABLE;
+    } else if (exception instanceof ExchangeApiKeyNotFoundError) {
+      status = HttpStatus.NOT_FOUND;
     }
 
     return response.status(status).json({
