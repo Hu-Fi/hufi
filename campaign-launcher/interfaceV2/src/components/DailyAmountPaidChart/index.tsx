@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 import {
@@ -14,7 +14,10 @@ import {
   ScriptableContext,
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { formatEther } from 'ethers';
 import { Line } from 'react-chartjs-2';
+
+import { formatTokenAmount } from '../../utils';
 
 ChartJS.register(
   CategoryScale,
@@ -26,25 +29,52 @@ ChartJS.register(
   annotationPlugin
 );
 
-const DailyAmountPaidChart: FC = () => {
+type Props = {
+  data: {
+    date: string;
+    totalAmountPaid: string;
+  }[];
+};
+
+type ProcessedData = {
+  date: string;
+  value: number;
+};
+
+const DailyAmountPaidChart: FC<Props> = ({ data }) => {
   const theme = useTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
-  const labels = [
-    '01/02',
-    '02/02',
-    '03/02',
-    '04/02',
-    '05/02',
-    '06/02',
-    '07/02',
-  ];
+  useEffect(() => {
+    if (data.length > 0) {
+      const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+      }).reverse();
 
-  const data: ChartData<'line'> = {
-    labels,
+      const processed = lastWeekDates.map(date => {
+        const foundData = data.find(item => item.date === date);
+        const [, month, day] = date.split('-');
+        return {
+          date: `${day}/${month}`,
+          value: foundData ? +formatTokenAmount(formatEther(foundData.totalAmountPaid)) : 0,
+        };
+      });
+
+      setProcessedData(processed);
+    }
+  }, [data]);
+
+  const dates = processedData.map(item => item.date);
+  const values = processedData.map(item => item.value);
+
+  const chartData: ChartData<'line'> = {
+    labels: dates,
     datasets: [
       {
-        data: [320, 780, 680, 880, 780, 1180, 970, 1300, 1180],
+        data: values,
         borderColor: theme.palette.text.primary,
         borderWidth: 2,
         backgroundColor: (context: ScriptableContext<'line'>) => {
@@ -66,6 +96,7 @@ const DailyAmountPaidChart: FC = () => {
         pointHoverBackgroundColor: theme.palette.primary.violet,
         pointHoverBorderColor: 'white',
         pointHoverBorderWidth: 2,
+        clip: false,
       },
     ],
   };
@@ -147,7 +178,7 @@ const DailyAmountPaidChart: FC = () => {
       y: {
         position: 'left',
         min: 0,
-        max: 1600,
+        max: Math.max(...values) || 1,
         grid: {
           color: 'rgba(203, 207, 230, 0.5)',
           drawTicks: false,
@@ -175,8 +206,9 @@ const DailyAmountPaidChart: FC = () => {
       height="100%"
       bgcolor="background.default"
       overflow="hidden"
+      onMouseLeave={() => setHoverIndex(null)}
     >
-      <Line data={data} options={options} />
+      <Line data={chartData} options={options} />
     </Box>
   );
 };

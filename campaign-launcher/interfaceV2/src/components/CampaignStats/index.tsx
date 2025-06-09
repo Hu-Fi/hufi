@@ -7,6 +7,7 @@ import { formatEther } from 'ethers';
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
 
@@ -130,10 +131,10 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
               fontWeight={800}
               lineHeight={7 / 6}
             >
-              0
+              {formatTokenAmount(formatEther(campaign.last24hAmountPaid))}
             </Typography>
           </Box>
-          <DailyAmountPaidChart />
+          <DailyAmountPaidChart data={campaign.dailyAmountPaid} />
         </Box>
       </Grid>
     </Grid>
