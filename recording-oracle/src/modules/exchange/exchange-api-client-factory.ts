@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import Environment from '@/utils/environment';
+import { ExchangeConfigService } from '@/config';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiClient, ExchangeApiClientInitOptions } from './types';
 
 @Injectable()
 export class ExchangeApiClientFactory {
-  constructor() {}
+  constructor(private readonly exchangeConfigService: ExchangeConfigService) {}
 
   create(
     exchangeName: string,
@@ -15,7 +15,7 @@ export class ExchangeApiClientFactory {
   ): ExchangeApiClient {
     return new CcxtExchangeClient(exchangeName, {
       ...initOptions,
-      sandbox: Environment.isDevelopment(),
+      sandbox: this.exchangeConfigService.useSandbox,
     });
   }
 }

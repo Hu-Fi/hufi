@@ -29,4 +29,6 @@ export const envValidator = Joi.object({
   JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
 
   AES_ENCRYPTION_KEY: Joi.string().required().length(32),
+
+  USE_EXCHANGE_SANDBOX: Joi.string().valid('true', 'false'),
 });
