@@ -134,7 +134,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
               {formatTokenAmount(formatEther(campaign.last24hAmountPaid))}
             </Typography>
           </Box>
-          <DailyAmountPaidChart data={campaign.dailyAmountPaid} />
+          <DailyAmountPaidChart data={campaign.dailyAmountPaid} endDate={campaign.endBlock} />
         </Box>
       </Grid>
     </Grid>

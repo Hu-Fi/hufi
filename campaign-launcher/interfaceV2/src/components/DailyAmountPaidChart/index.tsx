@@ -29,26 +29,33 @@ ChartJS.register(
   annotationPlugin
 );
 
-type Props = {
-  data: {
-    date: string;
-    totalAmountPaid: string;
-  }[];
-};
-
 type ProcessedData = {
   date: string;
   value: number;
 };
 
-const DailyAmountPaidChart: FC<Props> = ({ data }) => {
+type Props = {
+  data: {
+    date: string;
+    totalAmountPaid: string;
+  }[];
+  endDate: number;
+};
+
+const DailyAmountPaidChart: FC<Props> = ({ data, endDate }) => {
   const theme = useTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
   useEffect(() => {
+    const today = new Date();
+    const endDateObj = new Date(endDate * 1000); 
+    const lastPayoutDate = data.length > 0 ? new Date(data[0].date) : endDateObj;
+    
+    const chartStartDate = today > endDateObj ? lastPayoutDate : today;
+    
     const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
+      const date = new Date(chartStartDate);
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     }).reverse();
