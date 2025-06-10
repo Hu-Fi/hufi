@@ -18,12 +18,14 @@
     "strictBindCallApply": true,
     "isolatedModules": true,
     "paths": {
-      "@/*": ["src/*"]
-    }
+      "@/*": ["src/*"],
+      "~/test/*": ["test/*"]
+    },
+    "resolveJsonModule": true
   },
   "ts-node": {
     "require": [
       "tsconfig-paths/register"
-    ],
+    ]
   }
 }
