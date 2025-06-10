@@ -1,8 +1,8 @@
+import Environment from '@/utils/environment';
+
 import NestLogger from './nest-logger';
 import { createLogger } from './pino-logger';
 import { LogLevel } from './types';
-
-import Environment from '@/utils/environment';
 
 const isDevelopment = Environment.isDevelopment();
 
@@ -22,5 +22,7 @@ const defaultLogger = createLogger(
 export const nestLoggerOverride = new NestLogger(
   defaultLogger.child({ name: 'NestLogger' }),
 );
+
+export type { Logger } from './types';
 
 export default defaultLogger;

@@ -8,7 +8,6 @@ function isValidLoggerName(maybeName: unknown): maybeName is string {
   return typeof maybeName === 'string' && maybeName.length > 0;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function serializeError(error: Error) {
   const { name, message, stack, ...errorProps } = error;
 

@@ -8,3 +8,15 @@ export class ExchangeApiKeyNotFoundError extends BaseError {
     super('Exchange API key not found');
   }
 }
+
+export class IncompleteKeySuppliedError extends BaseError {
+  constructor(readonly exchangeName: string) {
+    super('Incomplete credentials supplied for exchange');
+  }
+}
+
+export class KeyAuthorizationError extends BaseError {
+  constructor(readonly exchangeName: string) {
+    super("Provided key can't be authorized");
+  }
+}

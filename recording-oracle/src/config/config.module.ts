@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthConfigService } from './auth-config.service';
 import { DatabaseConfigService } from './database-config.service';
 import { EncryptionConfigService } from './encryption-config.service';
+import { ExchangeConfigService } from './exchange-config.service';
 import { ServerConfigService } from './server-config.service';
 
 @Global()
@@ -13,12 +14,14 @@ import { ServerConfigService } from './server-config.service';
     AuthConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
+    ExchangeConfigService,
     ServerConfigService,
   ],
   exports: [
     AuthConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
+    ExchangeConfigService,
     ServerConfigService,
   ],
 })

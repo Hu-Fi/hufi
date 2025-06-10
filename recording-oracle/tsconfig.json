@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
-    "module": "Node18",
-    "sourceMap": true,
+    "module": "node18",
     "moduleResolution": "node16",
+    "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+    "target": "es2024",
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
@@ -17,7 +16,7 @@
     "strictBindCallApply": true,
     "isolatedModules": true,
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["src/*"]
     }
   },
   "ts-node": {

@@ -1,11 +1,12 @@
-import ccxt from 'ccxt';
 import {
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-const validExchangeNameSet = new Set(ccxt.exchanges);
+import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+
+const validExchangeNameSet = new Set(SUPPORTED_EXCHANGE_NAMES);
 export function isValidExchangeName(input: string): boolean {
   return validExchangeNameSet.has(input);
 }

@@ -8,10 +8,10 @@ import {
 } from '@nestjs/terminus';
 import { Test } from '@nestjs/testing';
 
-import { HealthController } from './health.controller';
-
 import { ServerConfigService } from '@/config';
 import { nestLoggerOverride } from '@/logger';
+
+import { HealthController } from './health.controller';
 
 const mockServerConfigService = {
   gitHash: faker.git.commitSha(),
