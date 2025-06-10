@@ -8,12 +8,14 @@ import {
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
 
+import { Public } from '@/common/decorators';
 import { ServerConfigService } from '@/config';
 import Environment from '@/utils/environment';
 
 import { PingResponseDto } from './dto/ping-response.dto';
 
 @ApiTags('Health')
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

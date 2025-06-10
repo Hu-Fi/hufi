@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../../src/app.module';
 
 const E2E_GIT_HASH = `e2e_${faker.git.commitSha()}`;
 process.env.GIT_HASH = E2E_GIT_HASH;
@@ -27,8 +27,8 @@ describe('App (e2e)', () => {
 
   it('GET: /health/ping', async () => {
     await request(app.getHttpServer()).get('/health/ping').expect(200).expect({
-      nodeEnv: 'test',
-      gitHash: E2E_GIT_HASH,
+      node_env: 'test',
+      git_hash: E2E_GIT_HASH,
     });
   });
 });
