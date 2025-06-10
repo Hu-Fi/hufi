@@ -52,11 +52,12 @@ export const getExplorerUrl = (chainId: ChainId, address: string): string => {
   return `https://polygonscan.com/address/${address}`;
 };
 
-export const formatTokenAmount = (amount: string | number): string | number => {
-  const _amount = Number(amount);
-  if (_amount >= 1000) {
-    return Math.round(_amount);
+export const formatTokenAmount = (amount: string | number, decimals = 18): string | number => {
+  const formattedAmount = +amount / Math.pow(10, decimals);
+  
+  if (formattedAmount >= 1000) {
+    return Math.round(formattedAmount);
   } else {
-    return parseFloat(_amount.toFixed(3));
+    return parseFloat(formattedAmount.toFixed(3));
   }
 };

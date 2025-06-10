@@ -6,7 +6,7 @@ import { formatEther } from 'ethers';
 
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import { useTokenSymbol } from '../../hooks/useTokenSymbol';
+import useTokenInfo from '../../hooks/useTokenInfo';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
@@ -80,7 +80,7 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 const CampaignStats: FC<Props> = ({ campaign }) => {
   const { exchanges } = useExchangesContext();
   const isXl = useIsXlDesktop();
-  const tokenSymbol = useTokenSymbol({
+  const { tokenSymbol } = useTokenInfo({
     tokenAddress: campaign?.token,
     chainId: campaign?.chainId,
   });
