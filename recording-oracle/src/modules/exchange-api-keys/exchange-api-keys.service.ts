@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
+import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { UsersService } from '@/modules/users';
 
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
@@ -11,7 +12,6 @@ import {
   KeyAuthorizationError,
 } from './exchange-api-key.error';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
-import { ExchangeApiClientFactory } from '../exchange/exchange-api-client-factory';
 
 @Injectable()
 export class ExchangeApiKeysService {
