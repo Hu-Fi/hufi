@@ -116,6 +116,10 @@ export class CampaignService {
       });
 
       const dailyMap = new Map<string, bigint>();
+      let last24hTotal = 0n;
+      const now = Math.floor(Date.now() / 1000);
+      const oneDayAgo = now - 24 * 60 * 60;
+
       transactions.forEach((tx) => {
         const date = new Date(Number(tx.timestamp) * 1000)
           .toISOString()
@@ -128,6 +132,10 @@ export class CampaignService {
             if (internalTx?.value) {
               const prev = dailyMap.get(date) || 0n;
               dailyMap.set(date, prev + BigInt(internalTx.value));
+
+              if (Number(tx.timestamp) >= oneDayAgo) {
+                last24hTotal += BigInt(internalTx.value);
+              }
             }
           }
         }
@@ -143,6 +151,7 @@ export class CampaignService {
         ...manifest,
         ...campaign,
         dailyAmountPaid: dailyArray,
+        last24hAmountPaid: last24hTotal.toString(),
         symbol: manifest.token.toLowerCase(),
       };
     } catch (err) {
