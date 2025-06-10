@@ -1,13 +1,12 @@
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { formatEther, ethers } from 'ethers';
+import { formatEther } from 'ethers';
 
-import ERC20_ABI from '../../abi/ERC20.json';
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import useClientToSigner from '../../hooks/useClientToSigner';
+import { useTokenSymbol } from '../../hooks/useTokenSymbol';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
@@ -79,32 +78,17 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 }));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
-  const [tokenSymbol, setTokenSymbol] = useState('');
   const { exchanges } = useExchangesContext();
-  const { signer } = useClientToSigner();
   const isXl = useIsXlDesktop();
+  const tokenSymbol = useTokenSymbol({
+    tokenAddress: campaign?.token,
+    chainId: campaign?.chainId,
+  });
 
   const exchange = exchanges?.find(
     (exchange) => exchange.name === campaign?.exchangeName
   );
   const exchangeName = exchange?.displayName;
-
-  useEffect(() => {
-    const getTokenInfo = async () => {
-      if (!campaign?.token || !campaign?.chainId || !signer) return;
-
-      try {
-        const contract = new ethers.Contract(campaign.token, ERC20_ABI, signer);
-        const symbol = await contract.symbol();
-        setTokenSymbol(symbol);
-      } catch (error) {
-        console.error('Error getting token symbol:', error);
-        setTokenSymbol('HMT');
-      }
-    };
-
-    getTokenInfo();
-  }, [campaign?.token, campaign?.chainId, signer]);
 
   if (!campaign) {
     return null;

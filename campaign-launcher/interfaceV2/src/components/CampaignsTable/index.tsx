@@ -9,6 +9,7 @@ import { useAccount } from 'wagmi';
 
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
+import { useTokenSymbol } from '../../hooks/useTokenSymbol';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatAddress, getExplorerUrl } from '../../utils';
@@ -155,7 +156,7 @@ const CampaignsTable: FC<Props> = ({
 
   const noRows = !(data && data.length > 0);
   
-    const handleAddressClick = (
+  const handleAddressClick = (
     e: MouseEvent<HTMLButtonElement>,
     chainId: ChainId,
     address: string
@@ -248,8 +249,12 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 150,
       renderCell: (params) => {
+        const tokenSymbol = useTokenSymbol({
+          tokenAddress: params.row.token,
+          chainId: params.row.chainId,
+        });
         return (
-          <Typography variant="subtitle2">{formatEther(params.row.fundAmount)} HMT</Typography>
+          <Typography variant="subtitle2">{formatEther(params.row.fundAmount)} {tokenSymbol}</Typography>
         );
       },
     },
