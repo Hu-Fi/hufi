@@ -47,25 +47,23 @@ const DailyAmountPaidChart: FC<Props> = ({ data }) => {
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
   useEffect(() => {
-    if (data.length > 0) {
-      const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        return date.toISOString().split('T')[0];
-      }).reverse();
+    const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    const processed = lastWeekDates.map((date) => {
+      const foundData = data.find(item => item.date === date);
+      const [, month, day] = date.split('-');
+      return {
+        date: `${day}/${month}`,
+        value: foundData ? +formatTokenAmount(formatEther(foundData.totalAmountPaid)) : 0,
+      };
+    });
 
-      const processed = lastWeekDates.map(date => {
-        const foundData = data.find(item => item.date === date);
-        const [, month, day] = date.split('-');
-        return {
-          date: `${day}/${month}`,
-          value: foundData ? +formatTokenAmount(formatEther(foundData.totalAmountPaid)) : 0,
-        };
-      });
-
-      setProcessedData(processed);
-    }
-  }, [data]);
+    setProcessedData(processed);
+  }, []);
 
   const dates = processedData.map(item => item.date);
   const values = processedData.map(item => item.value);
