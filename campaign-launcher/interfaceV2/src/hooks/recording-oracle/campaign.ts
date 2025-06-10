@@ -136,6 +136,7 @@ export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
         endBlock: new Date(campaign.end_date).getTime() / 1000,
         fundAmount: campaign.fund_amount,
         status: 'Pending',
+        token: campaign.fund_token,
       })),
     enabled: !!chainId && isAuthenticated && isConnected,
   });
