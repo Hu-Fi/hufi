@@ -113,6 +113,8 @@ type JoinedCampaign = {
   end_date: Date;
   fund_token: string;
   fund_amount: string;
+  token_decimals: number;
+  token_symbol: string;
 };
 
 export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
@@ -136,6 +138,9 @@ export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
         endBlock: new Date(campaign.end_date).getTime() / 1000,
         fundAmount: campaign.fund_amount,
         status: 'Pending',
+        token: campaign.fund_token,
+        tokenDecimals: campaign.token_decimals,
+        tokenSymbol: campaign.token_symbol,
       })),
     enabled: !!chainId && isAuthenticated && isConnected,
   });

@@ -8,11 +8,7 @@ import { SignatureType } from '../../common/enums/web3';
 import { ControlledError } from '../../common/errors/controlled';
 import { isCenteralizedExchange } from '../../common/utils/exchange';
 import { generateNonce } from '../../common/utils/signature';
-import {
-  CampaignEntity,
-  ExchangeAPIKeyEntity,
-  UserEntity,
-} from '../../database/entities';
+import { ExchangeAPIKeyEntity, UserEntity } from '../../database/entities';
 import { CampaignService } from '../campaign/campaign.service';
 import { Web3Service } from '../web3/web3.service';
 
@@ -20,6 +16,7 @@ import { ExchangeAPIKeyRepository } from './exchange-api-key.repository';
 import {
   CampaignRegisterRequestDto,
   ExchangeAPIKeyCreateRequestDto,
+  JoinedCampaignDto,
   SignatureBodyDto,
 } from './user.dto';
 import { UserRepository } from './user.repository';
@@ -188,16 +185,38 @@ export class UserService {
   public async getUserJoinedCampaigns(
     user: UserEntity,
     chainId: number,
-  ): Promise<CampaignEntity[]> {
+  ): Promise<JoinedCampaignDto[]> {
     if (!user || !user.campaigns) {
       return [];
     }
 
-    return user.campaigns
-      .filter((c) => c.chainId === chainId)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+    return Promise.all(
+      user.campaigns
+        .filter((c) => c.chainId === chainId)
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .map(async (c) => ({
+          id: c.id,
+          chainId: c.chainId,
+          address: c.address,
+          exchangeName: c.exchangeName,
+          token: c.token,
+          tokenDecimals: await this.web3Service.getTokenDecimals(
+            c.fundToken,
+            c.chainId,
+          ),
+          tokenSymbol: await this.web3Service.getTokenSymbol(
+            c.fundToken,
+            c.chainId,
+          ),
+          startDate: c.startDate,
+          endDate: c.endDate,
+          fundToken: c.fundToken,
+          fundAmount: c.fundAmount,
+          lastSyncedAt: c.lastSyncedAt,
+        })),
+    );
   }
 }

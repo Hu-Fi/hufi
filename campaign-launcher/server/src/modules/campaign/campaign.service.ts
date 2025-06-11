@@ -1,4 +1,4 @@
-import { ChainId, EscrowUtils } from '@human-protocol/sdk';
+import { ChainId, EscrowUtils, TransactionUtils } from '@human-protocol/sdk';
 import { Injectable, Logger } from '@nestjs/common';
 import { ethers } from 'ethers';
 
@@ -52,6 +52,14 @@ export class CampaignService {
                 ...manifest,
                 ...campaign,
                 symbol: manifest.token.toLowerCase(),
+                tokenSymbol: await this.web3Service.getTokenSymbol(
+                  campaign.token,
+                  chainId,
+                ),
+                tokenDecimals: await this.web3Service.getTokenDecimals(
+                  campaign.token,
+                  chainId,
+                ),
               } as CampaignDataDto;
             } catch (err) {
               this.logger.warn(
@@ -109,11 +117,58 @@ export class CampaignService {
       if (!url) return undefined;
 
       const manifest = await fetch(url).then((res) => res.json());
+      const transactions = await TransactionUtils.getTransactions({
+        chainId: chainId,
+        fromAddress: escrowAddress,
+        toAddress: escrowAddress,
+      });
+
+      const dailyMap = new Map<string, bigint>();
+      let last24hTotal = 0n;
+      const now = Math.floor(Date.now() / 1000);
+      const oneDayAgo = now - 24 * 60 * 60;
+
+      transactions.forEach((tx) => {
+        const date = new Date(Number(tx.timestamp) * 1000)
+          .toISOString()
+          .slice(0, 10);
+        if (
+          Array.isArray(tx.internalTransactions) &&
+          tx.method === 'bulkTransfer'
+        ) {
+          for (const internalTx of tx.internalTransactions) {
+            if (internalTx?.value) {
+              const prev = dailyMap.get(date) || 0n;
+              dailyMap.set(date, prev + BigInt(internalTx.value));
+
+              if (Number(tx.timestamp) >= oneDayAgo) {
+                last24hTotal += BigInt(internalTx.value);
+              }
+            }
+          }
+        }
+      });
+      const dailyArray = Array.from(dailyMap.entries()).map(
+        ([date, totalAmountPaid]) => ({
+          date,
+          totalAmountPaid: totalAmountPaid.toString(),
+        }),
+      );
 
       return {
         ...manifest,
         ...campaign,
+        dailyAmountPaid: dailyArray,
+        last24hAmountPaid: last24hTotal.toString(),
         symbol: manifest.token.toLowerCase(),
+        tokenSymbol: await this.web3Service.getTokenSymbol(
+          campaign.token,
+          chainId,
+        ),
+        tokenDecimals: await this.web3Service.getTokenDecimals(
+          campaign.token,
+          chainId,
+        ),
       };
     } catch (err) {
       this.logger.error(`Failed to fetch campaign or manifest`, err);
