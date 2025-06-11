@@ -9,6 +9,7 @@ import {
   LOCALHOST_CHAIN_IDS,
   MAINNET_CHAIN_IDS,
   TESTNET_CHAIN_IDS,
+  TOKENS,
 } from '../../common/constants/networks';
 import { Web3Env } from '../../common/enums/web3';
 import { ControlledError } from '../../common/errors/controlled';
@@ -83,5 +84,50 @@ export class Web3Service {
 
   public getOperatorAddress(): string {
     return Object.values(this.signers)[0].address;
+  }
+
+  public async getTokenDecimals(
+    tokenAddress: string,
+    chainId: number,
+  ): Promise<number> {
+    const addr = tokenAddress.toLowerCase();
+
+    if (TOKENS[`${addr}:${chainId}`]) {
+      return TOKENS[`${addr}:${chainId}`].decimals;
+    }
+
+    try {
+      const abi = ['function decimals() view returns (uint8)'];
+      const provider = this.getSigner(chainId);
+      const contract = new ethers.Contract(tokenAddress, abi, provider);
+      const decimals = Number(await contract.decimals());
+      return decimals;
+    } catch (err) {
+      this.logger.warn(
+        `Could not fetch decimals for token ${addr}, defaulting to 18`,
+      );
+      return 18;
+    }
+  }
+
+  public async getTokenSymbol(
+    tokenAddress: string,
+    chainId: number,
+  ): Promise<string> {
+    const addr = tokenAddress.toLowerCase();
+    if (TOKENS[`${addr}:${chainId}`]) {
+      return TOKENS[`${addr}:${chainId}`].symbol;
+    }
+    try {
+      const provider = this.getSigner(chainId);
+      const abi = ['function symbol() view returns (string)'];
+      const contract = new ethers.Contract(tokenAddress, abi, provider);
+      return await contract.symbol();
+    } catch (err) {
+      this.logger.warn(
+        `Could not fetch symbol for token ${addr}, defaulting to HMT`,
+      );
+      return 'HMT';
+    }
   }
 }
