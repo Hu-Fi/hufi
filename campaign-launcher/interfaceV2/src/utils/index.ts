@@ -51,3 +51,13 @@ export const getExplorerUrl = (chainId: ChainId, address: string): string => {
 
   return `https://polygonscan.com/address/${address}`;
 };
+
+export const formatTokenAmount = (amount: string | number, decimals = 18): string | number => {
+  const formattedAmount = +amount / Math.pow(10, decimals);
+  
+  if (formattedAmount >= 1000) {
+    return Math.round(formattedAmount);
+  } else {
+    return parseFloat(formattedAmount.toFixed(3));
+  }
+};
