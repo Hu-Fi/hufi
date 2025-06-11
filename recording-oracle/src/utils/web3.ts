@@ -14,6 +14,18 @@ export function assertValidEvmAddress(address: string): void {
   }
 }
 
+export async function signMessage(
+  message: SignatureMessage,
+  privateKey: string,
+): Promise<string> {
+  const _message = prepareSignatureMessage(message);
+
+  const wallet = new ethers.Wallet(privateKey);
+  const signature = await wallet.signMessage(_message);
+
+  return signature;
+}
+
 export function verifySignature(
   message: SignatureMessage,
   signature: string,
