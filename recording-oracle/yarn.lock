@@ -608,6 +608,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@golevelup/ts-jest@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@golevelup/ts-jest@npm:0.7.0"
+  checksum: 10c0/98f8663bca40c42c02cd875259b4a37671f5e931a20c44c64f86f2a9cb98431a0b3e96b14a6b2b07ce6f8407cd40015c127714d95fa6acda7e99f22de1a22199
+  languageName: node
+  linkType: hard
+
 "@hapi/hoek@npm:^9.0.0, @hapi/hoek@npm:^9.3.0":
   version: 9.3.0
   resolution: "@hapi/hoek@npm:9.3.0"
@@ -7849,6 +7856,7 @@ __metadata:
   dependencies:
     "@eslint/js": "npm:^9.27.0"
     "@faker-js/faker": "npm:^9.8.0"
+    "@golevelup/ts-jest": "npm:^0.7.0"
     "@nestjs/cli": "npm:^11.0.0"
     "@nestjs/common": "npm:^11.0.1"
     "@nestjs/config": "npm:^4.0.2"
