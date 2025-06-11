@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 
-import { AppModule } from '../../src/app.module';
+import { AppModule } from '@/app.module';
 
 const E2E_GIT_HASH = `e2e_${faker.git.commitSha()}`;
 process.env.GIT_HASH = E2E_GIT_HASH;
