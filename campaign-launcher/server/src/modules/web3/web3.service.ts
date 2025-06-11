@@ -161,7 +161,7 @@ export class Web3Service {
       const abi = ['function decimals() view returns (uint8)'];
       const provider = this.getProvider(chainId);
       const contract = new ethers.Contract(tokenAddress, abi, provider);
-      const decimals: number = await contract.decimals();
+      const decimals = Number(await contract.decimals());
       return decimals;
     } catch (err) {
       this.logger.warn(
