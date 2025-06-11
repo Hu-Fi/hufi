@@ -2,7 +2,6 @@ import { FC } from 'react';
 
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { formatEther } from 'ethers';
 
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
@@ -96,13 +95,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>{campaign.tokenSymbol}</span>
+              {formatTokenAmount(campaign.totalFundedAmount)} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>{campaign.tokenSymbol}</span>
+              {formatTokenAmount(campaign.amountPaid)} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
@@ -141,7 +140,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
               fontWeight={800}
               lineHeight={7 / 6}
             >
-              {formatTokenAmount(formatEther(campaign.last24hAmountPaid))}
+              {formatTokenAmount(campaign.last24hAmountPaid)}
             </Typography>
           </Box>
           <DailyAmountPaidChart data={campaign.dailyAmountPaid} endDate={campaign.endBlock} tokenSymbol={campaign.tokenSymbol} />
