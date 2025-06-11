@@ -40,9 +40,10 @@ type Props = {
     totalAmountPaid: string;
   }[];
   endDate: number;
+  tokenSymbol: string;
 };
 
-const DailyAmountPaidChart: FC<Props> = ({ data, endDate }) => {
+const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
   const theme = useTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
@@ -143,7 +144,7 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate }) => {
           title: () => '',
           label: (context) => {
             const value = context.raw;
-            return `${value} HMT`;
+            return `${value} ${tokenSymbol}`;
           },
         },
       },
