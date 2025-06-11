@@ -6,7 +6,6 @@ import { formatEther } from 'ethers';
 
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import useTokenInfo from '../../hooks/useTokenInfo';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
@@ -80,10 +79,6 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 const CampaignStats: FC<Props> = ({ campaign }) => {
   const { exchanges } = useExchangesContext();
   const isXl = useIsXlDesktop();
-  const { tokenSymbol } = useTokenInfo({
-    tokenAddress: campaign?.token,
-    chainId: campaign?.chainId,
-  });
 
   const exchange = exchanges?.find(
     (exchange) => exchange.name === campaign?.exchangeName
@@ -101,13 +96,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>{tokenSymbol}</span>
+              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>{tokenSymbol}</span>
+              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>

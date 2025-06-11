@@ -8,7 +8,6 @@ import { useAccount } from 'wagmi';
 
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
-import useTokenInfo from '../../hooks/useTokenInfo';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { formatAddress, getExplorerUrl, formatTokenAmount } from '../../utils';
@@ -248,14 +247,11 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 150,
       renderCell: (params) => {
-        const { tokenSymbol, tokenDecimals } = useTokenInfo({
-          tokenAddress: params.row.token,
-          chainId: params.row.chainId,
-        });
+        const { fundAmount, tokenDecimals, tokenSymbol } = params.row;
         
         return (
           <Typography variant="subtitle2">
-            {formatTokenAmount(params.row.fundAmount, tokenDecimals)} {tokenSymbol}
+            {formatTokenAmount(fundAmount, tokenDecimals)} {tokenSymbol}
           </Typography>
         );
       },
