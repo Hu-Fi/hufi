@@ -28,6 +28,11 @@ const StatsCard = styled(Box)(({ theme }) => ({
     height: '125px',
     padding: '16px 32px 24px',
   },
+
+  [theme.breakpoints.only('md')]: {
+    height: '125px',
+    padding: '12px',
+  },
 }));
 
 const Title = styled(Typography)(({ theme }) => ({
@@ -60,6 +65,10 @@ const FlexGrid = styled(Box)(({ theme }) => ({
     flexBasis: 'calc(50% - 8px)',
   },
 
+  [theme.breakpoints.only('md')]: {
+    gap: '8px',
+  },
+
   [theme.breakpoints.down('md')]: {
     '& > *': {
       flexBasis: '100%',
@@ -68,8 +77,9 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 }));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
-  const isXl = useIsXlDesktop();
   const { exchanges } = useExchangesContext();
+  const isXl = useIsXlDesktop();
+
   const exchange = exchanges?.find(
     (exchange) => exchange.name === campaign?.exchangeName
   );
@@ -86,13 +96,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatEther(campaign.totalFundedAmount)} <span>HMT</span>
+              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatEther(campaign.amountPaid)} <span>HMT</span>
+              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>

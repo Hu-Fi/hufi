@@ -58,6 +58,8 @@ export interface ManifestUploadRequestDto {
     exchangeOracleFee: string;
     status: string;
     token: string;
+    tokenDecimals: number;
+    tokenSymbol: string;
     totalFundedAmount: string;
     createdAt: string;
   }

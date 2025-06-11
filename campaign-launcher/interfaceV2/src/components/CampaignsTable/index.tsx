@@ -3,7 +3,6 @@ import { FC, MouseEvent } from 'react';
 import { ChainId } from '@human-protocol/sdk';
 import { Button, IconButton, Typography, Box } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
-import { formatEther } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
@@ -11,7 +10,7 @@ import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatAddress, getExplorerUrl } from '../../utils';
+import { formatAddress, getExplorerUrl, formatTokenAmount } from '../../utils';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import LaunchCampaign from '../LaunchCampaign';
@@ -155,7 +154,7 @@ const CampaignsTable: FC<Props> = ({
 
   const noRows = !(data && data.length > 0);
   
-    const handleAddressClick = (
+  const handleAddressClick = (
     e: MouseEvent<HTMLButtonElement>,
     chainId: ChainId,
     address: string
@@ -248,8 +247,12 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 150,
       renderCell: (params) => {
+        const { fundAmount, tokenDecimals, tokenSymbol } = params.row;
+        
         return (
-          <Typography variant="subtitle2">{formatEther(params.row.fundAmount)} HMT</Typography>
+          <Typography variant="subtitle2">
+            {formatTokenAmount(fundAmount, tokenDecimals)} {tokenSymbol}
+          </Typography>
         );
       },
     },
