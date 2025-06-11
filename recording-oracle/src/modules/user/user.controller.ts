@@ -19,12 +19,13 @@ import {
 import { Public } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import { RequestWithUser } from '../../common/types/request';
-import { CampaignEntity, ExchangeAPIKeyEntity } from '../../database/entities';
+import { ExchangeAPIKeyEntity } from '../../database/entities';
 
 import {
   CampaignRegisterRequestDto,
   CampaignRegisterResponseDto,
   ExchangeAPIKeyCreateRequestDto,
+  JoinedCampaignDto,
 } from './user.dto';
 import { UserService } from './user.service';
 
@@ -156,14 +157,14 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'List of campaigns the user has joined',
-    type: [CampaignEntity],
+    type: [JoinedCampaignDto],
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'User not found' })
   public async getUserJoinedCampaigns(
     @Req() request: RequestWithUser,
     @Param('chainId') chainId: number,
-  ): Promise<CampaignEntity[]> {
+  ): Promise<JoinedCampaignDto[]> {
     return await this.userService.getUserJoinedCampaigns(request.user, chainId);
   }
 }
