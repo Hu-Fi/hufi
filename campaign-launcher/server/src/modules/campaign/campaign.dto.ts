@@ -129,6 +129,10 @@ export class CampaignDataDto {
 
   @ApiProperty()
   @IsString()
+  tokenSymbol: string;
+
+  @ApiProperty()
+  @IsString()
   totalFundedAmount: string;
 
   @ApiProperty()

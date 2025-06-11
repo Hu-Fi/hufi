@@ -48,10 +48,16 @@ export class CampaignService {
 
               const manifest = await fetch(url).then((res) => res.json());
 
+              const tokenSymbol = await this.web3Service.getTokenSymbol(
+                campaign.token,
+                chainId,
+              );
+
               return {
                 ...manifest,
                 ...campaign,
                 symbol: manifest.token.toLowerCase(),
+                tokenSymbol,
               } as CampaignDataDto;
             } catch (err) {
               this.logger.warn(
@@ -147,12 +153,18 @@ export class CampaignService {
         }),
       );
 
+      const tokenSymbol = await this.web3Service.getTokenSymbol(
+        campaign.token,
+        chainId,
+      );
+
       return {
         ...manifest,
         ...campaign,
         dailyAmountPaid: dailyArray,
         last24hAmountPaid: last24hTotal.toString(),
         symbol: manifest.token.toLowerCase(),
+        tokenSymbol,
       };
     } catch (err) {
       this.logger.error(`Failed to fetch campaign or manifest`, err);
