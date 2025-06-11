@@ -92,8 +92,8 @@ export class Web3Service {
   ): Promise<number> {
     const addr = tokenAddress.toLowerCase();
 
-    if (TOKENS[addr]) {
-      return TOKENS[addr].decimals;
+    if (TOKENS[`${addr}:${chainId}`]) {
+      return TOKENS[`${addr}:${chainId}`].decimals;
     }
 
     try {
@@ -115,8 +115,8 @@ export class Web3Service {
     chainId: number,
   ): Promise<string> {
     const addr = tokenAddress.toLowerCase();
-    if (TOKENS[addr]) {
-      return TOKENS[addr].symbol;
+    if (TOKENS[`${addr}:${chainId}`]) {
+      return TOKENS[`${addr}:${chainId}`].symbol;
     }
     try {
       const provider = this.getSigner(chainId);
