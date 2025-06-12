@@ -8,7 +8,7 @@ type FindOptions = {
 };
 
 @Injectable()
-export class RefreshTokenRepository extends Repository<RefreshTokenEntity> {
+export class RefreshTokensRepository extends Repository<RefreshTokenEntity> {
   constructor(dataSource: DataSource) {
     super(RefreshTokenEntity, dataSource.createEntityManager());
   }

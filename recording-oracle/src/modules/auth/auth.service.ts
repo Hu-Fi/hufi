@@ -9,7 +9,7 @@ import * as web3Utils from '@/utils/web3';
 
 import { AuthError, AuthErrorMessage } from './auth.error';
 import { RefreshTokenEntity } from './refresh-token.entity';
-import { RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokensRepository } from './refresh-tokens.repository';
 import type { AuthTokens } from './types';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class AuthService {
     private readonly authConfigService: AuthConfigService,
     private readonly jwtService: JwtService,
 
-    private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly refreshTokensRepository: RefreshTokensRepository,
     private readonly usersRepository: UsersRepository,
     private readonly usersService: UsersService,
   ) {}
@@ -59,10 +59,10 @@ export class AuthService {
 
   async generateTokens(user: UserEntity): Promise<AuthTokens> {
     const refreshTokenEntity =
-      await this.refreshTokenRepository.findOneByUserId(user.id);
+      await this.refreshTokensRepository.findOneByUserId(user.id);
 
     if (refreshTokenEntity) {
-      await this.refreshTokenRepository.remove(refreshTokenEntity);
+      await this.refreshTokensRepository.remove(refreshTokenEntity);
     }
 
     const newRefreshTokenEntity = new RefreshTokenEntity();
@@ -72,7 +72,7 @@ export class AuthService {
       date.getTime() + this.authConfigService.refreshTokenExpiresIn,
     );
 
-    await this.refreshTokenRepository.insert(newRefreshTokenEntity);
+    await this.refreshTokensRepository.insert(newRefreshTokenEntity);
 
     const jwtPayload = {
       user_id: user.id,
@@ -85,7 +85,7 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string): Promise<AuthTokens> {
-    const tokenEntity = await this.refreshTokenRepository.findOneById(
+    const tokenEntity = await this.refreshTokensRepository.findOneById(
       refreshToken,
       {
         relations: {

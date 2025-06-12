@@ -27,7 +27,7 @@ import {
 } from './auth.dto';
 import { AuthControllerErrorsFilter } from './auth.error-filter';
 import { AuthService } from './auth.service';
-import { RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokenRepository } from './refresh-tokens.repository';
 
 @ApiTags('Auth')
 @Controller('/auth')
