@@ -2,8 +2,6 @@ import { createDefaultPreset, pathsToModuleNameMapper } from 'ts-jest';
 
 import { compilerOptions } from './tsconfig.json';
 
-process.env['GIT_HASH'] = 'test_value_hardcoded_in_jest_config';
-
 const jestTsPreset = createDefaultPreset({});
 
 module.exports = {

@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-import { NotValidEvmAddressError } from '@/common/errors/web3';
+import { InvalidEvmAddressError } from '@/common/errors/web3';
 
 type SignatureMessage = object | string;
 
@@ -10,7 +10,7 @@ export function generateNonce(): string {
 
 export function assertValidEvmAddress(address: string): void {
   if (!ethers.isAddress(address)) {
-    throw new NotValidEvmAddressError(address);
+    throw new InvalidEvmAddressError(address);
   }
 }
 

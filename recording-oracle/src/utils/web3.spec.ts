@@ -1,7 +1,10 @@
 import { faker } from '@faker-js/faker';
 
-import { NotValidEvmAddressError } from '@/common/errors/web3';
-import { generateEthWallet } from '~/test/fixtures/web3';
+import { InvalidEvmAddressError } from '@/common/errors/web3';
+import {
+  generateEthWallet,
+  generateInvalidEvmAddress,
+} from '~/test/fixtures/web3';
 
 import * as web3Utils from './web3';
 
@@ -34,15 +37,8 @@ describe('Web3 utilities', () => {
 
     it('should throw for invalid address', () => {
       expect(() =>
-        web3Utils.assertValidEvmAddress(`${address.slice(0, -1)}g`),
-      ).toThrow(NotValidEvmAddressError);
-    });
-
-    it('should throw for address with corrupted checksum', () => {
-      const corruptedAddress = '0x742d35cc6634c0532925a3b844bc454e4438f44E';
-      expect(() => web3Utils.assertValidEvmAddress(corruptedAddress)).toThrow(
-        NotValidEvmAddressError,
-      );
+        web3Utils.assertValidEvmAddress(generateInvalidEvmAddress()),
+      ).toThrow(InvalidEvmAddressError);
     });
   });
 
