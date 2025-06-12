@@ -31,7 +31,7 @@ export class AuthService {
     address: string,
   ): Promise<AuthTokens | undefined> {
     let signedData;
-    let user = await this.usersRepository.findOneByEvmAddress(address);
+    let user = await this.usersService.findOneByEvmAddress(address);
 
     if (!user) {
       signedData = { nonce: DEFAULT_NONCE };
@@ -103,10 +103,15 @@ export class AuthService {
     }
 
     if (!tokenEntity.user) {
-      this.logger.error('User not found during token refresh', {
+      this.logger.error('Related user is missing for refresh token', {
+        refreshToken: tokenEntity.id,
         userId: tokenEntity.userId,
       });
-      throw new AuthError(AuthErrorMessage.INVALID_REFRESH_TOKEN);
+      /**
+       * This should never happen, just a safety-belt,
+       * so throw it as unexpected error.
+       */
+      throw new Error(AuthErrorMessage.INVALID_REFRESH_TOKEN);
     }
 
     return this.generateTokens(tokenEntity.user);

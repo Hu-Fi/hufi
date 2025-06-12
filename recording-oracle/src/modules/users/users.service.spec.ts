@@ -2,9 +2,9 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
 import { ethers } from 'ethers';
-import * as Joi from 'joi';
 
 import { InvalidEvmAddressError } from '@/common/errors/web3';
+import { isUuidV4, isValidNonce } from '@/common/validators';
 import { generateInvalidEvmAddress } from '~/test/fixtures/web3';
 
 import { generateUserEntity } from './fixtures';
@@ -59,12 +59,9 @@ describe('UsersService', () => {
 
       const user = await usersService.create(randomAddress);
 
-      const userIdValidationResult = Joi.string()
-        .uuid({ version: 'uuidv4' })
-        .validate(user.id);
-      expect(userIdValidationResult.error).toBeUndefined();
+      expect(isUuidV4(user.id)).toBe(true);
 
-      expect(user.nonce).toMatch(/^[0-9a-fA-F]{32}$/);
+      expect(isValidNonce(user.nonce)).toBe(true);
 
       const checksummedAddress = ethers.getAddress(randomAddress);
       expect(user.evmAddress).toBe(checksummedAddress);
