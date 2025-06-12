@@ -54,11 +54,11 @@ export class CampaignService {
                 symbol: manifest.token.toLowerCase(),
                 tokenSymbol: await this.web3Service.getTokenSymbol(
                   campaign.token,
-                  chainId,
+                  campaign.chainId,
                 ),
                 tokenDecimals: await this.web3Service.getTokenDecimals(
                   campaign.token,
-                  chainId,
+                  campaign.chainId,
                 ),
               } as CampaignDataDto;
             } catch (err) {
