@@ -14,7 +14,6 @@ import {
   ScriptableContext,
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { formatEther } from 'ethers';
 import { Line } from 'react-chartjs-2';
 
 import { formatTokenAmount } from '../../utils';
@@ -66,7 +65,7 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
       const [, month, day] = date.split('-');
       return {
         date: `${day}/${month}`,
-        value: foundData ? +formatTokenAmount(formatEther(foundData.totalAmountPaid)) : 0,
+        value: foundData ? +formatTokenAmount(foundData.totalAmountPaid) : 0,
       };
     });
 
