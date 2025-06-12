@@ -1,6 +1,8 @@
 import { faker } from '@faker-js/faker';
 
+import { EVM_SIGNATURE_REGEX } from '@/common/constants';
 import { InvalidEvmAddressError } from '@/common/errors/web3';
+import { isValidNonce } from '@/common/validators';
 import {
   generateEthWallet,
   generateInvalidEvmAddress,
@@ -26,7 +28,7 @@ describe('Web3 utilities', () => {
   describe('generateNonce', () => {
     it('should generate nonce exactly 32 hex characters length', () => {
       const nonce = web3Utils.generateNonce();
-      expect(nonce).toMatch(/^[0-9a-fA-F]{32}$/);
+      expect(isValidNonce(nonce)).toBe(true);
     });
   });
 
@@ -43,14 +45,12 @@ describe('Web3 utilities', () => {
   });
 
   describe('signMessage', () => {
-    const signatureRegex = /^0x[0-9a-fA-F]{130}$/;
-
     it('should sign message when it is a string', async () => {
       const message = faker.lorem.words();
 
       const signature = await web3Utils.signMessage(message, privateKey);
 
-      expect(signature).toMatch(signatureRegex);
+      expect(signature).toMatch(EVM_SIGNATURE_REGEX);
     });
 
     it('should sign message when it is an object', async () => {
@@ -60,7 +60,7 @@ describe('Web3 utilities', () => {
 
       const signature = await web3Utils.signMessage(message, privateKey);
 
-      expect(signature).toMatch(signatureRegex);
+      expect(signature).toMatch(EVM_SIGNATURE_REGEX);
     });
 
     it('should return exact signature', async () => {
