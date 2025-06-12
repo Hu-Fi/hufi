@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 import {
@@ -16,6 +16,8 @@ import {
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Line } from 'react-chartjs-2';
 
+import { formatTokenAmount } from '../../utils';
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -26,25 +28,58 @@ ChartJS.register(
   annotationPlugin
 );
 
-const DailyAmountPaidChart: FC = () => {
+type ProcessedData = {
+  date: string;
+  value: number;
+};
+
+type Props = {
+  data: {
+    date: string;
+    totalAmountPaid: string;
+  }[];
+  endDate: number;
+  tokenSymbol: string;
+};
+
+const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
   const theme = useTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
-  const labels = [
-    '01/02',
-    '02/02',
-    '03/02',
-    '04/02',
-    '05/02',
-    '06/02',
-    '07/02',
-  ];
+  useEffect(() => {
+    const today = new Date();
+    const endDateObj = new Date(endDate * 1000); 
+    const lastPayoutDate = data.length > 0 ? new Date(data[0].date) : endDateObj;
+    
+    const chartStartDate = today > endDateObj ? lastPayoutDate : today;
+    
+    const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(chartStartDate);
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    const processed = lastWeekDates.map((date) => {
+      const foundData = data.find(item => item.date === date);
+      const [, month, day] = date.split('-');
+      return {
+        date: `${day}/${month}`,
+        value: foundData ? +formatTokenAmount(foundData.totalAmountPaid) : 0,
+      };
+    });
 
-  const data: ChartData<'line'> = {
-    labels,
+    setProcessedData(processed);
+  }, []);
+
+  const dates = processedData.map(item => item.date);
+  const values = processedData.map(item => item.value);
+
+  const chartData: ChartData<'line'> = {
+    labels: dates,
     datasets: [
       {
-        data: [320, 780, 680, 880, 780, 1180, 970, 1300, 1180],
+        data: values,
         borderColor: theme.palette.text.primary,
         borderWidth: 2,
         backgroundColor: (context: ScriptableContext<'line'>) => {
@@ -66,6 +101,7 @@ const DailyAmountPaidChart: FC = () => {
         pointHoverBackgroundColor: theme.palette.primary.violet,
         pointHoverBorderColor: 'white',
         pointHoverBorderWidth: 2,
+        clip: false,
       },
     ],
   };
@@ -107,7 +143,7 @@ const DailyAmountPaidChart: FC = () => {
           title: () => '',
           label: (context) => {
             const value = context.raw;
-            return `${value} HMT`;
+            return `${value} ${tokenSymbol}`;
           },
         },
       },
@@ -147,7 +183,7 @@ const DailyAmountPaidChart: FC = () => {
       y: {
         position: 'left',
         min: 0,
-        max: 1600,
+        max: Math.max(...values) || 1,
         grid: {
           color: 'rgba(203, 207, 230, 0.5)',
           drawTicks: false,
@@ -175,8 +211,9 @@ const DailyAmountPaidChart: FC = () => {
       height="100%"
       bgcolor="background.default"
       overflow="hidden"
+      onMouseLeave={() => setHoverIndex(null)}
     >
-      <Line data={data} options={options} />
+      <Line data={chartData} options={options} />
     </Box>
   );
 };

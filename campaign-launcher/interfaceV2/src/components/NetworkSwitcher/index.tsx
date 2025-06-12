@@ -14,7 +14,7 @@ const getChainIcon = (id?: number) => {
 };
 
 const NetworkSwitcher: FC = () => {
-  const { chain } = useAccount();
+  const { chain, isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
   const { chains } = useConfig();
 
@@ -31,6 +31,8 @@ const NetworkSwitcher: FC = () => {
     switchChain?.({ chainId });
     handleClose();
   };
+
+  if (!isConnected) return null;
 
   return (
     <>
