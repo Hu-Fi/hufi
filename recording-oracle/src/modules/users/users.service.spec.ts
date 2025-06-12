@@ -8,9 +8,9 @@ import { InvalidEvmAddressError } from '@/common/errors/web3';
 import { generateInvalidEvmAddress } from '~/test/fixtures/web3';
 
 import { generateUserEntity } from './fixtures';
+import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
-import { UserNotFoundError } from './users.errors';
 
 const mockUsersRepository = createMock<UsersRepository>();
 
@@ -55,7 +55,7 @@ describe('UsersService', () => {
       const now = Date.now();
       jest.useFakeTimers({ now });
 
-      const randomAddress = faker.finance.ethereumAddress().toLowerCase();
+      const randomAddress = faker.finance.ethereumAddress();
 
       const user = await usersService.create(randomAddress);
 
@@ -71,7 +71,7 @@ describe('UsersService', () => {
 
       expect(user.createdAt).toBeInstanceOf(Date);
       expect(user.createdAt.valueOf()).toBe(now);
-      expect(user.createdAt).toEqual(user.updatedAt);
+      expect(user.updatedAt).toEqual(user.createdAt);
 
       jest.useRealTimers();
     });
@@ -91,20 +91,16 @@ describe('UsersService', () => {
 
     it('should find user for non-checksummed address', async () => {
       const user = generateUserEntity();
-      mockUsersRepository.findOneByEvmAddress.mockImplementationOnce(
-        async (address) => {
-          if (address === user.evmAddress) {
-            return user;
-          }
-          return null;
-        },
-      );
+      mockUsersRepository.findOneByEvmAddress.mockResolvedValueOnce(user);
 
       const result = await usersService.findOneByEvmAddress(
         user.evmAddress.toLowerCase(),
       );
 
       expect(result).toEqual(user);
+      expect(mockUsersRepository.findOneByEvmAddress).toHaveBeenCalledWith(
+        user.evmAddress,
+      );
     });
   });
 
@@ -144,7 +140,7 @@ describe('UsersService', () => {
   });
 
   describe('assertUserExistsById', () => {
-    it('should throw if used does not exist for id', async () => {
+    it('should throw if used does not exist for provided id', async () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(false);
       const testUserId = faker.string.uuid();
 
@@ -159,7 +155,7 @@ describe('UsersService', () => {
       expect(thrownError).toBeInstanceOf(UserNotFoundError);
     });
 
-    it('should not throw if used exists for id', async () => {
+    it('should not throw if user exists for provided id', async () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(true);
       const testUserId = faker.string.uuid();
 
