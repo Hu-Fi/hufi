@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 import { InvalidEvmAddressError } from '@/common/errors/web3';
 import logger from '@/logger';
 
-import { AuthError } from './auth.error';
+import { AuthError } from './auth.errors';
 
 @Catch(AuthError, InvalidEvmAddressError)
 export class AuthControllerErrorsFilter implements ExceptionFilter {

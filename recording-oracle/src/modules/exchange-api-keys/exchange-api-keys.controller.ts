@@ -24,7 +24,7 @@ import {
   EnrollExchangeApiKeysDto,
   EnrollExchangeApiKeysResponseDto,
   ExchangeNameParamDto,
-} from './exchange-api-key.dto';
+} from './exchange-api-keys.dto';
 import { ExchangeApiKeysControllerErrorsFilter } from './exchange-api-keys.error-filter';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 import { ExchangeApiKeysService } from './exchange-api-keys.service';
