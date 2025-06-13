@@ -20,7 +20,7 @@ export class UserCampaignEntity {
     persistence: false,
   })
   @JoinColumn({ name: 'user_id' })
-  user: UserEntity;
+  user?: UserEntity;
 
   @PrimaryColumn()
   userId: string;
@@ -29,7 +29,7 @@ export class UserCampaignEntity {
     persistence: false,
   })
   @JoinColumn({ name: 'campaign_id' })
-  campaign: CampaignEntity;
+  campaign?: CampaignEntity;
 
   @PrimaryColumn()
   @Index('idx_users_campaigns_campaign_id')
@@ -40,7 +40,10 @@ export class UserCampaignEntity {
     persistence: false,
   })
   @JoinColumn({ name: 'exchange_api_key_id' })
-  exchangeApiKey: ExchangeApiKeyEntity;
+  exchangeApiKey?: ExchangeApiKeyEntity;
+
+  @Column()
+  exchangeApiKeyId: string;
 
   @Column({ type: 'timestamptz' })
   createdAt: Date;

@@ -5,11 +5,10 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DatabaseConfigService } from '@/config';
 import { RefreshTokenEntity } from '@/modules/auth';
+import { CampaignEntity, UserCampaignEntity } from '@/modules/campaign';
 import { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
 import { UserEntity } from '@/modules/users';
 import Environment from '@/utils/environment';
-
-import { CampaignEntity, UserCampaignEntity } from '@/modules/campaign';
 
 @Module({
   imports: [

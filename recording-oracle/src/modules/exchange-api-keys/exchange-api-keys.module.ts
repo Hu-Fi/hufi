@@ -12,6 +12,6 @@ import { ExchangeApiKeysService } from './exchange-api-keys.service';
   imports: [ExchangeModule, EncryptionModule, UsersModule],
   providers: [ExchangeApiKeysRepository, ExchangeApiKeysService],
   controllers: [ExchangeApiKeysController],
-  exports: [],
+  exports: [ExchangeApiKeysRepository],
 })
 export class ExchangeApiKeysModule {}
