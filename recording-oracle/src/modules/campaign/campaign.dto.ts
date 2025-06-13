@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsEthereumAddress, IsUUID } from 'class-validator';
+import { IsArray, IsEnum, IsEthereumAddress, IsUUID } from 'class-validator';
 
 import { ChainIds, type ChainId } from '@/utils/chain';
 
@@ -19,4 +19,10 @@ export class JoinCampaignSuccessDto {
   @ApiProperty()
   @IsUUID()
   id: string;
+}
+
+export class ListJoinedCampaignsSuccessDto {
+  @ApiProperty()
+  @IsArray()
+  campaigns: string[];
 }

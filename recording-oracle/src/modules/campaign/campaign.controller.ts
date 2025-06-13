@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Post,
   Req,
@@ -16,7 +17,11 @@ import {
 
 import type { RequestWithUser } from '@/common/types';
 
-import { JoinCampaignDto, JoinCampaignSuccessDto } from './campaign.dto';
+import {
+  JoinCampaignDto,
+  JoinCampaignSuccessDto,
+  ListJoinedCampaignsSuccessDto,
+} from './campaign.dto';
 import { CampaignControllerErrorsFilter } from './campaign.error-filter';
 import { CampaignService } from './campaign.service';
 
@@ -30,16 +35,16 @@ export class CampaignController {
   @Post('/join')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'Web3 signature body',
-    description: 'Endpoint for retrieving the nonce used for signing.',
+    summary: 'Join campaign.',
+    description: 'Endpoint for joining the campaign.',
   })
   @ApiBody({ type: JoinCampaignDto })
   @ApiResponse({
     status: 200,
-    description: 'Nonce retrieved successfully',
+    description: 'User joined successfully',
     type: JoinCampaignSuccessDto,
   })
-  public async joinCampaign(
+  async joinCampaign(
     @Req() request: RequestWithUser,
     @Body() data: JoinCampaignDto,
   ): Promise<JoinCampaignSuccessDto> {
@@ -48,6 +53,25 @@ export class CampaignController {
       data.chainId,
       data.address,
     );
-    return { id: campaignId as unknown as string };
+    return { id: campaignId };
+  }
+
+  @ApiBearerAuth()
+  @Get('/')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'List joined campaigns.',
+    description: 'Retrieve the list of campaign addresses user joined.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List retrieved successfully',
+    type: ListJoinedCampaignsSuccessDto,
+  })
+  async joinedCampaigns(
+    @Req() request: RequestWithUser,
+  ): Promise<ListJoinedCampaignsSuccessDto> {
+    const campaigns = await this.campaignService.getJoined(request.user.id);
+    return { campaigns };
   }
 }

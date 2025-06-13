@@ -23,4 +23,11 @@ export class UserCampaignRepository extends Repository<UserCampaignEntity> {
       relations: options.relations,
     });
   }
+
+  async findByUserId(
+    userId: string,
+    options: FindOptions = {},
+  ): Promise<UserCampaignEntity[]> {
+    return this.find({ where: { userId }, relations: options.relations });
+  }
 }

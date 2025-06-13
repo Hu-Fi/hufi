@@ -4,16 +4,17 @@ import { plainToInstance } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
 
 import logger from '@/logger';
-import { ExchangeApiKeysRepository } from '@/modules/exchange-api-keys';
+import {
+  ExchangeApiKeyNotFoundError,
+  ExchangeApiKeysRepository,
+} from '@/modules/exchange-api-keys';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
 import {
-  ExchangeApiKeyNotFoundError,
   CampaignNotFoundError,
   InvalidCampaignStatusError,
   InvalidManifestError,
-  UserAlreadyJoinedCampaignError,
 } from './campaign.error';
 import { CampaignRepository } from './campaign.repository';
 import { CampaignManifest, CampaignStatus } from './types';
@@ -129,5 +130,20 @@ export class CampaignService {
     await this.campaignRepository.insert(newCampaign);
 
     return newCampaign;
+  }
+
+  async getJoined(userId: string): Promise<string[]> {
+    const userCampaigns = await this.userCampaignRepository.findByUserId(
+      userId,
+      {
+        relations: {
+          campaign: true,
+        },
+      },
+    );
+
+    return userCampaigns
+      .filter((uc) => uc.campaign?.address)
+      .map((uc) => uc.campaign!.address);
   }
 }
