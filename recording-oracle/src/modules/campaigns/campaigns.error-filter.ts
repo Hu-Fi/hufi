@@ -13,7 +13,7 @@ import {
   CampaignNotFoundError,
   InvalidCampaignStatusError,
   InvalidManifestError,
-} from './campaign.error';
+} from './campaigns.errors';
 
 @Catch(
   CampaignNotFoundError,
@@ -21,9 +21,9 @@ import {
   InvalidCampaignStatusError,
   InvalidManifestError,
 )
-export class CampaignControllerErrorsFilter implements ExceptionFilter {
+export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
-    context: CampaignControllerErrorsFilter.name,
+    context: CampaignsControllerErrorsFilter.name,
   });
 
   catch(exception: Error, host: ArgumentsHost) {

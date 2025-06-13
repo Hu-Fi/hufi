@@ -10,7 +10,7 @@ import { HttpValidationPipe } from './common/pipes';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './database';
 import { AuthModule } from './modules/auth';
-import { CampaignModule } from './modules/campaign';
+import { CampaignsModule } from './modules/campaigns';
 import { ExchangeApiKeysModule } from './modules/exchange-api-keys';
 import { HealthModule } from './modules/health';
 import { UsersModule } from './modules/users';
@@ -55,7 +55,7 @@ import Environment from './utils/environment';
       validationSchema: envValidator,
     }),
     AuthModule,
-    CampaignModule,
+    CampaignsModule,
     DatabaseModule,
     EnvConfigModule,
     ExchangeApiKeysModule,

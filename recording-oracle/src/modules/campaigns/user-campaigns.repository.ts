@@ -8,7 +8,7 @@ type FindOptions = {
 };
 
 @Injectable()
-export class UserCampaignRepository extends Repository<UserCampaignEntity> {
+export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
   constructor(dataSource: DataSource) {
     super(UserCampaignEntity, dataSource.createEntityManager());
   }

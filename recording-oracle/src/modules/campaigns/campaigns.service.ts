@@ -15,21 +15,21 @@ import {
   CampaignNotFoundError,
   InvalidCampaignStatusError,
   InvalidManifestError,
-} from './campaign.error';
-import { CampaignRepository } from './campaign.repository';
+} from './campaigns.errors';
+import { CampaignsRepository } from './campaigns.repository';
 import { CampaignManifest, CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
-import { UserCampaignRepository } from './user-campaign.repository';
+import { UserCampaignsRepository } from './user-campaigns.repository';
 
 @Injectable()
-export class CampaignService {
+export class CampaignsService {
   private readonly logger = logger.child({
-    context: CampaignService.name,
+    context: CampaignsService.name,
   });
   constructor(
-    private readonly campaignRepository: CampaignRepository,
+    private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
-    private readonly userCampaignRepository: UserCampaignRepository,
+    private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly web3Service: Web3Service,
   ) {}
 
@@ -39,7 +39,7 @@ export class CampaignService {
     campaignAddress: string,
   ): Promise<string> {
     let campaign =
-      await this.campaignRepository.findOneByAddress(campaignAddress);
+      await this.campaignsRepository.findOneByAddress(campaignAddress);
 
     // Create a new campaign if it does not exist
     if (!campaign) {
@@ -84,7 +84,7 @@ export class CampaignService {
     }
 
     const existingUserCampaign =
-      await this.userCampaignRepository.findOneByUserIdAndCampaignId(
+      await this.userCampaignsRepository.findOneByUserIdAndCampaignId(
         userId,
         campaign.id,
       );
@@ -108,7 +108,7 @@ export class CampaignService {
     newUserCampaign.exchangeApiKeyId = exchangeApiKey.id;
     newUserCampaign.createdAt = new Date();
 
-    await this.userCampaignRepository.insert(newUserCampaign);
+    await this.userCampaignsRepository.insert(newUserCampaign);
 
     return campaign.id;
   }
@@ -127,13 +127,13 @@ export class CampaignService {
     newCampaign.endDate = manifest.end_date;
     newCampaign.status = CampaignStatus.ACTIVE;
 
-    await this.campaignRepository.insert(newCampaign);
+    await this.campaignsRepository.insert(newCampaign);
 
     return newCampaign;
   }
 
   async getJoined(userId: string): Promise<string[]> {
-    const userCampaigns = await this.userCampaignRepository.findByUserId(
+    const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
         relations: {

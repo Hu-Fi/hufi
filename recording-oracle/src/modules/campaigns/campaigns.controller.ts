@@ -21,15 +21,15 @@ import {
   JoinCampaignDto,
   JoinCampaignSuccessDto,
   ListJoinedCampaignsSuccessDto,
-} from './campaign.dto';
-import { CampaignControllerErrorsFilter } from './campaign.error-filter';
-import { CampaignService } from './campaign.service';
+} from './campaigns.dto';
+import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
+import { CampaignsService } from './campaigns.service';
 
 @ApiTags('Campaign')
 @Controller('/campaign')
-@UseFilters(CampaignControllerErrorsFilter)
-export class CampaignController {
-  constructor(private readonly campaignService: CampaignService) {}
+@UseFilters(CampaignsControllerErrorsFilter)
+export class CampaignsController {
+  constructor(private readonly campaignsService: CampaignsService) {}
 
   @ApiBearerAuth()
   @Post('/join')
@@ -48,7 +48,7 @@ export class CampaignController {
     @Req() request: RequestWithUser,
     @Body() data: JoinCampaignDto,
   ): Promise<JoinCampaignSuccessDto> {
-    const campaignId = await this.campaignService.join(
+    const campaignId = await this.campaignsService.join(
       request.user.id,
       data.chainId,
       data.address,
@@ -71,7 +71,7 @@ export class CampaignController {
   async joinedCampaigns(
     @Req() request: RequestWithUser,
   ): Promise<ListJoinedCampaignsSuccessDto> {
-    const campaigns = await this.campaignService.getJoined(request.user.id);
+    const campaigns = await this.campaignsService.getJoined(request.user.id);
     return { campaigns };
   }
 }

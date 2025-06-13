@@ -5,7 +5,7 @@ import {
 } from 'class-validator';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
-import { CampaignManifest } from '@/modules/campaign/types';
+import { CampaignManifest } from '@/modules/campaigns/types';
 
 const validExchangeNameSet = new Set(SUPPORTED_EXCHANGE_NAMES);
 export function isValidExchangeName(input: string): boolean {

@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CampaignEntity } from './campaign.entity';
 
 @Injectable()
-export class CampaignRepository extends Repository<CampaignEntity> {
+export class CampaignsRepository extends Repository<CampaignEntity> {
   constructor(dataSource: DataSource) {
     super(CampaignEntity, dataSource.createEntityManager());
   }
