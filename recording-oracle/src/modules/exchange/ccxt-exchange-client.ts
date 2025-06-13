@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ccxt from 'ccxt';
+import type { Exchange } from 'ccxt';
 
 import logger from '@/logger';
 import type { Logger } from '@/logger';
@@ -15,7 +15,7 @@ type InitOptions = {
 
 export class CcxtExchangeClient implements ExchangeApiClient {
   private logger: Logger;
-  private ccxtClient: any;
+  private ccxtClient: Exchange;
 
   constructor(
     readonly exchangeName: string,
