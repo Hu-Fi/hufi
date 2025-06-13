@@ -9,6 +9,8 @@ import { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
 import { UserEntity } from '@/modules/users';
 import Environment from '@/utils/environment';
 
+import { CampaignEntity, UserCampaignEntity } from '@/modules/campaign';
+
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -43,7 +45,13 @@ import Environment from '@/utils/environment';
            */
           synchronize: false,
           migrationsRun: false,
-          entities: [ExchangeApiKeyEntity, RefreshTokenEntity, UserEntity],
+          entities: [
+            CampaignEntity,
+            ExchangeApiKeyEntity,
+            RefreshTokenEntity,
+            UserCampaignEntity,
+            UserEntity,
+          ],
 
           logging: shouldEnableLogging
             ? (databaseConfigService.logLevels as LogLevel[])
