@@ -14,7 +14,7 @@ import {
   ExchangeApiKeyNotFoundError,
   IncompleteKeySuppliedError,
   KeyAuthorizationError,
-} from './exchange-api-key.error';
+} from './exchange-api-keys.errors';
 
 @Catch(
   UserNotFoundError,

@@ -15,7 +15,7 @@ import {
   ExchangeApiKeyNotFoundError,
   IncompleteKeySuppliedError,
   KeyAuthorizationError,
-} from './exchange-api-key.error';
+} from './exchange-api-keys.errors';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 import { ExchangeApiKeysService } from './exchange-api-keys.service';
 import { generateExchangeApiKeysData } from './fixtures';

@@ -7,7 +7,7 @@ import logger from '@/logger';
 import { UserEntity, UsersRepository, UsersService } from '@/modules/users';
 import * as web3Utils from '@/utils/web3';
 
-import { AuthError, AuthErrorMessage } from './auth.error';
+import { AuthError, AuthErrorMessage } from './auth.errors';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 import type { AuthTokens } from './types';
