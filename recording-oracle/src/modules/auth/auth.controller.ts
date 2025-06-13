@@ -27,7 +27,7 @@ import {
 } from './auth.dto';
 import { AuthControllerErrorsFilter } from './auth.error-filter';
 import { AuthService } from './auth.service';
-import { RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -36,7 +36,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-    private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
   @Public()
@@ -110,6 +110,6 @@ export class AuthController {
   @Post('/logout')
   @HttpCode(204)
   async logout(@Req() request: RequestWithUser): Promise<void> {
-    await this.refreshTokenRepository.deleteByUserId(request.user.id);
+    await this.refreshTokensRepository.deleteByUserId(request.user.id);
   }
 }

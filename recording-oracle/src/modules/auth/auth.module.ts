@@ -7,7 +7,7 @@ import { UsersModule } from '@/modules/users';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtHttpStrategy } from './jwt-http-strategy';
-import { RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { RefreshTokenRepository } from './refresh-token.repository';
     }),
     UsersModule,
   ],
-  providers: [AuthService, JwtHttpStrategy, RefreshTokenRepository],
+  providers: [AuthService, JwtHttpStrategy, RefreshTokensRepository],
   controllers: [AuthController],
 })
 export class AuthModule {}
