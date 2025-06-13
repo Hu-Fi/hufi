@@ -24,6 +24,7 @@
     "resolveJsonModule": true
   },
   "ts-node": {
+    "files": true,
     "require": [
       "tsconfig-paths/register"
     ]

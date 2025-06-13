@@ -27,8 +27,14 @@ export const envValidator = Joi.object({
     .message('Invalid JWT_PUBLIC_KEY format (expecting PEM)'),
   JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
   JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
-
+  // Encryption
   AES_ENCRYPTION_KEY: Joi.string().required().length(32),
-
+  // Exchange
   USE_EXCHANGE_SANDBOX: Joi.string().valid('true', 'false'),
+  // Web3
+  WEB3_PRIVATE_KEY: Joi.string().required(),
+  RPC_URL_SEPOLIA: Joi.string().uri({ scheme: ['http', 'https'] }),
+  RPC_URL_POLYGON: Joi.string().uri({ scheme: ['http', 'https'] }),
+  RPC_URL_POLYGON_AMOY: Joi.string().uri({ scheme: ['http', 'https'] }),
+  RPC_URL_LOCALHOST: Joi.string(),
 });

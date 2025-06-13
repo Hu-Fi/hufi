@@ -6,6 +6,7 @@ import { DatabaseConfigService } from './database-config.service';
 import { EncryptionConfigService } from './encryption-config.service';
 import { ExchangeConfigService } from './exchange-config.service';
 import { ServerConfigService } from './server-config.service';
+import { Web3ConfigService } from './web3-config.service';
 
 @Global()
 @Module({
@@ -16,6 +17,7 @@ import { ServerConfigService } from './server-config.service';
     EncryptionConfigService,
     ExchangeConfigService,
     ServerConfigService,
+    Web3ConfigService,
   ],
   exports: [
     AuthConfigService,
@@ -23,6 +25,7 @@ import { ServerConfigService } from './server-config.service';
     EncryptionConfigService,
     ExchangeConfigService,
     ServerConfigService,
+    Web3ConfigService,
   ],
 })
 export class EnvConfigModule {}
