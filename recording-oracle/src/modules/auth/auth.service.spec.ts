@@ -310,7 +310,7 @@ describe('AuthService', () => {
         thrownError = error;
       }
 
-      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.constructor).toBe(Error);
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_REFRESH_TOKEN);
 
       expect(logger.error).toHaveBeenCalledWith(
