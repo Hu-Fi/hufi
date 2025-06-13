@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import { generateExchangeName } from '@/modules/exchange/fixtures';
 
 export function generateExchangeApiKeysData() {
   return {
@@ -9,8 +9,4 @@ export function generateExchangeApiKeysData() {
     apiKey: faker.string.sample(),
     secretKey: faker.string.sample(),
   };
-}
-
-export function generateExchangeName() {
-  return faker.helpers.arrayElement(SUPPORTED_EXCHANGE_NAMES);
 }
