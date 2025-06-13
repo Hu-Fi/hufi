@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsString, Validate } from 'class-validator';
+import { IsDate, IsString, Validate } from 'class-validator';
 
 import {
   CampaignDurationValidator,
@@ -27,12 +27,12 @@ export class CampaignManifest {
   @IsString()
   fund_token: string;
 
-  @IsDateString()
   @Type(() => Date)
+  @IsDate()
   start_date: Date;
 
-  @IsDateString()
   @Type(() => Date)
+  @IsDate()
   @Validate(CampaignDurationValidator)
   end_date: Date;
 }

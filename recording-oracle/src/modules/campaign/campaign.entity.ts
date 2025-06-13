@@ -1,4 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 
@@ -39,4 +46,15 @@ export class CampaignEntity {
 
   @Column({ type: 'timestamptz' })
   updatedAt: Date;
+
+  @BeforeInsert()
+  protected beforeInsert(): void {
+    this.createdAt = new Date();
+    this.updatedAt = this.createdAt;
+  }
+
+  @BeforeUpdate()
+  protected beforeUpdate(): void {
+    this.updatedAt = new Date();
+  }
 }
