@@ -1,7 +1,5 @@
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
-import { validate, ValidationError } from 'class-validator';
 
 import logger from '@/logger';
 import {
@@ -9,6 +7,7 @@ import {
   ExchangeApiKeysRepository,
 } from '@/modules/exchange-api-keys';
 import { Web3Service } from '@/modules/web3';
+import { downloadCampaignManifest } from '@/utils/manifest';
 
 import { CampaignEntity } from './campaign.entity';
 import {
@@ -60,27 +59,18 @@ export class CampaignsService {
           EscrowStatus[escrowStatus],
         );
       }
-
-      const manifestJson = await fetch(escrow.manifestUrl as string).then(
-        (res) => res.json(),
-      );
-
-      const campaignManifest = plainToInstance(CampaignManifest, manifestJson);
-      const errors: ValidationError[] = await validate(campaignManifest);
-      if (errors.length > 0) {
+      let manifest: CampaignManifest;
+      try {
+        manifest = await downloadCampaignManifest(escrow.manifestUrl as string);
+      } catch (error) {
+        this.logger.error('Campaign manifest error', error);
         throw new InvalidManifestError(
           campaignAddress,
-          errors.flatMap((error) =>
-            error.constraints ? Object.values(error.constraints) : [],
-          ),
+          error.message as string,
         );
       }
 
-      campaign = await this.createCampaign(
-        chainId,
-        campaignAddress,
-        campaignManifest,
-      );
+      campaign = await this.createCampaign(chainId, campaignAddress, manifest);
     }
 
     const existingUserCampaign =
@@ -142,8 +132,17 @@ export class CampaignsService {
       },
     );
 
-    return userCampaigns
-      .filter((uc) => uc.campaign?.address)
-      .map((uc) => uc.campaign!.address);
+    const result: string[] = [];
+    for (const userCampaign of userCampaigns) {
+      if (!userCampaign.campaign) {
+        this.logger.error(`User campaign does not have associated campaign`, {
+          userId,
+          campaignId: userCampaign.campaignId,
+        });
+        continue;
+      }
+      result.push(userCampaign.campaign.address);
+    }
+    return result;
   }
 }

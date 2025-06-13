@@ -15,8 +15,8 @@ export class CampaignNotFoundError extends BaseError {
 
 export class InvalidManifestError extends BaseError {
   address: string;
-  constructor(address: string, errors: string[]) {
-    super(`Invalid campaign manifest: ${errors}`);
+  constructor(address: string, details: string) {
+    super(`Invalid campaign manifest: ${details}`);
     this.address = address;
   }
 }

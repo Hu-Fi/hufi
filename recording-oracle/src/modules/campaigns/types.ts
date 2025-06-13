@@ -1,11 +1,3 @@
-import { Type } from 'class-transformer';
-import { IsDate, IsString, Validate } from 'class-validator';
-
-import {
-  CampaignDurationValidator,
-  ExchangeNameValidator,
-} from '@/common/validators';
-
 /*
     Internal status of the campaign in recording oracle database.
     Used to simplify queries for results calculation and cancellation.
@@ -17,22 +9,10 @@ export enum CampaignStatus {
   COMPLETED = 'completed',
 }
 
-export class CampaignManifest {
-  @Validate(ExchangeNameValidator)
+export type CampaignManifest = {
   exchange: string;
-
-  @IsString()
   pair: string;
-
-  @IsString()
   fund_token: string;
-
-  @Type(() => Date)
-  @IsDate()
   start_date: Date;
-
-  @Type(() => Date)
-  @IsDate()
-  @Validate(CampaignDurationValidator)
   end_date: Date;
-}
+};
