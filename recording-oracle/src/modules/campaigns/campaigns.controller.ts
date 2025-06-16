@@ -25,8 +25,8 @@ import {
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
 
-@ApiTags('Campaign')
-@Controller('/campaign')
+@ApiTags('Campaigns')
+@Controller('/campaigns')
 @UseFilters(CampaignsControllerErrorsFilter)
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}

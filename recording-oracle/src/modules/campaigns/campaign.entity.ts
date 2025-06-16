@@ -20,7 +20,7 @@ export class CampaignEntity {
   @Column('int')
   chainId: number;
 
-  @Column('varchar', { length: 42, unique: true })
+  @Column('varchar', { length: 42 })
   address: string;
 
   @Column('varchar', { length: 20 })

@@ -6,25 +6,25 @@ export enum CampaignErrorMessage {
 }
 
 export class CampaignNotFoundError extends BaseError {
-  address: string;
-  constructor(address: string) {
+  constructor(readonly address: string) {
     super(CampaignErrorMessage.NOT_FOUND);
-    this.address = address;
   }
 }
 
 export class InvalidManifestError extends BaseError {
-  address: string;
-  constructor(address: string, details: string) {
-    super(`Invalid campaign manifest: ${details}`);
-    this.address = address;
+  constructor(
+    readonly address: string,
+    readonly details: string,
+  ) {
+    super('Invalid campaign manifest');
   }
 }
 
 export class InvalidCampaignStatusError extends BaseError {
-  address: string;
-  constructor(address: string, status: string) {
-    super(`Invalid campaign status: ${status}`);
-    this.address = address;
+  constructor(
+    readonly address: string,
+    readonly status: string,
+  ) {
+    super('Invalid campaign status');
   }
 }

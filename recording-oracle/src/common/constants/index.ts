@@ -6,3 +6,5 @@ export const DEFAULT_NONCE = 'signup';
 export const JWT_STRATEGY_NAME = 'jwt-http';
 
 export const SUPPORTED_EXCHANGE_NAMES = [...ccxt.exchanges] as const;
+
+export * from './chains';

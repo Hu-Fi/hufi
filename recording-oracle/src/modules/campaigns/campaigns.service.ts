@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 
@@ -37,49 +39,27 @@ export class CampaignsService {
     chainId: number,
     campaignAddress: string,
   ): Promise<string> {
-    let campaign =
-      await this.campaignsRepository.findOneByAddress(campaignAddress);
+    let campaign = await this.campaignsRepository.findOneByChainIdAndAddress(
+      chainId,
+      campaignAddress,
+    );
 
     // Create a new campaign if it does not exist
     if (!campaign) {
-      const escrow = await EscrowUtils.getEscrow(chainId, campaignAddress);
-      if (!escrow) {
-        throw new CampaignNotFoundError(campaignAddress);
-      }
-
-      const signer = this.web3Service.getSigner(chainId);
-      const escrowClient = await EscrowClient.build(signer);
-      const escrowStatus = await escrowClient.getStatus(campaignAddress);
-
-      if (
-        [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
-      ) {
-        throw new InvalidCampaignStatusError(
-          campaignAddress,
-          EscrowStatus[escrowStatus],
-        );
-      }
-      let manifest: CampaignManifest;
-      try {
-        manifest = await downloadCampaignManifest(escrow.manifestUrl as string);
-      } catch (error) {
-        this.logger.error('Campaign manifest error', error);
-        throw new InvalidManifestError(
-          campaignAddress,
-          error.message as string,
-        );
-      }
-
+      const manifest = await this.retrieveCampaignManifest(
+        chainId,
+        campaignAddress,
+      );
       campaign = await this.createCampaign(chainId, campaignAddress, manifest);
     }
 
-    const existingUserCampaign =
-      await this.userCampaignsRepository.findOneByUserIdAndCampaignId(
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );
-    if (existingUserCampaign) {
-      return existingUserCampaign.campaignId;
+    if (isUserJoined) {
+      return campaign.id;
     }
 
     const exchangeApiKey =
@@ -109,6 +89,7 @@ export class CampaignsService {
     manifest: CampaignManifest,
   ): Promise<CampaignEntity> {
     const newCampaign = new CampaignEntity();
+    newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
     newCampaign.address = address;
     newCampaign.exchangeName = manifest.exchange;
@@ -144,5 +125,34 @@ export class CampaignsService {
       result.push(userCampaign.campaign.address);
     }
     return result;
+  }
+
+  private async retrieveCampaignManifest(
+    chainId: number,
+    campaignAddress: string,
+  ): Promise<CampaignManifest> {
+    const escrow = await EscrowUtils.getEscrow(chainId, campaignAddress);
+    if (!escrow) {
+      throw new CampaignNotFoundError(campaignAddress);
+    }
+
+    const signer = this.web3Service.getSigner(chainId);
+    const escrowClient = await EscrowClient.build(signer);
+    const escrowStatus = await escrowClient.getStatus(campaignAddress);
+
+    if (
+      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
+    ) {
+      throw new InvalidCampaignStatusError(
+        campaignAddress,
+        EscrowStatus[escrowStatus],
+      );
+    }
+    try {
+      return await downloadCampaignManifest(escrow.manifestUrl as string);
+    } catch (error) {
+      this.logger.error('Failed to download campaign manifest', error);
+      throw new InvalidManifestError(campaignAddress, error.message as string);
+    }
   }
 }

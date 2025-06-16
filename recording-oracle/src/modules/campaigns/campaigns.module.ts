@@ -12,6 +12,6 @@ import { UserCampaignsRepository } from './user-campaigns.repository';
   controllers: [CampaignsController],
   imports: [ExchangeApiKeysModule, Web3Module],
   providers: [CampaignsRepository, CampaignsService, UserCampaignsRepository],
-  exports: [CampaignsRepository, CampaignsService, UserCampaignsRepository],
+  exports: [],
 })
 export class CampaignsModule {}

@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
-import { type CampaignManifest } from '@/modules/campaigns/types';
+import type { CampaignManifest } from '@/modules/campaigns';
 
 const manifestSchema = Joi.object({
   exchange: Joi.string()

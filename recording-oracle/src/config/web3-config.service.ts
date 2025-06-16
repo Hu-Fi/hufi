@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Wallet } from 'ethers';
 
-import { DevelopmentChainId, ProductionChainId } from '@/utils/chain';
+import { DevelopmentChainId, ProductionChainId } from '@/common/constants';
 
 @Injectable()
 export class Web3ConfigService {

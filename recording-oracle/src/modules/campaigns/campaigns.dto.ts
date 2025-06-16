@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { IsEnum, IsEthereumAddress } from 'class-validator';
 
-import { ChainIds, type ChainId } from '@/utils/chain';
+import { ChainIds, type ChainId } from '@/common/constants';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
   @IsEnum(ChainIds)
-  @Transform(({ value }) => Number(value))
   chainId: ChainId;
 
   @ApiProperty()

@@ -15,9 +15,12 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     });
   }
 
-  async findOneByAddress(address: string): Promise<CampaignEntity | null> {
+  async findOneByChainIdAndAddress(
+    chainId: number,
+    address: string,
+  ): Promise<CampaignEntity | null> {
     return this.findOne({
-      where: { address },
+      where: { chainId, address },
     });
   }
 }

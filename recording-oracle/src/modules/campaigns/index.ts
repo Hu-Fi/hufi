@@ -2,5 +2,5 @@ export { CampaignEntity } from './campaign.entity';
 export { UserCampaignEntity } from './user-campaign.entity';
 
 export { CampaignsModule } from './campaigns.module';
-export { CampaignsRepository } from './campaigns.repository';
-export { CampaignsService } from './campaigns.service';
+
+export type { CampaignManifest } from './types';

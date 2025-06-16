@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
 
-import { ChainIds } from '@/utils/chain';
+import { ChainIds } from '@/common/constants';
 
 import type { Chain, WalletWithProvider } from './types';
 import { Web3ConfigService } from '../../config';

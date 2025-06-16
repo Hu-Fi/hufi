@@ -13,21 +13,17 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
     super(UserCampaignEntity, dataSource.createEntityManager());
   }
 
-  async findOneByUserIdAndCampaignId(
-    userId: string,
-    campaignId: string,
-    options: FindOptions = {},
-  ): Promise<UserCampaignEntity | null> {
-    return this.findOne({
-      where: { userId, campaignId },
-      relations: options.relations,
-    });
-  }
-
   async findByUserId(
     userId: string,
     options: FindOptions = {},
   ): Promise<UserCampaignEntity[]> {
     return this.find({ where: { userId }, relations: options.relations });
+  }
+
+  async checkUserJoinedCampaign(
+    userId: string,
+    campaignId: string,
+  ): Promise<boolean> {
+    return this.existsBy({ userId, campaignId });
   }
 }
