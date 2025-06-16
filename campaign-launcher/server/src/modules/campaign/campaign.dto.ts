@@ -147,11 +147,6 @@ export class CampaignDataDto {
   @IsArray()
   @IsOptional()
   dailyAmountPaid?: DailyAmountPaid[];
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  last24hAmountPaid?: string;
 }
 
 export class DailyAmountPaid {
