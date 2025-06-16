@@ -41,7 +41,6 @@ export interface ManifestUploadRequestDto {
       date: string;
       totalAmountPaid: string;
     }[];
-    last24hAmountPaid: string;
     balance: string;
     count: string;
     factoryAddress: string;
