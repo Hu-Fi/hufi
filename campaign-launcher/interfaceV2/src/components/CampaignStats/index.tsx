@@ -122,27 +122,14 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Box
           display="flex"
-          justifyContent="space-between"
-          flexDirection={{ xs: 'column', md: 'row' }}
+          justifyContent="center"
+          alignItems="center"
           bgcolor="background.default"
           borderRadius="16px"
           border="1px solid rgba(255, 255, 255, 0.1)"
           height="100%"
           p={2}
         >
-          <Box display="flex" flexDirection="column">
-            <Title variant="subtitle2" sx={{ mb: 1 }}>
-              Daily amounts paid (24h)
-            </Title>
-            <Typography
-              color="primary.violet"
-              fontSize={{ xs: '40px', xl: '80px' }}
-              fontWeight={800}
-              lineHeight={7 / 6}
-            >
-              {formatTokenAmount(campaign.last24hAmountPaid)}
-            </Typography>
-          </Box>
           <DailyAmountPaidChart data={campaign.dailyAmountPaid} endDate={campaign.endBlock} tokenSymbol={campaign.tokenSymbol} />
         </Box>
       </Grid>
