@@ -10,14 +10,14 @@ import {
   ExchangeApiKeyNotFoundError,
   IncompleteKeySuppliedError,
   KeyAuthorizationError,
-} from './exchange-api-key.error';
+} from './exchange-api-keys.errors';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 
 @Injectable()
 export class ExchangeApiKeysService {
   constructor(
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
-    private readonly userService: UsersService,
+    private readonly usersService: UsersService,
     private readonly aesEncryptionService: AesEncryptionService,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
   ) {}
@@ -52,7 +52,7 @@ export class ExchangeApiKeysService {
       throw new KeyAuthorizationError(exchangeName);
     }
 
-    await this.userService.assertUserExistsById(userId);
+    await this.usersService.assertUserExistsById(userId);
 
     const enrolledKey = new ExchangeApiKeyEntity();
     enrolledKey.userId = userId;

@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEthereumAddress, IsString, IsUUID, Matches } from 'class-validator';
 
+import { EVM_SIGNATURE_REGEX } from '@/common/constants';
+
 export class AuthDto {
   @ApiProperty()
   @IsEthereumAddress()
@@ -8,7 +10,7 @@ export class AuthDto {
 
   @ApiProperty()
   @IsString()
-  @Matches(/^0x[a-fA-F0-9]{130}$/, {
+  @Matches(EVM_SIGNATURE_REGEX, {
     message:
       'Signature must be a valid Ethereum Web3 signature in hex format starting with "0x',
   })

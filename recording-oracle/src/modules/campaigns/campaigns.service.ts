@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 
+import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
@@ -12,11 +13,7 @@ import { Web3Service } from '@/modules/web3';
 import { downloadCampaignManifest } from '@/utils/manifest';
 
 import { CampaignEntity } from './campaign.entity';
-import {
-  CampaignNotFoundError,
-  InvalidCampaignStatusError,
-  InvalidManifestError,
-} from './campaigns.errors';
+import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignManifest, CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
@@ -32,6 +29,7 @@ export class CampaignsService {
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly web3Service: Web3Service,
+    private readonly web3ConfigService: Web3ConfigService,
   ) {}
 
   async join(
@@ -136,6 +134,17 @@ export class CampaignsService {
       throw new CampaignNotFoundError(campaignAddress);
     }
 
+    const isEscrowForThisOracle =
+      escrow.recordingOracle?.toLowerCase() ===
+      this.web3ConfigService.operatorAddress.toLowerCase();
+
+    if (!isEscrowForThisOracle) {
+      throw new InvalidCampaign(
+        campaignAddress,
+        `Invalid recording oracle address: ${escrow.recordingOracle}`,
+      );
+    }
+
     const signer = this.web3Service.getSigner(chainId);
     const escrowClient = await EscrowClient.build(signer);
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
@@ -143,16 +152,21 @@ export class CampaignsService {
     if (
       [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
     ) {
-      throw new InvalidCampaignStatusError(
+      throw new InvalidCampaign(
         campaignAddress,
-        EscrowStatus[escrowStatus],
+        `Invalid status: ${EscrowStatus[escrowStatus]}`,
       );
     }
+
     try {
-      return await downloadCampaignManifest(escrow.manifestUrl as string);
+      const manifest = await downloadCampaignManifest(
+        escrow.manifestUrl as string,
+      );
+
+      return manifest;
     } catch (error) {
       this.logger.error('Failed to download campaign manifest', error);
-      throw new InvalidManifestError(campaignAddress, error.message as string);
+      throw new InvalidCampaign(campaignAddress, error.message as string);
     }
   }
 }
