@@ -143,7 +143,22 @@ describe('AuthService', () => {
       spyOnGenerateTokens.mockRestore();
     });
 
-    it('should throw if invalid signup signature', async () => {
+    it('should throw if invalid signature', async () => {
+      let thrownError;
+      try {
+        await authService.auth(
+          faker.string.hexadecimal(),
+          faker.finance.ethereumAddress(),
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(AuthError);
+      expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
+    });
+
+    it('should throw if valid signup signature for wrong address', async () => {
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(null);
 
       const ethWallet = generateEthWallet();
@@ -165,7 +180,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
     });
 
-    it('should throw if invalid signature for user', async () => {
+    it('should throw if valid nonce signature for wrong address', async () => {
       const user = generateUserEntity();
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(user);
 
