@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 
+import type { CampaignManifest } from '@/common/types';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
@@ -15,7 +16,7 @@ import { downloadCampaignManifest } from '@/utils/manifest';
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
-import { CampaignManifest, CampaignStatus } from './types';
+import { CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
