@@ -1,13 +1,17 @@
 import { faker } from '@faker-js/faker';
 
-import { ChainIds } from '@/common/constants';
+import { DevelopmentChainId } from '@/common/constants';
 import { Web3ConfigService } from '@/config/web3-config.service';
 import { generateEthWallet } from '~/test/fixtures/web3';
 
 const testWallet = generateEthWallet();
 
+const testnetChainIds = Object.values(DevelopmentChainId).filter(
+  (v) => typeof v === 'number',
+);
+
 export function generateTestnetChainId() {
-  return faker.helpers.arrayElement(ChainIds);
+  return faker.helpers.arrayElement(testnetChainIds);
 }
 
 export const mockWeb3ConfigService: Omit<Web3ConfigService, 'configService'> = {
