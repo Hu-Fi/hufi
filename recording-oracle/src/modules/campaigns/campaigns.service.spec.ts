@@ -7,9 +7,14 @@ import { createMock } from '@golevelup/ts-jest';
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 
+import { isUuidV4 } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import { ExchangeApiKeysRepository } from '@/modules/exchange-api-keys';
+import {
+  ExchangeApiKeyNotFoundError,
+  ExchangeApiKeysRepository,
+} from '@/modules/exchange-api-keys';
+import { generateExchangeApiKey } from '@/modules/exchange-api-keys/fixtures';
 import { Web3Service } from '@/modules/web3';
 import {
   generateTestnetChainId,
@@ -17,11 +22,12 @@ import {
 } from '@/modules/web3/fixtures';
 import * as manifestUtils from '@/utils/manifest';
 
+import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
+import { generateCampaignEntity, generateCampaignManifest } from './fixtures';
 import { UserCampaignsRepository } from './user-campaigns.repository';
-import { generateCampaignManifest } from './fixtures';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
@@ -238,6 +244,158 @@ describe('CampaignsService', () => {
 
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledTimes(1);
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledWith(manifestUrl);
+    });
+  });
+
+  describe('createCampaign', () => {
+    it('should create campaign with proper data', async () => {
+      const chainId = generateTestnetChainId();
+      const campaignAddress = faker.finance.ethereumAddress();
+      const manifest = generateCampaignManifest();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        chainId,
+        address: campaignAddress,
+        exchangeName: manifest.exchange,
+        pair: manifest.pair,
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        status: 'active',
+      };
+      expect(campaign).toEqual(expect.objectContaining(expectedCampaignData));
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expect.objectContaining(expectedCampaignData),
+      );
+    });
+  });
+
+  describe('join', () => {
+    let campaign: CampaignEntity;
+    let userId: string;
+    let chainId: number;
+    let campaignAddress: string;
+
+    beforeEach(() => {
+      campaign = generateCampaignEntity();
+      userId = faker.string.uuid();
+      chainId = generateTestnetChainId();
+      campaignAddress = faker.finance.ethereumAddress();
+    });
+
+    it('should return campaign id if exists and user already joined', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        true,
+      );
+
+      const id = await campaignsService.join(userId, chainId, campaignAddress);
+
+      expect(id).toBe(campaign.id);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaignAddress);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should throw when exchange api key not found for exchange from campaign', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        null,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.join(userId, chainId, campaignAddress);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(ExchangeApiKeyNotFoundError);
+      expect(thrownError.userId).toBe(userId);
+      expect(thrownError.exchangeName).toBe(campaign.exchangeName);
+
+      expect(
+        mockExchangeApiKeysRepository.findOneByUserAndExchange,
+      ).toHaveBeenCalledWith(userId, campaign.exchangeName);
+    });
+
+    it('should create campaign when not exist and join user', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        null,
+      );
+
+      const spyOnRetrieveCampaignManifest = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignManifest',
+      );
+      const spyOnCreateCampaign = jest.spyOn(
+        campaignsService,
+        'createCampaign',
+      );
+      const campaignManifest = generateCampaignManifest();
+      spyOnRetrieveCampaignManifest.mockResolvedValueOnce(campaignManifest);
+      spyOnCreateCampaign.mockResolvedValueOnce(campaign);
+
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+      const exchangeApiKey = generateExchangeApiKey();
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        exchangeApiKey,
+      );
+
+      const now = new Date();
+      jest.useFakeTimers();
+
+      const id = await campaignsService.join(userId, chainId, campaignAddress);
+
+      expect(id).toBe(campaign.id);
+
+      expect(spyOnRetrieveCampaignManifest).toHaveBeenCalledTimes(1);
+      expect(spyOnRetrieveCampaignManifest).toHaveBeenCalledWith(
+        chainId,
+        campaignAddress,
+      );
+
+      expect(spyOnCreateCampaign).toHaveBeenCalledTimes(1);
+      expect(spyOnCreateCampaign).toHaveBeenCalledWith(
+        chainId,
+        campaignAddress,
+        campaignManifest,
+      );
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+        userId,
+        campaignId: campaign.id,
+        exchangeApiKeyId: exchangeApiKey.id,
+        createdAt: now,
+      });
+
+      spyOnRetrieveCampaignManifest.mockRestore();
+      spyOnCreateCampaign.mockRestore();
+      jest.useRealTimers();
     });
   });
 });
