@@ -355,7 +355,6 @@ describe('CampaignsService', () => {
       );
       const campaignManifest = generateCampaignManifest();
       spyOnRetrieveCampaignManifest.mockResolvedValueOnce(campaignManifest);
-      spyOnCreateCampaign.mockResolvedValueOnce(campaign);
 
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
@@ -368,9 +367,13 @@ describe('CampaignsService', () => {
       const now = new Date();
       jest.useFakeTimers();
 
-      const id = await campaignsService.join(userId, chainId, campaignAddress);
+      const campaignId = await campaignsService.join(
+        userId,
+        chainId,
+        campaignAddress,
+      );
 
-      expect(id).toBe(campaign.id);
+      expect(isUuidV4(campaignId)).toBe(true);
 
       expect(spyOnRetrieveCampaignManifest).toHaveBeenCalledTimes(1);
       expect(spyOnRetrieveCampaignManifest).toHaveBeenCalledWith(
@@ -388,7 +391,7 @@ describe('CampaignsService', () => {
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
         userId,
-        campaignId: campaign.id,
+        campaignId,
         exchangeApiKeyId: exchangeApiKey.id,
         createdAt: now,
       });
