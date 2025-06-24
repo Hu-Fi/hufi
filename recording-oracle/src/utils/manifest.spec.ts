@@ -1,0 +1,131 @@
+import { faker } from '@faker-js/faker';
+import nock from 'nock';
+
+import {
+  generateCampaignManifest,
+  generateTradingPair,
+} from '~/test/fixtures/manifest';
+
+import * as manifestUtils from './manifest';
+
+function generateManifestResponse() {
+  const manifest = generateCampaignManifest();
+
+  return {
+    ...manifest,
+    start_date: manifest.start_date.toISOString(),
+    end_date: manifest.end_date.toISOString(),
+  };
+}
+
+describe('manifest utils', () => {
+  describe('downloadCampaignManifest', () => {
+    let manifestUrl: string;
+
+    beforeEach(() => {
+      manifestUrl = faker.internet.url();
+    });
+
+    afterEach(() => {
+      nock.cleanAll();
+    });
+
+    afterAll(() => {
+      nock.restore();
+    });
+
+    it('should throw when manifest not found', async () => {
+      const scope = nock(manifestUrl).get('/').reply(404);
+
+      let thrownError;
+      try {
+        await manifestUtils.downloadCampaignManifest(manifestUrl);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      scope.done();
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe('Failed to load manifest');
+    });
+
+    it.each([
+      faker.lorem.paragraph(),
+      {},
+      {
+        exchange: faker.lorem.word(),
+        pair: generateTradingPair().replace('/', '-'),
+        fund_token: faker.string.alpha({ length: 11 }),
+        start_date: faker.date.recent().toDateString(),
+        end_date: faker.date.future().toDateString(),
+      },
+      Object.assign(generateManifestResponse(), {
+        start_date: faker.date.soon().toISOString(),
+        end_date: faker.date.recent().toISOString(),
+      }),
+      Object.assign(
+        generateManifestResponse(),
+        (() => {
+          const nowIsoString = new Date().toISOString();
+
+          return {
+            start_date: nowIsoString,
+            end_date: nowIsoString,
+          };
+        })(),
+      ),
+    ])(
+      'should throw when invalid manifest schema [%#]',
+      async (manifestResponse) => {
+        const scope = nock(manifestUrl).get('/').reply(200, manifestResponse);
+
+        let thrownError;
+        try {
+          await manifestUtils.downloadCampaignManifest(manifestUrl);
+        } catch (error) {
+          thrownError = error;
+        }
+
+        scope.done();
+        expect(thrownError).toBeInstanceOf(Error);
+        expect(thrownError.message).toBe('Invalid manifest schema');
+      },
+    );
+
+    it('should download valid manifest', async () => {
+      const mockedManifest = generateManifestResponse();
+      const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
+
+      const downloadedManifest =
+        await manifestUtils.downloadCampaignManifest(manifestUrl);
+
+      scope.done();
+      expect(downloadedManifest).toEqual({
+        ...mockedManifest,
+        start_date: new Date(mockedManifest.start_date),
+        end_date: new Date(mockedManifest.end_date),
+      });
+    });
+
+    it('should download valid manifest and strip unknown fields', async () => {
+      const mockedManifest = generateManifestResponse();
+
+      const scope = nock(manifestUrl)
+        .get('/')
+        .reply(200, {
+          ...mockedManifest,
+          unknown_field: faker.string.sample(),
+        });
+
+      const downloadedManifest =
+        await manifestUtils.downloadCampaignManifest(manifestUrl);
+
+      scope.done();
+      expect(downloadedManifest).toEqual({
+        ...mockedManifest,
+        start_date: new Date(mockedManifest.start_date),
+        end_date: new Date(mockedManifest.end_date),
+      });
+    });
+  });
+});
