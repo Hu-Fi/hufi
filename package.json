@@ -10,7 +10,8 @@
     "start": "cd scripts && make start",
     "lint": "cd scripts && make lint",
     "lint:fix": "cd scripts && make lint-fix",
-    "format": "cd scripts && make format"
+    "format": "cd scripts && make format",
+    "test": "cd scripts && make test"
   },
   "packageManager": "yarn@4.9.1",
   "devDependencies": {

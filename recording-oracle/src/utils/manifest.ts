@@ -1,29 +1,38 @@
 import Joi from 'joi';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
-import type { CampaignManifest } from '@/modules/campaigns';
+import type { CampaignManifest } from '@/common/types';
 
 const manifestSchema = Joi.object({
   exchange: Joi.string()
     .valid(...SUPPORTED_EXCHANGE_NAMES)
     .required(),
-  pair: Joi.string().required(),
-  fund_token: Joi.string().required(),
+  pair: Joi.string()
+    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
+    .required(),
+  fund_token: Joi.string()
+    .pattern(/^[A-Z]{3,10}$/)
+    .required(),
   start_date: Joi.date().iso(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
-}).unknown();
+}).options({ allowUnknown: true, stripUnknown: true });
 
 export async function downloadCampaignManifest(
   url: string,
 ): Promise<CampaignManifest> {
   const response = await fetch(url);
-  const manifestJson = await response.json();
 
-  const validationResult = manifestSchema.validate(manifestJson);
-
-  if (validationResult.error) {
-    throw new Error(`Invalid manifest schema`);
+  if (!response.ok) {
+    throw new Error('Failed to load manifest');
   }
 
-  return validationResult.value;
+  try {
+    const manifestJson = await response.json();
+
+    const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
+
+    return validatedManifest;
+  } catch {
+    throw new Error(`Invalid manifest schema`);
+  }
 }

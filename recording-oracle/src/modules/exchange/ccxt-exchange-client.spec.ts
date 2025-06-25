@@ -27,10 +27,10 @@ import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
 import logger from '@/logger';
+import { generateExchangeName } from '~/test/fixtures/manifest';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiClientError } from './errors';
-import { generateExchangeName } from './fixtures';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
