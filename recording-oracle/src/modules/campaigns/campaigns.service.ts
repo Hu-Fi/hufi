@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 import type { CampaignManifest } from '@/common/types';
 import { Web3ConfigService } from '@/config';
@@ -11,6 +12,7 @@ import {
   ExchangeApiKeysRepository,
 } from '@/modules/exchange-api-keys';
 import { Web3Service } from '@/modules/web3';
+import Environment from '@/utils/environment';
 import { downloadCampaignManifest } from '@/utils/manifest';
 
 import { CampaignEntity } from './campaign.entity';
@@ -19,6 +21,10 @@ import { CampaignsRepository } from './campaigns.repository';
 import { CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
+
+const PROGRESS_CHECK_SCHEDULE = Environment.isProduction()
+  ? CronExpression.EVERY_DAY_AT_MIDNIGHT
+  : CronExpression.EVERY_MINUTE;
 
 @Injectable()
 export class CampaignsService {
@@ -93,6 +99,7 @@ export class CampaignsService {
     newCampaign.address = address;
     newCampaign.exchangeName = manifest.exchange;
     newCampaign.pair = manifest.pair;
+    newCampaign.lastResultsAt = null;
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.status = CampaignStatus.ACTIVE;
@@ -169,6 +176,51 @@ export class CampaignsService {
     } catch (error) {
       this.logger.error('Failed to download campaign manifest', error);
       throw new InvalidCampaign(campaignAddress, error.message as string);
+    }
+  }
+
+  @Cron(PROGRESS_CHECK_SCHEDULE)
+  async checkCampaignsProgress(): Promise<void> {
+    this.logger.info('Campaigns progress check started');
+
+    /**
+     * Atm we don't expect many active campaigns
+     * so it's fine to get all at once, but later
+     * we might need to query them in batches or as stream.
+     */
+    const campaignsToCheck =
+      await this.campaignsRepository.findForProgressCheck();
+
+    for (const campaign of campaignsToCheck) {
+      /**
+       * Right now for simplicity process sequentially.
+       * Later we can add "fastq" usage for parallel processing
+       * and "backpressured" adding to the queue.
+       */
+      await this.checkCampaignProgress(campaign);
+    }
+
+    this.logger.info('Campaigns progress check finished');
+  }
+
+  async checkCampaignProgress(campaign: CampaignEntity): Promise<void> {
+    const logger = this.logger.child({
+      action: 'check-campaign-progress',
+      campaignId: campaign.id,
+    });
+    logger.debug('Campaign progress check started');
+
+    try {
+      if (campaign.endDate < new Date()) {
+        campaign.status = CampaignStatus.COMPLETED;
+      }
+      campaign.lastResultsAt = new Date();
+
+      await this.campaignsRepository.save(campaign);
+    } catch (error) {
+      logger.error('Failure while checking campaign progress', error);
+    } finally {
+      logger.debug('Campaign progress check finished');
     }
   }
 }

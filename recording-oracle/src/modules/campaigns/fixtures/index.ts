@@ -20,6 +20,7 @@ export function generateCampaignEntity(): CampaignEntity {
     startDate: faker.date.soon(),
     endDate: faker.date.soon({ refDate: startDate }),
     status: CampaignStatus.ACTIVE,
+    lastResultsAt: null,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };

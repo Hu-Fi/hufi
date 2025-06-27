@@ -279,6 +279,7 @@ describe('CampaignsService', () => {
         pair: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
+        lastResultsAt: null,
         status: 'active',
       };
       expect(campaign).toEqual(expect.objectContaining(expectedCampaignData));
@@ -376,7 +377,7 @@ describe('CampaignsService', () => {
       );
 
       const now = new Date();
-      jest.useFakeTimers();
+      jest.useFakeTimers({ now });
 
       const campaignId = await campaignsService.join(
         userId,
