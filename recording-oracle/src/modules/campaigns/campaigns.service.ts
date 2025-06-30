@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 import type { CampaignManifest } from '@/common/types';
@@ -18,6 +19,10 @@ import { downloadCampaignManifest } from '@/utils/manifest';
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
+import {
+  CampaignProgressChecker,
+  MarketMakingResultsChecker,
+} from './progress-checkers';
 import { CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -37,6 +42,7 @@ export class CampaignsService {
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async join(
@@ -204,6 +210,7 @@ export class CampaignsService {
   }
 
   async checkCampaignProgress(campaign: CampaignEntity): Promise<void> {
+    // TODO: add pessimistic lock here
     const logger = this.logger.child({
       action: 'check-campaign-progress',
       campaignId: campaign.id,
@@ -211,6 +218,13 @@ export class CampaignsService {
     logger.debug('Campaign progress check started');
 
     try {
+      const campaignProgressChecker =
+        this.getCampaignProgressChecker('default');
+
+      const results = await campaignProgressChecker.check({});
+
+      logger.debug('Campaign progress', { results });
+
       if (campaign.endDate < new Date()) {
         campaign.status = CampaignStatus.COMPLETED;
       }
@@ -221,6 +235,15 @@ export class CampaignsService {
       logger.error('Failure while checking campaign progress', error);
     } finally {
       logger.debug('Campaign progress check finished');
+    }
+  }
+
+  private getCampaignProgressChecker(
+    campaignType: string,
+  ): CampaignProgressChecker {
+    switch (campaignType) {
+      default:
+        return this.moduleRef.get(MarketMakingResultsChecker);
     }
   }
 }

@@ -27,15 +27,16 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
   }
 
   async findForProgressCheck(): Promise<CampaignEntity[]> {
-    const dayAgo = dayjs().subtract(1, 'day').toDate();
+    // const timeAgo = dayjs().subtract(1, 'day').toDate();
+    const timeAgo = dayjs().subtract(1, 'hour').toDate();
 
     const results = await this.createQueryBuilder('campaign')
       .where('campaign.status = :status', { status: CampaignStatus.ACTIVE })
-      .andWhere('campaign.startDate <= :dayAgo', { dayAgo })
+      .andWhere('campaign.startDate <= :timeAgo', { timeAgo })
       .andWhere(
-        '(campaign.lastResultsAt IS NULL OR campaign.lastResultsAt <= :dayAgo)',
+        '(campaign.lastResultsAt IS NULL OR campaign.lastResultsAt <= :timeAgo)',
         {
-          dayAgo,
+          timeAgo,
         },
       )
       .getMany();
