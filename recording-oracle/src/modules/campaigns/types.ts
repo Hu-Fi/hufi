@@ -22,3 +22,28 @@ export type CampaignManifest = {
   start_date: Date;
   end_date: Date;
 };
+
+export type ParticipantOutcome = {
+  address: string;
+  score: number;
+  totalVolume: number;
+};
+
+export type ParticipantsOutcomesBatch = {
+  id: string;
+  results: ParticipantOutcome[];
+};
+
+export type IntermediateResult = {
+  from: string;
+  to: string;
+  total_volume: number;
+  participants_outcomes_batches: ParticipantsOutcomesBatch[];
+};
+
+export type IntermediateResultsData = {
+  chain_id: number;
+  exchange: string;
+  pair: string;
+  results: IntermediateResult[];
+};

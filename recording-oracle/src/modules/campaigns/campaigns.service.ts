@@ -1,9 +1,16 @@
 import crypto from 'crypto';
 
-import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
+import {
+  ESCROW_BULK_PAYOUT_MAX_ITEMS,
+  EscrowClient,
+  EscrowStatus,
+  EscrowUtils,
+} from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import dayjs from 'dayjs';
+import _ from 'lodash';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { Web3ConfigService } from '@/config';
@@ -11,9 +18,12 @@ import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
   ExchangeApiKeysRepository,
+  ExchangeApiKeysService,
 } from '@/modules/exchange-api-keys';
+import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 import Environment from '@/utils/environment';
+import * as httpUtils from '@/utils/http';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
@@ -24,7 +34,15 @@ import {
   CampaignProgressChecker,
   MarketMakingResultsChecker,
 } from './progress-checkers';
-import { CampaignManifest, CampaignStatus, CampaignType } from './types';
+import {
+  CampaignManifest,
+  CampaignStatus,
+  CampaignType,
+  IntermediateResult,
+  IntermediateResultsData,
+  ParticipantOutcome,
+  ParticipantsOutcomesBatch,
+} from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
@@ -40,6 +58,7 @@ export class CampaignsService {
   constructor(
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
+    private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
@@ -228,7 +247,11 @@ export class CampaignsService {
   }
 
   async checkCampaignProgress(campaign: CampaignEntity): Promise<void> {
-    // TODO: add pessimistic lock here
+    /**
+     * TODO:
+     * - pessimistic lock on per-campaign processing
+     * - parallel processing of participants?
+     */
     const logger = this.logger.child({
       action: 'check-campaign-progress',
       campaignId: campaign.id,
@@ -236,12 +259,41 @@ export class CampaignsService {
     logger.debug('Campaign progress check started');
 
     try {
-      const campaignProgressChecker =
-        this.getCampaignProgressChecker('default');
+      let startDate = campaign.startDate;
 
-      const results = await campaignProgressChecker.check({});
+      const intermediateResults =
+        await this.retrieveCampaignIntermediateResults(campaign);
 
-      logger.debug('Campaign progress', { results });
+      if (intermediateResults) {
+        const lastResult = intermediateResults.results.at(
+          -1,
+        ) as IntermediateResult;
+
+        if (dayjs().diff(lastResult.to, 'day') === 0) {
+          return;
+        }
+
+        startDate = new Date(lastResult.to);
+      }
+
+      let endDate = dayjs(startDate).add(1, 'day').toDate();
+      if (endDate > campaign.endDate) {
+        endDate = campaign.endDate;
+      }
+
+      const campaignParticipants =
+        await this.userCampaignsRepository.findCampaignUsers(campaign.id);
+
+      const progress = await this.checkCampaignProgressForPeriod(
+        campaign,
+        campaignParticipants,
+        startDate,
+        endDate,
+      );
+
+      logger.debug('Campaign progress', { progress });
+
+      // TODO: concat and upload intermediate results to storage
 
       if (campaign.endDate < new Date()) {
         campaign.status = CampaignStatus.COMPLETED;
@@ -256,6 +308,60 @@ export class CampaignsService {
     }
   }
 
+  private async checkCampaignProgressForPeriod(
+    campaign: CampaignEntity,
+    participants: UserEntity[],
+    startDate: Date,
+    endDate: Date,
+  ): Promise<IntermediateResult> {
+    const campaignProgressChecker = this.getCampaignProgressChecker(
+      campaign.type,
+    );
+
+    let totalVolume = 0;
+    const outcomes: ParticipantOutcome[] = [];
+    for (const participant of participants) {
+      const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
+        participant.id,
+        campaign.exchangeName,
+      );
+
+      const participantOutcomes = await campaignProgressChecker.check({
+        exchangeName: campaign.exchangeName,
+        apiClientOptions: {
+          apiKey: exchangeApiKey.apiKey,
+          secret: exchangeApiKey.secretKey,
+        },
+        pair: campaign.pair,
+        startDate,
+        endDate: campaign.endDate,
+      });
+
+      totalVolume += participantOutcomes.totalVolume;
+
+      outcomes.push({
+        address: participant.evmAddress,
+        score: participantOutcomes.score,
+        totalVolume: participantOutcomes.totalVolume,
+      });
+    }
+
+    const outcomesBatches: ParticipantsOutcomesBatch[] = [];
+    for (const chunk of _.chunk(outcomes, ESCROW_BULK_PAYOUT_MAX_ITEMS)) {
+      outcomesBatches.push({
+        id: crypto.randomUUID(),
+        results: chunk,
+      });
+    }
+
+    return {
+      from: startDate.toISOString(),
+      to: endDate.toISOString(),
+      total_volume: totalVolume,
+      participants_outcomes_batches: outcomesBatches,
+    };
+  }
+
   private getCampaignProgressChecker(
     campaignType: string,
   ): CampaignProgressChecker {
@@ -263,5 +369,24 @@ export class CampaignsService {
       default:
         return this.moduleRef.get(MarketMakingResultsChecker);
     }
+  }
+
+  private async retrieveCampaignIntermediateResults(
+    campaign: CampaignEntity,
+  ): Promise<IntermediateResultsData | null> {
+    const signer = this.web3Service.getSigner(campaign.chainId);
+    const escrowClient = await EscrowClient.build(signer);
+    const intermediateResultsUrl = await escrowClient.getIntermediateResultsUrl(
+      campaign.address,
+    );
+    if (!intermediateResultsUrl) {
+      return null;
+    }
+
+    const intermediateResults = await httpUtils.downloadFile(
+      intermediateResultsUrl,
+    );
+
+    return JSON.parse(intermediateResults.toString());
   }
 }
