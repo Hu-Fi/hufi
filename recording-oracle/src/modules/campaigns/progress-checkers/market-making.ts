@@ -30,7 +30,7 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
     let totalVolume = 0;
 
     let since = startDate.valueOf();
-    while (since < endDate.valueOf()) {
+    while (since <= endDate.valueOf()) {
       const openOrders = await exchangeApiClient.fetchOpenOrders(pair, since);
       if (openOrders.length === 0) {
         break;
@@ -45,7 +45,7 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
     }
 
     since = startDate.valueOf();
-    while (since < endDate.valueOf()) {
+    while (since <= endDate.valueOf()) {
       const trades = await exchangeApiClient.fetchTrades(pair, since);
       if (trades.length === 0) {
         break;

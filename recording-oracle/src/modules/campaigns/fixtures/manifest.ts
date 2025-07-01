@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 
 import { generateExchangeName } from '@/modules/exchange/fixtures';
 
+import { SUPPORTED_CAMPAIGN_TYPES } from '../constants';
 import type { CampaignManifest } from '../types';
 
 export function generateTradingPair(): string {
@@ -10,7 +11,7 @@ export function generateTradingPair(): string {
 
 export function generateCampaignManifest(): CampaignManifest {
   return {
-    type: 'MARKET_MAKING',
+    type: faker.helpers.arrayElement(SUPPORTED_CAMPAIGN_TYPES),
     daily_volume_target: faker.number.float(),
     exchange: generateExchangeName(),
     pair: generateTradingPair(),

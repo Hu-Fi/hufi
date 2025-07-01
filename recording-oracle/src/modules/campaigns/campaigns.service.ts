@@ -273,7 +273,8 @@ export class CampaignsService {
           return;
         }
 
-        startDate = new Date(lastResult.to);
+        const lastResultDate = new Date(lastResult.to);
+        startDate = new Date(lastResultDate.valueOf() + 1);
       }
 
       let endDate = dayjs(startDate).add(1, 'day').toDate();
@@ -295,7 +296,7 @@ export class CampaignsService {
 
       // TODO: concat and upload intermediate results to storage
 
-      if (campaign.endDate < new Date()) {
+      if (campaign.endDate.valueOf() <= Date.now()) {
         campaign.status = CampaignStatus.COMPLETED;
       }
       campaign.lastResultsAt = new Date();

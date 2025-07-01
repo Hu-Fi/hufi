@@ -27,8 +27,7 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
   }
 
   async findForProgressCheck(): Promise<CampaignEntity[]> {
-    // const timeAgo = dayjs().subtract(1, 'day').toDate();
-    const timeAgo = dayjs().subtract(1, 'hour').toDate();
+    const timeAgo = dayjs().subtract(1, 'day').toDate();
 
     const results = await this.createQueryBuilder('campaign')
       .where('campaign.status = :status', { status: CampaignStatus.ACTIVE })
