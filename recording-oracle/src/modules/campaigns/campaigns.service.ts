@@ -6,7 +6,6 @@ import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
-import type { CampaignManifest } from '@/common/types';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
@@ -15,17 +14,17 @@ import {
 } from '@/modules/exchange-api-keys';
 import { Web3Service } from '@/modules/web3';
 import Environment from '@/utils/environment';
-import { downloadCampaignManifest } from '@/utils/manifest';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
-import { CampaignType, SUPPORTED_CAMPAIGN_TYPES } from './constants';
+import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
+import * as manifestUtils from './manifest.utils';
 import {
   CampaignProgressChecker,
   MarketMakingResultsChecker,
 } from './progress-checkers';
-import { CampaignStatus } from './types';
+import { CampaignManifest, CampaignStatus, CampaignType } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
@@ -178,7 +177,7 @@ export class CampaignsService {
 
     let manifest: CampaignManifest;
     try {
-      manifest = await downloadCampaignManifest(
+      manifest = await manifestUtils.downloadCampaignManifest(
         escrow.manifestUrl as string,
         escrow.manifestHash as string,
       );

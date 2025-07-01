@@ -1,3 +1,3 @@
 export interface CampaignProgressChecker {
-  check(input: any): Promise<any>;
+  check(input: unknown): Promise<unknown>;
 }

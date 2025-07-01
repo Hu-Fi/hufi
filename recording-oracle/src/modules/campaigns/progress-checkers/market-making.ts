@@ -10,7 +10,7 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
   ) {}
 
-  async check(input: any): Promise<any> {
+  async check(input: unknown): Promise<unknown> {
     console.log('Check market making for campaign', input);
     return { e2e: 'check' };
   }

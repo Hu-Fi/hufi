@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-import { generateExchangeName } from '~/test/fixtures/manifest';
+import { generateExchangeName } from '@/modules/exchange/fixtures';
 
 import { ExchangeApiKeyEntity } from '../exchange-api-key.entity';
 

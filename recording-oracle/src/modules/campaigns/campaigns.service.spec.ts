@@ -20,14 +20,14 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
-import * as manifestUtils from '@/utils/manifest';
-import { generateCampaignManifest } from '~/test/fixtures/manifest';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
+import { generateCampaignManifest } from './fixtures';
 import { generateCampaignEntity } from './fixtures';
+import * as manifestUtils from './manifest.utils';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();

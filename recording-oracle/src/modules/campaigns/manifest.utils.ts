@@ -2,9 +2,9 @@ import * as crypto from 'crypto';
 
 import Joi from 'joi';
 
-import type { CampaignManifest } from '@/common/types';
+import * as httpUtils from '@/utils/http';
 
-import * as httpUtils from './http';
+import type { CampaignManifest } from './types';
 
 const manifestSchema = Joi.object({
   type: Joi.string().required(),
