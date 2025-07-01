@@ -191,9 +191,11 @@ describe('CampaignsService', () => {
 
     it('should log and throw when fails to download manifest', async () => {
       const manifestUrl = faker.internet.url();
+      const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         manifestUrl,
+        manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
@@ -221,14 +223,19 @@ describe('CampaignsService', () => {
       );
 
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledTimes(1);
-      expect(spyOnDownloadCampaignManifest).toHaveBeenCalledWith(manifestUrl);
+      expect(spyOnDownloadCampaignManifest).toHaveBeenCalledWith(
+        manifestUrl,
+        manifestHash,
+      );
     });
 
     it('should download and return manifest', async () => {
       const manifestUrl = faker.internet.url();
+      const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         manifestUrl,
+        manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
@@ -244,7 +251,10 @@ describe('CampaignsService', () => {
       expect(manifest).toEqual(mockedManifest);
 
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledTimes(1);
-      expect(spyOnDownloadCampaignManifest).toHaveBeenCalledWith(manifestUrl);
+      expect(spyOnDownloadCampaignManifest).toHaveBeenCalledWith(
+        manifestUrl,
+        manifestHash,
+      );
     });
   });
 

@@ -1,3 +1,5 @@
+import * as crypto from 'crypto';
+
 import Joi from 'joi';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
@@ -19,6 +21,7 @@ const manifestSchema = Joi.object({
 
 export async function downloadCampaignManifest(
   url: string,
+  manifestHash: string,
 ): Promise<CampaignManifest> {
   const response = await fetch(url);
 
@@ -26,13 +29,23 @@ export async function downloadCampaignManifest(
     throw new Error('Failed to load manifest');
   }
 
-  try {
-    const manifestJson = await response.json();
+  const manifestText = await response.text();
+  const hash = calculateManifestHash(manifestText as string);
 
+  if (hash !== manifestHash) {
+    throw new Error('Invalid manifest hash');
+  }
+
+  try {
+    const manifestJson = JSON.parse(manifestText);
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
     return validatedManifest;
   } catch {
-    throw new Error(`Invalid manifest schema`);
+    throw new Error('Invalid manifest schema');
   }
+}
+
+export function calculateManifestHash(manifest: string): string {
+  return crypto.createHash('sha1').update(manifest).digest('hex');
 }
