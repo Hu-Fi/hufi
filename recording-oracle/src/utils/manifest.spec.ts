@@ -39,7 +39,10 @@ describe('manifest utils', () => {
 
       let thrownError;
       try {
-        await manifestUtils.downloadCampaignManifest(manifestUrl);
+        await manifestUtils.downloadCampaignManifest(
+          manifestUrl,
+          faker.string.hexadecimal(),
+        );
       } catch (error) {
         thrownError = error;
       }
@@ -50,7 +53,6 @@ describe('manifest utils', () => {
     });
 
     it.each([
-      faker.lorem.paragraph(),
       {},
       {
         exchange: faker.lorem.word(),
@@ -78,10 +80,15 @@ describe('manifest utils', () => {
       'should throw when invalid manifest schema [%#]',
       async (manifestResponse) => {
         const scope = nock(manifestUrl).get('/').reply(200, manifestResponse);
-
+        const manifestHash = manifestUtils.calculateManifestHash(
+          JSON.stringify(manifestResponse),
+        );
         let thrownError;
         try {
-          await manifestUtils.downloadCampaignManifest(manifestUrl);
+          await manifestUtils.downloadCampaignManifest(
+            manifestUrl,
+            manifestHash,
+          );
         } catch (error) {
           thrownError = error;
         }
@@ -94,10 +101,15 @@ describe('manifest utils', () => {
 
     it('should download valid manifest', async () => {
       const mockedManifest = generateManifestResponse();
+      const mockedManifestHash = manifestUtils.calculateManifestHash(
+        JSON.stringify(mockedManifest),
+      );
       const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
 
-      const downloadedManifest =
-        await manifestUtils.downloadCampaignManifest(manifestUrl);
+      const downloadedManifest = await manifestUtils.downloadCampaignManifest(
+        manifestUrl,
+        mockedManifestHash,
+      );
 
       scope.done();
       expect(downloadedManifest).toEqual({
@@ -108,24 +120,45 @@ describe('manifest utils', () => {
     });
 
     it('should download valid manifest and strip unknown fields', async () => {
-      const mockedManifest = generateManifestResponse();
+      const strippedManifest = generateManifestResponse();
+      const manifestWithExtra = {
+        ...strippedManifest,
+        unknown_field: faker.string.sample(),
+      };
+      const mockedManifestHash = manifestUtils.calculateManifestHash(
+        JSON.stringify(manifestWithExtra),
+      );
 
-      const scope = nock(manifestUrl)
-        .get('/')
-        .reply(200, {
-          ...mockedManifest,
-          unknown_field: faker.string.sample(),
-        });
+      const scope = nock(manifestUrl).get('/').reply(200, manifestWithExtra);
 
-      const downloadedManifest =
-        await manifestUtils.downloadCampaignManifest(manifestUrl);
+      const downloadedManifest = await manifestUtils.downloadCampaignManifest(
+        manifestUrl,
+        mockedManifestHash,
+      );
 
       scope.done();
       expect(downloadedManifest).toEqual({
-        ...mockedManifest,
-        start_date: new Date(mockedManifest.start_date),
-        end_date: new Date(mockedManifest.end_date),
+        ...strippedManifest,
+        start_date: new Date(strippedManifest.start_date),
+        end_date: new Date(strippedManifest.end_date),
       });
+    });
+
+    it('should throw when invalid manifest hash', async () => {
+      const mockedManifest = generateManifestResponse();
+      const invalidHash = faker.string.hexadecimal();
+      const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
+
+      let thrownError;
+      try {
+        await manifestUtils.downloadCampaignManifest(manifestUrl, invalidHash);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      scope.done();
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe('Invalid manifest hash');
     });
   });
 });

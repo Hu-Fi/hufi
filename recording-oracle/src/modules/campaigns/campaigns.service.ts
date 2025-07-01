@@ -162,6 +162,7 @@ export class CampaignsService {
     try {
       const manifest = await downloadCampaignManifest(
         escrow.manifestUrl as string,
+        escrow.manifestHash as string,
       );
 
       return manifest;
