@@ -55,16 +55,14 @@ describe('manifest utils', () => {
     it.each([
       {},
       {
+        type: faker.number.int(),
         exchange: faker.lorem.word(),
+        daily_volume_target: faker.number.float({ min: -42, max: 0 }),
         pair: generateTradingPair().replace('/', '-'),
         fund_token: faker.string.alpha({ length: 11 }),
-        start_date: faker.date.recent().toDateString(),
-        end_date: faker.date.future().toDateString(),
+        start_date: faker.date.recent().valueOf(),
+        end_date: faker.date.future().valueOf(),
       },
-      Object.assign(generateManifestResponse(), {
-        start_date: faker.date.soon().toISOString(),
-        end_date: faker.date.recent().toISOString(),
-      }),
       Object.assign(
         generateManifestResponse(),
         (() => {

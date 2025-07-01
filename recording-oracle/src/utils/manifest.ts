@@ -2,15 +2,14 @@ import * as crypto from 'crypto';
 
 import Joi from 'joi';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import type { CampaignManifest } from '@/common/types';
 
 import * as httpUtils from './http';
 
 const manifestSchema = Joi.object({
-  exchange: Joi.string()
-    .valid(...SUPPORTED_EXCHANGE_NAMES)
-    .required(),
+  type: Joi.string().required(),
+  exchange: Joi.string().required(),
+  daily_volume_target: Joi.number().greater(0),
   pair: Joi.string()
     .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
     .required(),

@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
+import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import type { CampaignManifest } from '@/common/types';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -19,6 +20,7 @@ import { downloadCampaignManifest } from '@/utils/manifest';
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
+import { CampaignType, SUPPORTED_CAMPAIGN_TYPES } from './constants';
 import {
   CampaignProgressChecker,
   MarketMakingResultsChecker,
@@ -103,7 +105,9 @@ export class CampaignsService {
     newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
     newCampaign.address = address;
+    newCampaign.type = manifest.type;
     newCampaign.exchangeName = manifest.exchange;
+    newCampaign.dailyVolumeTarget = manifest.daily_volume_target;
     newCampaign.pair = manifest.pair;
     newCampaign.lastResultsAt = null;
     newCampaign.startDate = manifest.start_date;
@@ -172,17 +176,32 @@ export class CampaignsService {
       );
     }
 
+    let manifest: CampaignManifest;
     try {
-      const manifest = await downloadCampaignManifest(
+      manifest = await downloadCampaignManifest(
         escrow.manifestUrl as string,
         escrow.manifestHash as string,
       );
-
-      return manifest;
     } catch (error) {
       this.logger.error('Failed to download campaign manifest', error);
       throw new InvalidCampaign(campaignAddress, error.message as string);
     }
+
+    if (!SUPPORTED_EXCHANGE_NAMES.includes(manifest.exchange)) {
+      throw new InvalidCampaign(
+        campaignAddress,
+        `Exchange not supported: ${manifest.exchange}`,
+      );
+    }
+
+    if (!SUPPORTED_CAMPAIGN_TYPES.includes(manifest.type as CampaignType)) {
+      throw new InvalidCampaign(
+        campaignAddress,
+        `Campaign type not supported: ${manifest.type}`,
+      );
+    }
+
+    return manifest;
   }
 
   @Cron(PROGRESS_CHECK_SCHEDULE)

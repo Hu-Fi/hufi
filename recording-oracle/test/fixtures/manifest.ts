@@ -13,6 +13,8 @@ export function generateExchangeName() {
 
 export function generateCampaignManifest(): CampaignManifest {
   return {
+    type: 'MARKET_MAKING',
+    daily_volume_target: faker.number.float(),
     exchange: generateExchangeName(),
     pair: generateTradingPair(),
     fund_token: 'HMT',
