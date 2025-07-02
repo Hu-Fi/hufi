@@ -368,7 +368,7 @@ export class CampaignsService {
         },
         pair: campaign.pair,
         startDate,
-        endDate: campaign.endDate,
+        endDate,
       });
 
       totalVolume += participantOutcomes.totalVolume;

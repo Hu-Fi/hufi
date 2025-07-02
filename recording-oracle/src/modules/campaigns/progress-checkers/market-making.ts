@@ -30,13 +30,17 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
     let totalVolume = 0;
 
     let since = startDate.valueOf();
-    while (since <= endDate.valueOf()) {
+    while (since < endDate.valueOf()) {
       const trades = await exchangeApiClient.fetchMyTrades(pair, since);
       if (trades.length === 0) {
         break;
       }
 
       for (const trade of trades) {
+        if (trade.timestamp >= endDate.valueOf()) {
+          break;
+        }
+
         totalVolume += trade.side === 'buy' ? trade.cost : 0;
         score += this.calculateTradeScore(trade);
       }
