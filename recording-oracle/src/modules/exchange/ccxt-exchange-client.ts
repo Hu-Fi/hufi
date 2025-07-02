@@ -96,7 +96,11 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     return orders.map(mapOrder);
   }
 
-  async fetchTrades(symbol: string, since: number): Promise<Trade[]> {
+  /**
+   * Returns all historical trades, both for fully and partially filled orders,
+   * i.e. returns historical data for actual buy/sell that happened.
+   */
+  async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
     /**
      * Use default value for "limit" because it varies
      * from exchange to exchange.

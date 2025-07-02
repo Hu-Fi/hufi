@@ -26,7 +26,7 @@ export type CampaignManifest = {
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  totalVolume: number;
+  total_volume: number;
 };
 
 export type ParticipantsOutcomesBatch = {

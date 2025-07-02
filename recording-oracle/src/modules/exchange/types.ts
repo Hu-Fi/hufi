@@ -38,5 +38,5 @@ export interface ExchangeApiClient {
 
   fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
 
-  fetchTrades(symbol: string, since: number): Promise<Trade[]>;
+  fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
 }

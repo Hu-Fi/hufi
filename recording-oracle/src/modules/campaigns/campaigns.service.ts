@@ -47,7 +47,7 @@ import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
 const PROGRESS_CHECK_SCHEDULE = Environment.isProduction()
-  ? CronExpression.EVERY_DAY_AT_MIDNIGHT
+  ? CronExpression.EVERY_30_MINUTES
   : CronExpression.EVERY_MINUTE;
 
 @Injectable()
@@ -247,11 +247,7 @@ export class CampaignsService {
   }
 
   async checkCampaignProgress(campaign: CampaignEntity): Promise<void> {
-    /**
-     * TODO:
-     * - pessimistic lock on per-campaign processing
-     * - parallel processing of participants?
-     */
+    // TODO: pessimistic lock on per-campaign processing
     const logger = this.logger.child({
       action: 'check-campaign-progress',
       campaignId: campaign.id,
@@ -274,6 +270,9 @@ export class CampaignsService {
         }
 
         const lastResultDate = new Date(lastResult.to);
+        /**
+         * Add 1 ms to end date because interval boundaries are inclusive
+         */
         startDate = new Date(lastResultDate.valueOf() + 1);
       }
 
@@ -343,7 +342,7 @@ export class CampaignsService {
       outcomes.push({
         address: participant.evmAddress,
         score: participantOutcomes.score,
-        totalVolume: participantOutcomes.totalVolume,
+        total_volume: participantOutcomes.totalVolume,
       });
     }
 

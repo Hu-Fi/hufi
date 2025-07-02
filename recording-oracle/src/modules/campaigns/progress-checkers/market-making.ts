@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { ExchangeApiClientFactory, Order, Trade } from '@/modules/exchange';
+import { ExchangeApiClientFactory, Trade } from '@/modules/exchange';
 
 import type {
   CampaignProgressChecker,
@@ -31,28 +31,13 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
 
     let since = startDate.valueOf();
     while (since <= endDate.valueOf()) {
-      const openOrders = await exchangeApiClient.fetchOpenOrders(pair, since);
-      if (openOrders.length === 0) {
-        break;
-      }
-
-      for (const order of openOrders) {
-        totalVolume += order.cost;
-        score += this.calculateOpenOrderScore(order);
-      }
-
-      since = openOrders[openOrders.length - 1].timestamp + 1;
-    }
-
-    since = startDate.valueOf();
-    while (since <= endDate.valueOf()) {
-      const trades = await exchangeApiClient.fetchTrades(pair, since);
+      const trades = await exchangeApiClient.fetchMyTrades(pair, since);
       if (trades.length === 0) {
         break;
       }
 
       for (const trade of trades) {
-        totalVolume += trade.cost;
+        totalVolume += trade.side === 'buy' ? trade.cost : 0;
         score += this.calculateTradeScore(trade);
       }
 
@@ -62,23 +47,20 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
     return { score, totalVolume };
   }
 
-  private calculateOpenOrderScore(order: Order): number {
-    if (order.side !== 'buy' || order.type === 'market') {
-      return 0;
-    }
-
-    const fillRatio = order.filled / order.amount;
-    return order.cost * fillRatio;
-  }
-
   private calculateTradeScore(trade: Trade): number {
-    /**
-     * Note: it can be "maker" for any trade side
-     */
+    let ratio: number;
+
     if (trade.takerOrMaker === 'maker') {
-      return trade.cost;
+      // Market making trade, no matter which side
+      ratio = 1;
+    } else if (trade.side === 'buy') {
+      // "taker" trade on "buy" side
+      ratio = 0.42;
+    } else {
+      // "taker" sells
+      ratio = 0;
     }
 
-    return 0;
+    return ratio * trade.cost;
   }
 }
