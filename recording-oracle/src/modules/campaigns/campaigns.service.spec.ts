@@ -235,6 +235,72 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should throw when exchange from manifest not supported', async () => {
+      const manifestUrl = faker.internet.url();
+      const manifestHash = faker.string.hexadecimal();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        manifestUrl,
+        manifestHash,
+        recordingOracle: mockWeb3ConfigService.operatorAddress,
+      } as any);
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
+
+      const mockedManifest = generateCampaignManifest();
+      mockedManifest.exchange = faker.lorem.word();
+      spyOnDownloadCampaignManifest.mockResolvedValueOnce(mockedManifest);
+
+      let thrownError;
+      try {
+        await campaignsService['retrieveCampaignManifest'](
+          chainId,
+          campaignAddress,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.address).toBe(campaignAddress);
+
+      expect(thrownError.details).toBe(
+        `Exchange not supported: ${mockedManifest.exchange}`,
+      );
+    });
+
+    it('should throw when campaign type from manifest not supported', async () => {
+      const manifestUrl = faker.internet.url();
+      const manifestHash = faker.string.hexadecimal();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        manifestUrl,
+        manifestHash,
+        recordingOracle: mockWeb3ConfigService.operatorAddress,
+      } as any);
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
+
+      const mockedManifest = generateCampaignManifest();
+      mockedManifest.type = faker.lorem.word();
+      spyOnDownloadCampaignManifest.mockResolvedValueOnce(mockedManifest);
+
+      let thrownError;
+      try {
+        await campaignsService['retrieveCampaignManifest'](
+          chainId,
+          campaignAddress,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.address).toBe(campaignAddress);
+
+      expect(thrownError.details).toBe(
+        `Campaign type not supported: ${mockedManifest.type}`,
+      );
+    });
+
     it('should download and return manifest', async () => {
       const manifestUrl = faker.internet.url();
       const manifestHash = faker.string.hexadecimal();
@@ -279,20 +345,23 @@ describe('CampaignsService', () => {
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
+        id: expect.any(String),
         chainId,
         address: campaignAddress,
+        type: manifest.type,
         exchangeName: manifest.exchange,
+        dailyVolumeTarget: manifest.daily_volume_target,
         pair: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
         lastResultsAt: null,
         status: 'active',
       };
-      expect(campaign).toEqual(expect.objectContaining(expectedCampaignData));
+      expect(campaign).toEqual(expectedCampaignData);
 
       expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
-        expect.objectContaining(expectedCampaignData),
+        expectedCampaignData,
       );
     });
   });
