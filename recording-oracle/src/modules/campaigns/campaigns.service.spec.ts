@@ -13,6 +13,7 @@ import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
   ExchangeApiKeysRepository,
+  ExchangeApiKeysService,
 } from '@/modules/exchange-api-keys';
 import { generateExchangeApiKey } from '@/modules/exchange-api-keys/fixtures';
 import { Web3Service } from '@/modules/web3';
@@ -33,6 +34,7 @@ import { UserCampaignsRepository } from './user-campaigns.repository';
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
+const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
@@ -55,6 +57,10 @@ describe('CampaignsService', () => {
         {
           provide: ExchangeApiKeysRepository,
           useValue: mockExchangeApiKeysRepository,
+        },
+        {
+          provide: ExchangeApiKeysService,
+          useValue: mockExchangeApiKeysService,
         },
         {
           provide: Web3ConfigService,
