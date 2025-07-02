@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import { ContentType } from '@/common/enums';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
@@ -20,6 +21,7 @@ import {
   ExchangeApiKeysRepository,
   ExchangeApiKeysService,
 } from '@/modules/exchange-api-keys';
+import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 import Environment from '@/utils/environment';
@@ -47,7 +49,7 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
-const PROGRESS_CHECK_SCHEDULE = Environment.isProduction()
+const PROGRESS_RECORDING_SCHEDULE = Environment.isProduction()
   ? CronExpression.EVERY_30_MINUTES
   : CronExpression.EVERY_MINUTE;
 
@@ -62,6 +64,7 @@ export class CampaignsService {
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
+    private readonly storageService: StorageService,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly moduleRef: ModuleRef,
@@ -225,9 +228,9 @@ export class CampaignsService {
     return manifest;
   }
 
-  @Cron(PROGRESS_CHECK_SCHEDULE)
-  async checkCampaignsProgress(): Promise<void> {
-    this.logger.info('Campaigns progress check started');
+  @Cron(PROGRESS_RECORDING_SCHEDULE)
+  async recordCampaignsProgress(): Promise<void> {
+    this.logger.info('Campaigns progress recording job started');
 
     /**
      * Atm we don't expect many active campaigns
@@ -235,7 +238,7 @@ export class CampaignsService {
      * we might need to query them in batches or as stream.
      */
     const campaignsToCheck =
-      await this.campaignsRepository.findForProgressCheck();
+      await this.campaignsRepository.findForProgressRecording();
 
     for (const campaign of campaignsToCheck) {
       /**
@@ -243,42 +246,54 @@ export class CampaignsService {
        * Later we can add "fastq" usage for parallel processing
        * and "backpressured" adding to the queue.
        */
-      await this.checkCampaignProgress(campaign);
+      await this.recordCampaignProgress(campaign);
     }
 
-    this.logger.info('Campaigns progress check finished');
+    this.logger.info('Campaigns progress recording job finished');
   }
 
-  async checkCampaignProgress(campaign: CampaignEntity): Promise<void> {
+  async recordCampaignProgress(campaign: CampaignEntity): Promise<void> {
     await this.pgAdvisoryLock.withLock(
-      `check-campaign-progress:${campaign.id}`,
+      `record-campaign-progress:${campaign.id}`,
       async () => {
         const logger = this.logger.child({
-          action: 'check-campaign-progress',
+          action: 'record-campaign-progress',
           campaignId: campaign.id,
         });
-        logger.debug('Campaign progress check started');
+        logger.debug('Campaign progress recording started');
 
         try {
           let startDate = campaign.startDate;
 
-          const intermediateResults =
+          let intermediateResults =
             await this.retrieveCampaignIntermediateResults(campaign);
 
           if (intermediateResults) {
-            const lastResult = intermediateResults.results.at(
+            const { to: lastResultAt } = intermediateResults.results.at(
               -1,
             ) as IntermediateResult;
 
-            if (dayjs().diff(lastResult.to, 'day') === 0) {
+            const lastResultDate = new Date(lastResultAt);
+
+            if (dayjs().diff(lastResultAt, 'day') === 0) {
+              logger.debug('Less than a day passed from previous check', {
+                lastResultAt,
+              });
               return;
             }
 
-            const lastResultDate = new Date(lastResult.to);
             /**
              * Add 1 ms to end date because interval boundaries are inclusive
              */
             startDate = new Date(lastResultDate.valueOf() + 1);
+          } else {
+            intermediateResults = {
+              chain_id: campaign.chainId,
+              address: campaign.address,
+              exchange: campaign.exchangeName,
+              pair: campaign.pair,
+              results: [],
+            };
           }
 
           let endDate = dayjs(startDate).add(1, 'day').toDate();
@@ -296,20 +311,32 @@ export class CampaignsService {
             endDate,
           );
 
-          logger.debug('Campaign progress', { progress });
+          logger.debug('Campaign progress checked', {
+            from: progress.from,
+            to: progress.to,
+            total_volume: progress.total_volume,
+            participants_outcomes_batches:
+              progress.participants_outcomes_batches.map((b) => ({
+                id: b.id,
+                n_results: b.results.length,
+              })),
+          });
 
-          // TODO: concat and upload intermediate results to storage
+          intermediateResults.results.push(progress);
+          const storedResultsMeta =
+            await this.recordCampaignIntermediateResults(intermediateResults);
+
+          logger.debug('Campaign progress recorded', storedResultsMeta);
 
           if (campaign.endDate.valueOf() <= Date.now()) {
             campaign.status = CampaignStatus.COMPLETED;
           }
-          campaign.lastResultsAt = new Date();
-
-          await this.campaignsRepository.save(campaign);
         } catch (error) {
-          logger.error('Failure while checking campaign progress', error);
+          logger.error('Failure while recording campaign progress', error);
         } finally {
-          logger.debug('Campaign progress check finished');
+          campaign.lastResultsAt = new Date();
+          await this.campaignsRepository.save(campaign);
+          logger.debug('Campaign progress recording finished');
         }
       },
     );
@@ -395,5 +422,37 @@ export class CampaignsService {
     );
 
     return JSON.parse(intermediateResults.toString());
+  }
+
+  private async recordCampaignIntermediateResults(
+    intermediateResults: IntermediateResultsData,
+  ): Promise<{ url: string; hash: string }> {
+    const chainId = intermediateResults.chain_id;
+    const campaignAddress = intermediateResults.address;
+
+    const resultsBuffer = JSON.stringify(intermediateResults);
+    const resultsHash = crypto
+      .createHash('sha256')
+      .update(resultsBuffer)
+      .digest('hex');
+
+    const fileName = `${campaignAddress}/${resultsHash}.json`;
+
+    const resultsUrl = await this.storageService.uploadData(
+      resultsBuffer,
+      fileName,
+      ContentType.JSON,
+    );
+
+    const signer = this.web3Service.getSigner(chainId);
+    const escrowClient = await EscrowClient.build(signer);
+
+    const gasPrice = await this.web3Service.calculateGasPrice(chainId);
+
+    await escrowClient.storeResults(campaignAddress, resultsUrl, resultsHash, {
+      gasPrice,
+    });
+
+    return { url: resultsUrl, hash: resultsHash };
   }
 }

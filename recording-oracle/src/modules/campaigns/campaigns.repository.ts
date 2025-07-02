@@ -26,7 +26,7 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     });
   }
 
-  async findForProgressCheck(): Promise<CampaignEntity[]> {
+  async findForProgressRecording(): Promise<CampaignEntity[]> {
     const timeAgo = dayjs().subtract(1, 'day').toDate();
 
     const results = await this.createQueryBuilder('campaign')

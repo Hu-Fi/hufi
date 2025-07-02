@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { ExchangeModule } from '@/modules/exchange';
 import { ExchangeApiKeysModule } from '@/modules/exchange-api-keys';
+import { StorageModule } from '@/modules/storage';
 import { Web3Module } from '@/modules/web3';
 import { PgAdvisoryLock } from '@/utils/pg-advisory-lock';
 
@@ -12,7 +13,7 @@ import { MarketMakingResultsChecker } from './progress-checkers';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
 @Module({
-  imports: [ExchangeModule, ExchangeApiKeysModule, Web3Module],
+  imports: [ExchangeModule, ExchangeApiKeysModule, StorageModule, Web3Module],
   providers: [
     CampaignsRepository,
     CampaignsService,
