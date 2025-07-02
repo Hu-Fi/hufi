@@ -24,6 +24,7 @@ import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 import Environment from '@/utils/environment';
 import * as httpUtils from '@/utils/http';
+import { PgAdvisoryLock } from '@/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
@@ -55,6 +56,7 @@ export class CampaignsService {
   private readonly logger = logger.child({
     context: CampaignsService.name,
   });
+
   constructor(
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
@@ -63,6 +65,7 @@ export class CampaignsService {
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly moduleRef: ModuleRef,
+    private readonly pgAdvisoryLock: PgAdvisoryLock,
   ) {}
 
   async join(
@@ -247,65 +250,69 @@ export class CampaignsService {
   }
 
   async checkCampaignProgress(campaign: CampaignEntity): Promise<void> {
-    // TODO: pessimistic lock on per-campaign processing
-    const logger = this.logger.child({
-      action: 'check-campaign-progress',
-      campaignId: campaign.id,
-    });
-    logger.debug('Campaign progress check started');
+    await this.pgAdvisoryLock.withLock(
+      `check-campaign-progress:${campaign.id}`,
+      async () => {
+        const logger = this.logger.child({
+          action: 'check-campaign-progress',
+          campaignId: campaign.id,
+        });
+        logger.debug('Campaign progress check started');
 
-    try {
-      let startDate = campaign.startDate;
+        try {
+          let startDate = campaign.startDate;
 
-      const intermediateResults =
-        await this.retrieveCampaignIntermediateResults(campaign);
+          const intermediateResults =
+            await this.retrieveCampaignIntermediateResults(campaign);
 
-      if (intermediateResults) {
-        const lastResult = intermediateResults.results.at(
-          -1,
-        ) as IntermediateResult;
+          if (intermediateResults) {
+            const lastResult = intermediateResults.results.at(
+              -1,
+            ) as IntermediateResult;
 
-        if (dayjs().diff(lastResult.to, 'day') === 0) {
-          return;
+            if (dayjs().diff(lastResult.to, 'day') === 0) {
+              return;
+            }
+
+            const lastResultDate = new Date(lastResult.to);
+            /**
+             * Add 1 ms to end date because interval boundaries are inclusive
+             */
+            startDate = new Date(lastResultDate.valueOf() + 1);
+          }
+
+          let endDate = dayjs(startDate).add(1, 'day').toDate();
+          if (endDate > campaign.endDate) {
+            endDate = campaign.endDate;
+          }
+
+          const campaignParticipants =
+            await this.userCampaignsRepository.findCampaignUsers(campaign.id);
+
+          const progress = await this.checkCampaignProgressForPeriod(
+            campaign,
+            campaignParticipants,
+            startDate,
+            endDate,
+          );
+
+          logger.debug('Campaign progress', { progress });
+
+          // TODO: concat and upload intermediate results to storage
+
+          if (campaign.endDate.valueOf() <= Date.now()) {
+            campaign.status = CampaignStatus.COMPLETED;
+          }
+          campaign.lastResultsAt = new Date();
+
+          await this.campaignsRepository.save(campaign);
+        } catch (error) {
+          logger.error('Failure while checking campaign progress', error);
+        } finally {
+          logger.debug('Campaign progress check finished');
         }
-
-        const lastResultDate = new Date(lastResult.to);
-        /**
-         * Add 1 ms to end date because interval boundaries are inclusive
-         */
-        startDate = new Date(lastResultDate.valueOf() + 1);
-      }
-
-      let endDate = dayjs(startDate).add(1, 'day').toDate();
-      if (endDate > campaign.endDate) {
-        endDate = campaign.endDate;
-      }
-
-      const campaignParticipants =
-        await this.userCampaignsRepository.findCampaignUsers(campaign.id);
-
-      const progress = await this.checkCampaignProgressForPeriod(
-        campaign,
-        campaignParticipants,
-        startDate,
-        endDate,
-      );
-
-      logger.debug('Campaign progress', { progress });
-
-      // TODO: concat and upload intermediate results to storage
-
-      if (campaign.endDate.valueOf() <= Date.now()) {
-        campaign.status = CampaignStatus.COMPLETED;
-      }
-      campaign.lastResultsAt = new Date();
-
-      await this.campaignsRepository.save(campaign);
-    } catch (error) {
-      logger.error('Failure while checking campaign progress', error);
-    } finally {
-      logger.debug('Campaign progress check finished');
-    }
+      },
+    );
   }
 
   private async checkCampaignProgressForPeriod(
