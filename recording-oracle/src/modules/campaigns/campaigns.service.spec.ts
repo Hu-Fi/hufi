@@ -16,11 +16,13 @@ import {
   ExchangeApiKeysService,
 } from '@/modules/exchange-api-keys';
 import { generateExchangeApiKey } from '@/modules/exchange-api-keys/fixtures';
+import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
+import { PgAdvisoryLock } from '@/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
@@ -35,6 +37,8 @@ const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
+const mockStorageService = createMock<StorageService>();
+const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
@@ -65,6 +69,14 @@ describe('CampaignsService', () => {
         {
           provide: Web3ConfigService,
           useValue: mockWeb3ConfigService,
+        },
+        {
+          provide: PgAdvisoryLock,
+          useValue: mockPgAdvisoryLock,
+        },
+        {
+          provide: StorageService,
+          useValue: mockStorageService,
         },
         Web3Service,
       ],
