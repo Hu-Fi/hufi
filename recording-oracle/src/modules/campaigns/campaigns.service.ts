@@ -274,7 +274,6 @@ export class CampaignsService {
             ) as IntermediateResult;
 
             const lastResultDate = new Date(lastResultAt);
-
             if (dayjs().diff(lastResultAt, 'day') === 0) {
               logger.debug('Less than a day passed from previous check', {
                 lastResultAt,
@@ -342,7 +341,7 @@ export class CampaignsService {
     );
   }
 
-  private async checkCampaignProgressForPeriod(
+  async checkCampaignProgressForPeriod(
     campaign: CampaignEntity,
     participants: UserEntity[],
     startDate: Date,
@@ -430,16 +429,16 @@ export class CampaignsService {
     const chainId = intermediateResults.chain_id;
     const campaignAddress = intermediateResults.address;
 
-    const resultsBuffer = JSON.stringify(intermediateResults);
+    const stringifiedResults = JSON.stringify(intermediateResults);
     const resultsHash = crypto
       .createHash('sha256')
-      .update(resultsBuffer)
+      .update(stringifiedResults)
       .digest('hex');
 
     const fileName = `${campaignAddress}/${resultsHash}.json`;
 
     const resultsUrl = await this.storageService.uploadData(
-      resultsBuffer,
+      stringifiedResults,
       fileName,
       ContentType.JSON,
     );
