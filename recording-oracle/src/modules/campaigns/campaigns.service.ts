@@ -330,11 +330,12 @@ export class CampaignsService {
           if (campaign.endDate.valueOf() <= Date.now()) {
             campaign.status = CampaignStatus.COMPLETED;
           }
+
+          campaign.lastResultsAt = new Date();
+          await this.campaignsRepository.save(campaign);
         } catch (error) {
           logger.error('Failure while recording campaign progress', error);
         } finally {
-          campaign.lastResultsAt = new Date();
-          await this.campaignsRepository.save(campaign);
           logger.debug('Campaign progress recording finished');
         }
       },
