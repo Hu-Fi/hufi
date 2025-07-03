@@ -13,7 +13,7 @@ type InitOptions = {
   sandbox?: boolean;
 };
 
-function mapOrder(order: CcxtOrder): Order {
+export function mapCcxtOrder(order: CcxtOrder): Order {
   return {
     id: order.id,
     status: order.status,
@@ -27,7 +27,7 @@ function mapOrder(order: CcxtOrder): Order {
   };
 }
 
-function mapTrade(trade: CcxtTrade): Trade {
+export function mapCcxtTrade(trade: CcxtTrade): Trade {
   return {
     id: trade.id,
     timestamp: trade.timestamp,
@@ -93,7 +93,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
      */
     const orders = await this.ccxtClient.fetchOpenOrders(symbol, since);
 
-    return orders.map(mapOrder);
+    return orders.map(mapCcxtOrder);
   }
 
   /**
@@ -107,6 +107,6 @@ export class CcxtExchangeClient implements ExchangeApiClient {
      */
     const trades = await this.ccxtClient.fetchMyTrades(symbol, since);
 
-    return trades.map(mapTrade);
+    return trades.map(mapCcxtTrade);
   }
 }

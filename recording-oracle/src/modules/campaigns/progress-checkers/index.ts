@@ -1,2 +1,6 @@
 export { MarketMakingResultsChecker } from './market-making';
-export type { CampaignProgressChecker } from './types';
+export type {
+  CampaignProgressChecker,
+  ProgressCheckInput,
+  ProgressCheckResult,
+} from './types';

@@ -6,7 +6,7 @@ import * as web3Utils from '@/utils/web3';
 import { UserEntity } from '../user.entity';
 
 export function generateUserEntity(
-  overrides: Partial<UserEntity> = {},
+  overrides?: Partial<UserEntity>,
 ): UserEntity {
   const user: UserEntity = {
     id: faker.string.uuid(),

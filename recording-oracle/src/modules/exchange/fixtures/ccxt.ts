@@ -14,7 +14,7 @@ function generateTakerOrMakerFlag(): TakerOrMakerFlag {
   return faker.helpers.arrayElement(TAKER_OR_MAKER_FLAGS);
 }
 
-export function generateCcxtTrade(overrides: Partial<Trade>): Trade {
+export function generateCcxtTrade(overrides?: Partial<Trade>): Trade {
   const price = faker.number.float({ min: 0.01, max: 100_000 });
   const amount = faker.number.float({ min: 0.001, max: 1_000 });
 
@@ -43,7 +43,7 @@ export function generateCcxtTrade(overrides: Partial<Trade>): Trade {
 
 type OpenOrder = Order & { status: 'open' };
 export function generateCcxtOpenOrder(
-  overrides: Partial<OpenOrder>,
+  overrides?: Partial<OpenOrder>,
 ): OpenOrder {
   const minAmount = 0.001;
   const amount = faker.number.float({ min: minAmount, max: 1_000 });
