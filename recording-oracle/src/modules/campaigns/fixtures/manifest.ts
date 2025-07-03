@@ -1,13 +1,12 @@
 import { faker } from '@faker-js/faker';
 
-import { generateExchangeName } from '@/modules/exchange/fixtures';
+import {
+  generateExchangeName,
+  generateTradingPair,
+} from '@/modules/exchange/fixtures';
 
 import { SUPPORTED_CAMPAIGN_TYPES } from '../constants';
 import type { CampaignManifest } from '../types';
-
-export function generateTradingPair(): string {
-  return `${faker.finance.currencyCode()}/${faker.finance.currencyCode()}`;
-}
 
 export function generateCampaignManifest(): CampaignManifest {
   return {

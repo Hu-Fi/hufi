@@ -1,9 +1,11 @@
 import { faker } from '@faker-js/faker';
 
-import { generateExchangeName } from '@/modules/exchange/fixtures';
+import {
+  generateExchangeName,
+  generateTradingPair,
+} from '@/modules/exchange/fixtures';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
-import { generateTradingPair } from './manifest';
 import { CampaignEntity } from '../campaign.entity';
 import { CampaignStatus } from '../types';
 

@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
-import { ExchangeApiClientFactory, Trade } from '@/modules/exchange';
+import {
+  ExchangeApiClientFactory,
+  TakerOrMakerFlag,
+  Trade,
+  TradingSide,
+} from '@/modules/exchange';
 
 import type {
   CampaignProgressChecker,
@@ -41,7 +46,7 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
           break;
         }
 
-        totalVolume += trade.side === 'buy' ? trade.cost : 0;
+        totalVolume += trade.side === TradingSide.BUY ? trade.cost : 0;
         score += this.calculateTradeScore(trade);
       }
 
@@ -54,10 +59,10 @@ export class MarketMakingResultsChecker implements CampaignProgressChecker {
   private calculateTradeScore(trade: Trade): number {
     let ratio: number;
 
-    if (trade.takerOrMaker === 'maker') {
+    if (trade.takerOrMaker === TakerOrMakerFlag.MAKER) {
       // Market making trade, no matter which side
       ratio = 1;
-    } else if (trade.side === 'buy') {
+    } else if (trade.side === TradingSide.BUY) {
       // "taker" trade on "buy" side
       ratio = 0.42;
     } else {

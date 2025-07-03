@@ -7,3 +7,5 @@ export type {
   Order,
   Trade,
 } from './types';
+
+export { TakerOrMakerFlag, TradingSide } from './types';

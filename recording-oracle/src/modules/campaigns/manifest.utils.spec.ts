@@ -1,7 +1,9 @@
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
 
-import { generateCampaignManifest, generateTradingPair } from './fixtures';
+import { generateTradingPair } from '@/modules/exchange/fixtures';
+
+import { generateCampaignManifest } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 
 function generateManifestResponse() {
