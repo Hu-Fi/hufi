@@ -5,7 +5,8 @@ import logger from '@/logger';
 import type { Logger } from '@/logger';
 
 import { ExchangeApiClientError } from './errors';
-import { ExchangeApiClient, Order, Trade } from './types';
+import type { ExchangeApiClient } from './exchange-api-client.interface';
+import { Order, Trade } from './types';
 
 type InitOptions = {
   apiKey: string;
