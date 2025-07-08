@@ -35,6 +35,13 @@ export class UserCampaignEntity {
   @Index('idx_users_campaigns_campaign_id')
   campaignId: string;
 
+  /**
+   * Do not fetch exchange api key entity from DB,
+   * use corresponding service instead to get decoded data.
+   *
+   * This relation is just to remove user from campaign
+   * if they remove exchange API key.
+   */
   @ManyToOne('ExchangeApiKeyEntity', {
     onDelete: 'CASCADE',
     persistence: false,

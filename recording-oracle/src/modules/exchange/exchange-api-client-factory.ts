@@ -3,7 +3,10 @@ import { Injectable } from '@nestjs/common';
 import { ExchangeConfigService } from '@/config';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
-import { ExchangeApiClient, ExchangeApiClientInitOptions } from './types';
+import type {
+  ExchangeApiClient,
+  ExchangeApiClientInitOptions,
+} from './exchange-api-client.interface';
 
 @Injectable()
 export class ExchangeApiClientFactory {

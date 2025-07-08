@@ -1,16 +1,36 @@
-export type Trade = {
-  id: string;
-};
+import type { Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 
-export type ExchangeApiClientInitOptions = {
-  apiKey: string;
-  secret: string;
-};
-
-export interface ExchangeApiClient {
-  readonly exchangeName: string;
-
-  checkRequiredCredentials(): boolean;
-
-  checkRequiredAccess(): Promise<boolean>;
+export enum TradingSide {
+  SELL = 'sell',
+  BUY = 'buy',
 }
+
+export enum TakerOrMakerFlag {
+  TAKER = 'taker',
+  MAKER = 'maker',
+}
+
+export type Order = Pick<
+  CcxtOrder,
+  | 'id'
+  | 'status'
+  | 'timestamp'
+  | 'symbol'
+  | 'side'
+  | 'type'
+  | 'amount'
+  | 'filled'
+  | 'cost'
+>;
+
+export type Trade = Pick<
+  CcxtTrade,
+  | 'id'
+  | 'timestamp'
+  | 'symbol'
+  | 'side'
+  | 'takerOrMaker'
+  | 'price'
+  | 'amount'
+  | 'cost'
+>;

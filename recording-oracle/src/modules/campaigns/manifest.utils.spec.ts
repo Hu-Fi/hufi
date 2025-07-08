@@ -1,12 +1,10 @@
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
 
-import {
-  generateCampaignManifest,
-  generateTradingPair,
-} from '~/test/fixtures/manifest';
+import { generateTradingPair } from '@/modules/exchange/fixtures';
 
-import * as manifestUtils from './manifest';
+import { generateCampaignManifest } from './fixtures';
+import * as manifestUtils from './manifest.utils';
 
 function generateManifestResponse() {
   const manifest = generateCampaignManifest();
@@ -55,16 +53,21 @@ describe('manifest utils', () => {
     it.each([
       {},
       {
+        type: faker.number.int(),
         exchange: faker.lorem.word(),
+        daily_volume_target: faker.number.float({ min: -42, max: 0 }),
         pair: generateTradingPair().replace('/', '-'),
         fund_token: faker.string.alpha({ length: 11 }),
+        // dates are not in ISO format
         start_date: faker.date.recent().toDateString(),
         end_date: faker.date.future().toDateString(),
       },
+      // start date is later than end date
       Object.assign(generateManifestResponse(), {
         start_date: faker.date.soon().toISOString(),
         end_date: faker.date.recent().toISOString(),
       }),
+      // equal dates
       Object.assign(
         generateManifestResponse(),
         (() => {

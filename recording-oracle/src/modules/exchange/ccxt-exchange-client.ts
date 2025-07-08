@@ -1,17 +1,45 @@
 import * as ccxt from 'ccxt';
-import type { Exchange } from 'ccxt';
+import type { Exchange, Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
 import { ExchangeApiClientError } from './errors';
-import { ExchangeApiClient } from './types';
+import type { ExchangeApiClient } from './exchange-api-client.interface';
+import { Order, Trade } from './types';
 
 type InitOptions = {
   apiKey: string;
   secret: string;
   sandbox?: boolean;
 };
+
+export function mapCcxtOrder(order: CcxtOrder): Order {
+  return {
+    id: order.id,
+    status: order.status,
+    timestamp: order.timestamp,
+    symbol: order.symbol,
+    side: order.side,
+    type: order.type,
+    amount: order.amount,
+    filled: order.filled,
+    cost: order.cost,
+  };
+}
+
+export function mapCcxtTrade(trade: CcxtTrade): Trade {
+  return {
+    id: trade.id,
+    timestamp: trade.timestamp,
+    symbol: trade.symbol,
+    side: trade.side,
+    takerOrMaker: trade.takerOrMaker,
+    price: trade.price,
+    amount: trade.amount,
+    cost: trade.cost,
+  };
+}
 
 export class CcxtExchangeClient implements ExchangeApiClient {
   private logger: Logger;
@@ -57,5 +85,29 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
       return false;
     }
+  }
+
+  async fetchOpenOrders(symbol: string, since: number): Promise<Order[]> {
+    /**
+     * Use default value for "limit" because it varies
+     * from exchange to exchange.
+     */
+    const orders = await this.ccxtClient.fetchOpenOrders(symbol, since);
+
+    return orders.map(mapCcxtOrder);
+  }
+
+  /**
+   * Returns all historical trades, both for fully and partially filled orders,
+   * i.e. returns historical data for actual buy/sell that happened.
+   */
+  async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
+    /**
+     * Use default value for "limit" because it varies
+     * from exchange to exchange.
+     */
+    const trades = await this.ccxtClient.fetchMyTrades(symbol, since);
+
+    return trades.map(mapCcxtTrade);
   }
 }

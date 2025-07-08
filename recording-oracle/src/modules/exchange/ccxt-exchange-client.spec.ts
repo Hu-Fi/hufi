@@ -27,10 +27,15 @@ import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
 import logger from '@/logger';
-import { generateExchangeName } from '~/test/fixtures/manifest';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiClientError } from './errors';
+import {
+  generateCcxtOpenOrder,
+  generateCcxtTrade,
+  generateExchangeName,
+  generateTradingPair,
+} from './fixtures';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -167,6 +172,94 @@ describe('CcxtExchangeClient', () => {
 
         expect(result).toBe(true);
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('fetchMyTrades', () => {
+      let tradingPair: string;
+      let tradesSince: Date;
+
+      beforeEach(() => {
+        tradingPair = generateTradingPair();
+        tradesSince = faker.date.anytime();
+      });
+
+      it('should fetch trades with default limit and return mapped data', async () => {
+        const nMockedResults = faker.number.int({ min: 2, max: 5 });
+        const mockedTrade = generateCcxtTrade({ symbol: tradingPair });
+
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce(
+          Array.from({ length: nMockedResults }, (_e, index) => ({
+            ...mockedTrade,
+            id: index.toString(),
+          })),
+        );
+
+        const trades = await ccxtExchangeApiClient.fetchMyTrades(
+          tradingPair,
+          tradesSince.valueOf(),
+        );
+
+        expect(trades.length).toBe(nMockedResults);
+        for (const [index, trade] of trades.entries()) {
+          expect(trade).toEqual({
+            ...mockedTrade,
+            id: index.toString(),
+            order: undefined,
+            info: undefined,
+            etc: undefined,
+          });
+        }
+
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
+          tradingPair,
+          tradesSince.valueOf(),
+        );
+      });
+    });
+
+    describe('fetchOpenOrders', () => {
+      let tradingPair: string;
+      let ordersSince: Date;
+
+      beforeEach(() => {
+        tradingPair = generateTradingPair();
+        ordersSince = faker.date.anytime();
+      });
+
+      it('should fetch open orders with default limit and return mapped data', async () => {
+        const nMockedResults = faker.number.int({ min: 2, max: 5 });
+        const mockedOrder = generateCcxtOpenOrder({ symbol: tradingPair });
+
+        mockedExchange.fetchOpenOrders.mockResolvedValueOnce(
+          Array.from({ length: nMockedResults }, (_e, index) => ({
+            ...mockedOrder,
+            id: index.toString(),
+          })),
+        );
+
+        const trades = await ccxtExchangeApiClient.fetchOpenOrders(
+          tradingPair,
+          ordersSince.valueOf(),
+        );
+
+        expect(trades.length).toBe(nMockedResults);
+        for (const [index, trade] of trades.entries()) {
+          expect(trade).toEqual({
+            ...mockedOrder,
+            id: index.toString(),
+            info: undefined,
+            etc: undefined,
+            trades: undefined,
+          });
+        }
+
+        expect(mockedExchange.fetchOpenOrders).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchOpenOrders).toHaveBeenCalledWith(
+          tradingPair,
+          ordersSince.valueOf(),
+        );
       });
     });
   });

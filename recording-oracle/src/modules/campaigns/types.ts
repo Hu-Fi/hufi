@@ -8,3 +8,43 @@ export enum CampaignStatus {
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }
+
+export enum CampaignType {
+  MARKET_MAKING = 'MARKET_MAKING',
+}
+
+export type CampaignManifest = {
+  type: string;
+  daily_volume_target: number;
+  exchange: string;
+  pair: string;
+  fund_token: string;
+  start_date: Date;
+  end_date: Date;
+};
+
+export type ParticipantOutcome = {
+  address: string;
+  score: number;
+  total_volume: number;
+};
+
+export type ParticipantsOutcomesBatch = {
+  id: string;
+  results: ParticipantOutcome[];
+};
+
+export type IntermediateResult = {
+  from: string;
+  to: string;
+  total_volume: number;
+  participants_outcomes_batches: ParticipantsOutcomesBatch[];
+};
+
+export type IntermediateResultsData = {
+  chain_id: number;
+  address: string;
+  exchange: string;
+  pair: string;
+  results: IntermediateResult[];
+};

@@ -2,13 +2,14 @@ import * as crypto from 'crypto';
 
 import Joi from 'joi';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
-import type { CampaignManifest } from '@/common/types';
+import * as httpUtils from '@/utils/http';
+
+import type { CampaignManifest } from './types';
 
 const manifestSchema = Joi.object({
-  exchange: Joi.string()
-    .valid(...SUPPORTED_EXCHANGE_NAMES)
-    .required(),
+  type: Joi.string().required(),
+  exchange: Joi.string().required(),
+  daily_volume_target: Joi.number().greater(0),
   pair: Joi.string()
     .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
     .required(),
@@ -23,21 +24,23 @@ export async function downloadCampaignManifest(
   url: string,
   manifestHash: string,
 ): Promise<CampaignManifest> {
-  const response = await fetch(url);
+  let manifestData: Buffer;
 
-  if (!response.ok) {
+  try {
+    manifestData = await httpUtils.downloadFile(url);
+  } catch {
     throw new Error('Failed to load manifest');
   }
 
-  const manifestText = await response.text();
-  const hash = calculateManifestHash(manifestText as string);
+  const manifestString = manifestData.toString();
+  const hash = calculateManifestHash(manifestString);
 
   if (hash !== manifestHash) {
     throw new Error('Invalid manifest hash');
   }
 
   try {
-    const manifestJson = JSON.parse(manifestText);
+    const manifestJson = JSON.parse(manifestString);
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
     return validatedManifest;

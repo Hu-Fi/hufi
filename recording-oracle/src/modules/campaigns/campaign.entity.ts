@@ -23,6 +23,12 @@ export class CampaignEntity {
   @Column('varchar', { length: 42 })
   address: string;
 
+  @Column('varchar', { length: 40 })
+  type: string;
+
+  @Column({ type: 'decimal', precision: 20, scale: 8 })
+  dailyVolumeTarget: number;
+
   @Column('varchar', { length: 20 })
   exchangeName: string;
 
@@ -34,6 +40,9 @@ export class CampaignEntity {
 
   @Column({ type: 'timestamptz' })
   endDate: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastResultsAt: Date | null;
 
   @Column({
     type: 'enum',
