@@ -8,8 +8,8 @@ import {
 import { Request, Response } from 'express';
 
 import { DatabaseError } from '@/common/errors/database';
+import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';
 import logger from '@/logger';
-import { transformKeysFromCamelToSnake } from '@/utils/case-converter';
 
 @Catch()
 export class ExceptionFilter implements IExceptionFilter {

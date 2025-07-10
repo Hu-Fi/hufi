@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { ethers } from 'ethers';
 
-import * as web3Utils from '@/utils/web3';
+import * as web3Utils from '@/common/utils/web3';
 
 import { UserEntity } from '../user.entity';
 

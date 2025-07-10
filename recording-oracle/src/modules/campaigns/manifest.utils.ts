@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 
 import Joi from 'joi';
 
-import * as httpUtils from '@/utils/http';
+import * as httpUtils from '@/common/utils/http';
 
 import type { CampaignManifest } from './types';
 
@@ -24,23 +24,14 @@ export async function downloadCampaignManifest(
   url: string,
   manifestHash: string,
 ): Promise<CampaignManifest> {
-  let manifestData: Buffer;
+  const manifestData = await httpUtils.downloadFileAndVerifyHash(
+    url,
+    manifestHash,
+    { algorithm: 'sha1' },
+  );
 
   try {
-    manifestData = await httpUtils.downloadFile(url);
-  } catch {
-    throw new Error('Failed to load manifest');
-  }
-
-  const manifestString = manifestData.toString();
-  const hash = calculateManifestHash(manifestString);
-
-  if (hash !== manifestHash) {
-    throw new Error('Invalid manifest hash');
-  }
-
-  try {
-    const manifestJson = JSON.parse(manifestString);
+    const manifestJson = JSON.parse(manifestData.toString());
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
     return validatedManifest;

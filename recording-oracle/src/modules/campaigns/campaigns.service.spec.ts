@@ -19,6 +19,8 @@ import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
 
+import * as httpUtils from '@/common/utils/http';
+import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -34,8 +36,6 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
-import * as httpUtils from '@/utils/http';
-import { PgAdvisoryLock } from '@/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
@@ -52,6 +52,7 @@ import {
   MarketMakingResult,
   MarketMakingResultsChecker,
 } from './progress-checkers';
+import { CampaignStatus } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { generateUserEntity } from '../users/fixtures';
 
@@ -915,6 +916,19 @@ describe('CampaignsService', () => {
       });
     });
 
+    it.each(
+      Object.values(CampaignStatus).filter((s) => s !== CampaignStatus.ACTIVE),
+    )('should not process campaign when status is "%s"', async (status) => {
+      campaign.status = status;
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(spyOnRetrieveCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+    });
+
     it('should use start date from campaign when no intermediate results yet', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -1075,17 +1089,61 @@ describe('CampaignsService', () => {
       jest.useRealTimers();
     });
 
-    it('should complete campaign if reached its end date', async () => {
+    it('should not complete campaign if reached its end date but not all results calculated', async () => {
       const now = new Date();
       campaign.endDate = new Date(now.valueOf() - 1);
-      campaign.startDate = faker.date.past({ refDate: campaign.endDate });
 
-      jest.useFakeTimers({ now });
+      const lastResultsEndDate = dayjs(campaign.endDate)
+        .subtract(2, 'days')
+        .toDate();
+
+      campaign.startDate = dayjs(lastResultsEndDate)
+        .subtract(1, 'day')
+        .toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        generateIntermediateResult(),
+        generateIntermediateResult(lastResultsEndDate),
       );
+
+      jest.useFakeTimers({ now });
+
+      await campaignsService.recordCampaignProgress(
+        Object.assign({}, campaign),
+      );
+
+      expect(logger.error).toHaveBeenCalledTimes(0);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...campaign,
+        lastResultsAt: now,
+      });
+
+      jest.useRealTimers();
+    });
+
+    it('should complete campaign when reached its end date and all results calculated', async () => {
+      const now = new Date();
+      campaign.endDate = new Date(now.valueOf() - 1);
+
+      const lastResultsEndDate = dayjs(campaign.endDate)
+        .subtract(1, 'day')
+        .toDate();
+
+      campaign.startDate = dayjs(lastResultsEndDate)
+        .subtract(1, 'day')
+        .toDate();
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        generateIntermediateResultsData({
+          results: [generateIntermediateResult(lastResultsEndDate)],
+        }),
+      );
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        generateIntermediateResult(campaign.endDate),
+      );
+
+      jest.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),

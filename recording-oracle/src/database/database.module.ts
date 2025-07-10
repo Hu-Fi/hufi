@@ -3,12 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LogLevel } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
+import Environment from '@/common/utils/environment';
 import { DatabaseConfigService } from '@/config';
 import { RefreshTokenEntity } from '@/modules/auth';
 import { CampaignEntity, UserCampaignEntity } from '@/modules/campaigns';
 import { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
 import { UserEntity } from '@/modules/users';
-import Environment from '@/utils/environment';
 
 @Module({
   imports: [

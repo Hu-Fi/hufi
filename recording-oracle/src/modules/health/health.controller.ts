@@ -9,8 +9,8 @@ import {
 } from '@nestjs/terminus';
 
 import { Public } from '@/common/decorators';
+import Environment from '@/common/utils/environment';
 import { ServerConfigService } from '@/config';
-import Environment from '@/utils/environment';
 
 import { PingResponseDto } from './dto/ping-response.dto';
 

@@ -46,8 +46,9 @@ describe('manifest utils', () => {
       }
 
       scope.done();
+
       expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe('Failed to load manifest');
+      expect(thrownError.message).toBe('Failed to download file');
     });
 
     it.each([
@@ -97,6 +98,7 @@ describe('manifest utils', () => {
         }
 
         scope.done();
+
         expect(thrownError).toBeInstanceOf(Error);
         expect(thrownError.message).toBe('Invalid manifest schema');
       },
@@ -115,6 +117,7 @@ describe('manifest utils', () => {
       );
 
       scope.done();
+
       expect(downloadedManifest).toEqual({
         ...mockedManifest,
         start_date: new Date(mockedManifest.start_date),
@@ -140,6 +143,7 @@ describe('manifest utils', () => {
       );
 
       scope.done();
+
       expect(downloadedManifest).toEqual({
         ...strippedManifest,
         start_date: new Date(strippedManifest.start_date),
@@ -160,8 +164,9 @@ describe('manifest utils', () => {
       }
 
       scope.done();
+
       expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe('Invalid manifest hash');
+      expect(thrownError.message).toBe('Invalid file hash');
     });
   });
 });

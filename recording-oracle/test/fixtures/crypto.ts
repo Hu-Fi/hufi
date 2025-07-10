@@ -1,9 +1,9 @@
-import { generateKeyPairSync } from 'crypto';
+import * as crypto from 'crypto';
 
 import { faker } from '@faker-js/faker';
 
 export function generateES256Keys(): { publicKey: string; privateKey: string } {
-  return generateKeyPairSync('ec', {
+  return crypto.generateKeyPairSync('ec', {
     namedCurve: 'P-256',
     publicKeyEncoding: {
       type: 'spki',
@@ -22,4 +22,16 @@ export function generateES256Keys(): { publicKey: string; privateKey: string } {
  */
 export function generateAesEncryptionKey(): string {
   return faker.string.sample(32);
+}
+
+export function generateRandomHashString(
+  algorithm: string,
+  encoding?: 'hex' | 'base64',
+): string {
+  const hash = crypto
+    .createHash(algorithm)
+    .update(crypto.randomUUID())
+    .digest(encoding || 'hex');
+
+  return hash;
 }
