@@ -256,6 +256,11 @@ export class CampaignsService {
     await this.pgAdvisoryLock.withLock(
       `record-campaign-progress:${campaign.id}`,
       async () => {
+        if (campaign.status !== CampaignStatus.ACTIVE) {
+          // safety-belt
+          return;
+        }
+
         const logger = this.logger.child({
           action: 'record-campaign-progress',
           campaignId: campaign.id,
@@ -327,7 +332,13 @@ export class CampaignsService {
 
           logger.debug('Campaign progress recorded', storedResultsMeta);
 
-          if (campaign.endDate.valueOf() <= Date.now()) {
+          /**
+           * There might be situations when due to delays/failures in processing
+           * we reach campaign end date but still have periods to process,
+           * so mark campaign as completed only if results recorded for all periods,
+           * otherwise keep it as is to wait for all periods to be recorded.
+           */
+          if (endDate.valueOf() === campaign.endDate.valueOf()) {
             campaign.status = CampaignStatus.COMPLETED;
           }
 
