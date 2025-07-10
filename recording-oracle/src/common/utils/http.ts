@@ -1,9 +1,13 @@
+import * as crypto from 'crypto';
+
+import _ from 'lodash';
+
 import { BaseError } from '@/common/errors/base';
 
 class FileDownloadError extends BaseError {
   constructor(
     readonly location: string,
-    readonly detail: unknown,
+    readonly details: unknown,
   ) {
     super('Failed to download file');
   }
@@ -71,4 +75,36 @@ export async function downloadFile<T extends DownloadFileOptions>(
     }
     throw new FileDownloadError(url, error.message);
   }
+}
+
+type HashVerificationOptions = {
+  algorithm?: 'sha256' | 'sha1' | 'md5';
+};
+
+class FileHashVerificationError extends BaseError {
+  constructor(
+    readonly fileUrl: string,
+    readonly details: { fileHash: string; expectedHash: string },
+  ) {
+    super('Invalid file hash');
+  }
+}
+
+export async function downloadFileAndVerifyHash(
+  url: string,
+  expectedHash: string,
+  options?: HashVerificationOptions,
+): Promise<Buffer> {
+  const file = await downloadFile(url);
+
+  const { algorithm } = _.defaults({}, options, {
+    algorithm: 'sha256',
+  });
+  const fileHash = crypto.createHash(algorithm).update(file).digest('hex');
+
+  if (fileHash !== expectedHash) {
+    throw new FileHashVerificationError(url, { fileHash, expectedHash });
+  }
+
+  return file;
 }
