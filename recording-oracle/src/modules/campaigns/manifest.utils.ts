@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 
 import Joi from 'joi';
 
-import * as httpUtils from '@/utils/http';
+import * as httpUtils from '@/common/utils/http';
 
 import type { CampaignManifest } from './types';
 

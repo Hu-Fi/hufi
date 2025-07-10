@@ -15,7 +15,7 @@ import { CampaignsModule } from './modules/campaigns';
 import { ExchangeApiKeysModule } from './modules/exchange-api-keys';
 import { HealthModule } from './modules/health';
 import { UsersModule } from './modules/users';
-import Environment from './utils/environment';
+import Environment from './common/utils/environment';
 
 @Module({
   providers: [

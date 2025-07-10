@@ -34,8 +34,8 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
-import * as httpUtils from '@/utils/http';
-import { PgAdvisoryLock } from '@/utils/pg-advisory-lock';
+import * as httpUtils from '@/common/utils/http';
+import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';

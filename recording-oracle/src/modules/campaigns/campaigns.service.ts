@@ -24,9 +24,9 @@ import {
 import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
-import Environment from '@/utils/environment';
-import * as httpUtils from '@/utils/http';
-import { PgAdvisoryLock } from '@/utils/pg-advisory-lock';
+import Environment from '@/common/utils/environment';
+import * as httpUtils from '@/common/utils/http';
+import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';

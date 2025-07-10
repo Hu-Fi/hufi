@@ -10,7 +10,7 @@ import {
 
 import { Public } from '@/common/decorators';
 import { ServerConfigService } from '@/config';
-import Environment from '@/utils/environment';
+import Environment from '@/common/utils/environment';
 
 import { PingResponseDto } from './dto/ping-response.dto';
 

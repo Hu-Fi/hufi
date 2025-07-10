@@ -1,6 +1,6 @@
 import { ChainId as SdkChainId } from '@human-protocol/sdk';
 
-import Environment from '@/utils/environment';
+import Environment from '@/common/utils/environment';
 
 export enum ProductionChainId {
   POLYGON_MAINNET = SdkChainId.POLYGON,

@@ -1,4 +1,4 @@
-import Environment from '@/utils/environment';
+import Environment from '@/common/utils/environment';
 
 import NestLogger from './nest-logger';
 import { createLogger } from './pino-logger';

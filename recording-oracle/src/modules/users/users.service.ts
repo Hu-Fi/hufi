@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 
 import { DEFAULT_NONCE } from '@/common/constants';
-import * as web3Utils from '@/utils/web3';
+import * as web3Utils from '@/common/utils/web3';
 
 import { UserEntity } from './user.entity';
 import { UserNotFoundError } from './users.errors';
