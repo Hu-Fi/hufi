@@ -14,6 +14,9 @@ import _ from 'lodash';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { ContentType } from '@/common/enums';
+import Environment from '@/common/utils/environment';
+import * as httpUtils from '@/common/utils/http';
+import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
@@ -24,9 +27,6 @@ import {
 import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
-import Environment from '@/common/utils/environment';
-import * as httpUtils from '@/common/utils/http';
-import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';

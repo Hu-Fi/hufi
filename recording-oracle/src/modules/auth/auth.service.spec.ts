@@ -6,12 +6,12 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
 import { DEFAULT_NONCE } from '@/common/constants';
+import * as web3Utils from '@/common/utils/web3';
 import { isUuidV4, isValidNonce } from '@/common/validators';
 import { AuthConfigService } from '@/config';
 import logger from '@/logger';
 import { UsersRepository, UsersService } from '@/modules/users';
 import { generateUserEntity } from '@/modules/users/fixtures';
-import * as web3Utils from '@/common/utils/web3';
 import { generateES256Keys } from '~/test/fixtures/crypto';
 import { generateEthWallet } from '~/test/fixtures/web3';
 

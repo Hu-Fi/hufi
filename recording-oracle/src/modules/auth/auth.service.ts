@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { DEFAULT_NONCE } from '@/common/constants';
+import * as web3Utils from '@/common/utils/web3';
 import { AuthConfigService } from '@/config';
 import logger from '@/logger';
 import { UserEntity, UsersRepository, UsersService } from '@/modules/users';
-import * as web3Utils from '@/common/utils/web3';
 
 import { AuthError, AuthErrorMessage } from './auth.errors';
 import { RefreshTokenEntity } from './refresh-token.entity';

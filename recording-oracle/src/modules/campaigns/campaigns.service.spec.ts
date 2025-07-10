@@ -19,6 +19,8 @@ import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
 
+import * as httpUtils from '@/common/utils/http';
+import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -34,8 +36,6 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
-import * as httpUtils from '@/common/utils/http';
-import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';

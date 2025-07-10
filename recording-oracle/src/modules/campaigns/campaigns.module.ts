@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
+import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { ExchangeModule } from '@/modules/exchange';
 import { ExchangeApiKeysModule } from '@/modules/exchange-api-keys';
 import { StorageModule } from '@/modules/storage';
 import { Web3Module } from '@/modules/web3';
-import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 
 import { CampaignsController } from './campaigns.controller';
 import { CampaignsRepository } from './campaigns.repository';
