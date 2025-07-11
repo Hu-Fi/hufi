@@ -2,7 +2,6 @@ import { FC } from 'react';
 
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { formatEther } from 'ethers';
 
 import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
@@ -96,13 +95,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.totalFundedAmount))} <span>{campaign.tokenSymbol}</span>
+              {formatTokenAmount(campaign.totalFundedAmount)} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatTokenAmount(formatEther(campaign.amountPaid))} <span>{campaign.tokenSymbol}</span>
+              {formatTokenAmount(campaign.amountPaid)} <span>{campaign.tokenSymbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
@@ -123,28 +122,15 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Box
           display="flex"
-          justifyContent="space-between"
-          flexDirection={{ xs: 'column', md: 'row' }}
+          justifyContent="center"
+          alignItems="center"
           bgcolor="background.default"
           borderRadius="16px"
           border="1px solid rgba(255, 255, 255, 0.1)"
           height="100%"
           p={2}
         >
-          <Box display="flex" flexDirection="column">
-            <Title variant="subtitle2" sx={{ mb: 1 }}>
-              Daily amounts paid (24h)
-            </Title>
-            <Typography
-              color="primary.violet"
-              fontSize={{ xs: '40px', xl: '80px' }}
-              fontWeight={800}
-              lineHeight={7 / 6}
-            >
-              0
-            </Typography>
-          </Box>
-          <DailyAmountPaidChart />
+          <DailyAmountPaidChart data={campaign.dailyAmountPaid} endDate={campaign.endBlock} tokenSymbol={campaign.tokenSymbol} />
         </Box>
       </Grid>
     </Grid>
