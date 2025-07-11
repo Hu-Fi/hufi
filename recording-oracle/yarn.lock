@@ -822,6 +822,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@human-protocol/logger@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@human-protocol/logger@npm:1.0.0"
+  dependencies:
+    pino: "npm:^9.7.0"
+    pino-pretty: "npm:^13.0.0"
+  peerDependencies:
+    "@nestjs/common": ^10.2.7
+  checksum: 10c0/e5f90a4dfe0713880e86b9ce058e9deb23bc561717826f36134f4ce5f8a2d80343306c0340dfe6d731d80ac7ee0df2d2fde5c2636249453228c4555c75d3e150
+  languageName: node
+  linkType: hard
+
 "@human-protocol/sdk@npm:^4.1.0":
   version: 4.1.0
   resolution: "@human-protocol/sdk@npm:4.1.0"
@@ -8933,6 +8945,7 @@ __metadata:
     "@eslint/js": "npm:^9.27.0"
     "@faker-js/faker": "npm:^9.8.0"
     "@golevelup/ts-jest": "npm:^0.7.0"
+    "@human-protocol/logger": "npm:^1.0.0"
     "@human-protocol/sdk": "npm:^4.1.0"
     "@nestjs/cli": "npm:^11.0.0"
     "@nestjs/common": "npm:^11.0.1"
@@ -8975,8 +8988,6 @@ __metadata:
     passport: "npm:^0.7.0"
     passport-jwt: "npm:^4.0.1"
     pg: "npm:^8.16.0"
-    pino: "npm:^9.7.0"
-    pino-pretty: "npm:^13.0.0"
     prettier: "npm:^3.4.2"
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.1"
