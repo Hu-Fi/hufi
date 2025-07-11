@@ -150,8 +150,12 @@ lint-fix:
 test-recording-oracle:
 	cd $(PROJECT_ROOT)/recording-oracle && yarn test
 
+test-reputation-oracle:
+	cd $(PROJECT_ROOT)/reputation-oracle && yarn test
+
 .PHONY: test
 test:
 	@echo "Run unit tests..."
 	$(MAKE) test-recording-oracle
+	$(MAKE) test-reputation-oracle
 	@echo "Finished unit tests"
