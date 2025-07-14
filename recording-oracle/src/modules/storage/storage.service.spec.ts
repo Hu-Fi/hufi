@@ -5,10 +5,10 @@ import { Test } from '@nestjs/testing';
 import { Client as MinioClient } from 'minio';
 
 import { ContentType } from '@/common/enums';
+import { S3ConfigService } from '@/config';
 
 import { MinioErrorCodes } from './minio.constants';
 import { StorageService } from './storage.service';
-import { S3ConfigService } from '../../config';
 
 const mockedMinioClientInstance = {
   statObject: jest.fn(),
