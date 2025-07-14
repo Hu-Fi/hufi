@@ -59,11 +59,8 @@ export class CampaignService {
             campaign.chainId,
             campaign.address,
           );
-          // “Active” if status is Pending or Partial and endDate is in the future
-          return (
-            (escrow.status === 'Pending' || escrow.status === 'Partial') &&
-            new Date() < campaign.endDate
-          );
+          // “Active” if status is Pending or Partial
+          return escrow.status === 'Pending' || escrow.status === 'Partial';
         } catch {
           // if the escrow call fails treat campaign as inactive
           return false;
@@ -99,8 +96,10 @@ export class CampaignService {
     campaign.exchangeName = campaignData.exchangeName;
 
     campaign.token = campaignData.token;
-    campaign.startDate = new Date(campaignData.startBlock * 1000);
-    campaign.endDate = new Date(campaignData.endBlock * 1000);
+    campaign.startDate = new Date(
+      Date.UTC(0, 0, campaignData.startBlock * 1000),
+    );
+    campaign.endDate = new Date(Date.UTC(0, 0, campaignData.endBlock * 1000));
     campaign.fundToken = campaignDetails.token;
     campaign.fundAmount = campaignData.fundAmount;
     campaign.lastSyncedAt = new Date(campaignData.startBlock * 1000);
