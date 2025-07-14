@@ -96,15 +96,11 @@ export class CampaignService {
     campaign.exchangeName = campaignData.exchangeName;
 
     campaign.token = campaignData.token;
-    campaign.startDate = new Date(
-      Date.UTC(0, 0, campaignData.startBlock * 1000),
-    );
-    campaign.endDate = new Date(Date.UTC(0, 0, campaignData.endBlock * 1000));
+    campaign.startDate = new Date(campaignData.startBlock * 1000);
+    campaign.endDate = new Date(campaignData.endBlock * 1000);
     campaign.fundToken = campaignDetails.token;
     campaign.fundAmount = campaignData.fundAmount;
-    campaign.lastSyncedAt = new Date(
-      Date.UTC(0, 0, campaignData.startBlock * 1000),
-    );
+    campaign.lastSyncedAt = campaign.startDate;
 
     return await this.campaignRepository.createUnique(campaign);
   }
