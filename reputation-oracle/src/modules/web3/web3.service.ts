@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
 
+import { ChainIds } from '@/common/constants';
 import { Web3ConfigService } from '@/config';
 
 import type { Chain, WalletWithProvider } from './types';
-
-import { ChainIds } from '@/common/constants';
 
 @Injectable()
 export class Web3Service {
