@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
 
-import { ChainIds } from '@/common/constants';
+import { type ChainId, ChainIds } from '@/common/constants';
 import { Web3ConfigService } from '@/config';
 
 import type { Chain, WalletWithProvider } from './types';
@@ -44,6 +44,10 @@ export class Web3Service {
     }
 
     return supportedChains;
+  }
+
+  get supportedChainIds(): ChainId[] {
+    return this.supportedChains.map((v) => v.id);
   }
 
   getSigner(chainId: number): WalletWithProvider {
