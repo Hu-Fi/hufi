@@ -88,19 +88,6 @@ export class LiquidityScoreService {
       );
     }
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const yesterday = new Date(
-      Date.UTC(
-        today.getUTCFullYear(),
-        today.getUTCMonth(),
-        today.getUTCDate() - 1,
-        0,
-        0,
-        0,
-        0,
-      ),
-    );
     let startDate =
       campaign.lastSyncedAt < campaign.startDate
         ? campaign.startDate
@@ -108,45 +95,13 @@ export class LiquidityScoreService {
 
     const scoresFiles: UploadFile[] = [];
 
-    if (
-      !(
-        new Date(
-          Date.UTC(
-            startDate.getUTCFullYear(),
-            startDate.getUTCMonth(),
-            startDate.getUTCDate(),
-            0,
-            0,
-            0,
-            0,
-          ),
-        ) <= yesterday
-      )
-    ) {
-      this.logger.debug(
-        `Cannot calculate score now for ${campaign.address}, 24 hours have not passed yet since the last calculation.`,
-      );
-    }
     if (startDate >= campaign.endDate) {
       this.logger.debug(
         `Cannot calculate score now for ${campaign.address}, campaign has already ended.`,
       );
     }
 
-    while (
-      new Date(
-        Date.UTC(
-          startDate.getUTCFullYear(),
-          startDate.getUTCMonth(),
-          startDate.getUTCDate(),
-          0,
-          0,
-          0,
-          0,
-        ),
-      ) <= yesterday &&
-      startDate < campaign.endDate
-    ) {
+    while (startDate < campaign.endDate) {
       const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
       let windowEnd = new Date(
         Date.UTC(
