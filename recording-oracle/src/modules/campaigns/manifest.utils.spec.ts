@@ -16,6 +16,8 @@ function generateManifestResponse() {
   };
 }
 
+const MANIFEST_RESPONSE_KEYS = Object.keys(generateManifestResponse());
+
 describe('manifest utils', () => {
   describe('downloadCampaignManifest', () => {
     let manifestUrl: string;
@@ -52,7 +54,6 @@ describe('manifest utils', () => {
     });
 
     it.each([
-      {},
       {
         type: faker.number.int(),
         exchange: faker.lorem.word(),
@@ -80,6 +81,18 @@ describe('manifest utils', () => {
           };
         })(),
       ),
+      ...(() => {
+        const invalidResponses = [];
+
+        for (const key of MANIFEST_RESPONSE_KEYS) {
+          const response = generateManifestResponse();
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
+          delete response[key];
+          invalidResponses.push(response);
+        }
+        return invalidResponses;
+      })(),
     ])(
       'should throw when invalid manifest schema [%#]',
       async (manifestResponse) => {
