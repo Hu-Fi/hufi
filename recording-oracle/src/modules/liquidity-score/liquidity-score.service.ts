@@ -88,9 +88,6 @@ export class LiquidityScoreService {
       );
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     let startDate =
       campaign.lastSyncedAt < campaign.startDate
         ? campaign.startDate
@@ -98,37 +95,25 @@ export class LiquidityScoreService {
 
     const scoresFiles: UploadFile[] = [];
 
-    if (
-      !(
-        new Date(
-          startDate.getFullYear(),
-          startDate.getMonth(),
-          startDate.getDate(),
-        ) <= yesterday
-      )
-    ) {
-      this.logger.debug(
-        `Cannot calculate score now for ${campaign.address}, 24 hours have not passed yet since the last calculation.`,
-      );
-    }
     if (startDate >= campaign.endDate) {
       this.logger.debug(
         `Cannot calculate score now for ${campaign.address}, campaign has already ended.`,
       );
     }
 
-    while (
-      new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate(),
-      ) <= yesterday &&
-      startDate < campaign.endDate
-    ) {
+    while (startDate < campaign.endDate) {
       const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
-      let windowEnd = new Date(startDate.getTime());
-      windowEnd.setHours(0, 0, 0, 0);
-      windowEnd = new Date(windowEnd.getTime() + 24 * 60 * 60 * 1000);
+      let windowEnd = new Date(
+        Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate() + 1,
+          0,
+          0,
+          0,
+          0,
+        ),
+      );
       windowEnd = windowEnd > campaign.endDate ? campaign.endDate : windowEnd;
 
       const scores: LiquidityScore[] = [];
@@ -322,6 +307,17 @@ export class LiquidityScoreService {
     windowStart: Date,
     windowEnd: Date,
   ) {
+    const now = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours(),
+        new Date().getUTCMinutes(),
+        new Date().getUTCSeconds(),
+        new Date().getUTCMilliseconds(),
+      ),
+    );
     await this.liquidityScoreRepository.upsert(
       {
         campaignId: campaign.id,
@@ -329,7 +325,7 @@ export class LiquidityScoreService {
         windowStart,
         windowEnd,
         score,
-        calculatedAt: new Date(),
+        calculatedAt: now,
       },
       ['campaignId', 'userId', 'windowStart'],
     );
