@@ -1,8 +1,10 @@
 import { FC } from 'react';
 
+import { ChainId } from '@human-protocol/sdk';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { CampaignDataDto } from '../../api/client';
+import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { CalendarIcon } from '../../icons';
 import JoinCampaign from '../JoinCampaign';
 
@@ -12,6 +14,11 @@ const formatDate = (block: number): string => {
   const month = date.toLocaleString('en-US', { month: 'short' });
   const year = date.getFullYear();
   return `${day} ${month} ${year}`;
+};
+
+const getChainIcon = (id?: number) => {
+  if (!id) return null;
+  return CHAIN_ICONS[id as ChainId] || null;
 };
 
 type Props = {
@@ -60,7 +67,10 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
           </>
         )}
       </Box>
-      <JoinCampaign campaign={campaign}  />
+      <Box ml={2}>
+        {getChainIcon(campaign.chainId)}
+      </Box>
+      <JoinCampaign campaign={campaign} />
     </>
   );
 };

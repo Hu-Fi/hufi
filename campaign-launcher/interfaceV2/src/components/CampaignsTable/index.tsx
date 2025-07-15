@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { CampaignDataDto } from '../../api/client';
+import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
@@ -44,6 +45,11 @@ const formatDate = (block: number) => {
   const month = date.toLocaleString('en-US', { month: 'long' });
   const year = date.getFullYear();
   return `${day}${getSuffix(day)} ${month} ${year}`;
+};
+
+const getChainIcon = (id?: number) => {
+  if (!id) return null;
+  return CHAIN_ICONS[id as ChainId] || null;
 };
 
 const MyCampaignsNoRows: FC = () => {
@@ -221,6 +227,15 @@ const CampaignsTable: FC<Props> = ({
             </IconButton>
           </Typography>
         );
+      },
+    },
+    {
+      field: 'network',
+      headerName: 'Network',
+      flex: 1,
+      minWidth: 100,
+      renderCell: (params) => {
+        return <Typography variant="subtitle2">{getChainIcon(params.row.chainId)}</Typography>;
       },
     },
     {
