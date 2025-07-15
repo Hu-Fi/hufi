@@ -7,11 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { CampaignDataDto } from '../../api/client';
-import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatAddress, getExplorerUrl, formatTokenAmount } from '../../utils';
+import { formatAddress, getExplorerUrl, formatTokenAmount, getChainIcon } from '../../utils';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import LaunchCampaign from '../LaunchCampaign';
@@ -45,11 +44,6 @@ const formatDate = (block: number) => {
   const month = date.toLocaleString('en-US', { month: 'long' });
   const year = date.getFullYear();
   return `${day}${getSuffix(day)} ${month} ${year}`;
-};
-
-const getChainIcon = (id?: number) => {
-  if (!id) return null;
-  return CHAIN_ICONS[id as ChainId] || null;
 };
 
 const MyCampaignsNoRows: FC = () => {

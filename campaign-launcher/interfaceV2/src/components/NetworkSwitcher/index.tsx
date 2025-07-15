@@ -4,14 +4,8 @@ import { ChainId } from '@human-protocol/sdk';
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
 import { useAccount, useSwitchChain, useConfig } from 'wagmi';
 
-import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { ChevronIcon } from '../../icons';
-import { getSupportedChainIds } from '../../utils';
-
-const getChainIcon = (id?: number) => {
-  if (!id) return null;
-  return CHAIN_ICONS[id as ChainId] || null;
-};
+import { getChainIcon, getSupportedChainIds } from '../../utils';
 
 const NetworkSwitcher: FC = () => {
   const { chain, isConnected } = useAccount();
@@ -60,7 +54,7 @@ const NetworkSwitcher: FC = () => {
         }}
       >
         <Typography variant="body2" fontWeight={600}>
-          {getChainIcon(chain?.id)}
+          {getChainIcon(chain?.id as ChainId)}
           {chain?.name ? null : 'Select Network'}
         </Typography>
       </Button>
