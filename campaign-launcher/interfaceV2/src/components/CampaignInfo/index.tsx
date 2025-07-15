@@ -4,6 +4,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { CampaignDataDto } from '../../api/client';
 import { CalendarIcon } from '../../icons';
+import { getChainIcon } from '../../utils';
 import JoinCampaign from '../JoinCampaign';
 
 const formatDate = (block: number): string => {
@@ -60,7 +61,10 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
           </>
         )}
       </Box>
-      <JoinCampaign campaign={campaign}  />
+      <Box ml={2}>
+        {getChainIcon(campaign.chainId)}
+      </Box>
+      <JoinCampaign campaign={campaign} />
     </>
   );
 };

@@ -10,7 +10,7 @@ import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatAddress, getExplorerUrl, formatTokenAmount } from '../../utils';
+import { formatAddress, getExplorerUrl, formatTokenAmount, getChainIcon } from '../../utils';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import LaunchCampaign from '../LaunchCampaign';
@@ -221,6 +221,15 @@ const CampaignsTable: FC<Props> = ({
             </IconButton>
           </Typography>
         );
+      },
+    },
+    {
+      field: 'network',
+      headerName: 'Network',
+      flex: 1,
+      minWidth: 100,
+      renderCell: (params) => {
+        return <Typography variant="subtitle2">{getChainIcon(params.row.chainId)}</Typography>;
       },
     },
     {
