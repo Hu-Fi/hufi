@@ -5,11 +5,13 @@ import Environment from '@/common/utils/environment';
 
 const isDevelopment = Environment.isDevelopment();
 
+const forcePretty = process.env.LOGGER_PRETTY === 'true';
+
 const defaultLogger = createLogger(
   {
     name: 'DefaultLogger',
     level: isDevelopment ? LogLevel.DEBUG : LogLevel.INFO,
-    pretty: isDevelopment,
+    pretty: forcePretty || isDevelopment,
     disabled: Environment.isTest(),
   },
   {
