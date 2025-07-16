@@ -49,9 +49,9 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 
-const PROGRESS_RECORDING_SCHEDULE = Environment.isProduction()
-  ? CronExpression.EVERY_30_MINUTES
-  : CronExpression.EVERY_MINUTE;
+const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
+  ? CronExpression.EVERY_MINUTE
+  : CronExpression.EVERY_30_MINUTES;
 
 @Injectable()
 export class CampaignsService {
