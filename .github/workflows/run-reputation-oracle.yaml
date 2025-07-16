@@ -5,48 +5,97 @@ permissions:
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '30 1 * * *' # every day at 01:30
+    inputs:
+      environment:
+        description: "Which environment to run?"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+  # temporarily disabled; turn on when we are ready
+  # schedule:
+  #   - cron: '30 1 * * *' # every day at 01:30
+
+env:
+  CONFIG_PER_ENV_JSON: |
+    {
+      "staging": {
+        "env_file_secret_name": "REPUTATION_ORACLE_ENV_STAGING",
+      },
+      "production": {
+        "env_file_secret_name": "REPUTATION_ORACLE_ENV_PRODUCTION",
+      }
+    }
 
 jobs:
+  define-env-names:
+    name: Define environments to run
+    runs-on: ubuntu-latest
+    outputs:
+      env_names: ${{ steps.get_env_names.outputs.env_names }}
+
+    steps:
+      - name: Define env names to run
+        id: get_env_names
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            ENV_NAMES='["staging","production"]'
+          else
+            INPUT_VAL="${{ github.event.inputs.environment }}"
+            ENV_NAMES="[\"${INPUT_VAL}\"]"
+          fi
+
+          echo "env_names=$ENV_NAMES" >> $GITHUB_OUTPUT
+
+      - name: Validate and print results
+        run: |
+          ENV_NAMES='${{ steps.get_env_names.outputs.env_names }}'
+
+          # Check if it's an empty string to prevent errors in job outputs
+          if [ "$ENV_NAMES" = "[]" ] || [ -z "$ENV_NAMES" ]; then
+            exit 1
+          else
+            echo "Env names: $ENV_NAMES"
+          fi
+
   run-rep-o:
     name: Run Reputation Oracle
+    needs: define-env-names
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./reputation-oracle
+        working-directory: reputation-oracle
     strategy:
       matrix:
-        env: [staging, production]
-    environment: ${{ matrix.env }}
+        env_name: ${{ fromJSON(needs.define-env-names.outputs.env_names) }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Enable corepack
         run: corepack enable
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: yarn
           cache-dependency-path: 'yarn.lock'
+
       - name: Install dependencies
         run: yarn install
-      - name: Write .env
+
+      - name: Get config for env
         run: |
-          cat <<EOF > .env.${{ matrix.environment }}
-          ${{ secrets.MY_PRIVATE_KEY }}
-          EOF
+          ENV_FILE_SECRET_NAME=$(echo "${{ fromJSON(env.CONFIG_PER_ENV_JSON)[matrix.env_name].env_file_secret_name }}")
+          echo "ENV_FILE_SECRET_NAME=$ENV_FILE_SECRET_NAME" >> $GITHUB_ENV
+
+      - name: Create .env file from secret
+        run: |
+          echo "${{ secrets[env.ENV_FILE_SECRET_NAME] }}" > .env.${{ matrix.env_name }}
+
       - name: Run
-        run: yarn start
         env:
           LOGGER_PRETTY: true
-          NODE_ENV: ${{ matrix.environment }}
-          S3_ENDPOINT: ${{ secrets.REPUTATION_ORACLE_S3_ENDPOINT }}
-          S3_PORT: ${{ secrets.REPUTATION_ORACLE_S3_PORT }}
-          S3_ACCESS_KEY: ${{ secrets.REPUTATION_ORACLE_S3_ACCESS_KEY }}
-          S3_SECRET_KEY: ${{ secrets.REPUTATION_ORACLE_S3_SECRET_KEY }}
-          S3_BUCKET: ${{ secrets.REPUTATION_ORACLE_S3_BUCKET }}
-          S3_USE_SSL: true
-          WEB3_PRIVATE_KEY: ${{ secrets.REPUTATION_ORACLE_WEB3_PRIVATE_KEY }}
-          RPC_URL_POLYGON_AMOY: ${{ secrets.REPUTATION_ORACLE_POLYGON_AMOY }}
-          RPC_URL_POLYGON: ${{ secrets.REPUTATION_ORACLE_RPC_URL_POLYGON }}
-          SUBGRAPH_API_KEY: ${{ secrets.REPUTATION_ORACLE_SUBGRAPH_API_KEY }}
+          NODE_ENV: ${{ matrix.env_name }}
+        run: yarn start
