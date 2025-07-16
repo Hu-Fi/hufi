@@ -8,9 +8,6 @@ export const ROUTES = {
   JOINED_CAMPAIGNS: '/joined-campaigns',
 };
 
-export const ACCESS_TOKEN_KEY = 'ro-access-token';
-export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
-
 export const oracles = {
   exchangeOracleFee: BigInt(import.meta.env.VITE_APP_EXCHANGE_ORACLE_FEE),
   recordingOracle: import.meta.env.VITE_APP_RECORDING_ORACLE_ADDRESS,

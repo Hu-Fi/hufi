@@ -2,9 +2,9 @@ import { FC } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import { useGetUserJoinedCampaigns } from '../../hooks/recording-oracle/campaign';
+import { Campaign } from '../../hooks/useCampaigns';
 import CampaignsTable from '../CampaignsTable';
 
 type Props = {
@@ -16,9 +16,8 @@ const JoinedCampaigns: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
 }) => {
-  const { chainId } = useAccount();
   const navigate = useNavigate();
-  const { data: campaigns, isLoading } = useGetUserJoinedCampaigns(chainId);
+  const { data: campaigns, isLoading } = useGetUserJoinedCampaigns();
 
   const onViewAllClick = () => {
     navigate('/joined-campaigns');
@@ -34,7 +33,7 @@ const JoinedCampaigns: FC<Props> = ({
       {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {!isLoading && (
         <CampaignsTable
-          data={campaigns}
+          data={campaigns as unknown as Campaign[]}
           showPagination={showPagination}
           showAllCampaigns={showAllCampaigns}
           isJoinedCampaigns={true}

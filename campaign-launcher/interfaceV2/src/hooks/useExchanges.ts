@@ -17,5 +17,6 @@ export const useExchanges = () => {
       api.exchange
         .exchangeControllerGetExchangeList()
         .then((res) => res.data as Exchange[]),
+    enabled: false, // TODO: remove this
   });
 };

@@ -48,7 +48,7 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Total Liquidity Provided</Typography>
-            <Value>${liquidityScore?.total || 0}</Value>
+            <Value>${(liquidityScore as { total: number })?.total || 0}</Value>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
