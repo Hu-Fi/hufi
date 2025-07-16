@@ -12,7 +12,6 @@ import { ethers } from 'ethers';
 import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import * as decimalUtils from '@/common/utils/decimal';
-import * as web3Utils from '@/common/utils/web3';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
@@ -291,7 +290,7 @@ export class PayoutsService {
         continue;
       }
 
-      const fundTokenDecimals = web3Utils.getTokenDecimals(
+      const fundTokenDecimals = await this.web3Service.getTokenDecimals(
         escrow.chainId,
         escrow.token,
       );
