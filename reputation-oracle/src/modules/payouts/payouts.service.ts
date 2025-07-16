@@ -17,7 +17,7 @@ import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
-import * as campaignUtils from './campaign.utils';
+import * as payoutsUtils from './payouts.utils';
 import {
   CalculatedRewardsBatch,
   CampaignWithResults,
@@ -76,11 +76,11 @@ export class PayoutsService {
       let allResultsPaid = false;
       try {
         const [manifest, intermediateResultsData] = await Promise.all([
-          campaignUtils.downloadCampaignManifest(
+          payoutsUtils.downloadCampaignManifest(
             campaign.manifestUrl,
             campaign.manifestHash,
           ),
-          campaignUtils.downloadIntermediateResults(
+          payoutsUtils.downloadIntermediateResults(
             campaign.intermediateResultsUrl,
           ),
         ]);
@@ -89,7 +89,7 @@ export class PayoutsService {
           throw new Error('Intermediate results are not recorded');
         }
 
-        const dailyReward = campaignUtils.calculateDailyReward(
+        const dailyReward = payoutsUtils.calculateDailyReward(
           campaign,
           manifest,
         );
