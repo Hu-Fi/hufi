@@ -101,7 +101,7 @@ export class PayoutsService {
           dailyReward,
         });
 
-        const finalResulsMeta = await this.uploadFinalResults(
+        const finalResultsMeta = await this.uploadFinalResults(
           campaign,
           intermediateResultsData,
         );
@@ -148,8 +148,8 @@ export class PayoutsService {
               campaign.address,
               Array.from(recipientToAmountMap.keys()),
               Array.from(recipientToAmountMap.values()),
-              finalResulsMeta.url,
-              finalResulsMeta.hash,
+              finalResultsMeta.url,
+              finalResultsMeta.hash,
               /**
                * TODO: replace it with batch id when SDK is updated
                */
@@ -271,6 +271,9 @@ export class PayoutsService {
       reputationOracle: this.web3ConfigService.operatorAddress,
     };
 
+    /**
+     * TODO: add "toCancelEscrows" when escrow cancelletion is done
+     */
     const [pendingEscrows, partialEscrows] = await Promise.all([
       EscrowUtils.getEscrows({
         ...baseFilter,
