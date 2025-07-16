@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 PROJECT_ROOT := ..
-SERVICES := campaign-launcher/client campaign-launcher/server recording-oracle reputation-oracle
+SERVICES := campaign-launcher/interfaceV2 campaign-launcher/server recording-oracle reputation-oracle
 
 .PHONY: help
 help:
@@ -18,7 +18,7 @@ help:
 
 # Dependency Installation
 install-campaign-launcher-client:
-	cd $(PROJECT_ROOT)/campaign-launcher/client && yarn
+	cd $(PROJECT_ROOT)/campaign-launcher/interfaceV2 && yarn
 
 install-campaign-launcher-server:
 	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn
@@ -56,7 +56,7 @@ create-env-files:
 
 # Development Servers
 start-campaign-launcher-client:
-	cd $(PROJECT_ROOT)/campaign-launcher/client && yarn dev
+	cd $(PROJECT_ROOT)/campaign-launcher/interfaceV2 && yarn dev
 
 start-campaign-launcher-server:
 	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn start:dev
@@ -84,7 +84,7 @@ start: start-docker
 
 # Format
 format-campaign-launcher-client:
-	cd $(PROJECT_ROOT)/campaign-launcher/client && yarn format
+	cd $(PROJECT_ROOT)/campaign-launcher/interfaceV2 && yarn format
 
 format-campaign-launcher-server:
 	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn format
@@ -106,7 +106,7 @@ format:
 
 # Lint
 lint-campaign-launcher-client:
-	cd $(PROJECT_ROOT)/campaign-launcher/client && yarn lint
+	cd $(PROJECT_ROOT)/campaign-launcher/interfaceV2 && yarn lint
 
 lint-campaign-launcher-server:
 	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn lint
@@ -127,7 +127,7 @@ lint:
 	@echo "Finished linting code"
 
 lint-fix-campaign-launcher-client:
-	cd $(PROJECT_ROOT)/campaign-launcher/client && yarn lint:fix
+	cd $(PROJECT_ROOT)/campaign-launcher/interfaceV2 && yarn lint:fix
 
 lint-fix-campaign-launcher-server:
 	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn lint:fix

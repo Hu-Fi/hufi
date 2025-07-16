@@ -73,7 +73,7 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    rootDir: campaign-launcher/client
+    rootDir: campaign-launcher/interfaceV2
     autoDeploy: false
   - type: web
     name: hufi-campaign-launcher-server
@@ -278,7 +278,7 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    rootDir: campaign-launcher/client
+    rootDir: campaign-launcher/interfaceV2
     autoDeploy: false
   - type: web
     name: hufi-reputation-oracle-server-testnet
