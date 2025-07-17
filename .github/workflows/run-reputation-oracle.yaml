@@ -9,25 +9,14 @@ on:
       environment:
         description: "Which environment to run?"
         required: true
-        default: staging
+        default: testnet
         type: choice
         options:
-          - staging
-          - production
+          - testnet
+          - mainnet
   # temporarily disabled; turn on when we are ready
   # schedule:
   #   - cron: '30 1 * * *' # every day at 01:30
-
-env:
-  CONFIG_PER_ENV_JSON: |
-    {
-      "staging": {
-        "env_file_secret_name": "REPUTATION_ORACLE_ENV_STAGING",
-      },
-      "production": {
-        "env_file_secret_name": "REPUTATION_ORACLE_ENV_PRODUCTION",
-      }
-    }
 
 jobs:
   define-env-names:
@@ -41,9 +30,9 @@ jobs:
         id: get_env_names
         run: |
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            ENV_NAMES='["staging","production"]'
+            ENV_NAMES='["testnet","mainnet"]'
           else
-            INPUT_VAL="${{ github.event.inputs.environment }}"
+            INPUT_VAL="${{ inputs.environment }}"
             ENV_NAMES="[\"${INPUT_VAL}\"]"
           fi
 
@@ -70,6 +59,7 @@ jobs:
     strategy:
       matrix:
         env_name: ${{ fromJSON(needs.define-env-names.outputs.env_names) }}
+    environment: ${{ fromJSON(vars.REPUTATION_ORACLE_GITHUB_ENV_MAP)[matrix.env_name] }}
     concurrency:
       group: reputation-oracle-run-${{ matrix.env_name }}
       cancel-in-progress: false
@@ -88,17 +78,27 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Get config for env
-        run: |
-          ENV_FILE_SECRET_NAME=$(echo "${{ fromJSON(env.CONFIG_PER_ENV_JSON)[matrix.env_name].env_file_secret_name }}")
-          echo "ENV_FILE_SECRET_NAME=$ENV_FILE_SECRET_NAME" >> $GITHUB_ENV
+      - name: Print job's github environment name
+        run: echo "Environment is '${{ fromJSON(vars.REPUTATION_ORACLE_GITHUB_ENV_MAP)[matrix.env_name] }}'"
 
-      - name: Create .env file from secret
-        run: |
-          echo "${{ secrets[env.ENV_FILE_SECRET_NAME] }}" > .env.${{ matrix.env_name }}
-
-      - name: Run
-        env:
-          LOGGER_PRETTY: true
-          NODE_ENV: ${{ matrix.env_name }}
+      - name: Start Reputation Oracle
         run: yarn start
+        env:
+          NODE_ENV: ${{ vars.NODE_ENV }}
+          LOGGER_PRETTY: true
+
+          S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
+          S3_PORT: ${{ vars.S3_PORT }}
+          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          S3_USE_SSL: ${{ vars.S3_USE_SSL }}
+
+          WEB3_PRIVATE_KEY: ${{ secrets.WEB3_PRIVATE_KEY }}
+          # mainnet URLs; will be empty in testnet env
+          RPC_URL_POLYGON: ${{ secrets.RPC_URL_POLYGON }}
+          # testnet URLs; will be empty in mainnet env
+          RPC_URL_SEPOLIA: ${{ secrets.RPC_URL_SEPOLIA }}
+          RPC_URL_POLYGON_AMOY: ${{ secrets.RPC_URL_POLYGON_AMOY }}
+
+          SUBGRAPH_API_KEY: ${{ secrets.SUBGRAPH_API_KEY }}
