@@ -84,6 +84,7 @@ jobs:
       - name: Start Reputation Oracle
         run: yarn start | tee app.log
         env:
+          HOSTNAME: github-action-${{ github.run_id }}
           NODE_ENV: ${{ vars.NODE_ENV }}
 
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
