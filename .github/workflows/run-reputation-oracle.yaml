@@ -82,10 +82,9 @@ jobs:
         run: echo "Environment is '${{ fromJSON(vars.REPUTATION_ORACLE_GITHUB_ENV_MAP)[matrix.env_name] }}'"
 
       - name: Start Reputation Oracle
-        run: yarn start
+        run: yarn start | tee app.log
         env:
           NODE_ENV: ${{ vars.NODE_ENV }}
-          LOGGER_PRETTY: true
 
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
           S3_PORT: ${{ vars.S3_PORT }}
@@ -102,3 +101,17 @@ jobs:
           RPC_URL_POLYGON_AMOY: ${{ secrets.RPC_URL_POLYGON_AMOY }}
 
           SUBGRAPH_API_KEY: ${{ secrets.SUBGRAPH_API_KEY }}
+
+      - name: Send action logs to DataDog
+        env:
+          DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_HTTP_INTAKE_URL: ${{ vars.DATADOG_HTTP_INTAKE_URL }}
+        run: |
+          split -l 100 app.log app_log_chunk_
+          for app_log_chunk in app_log_chunk_*; do
+            jq -s . "$app_log_chunk" | curl -s -X POST \
+              -H "Content-Type: application/json" \
+              -H "DD-API-KEY: $DD_API_KEY" \
+              "$DATADOG_HTTP_INTAKE_URL" \
+              -d @-
+          done
