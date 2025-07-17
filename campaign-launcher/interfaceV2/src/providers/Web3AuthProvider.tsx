@@ -77,9 +77,9 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const refreshAuthToken = async () => {
     const refresh_token = localStorage.getItem(REFRESH_TOKEN_KEY);
-
     if (!refresh_token) {
-      throw new Error('No refresh token available');
+      signIn();
+      return;
     }
 
     setIsLoading(true);
@@ -92,17 +92,17 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         },
         body: JSON.stringify({ refresh_token }),
       });
-  
+
       localStorage.setItem(ACCESS_TOKEN_KEY, authData.access_token);
       localStorage.setItem(REFRESH_TOKEN_KEY, authData.refresh_token);
       setIsAuthenticated(true);
+      setIsLoading(false);
     } catch (error) {
       console.error('Refresh token invalid, clearing tokens');
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
+      signIn();
     }
   };
 
