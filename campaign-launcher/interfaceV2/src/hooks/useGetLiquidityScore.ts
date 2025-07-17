@@ -6,6 +6,7 @@ const useGetLiquidityScore = () => {
   return useQuery({
     queryKey: ['liquidityScore'],
     queryFn: () => request('/liquidity-score/total'),
+    enabled: false, // TODO: remove this
   });
 };
 

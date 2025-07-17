@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -19,17 +19,20 @@ const SignInButton: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { connect, connectors } = useConnect();
-  const { isConnected, address } = useAccount();
-  const { signIn } = useWeb3Auth();
+  const { isConnected } = useAccount();
+  const { signIn, isLoading } = useWeb3Auth();
+
+  const onSignInButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isLoading) return;
+
+    if (isConnected) {
+      signIn();
+    } else {
+      setAnchorEl(e.currentTarget);
+    }
+  };
 
   const onClose = () => setAnchorEl(null);
-
-  useEffect(() => { 
-    if (isConnected && address) {
-      console.log('0', address);
-      signIn(address);
-    }
-  }, [isConnected, address]);
 
   return (
     <>
@@ -37,7 +40,8 @@ const SignInButton: FC = () => {
         variant="contained"
         size="large"
         sx={{ color: 'primary.contrast', fontWeight: 600 }}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
+        disabled={isLoading}
+        onClick={onSignInButtonClick}
       >
         Sign In
       </Button>

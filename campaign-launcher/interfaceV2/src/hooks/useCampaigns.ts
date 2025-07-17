@@ -52,5 +52,6 @@ export const useCampaignsStats = (chainId: ChainId) => {
       api.campaign
         .campaignControllerGetCampaignsStats({ chainId })
         .then((res) => (res.data as unknown) as CampaignsStats),
+    enabled: false, // TODO: remove this
   });
 };
