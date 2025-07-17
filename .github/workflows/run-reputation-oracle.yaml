@@ -70,6 +70,9 @@ jobs:
     strategy:
       matrix:
         env_name: ${{ fromJSON(needs.define-env-names.outputs.env_names) }}
+    concurrency:
+      group: reputation-oracle-run-${{ matrix.env_name }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
