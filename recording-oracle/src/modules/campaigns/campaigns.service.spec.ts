@@ -31,6 +31,7 @@ import {
 } from '@/modules/exchange-api-keys';
 import { generateExchangeApiKey } from '@/modules/exchange-api-keys/fixtures';
 import { StorageService } from '@/modules/storage';
+import { generateUserEntity } from '@/modules/users/fixtures';
 import { Web3Service } from '@/modules/web3';
 import {
   generateTestnetChainId,
@@ -54,7 +55,6 @@ import {
 } from './progress-checkers';
 import { CampaignStatus } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
-import { generateUserEntity } from '../users/fixtures';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();

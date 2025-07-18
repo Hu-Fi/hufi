@@ -30,6 +30,12 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
 - [Node.js (*v18 is recommended*)](https://nodejs.org/en/download/package-manager) 
 - [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
 
+And setup project dependencies:
+```bash
+$ yarn install & yarn husky
+```
+From the project root
+
 ### All in one go
 
 1. Install all dependencies
