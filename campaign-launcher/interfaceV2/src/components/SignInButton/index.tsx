@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -17,10 +17,13 @@ const WALLET_ICONS: Record<string, string> = {
 
 const SignInButton: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const isAuthorizing = useRef(false);
 
   const { connect, connectors } = useConnect();
-  const { isConnected } = useAccount();
+  const { isConnected, status } = useAccount();
   const { signIn, isLoading } = useWeb3Auth();
+
+  const isWagmiConnected = status === 'connected';
 
   const onSignInButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isLoading) return;
@@ -31,6 +34,14 @@ const SignInButton: FC = () => {
       setAnchorEl(e.currentTarget);
     }
   };
+
+  useEffect(() => {
+    if (isWagmiConnected && isConnected && isAuthorizing.current) {
+      signIn().finally(() => {
+        isAuthorizing.current = false;
+      });
+    }
+  }, [isConnected, isWagmiConnected]);
 
   const onClose = () => setAnchorEl(null);
 
@@ -92,6 +103,7 @@ const SignInButton: FC = () => {
                 borderRadius: '4px',
               }}
               onClick={() => {
+                isAuthorizing.current = true;
                 connect({ connector });
                 onClose();
               }}
