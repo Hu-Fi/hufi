@@ -6,7 +6,11 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import Environment from '@/common/utils/environment';
 import { DatabaseConfigService } from '@/config';
 import { RefreshTokenEntity } from '@/modules/auth';
-import { CampaignEntity, UserCampaignEntity } from '@/modules/campaigns';
+import {
+  CampaignEntity,
+  UserCampaignEntity,
+  VolumeStatEntity,
+} from '@/modules/campaigns';
 import { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
 import { UserEntity } from '@/modules/users';
 
@@ -50,6 +54,7 @@ import { UserEntity } from '@/modules/users';
             RefreshTokenEntity,
             UserCampaignEntity,
             UserEntity,
+            VolumeStatEntity,
           ],
 
           logging: shouldEnableLogging

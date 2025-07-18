@@ -11,6 +11,7 @@ import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
 import { MarketMakingResultsChecker } from './progress-checkers';
 import { UserCampaignsRepository } from './user-campaigns.repository';
+import { VolumeStatsRepository } from './volume-stats.repository';
 
 @Module({
   imports: [ExchangeModule, ExchangeApiKeysModule, StorageModule, Web3Module],
@@ -18,10 +19,11 @@ import { UserCampaignsRepository } from './user-campaigns.repository';
     CampaignsRepository,
     CampaignsService,
     UserCampaignsRepository,
+    VolumeStatsRepository,
     MarketMakingResultsChecker,
     PgAdvisoryLock,
   ],
   controllers: [CampaignsController],
-  exports: [],
+  exports: [VolumeStatsRepository],
 })
 export class CampaignsModule {}

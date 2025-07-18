@@ -48,6 +48,7 @@ import {
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
+import { VolumeStatsRepository } from './volume-stats.repository';
 
 const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
@@ -65,6 +66,7 @@ export class CampaignsService {
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly storageService: StorageService,
+    private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly moduleRef: ModuleRef,
@@ -325,6 +327,7 @@ export class CampaignsService {
                 n_results: b.results.length,
               })),
           });
+          await this.recordGeneratedVolume(campaign, progress);
 
           intermediateResults.results.push(progress);
           const storedResultsMeta =
@@ -465,5 +468,25 @@ export class CampaignsService {
     });
 
     return { url: resultsUrl, hash: resultsHash };
+  }
+
+  private async recordGeneratedVolume(
+    campaign: CampaignEntity,
+    intermediateResult: IntermediateResult,
+  ): Promise<void> {
+    try {
+      await this.volumeStatsRepository.upsert(
+        {
+          exchangeName: campaign.exchangeName,
+          campaignAddress: campaign.address,
+          periodStart: new Date(intermediateResult.from),
+          periodEnd: new Date(intermediateResult.to),
+          volume: intermediateResult.total_volume,
+        },
+        ['exchangeName', 'campaignAddress', 'periodStart'],
+      );
+    } catch {
+      // noop
+    }
   }
 }
