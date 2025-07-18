@@ -9,7 +9,7 @@ import {
 
 import { useAccount, useSignMessage } from 'wagmi';
 
-import { request, requestWithAuth } from '../api/recordingApi';
+import axiosInstance from '../api/recordingApi';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../constants';
 
 type Nonce = 'signup' | string;
@@ -34,14 +34,8 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const isWagmiConnected = status === 'connected';
 
   const getNonce = async (): Promise<Nonce> => {
-    const nonce = await request(`/auth/nonce`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ address }),
-    });
-    return nonce; 
+    const response = await axiosInstance.post(`/auth/nonce`, { address });
+    return response.data; 
   };
 
   const getSignature = async (nonce: Nonce) => {
@@ -55,16 +49,13 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     try {
       const nonce = await getNonce();
       const signature = await getSignature(nonce);
-      const authData = await request('/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address, signature }),
+      const authResponse = await axiosInstance.post('/auth', {
+        address,
+        signature,
       });
 
-      localStorage.setItem(ACCESS_TOKEN_KEY, authData.access_token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, authData.refresh_token);
+      localStorage.setItem(ACCESS_TOKEN_KEY, authResponse.data.access_token);
+      localStorage.setItem(REFRESH_TOKEN_KEY, authResponse.data.refresh_token);
       setIsAuthenticated(true);
     } catch(e) {
       setIsAuthenticated(false);
@@ -76,45 +67,38 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const refreshAuthToken = async () => {
+    const access_token = localStorage.getItem(ACCESS_TOKEN_KEY);
     const refresh_token = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!refresh_token) {
-      signIn();
+
+    if (!refresh_token || !access_token) {
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const authData = await request('/auth/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token }),
+      const response = await axiosInstance.post('/auth/refresh', {
+        refresh_token,
       });
 
-      localStorage.setItem(ACCESS_TOKEN_KEY, authData.access_token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, authData.refresh_token);
+      localStorage.setItem(ACCESS_TOKEN_KEY, response.data.access_token);
+      localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refresh_token);
       setIsAuthenticated(true);
       setIsLoading(false);
     } catch (error) {
+      console.log('Error:', error);
       console.error('Refresh token invalid, clearing tokens');
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       setIsAuthenticated(false);
-      signIn();
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     setIsLoading(true);
     try {
-      await requestWithAuth('/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      await axiosInstance.post('/auth/logout');
     } catch (e) {
       console.error('Logout request failed:', e);
     } finally {
@@ -127,10 +111,9 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     if (isWalletConnected && !isAuthenticated && isWagmiConnected) {
-      const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-      !accessToken ? signIn() : refreshAuthToken();
+      refreshAuthToken();
     }
-  }, [isWalletConnected, address, isWagmiConnected]);
+  }, [isWalletConnected, isWagmiConnected]);
 
   return (
     <Web3AuthContext.Provider
