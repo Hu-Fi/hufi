@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 
-import { HelloService } from '@/modules/hello';
+import { PayoutsService } from '@/modules/payouts';
 
 import { AppModule } from './app.module';
 import { nestLoggerOverride } from './logger';
@@ -10,9 +10,11 @@ async function bootstrap() {
     logger: nestLoggerOverride,
   });
 
-  const helloService = app.get(HelloService);
-  helloService.sayHello();
+  const payoutsService = app.get(PayoutsService);
 
-  return app.close();
+  await payoutsService.runPayoutsCycle();
+
+  await app.close();
 }
+
 void bootstrap();

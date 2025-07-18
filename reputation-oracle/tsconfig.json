@@ -18,7 +18,8 @@
     "strictBindCallApply": true,
     "isolatedModules": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "~/test/*": ["test/*"]
     },
     "resolveJsonModule": true
   },
