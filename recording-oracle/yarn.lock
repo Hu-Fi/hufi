@@ -5284,7 +5284,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:5.1.0":
+"express@npm:5.1.0, express@npm:^5.1.0":
   version: 5.1.0
   resolution: "express@npm:5.1.0"
   dependencies:
@@ -8991,6 +8991,7 @@ __metadata:
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-prettier: "npm:^5.2.2"
     ethers: "npm:~6.13.5"
+    express: "npm:^5.1.0"
     globals: "npm:^16.2.0"
     helmet: "npm:^8.1.0"
     jest: "npm:^29.7.0"
