@@ -15,6 +15,7 @@ import { AuthModule } from './modules/auth';
 import { CampaignsModule } from './modules/campaigns';
 import { ExchangeApiKeysModule } from './modules/exchange-api-keys';
 import { HealthModule } from './modules/health';
+import { StatisticsModule } from './modules/statistics';
 import { UsersModule } from './modules/users';
 
 @Module({
@@ -63,6 +64,7 @@ import { UsersModule } from './modules/users';
     ExchangeApiKeysModule,
     HealthModule,
     UsersModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
 })

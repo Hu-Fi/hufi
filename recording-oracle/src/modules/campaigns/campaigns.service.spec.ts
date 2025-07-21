@@ -55,10 +55,12 @@ import {
 } from './progress-checkers';
 import { CampaignStatus } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
+import { VolumeStatsRepository } from './volume-stats.repository';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
+const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 const mockStorageService = createMock<StorageService>();
 const mockWeb3Service = createMock<Web3Service>();
@@ -80,10 +82,6 @@ describe('CampaignsService', () => {
           useValue: mockCampaignsRepository,
         },
         {
-          provide: UserCampaignsRepository,
-          useValue: mockUserCampaignsRepository,
-        },
-        {
           provide: ExchangeApiKeysRepository,
           useValue: mockExchangeApiKeysRepository,
         },
@@ -92,20 +90,28 @@ describe('CampaignsService', () => {
           useValue: mockExchangeApiKeysService,
         },
         {
-          provide: Web3ConfigService,
-          useValue: mockWeb3ConfigService,
-        },
-        {
-          provide: PgAdvisoryLock,
-          useValue: mockPgAdvisoryLock,
+          provide: UserCampaignsRepository,
+          useValue: mockUserCampaignsRepository,
         },
         {
           provide: StorageService,
           useValue: mockStorageService,
         },
         {
+          provide: VolumeStatsRepository,
+          useValue: mockVolumeStatsRepository,
+        },
+        {
           provide: Web3Service,
           useValue: mockWeb3Service,
+        },
+        {
+          provide: Web3ConfigService,
+          useValue: mockWeb3ConfigService,
+        },
+        {
+          provide: PgAdvisoryLock,
+          useValue: mockPgAdvisoryLock,
         },
         {
           provide: MarketMakingResultsChecker,
@@ -1158,6 +1164,29 @@ describe('CampaignsService', () => {
       });
 
       jest.useRealTimers();
+    });
+
+    it('should record generated volume stat', async () => {
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const intermediateResult = generateIntermediateResult();
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        intermediateResult,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(1);
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledWith(
+        {
+          exchangeName: campaign.exchangeName,
+          campaignAddress: campaign.address,
+          periodStart: new Date(intermediateResult.from),
+          periodEnd: new Date(intermediateResult.to),
+          volume: intermediateResult.total_volume,
+        },
+        ['exchangeName', 'campaignAddress', 'periodStart'],
+      );
     });
   });
 
