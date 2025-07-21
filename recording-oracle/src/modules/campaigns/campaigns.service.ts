@@ -69,8 +69,8 @@ export class CampaignsService {
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
-    private readonly moduleRef: ModuleRef,
     private readonly pgAdvisoryLock: PgAdvisoryLock,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async join(
