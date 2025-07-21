@@ -21,11 +21,17 @@ export class TransformInterceptor implements NestInterceptor {
 
     if (request.query) {
       const transformedQuery = this.transformRequestData(request.query);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      for (const key of Object.keys(request.query)) {
-        delete request.query[key];
-      }
-      Object.assign(request.query, transformedQuery);
+      /**
+       * Starting from express v5 'req.query' is not writable property anymore
+       * (https://expressjs.com/en/guide/migrating-5.html#req.query), so we have
+       * to monkey patch it in order to transform it.
+       */
+      Object.defineProperty(request, 'query', {
+        value: transformedQuery,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
     }
 
     if (request.params) {
