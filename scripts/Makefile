@@ -147,6 +147,9 @@ lint-fix:
 	$(MAKE) lint-fix-reputation-oracle
 	@echo "Finished fixing lint issues"
 
+test-campaign-launcher:
+	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn test
+
 test-recording-oracle:
 	cd $(PROJECT_ROOT)/recording-oracle && yarn test
 
@@ -156,6 +159,7 @@ test-reputation-oracle:
 .PHONY: test
 test:
 	@echo "Run unit tests..."
+	$(MAKE) test-campaign-launcher
 	$(MAKE) test-recording-oracle
 	$(MAKE) test-reputation-oracle
 	@echo "Finished unit tests"
