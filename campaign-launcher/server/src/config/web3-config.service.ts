@@ -15,6 +15,9 @@ export class Web3ConfigService {
         'RPC_URL_POLYGON_AMOY',
       ),
       [DevelopmentChainId.SEPOLIA]: this.configService.get('RPC_URL_SEPOLIA'),
+      [DevelopmentChainId.AURORA_TESTNET]: this.configService.get(
+        'RPC_URL_AURORA_TESTNET',
+      ),
       [DevelopmentChainId.LOCALHOST]:
         this.configService.get('RPC_URL_LOCALHOST'),
     };
