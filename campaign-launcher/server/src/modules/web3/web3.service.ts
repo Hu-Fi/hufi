@@ -16,9 +16,7 @@ const operationPromisesCache = new Map<string, Promise<unknown>>();
 
 @Injectable()
 export class Web3Service {
-  private readonly logger = logger.child({
-    context: Web3Service.name,
-  });
+  private readonly logger = logger.child({ context: Web3Service.name });
 
   private providersByChainId: {
     [chainId: number]: JsonRpcProvider;

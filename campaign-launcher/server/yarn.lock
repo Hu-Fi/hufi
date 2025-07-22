@@ -3702,6 +3702,7 @@ __metadata:
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.0.15"
     "@types/supertest": "npm:^6.0.3"
+    ccxt: "npm:^4.4.95"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.2"
     eslint: "npm:^9.31.0"
@@ -3715,6 +3716,7 @@ __metadata:
     helmet: "npm:^8.1.0"
     jest: "npm:^30.0.4"
     joi: "npm:^17.13.3"
+    lru-cache: "npm:^11.1.0"
     prettier: "npm:^3.6.2"
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.2"
@@ -3731,6 +3733,15 @@ __metadata:
   version: 1.0.30001727
   resolution: "caniuse-lite@npm:1.0.30001727"
   checksum: 10c0/f0a441c05d8925d728c2d02ce23b001935f52183a3bf669556f302568fe258d1657940c7ac0b998f92bc41383e185b390279a7d779e6d96a2b47881f56400221
+  languageName: node
+  linkType: hard
+
+"ccxt@npm:^4.4.95":
+  version: 4.4.95
+  resolution: "ccxt@npm:4.4.95"
+  dependencies:
+    ws: "npm:^8.8.1"
+  checksum: 10c0/0bd20c46d6733dfcc0f62487fc0c1a2933c48e89dcab7cc86a37c5c0535cf2109612d09b1e9b4a487dbfbe370ef5395a83a0e1d60f67c97f066a2e2403b941a2
   languageName: node
   linkType: hard
 
@@ -7097,7 +7108,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^11.0.0":
+"lru-cache@npm:^11.0.0, lru-cache@npm:^11.1.0":
   version: 11.1.0
   resolution: "lru-cache@npm:11.1.0"
   checksum: 10c0/85c312f7113f65fae6a62de7985348649937eb34fb3d212811acbf6704dc322a421788aca253b62838f1f07049a84cc513d88f494e373d3756514ad263670a64
@@ -10330,6 +10341,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/f4a49064afae4500be772abdc2211c8518f39e1c959640457dcee15d4488628620625c783902a52af2dd02f68558da2868fd06e6fd0e67ebcd09e6881b1b5bfe
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.8.1":
+  version: 8.18.3
+  resolution: "ws@npm:8.18.3"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10c0/eac918213de265ef7cb3d4ca348b891a51a520d839aa51cdb8ca93d4fa7ff9f6ccb339ccee89e4075324097f0a55157c89fa3f7147bde9d8d7e90335dc087b53
   languageName: node
   linkType: hard
 
