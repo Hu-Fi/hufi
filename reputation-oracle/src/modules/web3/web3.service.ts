@@ -7,7 +7,7 @@ import logger from '@/logger';
 
 import type { Chain, WalletWithProvider } from './types';
 
-const tokenDecimalsPromisesCache = new Map<string, Promise<number>>();
+const operationPromisesCache = new Map<string, Promise<unknown>>();
 
 @Injectable()
 export class Web3Service {
@@ -82,10 +82,10 @@ export class Web3Service {
     chainId: number,
     tokenAddress: string,
   ): Promise<number> {
-    const cacheKey = `${chainId}-${tokenAddress}`;
+    const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
 
     try {
-      if (!tokenDecimalsPromisesCache.has(cacheKey)) {
+      if (!operationPromisesCache.has(cacheKey)) {
         const signer = this.getSigner(chainId);
 
         const tokenContract = new ethers.Contract(
@@ -94,16 +94,18 @@ export class Web3Service {
           signer,
         );
 
-        tokenDecimalsPromisesCache.set(
-          cacheKey,
-          tokenContract.decimals() as Promise<number>,
-        );
+        operationPromisesCache.set(cacheKey, tokenContract.decimals());
       }
 
-      const decimals = await tokenDecimalsPromisesCache.get(cacheKey);
-      return decimals as number;
+      const operationPromise = operationPromisesCache.get(
+        cacheKey,
+      ) as Promise<bigint>;
+
+      const decimals: bigint = await operationPromise;
+
+      return Number(decimals);
     } catch (error) {
-      tokenDecimalsPromisesCache.delete(cacheKey);
+      operationPromisesCache.delete(cacheKey);
 
       const message = 'Failed to get token decimals';
       this.logger.error(message, {

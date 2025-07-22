@@ -1,23 +1,32 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
+    "module": "node18",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "sourceMap": true,
+    "target": "es2024",
     "outDir": "./dist",
-    "baseUrl": ".",
+    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false,
-    "esModuleInterop": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "isolatedModules": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "~/test/*": ["test/*"]
+    },
     "resolveJsonModule": true
+  },
+  "ts-node": {
+    "files": true,
+    "require": [
+      "tsconfig-paths/register"
+    ]
   }
 }

@@ -1,3 +1,4 @@
-export const SERVICE_NAME = 'Campaign Launcher Server';
-export const NS = 'hufi';
-export const JOB_TYPE = 'MARKET_MAKING';
+export const EVM_ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
+
+export * from './chains';
+export * from './token';
