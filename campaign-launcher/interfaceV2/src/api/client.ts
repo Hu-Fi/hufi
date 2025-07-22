@@ -444,7 +444,8 @@ export interface ManifestUploadRequestDto {
             | 44787
             | 195
             | 1338
-            | 196;
+            | 196
+            | 1313161555;
           status?: string;
           exchangeName?: string;
           launcher?: string;
@@ -489,7 +490,8 @@ export interface ManifestUploadRequestDto {
             | 44787
             | 195
             | 1338
-            | 196;
+            | 196
+            | 1313161555;
         },
         params: RequestParams = {}
       ) =>
@@ -529,7 +531,8 @@ export interface ManifestUploadRequestDto {
           | 44787
           | 195
           | 1338
-          | 196,
+          | 196
+          | 1313161555,
         escrowAddress: string,
         params: RequestParams = {}
       ) =>
@@ -569,7 +572,8 @@ export interface ManifestUploadRequestDto {
           | 44787
           | 195
           | 1338
-          | 196,
+          | 196
+          | 1313161555,
         address: string,
         params: RequestParams = {}
       ) =>
