@@ -7,7 +7,6 @@ export const envValidator = Joi.object({
   HOST: Joi.string(),
   PORT: Joi.number().integer(),
   // Web3
-  WEB3_PRIVATE_KEY: Joi.string().required(),
   RPC_URL_SEPOLIA: Joi.string().uri({ scheme: ['http', 'https'] }),
   RPC_URL_POLYGON: Joi.string().uri({ scheme: ['http', 'https'] }),
   RPC_URL_POLYGON_AMOY: Joi.string().uri({ scheme: ['http', 'https'] }),

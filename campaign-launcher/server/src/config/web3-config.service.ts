@@ -1,33 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Wallet } from 'ethers';
 
 import { DevelopmentChainId, ProductionChainId } from '@/common/constants';
 
 @Injectable()
 export class Web3ConfigService {
-  readonly operatorAddress: string;
-
-  constructor(private configService: ConfigService) {
-    const wallet = new Wallet(this.privateKey);
-    this.operatorAddress = wallet.address;
-  }
-
-  /**
-   * The private key used for signing transactions.
-   * Required
-   */
-  get privateKey(): string {
-    return this.configService.getOrThrow('WEB3_PRIVATE_KEY');
-  }
-
-  /**
-   * Multiplier for gas price adjustments.
-   * Default: 1
-   */
-  get gasPriceMultiplier(): number {
-    return Number(this.configService.get('GAS_PRICE_MULTIPLIER')) || 1;
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   getRpcUrlByChainId(chainId: number): string | undefined {
     const rpcUrlsByChainId: Record<string, string | undefined> = {

@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Wallet, ethers } from 'ethers';
+import { ethers, JsonRpcProvider } from 'ethers';
 
-import { type ChainId, ChainIds, ERC20_ABI_DECIMALS } from '@/common/constants';
+import {
+  type ChainId,
+  ChainIds,
+  ERC20_ABI_DECIMALS,
+  ERC20_ABI_SYMBOL,
+} from '@/common/constants';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 
-import type { Chain, WalletWithProvider } from './types';
+import type { Chain } from './types';
 
-const tokenDecimalsPromisesCache = new Map<string, Promise<number>>();
+const operationPromisesCache = new Map<string, Promise<unknown>>();
 
 @Injectable()
 export class Web3Service {
@@ -15,19 +20,15 @@ export class Web3Service {
     context: Web3Service.name,
   });
 
-  private signersByChainId: {
-    [chainId: number]: WalletWithProvider;
+  private providersByChainId: {
+    [chainId: number]: JsonRpcProvider;
   } = {};
 
   constructor(private readonly web3ConfigService: Web3ConfigService) {
-    const privateKey = this.web3ConfigService.privateKey;
-
     for (const chain of this.supportedChains) {
-      const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
-      this.signersByChainId[chain.id] = new Wallet(
-        privateKey,
-        provider,
-      ) as WalletWithProvider;
+      this.providersByChainId[chain.id] = new ethers.JsonRpcProvider(
+        chain.rpcUrl,
+      );
     }
   }
 
@@ -57,55 +58,78 @@ export class Web3Service {
     return this.supportedChains.map((v) => v.id);
   }
 
-  getSigner(chainId: number): WalletWithProvider {
-    const signer = this.signersByChainId[chainId];
+  getProvider(chainId: number): JsonRpcProvider {
+    const provider = this.providersByChainId[chainId];
 
-    if (signer) {
-      return signer;
+    if (provider) {
+      return provider;
     }
 
-    throw new Error(`No signer for provided chain id: ${chainId}`);
-  }
-
-  async calculateGasPrice(chainId: number): Promise<bigint> {
-    const signer = this.getSigner(chainId);
-    const { gasPrice } = await signer.provider.getFeeData();
-
-    if (gasPrice) {
-      return gasPrice * BigInt(this.web3ConfigService.gasPriceMultiplier);
-    }
-
-    throw new Error(`No gas price data for chain id: ${chainId}`);
+    throw new Error(`No rpc provider for provided chain id: ${chainId}`);
   }
 
   async getTokenDecimals(
     chainId: number,
     tokenAddress: string,
   ): Promise<number> {
-    const cacheKey = `${chainId}-${tokenAddress}`;
+    const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
 
     try {
-      if (!tokenDecimalsPromisesCache.has(cacheKey)) {
-        const signer = this.getSigner(chainId);
+      if (!operationPromisesCache.has(cacheKey)) {
+        const provider = this.getProvider(chainId);
 
         const tokenContract = new ethers.Contract(
           tokenAddress,
           ERC20_ABI_DECIMALS,
-          signer,
+          provider,
         );
 
-        tokenDecimalsPromisesCache.set(
-          cacheKey,
-          tokenContract.decimals() as Promise<number>,
-        );
+        operationPromisesCache.set(cacheKey, tokenContract.decimals());
       }
 
-      const decimals = await tokenDecimalsPromisesCache.get(cacheKey);
-      return decimals as number;
+      const operationPromise = operationPromisesCache.get(
+        cacheKey,
+      ) as Promise<bigint>;
+
+      const decimals: bigint = await operationPromise;
+
+      return Number(decimals);
     } catch (error) {
-      tokenDecimalsPromisesCache.delete(cacheKey);
+      operationPromisesCache.delete(cacheKey);
 
       const message = 'Failed to get token decimals';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
+    }
+  }
+
+  async getTokenSymbol(chainId: number, tokenAddress: string): Promise<string> {
+    const cacheKey = `token-symbol-${chainId}-${tokenAddress}`;
+
+    try {
+      if (!operationPromisesCache.has(cacheKey)) {
+        const provider = this.getProvider(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_SYMBOL,
+          provider,
+        );
+
+        operationPromisesCache.set(cacheKey, tokenContract.symbol());
+      }
+
+      const symbol = await operationPromisesCache.get(cacheKey);
+      return symbol as string;
+    } catch (error) {
+      operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token symbol';
       this.logger.error(message, {
         error,
         chainId,
