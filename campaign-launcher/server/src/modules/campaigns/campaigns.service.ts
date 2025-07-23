@@ -1,6 +1,7 @@
 import { EscrowUtils, TransactionUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { ethers } from 'ethers';
 
 import { ChainId } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
@@ -67,16 +68,17 @@ export class CampaignsService {
 
       campaings.push({
         chainId,
-        address: campaignEscrow.address,
+        address: ethers.getAddress(campaignEscrow.address),
         exchangeName: manifest.exchange,
         tradingPair: manifest.pair,
         startDate: manifest.start_date.toISOString(),
         endDate: manifest.end_date.toISOString(),
         fundAmount: campaignEscrow.totalFundedAmount,
-        fundToken: campaignEscrow.token,
+        fundToken: ethers.getAddress(campaignEscrow.token),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
         status: campaignEscrow.status,
+        launcher: ethers.getAddress(campaignEscrow.launcher),
       });
     }
 
@@ -100,7 +102,7 @@ export class CampaignsService {
       throw new InvalidCampaignManifestError(
         chainId,
         escrowAddress,
-        'manifestUrl is missing',
+        'Manifest url is missing',
       );
     }
 
@@ -149,13 +151,13 @@ export class CampaignsService {
 
     return {
       chainId,
-      address: campaignEscrow.address,
+      address: ethers.getAddress(campaignEscrow.address),
       exchangeName: manifest.exchange,
       tradingPair: manifest.pair,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
       fundAmount: campaignEscrow.totalFundedAmount,
-      fundToken: campaignEscrow.token,
+      fundToken: ethers.getAddress(campaignEscrow.token),
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
       status: campaignEscrow.status,
@@ -165,6 +167,7 @@ export class CampaignsService {
         date,
         amount: amount.toString(),
       })),
+      launcher: ethers.getAddress(campaignEscrow.launcher),
     };
   }
 

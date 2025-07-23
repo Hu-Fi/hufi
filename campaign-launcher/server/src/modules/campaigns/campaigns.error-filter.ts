@@ -18,7 +18,7 @@ export class CampaignsControllerErrorsFilter implements ExceptionFilter {
 
     let message: string = exception.message;
     if (exception instanceof InvalidCampaignManifestError) {
-      message = `${exception.message}: ${exception.details}`;
+      message = `${exception.message}. ${exception.details}`;
     }
 
     return response.status(status).json({

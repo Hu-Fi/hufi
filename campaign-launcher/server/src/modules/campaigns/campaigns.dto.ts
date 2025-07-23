@@ -83,6 +83,9 @@ export class CampaignData {
 
   @ApiProperty()
   status: string;
+
+  @ApiProperty()
+  launcher: string;
 }
 
 export class GetCampaignWithDetailsParamsDto {
