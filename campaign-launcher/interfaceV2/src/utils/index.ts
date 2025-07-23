@@ -67,3 +67,8 @@ export const getChainIcon = (id?: ChainId) => {
   if (!id) return null;
   return CHAIN_ICONS[id] || null;
 };
+
+export const getNetworkName = (chainId?: ChainId): string | undefined => {
+  if (!chainId) return undefined;
+  return NETWORKS[chainId]?.title;
+};

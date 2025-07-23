@@ -1,7 +1,7 @@
 import { FC, MouseEvent } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { Button, IconButton, Typography, Box } from '@mui/material';
+import { Button, IconButton, Typography, Box, Tooltip } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
@@ -10,7 +10,7 @@ import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatAddress, getExplorerUrl, formatTokenAmount, getChainIcon } from '../../utils';
+import { formatAddress, getExplorerUrl, formatTokenAmount, getChainIcon, getNetworkName } from '../../utils';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import LaunchCampaign from '../LaunchCampaign';
@@ -229,7 +229,14 @@ const CampaignsTable: FC<Props> = ({
       flex: 1,
       minWidth: 100,
       renderCell: (params) => {
-        return <Typography variant="subtitle2">{getChainIcon(params.row.chainId)}</Typography>;
+        const networkName = getNetworkName(params.row.chainId);
+        return (
+          <Tooltip title={networkName || "Unknown Network"}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {getChainIcon(params.row.chainId)}
+            </Box>
+          </Tooltip>
+        );
       },
     },
     {
