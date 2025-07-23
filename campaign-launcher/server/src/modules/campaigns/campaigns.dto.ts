@@ -84,3 +84,41 @@ export class CampaignData {
   @ApiProperty()
   status: string;
 }
+
+export class GetCampaignWithDetailsParamsDto {
+  @ApiProperty({
+    name: 'chain_id',
+    enum: ChainIds,
+  })
+  @IsChainId()
+  chainId: ChainId;
+
+  @ApiProperty({
+    name: 'campaign_address',
+  })
+  @IsEthereumAddress()
+  campaignAddress: string;
+}
+
+class DailyPaidAmount {
+  @ApiProperty({
+    example: '2025-01-01',
+  })
+  date: string;
+  @ApiProperty()
+  amount: string;
+}
+
+export class CampaignDataWithDetails extends CampaignData {
+  @ApiProperty({
+    name: 'amount_paid',
+  })
+  amountPaid: string;
+
+  @ApiProperty({
+    name: 'daily_paid_amounts',
+    type: DailyPaidAmount,
+    isArray: true,
+  })
+  dailyPaidAmounts: DailyPaidAmount[];
+}

@@ -1,11 +1,25 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+  UseFilters,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { CampaignData, GetCampaignsQueryDto } from './campaigns.dto';
+import {
+  CampaignData,
+  CampaignDataWithDetails,
+  GetCampaignsQueryDto,
+  GetCampaignWithDetailsParamsDto,
+} from './campaigns.dto';
+import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
 
 @ApiTags('Campaigns')
 @Controller('campaigns')
+@UseFilters(CampaignsControllerErrorsFilter)
 export class CampaignsController {
   constructor(private campaignsService: CampaignsService) {}
 
@@ -34,5 +48,31 @@ export class CampaignsController {
     );
 
     return campaigns;
+  }
+
+  @ApiOperation({
+    summary: 'Get campaign with details',
+    description: 'Returns full details about specific campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CampaignDataWithDetails,
+  })
+  @Get('/:chain_id-:campaign_address')
+  async getCampaignWithDetails(
+    @Param() params: GetCampaignWithDetailsParamsDto,
+  ): Promise<CampaignDataWithDetails> {
+    const { chainId, campaignAddress } = params;
+
+    const campaign = await this.campaignsService.getCampaignWithDetails(
+      chainId,
+      campaignAddress,
+    );
+
+    if (!campaign) {
+      throw new NotFoundException();
+    }
+
+    return campaign;
   }
 }

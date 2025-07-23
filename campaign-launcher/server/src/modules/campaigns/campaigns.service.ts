@@ -1,5 +1,6 @@
-import { EscrowUtils } from '@human-protocol/sdk';
+import { EscrowUtils, TransactionUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
+import dayjs from 'dayjs';
 
 import { ChainId } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
@@ -7,7 +8,8 @@ import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
-import { CampaignData } from './campaigns.dto';
+import { CampaignData, CampaignDataWithDetails } from './campaigns.dto';
+import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
 import { CampaignManifest } from './types';
 
@@ -79,6 +81,91 @@ export class CampaignsService {
     }
 
     return campaings;
+  }
+
+  async getCampaignWithDetails(
+    chainId: ChainId,
+    escrowAddress: string,
+  ): Promise<CampaignDataWithDetails | null> {
+    const campaignEscrow = await EscrowUtils.getEscrow(
+      chainId as number,
+      escrowAddress,
+    );
+
+    if (!campaignEscrow) {
+      return null;
+    }
+
+    if (!campaignEscrow.manifestUrl) {
+      throw new InvalidCampaignManifestError(
+        chainId,
+        escrowAddress,
+        'manifestUrl is missing',
+      );
+    }
+
+    let manifest: CampaignManifest;
+    try {
+      manifest = await this.retrieveCampaignManifset(
+        campaignEscrow.manifestUrl,
+        campaignEscrow.manifestHash,
+      );
+    } catch (error) {
+      throw new InvalidCampaignManifestError(
+        chainId,
+        escrowAddress,
+        error.message as string,
+      );
+    }
+
+    const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
+      this.web3Service.getTokenSymbol(chainId, campaignEscrow.token),
+      this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
+    ]);
+
+    const transactions = await TransactionUtils.getTransactions({
+      chainId: chainId as number,
+      fromAddress: escrowAddress,
+      toAddress: escrowAddress,
+      method: 'bulkTransfer',
+    });
+
+    const amountsPerDay: Record<string, bigint> = {};
+    for (const tx of transactions) {
+      let totalTransfersAmount = 0n;
+      for (const internalTx of tx.internalTransactions) {
+        totalTransfersAmount += BigInt(internalTx.value);
+      }
+
+      const txDate = dayjs(Number(tx.timestamp) * 1000);
+      const day = txDate.format('YYYY-MM-DD');
+
+      if (amountsPerDay[day] === undefined) {
+        amountsPerDay[day] = 0n;
+      }
+
+      amountsPerDay[day] += totalTransfersAmount;
+    }
+
+    return {
+      chainId,
+      address: campaignEscrow.address,
+      exchangeName: manifest.exchange,
+      tradingPair: manifest.pair,
+      startDate: manifest.start_date.toISOString(),
+      endDate: manifest.end_date.toISOString(),
+      fundAmount: campaignEscrow.totalFundedAmount,
+      fundToken: campaignEscrow.token,
+      fundTokenSymbol: campaignTokenSymbol,
+      fundTokenDecimals: campaignTokenDecimals,
+      status: campaignEscrow.status,
+      // details
+      amountPaid: campaignEscrow.amountPaid,
+      dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
+        date,
+        amount: amount.toString(),
+      })),
+    };
   }
 
   private async retrieveCampaignManifset(
