@@ -18,8 +18,8 @@ export class ExchangesController {
     isArray: true,
   })
   @Get('/')
-  async getExchangeList() {
-    return this.exchangesService.supportedExchanges;
+  async getExchangeList(): Promise<ExchangeDataDto[]> {
+    return this.exchangesService.supportedExchanges as ExchangeDataDto[];
   }
 
   @ApiOperation({
@@ -30,7 +30,9 @@ export class ExchangesController {
     type: Array<string>,
   })
   @Get('/:exchange_name/trading-pairs')
-  async getExchangeTradingPairs(@Param() params: ExchangeNameParamDto) {
+  async getExchangeTradingPairs(
+    @Param() params: ExchangeNameParamDto,
+  ): Promise<string[]> {
     const exchangeName = params.exchangeName;
     const exchangeTradingPairs =
       await this.exchangesService.getExchangeTradingPairs(exchangeName);
