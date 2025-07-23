@@ -14,7 +14,8 @@ export class ExchangesController {
   })
   @ApiResponse({
     status: 200,
-    type: Array<ExchangeDataDto>,
+    type: ExchangeDataDto,
+    isArray: true,
   })
   @Get('/')
   async getExchangeList() {

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ethers, JsonRpcProvider } from 'ethers';
 
 import {
-  type ChainId,
   ChainIds,
   ERC20_ABI_DECIMALS,
   ERC20_ABI_SYMBOL,
@@ -50,10 +49,6 @@ export class Web3Service {
     }
 
     return supportedChains;
-  }
-
-  get supportedChainIds(): ChainId[] {
-    return this.supportedChains.map((v) => v.id);
   }
 
   getProvider(chainId: number): JsonRpcProvider {

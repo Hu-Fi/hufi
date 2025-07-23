@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { GetCampaignsQueryDto } from './campaigns.dto';
 import { CampaignsService } from './campaigns.service';
 
 @ApiTags('Campaigns')
@@ -8,8 +9,28 @@ import { CampaignsService } from './campaigns.service';
 export class CampaignsController {
   constructor(private campaignsService: CampaignsService) {}
 
+  @ApiOperation({
+    summary: 'Get campaigns',
+    description: 'Returns a list of campaigns for provided chainId and filters',
+  })
+  @ApiResponse({
+    status: 200,
+    type: Object,
+    isArray: true,
+  })
   @Get('/')
-  async getCampaigns() {
-    return this.campaignsService.getCampaigns();
+  async getCampaigns(@Query() query: GetCampaignsQueryDto) {
+    const chainId = query.chainId;
+    const filters = {
+      exchangeName: query.exchangeName,
+      launcher: query.launcher,
+    };
+
+    const campaigns = await this.campaignsService.getCampaigns(
+      chainId,
+      filters,
+    );
+
+    return campaigns;
   }
 }
