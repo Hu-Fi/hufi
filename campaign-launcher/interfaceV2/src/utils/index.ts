@@ -6,6 +6,7 @@ import {
   TESTNET_CHAIN_IDS,
   LOCALHOST_CHAIN_IDS,
 } from '../constants';
+import { CHAIN_ICONS } from '../constants/chainIcons';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -60,4 +61,14 @@ export const formatTokenAmount = (amount: string | number, decimals = 18): strin
   } else {
     return parseFloat(formattedAmount.toFixed(3));
   }
+};
+
+export const getChainIcon = (id?: ChainId) => {
+  if (!id) return null;
+  return CHAIN_ICONS[id] || null;
+};
+
+export const getNetworkName = (chainId?: ChainId): string | undefined => {
+  if (!chainId) return undefined;
+  return NETWORKS[chainId]?.title;
 };
