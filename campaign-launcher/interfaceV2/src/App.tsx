@@ -11,7 +11,6 @@ import Campaign from './pages/Campaign';
 import Dashboard from './pages/Dashboard';
 import JoinedCampaignsPage from './pages/JoinedCampaigns';
 import MyCampaignsPage from './pages/MyCampaigns';
-//import { AuthenticationProvider as ROAuthProvider } from './providers/AuthProvider';
 import ExchangesProvider from './providers/ExchangesProvider';
 import QueryClientProvider from './providers/QueryClientProvider';
 import ThemeProvider from './providers/ThemeProvider';
