@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, ILike } from 'typeorm';
 
 import { BaseRepository } from '../../database/base.repository';
 import { UserEntity } from '../../database/entities';
@@ -21,7 +21,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
     evmAddress: string,
   ): Promise<UserEntity | null> {
     return this.findOne({
-      where: { evmAddress },
+      where: { evmAddress: ILike(evmAddress) },
       relations: { campaigns: true, exchangeAPIKeys: true },
     });
   }

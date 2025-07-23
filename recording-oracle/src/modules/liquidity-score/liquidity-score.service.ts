@@ -101,8 +101,9 @@ export class LiquidityScoreService {
       );
     }
 
+    const now = new Date();
+    const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
     while (startDate < campaign.endDate) {
-      const isCEXCampaign = isCenteralizedExchange(campaign.exchangeName);
       let windowEnd = new Date(
         Date.UTC(
           startDate.getUTCFullYear(),
@@ -115,6 +116,13 @@ export class LiquidityScoreService {
         ),
       );
       windowEnd = windowEnd > campaign.endDate ? campaign.endDate : windowEnd;
+
+      if (windowEnd > now) {
+        this.logger.debug(
+          `Skipping score calculation for ${campaign.address} from ${startDate} to ${windowEnd}, as it is in the future.`,
+        );
+        break;
+      }
 
       const scores: LiquidityScore[] = [];
       const tradeFingerprints = new Set<string>();

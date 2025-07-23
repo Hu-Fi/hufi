@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, ILike } from 'typeorm';
 
 import { BaseRepository } from '../../database/base.repository';
 import { CampaignEntity } from '../../database/entities';
@@ -23,7 +23,7 @@ export class CampaignRepository extends BaseRepository<CampaignEntity> {
     address: string,
   ): Promise<CampaignEntity | null> {
     return this.findOne({
-      where: { chainId, address },
+      where: { chainId, address: ILike(address) },
       relations: {
         users: true,
       },
