@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { GetCampaignsQueryDto } from './campaigns.dto';
+import { CampaignData, GetCampaignsQueryDto } from './campaigns.dto';
 import { CampaignsService } from './campaigns.service';
 
 @ApiTags('Campaigns')
@@ -15,11 +15,13 @@ export class CampaignsController {
   })
   @ApiResponse({
     status: 200,
-    type: Object,
+    type: CampaignData,
     isArray: true,
   })
   @Get('/')
-  async getCampaigns(@Query() query: GetCampaignsQueryDto) {
+  async getCampaigns(
+    @Query() query: GetCampaignsQueryDto,
+  ): Promise<CampaignData[]> {
     const chainId = query.chainId;
     const filters = {
       exchangeName: query.exchangeName,

@@ -2,11 +2,14 @@ import { EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 
 import { ChainId } from '@/common/constants';
+import * as httpUtils from '@/common/utils/http';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
-import { CampaignData } from './types';
+import { CampaignData } from './campaigns.dto';
+import * as manifestUtils from './manifest.utils';
+import { CampaignManifest } from './types';
 
 @Injectable()
 export class CampaignsService {
@@ -34,21 +37,73 @@ export class CampaignsService {
     });
 
     for (const campaignEscrow of campaignEscrows) {
+      if (!campaignEscrow.manifestUrl) {
+        continue;
+      }
+
+      let manifest: CampaignManifest;
+      try {
+        manifest = await this.retrieveCampaignManifset(
+          campaignEscrow.manifestUrl,
+          campaignEscrow.manifestHash,
+        );
+      } catch (error) {
+        this.logger.error('Failed to retrieve campaign manifest', {
+          chainId,
+          campaignAddress: campaignEscrow.address,
+          manifestUrl: campaignEscrow.manifestUrl,
+          manifestHash: campaignEscrow.manifestHash,
+          error,
+        });
+        continue;
+      }
+
+      const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
+        this.web3Service.getTokenSymbol(chainId, campaignEscrow.token),
+        this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
+      ]);
+
       campaings.push({
         chainId,
         address: campaignEscrow.address,
-        exchangeName: 'tbd',
-        tradingPair: 'tbd',
-        startDate: 'tbd',
-        endDate: 'tbd',
+        exchangeName: manifest.exchange,
+        tradingPair: manifest.pair,
+        startDate: manifest.start_date.toISOString(),
+        endDate: manifest.end_date.toISOString(),
         fundAmount: campaignEscrow.totalFundedAmount,
         fundToken: campaignEscrow.token,
-        fundTokenSymbol: 'tbd',
-        fundTokenDecimals: -1,
+        fundTokenSymbol: campaignTokenSymbol,
+        fundTokenDecimals: campaignTokenDecimals,
         status: campaignEscrow.status,
       });
     }
 
     return campaings;
+  }
+
+  private async retrieveCampaignManifset(
+    manifestUrlOrJson: string,
+    manifestHash?: string,
+  ): Promise<CampaignManifest> {
+    let manifestString;
+    if (httpUtils.isValidHttpUrl(manifestUrlOrJson)) {
+      const manifestData = await httpUtils.downloadFileAndVerifyHash(
+        manifestUrlOrJson,
+        manifestHash || '',
+        { algorithm: 'sha1' },
+      );
+      manifestString = manifestData.toString();
+    } else {
+      manifestString = manifestUrlOrJson;
+    }
+
+    let manifestJson: unknown;
+    try {
+      manifestJson = JSON.parse(manifestString);
+    } catch {
+      throw new Error('Manifest is not valid JSON');
+    }
+
+    return manifestUtils.validateManifest(manifestJson);
   }
 }
