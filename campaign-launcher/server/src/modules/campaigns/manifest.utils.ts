@@ -1,5 +1,7 @@
 import Joi from 'joi';
 
+import * as httpUtils from '@/common/utils/http';
+
 import type { CampaignManifest } from './types';
 
 const manifestSchema = Joi.object({
@@ -16,7 +18,20 @@ const manifestSchema = Joi.object({
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
 
-export function validateManifest(manifestJson: unknown): CampaignManifest {
+export async function donwload(
+  manifestUrl: string,
+  manifestHash: string,
+): Promise<string> {
+  const manifestData = await httpUtils.downloadFileAndVerifyHash(
+    manifestUrl,
+    manifestHash,
+    { algorithm: 'sha1' },
+  );
+
+  return manifestData.toString();
+}
+
+export function validateSchema(manifestJson: unknown): CampaignManifest {
   try {
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 

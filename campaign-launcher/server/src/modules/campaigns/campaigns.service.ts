@@ -177,12 +177,10 @@ export class CampaignsService {
   ): Promise<CampaignManifest> {
     let manifestString;
     if (httpUtils.isValidHttpUrl(manifestUrlOrJson)) {
-      const manifestData = await httpUtils.downloadFileAndVerifyHash(
+      manifestString = await manifestUtils.donwload(
         manifestUrlOrJson,
-        manifestHash || '',
-        { algorithm: 'sha1' },
+        manifestHash as string,
       );
-      manifestString = manifestData.toString();
     } else {
       manifestString = manifestUrlOrJson;
     }
@@ -194,6 +192,6 @@ export class CampaignsService {
       throw new Error('Manifest is not valid JSON');
     }
 
-    return manifestUtils.validateManifest(manifestJson);
+    return manifestUtils.validateSchema(manifestJson);
   }
 }
