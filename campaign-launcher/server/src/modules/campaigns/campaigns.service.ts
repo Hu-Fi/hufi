@@ -1,9 +1,13 @@
-import { EscrowUtils, TransactionUtils } from '@human-protocol/sdk';
+import {
+  EscrowStatus,
+  EscrowUtils,
+  TransactionUtils,
+} from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 
-import { ChainId } from '@/common/constants';
+import { ChainId, ReadableEscrowStatus } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -28,6 +32,7 @@ export class CampaignsService {
     filters?: Partial<{
       exchangeName: string;
       launcherAddress: string;
+      status: ReadableEscrowStatus;
     }>,
   ): Promise<CampaignData[]> {
     const campaings: CampaignData[] = [];
@@ -37,6 +42,7 @@ export class CampaignsService {
       recordingOracle: this.web3ConfigService.recordingOracle,
       reputationOracle: this.web3ConfigService.reputationOracle,
       launcher: filters?.launcherAddress,
+      status: filters?.status ? EscrowStatus[filters.status] : undefined,
     });
 
     for (const campaignEscrow of campaignEscrows) {
@@ -77,7 +83,7 @@ export class CampaignsService {
         fundToken: ethers.getAddress(campaignEscrow.token),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
-        status: campaignEscrow.status,
+        status: campaignEscrow.status as ReadableEscrowStatus,
         launcher: ethers.getAddress(campaignEscrow.launcher),
       });
     }
@@ -160,7 +166,7 @@ export class CampaignsService {
       fundToken: ethers.getAddress(campaignEscrow.token),
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
-      status: campaignEscrow.status,
+      status: campaignEscrow.status as ReadableEscrowStatus,
       // details
       amountPaid: campaignEscrow.amountPaid,
       dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({

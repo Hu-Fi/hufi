@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEthereumAddress, IsOptional, Validate } from 'class-validator';
+import { IsEthereumAddress, IsIn, IsOptional, Validate } from 'class-validator';
 
 import {
   type ChainId,
   ChainIds,
+  type ReadableEscrowStatus,
+  READABLE_ESCROW_STATUSES,
   SUPPORTED_EXCHANGE_NAMES,
 } from '@/common/constants';
 import { ExchangeNameValidator, IsChainId } from '@/common/validators';
@@ -30,6 +32,14 @@ export class GetCampaignsQueryDto {
   @IsOptional()
   @IsEthereumAddress()
   launcher?: string;
+
+  @ApiPropertyOptional({
+    description: 'Status of campaign escrow',
+    enum: READABLE_ESCROW_STATUSES,
+  })
+  @IsOptional()
+  @IsIn(READABLE_ESCROW_STATUSES)
+  status?: ReadableEscrowStatus;
 }
 
 export class CampaignData {
@@ -82,7 +92,7 @@ export class CampaignData {
   fundTokenDecimals: number;
 
   @ApiProperty()
-  status: string;
+  status: ReadableEscrowStatus;
 
   @ApiProperty()
   launcher: string;

@@ -40,6 +40,7 @@ export class CampaignsController {
     const filters = {
       exchangeName: query.exchangeName,
       launcher: query.launcher,
+      status: query.status,
     };
 
     const campaigns = await this.campaignsService.getCampaigns(
