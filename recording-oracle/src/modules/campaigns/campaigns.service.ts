@@ -202,17 +202,26 @@ export class CampaignsService {
       );
     }
 
-    let manifest: CampaignManifest;
-    try {
-      manifest = await manifestUtils.downloadCampaignManifest(
-        escrow.manifestUrl as string,
-        escrow.manifestHash as string,
-      );
-    } catch (error) {
-      this.logger.error('Failed to download campaign manifest', error);
-      throw new InvalidCampaign(campaignAddress, error.message as string);
+    let manifestString: string;
+    if (httpUtils.isValidHttpUrl(escrow.manifestUrl as string)) {
+      try {
+        manifestString = await manifestUtils.downloadCampaignManifest(
+          escrow.manifestUrl as string,
+          escrow.manifestHash as string,
+        );
+      } catch (error) {
+        this.logger.error('Failed to download campaign manifest', error);
+        throw new InvalidCampaign(campaignAddress, error.message as string);
+      }
+    } else {
+      manifestString = escrow.manifestUrl as string;
     }
 
+    const manifest = manifestUtils.validateSchema(manifestString);
+
+    /*
+     * Not including this into Joi schema to send meaningful errors
+     */
     if (!SUPPORTED_EXCHANGE_NAMES.includes(manifest.exchange)) {
       throw new InvalidCampaign(
         campaignAddress,

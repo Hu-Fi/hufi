@@ -61,17 +61,25 @@ export async function downloadIntermediateResults(
   }
 }
 
-export async function downloadCampaignManifest(
-  url: string,
+export async function retrieveCampaignManifest(
+  manifestOrUrl: string,
   manifestHash: string,
 ): Promise<CampaignManifest> {
-  const manifestData = await httpUtils.downloadFileAndVerifyHash(
-    url,
-    manifestHash,
-    { algorithm: 'sha1' },
-  );
+  let manifestData;
+  if (httpUtils.isValidHttpUrl(manifestOrUrl)) {
+    const manifestContent = await httpUtils.downloadFileAndVerifyHash(
+      manifestOrUrl,
+      manifestHash,
+      {
+        algorithm: 'sha1',
+      },
+    );
+    manifestData = manifestContent.toString();
+  } else {
+    manifestData = manifestOrUrl;
+  }
 
-  return JSON.parse(manifestData.toString());
+  return JSON.parse(manifestData);
 }
 
 export function calculateDailyReward(
