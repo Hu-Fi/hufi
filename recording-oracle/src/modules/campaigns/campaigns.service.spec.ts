@@ -298,7 +298,9 @@ describe('CampaignsService', () => {
 
       const mockedManifest = generateCampaignManifest();
       mockedManifest.exchange = faker.lorem.word();
-      spyOnDownloadCampaignManifest.mockResolvedValueOnce(mockedManifest);
+      spyOnDownloadCampaignManifest.mockResolvedValueOnce(
+        JSON.stringify(mockedManifest),
+      );
 
       let thrownError;
       try {
@@ -331,7 +333,9 @@ describe('CampaignsService', () => {
 
       const mockedManifest = generateCampaignManifest();
       mockedManifest.type = faker.lorem.word();
-      spyOnDownloadCampaignManifest.mockResolvedValueOnce(mockedManifest);
+      spyOnDownloadCampaignManifest.mockResolvedValueOnce(
+        JSON.stringify(mockedManifest),
+      );
 
       let thrownError;
       try {
@@ -351,7 +355,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should download and return manifest', async () => {
+    it('should download and return manifest (url)', async () => {
       const manifestUrl = faker.internet.url();
       const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -363,7 +367,9 @@ describe('CampaignsService', () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
       const mockedManifest = generateCampaignManifest();
-      spyOnDownloadCampaignManifest.mockResolvedValueOnce(mockedManifest);
+      spyOnDownloadCampaignManifest.mockResolvedValueOnce(
+        JSON.stringify(mockedManifest),
+      );
 
       const manifest = await campaignsService['retrieveCampaignManifest'](
         chainId,
@@ -377,6 +383,25 @@ describe('CampaignsService', () => {
         manifestUrl,
         manifestHash,
       );
+    });
+
+    it('should download and return manifest (json)', async () => {
+      const mockedManifest = generateCampaignManifest();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        manifestUrl: JSON.stringify(mockedManifest),
+        recordingOracle: mockWeb3ConfigService.operatorAddress,
+      } as any);
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
+
+      const manifest = await campaignsService['retrieveCampaignManifest'](
+        chainId,
+        campaignAddress,
+      );
+
+      expect(manifest).toEqual(mockedManifest);
+
+      expect(spyOnDownloadCampaignManifest).not.toHaveBeenCalled();
     });
   });
 
