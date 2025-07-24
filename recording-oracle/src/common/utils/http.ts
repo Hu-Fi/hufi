@@ -27,7 +27,7 @@ function isValidUrl(maybeUrl: string, protocols?: string[]): boolean {
   }
 }
 
-function isValidHttpUrl(maybeUrl: string): boolean {
+export function isValidHttpUrl(maybeUrl: string): boolean {
   return isValidUrl(maybeUrl, ['http', 'https']);
 }
 

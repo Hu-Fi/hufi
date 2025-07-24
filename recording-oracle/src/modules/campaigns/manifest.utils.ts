@@ -23,23 +23,27 @@ const manifestSchema = Joi.object({
 export async function downloadCampaignManifest(
   url: string,
   manifestHash: string,
-): Promise<CampaignManifest> {
+): Promise<string> {
   const manifestData = await httpUtils.downloadFileAndVerifyHash(
     url,
     manifestHash,
     { algorithm: 'sha1' },
   );
 
+  return manifestData.toString();
+}
+
+export function calculateManifestHash(manifest: string): string {
+  return crypto.createHash('sha1').update(manifest).digest('hex');
+}
+
+export function validateSchema(manifest: string): CampaignManifest {
   try {
-    const manifestJson = JSON.parse(manifestData.toString());
+    const manifestJson = JSON.parse(manifest);
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
     return validatedManifest;
   } catch {
     throw new Error('Invalid manifest schema');
   }
-}
-
-export function calculateManifestHash(manifest: string): string {
-  return crypto.createHash('sha1').update(manifest).digest('hex');
 }

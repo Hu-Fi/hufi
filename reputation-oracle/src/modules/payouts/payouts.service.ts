@@ -75,7 +75,7 @@ export class PayoutsService {
       let allResultsPaid = false;
       try {
         const [manifest, intermediateResultsData] = await Promise.all([
-          payoutsUtils.downloadCampaignManifest(
+          payoutsUtils.retrieveCampaignManifest(
             campaign.manifestUrl,
             campaign.manifestHash,
           ),
