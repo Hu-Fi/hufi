@@ -203,18 +203,18 @@ export class CampaignsService {
     }
 
     let manifestString: string;
-    try {
-      if (httpUtils.isValidHttpUrl(escrow.manifestUrl as string)) {
+    if (httpUtils.isValidHttpUrl(escrow.manifestUrl as string)) {
+      try {
         manifestString = await manifestUtils.downloadCampaignManifest(
           escrow.manifestUrl as string,
           escrow.manifestHash as string,
         );
-      } else {
-        manifestString = escrow.manifestUrl as string;
+      } catch (error) {
+        this.logger.error('Failed to download campaign manifest', error);
+        throw new InvalidCampaign(campaignAddress, error.message as string);
       }
-    } catch (error) {
-      this.logger.error('Failed to download campaign manifest', error);
-      throw new InvalidCampaign(campaignAddress, error.message as string);
+    } else {
+      manifestString = escrow.manifestUrl as string;
     }
 
     const manifest = manifestUtils.validateSchema(manifestString);
