@@ -90,7 +90,9 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await recordingApi.post('/auth/logout');
+      await recordingApi.post('/auth/logout', {
+        refresh_token: tokenManager.getRefreshToken(),
+      });
     } catch (e) {
       console.error('Logout request failed:', e);
     } finally {
