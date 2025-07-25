@@ -17,7 +17,7 @@ import { ContentType } from '@/common/enums';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
-import { AbuseConfigService, Web3ConfigService } from '@/config';
+import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
@@ -34,9 +34,9 @@ import { CampaignsRepository } from './campaigns.repository';
 import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
-  CampaignProgressChecker,
+  type CampaignProgressChecker,
+  CampaignProgressCheckerSetup,
   MarketMakingResultsChecker,
-  SameTradeAbuseDetector,
 } from './progress-checking';
 import {
   CampaignManifest,
@@ -50,6 +50,7 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
+import { ExchangeApiClientFactory } from '../exchange';
 
 const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
@@ -70,7 +71,6 @@ export class CampaignsService {
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
-    private readonly abuseConfigService: AbuseConfigService,
     private readonly pgAdvisoryLock: PgAdvisoryLock,
     private readonly moduleRef: ModuleRef,
   ) {}
@@ -375,9 +375,12 @@ export class CampaignsService {
   ): Promise<IntermediateResult> {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
-    );
-    campaignProgressChecker.setAbuseDetector(
-      new SameTradeAbuseDetector(this.abuseConfigService.tradesSampleRate),
+      {
+        exchangeName: campaign.exchangeName,
+        tradingPair: campaign.pair,
+        tradingPeriodStart: startDate,
+        tradingPeriodEnd: endDate,
+      },
     );
 
     let totalVolume = 0;
@@ -388,16 +391,11 @@ export class CampaignsService {
         campaign.exchangeName,
       );
 
-      const participantOutcomes = await campaignProgressChecker.check({
-        exchangeName: campaign.exchangeName,
-        apiClientOptions: {
+      const participantOutcomes =
+        await campaignProgressChecker.checkForParticipant({
           apiKey: exchangeApiKey.apiKey,
           secret: exchangeApiKey.secretKey,
-        },
-        pair: campaign.pair,
-        startDate,
-        endDate,
-      });
+        });
 
       if (participantOutcomes.abuseDetected) {
         this.logger.warn('Abuse detected. Skipping participant outcome', {
@@ -436,10 +434,19 @@ export class CampaignsService {
 
   private getCampaignProgressChecker(
     campaignType: string,
+    campaignCheckerSetup: CampaignProgressCheckerSetup,
   ): CampaignProgressChecker {
+    const exchangeApiClientFactory = this.moduleRef.get(
+      ExchangeApiClientFactory,
+      { strict: false },
+    );
+
     switch (campaignType) {
       default:
-        return this.moduleRef.get(MarketMakingResultsChecker);
+        return new MarketMakingResultsChecker(
+          exchangeApiClientFactory,
+          campaignCheckerSetup,
+        );
     }
   }
 

@@ -1,10 +1,7 @@
-import { Injectable } from '@nestjs/common';
-
 import { TakerOrMakerFlag, Trade, TradingSide } from '@/modules/exchange';
 
 import { BaseCampaignProgressChecker } from './progress-checker';
 
-@Injectable()
 export class MarketMakingResultsChecker extends BaseCampaignProgressChecker {
   protected calculateTradeScore(trade: Trade): number {
     let ratio: number;

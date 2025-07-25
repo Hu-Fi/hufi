@@ -1,5 +1,3 @@
-import { Injectable } from '@nestjs/common';
-
 import {
   ExchangeApiClientFactory,
   Trade,
@@ -7,74 +5,86 @@ import {
 } from '@/modules/exchange';
 
 import type {
-  AbuseDetector,
   CampaignProgressChecker,
-  ProgressCheckInput,
+  CampaignProgressCheckerSetup,
+  ParticipantAuthKeys,
   ProgressCheckResult,
 } from './types';
 
-const DEFAULT_ABUSE_DETECTOR: AbuseDetector = {
-  checkTradeForAbuse() {
-    return false;
-  },
-};
+const N_TRADES_FOR_ABUSE_CHECK = 5;
 
-@Injectable()
 export abstract class BaseCampaignProgressChecker
   implements CampaignProgressChecker
 {
-  protected abuseDetector: AbuseDetector;
+  readonly exchangeName: string;
+  readonly tradingPair: string;
+  readonly tradingPeriodStart: Date;
+  readonly tradingPeriodEnd: Date;
+
+  private readonly tradeIdsSample = new Set<string>();
 
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
+    setupData: CampaignProgressCheckerSetup,
   ) {
-    this.setAbuseDetector(DEFAULT_ABUSE_DETECTOR);
+    this.exchangeName = setupData.exchangeName;
+    this.tradingPair = setupData.tradingPair;
+    this.tradingPeriodStart = setupData.tradingPeriodStart;
+    this.tradingPeriodEnd = setupData.tradingPeriodEnd;
   }
 
-  async check({
-    exchangeName,
-    apiClientOptions,
-    pair,
-    startDate,
-    endDate,
-  }: ProgressCheckInput): Promise<ProgressCheckResult> {
+  async checkForParticipant(
+    authKeys: ParticipantAuthKeys,
+  ): Promise<ProgressCheckResult> {
     let abuseDetected = false;
 
     const exchangeApiClient = this.exchangeApiClientFactory.create(
-      exchangeName,
-      apiClientOptions,
+      this.exchangeName,
+      authKeys,
     );
 
     let score = 0;
     let totalVolume = 0;
+    let nTradesSampled = 0;
 
-    let since = startDate.valueOf();
-    while (since < endDate.valueOf()) {
-      const trades = await exchangeApiClient.fetchMyTrades(pair, since);
+    let since = this.tradingPeriodStart.valueOf();
+    while (since < this.tradingPeriodEnd.valueOf() && !abuseDetected) {
+      const trades = await exchangeApiClient.fetchMyTrades(
+        this.tradingPair,
+        since,
+      );
       if (trades.length === 0) {
         break;
       }
 
       for (const trade of trades) {
-        if (trade.timestamp >= endDate.valueOf()) {
+        if (trade.timestamp >= this.tradingPeriodEnd.valueOf()) {
           break;
+        }
+
+        if (this.tradeIdsSample.has(trade.id)) {
+          abuseDetected = true;
+          break;
+        }
+
+        if (nTradesSampled < N_TRADES_FOR_ABUSE_CHECK) {
+          this.tradeIdsSample.add(trade.id);
+          nTradesSampled += 1;
         }
 
         totalVolume += trade.side === TradingSide.BUY ? trade.cost : 0;
         score += this.calculateTradeScore(trade);
-        if (this.abuseDetector.checkTradeForAbuse(trade)) {
-          abuseDetected = true;
-        }
       }
 
       since = trades[trades.length - 1].timestamp + 1;
     }
 
-    return { abuseDetected, score, totalVolume };
-  }
+    if (abuseDetected) {
+      score = 0;
+      totalVolume = 0;
+    }
 
-  setAbuseDetector(abuseDetectorToUse: AbuseDetector): void {
-    this.abuseDetector = abuseDetectorToUse;
+    return { abuseDetected, score, totalVolume };
   }
 
   protected abstract calculateTradeScore(trade: Trade): number;

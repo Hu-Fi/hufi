@@ -8,7 +8,10 @@ import {
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import { CampaignEntity } from '../campaign.entity';
-import { ProgressCheckInput } from '../progress-checking';
+import type {
+  CampaignProgressCheckerSetup,
+  ParticipantAuthKeys,
+} from '../progress-checking';
 import {
   CampaignStatus,
   IntermediateResult,
@@ -36,23 +39,26 @@ export function generateCampaignEntity(): CampaignEntity {
   return campaign as CampaignEntity;
 }
 
-export function generateProgressCheckInput(
-  overrides?: Partial<ProgressCheckInput>,
-): ProgressCheckInput {
-  const input: ProgressCheckInput = {
+export function generateProgressCheckerSetup(
+  overrides?: Partial<CampaignProgressCheckerSetup>,
+): CampaignProgressCheckerSetup {
+  const input: CampaignProgressCheckerSetup = {
     exchangeName: generateExchangeName(),
-    apiClientOptions: {
-      apiKey: faker.string.sample(),
-      secret: faker.string.sample(),
-    },
-    pair: generateTradingPair(),
-    startDate: faker.date.recent(),
-    endDate: faker.date.future(),
+    tradingPair: generateTradingPair(),
+    tradingPeriodStart: faker.date.recent(),
+    tradingPeriodEnd: faker.date.future(),
   };
 
   Object.assign(input, overrides);
 
   return input;
+}
+
+export function generateParticipantAuthKeys(): ParticipantAuthKeys {
+  return {
+    apiKey: faker.string.sample(),
+    secret: faker.string.sample(),
+  };
 }
 
 export function generateIntermediateResult(endDate?: Date): IntermediateResult {
