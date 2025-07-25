@@ -110,8 +110,10 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const handleRefreshFailure = () => {
-      setIsAuthenticated(false);
-      setIsLoading(false);
+      if (isAuthenticated) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+      }
     };
 
     window.addEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailure);
