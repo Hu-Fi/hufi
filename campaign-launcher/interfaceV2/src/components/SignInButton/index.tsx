@@ -20,10 +20,8 @@ const SignInButton: FC = () => {
   const isAuthorizing = useRef(false);
 
   const { connect, connectors } = useConnect();
-  const { isConnected, status } = useAccount();
+  const { isConnected } = useAccount();
   const { signIn, isLoading } = useWeb3Auth();
-
-  const isWagmiConnected = status === 'connected';
 
   const onSignInButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isLoading) return;
@@ -36,12 +34,12 @@ const SignInButton: FC = () => {
   };
 
   useEffect(() => {
-    if (isWagmiConnected && isConnected && isAuthorizing.current) {
+    if (isConnected && isAuthorizing.current) {
       signIn().finally(() => {
         isAuthorizing.current = false;
       });
     }
-  }, [isConnected, isWagmiConnected]);
+  }, [isConnected]);
 
   const onClose = () => setAnchorEl(null);
 
