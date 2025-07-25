@@ -1,21 +1,7 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  Post,
-  Req,
-  UseFilters,
-} from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiBody,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Body, Controller, HttpCode, Post, UseFilters } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators';
-import type { RequestWithUser } from '@/common/types';
 import { UsersService } from '@/modules/users';
 
 import {
@@ -30,6 +16,7 @@ import { AuthService } from './auth.service';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 @ApiTags('Auth')
+@Public()
 @Controller('/auth')
 @UseFilters(AuthControllerErrorsFilter)
 export class AuthController {
@@ -39,22 +26,19 @@ export class AuthController {
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
-  @Public()
-  @Post('/nonce')
-  @HttpCode(200)
   @ApiOperation({
     summary: 'Web3 signature body',
     description: 'Endpoint for retrieving the nonce used for signing.',
   })
-  @ApiBody({ type: ObtainNonceDto })
   @ApiResponse({
     status: 200,
     description: 'Nonce retrieved successfully',
     type: ObtainNonceSuccessDto,
   })
-  public async getNonce(
-    @Body() data: ObtainNonceDto,
-  ): Promise<ObtainNonceSuccessDto> {
+  @ApiBody({ type: ObtainNonceDto })
+  @Post('/nonce')
+  @HttpCode(200)
+  async getNonce(@Body() data: ObtainNonceDto): Promise<ObtainNonceSuccessDto> {
     const nonce = await this.usersService.getNonce(data.address);
     return { nonce };
   }
@@ -63,13 +47,12 @@ export class AuthController {
     summary: 'Web3 auth',
     description: 'Endpoint for Web3 authentication',
   })
-  @ApiBody({ type: AuthDto })
   @ApiResponse({
     status: 200,
     description: 'User authed successfully',
     type: SuccessAuthDto,
   })
-  @Public()
+  @ApiBody({ type: AuthDto })
   @Post('/')
   @HttpCode(200)
   async auth(@Body() data: AuthDto): Promise<SuccessAuthDto | undefined> {
@@ -80,7 +63,6 @@ export class AuthController {
     return authTokens;
   }
 
-  @ApiBody({ type: RefreshDto })
   @ApiOperation({
     summary: 'Refresh token',
     description: 'Endpoint to refresh the authentication token.',
@@ -90,7 +72,7 @@ export class AuthController {
     description: 'Token refreshed successfully',
     type: SuccessAuthDto,
   })
-  @Public()
+  @ApiBody({ type: RefreshDto })
   @Post('/refresh')
   @HttpCode(200)
   async refreshToken(@Body() data: RefreshDto): Promise<SuccessAuthDto> {
@@ -103,13 +85,13 @@ export class AuthController {
     description: 'Endpoint to log out the user',
   })
   @ApiResponse({
-    status: 200,
+    status: 204,
     description: 'User logged out successfully',
   })
-  @ApiBearerAuth()
+  @ApiBody({ type: RefreshDto })
   @Post('/logout')
   @HttpCode(204)
-  async logout(@Req() request: RequestWithUser): Promise<void> {
-    await this.refreshTokensRepository.deleteByUserId(request.user.id);
+  async logout(@Body() data: RefreshDto): Promise<void> {
+    await this.refreshTokensRepository.deleteById(data.refreshToken);
   }
 }
