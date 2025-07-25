@@ -4,23 +4,37 @@ import { createMock } from '@golevelup/ts-jest';
 import {
   ExchangeApiClient,
   ExchangeApiClientFactory,
-  TakerOrMakerFlag,
   TradingSide,
 } from '@/modules/exchange';
 import { generateTrade } from '@/modules/exchange/fixtures';
 
-import { MarketMakingResultsChecker } from './market-making';
-import { generateProgressCheckInput } from '../fixtures';
+import {
+  generateProgressCheckerSetup,
+  generateParticipantAuthKeys,
+} from '../fixtures';
+import { BaseCampaignProgressChecker } from './progress-checker';
+import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from './types';
 
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 
-describe('MarketMakingResultsChecker', () => {
-  let resultsChecker: MarketMakingResultsChecker;
+class TestCampaignProgressChecker extends BaseCampaignProgressChecker {
+  override calculateTradeScore = jest.fn();
+}
 
-  beforeAll(() => {
-    resultsChecker = new MarketMakingResultsChecker(
+describe('BaseCampaignProgressChecker', () => {
+  let progressCheckerSetup: CampaignProgressCheckerSetup;
+  let participantAuthKeys: ParticipantAuthKeys;
+
+  let resultsChecker: TestCampaignProgressChecker;
+
+  beforeEach(() => {
+    progressCheckerSetup = generateProgressCheckerSetup();
+    participantAuthKeys = generateParticipantAuthKeys();
+
+    resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      progressCheckerSetup,
     );
   });
 
@@ -28,59 +42,7 @@ describe('MarketMakingResultsChecker', () => {
     expect(resultsChecker).toBeDefined();
   });
 
-  describe('calculateTradeScore', () => {
-    it.each(Object.values(TradingSide))(
-      'should return proper score for maker %s',
-      (side) => {
-        const trade = generateTrade({
-          takerOrMaker: TakerOrMakerFlag.MAKER,
-          side,
-        });
-
-        const score = resultsChecker['calculateTradeScore'](trade);
-
-        expect(score).toBe(trade.cost);
-      },
-    );
-
-    it('should return proper score for taker buy', () => {
-      const trade = generateTrade({
-        takerOrMaker: TakerOrMakerFlag.TAKER,
-        side: TradingSide.BUY,
-      });
-
-      const score = resultsChecker['calculateTradeScore'](trade);
-
-      expect(score).toBe(trade.cost * 0.42);
-    });
-
-    it('should return zero score for taker sell', () => {
-      const trade = generateTrade({
-        takerOrMaker: TakerOrMakerFlag.TAKER,
-        side: TradingSide.SELL,
-      });
-
-      const score = resultsChecker['calculateTradeScore'](trade);
-
-      expect(score).toBe(0);
-    });
-  });
-
   describe('check', () => {
-    let spyOnCalculateTradeScore: jest.SpyInstance;
-
-    beforeAll(() => {
-      spyOnCalculateTradeScore = jest.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        resultsChecker as any,
-        'calculateTradeScore',
-      );
-    });
-
-    afterAll(() => {
-      spyOnCalculateTradeScore.mockRestore();
-    });
-
     beforeEach(() => {
       mockedExchangeApiClientFactory.create.mockReturnValue(
         mockedExchangeApiClient,
@@ -94,32 +56,42 @@ describe('MarketMakingResultsChecker', () => {
 
     it('should properly init api client and return zeros for same date range', async () => {
       const anytime = faker.date.anytime();
-      const progessCheckInput = generateProgressCheckInput({
-        startDate: anytime,
-        endDate: anytime,
+
+      const setup = generateProgressCheckerSetup({
+        tradingPeriodStart: anytime,
+        tradingPeriodEnd: anytime,
       });
 
-      const result = await resultsChecker.check(progessCheckInput);
+      resultsChecker = new TestCampaignProgressChecker(
+        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        setup,
+      );
+
+      const result =
+        await resultsChecker.checkForParticipant(participantAuthKeys);
 
       expect(result).toEqual({
+        abuseDetected: false,
         totalVolume: 0,
         score: 0,
       });
 
       expect(mockedExchangeApiClientFactory.create).toHaveBeenCalledTimes(1);
       expect(mockedExchangeApiClientFactory.create).toHaveBeenCalledWith(
-        progessCheckInput.exchangeName,
-        progessCheckInput.apiClientOptions,
+        setup.exchangeName,
+        participantAuthKeys,
       );
     });
 
     it('should return zeros when no trades found', async () => {
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([]);
-      const progessCheckInput = generateProgressCheckInput();
 
-      const result = await resultsChecker.check(progessCheckInput);
+      const result = await resultsChecker.checkForParticipant(
+        generateParticipantAuthKeys(),
+      );
 
       expect(result).toEqual({
+        abuseDetected: false,
         totalVolume: 0,
         score: 0,
       });
@@ -135,39 +107,42 @@ describe('MarketMakingResultsChecker', () => {
         mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(page);
       }
 
-      const input = generateProgressCheckInput();
-      await resultsChecker.check(input);
+      await resultsChecker.checkForParticipant(participantAuthKeys);
 
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(3);
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         1,
-        input.pair,
-        input.startDate.valueOf(),
+        progressCheckerSetup.tradingPair,
+        progressCheckerSetup.tradingPeriodStart.valueOf(),
       );
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         2,
-        input.pair,
+        progressCheckerSetup.tradingPair,
         pages[0].at(-1)!.timestamp + 1,
       );
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         3,
-        input.pair,
+        progressCheckerSetup.tradingPair,
         pages[1].at(-1)!.timestamp + 1,
       );
     });
 
     it('should count volume only for buy trades up to exclusive end date', async () => {
-      const input = generateProgressCheckInput();
-
       const tradesInRange = Array.from({ length: 3 }, () =>
         generateTrade({
-          timestamp: faker.date.recent({ refDate: input.endDate }).valueOf(),
+          timestamp: faker.date
+            .recent({ refDate: progressCheckerSetup.tradingPeriodEnd })
+            .valueOf(),
         }),
       );
       const tradesOutOfRange = [
-        generateTrade({ timestamp: input.endDate.valueOf() }),
         generateTrade({
-          timestamp: faker.date.soon({ refDate: input.endDate }).valueOf(),
+          timestamp: progressCheckerSetup.tradingPeriodEnd.valueOf(),
+        }),
+        generateTrade({
+          timestamp: faker.date
+            .soon({ refDate: progressCheckerSetup.tradingPeriodEnd })
+            .valueOf(),
         }),
       ];
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
@@ -175,22 +150,24 @@ describe('MarketMakingResultsChecker', () => {
         ...tradesOutOfRange,
       ]);
       const mockedScoreForTrades = 1;
-      spyOnCalculateTradeScore.mockReturnValue(mockedScoreForTrades);
+      resultsChecker.calculateTradeScore.mockReturnValue(mockedScoreForTrades);
 
-      const result = await resultsChecker.check(input);
+      const result =
+        await resultsChecker.checkForParticipant(participantAuthKeys);
 
       const expectedTotalVolume = tradesInRange
         .filter((t) => t.side === TradingSide.BUY)
         .reduce((acc, curr) => acc + curr.cost, 0);
 
+      expect(result.abuseDetected).toBe(false);
       expect(result.totalVolume).toBe(expectedTotalVolume);
       expect(result.score).toBe(mockedScoreForTrades * tradesInRange.length);
 
-      expect(spyOnCalculateTradeScore).toHaveBeenCalledTimes(
+      expect(resultsChecker.calculateTradeScore).toHaveBeenCalledTimes(
         tradesInRange.length,
       );
       for (const [index, trade] of tradesInRange.entries()) {
-        expect(spyOnCalculateTradeScore).toHaveBeenNthCalledWith(
+        expect(resultsChecker.calculateTradeScore).toHaveBeenNthCalledWith(
           index + 1,
           trade,
         );
