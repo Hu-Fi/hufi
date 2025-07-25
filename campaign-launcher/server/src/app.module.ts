@@ -8,6 +8,8 @@ import { TransformInterceptor } from './common/interceptors';
 import { HttpValidationPipe } from './common/pipes';
 import Environment from './common/utils/environment';
 import { EnvConfigModule, envValidator } from './config';
+import { CampaignModule } from './modules/campaigns';
+import { ExchangesModule } from './modules/exchanges';
 import { HealthModule } from './modules/health';
 
 @Module({
@@ -44,7 +46,9 @@ import { HealthModule } from './modules/health';
       envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
       validationSchema: envValidator,
     }),
+    CampaignModule,
     EnvConfigModule,
+    ExchangesModule,
     HealthModule,
   ],
   controllers: [AppController],
