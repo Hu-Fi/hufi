@@ -9,6 +9,7 @@ import {
 
 import { useAccount, useSignMessage } from 'wagmi';
 
+import { REFRESH_FAILURE_EVENT } from '../api/httpClient';
 import recordingApi from '../api/recordingApi';
 import { tokenManager, TokenData } from '../utils/TokenManager';
 
@@ -62,7 +63,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const refreshAuthToken = async () => {
+  const validateAuthState = async () => {
     const access_token = tokenManager.getAccessToken();
     const refresh_token = tokenManager.getRefreshToken();
 
@@ -101,9 +102,22 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
-      refreshAuthToken();
+      validateAuthState();
     }
   }, [isConnected, isAuthenticated]);
+
+  useEffect(() => {
+    const handleRefreshFailure = () => {
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    };
+
+    window.addEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailure);
+
+    return () => {
+      window.removeEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailure);
+    };
+  }, []);
 
   return (
     <Web3AuthContext.Provider
