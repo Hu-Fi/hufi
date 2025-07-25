@@ -35,7 +35,7 @@ export class RefreshTokensRepository extends Repository<RefreshTokenEntity> {
     });
   }
 
-  async deleteByUserId(userId: string): Promise<void> {
-    await this.delete({ userId });
+  async deleteById(id: string): Promise<void> {
+    await this.delete({ id });
   }
 }
