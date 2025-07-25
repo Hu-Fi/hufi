@@ -8,7 +8,7 @@ import {
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import { CampaignEntity } from '../campaign.entity';
-import { ProgressCheckInput } from '../progress-checkers';
+import { ProgressCheckInput } from '../progress-checking';
 import {
   CampaignStatus,
   IntermediateResult,

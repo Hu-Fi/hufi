@@ -9,7 +9,7 @@ import { Web3Module } from '@/modules/web3';
 import { CampaignsController } from './campaigns.controller';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
-import { MarketMakingResultsChecker } from './progress-checkers';
+import { MarketMakingResultsChecker } from './progress-checking';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 

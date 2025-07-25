@@ -36,7 +36,7 @@ import * as manifestUtils from './manifest.utils';
 import {
   CampaignProgressChecker,
   MarketMakingResultsChecker,
-} from './progress-checkers';
+} from './progress-checking';
 import {
   CampaignManifest,
   CampaignStatus,
