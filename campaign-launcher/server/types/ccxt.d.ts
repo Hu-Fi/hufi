@@ -15,8 +15,8 @@ declare module 'ccxt' {
     name: string;
     urls: {
       www: string;
+      logo: string;
     };
-    logo: string;
   }
 
   const ccxt: {

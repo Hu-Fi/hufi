@@ -33,7 +33,7 @@ export class ExchangesService {
         name: exchangeName,
         displayName: exchange.name,
         url: exchange.urls.www,
-        logo: exchange.logo,
+        logo: exchange.urls.logo,
         type: ExchangeType.CEX,
       });
     }
