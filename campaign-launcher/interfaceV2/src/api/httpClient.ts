@@ -16,6 +16,8 @@ type HttpClientConfig = {
 
 type RefreshPromise = Promise<AxiosResponse<TokenData>>;
 
+export const REFRESH_FAILURE_EVENT = 'refresh-failure';
+
 export class HttpClient {
   private axiosInstance: AxiosInstance;
   private refreshPromise: RefreshPromise | null = null;
@@ -60,9 +62,16 @@ export class HttpClient {
     );
   }
 
+  private dispatchRefreshFailure(): void {
+    window.dispatchEvent(new CustomEvent(REFRESH_FAILURE_EVENT, {
+      detail: 'refresh_failed',
+    }));
+  }
+
   async performRefresh(): Promise<void> {
     const refreshToken = tokenManager.getRefreshToken();
     if (!refreshToken) {
+      this.dispatchRefreshFailure();
       throw new Error('No refresh token');
     }
 
@@ -83,6 +92,7 @@ export class HttpClient {
     } catch(e) {
       if (e instanceof AxiosError && e.response?.status === 401) {
         tokenManager.clearTokens();
+        this.dispatchRefreshFailure();
         throw new Error('Refresh token invalid');
       }
       console.error('Refresh token error', e);
