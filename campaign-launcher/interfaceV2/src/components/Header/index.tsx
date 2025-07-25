@@ -4,20 +4,20 @@ import CloseIcon from '@mui/icons-material/Close';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, Button, Drawer, IconButton, Link as MuiLink, Toolbar } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import logo from '../../assets/logo.svg';
 import { ROUTES } from '../../constants';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import Account from '../Account';
 import CampaignsMenu from '../CampaignsMenu';
-import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
 import NetworkSwitcher from '../NetworkSwitcher';
+import SignInButton from '../SignInButton';
 
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { isConnected } = useAccount();
+  const { isAuthenticated } = useWeb3Auth();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -79,8 +79,7 @@ const Header: FC = () => {
             </MuiLink>
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" />
-            {!isConnected && <ConnectWallet />}
-            {isConnected && <Account />}
+            {isAuthenticated ? <Account /> : <SignInButton />}
           </Box>
 
           <IconButton
@@ -153,8 +152,7 @@ const Header: FC = () => {
               </MuiLink>
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {!isConnected && <ConnectWallet />}
-              {isConnected && <Account />}
+              {isAuthenticated ? <Account /> : <SignInButton />}
             </Box>
           </Drawer>
         </Toolbar>
