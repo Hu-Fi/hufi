@@ -1,4 +1,4 @@
-import type { ExchangeApiClientInitOptions } from '@/modules/exchange';
+import type { ExchangeApiClientInitOptions, Trade } from '@/modules/exchange';
 
 export type ProgressCheckInput = {
   exchangeName: string;
@@ -8,13 +8,17 @@ export type ProgressCheckInput = {
   endDate: Date;
 };
 
-export type MarketMakingResult = {
+export type ProgressCheckResult = {
+  abuseDetected: boolean;
   score: number;
   totalVolume: number;
 };
 
-export type ProgressCheckResult = MarketMakingResult;
-
 export interface CampaignProgressChecker {
   check(input: ProgressCheckInput): Promise<ProgressCheckResult>;
+  setAbuseDetector(abuseDetectorToUse: AbuseDetector): void;
+}
+
+export interface AbuseDetector {
+  checkTradeForAbuse(trade: Trade): boolean;
 }

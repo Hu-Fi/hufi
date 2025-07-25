@@ -58,4 +58,6 @@ export const envValidator = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string(),
   S3_USE_SSL: Joi.string().valid('true', 'false'),
+  // Abuse
+  ABUSE_TRADES_SAMPLE_RATE: Joi.number().integer().positive().max(100),
 });

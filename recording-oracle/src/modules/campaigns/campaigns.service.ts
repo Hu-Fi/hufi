@@ -17,7 +17,7 @@ import { ContentType } from '@/common/enums';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
-import { Web3ConfigService } from '@/config';
+import { AbuseConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
@@ -36,6 +36,7 @@ import * as manifestUtils from './manifest.utils';
 import {
   CampaignProgressChecker,
   MarketMakingResultsChecker,
+  SameTradeAbuseDetector,
 } from './progress-checking';
 import {
   CampaignManifest,
@@ -69,6 +70,7 @@ export class CampaignsService {
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
+    private readonly abuseConfigService: AbuseConfigService,
     private readonly pgAdvisoryLock: PgAdvisoryLock,
     private readonly moduleRef: ModuleRef,
   ) {}
@@ -374,6 +376,9 @@ export class CampaignsService {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
     );
+    campaignProgressChecker.setAbuseDetector(
+      new SameTradeAbuseDetector(this.abuseConfigService.tradesSampleRate),
+    );
 
     let totalVolume = 0;
     const outcomes: ParticipantOutcome[] = [];
@@ -393,6 +398,16 @@ export class CampaignsService {
         startDate,
         endDate,
       });
+
+      if (participantOutcomes.abuseDetected) {
+        this.logger.warn('Abuse detected. Skipping participant outcome', {
+          campaignId: campaign.id,
+          participantId: participant.id,
+          startDate,
+          endDate,
+        });
+        continue;
+      }
 
       totalVolume += participantOutcomes.totalVolume;
 

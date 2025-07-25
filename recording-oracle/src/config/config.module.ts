@@ -1,6 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { AbuseConfigService } from './abuse-config.service';
 import { AuthConfigService } from './auth-config.service';
 import { DatabaseConfigService } from './database-config.service';
 import { EncryptionConfigService } from './encryption-config.service';
@@ -13,6 +14,7 @@ import { Web3ConfigService } from './web3-config.service';
 @Module({
   imports: [ConfigModule],
   providers: [
+    AbuseConfigService,
     AuthConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
@@ -22,6 +24,7 @@ import { Web3ConfigService } from './web3-config.service';
     Web3ConfigService,
   ],
   exports: [
+    AbuseConfigService,
     AuthConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
