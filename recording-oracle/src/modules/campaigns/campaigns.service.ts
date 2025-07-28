@@ -193,6 +193,18 @@ export class CampaignsService {
       throw new CampaignNotFoundError(campaignAddress);
     }
 
+    // Safety-belt for missing subgraph data START
+    if (!escrow.token) {
+      throw new InvalidCampaign(campaignAddress, 'Missing fund token data');
+    }
+    if (!escrow.totalFundedAmount) {
+      throw new InvalidCampaign(campaignAddress, 'Missing fund amount data');
+    }
+    if (!escrow.manifestUrl) {
+      throw new InvalidCampaign(campaignAddress, 'Missing manifest data');
+    }
+    // Safety-belt for missing subgraph data END
+
     const isEscrowForThisOracle =
       escrow.recordingOracle?.toLowerCase() ===
       this.web3ConfigService.operatorAddress.toLowerCase();
@@ -215,17 +227,6 @@ export class CampaignsService {
         campaignAddress,
         `Invalid status: ${EscrowStatus[escrowStatus]}`,
       );
-    }
-
-    /**
-     * Safety-belts for missing subgraph data
-     */
-    if (!escrow.token || !escrow.totalFundedAmount) {
-      throw new InvalidCampaign(campaignAddress, `Missing fund amount data`);
-    }
-
-    if (!escrow.manifestUrl) {
-      throw new InvalidCampaign(campaignAddress, `Missing manifest data`);
     }
 
     let manifestString: string;
@@ -266,6 +267,7 @@ export class CampaignsService {
       this.web3Service.getTokenSymbol(chainId, escrow.token),
       this.web3Service.getTokenDecimals(chainId, escrow.token),
     ]);
+
     return {
       manifest,
       escrowInfo: {
