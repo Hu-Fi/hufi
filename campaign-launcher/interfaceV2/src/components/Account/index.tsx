@@ -1,11 +1,32 @@
 import { FC, useState } from 'react';
 
-import { Avatar, Button, Popover, Typography } from '@mui/material';
+import { Avatar, Button, List, ListItemButton, Popover, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from 'wagmi';
 
-import { AvatarIcon, ArrowDownIcon, PowerIcon } from '../../icons';
+import { AvatarIcon, ArrowDownIcon, PowerIcon, ApiKeyIcon } from '../../icons';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { formatAddress } from '../../utils';
+
+const buttonSx = {
+  color: 'text.secondary',
+  bgcolor: '#f5efff',
+  p: 1,
+  width: '100%',
+  fontWeight: 600,
+  fontSize: '13px',
+  justifyContent: 'flex-start',
+  gap: 1,
+  borderBottom: '1px solid',
+  borderBottomColor: 'rgba(205, 199, 255, 0.50)',
+  '&:hover': {
+    bgcolor: '#f5efff',
+    color: 'primary.main',
+  },
+  '&:last-child': {
+    borderBottom: 'none',
+  },
+};
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -14,10 +35,15 @@ const Account: FC = () => {
   const { logout } = useWeb3Auth();
   const { data: ensName } = useEnsName({ address });
   const { data: ensAvatar } = useEnsAvatar({ name: ensName! });
+  const navigate = useNavigate();
 
   const formattedAddress = formatAddress(address);
 
   const handleClosePopover = () => setAnchorEl(null);
+
+  const handleGoToManageApiKeys = () => {
+    navigate('/manage-api-keys');
+  };
 
   const handleLogout = () => {
     logout();
@@ -88,23 +114,22 @@ const Account: FC = () => {
           },
         }}
       >
-        <Button
-          onClick={handleLogout}
-          sx={{
-            color: 'primary.light',
-            p: 1,
-            width: '100%',
-            fontWeight: 600,
-            justifyContent: 'flex-start',
-            gap: 1,
-            '&:hover': {
-              backgroundColor: 'unset',
-            },
-          }}
-        >
-          <PowerIcon />
-          Disconnect wallet
-        </Button>
+        <List sx={{ p: 0 }}>
+          <ListItemButton
+            sx={buttonSx}
+            onClick={handleGoToManageApiKeys}
+          >
+            <ApiKeyIcon />
+            Manage API Keys
+          </ListItemButton>
+          <ListItemButton
+            sx={buttonSx}
+            onClick={handleLogout}
+          >
+            <PowerIcon />
+            Disconnect wallet
+          </ListItemButton>
+        </List>
       </Popover>
     </>
   );

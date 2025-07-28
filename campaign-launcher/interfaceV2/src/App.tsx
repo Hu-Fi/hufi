@@ -10,6 +10,7 @@ import AllCampaignsPage from './pages/AllCampaigns';
 import Campaign from './pages/Campaign';
 import Dashboard from './pages/Dashboard';
 import JoinedCampaignsPage from './pages/JoinedCampaigns';
+import ManageApiKeysPage from './pages/ManageApiKeys';
 import MyCampaignsPage from './pages/MyCampaigns';
 import ExchangesProvider from './providers/ExchangesProvider';
 import QueryClientProvider from './providers/QueryClientProvider';
@@ -44,6 +45,10 @@ const App: FC = () => {
                       <Route
                         path={ROUTES.JOINED_CAMPAIGNS}
                         element={<JoinedCampaignsPage />}
+                      />
+                      <Route
+                        path={ROUTES.MANAGE_API_KEYS}
+                        element={<ManageApiKeysPage />}
                       />
                     </Routes>
                   </Layout>

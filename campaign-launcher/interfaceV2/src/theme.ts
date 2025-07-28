@@ -85,7 +85,7 @@ const createAppTheme = (mode: PaletteMode) => {
             },
             text: {
               primary: '#d4cfff',
-              secondary: 'rgba(212, 207, 255, 0.70)',
+              secondary: '#858ec6',
               disabled: 'rgba(212, 207, 255, 0.50)',
             },
             success: {

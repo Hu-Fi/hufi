@@ -5,7 +5,7 @@ import { Paper } from '@mui/material';
 const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
     <Paper
-      elevation={1}
+      elevation={2}
       sx={{
         display: 'flex',
         py: { xs: 4, xl: 8 },
