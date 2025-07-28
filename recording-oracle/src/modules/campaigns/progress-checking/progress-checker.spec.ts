@@ -19,39 +19,44 @@ const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 
 class TestCampaignProgressChecker extends BaseCampaignProgressChecker {
+  override tradeIdsSample = new Set<string>();
   override calculateTradeScore = jest.fn();
 }
 
 describe('BaseCampaignProgressChecker', () => {
-  let progressCheckerSetup: CampaignProgressCheckerSetup;
-  let participantAuthKeys: ParticipantAuthKeys;
-
-  let resultsChecker: TestCampaignProgressChecker;
-
   beforeEach(() => {
-    progressCheckerSetup = generateProgressCheckerSetup();
-    participantAuthKeys = generateParticipantAuthKeys();
-
-    resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
-      progressCheckerSetup,
+    mockedExchangeApiClientFactory.create.mockReturnValue(
+      mockedExchangeApiClient,
     );
+    mockedExchangeApiClient.fetchMyTrades.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it('should be defined', () => {
+    const resultsChecker = new TestCampaignProgressChecker(
+      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      generateProgressCheckerSetup(),
+    );
     expect(resultsChecker).toBeDefined();
   });
 
-  describe('check', () => {
-    beforeEach(() => {
-      mockedExchangeApiClientFactory.create.mockReturnValue(
-        mockedExchangeApiClient,
-      );
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValue([]);
-    });
+  describe('checkForParticipant', () => {
+    let progressCheckerSetup: CampaignProgressCheckerSetup;
+    let participantAuthKeys: ParticipantAuthKeys;
 
-    afterEach(() => {
-      jest.resetAllMocks();
+    let resultsChecker: TestCampaignProgressChecker;
+
+    beforeEach(() => {
+      progressCheckerSetup = generateProgressCheckerSetup();
+      participantAuthKeys = generateParticipantAuthKeys();
+
+      resultsChecker = new TestCampaignProgressChecker(
+        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        progressCheckerSetup,
+      );
     });
 
     it('should properly init api client and return zeros for same date range', async () => {
@@ -172,6 +177,97 @@ describe('BaseCampaignProgressChecker', () => {
           trade,
         );
       }
+    });
+  });
+
+  describe('abuse detection', () => {
+    const checkerSetup = generateProgressCheckerSetup();
+    const resultsChecker = new TestCampaignProgressChecker(
+      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      checkerSetup,
+    );
+
+    beforeEach(() => {
+      resultsChecker.tradeIdsSample.clear();
+      /**
+       * Always return some positive score in order to
+       * make sure it's not counted when abuse detected
+       */
+      resultsChecker.calculateTradeScore.mockImplementation(() =>
+        faker.number.float({ min: 0.1 }),
+      );
+    });
+
+    it('should return zeros when abuse detected', async () => {
+      const sameTrade = generateTrade();
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
+        generateTrade(),
+        sameTrade,
+        generateTrade({
+          /**
+           * Override it to 'buy' to always have volume
+           */
+          side: 'buy',
+        }),
+        generateTrade({
+          /**
+           * Last trade is out of configured period,
+           * so no more pages fetched for the first participant
+           */
+          timestamp: checkerSetup.tradingPeriodEnd.valueOf(),
+        }),
+      ]);
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValue([
+        generateTrade({
+          /**
+           * Override it to buy to make sure it always has some volume
+           * but it's not counted if abuse detected
+           */
+          side: 'buy',
+        }),
+        sameTrade,
+      ]);
+
+      const normalResult = await resultsChecker.checkForParticipant(
+        generateParticipantAuthKeys(),
+      );
+      expect(normalResult.abuseDetected).toBe(false);
+      expect(normalResult.score).toBeGreaterThan(0);
+      expect(normalResult.totalVolume).toBeGreaterThan(0);
+
+      const abuseResult = await resultsChecker.checkForParticipant(
+        generateParticipantAuthKeys(),
+      );
+      expect(abuseResult.abuseDetected).toBe(true);
+      expect(abuseResult.score).toBe(0);
+      expect(abuseResult.totalVolume).toBe(0);
+    });
+
+    it('should avoid extra trades fetch if abuse detected', async () => {
+      const sameTrade = generateTrade();
+
+      const pages = Array.from({ length: 4 }, () => [
+        generateTrade(),
+        sameTrade,
+      ]);
+      for (const page of pages) {
+        mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(page);
+      }
+
+      const result = await resultsChecker.checkForParticipant(
+        generateParticipantAuthKeys(),
+      );
+      expect(result.abuseDetected).toBe(true);
+
+      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(2);
+    });
+
+    it('should sample only 5 trades per participant', async () => {
+      const trades = Array.from({ length: 6 }, () => generateTrade());
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(trades);
+      await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
+
+      expect(resultsChecker.tradeIdsSample.size).toBe(5);
     });
   });
 });

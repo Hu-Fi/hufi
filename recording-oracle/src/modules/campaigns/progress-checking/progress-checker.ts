@@ -21,7 +21,7 @@ export abstract class BaseCampaignProgressChecker
   readonly tradingPeriodStart: Date;
   readonly tradingPeriodEnd: Date;
 
-  private readonly tradeIdsSample = new Set<string>();
+  protected readonly tradeIdsSample = new Set<string>();
 
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
