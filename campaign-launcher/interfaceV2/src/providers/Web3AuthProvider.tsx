@@ -46,7 +46,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       setIsAuthenticated(true);
     } catch(e) {
       setIsAuthenticated(false);
-      console.error('Failed to sign in');
+      console.error('Failed to sign in', e);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +68,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setIsAuthenticated(true);
       } catch (e) {
         setIsAuthenticated(false);
-        console.error('Failed to refresh token');
+        console.error('Failed to refresh token', e);
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +82,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     try {
       await recordingApi.logout();
     } catch (e) {
-      console.error('Logout request failed');
+      console.error('Logout request failed', e);
     } finally {
       tokenManager.clearTokens();
       setIsAuthenticated(false);

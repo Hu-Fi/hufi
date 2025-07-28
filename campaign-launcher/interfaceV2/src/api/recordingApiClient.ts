@@ -20,24 +20,29 @@ type RecordingApiClientConfig = {
 
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
 
-class HttpError extends Error {
-  public readonly status: number;
-
-  constructor(message: string, status: number) {
+class BaseError extends Error {
+  constructor(message: string) {
     super(message);
-    this.status = status;
+    this.name = this.constructor.name;
+  }
+}
+
+class HttpError extends BaseError {
+  constructor(message: string, readonly status?: number) {
+    super(message);
   }
 
   static fromAxiosError(error: AxiosError): HttpError {
-    const status = error.response?.status || 0;
-    const message = error.message || 'Request failed';
-    return new HttpError(message, status);
+    return new HttpError(
+      error.message || 'Request failed',
+      error.response?.status,
+    );
   }
-} 
+}
 
 export class RecordingApiClient {
-  private axiosInstance: AxiosInstance;
-  private tokenManager: TokenManager;
+  private readonly axiosInstance: AxiosInstance;
+  private readonly tokenManager: TokenManager;
   private refreshPromise: RefreshPromise | null = null;
   
   constructor(config: RecordingApiClientConfig) {
@@ -62,8 +67,7 @@ export class RecordingApiClient {
           config.headers['Authorization'] = `Bearer ${accessToken}`;
         }
         return config;
-      },
-      (error: AxiosError) => Promise.reject(error)
+      }
     );
 
     this.axiosInstance.interceptors.response.use(
@@ -110,9 +114,9 @@ export class RecordingApiClient {
       if (e instanceof AxiosError && e.response?.status === 401) {
         this.tokenManager.clearTokens();
         this.dispatchRefreshFailureEvent();
-        throw new HttpError('Refresh token invalid', 401);
+        throw HttpError.fromAxiosError(e);
       }
-      console.error('Refresh token error');
+      console.error('Error while performing tokens refresh', e);
       throw e;
     } finally {
       this.refreshPromise = null;
