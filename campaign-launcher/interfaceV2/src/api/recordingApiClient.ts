@@ -1,27 +1,52 @@
 import axios, { 
   AxiosError, 
+  AxiosInstance, 
+  AxiosRequestConfig, 
+  AxiosRequestHeaders, 
   AxiosResponse, 
-  InternalAxiosRequestConfig 
+  InternalAxiosRequestConfig, 
+  Method
 } from 'axios';
 
-import { HttpClient, HttpClientConfig } from "./httpClient";
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
 type RefreshPromise = Promise<AxiosResponse<TokenData>>;
 
-type RecordingApiClientConfig = HttpClientConfig & {
+type RecordingApiClientConfig = {
+  baseUrl: string;
+  headers?: AxiosRequestHeaders;
   tokenManager: TokenManager;
 };
 
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
 
-export class RecordingApiClient extends HttpClient {
-  private refreshPromise: RefreshPromise | null = null;
-  private tokenManager: TokenManager;
+class HttpError extends Error {
+  public readonly status: number;
 
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+
+  static fromAxiosError(error: AxiosError): HttpError {
+    const status = error.response?.status || 0;
+    const message = error.message || 'Request failed';
+    return new HttpError(message, status);
+  }
+} 
+
+export class RecordingApiClient {
+  private axiosInstance: AxiosInstance;
+  private tokenManager: TokenManager;
+  private refreshPromise: RefreshPromise | null = null;
+  
   constructor(config: RecordingApiClientConfig) {
-    super({
-      baseUrl: config.baseUrl,
+    this.axiosInstance = axios.create({
+      baseURL: config.baseUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        ...config.headers,
+      },
     });
     this.tokenManager = config.tokenManager;
 
@@ -85,13 +110,51 @@ export class RecordingApiClient extends HttpClient {
       if (e instanceof AxiosError && e.response?.status === 401) {
         this.tokenManager.clearTokens();
         this.dispatchRefreshFailureEvent();
-        throw new Error('Refresh token invalid');
+        throw new HttpError('Refresh token invalid', 401);
       }
       console.error('Refresh token error');
       throw e;
     } finally {
       this.refreshPromise = null;
     }
+  }
+
+  private async request<T = unknown>(method: Method, url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response = await this.axiosInstance.request<T>({
+        method,
+        url,
+        data,
+        ...config,
+      });
+      return response.data;
+    } catch(e) {
+      if (e instanceof AxiosError) {
+        throw HttpError.fromAxiosError(e);
+      }
+      console.error('Failed to make request', e);
+      throw e;
+    }
+  }
+
+  async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('GET', url, config);
+  }
+
+  async post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('POST', url, data, config);
+  }
+
+  async put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('PUT', url, data, config);
+  }
+
+  async patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('PATCH', url, data, config);
+  }
+
+  async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('DELETE', url, config);
   }
 
   async getNonce(address: `0x${string}` | undefined): Promise<string> {
