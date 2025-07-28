@@ -855,29 +855,45 @@ describe('CampaignsService', () => {
     });
 
     it('should skip participant results if abuse detected', async () => {
-      const participant = generateUserEntity();
+      const abuseParticipant = generateUserEntity();
+      const normalParticipant = generateUserEntity();
+
+      const normalParticipantResult = {
+        abuseDetected: false,
+        score: faker.number.float(),
+        totalVolume: faker.number.float(),
+      };
       mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValueOnce({
         abuseDetected: true,
         score: 0,
         totalVolume: 0,
       });
+      mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValueOnce(
+        normalParticipantResult,
+      );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
-        [participant],
+        [abuseParticipant, normalParticipant],
         periodStart,
         periodEnd,
       );
 
-      expect(progress.total_volume).toBe(0);
-      expect(progress.participants_outcomes_batches.length).toBe(0);
+      expect(progress.total_volume).toBe(normalParticipantResult.totalVolume);
+      expect(progress.participants_outcomes_batches.length).toBe(1);
+      expect(progress.participants_outcomes_batches[0].results.length).toBe(1);
+      expect(progress.participants_outcomes_batches[0].results[0]).toEqual({
+        address: normalParticipant.evmAddress,
+        score: normalParticipantResult.score,
+        total_volume: normalParticipantResult.totalVolume,
+      });
 
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
         'Abuse detected. Skipping participant outcome',
         {
           campaignId: campaign.id,
-          participantId: participant.id,
+          participantId: abuseParticipant.id,
           startDate: periodStart,
           endDate: periodEnd,
         },
