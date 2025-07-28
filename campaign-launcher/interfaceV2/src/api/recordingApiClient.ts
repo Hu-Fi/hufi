@@ -8,6 +8,7 @@ import axios, {
   Method
 } from 'axios';
 
+import { BaseError } from '../utils/BaseError';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
 type RefreshPromise = Promise<AxiosResponse<TokenData>>;
@@ -19,13 +20,6 @@ type RecordingApiClientConfig = {
 };
 
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
-
-class BaseError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
 
 class HttpError extends BaseError {
   constructor(message: string, readonly status?: number) {
