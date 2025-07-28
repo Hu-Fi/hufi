@@ -6,6 +6,7 @@ export const ROUTES = {
   ALL_CAMPAIGNS: '/all-campaigns',
   MY_CAMPAIGNS: '/my-campaigns',
   JOINED_CAMPAIGNS: '/joined-campaigns',
+  MANAGE_API_KEYS: '/manage-api-keys',
 };
 
 export const oracles = {

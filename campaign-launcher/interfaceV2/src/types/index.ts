@@ -25,3 +25,8 @@ export type CampaignsStats = {
   averageFundingUSD: number;
   chains: Chain[];
 };
+
+export type ExchangeApiKeyData = {
+  exchange_name: string;
+  api_key: string;
+};
