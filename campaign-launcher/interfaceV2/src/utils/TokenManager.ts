@@ -1,10 +1,12 @@
-import { decodeJwt } from '.';
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../constants';
+import { jwtDecode } from "jwt-decode";
 
 export type TokenData = {
   access_token: string;
   refresh_token: string;
 };
+
+const ACCESS_TOKEN_KEY = 'ro-access-token';
+const REFRESH_TOKEN_KEY = 'ro-refresh-token';
 
 export class TokenManager {
   private static instance: TokenManager;
@@ -54,8 +56,8 @@ export class TokenManager {
       throw new Error('No access token');
     }
 
-    const decodedAccessToken = decodeJwt<{ exp: number }>(accessToken);
-    const currentTime = Math.floor(Date.now() / 1000);
+    const decodedAccessToken = jwtDecode<{ exp: number }>(accessToken);
+    const currentTime = Math.ceil(Date.now() / 1000);
     const timeUntilExpiry = decodedAccessToken.exp - currentTime;
 
     return timeUntilExpiry < seconds;

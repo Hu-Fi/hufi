@@ -9,11 +9,9 @@ import {
 
 import { useAccount, useSignMessage } from 'wagmi';
 
-import { REFRESH_FAILURE_EVENT } from '../api/httpClient';
 import recordingApi from '../api/recordingApi';
-import { tokenManager, TokenData } from '../utils/TokenManager';
-
-type Nonce = 'signup' | string;
+import { REFRESH_FAILURE_EVENT } from '../api/recordingApiClient';
+import { tokenManager } from '../utils/TokenManager';
 
 type Web3AuthContextType = {
   isAuthenticated: boolean;
@@ -26,11 +24,6 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
   {} as Web3AuthContextType
 );
 
-const getNonce = async (address: `0x${string}` | undefined) => {
-  const response = await recordingApi.post<Nonce>(`/auth/nonce`, { address });
-  return response.data; 
-};
-
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,30 +33,26 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const signIn = async () => {
     setIsLoading(true);
     try {
-      const nonce = await getNonce(address);
+      const nonce = await recordingApi.getNonce(address);
       const signature = await signMessageAsync({
         message: JSON.stringify(nonce),
       });
-      const authResponse = await recordingApi.post<TokenData>('/auth', {
-        address,
-        signature,
-      });
+      const authResponse = await recordingApi.auth(address, signature);
 
       tokenManager.setTokens({
-        access_token: authResponse.data.access_token,
-        refresh_token: authResponse.data.refresh_token,
+        access_token: authResponse.access_token,
+        refresh_token: authResponse.refresh_token,
       });
       setIsAuthenticated(true);
     } catch(e) {
       setIsAuthenticated(false);
-      console.error(e);
-      throw new Error('Failed to sign in');
+      console.error('Failed to sign in');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const validateAuthState = async () => {
+  const bootstrapAuthState = async () => {
     const access_token = tokenManager.getAccessToken();
     const refresh_token = tokenManager.getRefreshToken();
 
@@ -77,8 +66,9 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       try {
         await recordingApi.performRefresh();
         setIsAuthenticated(true);
-      } catch (error) {
+      } catch (e) {
         setIsAuthenticated(false);
+        console.error('Failed to refresh token');
       } finally {
         setIsLoading(false);
       }
@@ -90,11 +80,9 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await recordingApi.post('/auth/logout', {
-        refresh_token: tokenManager.getRefreshToken(),
-      });
+      await recordingApi.logout();
     } catch (e) {
-      console.error('Logout request failed:', e);
+      console.error('Logout request failed');
     } finally {
       tokenManager.clearTokens();
       setIsAuthenticated(false);
@@ -104,22 +92,22 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
-      validateAuthState();
+      bootstrapAuthState();
     }
   }, [isConnected, isAuthenticated]);
 
   useEffect(() => {
-    const handleRefreshFailure = () => {
+    const handleRefreshFailureEvent = () => {
       if (isAuthenticated) {
         setIsAuthenticated(false);
         setIsLoading(false);
       }
     };
 
-    window.addEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailure);
+    window.addEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailureEvent);
 
     return () => {
-      window.removeEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailure);
+      window.removeEventListener(REFRESH_FAILURE_EVENT, handleRefreshFailureEvent);
     };
   }, []);
 
