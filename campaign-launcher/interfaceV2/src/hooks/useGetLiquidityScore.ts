@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import recordingApi from '../api/recordingApi';
+import { recordingApi } from '../api';
 
 const useGetLiquidityScore = () => {
   return useQuery({

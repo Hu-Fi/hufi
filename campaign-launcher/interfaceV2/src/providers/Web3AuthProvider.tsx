@@ -9,7 +9,7 @@ import {
 
 import { useAccount, useSignMessage } from 'wagmi';
 
-import recordingApi from '../api/recordingApi';
+import { recordingApi } from '../api';
 import { REFRESH_FAILURE_EVENT } from '../api/recordingApiClient';
 import { tokenManager } from '../utils/TokenManager';
 
