@@ -130,6 +130,14 @@ export class PayoutsService {
 
             const recipientToAmountMap = new Map<string, bigint>();
             for (const { address, amount } of rewardsBatch.rewards) {
+              /**
+               * Escrow contract doesn't allow payout of 0 amount,
+               * so just skip it for final payouts
+               */
+              if (amount === 0) {
+                continue;
+              }
+
               recipientToAmountMap.set(
                 address,
                 ethers.parseUnits(
@@ -217,11 +225,13 @@ export class PayoutsService {
       };
 
       for (const outcome of outcomesBatch.results) {
-        const participantShare = decimalUtils.div(totalScore, outcome.score);
-        const rewardAmount = decimalUtils.div(
-          totalSharedReward,
-          participantShare,
-        );
+        let rewardAmount = 0;
+
+        if (outcome.score > 0) {
+          const participantShare = decimalUtils.div(totalScore, outcome.score);
+
+          rewardAmount = decimalUtils.div(totalSharedReward, participantShare);
+        }
 
         rewardsBatch.rewards.push({
           address: outcome.address,

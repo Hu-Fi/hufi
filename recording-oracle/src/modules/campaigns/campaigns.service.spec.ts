@@ -46,16 +46,18 @@ import {
   generateCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
+  generateProgressCheckerSetup,
 } from './fixtures';
 import { generateCampaignEntity } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
-  MarketMakingResult,
   MarketMakingResultsChecker,
-} from './progress-checkers';
+  ProgressCheckResult,
+} from './progress-checking';
 import { CampaignStatus } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
+import { ExchangeApiClientFactory } from '../exchange';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
@@ -65,7 +67,6 @@ const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 const mockStorageService = createMock<StorageService>();
 const mockWeb3Service = createMock<Web3Service>();
 const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
-const mockMarketMakingResultsChecker = createMock<MarketMakingResultsChecker>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
@@ -90,6 +91,10 @@ describe('CampaignsService', () => {
           useValue: mockExchangeApiKeysService,
         },
         {
+          provide: ExchangeApiClientFactory,
+          useValue: createMock<ExchangeApiClientFactory>(),
+        },
+        {
           provide: UserCampaignsRepository,
           useValue: mockUserCampaignsRepository,
         },
@@ -112,10 +117,6 @@ describe('CampaignsService', () => {
         {
           provide: PgAdvisoryLock,
           useValue: mockPgAdvisoryLock,
-        },
-        {
-          provide: MarketMakingResultsChecker,
-          useValue: mockMarketMakingResultsChecker,
         },
       ],
     }).compile();
@@ -597,11 +598,15 @@ describe('CampaignsService', () => {
 
   describe('getCampaignProgressChecker', () => {
     it('should return market making checker for any type', () => {
+      const campaign = generateCampaignEntity();
+      campaign.type = faker.lorem.word();
+
       const checker = campaignsService['getCampaignProgressChecker'](
-        faker.lorem.word(),
+        campaign.type,
+        generateProgressCheckerSetup(),
       );
 
-      expect(checker).toBe(mockMarketMakingResultsChecker);
+      expect(checker).toBeInstanceOf(MarketMakingResultsChecker);
     });
   });
 
@@ -726,10 +731,15 @@ describe('CampaignsService', () => {
   });
 
   describe('checkCampaignProgressForPeriod', () => {
+    const mockMarketMakingResultsChecker =
+      createMock<MarketMakingResultsChecker>();
+
+    let spyOnGetCampaignProgressChecker: jest.SpyInstance;
+
     let periodStart: Date;
     let periodEnd: Date;
     let campaign: CampaignEntity;
-    let mockParticipantOutcome: MarketMakingResult;
+    let mockParticipantOutcome: ProgressCheckResult;
 
     beforeAll(() => {
       periodEnd = new Date();
@@ -737,13 +747,23 @@ describe('CampaignsService', () => {
       campaign = generateCampaignEntity();
 
       mockParticipantOutcome = {
+        abuseDetected: false,
         totalVolume: faker.number.float(),
         score: faker.number.float(),
       };
+
+      spyOnGetCampaignProgressChecker = jest.spyOn(
+        campaignsService as any,
+        'getCampaignProgressChecker',
+      );
+    });
+
+    afterAll(() => {
+      spyOnGetCampaignProgressChecker.mockRestore();
     });
 
     beforeEach(() => {
-      mockMarketMakingResultsChecker.check.mockResolvedValue(
+      mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValue(
         mockParticipantOutcome,
       );
       mockExchangeApiKeysService.retrieve.mockImplementation(
@@ -751,6 +771,9 @@ describe('CampaignsService', () => {
           apiKey: `${userId}-apiKey`,
           secretKey: `${userId}-secretKey`,
         }),
+      );
+      spyOnGetCampaignProgressChecker.mockReturnValueOnce(
+        mockMarketMakingResultsChecker,
       );
     });
 
@@ -800,15 +823,11 @@ describe('CampaignsService', () => {
           participantId,
           campaign.exchangeName,
         );
-        expect(mockMarketMakingResultsChecker.check).toHaveBeenCalledWith({
-          exchangeName: campaign.exchangeName,
-          apiClientOptions: {
-            apiKey: `${participantId}-apiKey`,
-            secret: `${participantId}-secretKey`,
-          },
-          pair: campaign.pair,
-          startDate: periodStart,
-          endDate: periodEnd,
+        expect(
+          mockMarketMakingResultsChecker.checkForParticipant,
+        ).toHaveBeenCalledWith({
+          apiKey: `${participantId}-apiKey`,
+          secret: `${participantId}-secretKey`,
         });
       }
     });
@@ -833,6 +852,52 @@ describe('CampaignsService', () => {
       expect(progress.participants_outcomes_batches.length).toBe(2);
       expect(progress.participants_outcomes_batches[0].results.length).toBe(2);
       expect(progress.participants_outcomes_batches[1].results.length).toBe(1);
+    });
+
+    it('should skip participant results if abuse detected', async () => {
+      const abuseParticipant = generateUserEntity();
+      const normalParticipant = generateUserEntity();
+
+      const normalParticipantResult = {
+        abuseDetected: false,
+        score: faker.number.float(),
+        totalVolume: faker.number.float(),
+      };
+      mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValueOnce({
+        abuseDetected: true,
+        score: 0,
+        totalVolume: 0,
+      });
+      mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValueOnce(
+        normalParticipantResult,
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        [abuseParticipant, normalParticipant],
+        periodStart,
+        periodEnd,
+      );
+
+      expect(progress.total_volume).toBe(normalParticipantResult.totalVolume);
+      expect(progress.participants_outcomes_batches.length).toBe(1);
+      expect(progress.participants_outcomes_batches[0].results.length).toBe(1);
+      expect(progress.participants_outcomes_batches[0].results[0]).toEqual({
+        address: normalParticipant.evmAddress,
+        score: normalParticipantResult.score,
+        total_volume: normalParticipantResult.totalVolume,
+      });
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Abuse detected. Skipping participant outcome',
+        {
+          campaignId: campaign.id,
+          participantId: abuseParticipant.id,
+          startDate: periodStart,
+          endDate: periodEnd,
+        },
+      );
     });
   });
 
