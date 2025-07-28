@@ -132,7 +132,10 @@ describe('CampaignsService', () => {
     expect(campaignsService).toBeDefined();
   });
 
-  describe('retrieveCampaignManifest', () => {
+  describe('retrieveCampaignData', () => {
+    const TEST_TOKEN_SYMBOL = faker.finance.currencyCode();
+    const TEST_TOKEN_DECIMALS = 18;
+
     const mockedGetEscrowStatus = jest.fn();
 
     let spyOnDownloadCampaignManifest: jest.SpyInstance;
@@ -158,6 +161,9 @@ describe('CampaignsService', () => {
       mockedEscrowClient.build.mockResolvedValue({
         getStatus: mockedGetEscrowStatus,
       } as unknown as EscrowClient);
+
+      mockWeb3Service.getTokenSymbol.mockResolvedValue(TEST_TOKEN_SYMBOL);
+      mockWeb3Service.getTokenDecimals.mockResolvedValue(TEST_TOKEN_DECIMALS);
     });
 
     it('should throw when escrow not found', async () => {
@@ -166,7 +172,7 @@ describe('CampaignsService', () => {
 
       let thrownError;
       try {
-        await campaignsService['retrieveCampaignManifest'](
+        await campaignsService['retrieveCampaignData'](
           chainId,
           campaignAddress,
         );
@@ -183,16 +189,99 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should throw when subgraph is missing fund token data', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: '',
+      } as any);
+
+      let thrownError;
+      try {
+        await campaignsService['retrieveCampaignData'](
+          chainId,
+          campaignAddress,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.address).toBe(campaignAddress);
+      expect(thrownError.details).toBe('Missing fund token data');
+
+      expect(mockedEscrowUtils.getEscrow).toHaveBeenCalledWith(
+        chainId,
+        campaignAddress,
+      );
+    });
+
+    it('should throw when subgraph is missing fund amount data', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+      } as any);
+
+      let thrownError;
+      try {
+        await campaignsService['retrieveCampaignData'](
+          chainId,
+          campaignAddress,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.address).toBe(campaignAddress);
+      expect(thrownError.details).toBe('Missing fund amount data');
+
+      expect(mockedEscrowUtils.getEscrow).toHaveBeenCalledWith(
+        chainId,
+        campaignAddress,
+      );
+    });
+
+    it('should throw when subgraph is missing manifest url', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
+        manifestUrl: '',
+      } as any);
+
+      let thrownError;
+      try {
+        await campaignsService['retrieveCampaignData'](
+          chainId,
+          campaignAddress,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.address).toBe(campaignAddress);
+      expect(thrownError.details).toBe('Missing manifest data');
+
+      expect(mockedEscrowUtils.getEscrow).toHaveBeenCalledWith(
+        chainId,
+        campaignAddress,
+      );
+    });
+
     it('should throw when escrow is for different recording oracle', async () => {
       const escrowRecordingOracle = faker.finance.ethereumAddress();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
+        manifestUrl: faker.internet.url(),
         recordingOracle: escrowRecordingOracle,
       } as any);
 
       let thrownError;
       try {
-        await campaignsService['retrieveCampaignManifest'](
+        await campaignsService['retrieveCampaignData'](
           chainId,
           campaignAddress,
         );
@@ -217,13 +306,16 @@ describe('CampaignsService', () => {
       async (escrowStatus) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+          token: faker.finance.ethereumAddress(),
+          totalFundedAmount: faker.number.bigInt().toString(),
+          manifestUrl: faker.internet.url(),
           recordingOracle: mockWeb3ConfigService.operatorAddress,
         } as any);
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
         let thrownError;
         try {
-          await campaignsService['retrieveCampaignManifest'](
+          await campaignsService['retrieveCampaignData'](
             chainId,
             campaignAddress,
           );
@@ -251,6 +343,8 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
         manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -262,7 +356,7 @@ describe('CampaignsService', () => {
 
       let thrownError;
       try {
-        await campaignsService['retrieveCampaignManifest'](
+        await campaignsService['retrieveCampaignData'](
           chainId,
           campaignAddress,
         );
@@ -291,6 +385,8 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
         manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -305,7 +401,7 @@ describe('CampaignsService', () => {
 
       let thrownError;
       try {
-        await campaignsService['retrieveCampaignManifest'](
+        await campaignsService['retrieveCampaignData'](
           chainId,
           campaignAddress,
         );
@@ -326,6 +422,8 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
         manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -340,7 +438,7 @@ describe('CampaignsService', () => {
 
       let thrownError;
       try {
-        await campaignsService['retrieveCampaignManifest'](
+        await campaignsService['retrieveCampaignData'](
           chainId,
           campaignAddress,
         );
@@ -361,6 +459,8 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
         manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -372,7 +472,7 @@ describe('CampaignsService', () => {
         JSON.stringify(mockedManifest),
       );
 
-      const manifest = await campaignsService['retrieveCampaignManifest'](
+      const { manifest } = await campaignsService['retrieveCampaignData'](
         chainId,
         campaignAddress,
       );
@@ -390,12 +490,14 @@ describe('CampaignsService', () => {
       const mockedManifest = generateCampaignManifest();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
         manifestUrl: JSON.stringify(mockedManifest),
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
-      const manifest = await campaignsService['retrieveCampaignManifest'](
+      const { manifest } = await campaignsService['retrieveCampaignData'](
         chainId,
         campaignAddress,
       );
@@ -411,11 +513,17 @@ describe('CampaignsService', () => {
       const chainId = generateTestnetChainId();
       const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateCampaignManifest();
+      const fundAmount = faker.number.float();
+      const fundTokenSymbol = faker.finance.currencyCode();
 
       const campaign = await campaignsService.createCampaign(
         chainId,
         campaignAddress,
         manifest,
+        {
+          fundAmount,
+          fundTokenSymbol,
+        },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
@@ -426,12 +534,14 @@ describe('CampaignsService', () => {
         address: campaignAddress,
         type: manifest.type,
         exchangeName: manifest.exchange,
-        dailyVolumeTarget: manifest.daily_volume_target,
+        dailyVolumeTarget: manifest.daily_volume_target.toString(),
         pair: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
         lastResultsAt: null,
         status: 'active',
+        fundAmount: fundAmount.toString(),
+        fundToken: fundTokenSymbol,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -508,16 +618,23 @@ describe('CampaignsService', () => {
         null,
       );
 
-      const spyOnRetrieveCampaignManifest = jest.spyOn(
+      const spyOnretrieveCampaignData = jest.spyOn(
         campaignsService as any,
-        'retrieveCampaignManifest',
+        'retrieveCampaignData',
       );
       const spyOnCreateCampaign = jest.spyOn(
         campaignsService,
         'createCampaign',
       );
       const campaignManifest = generateCampaignManifest();
-      spyOnRetrieveCampaignManifest.mockResolvedValueOnce(campaignManifest);
+      const escrowInfo = {
+        fundAmount: faker.number.float(),
+        fundTokenSymbol: faker.finance.currencyCode(),
+      };
+      spyOnretrieveCampaignData.mockResolvedValueOnce({
+        manifest: campaignManifest,
+        escrowInfo,
+      });
 
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
@@ -538,8 +655,8 @@ describe('CampaignsService', () => {
 
       expect(isUuidV4(campaignId)).toBe(true);
 
-      expect(spyOnRetrieveCampaignManifest).toHaveBeenCalledTimes(1);
-      expect(spyOnRetrieveCampaignManifest).toHaveBeenCalledWith(
+      expect(spyOnretrieveCampaignData).toHaveBeenCalledTimes(1);
+      expect(spyOnretrieveCampaignData).toHaveBeenCalledWith(
         chainId,
         campaignAddress,
       );
@@ -549,6 +666,7 @@ describe('CampaignsService', () => {
         chainId,
         campaignAddress,
         campaignManifest,
+        escrowInfo,
       );
 
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
@@ -559,14 +677,14 @@ describe('CampaignsService', () => {
         createdAt: now,
       });
 
-      spyOnRetrieveCampaignManifest.mockRestore();
+      spyOnretrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
       jest.useRealTimers();
     });
   });
 
   describe('getJoined', () => {
-    it('should return campaign addresses where user is participant', async () => {
+    it('should return data of campaigns where user is participant', async () => {
       const userId = faker.string.uuid();
       const userCampaigns = Array.from({ length: 3 }, () => {
         const campaign = generateCampaignEntity();
@@ -585,7 +703,7 @@ describe('CampaignsService', () => {
 
       const campaigns = await campaignsService.getJoined(userId);
 
-      expect(campaigns).toEqual(userCampaigns.map((e) => e.campaign.address));
+      expect(campaigns).toEqual(userCampaigns.map((e) => e.campaign));
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledTimes(1);
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledWith(
         userId,
@@ -1273,7 +1391,7 @@ describe('CampaignsService', () => {
           campaignAddress: campaign.address,
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume,
+          volume: intermediateResult.total_volume.toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
       );

@@ -18,9 +18,13 @@ export type CampaignManifest = {
   daily_volume_target: number;
   exchange: string;
   pair: string;
-  fund_token: string;
   start_date: Date;
   end_date: Date;
+};
+
+export type CampaignEscrowInfo = {
+  fundAmount: number;
+  fundTokenSymbol: string;
 };
 
 export type ParticipantOutcome = {

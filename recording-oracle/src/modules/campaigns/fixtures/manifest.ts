@@ -14,7 +14,6 @@ export function generateCampaignManifest(): CampaignManifest {
     daily_volume_target: faker.number.float(),
     exchange: generateExchangeName(),
     pair: generateTradingPair(),
-    fund_token: 'HMT',
     start_date: faker.date.recent(),
     end_date: faker.date.future(),
   };

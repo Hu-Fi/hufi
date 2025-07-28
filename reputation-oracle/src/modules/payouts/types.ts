@@ -5,7 +5,6 @@ export type CampaignManifest = {
   daily_volume_target: number;
   exchange: string;
   pair: string;
-  fund_token: string;
   start_date: string;
   end_date: string;
 };
