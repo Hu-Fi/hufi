@@ -138,7 +138,7 @@ export class RecordingApiClient {
   }
 
   async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('GET', url, config);
+    return this.request<T>('GET', url, undefined, config);
   }
 
   async post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
@@ -154,7 +154,7 @@ export class RecordingApiClient {
   }
 
   async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('DELETE', url, config);
+    return this.request<T>('DELETE', url, undefined, config);
   }
 
   async getNonce(address: `0x${string}` | undefined): Promise<string> {
