@@ -77,7 +77,6 @@ describe('manifest utils', () => {
         exchange: faker.lorem.word(),
         daily_volume_target: faker.number.float({ min: -42, max: 0 }),
         pair: generateTradingPair().replace('/', '-'),
-        fund_token: faker.string.alpha({ length: 11 }),
         // dates are not in ISO format
         start_date: faker.date.recent().toDateString(),
         end_date: faker.date.future().toDateString(),

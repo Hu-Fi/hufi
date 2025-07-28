@@ -18,7 +18,29 @@ export class JoinCampaignSuccessDto {
   id: string;
 }
 
-export class ListJoinedCampaignsSuccessDto {
+class JoinedCampaignDto {
+  @ApiProperty({ name: 'chain_id' })
+  chainId: number;
   @ApiProperty()
-  campaigns: string[];
+  address: string;
+  @ApiProperty({ name: 'exchange_name' })
+  exchangeName: string;
+  @ApiProperty({ name: 'trading_pair' })
+  tradingPair: string;
+  @ApiProperty({ name: 'start_date' })
+  startDate: string;
+  @ApiProperty({ name: 'end_date' })
+  endDate: string;
+  @ApiProperty({ name: 'fund_amount' })
+  fundAmount: number;
+  @ApiProperty({ name: 'fund_token' })
+  fundToken: string;
+}
+
+export class ListJoinedCampaignsSuccessDto {
+  @ApiProperty({
+    type: JoinedCampaignDto,
+    isArray: true,
+  })
+  campaigns: JoinedCampaignDto[];
 }

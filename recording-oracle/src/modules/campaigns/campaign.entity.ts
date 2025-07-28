@@ -27,7 +27,7 @@ export class CampaignEntity {
   type: string;
 
   @Column({ type: 'decimal', precision: 20, scale: 8 })
-  dailyVolumeTarget: number;
+  dailyVolumeTarget: string;
 
   @Column('varchar', { length: 20 })
   exchangeName: string;
@@ -40,6 +40,12 @@ export class CampaignEntity {
 
   @Column({ type: 'timestamptz' })
   endDate: Date;
+
+  @Column({ type: 'decimal', precision: 30, scale: 18 })
+  fundAmount: string;
+
+  @Column('varchar', { length: 20 })
+  fundToken: string;
 
   @Column({ type: 'timestamptz', nullable: true })
   lastResultsAt: Date | null;

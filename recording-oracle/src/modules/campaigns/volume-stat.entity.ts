@@ -15,7 +15,7 @@ export class VolumeStatEntity {
   exchangeName: string;
 
   @Column({ type: 'decimal', precision: 20, scale: 2 })
-  volume: number;
+  volume: string;
 
   @Column({ type: 'timestamptz' })
   periodStart: Date;

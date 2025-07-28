@@ -10,6 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import dayjs from 'dayjs';
+import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
@@ -39,6 +40,7 @@ import {
   MarketMakingResultsChecker,
 } from './progress-checking';
 import {
+  CampaignEscrowInfo,
   CampaignManifest,
   CampaignStatus,
   CampaignType,
@@ -87,11 +89,16 @@ export class CampaignsService {
 
     // Create a new campaign if it does not exist
     if (!campaign) {
-      const manifest = await this.retrieveCampaignManifest(
+      const { manifest, escrowInfo } = await this.retrieveCampaignData(
         chainId,
         campaignAddress,
       );
-      campaign = await this.createCampaign(chainId, campaignAddress, manifest);
+      campaign = await this.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        escrowInfo,
+      );
     }
 
     const isUserJoined =
@@ -128,6 +135,7 @@ export class CampaignsService {
     chainId: number,
     address: string,
     manifest: CampaignManifest,
+    escrowInfo: CampaignEscrowInfo,
   ): Promise<CampaignEntity> {
     const newCampaign = new CampaignEntity();
     newCampaign.id = crypto.randomUUID();
@@ -135,19 +143,21 @@ export class CampaignsService {
     newCampaign.address = address;
     newCampaign.type = manifest.type;
     newCampaign.exchangeName = manifest.exchange;
-    newCampaign.dailyVolumeTarget = manifest.daily_volume_target;
+    newCampaign.dailyVolumeTarget = manifest.daily_volume_target.toString();
     newCampaign.pair = manifest.pair;
     newCampaign.lastResultsAt = null;
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.status = CampaignStatus.ACTIVE;
+    newCampaign.fundAmount = escrowInfo.fundAmount.toString();
+    newCampaign.fundToken = escrowInfo.fundTokenSymbol;
 
     await this.campaignsRepository.insert(newCampaign);
 
     return newCampaign;
   }
 
-  async getJoined(userId: string): Promise<string[]> {
+  async getJoined(userId: string): Promise<CampaignEntity[]> {
     const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
@@ -157,7 +167,7 @@ export class CampaignsService {
       },
     );
 
-    const result: string[] = [];
+    const result: CampaignEntity[] = [];
     for (const userCampaign of userCampaigns) {
       if (!userCampaign.campaign) {
         this.logger.error(`User campaign does not have associated campaign`, {
@@ -166,19 +176,34 @@ export class CampaignsService {
         });
         continue;
       }
-      result.push(userCampaign.campaign.address);
+      result.push(userCampaign.campaign);
     }
     return result;
   }
 
-  private async retrieveCampaignManifest(
+  private async retrieveCampaignData(
     chainId: number,
     campaignAddress: string,
-  ): Promise<CampaignManifest> {
+  ): Promise<{
+    manifest: CampaignManifest;
+    escrowInfo: CampaignEscrowInfo;
+  }> {
     const escrow = await EscrowUtils.getEscrow(chainId, campaignAddress);
     if (!escrow) {
       throw new CampaignNotFoundError(campaignAddress);
     }
+
+    // Safety-belt for missing subgraph data START
+    if (!escrow.token) {
+      throw new InvalidCampaign(campaignAddress, 'Missing fund token data');
+    }
+    if (!escrow.totalFundedAmount) {
+      throw new InvalidCampaign(campaignAddress, 'Missing fund amount data');
+    }
+    if (!escrow.manifestUrl) {
+      throw new InvalidCampaign(campaignAddress, 'Missing manifest data');
+    }
+    // Safety-belt for missing subgraph data END
 
     const isEscrowForThisOracle =
       escrow.recordingOracle?.toLowerCase() ===
@@ -238,7 +263,20 @@ export class CampaignsService {
       );
     }
 
-    return manifest;
+    const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
+      this.web3Service.getTokenSymbol(chainId, escrow.token),
+      this.web3Service.getTokenDecimals(chainId, escrow.token),
+    ]);
+
+    return {
+      manifest,
+      escrowInfo: {
+        fundAmount: Number(
+          ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
+        ),
+        fundTokenSymbol: campaignTokenSymbol,
+      },
+    };
   }
 
   @Cron(PROGRESS_RECORDING_SCHEDULE)
@@ -512,7 +550,7 @@ export class CampaignsService {
           campaignAddress: campaign.address,
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume,
+          volume: intermediateResult.total_volume.toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
       );
