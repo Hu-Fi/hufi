@@ -1,13 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
 
-import { ChainIds } from '@/common/constants';
+import {
+  ChainIds,
+  ERC20_ABI_DECIMALS,
+  ERC20_ABI_SYMBOL,
+} from '@/common/constants';
 import { Web3ConfigService } from '@/config';
+import logger from '@/logger';
 
 import type { Chain, WalletWithProvider } from './types';
 
+const operationPromisesCache = new Map<string, Promise<unknown>>();
+
 @Injectable()
 export class Web3Service {
+  private readonly logger = logger.child({ context: Web3Service.name });
+
   private signersByChainId: {
     [chainId: number]: WalletWithProvider;
   } = {};
@@ -65,5 +74,77 @@ export class Web3Service {
     }
 
     throw new Error(`No gas price data for chain id: ${chainId}`);
+  }
+
+  async getTokenDecimals(
+    chainId: number,
+    tokenAddress: string,
+  ): Promise<number> {
+    const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
+
+    try {
+      if (!operationPromisesCache.has(cacheKey)) {
+        const provider = this.getSigner(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_DECIMALS,
+          provider,
+        );
+
+        operationPromisesCache.set(cacheKey, tokenContract.decimals());
+      }
+
+      const operationPromise = operationPromisesCache.get(
+        cacheKey,
+      ) as Promise<bigint>;
+
+      const decimals: bigint = await operationPromise;
+
+      return Number(decimals);
+    } catch (error) {
+      operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token decimals';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
+    }
+  }
+
+  async getTokenSymbol(chainId: number, tokenAddress: string): Promise<string> {
+    const cacheKey = `token-symbol-${chainId}-${tokenAddress}`;
+
+    try {
+      if (!operationPromisesCache.has(cacheKey)) {
+        const provider = this.getSigner(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_SYMBOL,
+          provider,
+        );
+
+        operationPromisesCache.set(cacheKey, tokenContract.symbol());
+      }
+
+      const symbol = await operationPromisesCache.get(cacheKey);
+      return symbol as string;
+    } catch (error) {
+      operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token symbol';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
+    }
   }
 }

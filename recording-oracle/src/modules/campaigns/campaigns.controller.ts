@@ -72,6 +72,18 @@ export class CampaignsController {
     @Req() request: RequestWithUser,
   ): Promise<ListJoinedCampaignsSuccessDto> {
     const campaigns = await this.campaignsService.getJoined(request.user.id);
-    return { campaigns };
+
+    return {
+      campaigns: campaigns.map((campaign) => ({
+        chainId: campaign.chainId,
+        address: campaign.address,
+        exchangeName: campaign.exchangeName,
+        tradingPair: campaign.pair,
+        startDate: campaign.startDate.toISOString(),
+        endDate: campaign.endDate.toISOString(),
+        fundAmount: Number(campaign.fundAmount),
+        fundToken: campaign.fundToken,
+      })),
+    };
   }
 }

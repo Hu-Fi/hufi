@@ -22,6 +22,11 @@ export type CampaignManifest = {
   end_date: Date;
 };
 
+export type CampaignEscrowInfo = {
+  fundAmount: number;
+  fundTokenSymbol: string;
+};
+
 export type ParticipantOutcome = {
   address: string;
   score: number;
