@@ -700,29 +700,30 @@ describe('CampaignsService', () => {
   describe('getJoined', () => {
     it('should return data of campaigns where user is participant', async () => {
       const userId = faker.string.uuid();
-      const userCampaigns = Array.from({ length: 3 }, () => {
-        const campaign = generateCampaignEntity();
-
-        return {
-          userId,
-          campaignId: campaign.id,
-          campaign: generateCampaignEntity(),
-          exchangeApiKeyId: faker.string.uuid(),
-          createdAt: faker.date.recent(),
-        };
-      });
+      const userCampaigns = Array.from({ length: 3 }, () =>
+        generateCampaignEntity(),
+      );
       mockUserCampaignsRepository.findByUserId.mockResolvedValueOnce(
         userCampaigns,
       );
+      const testStatus = faker.string.sample();
+      const testLimit = faker.number.int();
+      const testSkip = faker.number.int();
 
-      const campaigns = await campaignsService.getJoined(userId);
+      const campaigns = await campaignsService.getJoined(userId, {
+        status: testStatus as CampaignStatus,
+        limit: testLimit,
+        skip: testSkip,
+      });
 
-      expect(campaigns).toEqual(userCampaigns.map((e) => e.campaign));
+      expect(campaigns).toEqual(userCampaigns);
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledTimes(1);
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledWith(
         userId,
         {
-          relations: { campaign: true },
+          status: testStatus,
+          limit: testLimit,
+          skip: testSkip,
         },
       );
     });

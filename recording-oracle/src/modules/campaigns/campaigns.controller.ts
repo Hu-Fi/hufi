@@ -77,6 +77,7 @@ export class CampaignsController {
     const limit = query.limit;
 
     const campaigns = await this.campaignsService.getJoined(request.user.id, {
+      status: query.status,
       limit: limit + 1,
       skip: query.skip,
     });
@@ -87,6 +88,7 @@ export class CampaignsController {
         .map((campaign) => ({
           chainId: campaign.chainId,
           address: campaign.address,
+          status: campaign.status,
           exchangeName: campaign.exchangeName,
           tradingPair: campaign.pair,
           startDate: campaign.startDate.toISOString(),

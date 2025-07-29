@@ -159,31 +159,18 @@ export class CampaignsService {
 
   async getJoined(
     userId: string,
-    pagination?: Partial<{ limit: number; skip: number }>,
+    options?: Partial<{ status?: CampaignStatus; limit: number; skip: number }>,
   ): Promise<CampaignEntity[]> {
     const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
-        relations: {
-          campaign: true,
-        },
-        limit: pagination?.limit,
-        skip: pagination?.skip,
+        status: options?.status,
+        limit: options?.limit,
+        skip: options?.skip,
       },
     );
 
-    const result: CampaignEntity[] = [];
-    for (const userCampaign of userCampaigns) {
-      if (!userCampaign.campaign) {
-        this.logger.error(`User campaign does not have associated campaign`, {
-          userId,
-          campaignId: userCampaign.campaignId,
-        });
-        continue;
-      }
-      result.push(userCampaign.campaign);
-    }
-    return result;
+    return userCampaigns;
   }
 
   private async retrieveCampaignData(
