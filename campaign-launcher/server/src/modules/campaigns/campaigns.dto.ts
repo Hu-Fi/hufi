@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEthereumAddress, IsIn, IsOptional, Validate } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsEthereumAddress,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  Validate,
+} from 'class-validator';
 
 import {
   type ChainId,
@@ -7,6 +15,7 @@ import {
   type ReadableEscrowStatus,
   READABLE_ESCROW_STATUSES,
   SUPPORTED_EXCHANGE_NAMES,
+  DEFAULT_PAGINATION_LIMIT,
 } from '@/common/constants';
 import { ExchangeNameValidator, IsChainId } from '@/common/validators';
 
@@ -40,6 +49,22 @@ export class GetCampaignsQueryDto {
   @IsOptional()
   @IsIn(READABLE_ESCROW_STATUSES)
   status?: ReadableEscrowStatus;
+
+  @ApiPropertyOptional({
+    default: DEFAULT_PAGINATION_LIMIT,
+  })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @IsPositive()
+  limit: number = DEFAULT_PAGINATION_LIMIT;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @IsPositive()
+  skip?: number;
 }
 
 export class CampaignData {
@@ -96,6 +121,17 @@ export class CampaignData {
 
   @ApiProperty()
   launcher: string;
+}
+
+export class GetCampaignsResponseDto {
+  @ApiProperty({ name: 'has_more' })
+  hasMore: boolean;
+
+  @ApiProperty({
+    type: CampaignData,
+    isArray: true,
+  })
+  results: CampaignData[];
 }
 
 export class GetCampaignWithDetailsParamsDto {

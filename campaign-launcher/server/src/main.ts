@@ -16,7 +16,6 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   const config = new DocumentBuilder()
-    .addBearerAuth()
     .setTitle('Recording Oracle API')
     .setDescription('Swagger Recording Oracle API')
     .setVersion('1.0')
