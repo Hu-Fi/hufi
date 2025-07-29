@@ -1,7 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsEthereumAddress } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import {
+  IsEnum,
+  IsEthereumAddress,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+} from 'class-validator';
 
-import { ChainIds, type ChainId } from '@/common/constants';
+import {
+  ChainIds,
+  DEFAULT_PAGINATION_LIMIT,
+  type ChainId,
+} from '@/common/constants';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
@@ -37,7 +48,30 @@ class JoinedCampaignDto {
   fundToken: string;
 }
 
+export class ListJoinedCampaignsQueryDto {
+  @ApiPropertyOptional({
+    default: DEFAULT_PAGINATION_LIMIT,
+  })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @IsPositive()
+  limit: number = DEFAULT_PAGINATION_LIMIT;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @IsPositive()
+  skip?: number;
+}
+
 export class ListJoinedCampaignsSuccessDto {
+  @ApiProperty({
+    name: 'has_more',
+  })
+  hasMore: boolean;
+
   @ApiProperty({
     type: JoinedCampaignDto,
     isArray: true,

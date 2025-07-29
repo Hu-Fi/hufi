@@ -157,13 +157,18 @@ export class CampaignsService {
     return newCampaign;
   }
 
-  async getJoined(userId: string): Promise<CampaignEntity[]> {
+  async getJoined(
+    userId: string,
+    pagination?: Partial<{ limit: number; skip: number }>,
+  ): Promise<CampaignEntity[]> {
     const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
         relations: {
           campaign: true,
         },
+        limit: pagination?.limit,
+        skip: pagination?.skip,
       },
     );
 

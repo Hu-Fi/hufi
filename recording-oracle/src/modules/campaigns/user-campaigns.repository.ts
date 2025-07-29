@@ -7,6 +7,8 @@ import { UserCampaignEntity } from './user-campaign.entity';
 
 type FindOptions = {
   relations?: FindManyOptions<UserCampaignEntity>['relations'];
+  limit?: number;
+  skip?: number;
 };
 
 @Injectable()
@@ -19,7 +21,12 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
     userId: string,
     options: FindOptions = {},
   ): Promise<UserCampaignEntity[]> {
-    return this.find({ where: { userId }, relations: options.relations });
+    return this.find({
+      where: { userId },
+      relations: options.relations,
+      skip: options.skip,
+      take: options.limit,
+    });
   }
 
   async checkUserJoinedCampaign(
