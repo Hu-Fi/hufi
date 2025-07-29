@@ -666,6 +666,8 @@ describe('CampaignsService', () => {
         campaignAddress,
       );
 
+      jest.useRealTimers();
+
       expect(isUuidV4(campaignId)).toBe(true);
 
       expect(spyOnretrieveCampaignData).toHaveBeenCalledTimes(1);
@@ -692,7 +694,6 @@ describe('CampaignsService', () => {
 
       spyOnretrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
-      jest.useRealTimers();
     });
   });
 
@@ -1219,9 +1220,9 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-
       jest.useRealTimers();
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
     it('should use campaign end date if less than a day left to check', async () => {
@@ -1305,6 +1306,8 @@ describe('CampaignsService', () => {
         Object.assign({}, campaign),
       );
 
+      jest.useRealTimers();
+
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
@@ -1312,8 +1315,6 @@ describe('CampaignsService', () => {
         status: 'active',
         lastResultsAt: now,
       });
-
-      jest.useRealTimers();
     });
 
     it('should not complete campaign if reached its end date but not all results calculated', async () => {
@@ -1339,14 +1340,14 @@ describe('CampaignsService', () => {
         Object.assign({}, campaign),
       );
 
+      jest.useRealTimers();
+
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
         lastResultsAt: now,
       });
-
-      jest.useRealTimers();
     });
 
     it('should complete campaign when reached its end date and all results calculated', async () => {
@@ -1376,6 +1377,8 @@ describe('CampaignsService', () => {
         Object.assign({}, campaign),
       );
 
+      jest.useRealTimers();
+
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
@@ -1383,8 +1386,42 @@ describe('CampaignsService', () => {
         status: 'completed',
         lastResultsAt: now,
       });
+    });
+
+    it('should complete campaign if recording period dates overlap', async () => {
+      campaign.endDate = dayjs().subtract(1, 'day').toDate();
+
+      campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        generateIntermediateResultsData({
+          results: [generateIntermediateResult(campaign.endDate)],
+        }),
+      );
+
+      const now = new Date();
+      jest.useFakeTimers({ now });
+
+      await campaignsService.recordCampaignProgress(
+        Object.assign({}, campaign),
+      );
 
       jest.useRealTimers();
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Campaign progress period dates overlap',
+      );
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...campaign,
+        status: 'completed',
+        lastResultsAt: now,
+      });
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
     it('should record generated volume stat', async () => {

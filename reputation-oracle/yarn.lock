@@ -859,9 +859,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^4.1.4":
-  version: 4.1.4
-  resolution: "@human-protocol/sdk@npm:4.1.4"
+"@human-protocol/sdk@npm:^4.1.5":
+  version: 4.1.5
+  resolution: "@human-protocol/sdk@npm:4.1.5"
   dependencies:
     "@human-protocol/core": "npm:x"
     axios: "npm:^1.4.0"
@@ -873,7 +873,7 @@ __metadata:
     openpgp: "npm:^5.11.2"
     secp256k1: "npm:^5.0.1"
     vitest: "npm:^3.0.9"
-  checksum: 10c0/d74c291f23042f41aa9ccf3132a493ee1e63f494761c11ab0d3f09ffe421fd8c2aca85ac000a188f9a4a90225f100da342295fa45b5fa6e10caf7624685b84fc
+  checksum: 10c0/2e7ebdd8e5a5df8a89dfa67992a06cc98e9c4b55d855d341c8ffea9357348a39a1ba95d444f7e1891b7d962fe6f8af0d872b88b378d137ff08c8b4d5530d3c08
   languageName: node
   linkType: hard
 
@@ -7753,7 +7753,7 @@ __metadata:
     "@faker-js/faker": "npm:^9.9.0"
     "@golevelup/ts-jest": "npm:^0.7.0"
     "@human-protocol/logger": "npm:^1.0.0"
-    "@human-protocol/sdk": "npm:^4.1.4"
+    "@human-protocol/sdk": "npm:^4.1.5"
     "@nestjs/cli": "npm:^11.0.0"
     "@nestjs/common": "npm:^11.0.1"
     "@nestjs/config": "npm:^4.0.2"

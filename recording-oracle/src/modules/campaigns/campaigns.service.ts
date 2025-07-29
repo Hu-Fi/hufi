@@ -356,6 +356,23 @@ export class CampaignsService {
             endDate = campaign.endDate;
           }
 
+          // safety-belt
+          if (startDate >= endDate) {
+            /**
+             * This can happen only in situations when:
+             * - by some reason we lost data about campaign from DB, then re-added it
+             * - by some reason campaign was 'completed', but status changed to 'active'
+             * and then attempted to record it's progress but it must be
+             * already finished and start-end dates overlap indicates that,
+             * so just mark it as completed, otherwise it leads to invalid intermediate results.
+             */
+            logger.warn('Campaign progress period dates overlap');
+            campaign.status = CampaignStatus.COMPLETED;
+            campaign.lastResultsAt = new Date();
+            await this.campaignsRepository.save(campaign);
+            return;
+          }
+
           const campaignParticipants =
             await this.userCampaignsRepository.findCampaignUsers(campaign.id);
 
