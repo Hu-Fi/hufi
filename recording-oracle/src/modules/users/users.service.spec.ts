@@ -59,6 +59,8 @@ describe('UsersService', () => {
 
       const user = await usersService.create(randomAddress);
 
+      jest.useRealTimers();
+
       expect(isUuidV4(user.id)).toBe(true);
 
       expect(isValidNonce(user.nonce)).toBe(true);
@@ -69,8 +71,6 @@ describe('UsersService', () => {
       expect(user.createdAt).toBeInstanceOf(Date);
       expect(user.createdAt.valueOf()).toBe(now);
       expect(user.updatedAt).toEqual(user.createdAt);
-
-      jest.useRealTimers();
     });
   });
 

@@ -1,11 +1,6 @@
 import crypto from 'crypto';
 
-import {
-  EscrowClient,
-  EscrowStatus,
-  EscrowUtils,
-  IEscrowsFilter,
-} from '@human-protocol/sdk';
+import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 
@@ -275,27 +270,17 @@ export class PayoutsService {
   private async getCampaignsForPayouts(
     chainId: ChainId,
   ): Promise<CampaignWithResults[]> {
-    const baseFilter: IEscrowsFilter = {
+    const escrows = await EscrowUtils.getEscrows({
       chainId: chainId as number,
       reputationOracle: this.web3ConfigService.operatorAddress,
-    };
-
-    /**
-     * TODO: add "toCancelEscrows" when escrow cancelletion is done
-     */
-    const [pendingEscrows, partialEscrows] = await Promise.all([
-      EscrowUtils.getEscrows({
-        ...baseFilter,
-        status: EscrowStatus.Pending,
-      }),
-      EscrowUtils.getEscrows({
-        ...baseFilter,
-        status: EscrowStatus.Partial,
-      }),
-    ]);
+      /**
+       * TODO: add "toCancelEscrows" when escrow cancelletion is done
+       */
+      status: [EscrowStatus.Pending, EscrowStatus.Partial],
+    });
 
     const campaignsWithResults: CampaignWithResults[] = [];
-    for (const escrow of [...pendingEscrows, ...partialEscrows]) {
+    for (const escrow of escrows) {
       if (!escrow.intermediateResultsUrl) {
         continue;
       }
