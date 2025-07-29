@@ -18,6 +18,7 @@ import { createMock } from '@golevelup/ts-jest';
 import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
+import { ethers } from 'ethers';
 
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -454,13 +455,14 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should download and return manifest (url)', async () => {
+    it('should retrieve and return data (manifest url)', async () => {
       const manifestUrl = faker.internet.url();
       const manifestHash = faker.string.hexadecimal();
+      const totalFundedAmount = faker.number.bigInt().toString();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt().toString(),
+        totalFundedAmount,
         manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -472,12 +474,17 @@ describe('CampaignsService', () => {
         JSON.stringify(mockedManifest),
       );
 
-      const { manifest } = await campaignsService['retrieveCampaignData'](
-        chainId,
-        campaignAddress,
-      );
+      const { manifest, escrowInfo } = await campaignsService[
+        'retrieveCampaignData'
+      ](chainId, campaignAddress);
 
       expect(manifest).toEqual(mockedManifest);
+      expect(escrowInfo).toEqual({
+        fundAmount: Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        ),
+        fundTokenSymbol: TEST_TOKEN_SYMBOL,
+      });
 
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledTimes(1);
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledWith(
@@ -486,23 +493,29 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should download and return manifest (json)', async () => {
+    it('should retrieve and return data (manifest json)', async () => {
       const mockedManifest = generateCampaignManifest();
+      const totalFundedAmount = faker.number.bigInt().toString();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt().toString(),
+        totalFundedAmount,
         manifestUrl: JSON.stringify(mockedManifest),
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
-      const { manifest } = await campaignsService['retrieveCampaignData'](
-        chainId,
-        campaignAddress,
-      );
+      const { manifest, escrowInfo } = await campaignsService[
+        'retrieveCampaignData'
+      ](chainId, campaignAddress);
 
       expect(manifest).toEqual(mockedManifest);
+      expect(escrowInfo).toEqual({
+        fundAmount: Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        ),
+        fundTokenSymbol: TEST_TOKEN_SYMBOL,
+      });
 
       expect(spyOnDownloadCampaignManifest).not.toHaveBeenCalled();
     });
