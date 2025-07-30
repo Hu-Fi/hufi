@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 
-import { Button, Paper } from '@mui/material';
+import Button from '@mui/material/Button';
 
 import { recordingApi } from '../../api';
 import ApiKeysTable from '../../components/ApiKeysTable';
@@ -55,18 +55,7 @@ const ManageApiKeysPage: FC = () => {
           Add new key
         </Button>
       </PageTitle>
-      <Paper
-        elevation={1}
-        sx={{
-          bgcolor: 'background.default',
-          minHeight: '560px',
-          width: '100%',
-          p: 4,
-          borderRadius: '16px',
-        }}
-      >
-        <ApiKeysTable data={apiKeysData} />
-      </Paper>
+      <ApiKeysTable data={apiKeysData} />
       <AddApiKeyModal
         open={addApiKeyModalOpen}
         onClose={() => setAddApiKeyModalOpen(false)}

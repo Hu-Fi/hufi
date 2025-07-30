@@ -101,7 +101,6 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       <DataGrid 
         columns={columns}
         rows={rows}
-        rowHeight={56 + 4}
         columnHeaderHeight={52}
         scrollbarSize={0}
         disableColumnFilter
@@ -111,13 +110,25 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         disableColumnSelector
         disableRowSelectionOnClick
         disableVirtualization
-        hideFooter
-        getRowSpacing={() => ({
-          top: 4,
-          bottom: 0,
-        })}
+        pageSizeOptions={[5, 10, 50]}
+        hideFooter={rows.length < 6}
+        getRowHeight={() => 'auto'}
+        initialState={{
+          pagination: {
+            paginationModel: {
+              pageSize: 5,
+            },
+          },
+        }}
         sx={{
           border: 'none',
+          '& .MuiDataGrid-main': {
+            p: 4,
+            borderRadius: '16px',
+            width: '100%',
+            height: '450px',
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 100%), #100735',
+          },
           '& .MuiDataGrid-cell': {
             borderTop: 'none',
             p: 2,
@@ -137,7 +148,10 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           '& .MuiDataGrid-row': {
             borderTop: '1px solid rgba(255, 255, 255, 0.04)',
           },
-          '& .MuiDataGrid-columnSeparator--sideRight': {
+          '& .MuiDataGrid-footerContainer': {
+            border: 'none',
+          },
+          '& .MuiDataGrid-columnSeparator--sideRight, & .MuiDataGrid-filler': {
             display: 'none',
           },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
