@@ -40,7 +40,11 @@ import {
 } from '@/modules/web3/fixtures';
 
 import { CampaignEntity } from './campaign.entity';
-import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
+import {
+  CampaignAlreadyFinishedError,
+  CampaignNotFoundError,
+  InvalidCampaign,
+} from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
 import {
@@ -569,13 +573,11 @@ describe('CampaignsService', () => {
     let campaign: CampaignEntity;
     let userId: string;
     let chainId: number;
-    let campaignAddress: string;
 
     beforeEach(() => {
       campaign = generateCampaignEntity();
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
-      campaignAddress = faker.finance.ethereumAddress();
     });
 
     it('should return campaign id if exists and user already joined', async () => {
@@ -586,13 +588,13 @@ describe('CampaignsService', () => {
         true,
       );
 
-      const id = await campaignsService.join(userId, chainId, campaignAddress);
+      const id = await campaignsService.join(userId, chainId, campaign.address);
 
       expect(id).toBe(campaign.id);
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaignAddress);
+      ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -612,7 +614,7 @@ describe('CampaignsService', () => {
 
       let thrownError;
       try {
-        await campaignsService.join(userId, chainId, campaignAddress);
+        await campaignsService.join(userId, chainId, campaign.address);
       } catch (error) {
         thrownError = error;
       }
@@ -627,6 +629,7 @@ describe('CampaignsService', () => {
     });
 
     it('should create campaign when not exist and join user', async () => {
+      const campaignAddress = faker.finance.ethereumAddress();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         null,
       );
@@ -694,6 +697,25 @@ describe('CampaignsService', () => {
 
       spyOnretrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
+    });
+
+    it('should throw when joining campaign that already finished', async () => {
+      campaign.endDate = faker.date.past();
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.join(userId, chainId, campaign.address);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
     });
   });
 

@@ -14,3 +14,9 @@ export class InvalidCampaign extends BaseError {
     super('Invalid campaign');
   }
 }
+
+export class CampaignAlreadyFinishedError extends BaseError {
+  constructor(readonly address: string) {
+    super('Campaign already finished');
+  }
+}

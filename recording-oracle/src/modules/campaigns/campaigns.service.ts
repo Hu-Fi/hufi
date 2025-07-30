@@ -30,7 +30,11 @@ import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
-import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
+import {
+  CampaignAlreadyFinishedError,
+  CampaignNotFoundError,
+  InvalidCampaign,
+} from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
 import * as manifestUtils from './manifest.utils';
@@ -99,6 +103,14 @@ export class CampaignsService {
         manifest,
         escrowInfo,
       );
+    }
+
+    if (campaign.endDate.valueOf() <= Date.now()) {
+      /**
+       * Safety belt to disallow joining campaigns that already finished
+       * but might be waiting for results recording or payouts
+       */
+      throw new CampaignAlreadyFinishedError(campaign.address);
     }
 
     const isUserJoined =
