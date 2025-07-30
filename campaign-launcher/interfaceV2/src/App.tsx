@@ -5,6 +5,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider/L
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
 import { ROUTES } from './constants';
 import AllCampaignsPage from './pages/AllCampaigns';
 import Campaign from './pages/Campaign';
@@ -48,7 +49,11 @@ const App: FC = () => {
                       />
                       <Route
                         path={ROUTES.MANAGE_API_KEYS}
-                        element={<ManageApiKeysPage />}
+                        element={
+                          <ProtectedRoute>
+                            <ManageApiKeysPage />
+                          </ProtectedRoute>
+                        }
                       />
                     </Routes>
                   </Layout>

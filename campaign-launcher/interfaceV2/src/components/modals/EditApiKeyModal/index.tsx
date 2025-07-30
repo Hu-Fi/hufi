@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -6,21 +6,25 @@ import {
   Button,
   FormControl,
   FormHelperText,
-  Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
-import { usePostExchangeApiKey } from '../../../hooks/recording-oracle/exchangeApiKeys';
+import { usePostExchangeApiKey } from '../../../hooks/recording-oracle';
 import FormExchangeSelect from '../../FormExchangeSelect';
 import { ModalError, ModalLoading, ModalSuccess } from '../../ModalState';
-import BaseModal from '../BaseModal';
+import BaseModal from "../BaseModal";
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  exchangeName?: string;
+  keysData?: {
+    api_key: string;
+    secret_key: string;
+  };
 };
 
 type APIKeyFormValues = {
@@ -35,8 +39,8 @@ const validationSchema = yup.object({
   exchange: yup.string().required('Required'),
 });
 
-const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
-  const { mutate: postExchangeApiKey, reset: resetMutation, isPending, isIdle, isSuccess, isError } = usePostExchangeApiKey();
+const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName, keysData }) => {
+  const { mutate: postExchangeApiKey, reset: resetMutation, isIdle, isPending, isSuccess, isError } = usePostExchangeApiKey();
   const {
     control,
     formState: { errors },
@@ -51,20 +55,30 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
     },
   });
 
+  useEffect(() => {
+    if (open && exchangeName && keysData) {
+      reset({
+        exchange: exchangeName || '',
+        apiKey: keysData?.api_key || '',
+        secret: keysData?.secret_key || '',
+      });
+    }
+  }, [open, exchangeName, keysData, reset]);
+
+  const handleClose = () => {
+    if (isPending) return;
+    
+    reset();
+    resetMutation();
+    onClose();
+  };
+
   const onSubmit = (values: APIKeyFormValues) => {
     postExchangeApiKey({
       exchangeName: values.exchange,
       apiKey: values.apiKey,
       secret: values.secret,
     });
-  };
-
-  const handleClose = () => {
-    if (isPending) return;
-
-    reset();
-    resetMutation();
-    onClose();
   };
 
   return (
@@ -78,26 +92,25 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack alignItems="center" textAlign="center" px={{ xs: 0, md: 4 }}>
+        <Box 
+          display="flex" 
+          flexDirection="column" 
+          alignItems="center" 
+          textAlign="center" 
+          px={{ xs: 0, md: 4 }}
+        >
           <Typography variant="h4" py={1} mb={2}>
-            Connect API key
+            Edit API key
           </Typography>
           {isPending && <ModalLoading />}
           {isIdle && (
             <>
-              <Typography component="p" mb={2} textAlign="center">
-                For you to join a running campaign you must connect your API key.{' '}
-                <br />
-                By connecting your API key, you agree to HUMAN Protocol{' '}
-                <strong>Terms of Service</strong> and consent to its{' '}
-                <strong>Privacy Policy</strong>.
-              </Typography>
               <Box display="flex" gap={1} mb={3} width="100%">
                 <FormControl error={!!errors.exchange} sx={{ width: '30%' }}>
                   <Controller
                     name="exchange"
                     control={control}
-                    render={({ field }) => <FormExchangeSelect<APIKeyFormValues, 'exchange'> field={field} />}
+                    render={({ field }) => <FormExchangeSelect<APIKeyFormValues, 'exchange'> field={field} disabled />}
                   />
                   {errors.exchange && (
                     <FormHelperText>{errors.exchange.message}</FormHelperText>
@@ -138,50 +151,59 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                   <FormHelperText>{errors.secret.message}</FormHelperText>
                 )}
               </FormControl>
-              
             </>
           )}
           {isSuccess && (
             <ModalSuccess>
               <Typography variant="subtitle2" py={1} mb={1} textAlign="center">
-                You have successfully added your API key
+                You have successfully edited your API key
               </Typography>
             </ModalSuccess>
           )}
           {isError && <ModalError />}
-          {isIdle && (
-            <Button
-              size="large"
-              type="submit"
-              variant="contained"
-              sx={{ mx: 'auto' }}
-            >
-              Connect API key
-            </Button>
-          )}
-          {(isPending || isSuccess) && (
-            <Button
-              size="large"
-              variant="contained"
-              disabled={isPending}
-              onClick={handleClose}
-            >
-              Close
-            </Button>
-          )}
-          {isError && (
-            <Button
-              size="large"
-              variant="contained"
-              onClick={resetMutation}
-            >
-              Edit
-            </Button>
-          )}
-        </Stack>
+          <Box display="flex" gap={1} mx="auto">
+            {isIdle && (
+              <>
+                <Button
+                  size="large"
+                  variant="outlined"
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="large"
+                  type="submit"
+                  variant="contained"
+                >
+                  Save
+                </Button>
+              </>
+            )}
+            {(isPending || isSuccess) && (
+              <Button
+                size="large"
+                variant="contained"
+                disabled={isPending}
+                onClick={handleClose}
+              >
+                Close
+              </Button>
+            )}
+            {isError && (
+              <Button
+                size="large"
+                variant="contained"
+                onClick={resetMutation}
+              >
+                Edit
+              </Button>
+            )}
+          </Box>
+        </Box>
       </form>
     </BaseModal>
   );
 };
 
-export default AddApiKeyModal;
+export default EditApiKeyModal;

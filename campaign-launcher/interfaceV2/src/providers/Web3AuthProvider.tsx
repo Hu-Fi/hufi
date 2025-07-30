@@ -26,7 +26,7 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
 
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { signMessageAsync } = useSignMessage();
   const { isConnected, address } = useAccount();
 
@@ -57,6 +57,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     const refresh_token = tokenManager.getRefreshToken();
 
     if (!refresh_token || !access_token) {
+      setIsLoading(false);
       return;
     }
     
@@ -93,6 +94,8 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
       bootstrapAuthState();
+    } else {
+      setIsLoading(false);
     }
   }, [isConnected, isAuthenticated]);
 

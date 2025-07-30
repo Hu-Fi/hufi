@@ -170,3 +170,47 @@ export const ApiKeyIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const EditIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path 
+        d="M2.99902 17.2515V21.0015H6.74902L17.809 9.94152L14.059 6.19152L2.99902 17.2515ZM20.709 7.04152C21.099 6.65152 21.099 6.02152 20.709 5.63152L18.369 3.29152C17.979 2.90152 17.349 2.90152 16.959 3.29152L15.129 5.12152L18.879 8.87152L20.709 7.04152Z"   
+        fill="currentColor"
+      />
+    </SvgIcon>
+  );
+};
+
+export const DeleteIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path 
+        d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" 
+        fill="currentColor"
+      />
+    </SvgIcon>
+  );
+};
+
+export const CloseIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 34 34" fill="none">
+      <path
+        fill="currentColor"
+        d="M26.7228 9.23568L24.7644 7.27734L17.0005 15.0412L9.23665 7.27734L7.27832 9.23568L15.0422 16.9996L7.27832 24.7635L9.23665 26.7218L17.0005 18.9579L24.7644 26.7218L26.7228 24.7635L18.9589 16.9996L26.7228 9.23568Z"
+      />
+    </SvgIcon>
+  );
+};
+
+export const SuccessIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 34 34" fill="none">
+      <path
+        fill="currentColor"
+        d="M12.5486 22.3822L6.75689 16.5905L4.78467 18.5489L12.5486 26.3127L29.2152 9.64608L27.2569 7.68774L12.5486 22.3822Z"
+      />
+    </SvgIcon>
+  );
+};

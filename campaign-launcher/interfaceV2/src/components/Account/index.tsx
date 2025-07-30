@@ -21,7 +21,7 @@ const buttonSx = {
   borderBottomColor: 'rgba(205, 199, 255, 0.50)',
   '&:hover': {
     bgcolor: '#f5efff',
-    color: 'primary.main',
+    color: 'primary.light',
   },
   '&:last-child': {
     borderBottom: 'none',
@@ -42,6 +42,7 @@ const Account: FC = () => {
   const handleClosePopover = () => setAnchorEl(null);
 
   const handleGoToManageApiKeys = () => {
+    handleClosePopover();
     navigate('/manage-api-keys');
   };
 
