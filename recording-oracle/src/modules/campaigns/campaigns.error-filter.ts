@@ -7,7 +7,10 @@ import {
 import { Request, Response } from 'express';
 
 import logger from '@/logger';
-import { ExchangeApiKeyNotFoundError } from '@/modules/exchange-api-keys';
+import {
+  ExchangeApiKeyNotFoundError,
+  KeyAuthorizationError,
+} from '@/modules/exchange-api-keys';
 
 import {
   CampaignAlreadyFinishedError,
@@ -17,9 +20,10 @@ import {
 
 @Catch(
   CampaignNotFoundError,
-  ExchangeApiKeyNotFoundError,
   InvalidCampaign,
   CampaignAlreadyFinishedError,
+  ExchangeApiKeyNotFoundError,
+  KeyAuthorizationError,
 )
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({

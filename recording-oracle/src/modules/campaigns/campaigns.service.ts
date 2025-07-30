@@ -20,11 +20,7 @@ import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import {
-  ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysRepository,
-  ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
+import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
@@ -70,7 +66,6 @@ export class CampaignsService {
 
   constructor(
     private readonly campaignsRepository: CampaignsRepository,
-    private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly storageService: StorageService,
@@ -122,20 +117,16 @@ export class CampaignsService {
       return campaign.id;
     }
 
-    const exchangeApiKey =
-      await this.exchangeApiKeysRepository.findOneByUserAndExchange(
+    const exchangeApiKeyId =
+      await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
         userId,
         campaign.exchangeName,
       );
 
-    if (!exchangeApiKey) {
-      throw new ExchangeApiKeyNotFoundError(userId, campaign.exchangeName);
-    }
-
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
     newUserCampaign.campaignId = campaign.id;
-    newUserCampaign.exchangeApiKeyId = exchangeApiKey.id;
+    newUserCampaign.exchangeApiKeyId = exchangeApiKeyId;
     newUserCampaign.createdAt = new Date();
 
     await this.userCampaignsRepository.insert(newUserCampaign);

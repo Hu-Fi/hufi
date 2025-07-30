@@ -25,12 +25,7 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import {
-  ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysRepository,
-  ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
-import { generateExchangeApiKey } from '@/modules/exchange-api-keys/fixtures';
+import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { generateUserEntity } from '@/modules/users/fixtures';
 import { Web3Service } from '@/modules/web3';
@@ -66,7 +61,6 @@ import { ExchangeApiClientFactory } from '../exchange';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
-const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 const mockStorageService = createMock<StorageService>();
@@ -86,10 +80,6 @@ describe('CampaignsService', () => {
         {
           provide: CampaignsRepository,
           useValue: mockCampaignsRepository,
-        },
-        {
-          provide: ExchangeApiKeysRepository,
-          useValue: mockExchangeApiKeysRepository,
         },
         {
           provide: ExchangeApiKeysService,
@@ -601,15 +591,16 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should throw when exchange api key not found for exchange from campaign', async () => {
+    it('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
-        null,
+      const testError = new Error(faker.lorem.sentence());
+      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+        testError,
       );
 
       let thrownError;
@@ -619,13 +610,7 @@ describe('CampaignsService', () => {
         thrownError = error;
       }
 
-      expect(thrownError).toBeInstanceOf(ExchangeApiKeyNotFoundError);
-      expect(thrownError.userId).toBe(userId);
-      expect(thrownError.exchangeName).toBe(campaign.exchangeName);
-
-      expect(
-        mockExchangeApiKeysRepository.findOneByUserAndExchange,
-      ).toHaveBeenCalledWith(userId, campaign.exchangeName);
+      expect(thrownError).toBe(testError);
     });
 
     it('should create campaign when not exist and join user', async () => {
@@ -655,9 +640,9 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      const exchangeApiKey = generateExchangeApiKey();
-      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
-        exchangeApiKey,
+      const exchangeApiKeyId = faker.string.uuid();
+      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
+        exchangeApiKeyId,
       );
 
       const now = new Date();
@@ -691,7 +676,7 @@ describe('CampaignsService', () => {
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
         userId,
         campaignId,
-        exchangeApiKeyId: exchangeApiKey.id,
+        exchangeApiKeyId,
         createdAt: now,
       });
 
