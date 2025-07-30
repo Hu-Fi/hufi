@@ -100,14 +100,6 @@ export class CampaignsService {
       );
     }
 
-    if (campaign.endDate.valueOf() <= Date.now()) {
-      /**
-       * Safety belt to disallow joining campaigns that already finished
-       * but might be waiting for results recording or payouts
-       */
-      throw new CampaignAlreadyFinishedError(campaign.address);
-    }
-
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
@@ -115,6 +107,14 @@ export class CampaignsService {
       );
     if (isUserJoined) {
       return campaign.id;
+    }
+
+    if (campaign.endDate.valueOf() <= Date.now()) {
+      /**
+       * Safety belt to disallow joining campaigns that already finished
+       * but might be waiting for results recording or payouts
+       */
+      throw new CampaignAlreadyFinishedError(campaign.address);
     }
 
     const exchangeApiKeyId =
