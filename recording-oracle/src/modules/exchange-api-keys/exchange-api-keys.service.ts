@@ -6,6 +6,7 @@ import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { UsersService } from '@/modules/users';
 
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
+import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
 import {
   ExchangeApiKeyNotFoundError,
   IncompleteKeySuppliedError,
@@ -116,5 +117,28 @@ export class ExchangeApiKeysService {
     }
 
     return id;
+  }
+
+  async retrievedEnrolledApiKeys(userId: string): Promise<EnrolledApiKeyDto[]> {
+    const enrolledKeys =
+      await this.exchangeApiKeysRepository.findByUserId(userId);
+
+    const retrievalPromises: Array<Promise<EnrolledApiKeyDto>> = [];
+    for (const enrolledKey of enrolledKeys) {
+      const retrieveFn = async () => {
+        const decodedApiKey = await this.aesEncryptionService.decrypt(
+          enrolledKey.apiKey,
+        );
+
+        return {
+          exchangeName: enrolledKey.exchangeName,
+          apiKey: decodedApiKey.toString(),
+        };
+      };
+
+      retrievalPromises.push(retrieveFn());
+    }
+
+    return await Promise.all(retrievalPromises);
   }
 }

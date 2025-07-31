@@ -57,4 +57,16 @@ export class ExchangeApiKeysRepository extends Repository<ExchangeApiKeyEntity> 
       exchangeName,
     });
   }
+
+  async findByUserId(userId: string): Promise<ExchangeApiKeyEntity[]> {
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+
+    return this.find({
+      where: {
+        userId,
+      },
+    });
+  }
 }
