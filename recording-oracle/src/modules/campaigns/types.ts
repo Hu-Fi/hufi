@@ -10,6 +10,12 @@ export enum CampaignStatus {
   COMPLETED = 'completed',
 }
 
+export enum ExposedCampaignStatus {
+  ACTIVE = 'active',
+  CANCELLED = 'cancelled',
+  COMPLETED = 'completed',
+}
+
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
 }

@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 
-import { ChainId } from '@/common/constants';
+import { ChainId, ReadableEscrowStatus } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -110,6 +110,7 @@ export class CampaignsService {
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
         status: ESCROW_TO_CAMPAIGN_STATUS[campaignEscrow.status],
+        escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
         launcher: ethers.getAddress(campaignEscrow.launcher),
       });
     }
@@ -193,6 +194,7 @@ export class CampaignsService {
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
       status: ESCROW_TO_CAMPAIGN_STATUS[campaignEscrow.status],
+      escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
       // details
       amountPaid: campaignEscrow.amountPaid,
       dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({

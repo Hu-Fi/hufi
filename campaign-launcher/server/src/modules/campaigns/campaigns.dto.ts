@@ -15,6 +15,7 @@ import {
   ChainIds,
   SUPPORTED_EXCHANGE_NAMES,
   DEFAULT_PAGINATION_LIMIT,
+  type ReadableEscrowStatus,
 } from '@/common/constants';
 import { ExchangeNameValidator, IsChainId } from '@/common/validators';
 
@@ -128,6 +129,9 @@ export class CampaignData {
 
   @ApiProperty()
   status: CampaignStatus;
+
+  @ApiProperty({ name: 'escrow_status' })
+  escrowStatus: ReadableEscrowStatus;
 
   @ApiProperty()
   launcher: string;

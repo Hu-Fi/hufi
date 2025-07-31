@@ -26,6 +26,30 @@ import {
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
+import { ExposedCampaignStatus, CampaignStatus } from './types';
+
+const EXPOSED_TO_CAMPAIGN_STATUSES: Record<
+  ExposedCampaignStatus,
+  CampaignStatus[]
+> = {
+  [CampaignStatus.ACTIVE]: [
+    CampaignStatus.ACTIVE,
+    CampaignStatus.PENDING_CANCELLATION,
+    CampaignStatus.PENDING_COMPLETION,
+  ],
+  [CampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
+  [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
+};
+
+const CAMPAIGN_TO_EXPOSED_STATUS: Record<string, ExposedCampaignStatus> = {};
+for (const [exposedCampaignStatus, campaignStatuses] of Object.entries(
+  EXPOSED_TO_CAMPAIGN_STATUSES,
+)) {
+  for (const campaignStatus of campaignStatuses) {
+    CAMPAIGN_TO_EXPOSED_STATUS[campaignStatus] =
+      exposedCampaignStatus as ExposedCampaignStatus;
+  }
+}
 
 @ApiTags('Campaigns')
 @Controller('/campaigns')
@@ -76,8 +100,12 @@ export class CampaignsController {
   ): Promise<ListJoinedCampaignsSuccessDto> {
     const limit = query.limit;
 
+    const statuses: CampaignStatus[] = query.status
+      ? EXPOSED_TO_CAMPAIGN_STATUSES[query.status]
+      : [];
+
     const campaigns = await this.campaignsService.getJoined(request.user.id, {
-      status: query.status,
+      statuses,
       limit: limit + 1,
       skip: query.skip,
     });
@@ -88,7 +116,8 @@ export class CampaignsController {
         .map((campaign) => ({
           chainId: campaign.chainId,
           address: campaign.address,
-          status: campaign.status,
+          status: CAMPAIGN_TO_EXPOSED_STATUS[campaign.status],
+          processingStatus: campaign.status,
           exchangeName: campaign.exchangeName,
           tradingPair: campaign.pair,
           startDate: campaign.startDate.toISOString(),

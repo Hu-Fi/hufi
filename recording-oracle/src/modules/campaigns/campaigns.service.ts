@@ -162,12 +162,16 @@ export class CampaignsService {
 
   async getJoined(
     userId: string,
-    options?: Partial<{ status?: CampaignStatus; limit: number; skip: number }>,
+    options?: Partial<{
+      statuses?: CampaignStatus[];
+      limit: number;
+      skip: number;
+    }>,
   ): Promise<CampaignEntity[]> {
     const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
-        status: options?.status,
+        statuses: options?.statuses,
         limit: options?.limit,
         skip: options?.skip,
       },

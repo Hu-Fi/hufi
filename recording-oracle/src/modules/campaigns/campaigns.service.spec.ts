@@ -721,7 +721,7 @@ describe('CampaignsService', () => {
       const testSkip = faker.number.int();
 
       const campaigns = await campaignsService.getJoined(userId, {
-        status: testStatus as CampaignStatus,
+        statuses: [testStatus as CampaignStatus],
         limit: testLimit,
         skip: testSkip,
       });
@@ -731,7 +731,7 @@ describe('CampaignsService', () => {
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledWith(
         userId,
         {
-          status: testStatus,
+          statuses: [testStatus],
           limit: testLimit,
           skip: testSkip,
         },
