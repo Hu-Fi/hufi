@@ -72,8 +72,8 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
   const onSubmit = (values: APIKeyFormValues) => {
     postExchangeApiKey({
       exchangeName: values.exchange,
-      apiKey: values.apiKey.trim(),
-      secret: values.secret.trim(),
+      apiKey: values.apiKey,
+      secret: values.secret,
     });
   };
 
