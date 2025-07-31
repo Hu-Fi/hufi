@@ -26,7 +26,7 @@ import * as yup from 'yup';
 
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
-import { useSymbols } from '../../../hooks/useSymbols';
+import { useTradingPairs } from '../../../hooks/useTradingPairs';
 import { useExchangesContext } from '../../../providers/ExchangesProvider';
 import { ExchangeType } from '../../../types';
 import { CryptoEntity } from '../../CryptoEntity';
@@ -138,7 +138,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const exchangeName = watch('exchangeName');
   const exchange = exchangesMap.get(exchangeName);
-  const { data: symbols } = useSymbols(exchangeName);
+  const { data: tradingPairs } = useTradingPairs(exchangeName);
 
   const submitForm = async ({ fundToken, ...data }: CampaignFormValues) => {
     await createEscrow(fundToken, {
@@ -229,21 +229,18 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         return (
                           <Autocomplete
                             id="trading-pair-select"
-                            options={symbols || []}
+                            options={tradingPairs || []}
                             slotProps={slotProps}
                             renderInput={(params) => (
                               <TextField {...params} label="Trading Pair" />
                             )}
                             renderOption={(props, option) => {
-                              // eslint-disable-next-line react/prop-types
-                              const { key, ...optionProps } = props;
-
                               return (
                                 <Box
-                                  key={key}
+                                  {...props}
+                                  key={option}
                                   component="li"
                                   sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
-                                  {...optionProps}
                                 >
                                   <CryptoPairEntity symbol={option} />
                                 </Box>

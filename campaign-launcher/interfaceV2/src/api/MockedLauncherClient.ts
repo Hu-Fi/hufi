@@ -51,5 +51,9 @@ export class MockedLauncherClient  {
   async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.request<T>('DELETE', url, undefined, config);
   }
+
+  async getTradingPairs(exchangeName: string): Promise<string[]> {
+    return this.get<string[]>(`/exchanges/${exchangeName}/trading-pairs`);
+  }
 }
 

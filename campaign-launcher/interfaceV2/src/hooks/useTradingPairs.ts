@@ -5,7 +5,7 @@ import { launcherApi } from "../api";
 export const useTradingPairs = (exchangeName: string) => {
   return useQuery({
     queryKey: ['trading-pairs', exchangeName],
-    queryFn: () => launcherApi.get(`/exchanges/${exchangeName}/trading-pairs`),
+    queryFn: () => launcherApi.getTradingPairs(exchangeName),
     enabled: !!exchangeName,
   });
 };
