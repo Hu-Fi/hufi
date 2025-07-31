@@ -36,7 +36,7 @@ const validationSchema = yup.object({
 });
 
 const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
-  const { mutate: postExchangeApiKey, reset: resetMutation, error,isPending, isIdle, isSuccess, isError } = usePostExchangeApiKey();
+  const { mutate: postExchangeApiKey, reset: resetMutation, error, isPending, isIdle, isSuccess, isError } = usePostExchangeApiKey();
   const {
     control,
     formState: { errors },

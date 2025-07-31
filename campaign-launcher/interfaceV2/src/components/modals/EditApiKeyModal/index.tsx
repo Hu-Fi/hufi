@@ -30,8 +30,8 @@ type APIKeyFormValues = {
 };
 
 const validationSchema = yup.object({
-  apiKey: yup.string().required('Required'),
-  secret: yup.string().required('Required'),
+  apiKey: yup.string().required('Required').trim().max(50, 'Max 50 characters'),
+  secret: yup.string().required('Required').trim().max(200, 'Max 200 characters'),
   exchange: yup.string().required('Required'),
 });
 
@@ -54,7 +54,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
   useEffect(() => {
     if (open && exchangeName) {
       reset({
-        exchange: exchangeName || '',
+        exchange: exchangeName,
         apiKey: '',
         secret: '',
       });
