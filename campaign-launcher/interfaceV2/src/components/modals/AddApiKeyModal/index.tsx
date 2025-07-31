@@ -129,7 +129,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                   render={({ field }) => (
                     <TextField
                       type="password"
-                      autoComplete="new-password"
+                      autoComplete="new-password" // disables autofill from browser
                       id="secret-input"
                       label="Secret"
                       placeholder="API SECRET KEY"
