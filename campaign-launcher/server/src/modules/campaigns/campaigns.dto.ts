@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
+  IsEnum,
   IsEthereumAddress,
-  IsIn,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -13,12 +13,12 @@ import {
 import {
   type ChainId,
   ChainIds,
-  type ReadableEscrowStatus,
-  READABLE_ESCROW_STATUSES,
   SUPPORTED_EXCHANGE_NAMES,
   DEFAULT_PAGINATION_LIMIT,
 } from '@/common/constants';
 import { ExchangeNameValidator, IsChainId } from '@/common/validators';
+
+import { CampaignStatus } from './types';
 
 export class GetCampaignsQueryDto {
   @ApiProperty({
@@ -45,11 +45,11 @@ export class GetCampaignsQueryDto {
 
   @ApiPropertyOptional({
     description: 'Status of campaign escrow',
-    enum: READABLE_ESCROW_STATUSES,
+    enum: CampaignStatus,
   })
   @IsOptional()
-  @IsIn(READABLE_ESCROW_STATUSES)
-  status?: ReadableEscrowStatus;
+  @IsEnum(CampaignStatus)
+  status?: CampaignStatus;
 
   @ApiPropertyOptional({
     default: DEFAULT_PAGINATION_LIMIT,
@@ -127,7 +127,7 @@ export class CampaignData {
   fundTokenDecimals: number;
 
   @ApiProperty()
-  status: ReadableEscrowStatus;
+  status: CampaignStatus;
 
   @ApiProperty()
   launcher: string;

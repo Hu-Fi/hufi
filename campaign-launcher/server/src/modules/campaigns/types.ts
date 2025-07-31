@@ -7,3 +7,9 @@ export type CampaignManifest = {
   start_date: Date;
   end_date: Date;
 };
+
+export enum CampaignStatus {
+  ACTIVE = 'active',
+  CANCELLED = 'cancelled',
+  COMPLETED = 'completed',
+}
