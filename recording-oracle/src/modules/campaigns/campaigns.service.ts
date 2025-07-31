@@ -13,13 +13,14 @@ import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
+import { isValidExchangeName } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
+import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
@@ -52,7 +53,6 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
-import { ExchangeApiClientFactory } from '../exchange';
 
 const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
@@ -248,7 +248,7 @@ export class CampaignsService {
     /*
      * Not including this into Joi schema to send meaningful errors
      */
-    if (!SUPPORTED_EXCHANGE_NAMES.includes(manifest.exchange)) {
+    if (!isValidExchangeName(manifest.exchange)) {
       throw new InvalidCampaign(
         campaignAddress,
         `Exchange not supported: ${manifest.exchange}`,
