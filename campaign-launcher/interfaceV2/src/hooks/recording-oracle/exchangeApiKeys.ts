@@ -2,14 +2,26 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
 import { recordingApi } from "../../api";
+import { QUERY_KEYS } from "../../constants/queryKeys";
 import { useWeb3Auth } from "../../providers/Web3AuthProvider";
 
-export const useGetExchangeApiKeys = () => {
+export const useGetEnrolledExchanges = () => {
   const { isAuthenticated } = useWeb3Auth();
   const { isConnected } = useAccount();
 
   return useQuery({
-    queryKey: ['exchange-api-keys'],
+    queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES],
+    queryFn: () => recordingApi.getEnrolledExchanges(),
+    enabled: isAuthenticated && isConnected,
+  });
+}
+
+export const useGetExchangesWithApiKeys = () => {
+  const { isAuthenticated } = useWeb3Auth();
+  const { isConnected } = useAccount();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
     queryFn: () => recordingApi.getExchangesWithApiKeys(),
     enabled: isAuthenticated && isConnected,
   });
@@ -29,7 +41,7 @@ export const usePostExchangeApiKey = () => {
     mutationFn: (data: MutationPayload) => 
       recordingApi.upsertExchangeApiKey(data.exchangeName, data.apiKey, data.secret),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exchange-api-keys'] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS] });
     },
   });
 };
@@ -40,7 +52,7 @@ export const useDeleteApiKeyByExchange = (exchangeName: string) => {
   return useMutation({
     mutationFn: () => recordingApi.deleteApiKeysForExchange(exchangeName),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exchange-api-keys'] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS] });
     },
   });
 };

@@ -21,10 +21,6 @@ type Props = {
   open: boolean;
   onClose: () => void;
   exchangeName?: string;
-  keysData?: {
-    api_key: string;
-    secret_key: string;
-  };
 };
 
 type APIKeyFormValues = {
@@ -39,8 +35,8 @@ const validationSchema = yup.object({
   exchange: yup.string().required('Required'),
 });
 
-const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName, keysData }) => {
-  const { mutate: postExchangeApiKey, reset: resetMutation, isIdle, isPending, isSuccess, isError } = usePostExchangeApiKey();
+const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
+  const { mutate: postExchangeApiKey, reset: resetMutation, error, isIdle, isPending, isSuccess, isError } = usePostExchangeApiKey();
   const {
     control,
     formState: { errors },
@@ -56,14 +52,14 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName, keysData }) =
   });
 
   useEffect(() => {
-    if (open && exchangeName && keysData) {
+    if (open && exchangeName) {
       reset({
         exchange: exchangeName || '',
-        apiKey: keysData?.api_key || '',
-        secret: keysData?.secret_key || '',
+        apiKey: '',
+        secret: '',
       });
     }
-  }, [open, exchangeName, keysData, reset]);
+  }, [open, exchangeName, reset]);
 
   const handleClose = () => {
     if (isPending) return;
@@ -163,7 +159,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName, keysData }) =
               </Typography>
             </ModalSuccess>
           )}
-          {isError && <ModalError />}
+          {isError && <ModalError error={error.message} />}
           <Box display="flex" gap={1} mx="auto">
             {isIdle && (
               <>

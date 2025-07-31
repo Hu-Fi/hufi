@@ -26,7 +26,7 @@ export type CampaignsStats = {
   chains: Chain[];
 };
 
-export type ApiKeyData = {
+export type ExchangeApiKeyData = {
+  exchange_name: string;
   api_key: string;
-  secret_key: string;
 };

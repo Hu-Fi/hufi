@@ -22,7 +22,7 @@ const FormExchangeSelect = <
   TFieldValues extends FieldValues, 
   TName extends Path<TFieldValues>
 >({ field, disabled = false }: FormExchangeSelectProps<TFieldValues, TName>) => {
-  const { exchanges } = useExchangesContext();
+  const { exchanges, exchangesMap } = useExchangesContext();
 
   return (
     <Autocomplete
@@ -30,20 +30,18 @@ const FormExchangeSelect = <
       slotProps={slotProps}
       options={exchanges?.map((exchange) => exchange.name) || []}
       getOptionLabel={(option) => {
-        const exchange = exchanges?.find((e) => e.name === option);
+        const exchange = exchangesMap.get(option);
         return exchange?.displayName || option || '';
       }}
       renderInput={(params) => (
         <TextField {...params} label="Exchange" />
       )}
       renderOption={(props, option) => {
-        const exchange = exchanges?.find(
-          (exchange) => exchange.name === option
-        );
+        const exchange = exchangesMap.get(option);
         return (
           <Box
             {...props}
-            key={exchange?.name}
+            key={option}
             component="li"
             sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
           >

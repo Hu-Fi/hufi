@@ -12,9 +12,9 @@ export class HttpError extends BaseError {
     super(message);
   }
 
-  static fromAxiosError(error: AxiosError): HttpError {
+  static fromAxiosError(error: AxiosError<{ message?: string }>): HttpError {
     return new HttpError(
-      error.message || 'Request failed',
+      error.response?.data?.message || error.message || 'Request failed',
       error.response?.status,
     );
   }

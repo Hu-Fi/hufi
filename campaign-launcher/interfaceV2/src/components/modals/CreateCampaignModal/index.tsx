@@ -26,8 +26,8 @@ import * as yup from 'yup';
 
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
-import { useExchanges } from '../../../hooks/useExchanges';
 import { useSymbols } from '../../../hooks/useSymbols';
+import { useExchangesContext } from '../../../providers/ExchangesProvider';
 import { ExchangeType } from '../../../types';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
@@ -100,7 +100,7 @@ const menuProps = {
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [activeStep] = useState(0);
-  const { data: exchanges } = useExchanges();
+  const { exchangesMap } = useExchangesContext();
   const account = useAccount();
   const {
     isLoading: isCreatingEscrow,
@@ -137,9 +137,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   });
 
   const exchangeName = watch('exchangeName');
-  const exchange = exchanges?.find(
-    (exchange) => exchange.name === exchangeName
-  );
+  const exchange = exchangesMap.get(exchangeName);
   const { data: symbols } = useSymbols(exchangeName);
 
   const submitForm = async ({ fundToken, ...data }: CampaignFormValues) => {

@@ -8,6 +8,7 @@ import axios, {
   Method
 } from 'axios';
 
+import { ExchangeApiKeyData } from '../types';
 import { HttpError } from '../utils/HttpError';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
@@ -163,8 +164,13 @@ export class RecordingApiClient {
     });
   }
 
-  async getExchangesWithApiKeys(): Promise<string[]> {
-    const response = await this.get<string[]>('/exchange-api-keys');
+  async getEnrolledExchanges(): Promise<string[]> {
+    const response = await this.get<string[]>('/exchange-api-keys/exchanges');
+    return response;
+  }
+
+  async getExchangesWithApiKeys(): Promise<ExchangeApiKeyData[]> {
+    const response = await this.get<ExchangeApiKeyData[]>('/exchange-api-keys');
     return response;
   }
 

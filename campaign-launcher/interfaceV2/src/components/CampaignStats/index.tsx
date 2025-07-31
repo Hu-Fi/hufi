@@ -76,17 +76,12 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 }));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
-  const { exchanges } = useExchangesContext();
+  const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
 
-  const exchange = exchanges?.find(
-    (exchange) => exchange.name === campaign?.exchangeName
-  );
-  const exchangeName = exchange?.displayName;
+  if (!campaign) return null;
 
-  if (!campaign) {
-    return null;
-  }
+  const exchangeName = exchangesMap.get(campaign.exchangeName)?.displayName || campaign.exchangeName;
 
   return (
     <Grid container spacing={2} width="100%">

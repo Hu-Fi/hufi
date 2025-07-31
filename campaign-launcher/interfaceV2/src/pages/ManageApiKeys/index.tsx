@@ -1,48 +1,17 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState } from 'react';
 
 import Button from '@mui/material/Button';
 
-import { recordingApi } from '../../api';
 import ApiKeysTable from '../../components/ApiKeysTable';
 import AddApiKeyModal from '../../components/modals/AddApiKeyModal';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
-import { useGetExchangeApiKeys } from '../../hooks/recording-oracle';
-import { ApiKeyData } from '../../types';
+import { useGetExchangesWithApiKeys } from '../../hooks/recording-oracle';
 
 const ManageApiKeysPage: FC = () => {
   const [addApiKeyModalOpen, setAddApiKeyModalOpen] = useState(false);
-  const [apiKeysData, setApiKeysData] = useState<Record<string, ApiKeyData>>({});
-  const { data: exchanges } = useGetExchangeApiKeys();
+  const { data: apiKeysData } = useGetExchangesWithApiKeys();
 
-  useEffect(() => {
-    if (exchanges && exchanges.length > 0) {
-      const fetchApiKeysData = async () => {
-        try {
-          const promises = exchanges.map(async (exchangeName) => {
-            const response = await recordingApi.get<ApiKeyData>(`/exchange-api-keys/${exchangeName}`);
-            return { exchangeName, data: response };
-          });
-
-          const results = await Promise.all(promises);
-          
-          const newApiKeysData: Record<string, ApiKeyData> = {};
-          results.forEach(({ exchangeName, data }) => {
-            newApiKeysData[exchangeName] = data;
-          });
-
-          setApiKeysData(newApiKeysData);
-        } catch (error) {
-          console.error('Error fetching API keys:', error);
-        }
-      };
-
-      fetchApiKeysData();
-    } else {
-      setApiKeysData({});
-    }
-  }, [exchanges]);
-  
   return (
     <PageWrapper>
       <PageTitle title="Manage API Keys">

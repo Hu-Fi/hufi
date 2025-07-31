@@ -4,12 +4,12 @@ import { Box, IconButton, Typography } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 
 import { DeleteIcon, EditIcon } from '../../icons';
-import { ApiKeyData } from '../../types';
+import { ExchangeApiKeyData } from '../../types';
 import DeleteApiKeyModal from '../modals/DeleteApiKeyModal';
 import EditApiKeyModal from '../modals/EditApiKeyModal';
 
 type ApiKeysTableProps = {
-  data: Record<string, ApiKeyData>;
+  data: ExchangeApiKeyData[] | undefined;
 };
 
 const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
@@ -32,11 +32,10 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     setDeletingItem('');
   }
 
-  const rows = Object.entries(data).map(([exchangeName, apiKeyData]) => ({
-    id: exchangeName,
-    exchangeName,
-    apiKey: apiKeyData.api_key,
-    secretKey: apiKeyData.secret_key,
+  const rows = data?.map(({ exchange_name, api_key }) => ({
+    id: exchange_name,
+    exchangeName: exchange_name,
+    apiKey: api_key,
   }));
 
   const columns: GridColDef[] = [
@@ -111,7 +110,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         disableRowSelectionOnClick
         disableVirtualization
         pageSizeOptions={[5, 10, 50]}
-        hideFooter={rows.length < 6}
+        hideFooter={!rows || rows?.length < 6}
         getRowHeight={() => 'auto'}
         initialState={{
           pagination: {
@@ -166,7 +165,6 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         open={!!editingItem}
         onClose={handleCloseEditModal}
         exchangeName={editingItem}
-        keysData={data[editingItem]}
       />
       <DeleteApiKeyModal
         open={!!deletingItem}

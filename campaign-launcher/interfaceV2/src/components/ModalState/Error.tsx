@@ -4,7 +4,11 @@ import { Box, Typography } from '@mui/material';
 
 import { CloseIcon } from '../../icons';
 
-const ModalError: FC = () => {
+type Props = {
+  error?: string;
+};
+
+const ModalError: FC<Props> = ({ error }) => {
   return (
     <>
       <Box
@@ -20,7 +24,7 @@ const ModalError: FC = () => {
         <CloseIcon sx={{ width: 34, height: 34 }} />
       </Box>
       <Typography variant="subtitle2" color="error.main" mb={1} py={1}>
-        An error occurred, please try again.
+        {error || 'An error occurred, please try again.'}
       </Typography>
     </>
   );
