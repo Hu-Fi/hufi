@@ -33,7 +33,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   }
 
   const rows = Object.entries(data).map(([exchangeName, apiKeyData]) => ({
-    id: apiKeyData.api_key,
+    id: exchangeName,
     exchangeName,
     apiKey: apiKeyData.api_key,
     secretKey: apiKeyData.secret_key,

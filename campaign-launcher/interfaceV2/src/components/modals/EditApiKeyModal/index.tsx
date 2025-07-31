@@ -122,6 +122,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName, keysData }) =
                     control={control}
                     render={({ field }) => (
                       <TextField
+                        type="text"
                         id="api-key-input"
                         label="API Key"
                         placeholder="API KEY"
@@ -140,6 +141,8 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName, keysData }) =
                   control={control}
                   render={({ field }) => (
                     <TextField
+                      type="password"
+                      autoComplete="new-password"
                       id="secret-input"
                       label="Secret"
                       placeholder="API SECRET KEY"

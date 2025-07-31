@@ -162,4 +162,21 @@ export class RecordingApiClient {
       refresh_token: this.tokenManager.getRefreshToken(),
     });
   }
+
+  async getExchangesWithApiKeys(): Promise<string[]> {
+    const response = await this.get<string[]>('/exchange-api-keys');
+    return response;
+  }
+
+  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<{ id: string }> {
+    const response = await this.post<{ id: string }>(`/exchange-api-keys/${exchangeName}`, {
+      api_key: apiKey,
+      secret_key: secret,
+    });
+    return response;
+  }
+
+  async deleteApiKeysForExchange(exchangeName: string): Promise<void> {
+    await this.delete(`/exchange-api-keys/${exchangeName}`);
+  }
 }

@@ -1,6 +1,6 @@
 import { AxiosError } from "axios";
 
-class BaseError extends Error {
+export class BaseError extends Error {
   constructor(message: string) {
     super(message);
     this.name = this.constructor.name;

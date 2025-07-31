@@ -13,13 +13,13 @@ import { ApiKeyData } from '../../types';
 const ManageApiKeysPage: FC = () => {
   const [addApiKeyModalOpen, setAddApiKeyModalOpen] = useState(false);
   const [apiKeysData, setApiKeysData] = useState<Record<string, ApiKeyData>>({});
-  const { data: apiKeys } = useGetExchangeApiKeys();
+  const { data: exchanges } = useGetExchangeApiKeys();
 
   useEffect(() => {
-    if (apiKeys && apiKeys.length > 0) {
+    if (exchanges && exchanges.length > 0) {
       const fetchApiKeysData = async () => {
         try {
-          const promises = apiKeys.map(async (exchangeName) => {
+          const promises = exchanges.map(async (exchangeName) => {
             const response = await recordingApi.get<ApiKeyData>(`/exchange-api-keys/${exchangeName}`);
             return { exchangeName, data: response };
           });
@@ -41,7 +41,7 @@ const ManageApiKeysPage: FC = () => {
     } else {
       setApiKeysData({});
     }
-  }, [apiKeys]);
+  }, [exchanges]);
   
   return (
     <PageWrapper>

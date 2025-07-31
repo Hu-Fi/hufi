@@ -1,8 +1,8 @@
 import { FC, useState } from 'react';
 
-import { Avatar, Button, List, ListItemButton, Popover, Typography } from '@mui/material';
+import { Button, List, ListItemButton, Popover, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 
 import { AvatarIcon, ArrowDownIcon, PowerIcon, ApiKeyIcon } from '../../icons';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
@@ -33,8 +33,6 @@ const Account: FC = () => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { logout } = useWeb3Auth();
-  const { data: ensName } = useEnsName({ address });
-  const { data: ensAvatar } = useEnsAvatar({ name: ensName! });
   const navigate = useNavigate();
 
   const formattedAddress = formatAddress(address);
@@ -54,6 +52,7 @@ const Account: FC = () => {
   return (
     <>
       <Button
+        size="medium"
         aria-describedby="account-popover"
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disableRipple
@@ -61,22 +60,13 @@ const Account: FC = () => {
           bgcolor: 'primary.main',
           borderRadius: '4px',
           height: '42px',
-          width: '195px',
+          width: 'fit-content',
           paddingX: 1,
-          fontWeight: 600,
           borderBottomLeftRadius: anchorEl ? 0 : 4,
           borderBottomRightRadius: anchorEl ? 0 : 4,
         }}
       >
-        {ensAvatar ? (
-          <Avatar
-            alt="ENS Avatar"
-            src={ensAvatar}
-            sx={{ width: 24, height: 24 }}
-          />
-        ) : (
-          <AvatarIcon />
-        )}
+        <AvatarIcon sx={{ width: 24, height: 24 }} />
         <Typography
           color="primary.light"
           fontSize="14px"

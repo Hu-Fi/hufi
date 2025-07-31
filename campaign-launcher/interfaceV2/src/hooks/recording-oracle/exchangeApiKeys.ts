@@ -10,7 +10,7 @@ export const useGetExchangeApiKeys = () => {
 
   return useQuery({
     queryKey: ['exchange-api-keys'],
-    queryFn: () => recordingApi.get<string[]>('/exchange-api-keys'),
+    queryFn: () => recordingApi.getExchangesWithApiKeys(),
     enabled: isAuthenticated && isConnected,
   });
 };
@@ -27,10 +27,7 @@ export const usePostExchangeApiKey = () => {
   return useMutation({
     mutationKey: ['post-exchange-api-keys'],
     mutationFn: (data: MutationPayload) => 
-      recordingApi.post(`/exchange-api-keys/${data.exchangeName}`, {
-        api_key: data.apiKey,
-        secret_key: data.secret,
-      }),
+      recordingApi.upsertExchangeApiKey(data.exchangeName, data.apiKey, data.secret),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exchange-api-keys'] });
     },
@@ -41,7 +38,7 @@ export const useDeleteApiKeyByExchange = (exchangeName: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => recordingApi.delete(`/exchange-api-keys/${exchangeName}`),
+    mutationFn: () => recordingApi.deleteApiKeysForExchange(exchangeName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exchange-api-keys'] });
     },

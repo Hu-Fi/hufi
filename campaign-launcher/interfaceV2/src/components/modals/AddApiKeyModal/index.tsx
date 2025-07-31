@@ -30,8 +30,8 @@ type APIKeyFormValues = {
 };
 
 const validationSchema = yup.object({
-  apiKey: yup.string().required('Required'),
-  secret: yup.string().required('Required'),
+  apiKey: yup.string().required('Required').trim().max(50, 'Max 50 characters'),
+  secret: yup.string().required('Required').trim().max(200, 'Max 200 characters'),
   exchange: yup.string().required('Required'),
 });
 
@@ -54,8 +54,8 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
   const onSubmit = (values: APIKeyFormValues) => {
     postExchangeApiKey({
       exchangeName: values.exchange,
-      apiKey: values.apiKey,
-      secret: values.secret,
+      apiKey: values.apiKey.trim(),
+      secret: values.secret.trim(),
     });
   };
 
@@ -109,6 +109,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                     control={control}
                     render={({ field }) => (
                       <TextField
+                        type="text"
                         id="api-key-input"
                         label="API Key"
                         placeholder="API KEY"
@@ -127,6 +128,8 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                   control={control}
                   render={({ field }) => (
                     <TextField
+                      type="password"
+                      autoComplete="new-password"
                       id="secret-input"
                       label="Secret"
                       placeholder="API SECRET KEY"
