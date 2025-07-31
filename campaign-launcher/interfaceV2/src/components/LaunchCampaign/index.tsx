@@ -4,10 +4,11 @@ import { Button, SxProps } from '@mui/material';
 import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import useLeader from '../../hooks/useLeader';
+import { useStakeContext } from '../../providers/StakeProvider';
 import CreateCampaignMenuModal from '../modals/CreateCampaignMenuModal';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
-interface Props {
+
+type Props = {
   variant: 'outlined' | 'contained';
   sx?: SxProps;
 }
@@ -19,8 +20,8 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
     setOpenCreateCampaignMenuModal,
   ] = useState(false);
   const { isConnected } = useAccount();
-  const { refetch } = useLeader({ enabled: false });
   const isXl = useIsXlDesktop();
+  const { stakedAmount } = useStakeContext();
 
   const handleCloseCreateCampaignMenuModal = () => {
     setOpenCreateCampaignMenuModal(false);
@@ -31,8 +32,9 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   };
 
   const onClick = async () => {
-    const { data } = await refetch();
-    if (+(data?.amountStaked ?? '0') > 0) {
+    if (!isConnected) return null;
+    
+    if (+(stakedAmount ?? '0') > 0) {
       setOpenCreateCampaignModal(true);
     } else {
       setOpenCreateCampaignMenuModal(true);
@@ -47,7 +49,6 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
         sx={{
           color: variant === 'outlined' ? 'primary.main' : 'primary.contrast',
           height: '42px',
-          fontWeight: 600,
           ...sx,
         }}
         disabled={!isConnected}

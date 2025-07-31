@@ -36,7 +36,7 @@ export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['uniswap'];
 export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds
 
-export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
+export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY, ChainId.AURORA_TESTNET];
 export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 
