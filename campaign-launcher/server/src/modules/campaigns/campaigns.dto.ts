@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsPositive,
+  Max,
   Validate,
 } from 'class-validator';
 
@@ -57,6 +58,10 @@ export class GetCampaignsQueryDto {
   @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsPositive()
+  /**
+   * To correspond to 'skip' max value
+   */
+  @Max(1000)
   limit: number = DEFAULT_PAGINATION_LIMIT;
 
   @ApiPropertyOptional()
@@ -64,6 +69,11 @@ export class GetCampaignsQueryDto {
   @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsPositive()
+  /**
+   * Subgraph implicit limit should be 5k, but 1k should be enough,
+   * since we are not going to provide a full history.
+   */
+  @Max(1000)
   skip?: number;
 }
 
