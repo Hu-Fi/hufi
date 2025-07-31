@@ -40,7 +40,7 @@ export class ExchangeApiKeysControllerErrorsFilter implements ExceptionFilter {
       exception instanceof IncompleteKeySuppliedError ||
       exception instanceof KeyAuthorizationError
     ) {
-      status = HttpStatus.BAD_REQUEST;
+      status = HttpStatus.UNPROCESSABLE_ENTITY;
     } else if (exception instanceof ExchangeApiClientError) {
       status = HttpStatus.SERVICE_UNAVAILABLE;
     } else if (exception instanceof ExchangeApiKeyNotFoundError) {

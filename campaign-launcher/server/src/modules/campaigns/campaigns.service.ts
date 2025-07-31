@@ -34,8 +34,12 @@ export class CampaignsService {
       launcherAddress: string;
       status: ReadableEscrowStatus;
     }>,
+    pagination?: Partial<{
+      skip: number;
+      limit: number;
+    }>,
   ): Promise<CampaignData[]> {
-    const campaings: CampaignData[] = [];
+    const campaigns: CampaignData[] = [];
 
     const campaignEscrows = await EscrowUtils.getEscrows({
       chainId: chainId as number,
@@ -43,6 +47,8 @@ export class CampaignsService {
       reputationOracle: this.web3ConfigService.reputationOracle,
       launcher: filters?.launcherAddress,
       status: filters?.status ? EscrowStatus[filters.status] : undefined,
+      first: pagination?.limit,
+      skip: pagination?.skip,
     });
 
     for (const campaignEscrow of campaignEscrows) {
@@ -72,7 +78,7 @@ export class CampaignsService {
         this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
       ]);
 
-      campaings.push({
+      campaigns.push({
         chainId,
         address: ethers.getAddress(campaignEscrow.address),
         exchangeName: manifest.exchange,
@@ -88,7 +94,7 @@ export class CampaignsService {
       });
     }
 
-    return campaings;
+    return campaigns;
   }
 
   async getCampaignWithDetails(

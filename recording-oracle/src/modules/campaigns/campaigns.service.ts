@@ -20,17 +20,17 @@ import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import {
-  ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysRepository,
-  ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
+import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
-import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
+import {
+  CampaignAlreadyFinishedError,
+  CampaignNotFoundError,
+  InvalidCampaign,
+} from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
 import * as manifestUtils from './manifest.utils';
@@ -66,7 +66,6 @@ export class CampaignsService {
 
   constructor(
     private readonly campaignsRepository: CampaignsRepository,
-    private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly storageService: StorageService,
@@ -110,20 +109,24 @@ export class CampaignsService {
       return campaign.id;
     }
 
-    const exchangeApiKey =
-      await this.exchangeApiKeysRepository.findOneByUserAndExchange(
+    if (campaign.endDate.valueOf() <= Date.now()) {
+      /**
+       * Safety belt to disallow joining campaigns that already finished
+       * but might be waiting for results recording or payouts
+       */
+      throw new CampaignAlreadyFinishedError(campaign.address);
+    }
+
+    const exchangeApiKeyId =
+      await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
         userId,
         campaign.exchangeName,
       );
 
-    if (!exchangeApiKey) {
-      throw new ExchangeApiKeyNotFoundError(userId, campaign.exchangeName);
-    }
-
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
     newUserCampaign.campaignId = campaign.id;
-    newUserCampaign.exchangeApiKeyId = exchangeApiKey.id;
+    newUserCampaign.exchangeApiKeyId = exchangeApiKeyId;
     newUserCampaign.createdAt = new Date();
 
     await this.userCampaignsRepository.insert(newUserCampaign);
@@ -157,28 +160,20 @@ export class CampaignsService {
     return newCampaign;
   }
 
-  async getJoined(userId: string): Promise<CampaignEntity[]> {
+  async getJoined(
+    userId: string,
+    options?: Partial<{ status?: CampaignStatus; limit: number; skip: number }>,
+  ): Promise<CampaignEntity[]> {
     const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
-        relations: {
-          campaign: true,
-        },
+        status: options?.status,
+        limit: options?.limit,
+        skip: options?.skip,
       },
     );
 
-    const result: CampaignEntity[] = [];
-    for (const userCampaign of userCampaigns) {
-      if (!userCampaign.campaign) {
-        this.logger.error(`User campaign does not have associated campaign`, {
-          userId,
-          campaignId: userCampaign.campaignId,
-        });
-        continue;
-      }
-      result.push(userCampaign.campaign);
-    }
-    return result;
+    return userCampaigns;
   }
 
   private async retrieveCampaignData(

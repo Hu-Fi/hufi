@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -18,11 +19,13 @@ import {
 } from '@nestjs/swagger';
 
 import type { RequestWithUser } from '@/common/types';
+import Environment from '@/common/utils/environment';
 
 import {
   EncrollExchangeApiKeysParamsDto,
   EnrollExchangeApiKeysDto,
   EnrollExchangeApiKeysResponseDto,
+  EnrolledApiKeyDto,
   ExchangeNameParamDto,
 } from './exchange-api-keys.dto';
 import { ExchangeApiKeysControllerErrorsFilter } from './exchange-api-keys.error-filter';
@@ -40,6 +43,28 @@ export class ExchangeApiKeysController {
   ) {}
 
   @ApiOperation({
+    summary: 'List enrolled exchanges with api keys',
+    description:
+      'Returns a list of enrolled API keys for exchanges w/o secret key',
+  })
+  @ApiResponse({
+    status: 200,
+    type: EnrolledApiKeyDto,
+    isArray: true,
+  })
+  @Get('/')
+  async retrieveEnrolledApiKeys(
+    @Req() request: RequestWithUser,
+  ): Promise<EnrolledApiKeyDto[]> {
+    const userId = request.user.id;
+
+    const enrolledApiKeys =
+      await this.exchangeApiKeysService.retrievedEnrolledApiKeys(userId);
+
+    return enrolledApiKeys;
+  }
+
+  @ApiOperation({
     summary: 'List all enrolled exchanges',
     description:
       'Returns a list of exchange names for which the user has enrolled API keys',
@@ -49,8 +74,8 @@ export class ExchangeApiKeysController {
     type: String,
     isArray: true,
   })
-  @Get('/')
-  async list(@Req() request: RequestWithUser): Promise<unknown> {
+  @Get('/exchanges')
+  async listExchanges(@Req() request: RequestWithUser): Promise<string[]> {
     const userId = request.user.id;
 
     const exchanges =
@@ -114,12 +139,18 @@ export class ExchangeApiKeysController {
 
   @ApiOperation({
     summary: 'Retreive API keys for exchange',
+    description:
+      'This functionality is purely for dev solely and works only in non-production environments',
   })
   @Get('/:exchange_name')
   async retrieve(
     @Req() request: RequestWithUser,
     @Param() params: ExchangeNameParamDto,
   ): Promise<unknown> {
+    if (Environment.isProduction()) {
+      throw new ForbiddenException();
+    }
+
     const userId = request.user.id;
     const exchangeName = params.exchangeName;
 

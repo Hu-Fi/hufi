@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Post,
+  Query,
   Req,
   UseFilters,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import type { RequestWithUser } from '@/common/types';
 import {
   JoinCampaignDto,
   JoinCampaignSuccessDto,
+  ListJoinedCampaignsQueryDto,
   ListJoinedCampaignsSuccessDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
@@ -70,20 +72,31 @@ export class CampaignsController {
   })
   async joinedCampaigns(
     @Req() request: RequestWithUser,
+    @Query() query: ListJoinedCampaignsQueryDto,
   ): Promise<ListJoinedCampaignsSuccessDto> {
-    const campaigns = await this.campaignsService.getJoined(request.user.id);
+    const limit = query.limit;
+
+    const campaigns = await this.campaignsService.getJoined(request.user.id, {
+      status: query.status,
+      limit: limit + 1,
+      skip: query.skip,
+    });
 
     return {
-      campaigns: campaigns.map((campaign) => ({
-        chainId: campaign.chainId,
-        address: campaign.address,
-        exchangeName: campaign.exchangeName,
-        tradingPair: campaign.pair,
-        startDate: campaign.startDate.toISOString(),
-        endDate: campaign.endDate.toISOString(),
-        fundAmount: Number(campaign.fundAmount),
-        fundToken: campaign.fundToken,
-      })),
+      hasMore: campaigns.length > limit,
+      campaigns: campaigns
+        .map((campaign) => ({
+          chainId: campaign.chainId,
+          address: campaign.address,
+          status: campaign.status,
+          exchangeName: campaign.exchangeName,
+          tradingPair: campaign.pair,
+          startDate: campaign.startDate.toISOString(),
+          endDate: campaign.endDate.toISOString(),
+          fundAmount: Number(campaign.fundAmount),
+          fundToken: campaign.fundToken,
+        }))
+        .slice(0, limit),
     };
   }
 }

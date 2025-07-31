@@ -34,3 +34,11 @@ export class EnrollExchangeApiKeysResponseDto {
 }
 
 export class DeleteExchangeApiKeysParamsDto extends ExchangeNameParamDto {}
+
+export class EnrolledApiKeyDto {
+  @ApiProperty({ name: 'exchange_name' })
+  exchangeName: string;
+
+  @ApiProperty({ name: 'api_key' })
+  apiKey: string;
+}

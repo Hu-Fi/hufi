@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Header, Param } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { ExchangeDataDto, ExchangeNameParamDto } from './exchanges.dto';
@@ -17,6 +17,7 @@ export class ExchangesController {
     type: ExchangeDataDto,
     isArray: true,
   })
+  @Header('Cache-Control', 'public, max-age=3600')
   @Get('/')
   async getExchangeList(): Promise<ExchangeDataDto[]> {
     return this.exchangesService.supportedExchanges as ExchangeDataDto[];
@@ -29,6 +30,7 @@ export class ExchangesController {
     status: 200,
     type: Array<string>,
   })
+  @Header('Cache-Control', 'public, max-age=300')
   @Get('/:exchange_name/trading-pairs')
   async getExchangeTradingPairs(
     @Param() params: ExchangeNameParamDto,
