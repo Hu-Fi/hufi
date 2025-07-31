@@ -1304,7 +1304,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should not complete campaign if not ended yet', async () => {
+    it('should not move campaign to "pending_completion" if not ended yet', async () => {
       const now = new Date();
       jest.useFakeTimers({ now });
 
@@ -1328,7 +1328,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should not complete campaign if reached its end date but not all results calculated', async () => {
+    it('should not move campaign to "pending_completion" if reached its end date but not all results calculated', async () => {
       const now = new Date();
       campaign.endDate = new Date(now.valueOf() - 1);
 
@@ -1361,7 +1361,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should complete campaign when reached its end date and all results calculated', async () => {
+    it('should move campaign to "pending_completion" when reached its end date and all results calculated', async () => {
       const now = new Date();
       campaign.endDate = new Date(now.valueOf() - 1);
 
@@ -1394,12 +1394,12 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
-        status: 'completed',
+        status: 'pending_completion',
         lastResultsAt: now,
       });
     });
 
-    it('should complete campaign if recording period dates overlap', async () => {
+    it('should move campaign to "pending_completion" campaign if recording period dates overlap', async () => {
       campaign.endDate = dayjs().subtract(1, 'day').toDate();
 
       campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
@@ -1426,7 +1426,7 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
-        status: 'completed',
+        status: 'pending_completion',
         lastResultsAt: now,
       });
 

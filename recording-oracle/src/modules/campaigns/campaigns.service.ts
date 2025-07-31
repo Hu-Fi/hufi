@@ -356,13 +356,14 @@ export class CampaignsService {
             /**
              * This can happen only in situations when:
              * - by some reason we lost data about campaign from DB, then re-added it
-             * - by some reason campaign was 'completed', but status changed to 'active'
+             * - by some reason campaign was 'pending_completion'/'completed', but status changed to 'active'
+             *
              * and then attempted to record it's progress but it must be
              * already finished and start-end dates overlap indicates that,
-             * so just mark it as completed, otherwise it leads to invalid intermediate results.
+             * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
              */
             logger.warn('Campaign progress period dates overlap');
-            campaign.status = CampaignStatus.COMPLETED;
+            campaign.status = CampaignStatus.PENDING_COMPLETION;
             campaign.lastResultsAt = new Date();
             await this.campaignsRepository.save(campaign);
             return;
@@ -399,11 +400,11 @@ export class CampaignsService {
           /**
            * There might be situations when due to delays/failures in processing
            * we reach campaign end date but still have periods to process,
-           * so mark campaign as completed only if results recorded for all periods,
+           * so mark campaign as pending completion only if results recorded for all periods,
            * otherwise keep it as is to wait for all periods to be recorded.
            */
           if (endDate.valueOf() === campaign.endDate.valueOf()) {
-            campaign.status = CampaignStatus.COMPLETED;
+            campaign.status = CampaignStatus.PENDING_COMPLETION;
           }
 
           campaign.lastResultsAt = new Date();
