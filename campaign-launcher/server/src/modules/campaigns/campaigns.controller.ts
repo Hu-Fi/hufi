@@ -9,7 +9,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import {
-  CampaignData,
+  GetCampaignsResponseDto,
   CampaignDataWithDetails,
   GetCampaignsQueryDto,
   GetCampaignWithDetailsParamsDto,
@@ -29,13 +29,12 @@ export class CampaignsController {
   })
   @ApiResponse({
     status: 200,
-    type: CampaignData,
-    isArray: true,
+    type: GetCampaignsResponseDto,
   })
   @Get('/')
   async getCampaigns(
     @Query() query: GetCampaignsQueryDto,
-  ): Promise<CampaignData[]> {
+  ): Promise<GetCampaignsResponseDto> {
     const chainId = query.chainId;
     const filters = {
       exchangeName: query.exchangeName,
@@ -43,12 +42,21 @@ export class CampaignsController {
       status: query.status,
     };
 
+    const limit = query.limit;
+
     const campaigns = await this.campaignsService.getCampaigns(
       chainId,
       filters,
+      {
+        limit: limit + 1,
+        skip: query.skip,
+      },
     );
 
-    return campaigns;
+    return {
+      hasMore: campaigns.length > limit,
+      results: campaigns.slice(0, limit),
+    };
   }
 
   @ApiOperation({

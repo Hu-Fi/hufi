@@ -218,4 +218,36 @@ describe('ExchangeApiKeysService', () => {
       ).toHaveBeenCalledWith(userId, exchangeName);
     });
   });
+
+  describe('retrievedEnrolledApiKeys', () => {
+    it('should return enrolled keys', async () => {
+      const { userId, exchangeName, apiKey, secretKey } =
+        generateExchangeApiKeysData();
+
+      const [encryptedApiKey, encryptedSecretKey] = await Promise.all([
+        aesEncryptionService.encrypt(Buffer.from(apiKey)),
+        aesEncryptionService.encrypt(Buffer.from(secretKey)),
+      ]);
+      mockExchangeApiKeysRepository.findByUserId.mockResolvedValueOnce([
+        {
+          exchangeName,
+          apiKey: encryptedApiKey,
+          secretKey: encryptedSecretKey,
+        },
+      ] as ExchangeApiKeyEntity[]);
+
+      const results =
+        await exchangeApiKeysService.retrievedEnrolledApiKeys(userId);
+
+      expect(results.length).toBe(1);
+
+      const enrolledApiKey = results[0];
+      expect(enrolledApiKey.exchangeName).toBe(exchangeName);
+      expect(enrolledApiKey.apiKey).toBe(apiKey);
+
+      expect(mockExchangeApiKeysRepository.findByUserId).toHaveBeenCalledWith(
+        userId,
+      );
+    });
+  });
 });

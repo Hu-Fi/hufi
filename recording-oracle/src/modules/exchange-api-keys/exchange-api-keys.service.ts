@@ -6,6 +6,7 @@ import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { UsersService } from '@/modules/users';
 
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
+import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
 import {
   ExchangeApiKeyNotFoundError,
   IncompleteKeySuppliedError,
@@ -77,7 +78,7 @@ export class ExchangeApiKeysService {
   async retrieve(
     userId: string,
     exchangeName: string,
-  ): Promise<{ apiKey: string; secretKey: string }> {
+  ): Promise<{ id: string; apiKey: string; secretKey: string }> {
     const entity =
       await this.exchangeApiKeysRepository.findOneByUserAndExchange(
         userId,
@@ -93,8 +94,51 @@ export class ExchangeApiKeysService {
     ]);
 
     return {
+      id: entity.id,
       apiKey: decryptedApiKey.toString(),
       secretKey: decryptedSecretKey.toString(),
     };
+  }
+
+  async assertUserHasAuthorizedKeys(
+    userId: string,
+    exchangeName: string,
+  ): Promise<string> {
+    const { id, apiKey, secretKey } = await this.retrieve(userId, exchangeName);
+
+    const exchangeApiClient = this.exchangeApiClientFactory.create(
+      exchangeName,
+      { apiKey, secret: secretKey },
+    );
+
+    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
+    if (!hasRequiredAccess) {
+      throw new KeyAuthorizationError(exchangeName);
+    }
+
+    return id;
+  }
+
+  async retrievedEnrolledApiKeys(userId: string): Promise<EnrolledApiKeyDto[]> {
+    const enrolledKeys =
+      await this.exchangeApiKeysRepository.findByUserId(userId);
+
+    const retrievalPromises: Array<Promise<EnrolledApiKeyDto>> = [];
+    for (const enrolledKey of enrolledKeys) {
+      const retrieveFn = async () => {
+        const decodedApiKey = await this.aesEncryptionService.decrypt(
+          enrolledKey.apiKey,
+        );
+
+        return {
+          exchangeName: enrolledKey.exchangeName,
+          apiKey: decodedApiKey.toString(),
+        };
+      };
+
+      retrievalPromises.push(retrieveFn());
+    }
+
+    return await Promise.all(retrievalPromises);
   }
 }

@@ -25,12 +25,7 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import {
-  ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysRepository,
-  ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
-import { generateExchangeApiKey } from '@/modules/exchange-api-keys/fixtures';
+import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { generateUserEntity } from '@/modules/users/fixtures';
 import { Web3Service } from '@/modules/web3';
@@ -40,7 +35,11 @@ import {
 } from '@/modules/web3/fixtures';
 
 import { CampaignEntity } from './campaign.entity';
-import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
+import {
+  CampaignAlreadyFinishedError,
+  CampaignNotFoundError,
+  InvalidCampaign,
+} from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
 import {
@@ -62,7 +61,6 @@ import { ExchangeApiClientFactory } from '../exchange';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
-const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 const mockStorageService = createMock<StorageService>();
@@ -82,10 +80,6 @@ describe('CampaignsService', () => {
         {
           provide: CampaignsRepository,
           useValue: mockCampaignsRepository,
-        },
-        {
-          provide: ExchangeApiKeysRepository,
-          useValue: mockExchangeApiKeysRepository,
         },
         {
           provide: ExchangeApiKeysService,
@@ -569,13 +563,11 @@ describe('CampaignsService', () => {
     let campaign: CampaignEntity;
     let userId: string;
     let chainId: number;
-    let campaignAddress: string;
 
     beforeEach(() => {
       campaign = generateCampaignEntity();
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
-      campaignAddress = faker.finance.ethereumAddress();
     });
 
     it('should return campaign id if exists and user already joined', async () => {
@@ -586,47 +578,43 @@ describe('CampaignsService', () => {
         true,
       );
 
-      const id = await campaignsService.join(userId, chainId, campaignAddress);
+      const id = await campaignsService.join(userId, chainId, campaign.address);
 
       expect(id).toBe(campaign.id);
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaignAddress);
+      ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should throw when exchange api key not found for exchange from campaign', async () => {
+    it('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
-        null,
+      const testError = new Error(faker.lorem.sentence());
+      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+        testError,
       );
 
       let thrownError;
       try {
-        await campaignsService.join(userId, chainId, campaignAddress);
+        await campaignsService.join(userId, chainId, campaign.address);
       } catch (error) {
         thrownError = error;
       }
 
-      expect(thrownError).toBeInstanceOf(ExchangeApiKeyNotFoundError);
-      expect(thrownError.userId).toBe(userId);
-      expect(thrownError.exchangeName).toBe(campaign.exchangeName);
-
-      expect(
-        mockExchangeApiKeysRepository.findOneByUserAndExchange,
-      ).toHaveBeenCalledWith(userId, campaign.exchangeName);
+      expect(thrownError).toBe(testError);
     });
 
     it('should create campaign when not exist and join user', async () => {
+      const campaignAddress = faker.finance.ethereumAddress();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         null,
       );
@@ -652,9 +640,9 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      const exchangeApiKey = generateExchangeApiKey();
-      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
-        exchangeApiKey,
+      const exchangeApiKeyId = faker.string.uuid();
+      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
+        exchangeApiKeyId,
       );
 
       const now = new Date();
@@ -688,41 +676,64 @@ describe('CampaignsService', () => {
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
         userId,
         campaignId,
-        exchangeApiKeyId: exchangeApiKey.id,
+        exchangeApiKeyId,
         createdAt: now,
       });
 
       spyOnretrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
     });
+
+    it('should throw when joining campaign that already finished', async () => {
+      campaign.endDate = faker.date.past();
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.join(userId, chainId, campaign.address);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
+    });
   });
 
   describe('getJoined', () => {
     it('should return data of campaigns where user is participant', async () => {
       const userId = faker.string.uuid();
-      const userCampaigns = Array.from({ length: 3 }, () => {
-        const campaign = generateCampaignEntity();
-
-        return {
-          userId,
-          campaignId: campaign.id,
-          campaign: generateCampaignEntity(),
-          exchangeApiKeyId: faker.string.uuid(),
-          createdAt: faker.date.recent(),
-        };
-      });
+      const userCampaigns = Array.from({ length: 3 }, () =>
+        generateCampaignEntity(),
+      );
       mockUserCampaignsRepository.findByUserId.mockResolvedValueOnce(
         userCampaigns,
       );
+      const testStatus = faker.string.sample();
+      const testLimit = faker.number.int();
+      const testSkip = faker.number.int();
 
-      const campaigns = await campaignsService.getJoined(userId);
+      const campaigns = await campaignsService.getJoined(userId, {
+        status: testStatus as CampaignStatus,
+        limit: testLimit,
+        skip: testSkip,
+      });
 
-      expect(campaigns).toEqual(userCampaigns.map((e) => e.campaign));
+      expect(campaigns).toEqual(userCampaigns);
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledTimes(1);
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledWith(
         userId,
         {
-          relations: { campaign: true },
+          status: testStatus,
+          limit: testLimit,
+          skip: testSkip,
         },
       );
     });

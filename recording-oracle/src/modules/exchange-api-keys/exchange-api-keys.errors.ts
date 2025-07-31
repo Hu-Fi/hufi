@@ -17,6 +17,6 @@ export class IncompleteKeySuppliedError extends BaseError {
 
 export class KeyAuthorizationError extends BaseError {
   constructor(readonly exchangeName: string) {
-    super("Provided key can't be authorized");
+    super("Provided API key can't be authorized on exchange");
   }
 }

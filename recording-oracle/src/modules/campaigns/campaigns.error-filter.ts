@@ -7,11 +7,24 @@ import {
 import { Request, Response } from 'express';
 
 import logger from '@/logger';
-import { ExchangeApiKeyNotFoundError } from '@/modules/exchange-api-keys';
+import {
+  ExchangeApiKeyNotFoundError,
+  KeyAuthorizationError,
+} from '@/modules/exchange-api-keys';
 
-import { CampaignNotFoundError, InvalidCampaign } from './campaigns.errors';
+import {
+  CampaignAlreadyFinishedError,
+  CampaignNotFoundError,
+  InvalidCampaign,
+} from './campaigns.errors';
 
-@Catch(CampaignNotFoundError, ExchangeApiKeyNotFoundError, InvalidCampaign)
+@Catch(
+  CampaignNotFoundError,
+  InvalidCampaign,
+  CampaignAlreadyFinishedError,
+  ExchangeApiKeyNotFoundError,
+  KeyAuthorizationError,
+)
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
     context: CampaignsControllerErrorsFilter.name,

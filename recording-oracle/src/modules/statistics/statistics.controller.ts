@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Header, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LRUCache } from 'lru-cache';
 
@@ -27,7 +27,6 @@ const statsCache = new LRUCache({
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 
-  @Get('/total-volume')
   @ApiOperation({
     summary: 'Get total generated volume',
     description:
@@ -38,6 +37,8 @@ export class StatisticsController {
     description: 'Total volume returned successfully',
     type: GetTotalVolumeResponseDto,
   })
+  @Header('Cache-Control', 'public, max-age=1800')
+  @Get('/total-volume')
   async getTotalVolume(
     @Query() { exchangeName }: GetTotalVolumeQueryDto,
   ): Promise<GetTotalVolumeResponseDto> {
