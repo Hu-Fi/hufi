@@ -1492,4 +1492,50 @@ describe('CampaignsService', () => {
       }
     });
   });
+
+  describe('trackCampaignsCompletion', () => {
+    const nCampaigns = faker.number.int({ min: 2, max: 5 });
+    let campaigns: CampaignEntity[];
+
+    beforeEach(() => {
+      campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity({ status: CampaignStatus.PENDING_COMPLETION }),
+      );
+      mockCampaignsRepository.findForCompletionTracking.mockResolvedValueOnce(
+        campaigns,
+      );
+    });
+
+    it('should complete campaigns when detects completed escrow', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValue({
+        status: EscrowStatus[EscrowStatus.Complete],
+      } as any);
+
+      await campaignsService.trackCampaignsCompletion();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(nCampaigns);
+
+      for (const campaign of campaigns) {
+        expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+          ...campaign,
+          status: 'completed',
+        });
+        expect(logger.info).toHaveBeenCalledWith('Completing campaign', {
+          campaignId: campaign.id,
+        });
+      }
+    });
+
+    it('should not complete campaigns when detects not completed escrow', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValue({
+        status: EscrowStatus[EscrowStatus.Partial],
+      } as any);
+
+      await campaignsService.trackCampaignsCompletion();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+    });
+  });
 });

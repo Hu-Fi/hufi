@@ -58,6 +58,10 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_30_MINUTES;
 
+const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
+  ? CronExpression.EVERY_MINUTE
+  : CronExpression.EVERY_HOUR;
+
 @Injectable()
 export class CampaignsService {
   private readonly logger = logger.child({
@@ -574,5 +578,31 @@ export class CampaignsService {
     } catch {
       // noop
     }
+  }
+
+  @Cron(COMPLETION_TRACKING_SCHEDULE)
+  async trackCampaignsCompletion(): Promise<void> {
+    this.logger.info('Campaigns completion tracking job started');
+
+    const campaignsToTrack =
+      await this.campaignsRepository.findForCompletionTracking();
+
+    for (const campaign of campaignsToTrack) {
+      const escrow = await EscrowUtils.getEscrow(
+        campaign.chainId,
+        campaign.address,
+      );
+
+      const completeStatusString = EscrowStatus[EscrowStatus.Complete];
+      if (escrow.status === completeStatusString) {
+        this.logger.info('Completing campaign', {
+          campaignId: campaign.id,
+        });
+        campaign.status = CampaignStatus.COMPLETED;
+        await this.campaignsRepository.save(campaign);
+      }
+    }
+
+    this.logger.info('Campaigns completion tracking job finished');
   }
 }
