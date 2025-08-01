@@ -142,7 +142,7 @@ const CampaignsTable: FC<Props> = ({
   isJoinedCampaigns = false,
   isMyCampaigns = false,
 }) => {
-  const { exchanges } = useExchangesContext();
+  const { exchangesMap } = useExchangesContext();
   const navigate = useNavigate();
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
@@ -187,9 +187,7 @@ const CampaignsTable: FC<Props> = ({
       flex: 1.5,
       minWidth: 170,
       renderCell: (params) => {
-        const exchangeName = exchanges?.find(
-          (exchange) => exchange.name === params.row.exchangeName
-        )?.displayName;
+        const exchangeName = exchangesMap.get(params.row.exchangeName)?.displayName;
         return (
           <Typography>
             {exchangeName}

@@ -8,7 +8,8 @@ import axios, {
   Method
 } from 'axios';
 
-import { BaseError } from '../utils/BaseError';
+import { ExchangeApiKeyData } from '../types';
+import { HttpError } from '../utils/HttpError';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
 type RefreshPromise = Promise<AxiosResponse<TokenData>>;
@@ -20,19 +21,6 @@ type RecordingApiClientConfig = {
 };
 
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
-
-class HttpError extends BaseError {
-  constructor(message: string, readonly status?: number) {
-    super(message);
-  }
-
-  static fromAxiosError(error: AxiosError): HttpError {
-    return new HttpError(
-      error.message || 'Request failed',
-      error.response?.status,
-    );
-  }
-}
 
 export class RecordingApiClient {
   private readonly axiosInstance: AxiosInstance;
@@ -174,5 +162,27 @@ export class RecordingApiClient {
     await this.post('/auth/logout', {
       refresh_token: this.tokenManager.getRefreshToken(),
     });
+  }
+
+  async getEnrolledExchanges(): Promise<string[]> {
+    const response = await this.get<string[]>('/exchange-api-keys/exchanges');
+    return response;
+  }
+
+  async getExchangesWithApiKeys(): Promise<ExchangeApiKeyData[]> {
+    const response = await this.get<ExchangeApiKeyData[]>('/exchange-api-keys');
+    return response;
+  }
+
+  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<{ id: string }> {
+    const response = await this.post<{ id: string }>(`/exchange-api-keys/${exchangeName}`, {
+      api_key: apiKey,
+      secret_key: secret,
+    });
+    return response;
+  }
+
+  async deleteApiKeysForExchange(exchangeName: string): Promise<void> {
+    await this.delete(`/exchange-api-keys/${exchangeName}`);
   }
 }

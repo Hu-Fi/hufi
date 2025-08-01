@@ -85,7 +85,7 @@ const createAppTheme = (mode: PaletteMode) => {
             },
             text: {
               primary: '#d4cfff',
-              secondary: 'rgba(212, 207, 255, 0.70)',
+              secondary: '#858ec6',
               disabled: 'rgba(212, 207, 255, 0.50)',
             },
             success: {
@@ -139,6 +139,12 @@ const createAppTheme = (mode: PaletteMode) => {
         lineHeight: '1.25rem',
         letterSpacing: '0.4px',
       },
+      body1: {
+        fontSize: '1rem',
+        fontWeight: 400,
+        lineHeight: '150%',
+        letterSpacing: '0.15px',
+      },
       subtitle2: {
         fontSize: '0.875rem',
         fontWeight: 600,
@@ -150,7 +156,24 @@ const createAppTheme = (mode: PaletteMode) => {
       MuiButton: {
         styleOverrides: {
           root: {
+            fontWeight: 600,
+            letterSpacing: '0.1px',
             textTransform: 'none',
+          },
+          sizeSmall: {
+            padding: '4px 10px',
+            fontSize: '13px',
+            lineHeight: '22px',
+          },
+          sizeMedium: {
+            padding: '6px 16px',
+            fontSize: '14px',
+            lineHeight: '24px',
+          },
+          sizeLarge: {
+            padding: '8px 22px',
+            fontSize: '15px',
+            lineHeight: '26px',
           },
         },
       },

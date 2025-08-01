@@ -15,16 +15,12 @@ type Props = {
 const JoinCampaign: FC<Props> = ({ campaign }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const { isConnected } = useAccount();
-  const { exchanges } = useExchangesContext();
+  const { exchangesMap } = useExchangesContext();
 
-  const exchange = exchanges?.find(
-    (exchange) =>
-      exchange.name?.toLowerCase() === campaign?.exchangeName.toLowerCase()
-  );
+  const exchange = exchangesMap.get(campaign.exchangeName.toLowerCase());
 
   const isButtonDisabled = !isConnected;
     
-
   const handleButtonClick = () => {
     if (isButtonDisabled) {
       return;
