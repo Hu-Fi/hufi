@@ -1049,6 +1049,7 @@ describe('CampaignsService', () => {
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;
+    let spyOnRecordGeneratedVolume: jest.SpyInstance;
     let campaign: CampaignEntity;
 
     beforeAll(() => {
@@ -1069,12 +1070,19 @@ describe('CampaignsService', () => {
         'recordCampaignIntermediateResults',
       );
       spyOnRecordCampaignIntermediateResults.mockImplementation();
+
+      spyOnRecordGeneratedVolume = jest.spyOn(
+        campaignsService as any,
+        'recordGeneratedVolume',
+      );
+      spyOnRecordGeneratedVolume.mockImplementation();
     });
 
     afterAll(() => {
       spyOnRetrieveCampaignIntermediateResults.mockRestore();
       spyOnCheckCampaignProgressForPeriod.mockRestore();
       spyOnRecordCampaignIntermediateResults.mockRestore();
+      spyOnRecordGeneratedVolume.mockRestore();
     });
 
     beforeEach(() => {
@@ -1431,7 +1439,7 @@ describe('CampaignsService', () => {
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
@@ -1445,16 +1453,10 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(1);
-      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledWith(
-        {
-          exchangeName: campaign.exchangeName,
-          campaignAddress: campaign.address,
-          periodStart: new Date(intermediateResult.from),
-          periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume.toString(),
-        },
-        ['exchangeName', 'campaignAddress', 'periodStart'],
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(
+        campaign,
+        intermediateResult,
       );
     });
   });
@@ -1536,6 +1538,61 @@ describe('CampaignsService', () => {
       await campaignsService.trackCampaignsCompletion();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('recordGeneratedVolume', () => {
+    const campaign = generateCampaignEntity();
+    const intermediateResult = generateIntermediateResult();
+
+    it('should not record if quote token usd price is null', async () => {
+      mockWeb3Service.getTokenPriceUsd.mockResolvedValueOnce(null);
+
+      await campaignsService['recordGeneratedVolume'](
+        campaign,
+        intermediateResult,
+      );
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+    });
+
+    it('should not record nor fail if error while getting quote token price', async () => {
+      mockWeb3Service.getTokenPriceUsd.mockRejectedValueOnce(new Error());
+
+      await campaignsService['recordGeneratedVolume'](
+        campaign,
+        intermediateResult,
+      );
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+    });
+
+    it('should record with correct usd volume', async () => {
+      const priceUsd = faker.number.float();
+      mockWeb3Service.getTokenPriceUsd.mockResolvedValueOnce(priceUsd);
+
+      const quoteToken = campaign.pair.split('/')[1];
+
+      await campaignsService['recordGeneratedVolume'](
+        campaign,
+        intermediateResult,
+      );
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(1);
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledWith(
+        {
+          exchangeName: campaign.exchangeName,
+          campaignAddress: campaign.address,
+          periodStart: new Date(intermediateResult.from),
+          periodEnd: new Date(intermediateResult.to),
+          volume: intermediateResult.total_volume.toString(),
+          volumeUsd: (priceUsd * intermediateResult.total_volume).toString(),
+        },
+        ['exchangeName', 'campaignAddress', 'periodStart'],
+      );
+
+      expect(mockWeb3Service.getTokenPriceUsd).toHaveBeenCalledTimes(1);
+      expect(mockWeb3Service.getTokenPriceUsd).toHaveBeenCalledWith(quoteToken);
     });
   });
 });

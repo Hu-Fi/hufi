@@ -565,6 +565,17 @@ export class CampaignsService {
     intermediateResult: IntermediateResult,
   ): Promise<void> {
     try {
+      const [_baseTokenSymbol, quoteTokenSymbol] = campaign.pair.split('/');
+
+      const quoteTokenPriceUsd =
+        await this.web3Service.getTokenPriceUsd(quoteTokenSymbol);
+
+      if (!quoteTokenPriceUsd) {
+        return;
+      }
+
+      const volumeUsd = intermediateResult.total_volume * quoteTokenPriceUsd;
+
       await this.volumeStatsRepository.upsert(
         {
           exchangeName: campaign.exchangeName,
@@ -572,6 +583,7 @@ export class CampaignsService {
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
           volume: intermediateResult.total_volume.toString(),
+          volumeUsd: volumeUsd.toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
       );

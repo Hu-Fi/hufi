@@ -15,7 +15,7 @@ export class StatisticsService {
       if (!inFlightPromisesCache.has(cacheKey)) {
         const totalVolumeQuery = this.volumeStatsRepository
           .createQueryBuilder('stat')
-          .select('COALESCE(SUM(stat.volume), 0)', 'totalVolume');
+          .select('COALESCE(SUM(stat.volume_usd), 0)', 'totalVolume');
 
         if (exchangeName) {
           totalVolumeQuery.where('stat.exchange_name = :exchangeName', {
