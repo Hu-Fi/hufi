@@ -63,6 +63,7 @@ export class CampaignsService {
     }
     const campaignEscrows = await EscrowUtils.getEscrows({
       chainId: chainId as number,
+      exchangeOracle: this.web3ConfigService.exchangeOracle,
       recordingOracle: this.web3ConfigService.recordingOracle,
       reputationOracle: this.web3ConfigService.reputationOracle,
       launcher: filters?.launcherAddress,
@@ -112,6 +113,9 @@ export class CampaignsService {
         status: ESCROW_TO_CAMPAIGN_STATUS[campaignEscrow.status],
         escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
         launcher: ethers.getAddress(campaignEscrow.launcher),
+        exchangeOracle: campaignEscrow.exchangeOracle as string,
+        recordingOracle: campaignEscrow.recordingOracle as string,
+        reputationOracle: campaignEscrow.reputationOracle as string,
       });
     }
 
@@ -202,6 +206,9 @@ export class CampaignsService {
         amount: amount.toString(),
       })),
       launcher: ethers.getAddress(campaignEscrow.launcher),
+      exchangeOracle: campaignEscrow.exchangeOracle as string,
+      recordingOracle: campaignEscrow.recordingOracle as string,
+      reputationOracle: campaignEscrow.reputationOracle as string,
     };
   }
 

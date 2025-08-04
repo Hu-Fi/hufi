@@ -135,6 +135,15 @@ export class CampaignData {
 
   @ApiProperty()
   launcher: string;
+
+  @ApiProperty({ name: 'exchange_oracle' })
+  exchangeOracle: string;
+
+  @ApiProperty({ name: 'recording_oracle' })
+  recordingOracle: string;
+
+  @ApiProperty({ name: 'reputation_oracle' })
+  reputationOracle: string;
 }
 
 export class GetCampaignsResponseDto {
