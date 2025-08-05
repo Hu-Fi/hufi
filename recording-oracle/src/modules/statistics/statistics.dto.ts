@@ -15,6 +15,6 @@ export class GetTotalVolumeQueryDto {
 }
 
 export class GetTotalVolumeResponseDto {
-  @ApiProperty()
+  @ApiProperty({ name: 'total_volume' })
   totalVolume: number;
 }

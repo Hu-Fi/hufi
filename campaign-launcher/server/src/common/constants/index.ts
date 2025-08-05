@@ -1,6 +1,19 @@
-import * as ccxt from 'ccxt';
-
-export const SUPPORTED_EXCHANGE_NAMES = [...ccxt.exchanges] as const;
+export const SUPPORTED_EXCHANGE_NAMES = [
+  'bigone',
+  'binance',
+  'bitget',
+  'bybit',
+  'coinbaseexchange',
+  'gate',
+  'htx',
+  'kraken',
+  'kucoin',
+  'mexc',
+  'okx',
+  'upbit',
+  'xt',
+] as const;
+export type SupportedExchange = (typeof SUPPORTED_EXCHANGE_NAMES)[number];
 
 export const EVM_ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
 

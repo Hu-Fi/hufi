@@ -46,4 +46,8 @@ export class Web3ConfigService {
 
     return rpcUrlsByChainId[chainId];
   }
+
+  get alchemyApiKey(): string {
+    return this.configService.getOrThrow('ALCHEMY_API_KEY');
+  }
 }

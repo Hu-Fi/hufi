@@ -13,13 +13,14 @@ import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
+import { isValidExchangeName } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
+import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import type { UserEntity } from '@/modules/users';
@@ -52,11 +53,14 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
-import { ExchangeApiClientFactory } from '../exchange';
 
 const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_30_MINUTES;
+
+const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
+  ? CronExpression.EVERY_MINUTE
+  : CronExpression.EVERY_HOUR;
 
 @Injectable()
 export class CampaignsService {
@@ -162,12 +166,16 @@ export class CampaignsService {
 
   async getJoined(
     userId: string,
-    options?: Partial<{ status?: CampaignStatus; limit: number; skip: number }>,
+    options?: Partial<{
+      statuses?: CampaignStatus[];
+      limit: number;
+      skip: number;
+    }>,
   ): Promise<CampaignEntity[]> {
     const userCampaigns = await this.userCampaignsRepository.findByUserId(
       userId,
       {
-        status: options?.status,
+        statuses: options?.statuses,
         limit: options?.limit,
         skip: options?.skip,
       },
@@ -244,7 +252,7 @@ export class CampaignsService {
     /*
      * Not including this into Joi schema to send meaningful errors
      */
-    if (!SUPPORTED_EXCHANGE_NAMES.includes(manifest.exchange)) {
+    if (!isValidExchangeName(manifest.exchange)) {
       throw new InvalidCampaign(
         campaignAddress,
         `Exchange not supported: ${manifest.exchange}`,
@@ -356,13 +364,14 @@ export class CampaignsService {
             /**
              * This can happen only in situations when:
              * - by some reason we lost data about campaign from DB, then re-added it
-             * - by some reason campaign was 'completed', but status changed to 'active'
+             * - by some reason campaign was 'pending_completion'/'completed', but status changed to 'active'
+             *
              * and then attempted to record it's progress but it must be
              * already finished and start-end dates overlap indicates that,
-             * so just mark it as completed, otherwise it leads to invalid intermediate results.
+             * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
              */
             logger.warn('Campaign progress period dates overlap');
-            campaign.status = CampaignStatus.COMPLETED;
+            campaign.status = CampaignStatus.PENDING_COMPLETION;
             campaign.lastResultsAt = new Date();
             await this.campaignsRepository.save(campaign);
             return;
@@ -399,11 +408,11 @@ export class CampaignsService {
           /**
            * There might be situations when due to delays/failures in processing
            * we reach campaign end date but still have periods to process,
-           * so mark campaign as completed only if results recorded for all periods,
+           * so mark campaign as pending completion only if results recorded for all periods,
            * otherwise keep it as is to wait for all periods to be recorded.
            */
           if (endDate.valueOf() === campaign.endDate.valueOf()) {
-            campaign.status = CampaignStatus.COMPLETED;
+            campaign.status = CampaignStatus.PENDING_COMPLETION;
           }
 
           campaign.lastResultsAt = new Date();
@@ -556,6 +565,17 @@ export class CampaignsService {
     intermediateResult: IntermediateResult,
   ): Promise<void> {
     try {
+      const [_baseTokenSymbol, quoteTokenSymbol] = campaign.pair.split('/');
+
+      const quoteTokenPriceUsd =
+        await this.web3Service.getTokenPriceUsd(quoteTokenSymbol);
+
+      if (!quoteTokenPriceUsd) {
+        return;
+      }
+
+      const volumeUsd = intermediateResult.total_volume * quoteTokenPriceUsd;
+
       await this.volumeStatsRepository.upsert(
         {
           exchangeName: campaign.exchangeName,
@@ -563,11 +583,38 @@ export class CampaignsService {
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
           volume: intermediateResult.total_volume.toString(),
+          volumeUsd: volumeUsd.toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
       );
     } catch {
       // noop
     }
+  }
+
+  @Cron(COMPLETION_TRACKING_SCHEDULE)
+  async trackCampaignsCompletion(): Promise<void> {
+    this.logger.info('Campaigns completion tracking job started');
+
+    const campaignsToTrack =
+      await this.campaignsRepository.findForCompletionTracking();
+
+    for (const campaign of campaignsToTrack) {
+      const escrow = await EscrowUtils.getEscrow(
+        campaign.chainId,
+        campaign.address,
+      );
+
+      const completeStatusString = EscrowStatus[EscrowStatus.Complete];
+      if (escrow.status === completeStatusString) {
+        this.logger.info('Completing campaign', {
+          campaignId: campaign.id,
+        });
+        campaign.status = CampaignStatus.COMPLETED;
+        await this.campaignsRepository.save(campaign);
+      }
+    }
+
+    this.logger.info('Campaigns completion tracking job finished');
   }
 }

@@ -42,4 +42,12 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
 
     return results;
   }
+
+  async findForCompletionTracking(): Promise<CampaignEntity[]> {
+    return this.find({
+      where: {
+        status: CampaignStatus.PENDING_COMPLETION,
+      },
+    });
+  }
 }
