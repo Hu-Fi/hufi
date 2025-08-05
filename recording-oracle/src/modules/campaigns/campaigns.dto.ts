@@ -14,7 +14,7 @@ import {
   type ChainId,
 } from '@/common/constants';
 
-import { ExposedCampaignStatus } from './types';
+import { ReturnedCampaignStatus } from './types';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
@@ -65,11 +65,11 @@ export class JoinedCampaignDto {
 
 export class ListJoinedCampaignsQueryDto {
   @ApiPropertyOptional({
-    enum: ExposedCampaignStatus,
+    enum: ReturnedCampaignStatus,
   })
   @IsOptional()
-  @IsEnum(ExposedCampaignStatus)
-  status?: ExposedCampaignStatus;
+  @IsEnum(ReturnedCampaignStatus)
+  status?: ReturnedCampaignStatus;
 
   @ApiPropertyOptional({
     default: DEFAULT_PAGINATION_LIMIT,

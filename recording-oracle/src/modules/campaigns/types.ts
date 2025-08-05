@@ -10,7 +10,7 @@ export enum CampaignStatus {
   COMPLETED = 'completed',
 }
 
-export enum ExposedCampaignStatus {
+export enum ReturnedCampaignStatus {
   ACTIVE = 'active',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',

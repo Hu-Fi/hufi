@@ -26,10 +26,10 @@ import {
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
-import { ExposedCampaignStatus, CampaignStatus } from './types';
+import { ReturnedCampaignStatus, CampaignStatus } from './types';
 
-const EXPOSED_TO_CAMPAIGN_STATUSES: Record<
-  ExposedCampaignStatus,
+const RETURNED_STATUS_TO_CAMPAIGN_STATUSES: Record<
+  ReturnedCampaignStatus,
   CampaignStatus[]
 > = {
   [CampaignStatus.ACTIVE]: [
@@ -41,13 +41,16 @@ const EXPOSED_TO_CAMPAIGN_STATUSES: Record<
   [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
 };
 
-const CAMPAIGN_TO_EXPOSED_STATUS: Record<string, ExposedCampaignStatus> = {};
-for (const [exposedCampaignStatus, campaignStatuses] of Object.entries(
-  EXPOSED_TO_CAMPAIGN_STATUSES,
+const CAMPAIGN_STATUS_TO_RETURNED_STATUS: Record<
+  string,
+  ReturnedCampaignStatus
+> = {};
+for (const [returnedCampaignStatus, campaignStatuses] of Object.entries(
+  RETURNED_STATUS_TO_CAMPAIGN_STATUSES,
 )) {
   for (const campaignStatus of campaignStatuses) {
-    CAMPAIGN_TO_EXPOSED_STATUS[campaignStatus] =
-      exposedCampaignStatus as ExposedCampaignStatus;
+    CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaignStatus] =
+      returnedCampaignStatus as ReturnedCampaignStatus;
   }
 }
 
@@ -101,7 +104,7 @@ export class CampaignsController {
     const limit = query.limit;
 
     const statuses: CampaignStatus[] = query.status
-      ? EXPOSED_TO_CAMPAIGN_STATUSES[query.status]
+      ? RETURNED_STATUS_TO_CAMPAIGN_STATUSES[query.status]
       : [];
 
     const campaigns = await this.campaignsService.getJoined(request.user.id, {
@@ -116,7 +119,7 @@ export class CampaignsController {
         .map((campaign) => ({
           chainId: campaign.chainId,
           address: campaign.address,
-          status: CAMPAIGN_TO_EXPOSED_STATUS[campaign.status],
+          status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],
           processingStatus: campaign.status,
           exchangeName: campaign.exchangeName,
           tradingPair: campaign.pair,

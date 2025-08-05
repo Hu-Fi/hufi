@@ -18,18 +18,21 @@ import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
 import { CampaignManifest, CampaignStatus } from './types';
 
-const CAMPAIGN_TO_ESCROW_STATUSES: Record<CampaignStatus, EscrowStatus[]> = {
+const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
+  CampaignStatus,
+  EscrowStatus[]
+> = {
   [CampaignStatus.ACTIVE]: [EscrowStatus.Pending, EscrowStatus.Partial],
   [CampaignStatus.CANCELLED]: [EscrowStatus.Cancelled],
   [CampaignStatus.COMPLETED]: [EscrowStatus.Complete],
 };
 
-const ESCROW_TO_CAMPAIGN_STATUS: Record<string, CampaignStatus> = {};
+const ESCROW_STATUS_TO_CAMPAIGN_STATUS: Record<string, CampaignStatus> = {};
 for (const [campaignStatus, escrowStatuses] of Object.entries(
-  CAMPAIGN_TO_ESCROW_STATUSES,
+  CAMPAIGN_STATUS_TO_ESCROW_STATUSES,
 )) {
   for (const escrowStatus of escrowStatuses) {
-    ESCROW_TO_CAMPAIGN_STATUS[EscrowStatus[escrowStatus]] =
+    ESCROW_STATUS_TO_CAMPAIGN_STATUS[EscrowStatus[escrowStatus]] =
       campaignStatus as CampaignStatus;
   }
 }
@@ -59,7 +62,7 @@ export class CampaignsService {
 
     let statuses: EscrowStatus[] | undefined;
     if (filters?.status) {
-      statuses = CAMPAIGN_TO_ESCROW_STATUSES[filters.status];
+      statuses = CAMPAIGN_STATUS_TO_ESCROW_STATUSES[filters.status];
     }
     const campaignEscrows = await EscrowUtils.getEscrows({
       chainId: chainId as number,
@@ -110,7 +113,7 @@ export class CampaignsService {
         fundToken: ethers.getAddress(campaignEscrow.token),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
-        status: ESCROW_TO_CAMPAIGN_STATUS[campaignEscrow.status],
+        status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
         escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
         launcher: ethers.getAddress(campaignEscrow.launcher),
         exchangeOracle: campaignEscrow.exchangeOracle as string,
@@ -197,7 +200,7 @@ export class CampaignsService {
       fundToken: ethers.getAddress(campaignEscrow.token),
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
-      status: ESCROW_TO_CAMPAIGN_STATUS[campaignEscrow.status],
+      status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
       escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
       // details
       amountPaid: campaignEscrow.amountPaid,
