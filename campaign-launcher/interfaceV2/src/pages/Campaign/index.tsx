@@ -15,6 +15,10 @@ const Campaign: FC = () => {
     chainId: string;
     address: string;
   };
+
+// localhost:3001/campaign-detail/0x000000?details=atob(Json.stringify())
+
+
   const { data: campaign, isPending: isCampaignLoading } = useCampaign(
     +chainId,
     address

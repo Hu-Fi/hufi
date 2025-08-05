@@ -20,10 +20,12 @@ declare module '@mui/material/styles' {
   interface TypographyVariants {
     'h4-mobile': React.CSSProperties;
     'h6-mobile': React.CSSProperties;
+    tooltip: React.CSSProperties;
   }
   interface TypographyVariantsOptions {
     'h4-mobile'?: React.CSSProperties;
     'h6-mobile'?: React.CSSProperties;
+    tooltip?: React.CSSProperties;
   }
 }
 
@@ -31,6 +33,7 @@ declare module '@mui/material/Typography' {
   interface TypographyPropsVariantOverrides {
     'h4-mobile': true;
     'h6-mobile': true;
+    tooltip: true;
   }
 }
 
@@ -150,6 +153,12 @@ const createAppTheme = (mode: PaletteMode) => {
         fontWeight: 600,
         lineHeight: '1.375rem',
         letterSpacing: '0.1px',
+      },
+      tooltip: {
+        fontSize: 10,
+        fontWeight: 500,
+        lineHeight: '14px',
+        letterSpacing: 0,
       },
     },
     components: {

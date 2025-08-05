@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 
 import { ChainId, StakerInfo, StakingClient } from '@human-protocol/sdk';
 import { Eip1193Provider, ethers } from 'ethers';
-import { useAccount, useWalletClient } from 'wagmi';
+import { useAccount, useChainId, useWalletClient } from 'wagmi';
 
 import { formatTokenAmount, getSupportedChainIds } from '../utils';
 
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
-  const { address, chainId, connector } = useAccount();
+  const { address, connector, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const appChainId = useChainId();
 
   useEffect(() => {
     const initStakingClient = async () => {
@@ -31,10 +32,10 @@ export const useStake = () => {
     };
 
     initStakingClient();
-  }, [walletClient, address, chainId, connector]);
+  }, [walletClient, address, chainId, connector, appChainId]);
 
   const checkSupportedChain = () => {
-    const isSupportedChain = getSupportedChainIds().includes(chainId as ChainId);
+    const isSupportedChain = getSupportedChainIds().includes(appChainId as ChainId);
     if (!isSupportedChain) {
       resetData();
       throw new Error(

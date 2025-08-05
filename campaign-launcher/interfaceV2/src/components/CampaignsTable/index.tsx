@@ -6,17 +6,17 @@ import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
-import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { Campaign } from '../../types';
 import { formatAddress, getExplorerUrl, formatTokenAmount } from '../../utils';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import LaunchCampaign from '../LaunchCampaign';
 
 type Props = {
-  data: CampaignDataDto[] | undefined;
+  data: Campaign[] | undefined;
   showPagination?: boolean;
   showAllCampaigns?: boolean;
   isJoinedCampaigns?: boolean;
@@ -187,7 +187,7 @@ const CampaignsTable: FC<Props> = ({
       flex: 1.5,
       minWidth: 170,
       renderCell: (params) => {
-        const exchangeName = exchangesMap.get(params.row.exchangeName)?.displayName;
+        const exchangeName = exchangesMap.get(params.row.exchangeName)?.display_name;
         return (
           <Typography>
             {exchangeName}

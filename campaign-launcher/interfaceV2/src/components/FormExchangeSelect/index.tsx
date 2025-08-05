@@ -31,7 +31,7 @@ const FormExchangeSelect = <
       options={exchanges?.map((exchange) => exchange.name) || []}
       getOptionLabel={(option) => {
         const exchange = exchangesMap.get(option);
-        return exchange?.displayName || option || '';
+        return exchange?.display_name || option || '';
       }}
       renderInput={(params) => (
         <TextField {...params} label="Exchange" />
@@ -47,7 +47,7 @@ const FormExchangeSelect = <
           >
             <CryptoEntity
               name={option}
-              displayName={exchange?.displayName}
+              displayName={exchange?.display_name}
               logo={exchange?.logo}
             />
           </Box>

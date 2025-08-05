@@ -1,5 +1,5 @@
 import { Api } from "./client";
-import { MockedLauncherClient } from "./MockedLauncherClient";
+import { MockedLauncherClient } from "./mockedLauncherClient";
 import { RecordingApiClient } from "./recordingApiClient";
 import { tokenManager } from "../utils/TokenManager";
 

@@ -1,9 +1,8 @@
 import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useMyCampaigns } from '../../hooks/useCampaigns';
@@ -19,13 +18,16 @@ const MyCampaigns: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
 }) => {
-  const { address, chain } = useAccount();
+  const { address } = useAccount();
   const navigate = useNavigate();
   const isXl = useIsXlDesktop();
+  const chain_id = useChainId();
 
-  const { data: campaigns, isLoading } = useMyCampaigns(
-    chain?.id as ChainId,
-    address?.toLowerCase(),
+  const { data, isLoading } = useMyCampaigns(
+    {
+      chain_id,
+      launcher: address,
+    }
   );
 
   const onViewAllClick = () => {
@@ -38,12 +40,12 @@ const MyCampaigns: FC<Props> = ({
         <Typography component="h3" variant={isXl ? 'h5' : 'h6'} color="text.primary">
           My Campaigns
         </Typography>
-        {campaigns && campaigns.length > 0 && <LaunchCampaign variant="contained" />}
+        {data && data?.results.length > 0 && <LaunchCampaign variant="contained" />}
       </Box>
       {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {!isLoading && (
         <CampaignsTable
-          data={campaigns}
+          data={data?.results || []}
           showPagination={showPagination}
           showAllCampaigns={showAllCampaigns}
           onViewAllClick={onViewAllClick}

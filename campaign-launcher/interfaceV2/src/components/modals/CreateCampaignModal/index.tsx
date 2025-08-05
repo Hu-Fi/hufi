@@ -9,12 +9,14 @@ import {
   FormControl,
   FormHelperText,
   InputLabel,
+  Link,
   MenuItem,
   Select,
   Step,
   StepLabel,
   Stepper,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -27,8 +29,6 @@ import * as yup from 'yup';
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
-import { useExchangesContext } from '../../../providers/ExchangesProvider';
-import { ExchangeType } from '../../../types';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
 import FormExchangeSelect from '../../FormExchangeSelect';
@@ -40,23 +40,21 @@ type Props = {
 };
 
 type CampaignFormValues = {
-  chainId: number;
-  exchangeName: string;
-  requesterAddress: string;
-  token: string;
-  startDate: Date;
-  endDate: Date;
-  fundToken: string;
-  fundAmount: number;
+  exchange: string;
+  pair: string;
+  start_date: Date;
+  end_date: Date;
+  fund_token: string;
+  fund_amount: number;
 };
 
 const validationSchema = yup.object({
-  chainId: yup.number().required('Required'),
-  exchangeName: yup.string().required('Required'),
-  requesterAddress: yup.string().required('Required'),
-  token: yup.string().required('Required'),
-  startDate: yup.date().required('Required'),
-  endDate: yup
+  exchange: yup.string().required('Required'),
+  pair: yup.string().required('Required'),
+  fund_token: yup.string().required('Required'),
+  fund_amount: yup.number().required('Required'),
+  start_date: yup.date().required('Required'),
+  end_date: yup
     .date()
     .required('Required')
     .test(
@@ -74,8 +72,6 @@ const validationSchema = yup.object({
         return endDate >= minEndDate;
       }
     ),
-  fundToken: yup.string().required('Required'),
-  fundAmount: yup.number().required('Required'),
 });
 
 const steps = ['Create Escrow', 'Fund Escrow', 'Setup Escrow'];
@@ -98,9 +94,59 @@ const menuProps = {
   },
 };
 
+const InfoTooltip = () => {
+  return (
+    <Tooltip 
+      arrow placement="right"
+      title={
+        <>
+          <Typography component="p" variant="tooltip" color="primary.contrast">
+            Can&apos;t find the exchange? <br />
+            Click the link below to submit a request. <br />
+            We&apos;d love to hear from you! <br />
+            <Link href="" target="_blank" rel="noopener noreferrer" color="primary.contrast">
+              Submit request
+            </Link>
+          </Typography>
+        </>
+      }
+      slotProps={{
+        tooltip: {
+          sx: {
+            bgcolor: 'primary.main',
+          },
+        },
+        arrow: {
+          sx: {
+            '&::before': {
+              bgcolor: 'primary.main',
+            },
+          },
+        },
+      }}
+    >
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        py={0.5} 
+        px={1.5}
+        borderRadius="100%"
+        sx={{
+          background: 'linear-gradient(13deg, rgba(247, 248, 253, 0.05) 20.33%, rgba(255, 255, 255, 0.05) 48.75%)',
+          cursor: 'pointer',
+        }}
+      >
+        <Typography component="span" variant="subtitle2" color="text.secondary">
+          i
+        </Typography>
+      </Box>
+    </Tooltip>
+  )
+};
+
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [activeStep] = useState(0);
-  const { exchangesMap } = useExchangesContext();
   const account = useAccount();
   const {
     isLoading: isCreatingEscrow,
@@ -125,28 +171,20 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   } = useForm<CampaignFormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
-      chainId: account.chainId,
-      requesterAddress: account.address,
-      exchangeName: '',
-      token: '',
-      startDate: new Date(),
-      endDate: new Date(),
-      fundToken: 'hmt',
-      fundAmount: 0.0001,
+      exchange: '',
+      pair: '',
+      start_date: new Date(),
+      end_date: new Date(),
+      fund_token: 'hmt',
+      fund_amount: 0.0001,
     },
   });
 
-  const exchangeName = watch('exchangeName');
-  const exchange = exchangesMap.get(exchangeName);
-  const { data: tradingPairs } = useTradingPairs(exchangeName);
+  const exchange = watch('exchange');
+  const { data: tradingPairs } = useTradingPairs(exchange);
 
-  const submitForm = async ({ fundToken, ...data }: CampaignFormValues) => {
-    await createEscrow(fundToken, {
-      ...data,
-      fundAmount: data.fundAmount.toString(),
-      startDate: data.startDate.toISOString(),
-      endDate: data.endDate.toISOString(),
-    });
+  const submitForm = async (data: CampaignFormValues) => {
+    await createEscrow(data);
   };
 
   return (
@@ -209,83 +247,59 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
             width={{ xs: '100%', sm: 625 }}
           >
             <Box display="flex" gap={2}>
-              <FormControl error={!!errors.exchangeName} sx={{ width: '100%' }}>
+              <Box display="flex" gap={2} alignItems="center" width="100%">
+                <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+                  <Controller
+                    name="exchange"
+                    control={control}
+                    render={({ field }) => <FormExchangeSelect<CampaignFormValues, 'exchange'> field={field} />}
+                  />
+                  {errors.exchange && (
+                    <FormHelperText>{errors.exchange.message}</FormHelperText>
+                  )}
+                </FormControl>
+                <InfoTooltip />
+              </Box>
+              <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
                 <Controller
-                  name="exchangeName"
+                  name="pair"
                   control={control}
-                  render={({ field }) => <FormExchangeSelect<CampaignFormValues, 'exchangeName'> field={field} />}
+                  render={({ field }) => {
+                    return (
+                      <Autocomplete
+                        id="trading-pair-select"
+                        options={tradingPairs || []}
+                        slotProps={slotProps}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Trading Pair" />
+                        )}
+                        renderOption={(props, option) => {
+                          return (
+                            <Box
+                              {...props}
+                              key={option}
+                              component="li"
+                              sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
+                            >
+                              <CryptoPairEntity symbol={option} />
+                            </Box>
+                          );
+                        }}
+                        {...field}
+                        onChange={(_, value) => field.onChange(value)}
+                      />
+                    );
+                  }}
                 />
-                {errors.exchangeName && (
-                  <FormHelperText>{errors.exchangeName.message}</FormHelperText>
-                )}
-              </FormControl>
-              <FormControl error={!!errors.token} sx={{ width: '100%' }}>
-                {exchange?.type === ExchangeType.CEX ? (
-                  <>
-                    <Controller
-                      name="token"
-                      control={control}
-                      render={({ field }) => {
-                        return (
-                          <Autocomplete
-                            id="trading-pair-select"
-                            options={tradingPairs || []}
-                            slotProps={slotProps}
-                            renderInput={(params) => (
-                              <TextField {...params} label="Trading Pair" />
-                            )}
-                            renderOption={(props, option) => {
-                              return (
-                                <Box
-                                  {...props}
-                                  key={option}
-                                  component="li"
-                                  sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
-                                >
-                                  <CryptoPairEntity symbol={option} />
-                                </Box>
-                              );
-                            }}
-                            {...field}
-                            onChange={(_, value) => field.onChange(value)}
-                          />
-                        );
-                      }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <InputLabel id="token-a-select-label">Token</InputLabel>
-                    <Controller
-                      name="token"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          labelId="token-a-select-label"
-                          id="token-a-select"
-                          label="Token A"
-                          MenuProps={menuProps}
-                          {...field}
-                        >
-                          {TOKENS.map((token) => (
-                            <MenuItem key={token.name} value={token.name}>
-                              <CryptoEntity name={token.name} />
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      )}
-                    />
-                  </>
-                )}
-                {errors.token && (
-                  <FormHelperText>{errors.token.message}</FormHelperText>
+                {errors.pair && (
+                  <FormHelperText>{errors.pair.message}</FormHelperText>
                 )}
               </FormControl>
             </Box>
             <Box display="flex" gap={2}>
-              <FormControl error={!!errors.startDate} sx={{ width: '100%' }}>
+              <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
                 <Controller
-                  name="startDate"
+                  name="start_date"
                   control={control}
                   render={({ field }) => (
                     <DatePicker
@@ -297,13 +311,13 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     />
                   )}
                 />
-                {errors.startDate && (
-                  <FormHelperText>{errors.startDate.message}</FormHelperText>
+                {errors.start_date && (
+                  <FormHelperText>{errors.start_date.message}</FormHelperText>
                 )}
               </FormControl>
-              <FormControl error={!!errors.endDate} sx={{ width: '100%' }}>
+              <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
                 <Controller
-                  name="endDate"
+                  name="end_date"
                   control={control}
                   render={({ field }) => (
                     <DatePicker
@@ -315,16 +329,16 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     />
                   )}
                 />
-                {errors.endDate && (
-                  <FormHelperText>{errors.endDate.message}</FormHelperText>
+                {errors.end_date && (
+                  <FormHelperText>{errors.end_date.message}</FormHelperText>
                 )}
               </FormControl>
             </Box>
             <Box display="flex" gap={2}>
-              <FormControl error={!!errors.token} sx={{ width: '100%' }}>
+              <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
                 <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
                 <Controller
-                  name="fundToken"
+                  name="fund_token"
                   control={control}
                   render={({ field }) => (
                     <Select
@@ -345,30 +359,30 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                   )}
                 />
 
-                {errors.fundToken && (
-                  <FormHelperText>{errors.fundToken.message}</FormHelperText>
+                {errors.fund_token && (
+                  <FormHelperText>{errors.fund_token.message}</FormHelperText>
                 )}
               </FormControl>
-              <FormControl error={!!errors.fundAmount} sx={{ width: '100%' }}>
+              <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
                 <Controller
-                  name="fundAmount"
+                  name="fund_amount"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       id="fund-amount-input"
                       label="Fund Amount"
-                      error={!!errors.fundAmount}
+                      error={!!errors.fund_amount}
                       type="number"
                       {...field}
                     />
                   )}
                 />
-                {errors.fundAmount && (
-                  <FormHelperText>{errors.fundAmount.message}</FormHelperText>
+                {errors.fund_amount && (
+                  <FormHelperText>{errors.fund_amount.message}</FormHelperText>
                 )}
               </FormControl>
             </Box>
-            {stepsCompleted < 4 ? (
+            {stepsCompleted < steps.length ? (
               <Button
                 variant="contained"
                 type="submit"

@@ -1,28 +1,31 @@
 import { useState } from 'react';
 
-import { ChainId, EscrowClient } from '@human-protocol/sdk';
+import { EscrowClient } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
-import { useAccount } from 'wagmi';
+import { useChainId } from 'wagmi';
 
 import useClientToSigner from './useClientToSigner';
 import ERC20ABI from '../abi/ERC20.json';
-import { ManifestUploadRequestDto } from '../api/client';
 import { oracles } from '../constants';
+import { EscrowCreateDto, ManifestUploadDto } from '../types';
 import { getTokenAddress } from '../utils';
-import { useUploadManifest } from './useUploadManifest';
+
+const calculateManifestHash = async (manifest: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(manifest);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
 
 const useCreateEscrow = () => {
   const [stepsCompleted, setStepsCompleted] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const { chainId } = useAccount();
+  const chainId = useChainId();
   const { signer, network } = useClientToSigner();
-  const { mutateAsync: uploadManifest } = useUploadManifest();
 
-  const createEscrow = async (
-    fundToken: string,
-    data: ManifestUploadRequestDto
-  ) => {
+  const createEscrow = async (data: EscrowCreateDto) => {
     if (!signer || !network) {
       return;
     }
@@ -31,7 +34,7 @@ const useCreateEscrow = () => {
 
     try {
       const escrowClient = await EscrowClient.build(signer);
-      const tokenAddress = getTokenAddress(chainId as ChainId, fundToken);
+      const tokenAddress = getTokenAddress(chainId, data.fund_token);
 
       if (!tokenAddress?.length) {
         throw new Error('Fund token is not supported.');
@@ -39,14 +42,19 @@ const useCreateEscrow = () => {
 
       const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
       const fundAmount = ethers.parseUnits(
-        data.fundAmount,
+        data.fund_amount.toString(),
         await tokenContract.decimals()
       );
 
-      const { data: manifest } = await uploadManifest({
-        ...data,
-        fundAmount: fundAmount.toString(),
-      });
+      const manifest: ManifestUploadDto = {
+        type: 'MARKET_MAKING',
+        exchange: data.exchange,
+        daily_volume_target: 1,
+        pair: data.pair,
+        fund_token: data.fund_token,
+        start_date: data.start_date.toISOString(),
+        end_date: data.end_date.toISOString(),
+      };
 
       const escrowAddress = await escrowClient.createEscrow(
         tokenAddress,
@@ -58,11 +66,13 @@ const useCreateEscrow = () => {
       await escrowClient.fund(escrowAddress, fundAmount);
       setStepsCompleted((prev) => prev + 1);
 
+      const manifestString = JSON.stringify(manifest);
+      const manifestHash = await calculateManifestHash(manifestString);
+      
       const escrowConfig = {
         ...oracles,
-        exchangeOracle: signer.address,
-        manifestUrl: manifest.url,
-        manifestHash: manifest.hash,
+        manifestUrl: manifestString,
+        manifestHash: manifestHash,
       };
 
       await escrowClient.setup(escrowAddress, escrowConfig);

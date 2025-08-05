@@ -1,37 +1,48 @@
 import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
 
-import { api } from '../api';
+import { api, launcherApi } from '../api';
 import { CampaignDataDto } from '../api/client';
 import { CampaignsStats } from '../types';
 
 export type Campaign = CampaignDataDto;
 
-export const useCampaigns = (
-  chainId: ChainId,
-  status?: string,
-  exchangeName?: string
-) => {
+type CampaignsParams = {
+  chain_id: ChainId;
+  exchange_name?: string;
+  status?: string;
+  launcher?: string;
+  limit?: number;
+  skip?: number;
+}
+
+const filterParams = (params: CampaignsParams) => {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => Boolean(value))
+  );
+};
+
+export const useCampaigns = (params: CampaignsParams) => {
+  const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: ['campaigns', chainId, status, exchangeName],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaigns({ chainId, status, exchangeName })
-        .then((res) => res.data),
+    queryKey: ['all-campaigns', chain_id, exchange_name, status, launcher, limit, skip],
+    queryFn: () => {
+      const filteredParams = filterParams(params);
+      return launcherApi.getCampaigns(filteredParams)
+    },
+    enabled: !!chain_id,
   });
 };
 
-export const useMyCampaigns = (chainId: ChainId, launcher?: string) => {
-  const { isConnected } = useAccount();
-
+export const useMyCampaigns = (params: CampaignsParams) => {
+  const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: ['myCampaigns', chainId, launcher],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaigns({ chainId, launcher })
-        .then((res) => res.data),
-    enabled: !!chainId && !!launcher && !!isConnected,
+    queryKey: ['my-campaigns', chain_id, exchange_name, status, launcher, limit, skip],
+    queryFn: () => {
+      const filteredParams = filterParams(params);
+      return launcherApi.getCampaigns(filteredParams)
+    },
+    enabled: !!chain_id && !!launcher,
   });
 };
 

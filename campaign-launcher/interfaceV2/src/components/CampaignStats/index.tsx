@@ -81,7 +81,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
 
   if (!campaign) return null;
 
-  const exchangeName = exchangesMap.get(campaign.exchangeName)?.displayName || campaign.exchangeName;
+  const exchangeName = exchangesMap.get(campaign.exchangeName)?.display_name || campaign.exchangeName;
 
   return (
     <Grid container spacing={2} width="100%">

@@ -1,9 +1,8 @@
 import { FC, useState } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { useChainId } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useCampaigns } from '../../hooks/useCampaigns';
@@ -22,20 +21,22 @@ const AllCampaigns: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
 }) => {
-  const [status, setStatus] = useState('all');
-  const [exchange, setExchange] = useState('all');
+  const [status, setStatus] = useState('');
+  const [exchange, setExchange] = useState('');
   const { exchanges } = useExchangesContext();
-  const { chain } = useAccount();
+  const chainId = useChainId();
   const navigate = useNavigate();
   const isXl = useIsXlDesktop();
 
-  const { data: campaigns, isPending } = useCampaigns(
-    (chain?.id || ChainId.ALL) as ChainId,
-    status,
-    exchange
+  const { data, isPending } = useCampaigns(
+    {
+      chain_id: chainId,
+      status,
+      exchange_name: exchange,
+    }
   );
 
-  const isCampaignsExist = campaigns && campaigns.length > 0;
+  const isCampaignsExist = data?.results && data.results.length > 0;
 
   const handleStatusChange = (value: string) => {
     setStatus(value);
@@ -62,7 +63,7 @@ const AllCampaigns: FC<Props> = ({
       {isPending && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {isCampaignsExist && (
         <CampaignsTable
-          data={campaigns}
+          data={data?.results}
           showPagination={showPagination}
           showAllCampaigns={showAllCampaigns}
           onViewAllClick={onViewAllClick}

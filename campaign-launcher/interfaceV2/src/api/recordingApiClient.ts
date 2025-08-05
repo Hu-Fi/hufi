@@ -1,3 +1,4 @@
+import { ChainId } from '@human-protocol/sdk';
 import axios, { 
   AxiosError, 
   AxiosInstance, 
@@ -8,7 +9,7 @@ import axios, {
   Method
 } from 'axios';
 
-import { ExchangeApiKeyData } from '../types';
+import { CampaignsResponse, ExchangeApiKeyData } from '../types';
 import { HttpError } from '../utils/HttpError';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
@@ -19,6 +20,10 @@ type RecordingApiClientConfig = {
   headers?: AxiosRequestHeaders;
   tokenManager: TokenManager;
 };
+
+type PostResponse = {
+  id: string;
+}
 
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
 
@@ -174,8 +179,8 @@ export class RecordingApiClient {
     return response;
   }
 
-  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<{ id: string }> {
-    const response = await this.post<{ id: string }>(`/exchange-api-keys/${exchangeName}`, {
+  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<PostResponse> {
+    const response = await this.post<PostResponse>(`/exchange-api-keys/${exchangeName}`, {
       api_key: apiKey,
       secret_key: secret,
     });
@@ -184,5 +189,18 @@ export class RecordingApiClient {
 
   async deleteApiKeysForExchange(exchangeName: string): Promise<void> {
     await this.delete(`/exchange-api-keys/${exchangeName}`);
+  }
+
+  async getJoinedCampaigns(): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns');
+    return response;
+  }
+
+  async joinCampaign(chainId: ChainId, address: `0x${string}`): Promise<PostResponse> {
+    const response = await this.post<PostResponse>(`/campaigns/join`, {
+      chain_id: chainId,
+      address,
+    });
+    return response;
   }
 }

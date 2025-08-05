@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Method } from "axios";
 
+import { CampaignsResponse, Exchange } from "../types";
 import { HttpError } from "../utils/HttpError";
 
 export class MockedLauncherClient  {
@@ -54,6 +55,16 @@ export class MockedLauncherClient  {
 
   async getTradingPairs(exchangeName: string): Promise<string[]> {
     return this.get<string[]>(`/exchanges/${exchangeName}/trading-pairs`);
+  }
+
+  async getExchanges(): Promise<Exchange[]> {
+    const response = await this.get<Exchange[]>('/exchanges');
+    return response;
+  }
+
+  async getCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns', { params });
+    return response;
   }
 }
 
