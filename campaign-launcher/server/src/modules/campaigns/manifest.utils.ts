@@ -11,9 +11,6 @@ const manifestSchema = Joi.object({
   pair: Joi.string()
     .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
     .required(),
-  fund_token: Joi.string()
-    .pattern(/^[A-Z]{3,10}$/)
-    .required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
