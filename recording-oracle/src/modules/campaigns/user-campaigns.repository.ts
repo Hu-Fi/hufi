@@ -7,12 +7,6 @@ import type { CampaignEntity } from './campaign.entity';
 import { CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 
-type FindOptions = {
-  status?: CampaignStatus;
-  limit?: number;
-  skip?: number;
-};
-
 @Injectable()
 export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
   constructor(dataSource: DataSource) {
@@ -21,14 +15,20 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
 
   async findByUserId(
     userId: string,
-    options: FindOptions = {},
+    options: {
+      statuses?: CampaignStatus[];
+      limit?: number;
+      skip?: number;
+    } = {},
   ): Promise<CampaignEntity[]> {
     const query = this.createQueryBuilder('userCampaign')
       .leftJoinAndSelect('userCampaign.campaign', 'campaign')
       .where('userCampaign.userId = :userId', { userId });
 
-    if (options.status) {
-      query.andWhere('campaign.status = :status', { status: options.status });
+    if (options.statuses?.length) {
+      query.andWhere('campaign.status IN (:...statuses)', {
+        statuses: options.statuses,
+      });
     }
 
     query.orderBy('campaign.startDate').skip(options.skip).limit(options.limit);

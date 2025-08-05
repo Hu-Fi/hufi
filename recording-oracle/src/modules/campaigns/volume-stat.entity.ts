@@ -17,6 +17,9 @@ export class VolumeStatEntity {
   @Column({ type: 'decimal', precision: 20, scale: 2 })
   volume: string;
 
+  @Column({ type: 'decimal', precision: 20, scale: 2 })
+  volumeUsd: string;
+
   @Column({ type: 'timestamptz' })
   periodStart: Date;
 

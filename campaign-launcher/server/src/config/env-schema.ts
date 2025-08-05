@@ -26,6 +26,7 @@ export const envValidator = Joi.object({
     .allow(''),
   RPC_URL_LOCALHOST: Joi.string(),
 
+  EXCHANGE_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
   RECORDING_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
   REPUTATION_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
 });

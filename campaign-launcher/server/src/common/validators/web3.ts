@@ -7,11 +7,17 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-import { ChainIds, SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import {
+  ChainIds,
+  SUPPORTED_EXCHANGE_NAMES,
+  type SupportedExchange,
+} from '@/common/constants';
 
-const validExchangeNameSet = new Set(SUPPORTED_EXCHANGE_NAMES);
-export function isValidExchangeName(input: string): boolean {
-  return validExchangeNameSet.has(input);
+const validExchangeNameSet = new Set<SupportedExchange>(
+  SUPPORTED_EXCHANGE_NAMES,
+);
+export function isValidExchangeName(input: string): input is SupportedExchange {
+  return validExchangeNameSet.has(input as SupportedExchange);
 }
 
 @ValidatorConstraint({ name: 'ExchangeName', async: false })

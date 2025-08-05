@@ -18,7 +18,9 @@ import {
   IntermediateResultsData,
 } from '../types';
 
-export function generateCampaignEntity(): CampaignEntity {
+export function generateCampaignEntity(
+  overrides: Partial<CampaignEntity> = {},
+): CampaignEntity {
   const startDate = new Date();
   const durationInDays = faker.number.int({ min: 2, max: 7 });
 
@@ -35,6 +37,8 @@ export function generateCampaignEntity(): CampaignEntity {
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };
+
+  Object.assign(campaign, overrides);
 
   return campaign as CampaignEntity;
 }

@@ -2,8 +2,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 
-export class InitialMigration1753720799709 implements MigrationInterface {
-  name = 'InitialMigration1753720799709';
+export class InitialMigration1754303207946 implements MigrationInterface {
+  name = 'InitialMigration1754303207946';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createSchema(DATABASE_SCHEMA_NAME, true);
@@ -18,22 +18,16 @@ export class InitialMigration1753720799709 implements MigrationInterface {
       `CREATE UNIQUE INDEX "IDX_8dcd9d18790ca62ebf1fb40cd3" ON "hu_fi"."exchange_api_keys" ("user_id", "exchange_name") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "hu_fi"."volume_stats" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "campaign_address" character varying(42) NOT NULL, "exchange_name" character varying(20) NOT NULL, "volume" numeric(20,2) NOT NULL, "period_start" TIMESTAMP WITH TIME ZONE NOT NULL, "period_end" TIMESTAMP WITH TIME ZONE NOT NULL, "recorded_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_cb48bf745e9c4fc42bf2d8c567e" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "hu_fi"."volume_stats" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "campaign_address" character varying(42) NOT NULL, "exchange_name" character varying(20) NOT NULL, "volume" numeric(20,2) NOT NULL, "volume_usd" numeric(20,2) NOT NULL, "period_start" TIMESTAMP WITH TIME ZONE NOT NULL, "period_end" TIMESTAMP WITH TIME ZONE NOT NULL, "recorded_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_cb48bf745e9c4fc42bf2d8c567e" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE UNIQUE INDEX "IDX_7ec2d9f22efc25135dc0e7731d" ON "hu_fi"."volume_stats" ("exchange_name", "campaign_address", "period_start") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "hu_fi"."user_campaigns" ("user_id" uuid NOT NULL, "campaign_id" uuid NOT NULL, "exchange_api_key_id" uuid NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "PK_8ccc7f91e6aa94ef3e1c672f000" PRIMARY KEY ("user_id", "campaign_id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_users_campaigns_campaign_id" ON "hu_fi"."user_campaigns" ("campaign_id") `,
-    );
-    await queryRunner.query(
       `CREATE TABLE "hu_fi"."refresh_tokens" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "expires_at" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "REL_3ddc983c5f7bcf132fd8732c3f" UNIQUE ("user_id"), CONSTRAINT "PK_7d8bee0204106019488c4c50ffa" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TYPE "hu_fi"."campaigns_status_enum" AS ENUM('active', 'pending_cancellation', 'cancelled', 'completed')`,
+      `CREATE TYPE "hu_fi"."campaigns_status_enum" AS ENUM('active', 'pending_cancellation', 'cancelled', 'pending_completion', 'completed')`,
     );
     await queryRunner.query(
       `CREATE TABLE "hu_fi"."campaigns" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "chain_id" integer NOT NULL, "address" character varying(42) NOT NULL, "type" character varying(40) NOT NULL, "daily_volume_target" numeric(20,8) NOT NULL, "exchange_name" character varying(20) NOT NULL, "pair" character varying(20) NOT NULL, "start_date" TIMESTAMP WITH TIME ZONE NOT NULL, "end_date" TIMESTAMP WITH TIME ZONE NOT NULL, "fund_amount" numeric(30,18) NOT NULL, "fund_token" character varying(20) NOT NULL, "last_results_at" TIMESTAMP WITH TIME ZONE, "status" "hu_fi"."campaigns_status_enum" NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "PK_831e3fcd4fc45b4e4c3f57a9ee4" PRIMARY KEY ("id"))`,
@@ -42,7 +36,16 @@ export class InitialMigration1753720799709 implements MigrationInterface {
       `CREATE UNIQUE INDEX "IDX_0130ea9fe1114c6f88f6ed6315" ON "hu_fi"."campaigns" ("chain_id", "address") `,
     );
     await queryRunner.query(
+      `CREATE TABLE "hu_fi"."user_campaigns" ("user_id" uuid NOT NULL, "campaign_id" uuid NOT NULL, "exchange_api_key_id" uuid NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "PK_8ccc7f91e6aa94ef3e1c672f000" PRIMARY KEY ("user_id", "campaign_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_users_campaigns_campaign_id" ON "hu_fi"."user_campaigns" ("campaign_id") `,
+    );
+    await queryRunner.query(
       `ALTER TABLE "hu_fi"."exchange_api_keys" ADD CONSTRAINT "FK_96ee74195b058a1b55afc49f673" FOREIGN KEY ("user_id") REFERENCES "hu_fi"."users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "hu_fi"."refresh_tokens" ADD CONSTRAINT "FK_3ddc983c5f7bcf132fd8732c3f4" FOREIGN KEY ("user_id") REFERENCES "hu_fi"."users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "hu_fi"."user_campaigns" ADD CONSTRAINT "FK_4deae32968a6a500078abf381a1" FOREIGN KEY ("user_id") REFERENCES "hu_fi"."users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -53,15 +56,9 @@ export class InitialMigration1753720799709 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "hu_fi"."user_campaigns" ADD CONSTRAINT "FK_9a1811aa669af54d7809c049525" FOREIGN KEY ("exchange_api_key_id") REFERENCES "hu_fi"."exchange_api_keys"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
-    await queryRunner.query(
-      `ALTER TABLE "hu_fi"."refresh_tokens" ADD CONSTRAINT "FK_3ddc983c5f7bcf132fd8732c3f4" FOREIGN KEY ("user_id") REFERENCES "hu_fi"."users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `ALTER TABLE "hu_fi"."refresh_tokens" DROP CONSTRAINT "FK_3ddc983c5f7bcf132fd8732c3f4"`,
-    );
     await queryRunner.query(
       `ALTER TABLE "hu_fi"."user_campaigns" DROP CONSTRAINT "FK_9a1811aa669af54d7809c049525"`,
     );
@@ -72,18 +69,21 @@ export class InitialMigration1753720799709 implements MigrationInterface {
       `ALTER TABLE "hu_fi"."user_campaigns" DROP CONSTRAINT "FK_4deae32968a6a500078abf381a1"`,
     );
     await queryRunner.query(
+      `ALTER TABLE "hu_fi"."refresh_tokens" DROP CONSTRAINT "FK_3ddc983c5f7bcf132fd8732c3f4"`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "hu_fi"."exchange_api_keys" DROP CONSTRAINT "FK_96ee74195b058a1b55afc49f673"`,
     );
+    await queryRunner.query(
+      `DROP INDEX "hu_fi"."idx_users_campaigns_campaign_id"`,
+    );
+    await queryRunner.query(`DROP TABLE "hu_fi"."user_campaigns"`);
     await queryRunner.query(
       `DROP INDEX "hu_fi"."IDX_0130ea9fe1114c6f88f6ed6315"`,
     );
     await queryRunner.query(`DROP TABLE "hu_fi"."campaigns"`);
     await queryRunner.query(`DROP TYPE "hu_fi"."campaigns_status_enum"`);
     await queryRunner.query(`DROP TABLE "hu_fi"."refresh_tokens"`);
-    await queryRunner.query(
-      `DROP INDEX "hu_fi"."idx_users_campaigns_campaign_id"`,
-    );
-    await queryRunner.query(`DROP TABLE "hu_fi"."user_campaigns"`);
     await queryRunner.query(
       `DROP INDEX "hu_fi"."IDX_7ec2d9f22efc25135dc0e7731d"`,
     );

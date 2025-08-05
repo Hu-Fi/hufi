@@ -721,7 +721,7 @@ describe('CampaignsService', () => {
       const testSkip = faker.number.int();
 
       const campaigns = await campaignsService.getJoined(userId, {
-        status: testStatus as CampaignStatus,
+        statuses: [testStatus as CampaignStatus],
         limit: testLimit,
         skip: testSkip,
       });
@@ -731,7 +731,7 @@ describe('CampaignsService', () => {
       expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledWith(
         userId,
         {
-          status: testStatus,
+          statuses: [testStatus],
           limit: testLimit,
           skip: testSkip,
         },
@@ -1049,6 +1049,7 @@ describe('CampaignsService', () => {
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;
+    let spyOnRecordGeneratedVolume: jest.SpyInstance;
     let campaign: CampaignEntity;
 
     beforeAll(() => {
@@ -1069,12 +1070,19 @@ describe('CampaignsService', () => {
         'recordCampaignIntermediateResults',
       );
       spyOnRecordCampaignIntermediateResults.mockImplementation();
+
+      spyOnRecordGeneratedVolume = jest.spyOn(
+        campaignsService as any,
+        'recordGeneratedVolume',
+      );
+      spyOnRecordGeneratedVolume.mockImplementation();
     });
 
     afterAll(() => {
       spyOnRetrieveCampaignIntermediateResults.mockRestore();
       spyOnCheckCampaignProgressForPeriod.mockRestore();
       spyOnRecordCampaignIntermediateResults.mockRestore();
+      spyOnRecordGeneratedVolume.mockRestore();
     });
 
     beforeEach(() => {
@@ -1304,7 +1312,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should not complete campaign if not ended yet', async () => {
+    it('should not move campaign to "pending_completion" if not ended yet', async () => {
       const now = new Date();
       jest.useFakeTimers({ now });
 
@@ -1328,7 +1336,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should not complete campaign if reached its end date but not all results calculated', async () => {
+    it('should not move campaign to "pending_completion" if reached its end date but not all results calculated', async () => {
       const now = new Date();
       campaign.endDate = new Date(now.valueOf() - 1);
 
@@ -1361,7 +1369,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should complete campaign when reached its end date and all results calculated', async () => {
+    it('should move campaign to "pending_completion" when reached its end date and all results calculated', async () => {
       const now = new Date();
       campaign.endDate = new Date(now.valueOf() - 1);
 
@@ -1394,12 +1402,12 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
-        status: 'completed',
+        status: 'pending_completion',
         lastResultsAt: now,
       });
     });
 
-    it('should complete campaign if recording period dates overlap', async () => {
+    it('should move campaign to "pending_completion" campaign if recording period dates overlap', async () => {
       campaign.endDate = dayjs().subtract(1, 'day').toDate();
 
       campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
@@ -1426,12 +1434,12 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
-        status: 'completed',
+        status: 'pending_completion',
         lastResultsAt: now,
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
@@ -1445,16 +1453,10 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(1);
-      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledWith(
-        {
-          exchangeName: campaign.exchangeName,
-          campaignAddress: campaign.address,
-          periodStart: new Date(intermediateResult.from),
-          periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume.toString(),
-        },
-        ['exchangeName', 'campaignAddress', 'periodStart'],
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(
+        campaign,
+        intermediateResult,
       );
     });
   });
@@ -1490,6 +1492,107 @@ describe('CampaignsService', () => {
       for (const campaign of campaigns) {
         expect(spyOnRecordCampaignProgress).toHaveBeenCalledWith(campaign);
       }
+    });
+  });
+
+  describe('trackCampaignsCompletion', () => {
+    const nCampaigns = faker.number.int({ min: 2, max: 5 });
+    let campaigns: CampaignEntity[];
+
+    beforeEach(() => {
+      campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity({ status: CampaignStatus.PENDING_COMPLETION }),
+      );
+      mockCampaignsRepository.findForCompletionTracking.mockResolvedValueOnce(
+        campaigns,
+      );
+    });
+
+    it('should complete campaigns when detects completed escrow', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValue({
+        status: EscrowStatus[EscrowStatus.Complete],
+      } as any);
+
+      await campaignsService.trackCampaignsCompletion();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(nCampaigns);
+
+      for (const campaign of campaigns) {
+        expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+          ...campaign,
+          status: 'completed',
+        });
+        expect(logger.info).toHaveBeenCalledWith('Completing campaign', {
+          campaignId: campaign.id,
+        });
+      }
+    });
+
+    it('should not complete campaigns when detects not completed escrow', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValue({
+        status: EscrowStatus[EscrowStatus.Partial],
+      } as any);
+
+      await campaignsService.trackCampaignsCompletion();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('recordGeneratedVolume', () => {
+    const campaign = generateCampaignEntity();
+    const intermediateResult = generateIntermediateResult();
+
+    it('should not record if quote token usd price is null', async () => {
+      mockWeb3Service.getTokenPriceUsd.mockResolvedValueOnce(null);
+
+      await campaignsService['recordGeneratedVolume'](
+        campaign,
+        intermediateResult,
+      );
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+    });
+
+    it('should not record nor fail if error while getting quote token price', async () => {
+      mockWeb3Service.getTokenPriceUsd.mockRejectedValueOnce(new Error());
+
+      await campaignsService['recordGeneratedVolume'](
+        campaign,
+        intermediateResult,
+      );
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
+    });
+
+    it('should record with correct usd volume', async () => {
+      const priceUsd = faker.number.float();
+      mockWeb3Service.getTokenPriceUsd.mockResolvedValueOnce(priceUsd);
+
+      const quoteToken = campaign.pair.split('/')[1];
+
+      await campaignsService['recordGeneratedVolume'](
+        campaign,
+        intermediateResult,
+      );
+
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(1);
+      expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledWith(
+        {
+          exchangeName: campaign.exchangeName,
+          campaignAddress: campaign.address,
+          periodStart: new Date(intermediateResult.from),
+          periodEnd: new Date(intermediateResult.to),
+          volume: intermediateResult.total_volume.toString(),
+          volumeUsd: (priceUsd * intermediateResult.total_volume).toString(),
+        },
+        ['exchangeName', 'campaignAddress', 'periodStart'],
+      );
+
+      expect(mockWeb3Service.getTokenPriceUsd).toHaveBeenCalledTimes(1);
+      expect(mockWeb3Service.getTokenPriceUsd).toHaveBeenCalledWith(quoteToken);
     });
   });
 });

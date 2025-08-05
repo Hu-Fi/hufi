@@ -3,7 +3,6 @@ import { Transform } from 'class-transformer';
 import {
   IsEnum,
   IsEthereumAddress,
-  IsIn,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -15,7 +14,7 @@ import {
   type ChainId,
 } from '@/common/constants';
 
-import { CampaignStatus } from './types';
+import { ReturnedCampaignStatus } from './types';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
@@ -32,7 +31,7 @@ export class JoinCampaignSuccessDto {
   id: string;
 }
 
-class JoinedCampaignDto {
+export class JoinedCampaignDto {
   @ApiProperty({ name: 'chain_id' })
   chainId: number;
 
@@ -41,6 +40,9 @@ class JoinedCampaignDto {
 
   @ApiProperty()
   status: string;
+
+  @ApiProperty({ name: 'processing_status' })
+  processingStatus: string;
 
   @ApiProperty({ name: 'exchange_name' })
   exchangeName: string;
@@ -61,18 +63,13 @@ class JoinedCampaignDto {
   fundToken: string;
 }
 
-const VALID_CAMPAIGN_FILTER_STATUSES = [
-  CampaignStatus.ACTIVE,
-  CampaignStatus.COMPLETED,
-];
-
 export class ListJoinedCampaignsQueryDto {
   @ApiPropertyOptional({
-    enum: VALID_CAMPAIGN_FILTER_STATUSES,
+    enum: ReturnedCampaignStatus,
   })
   @IsOptional()
-  @IsIn(VALID_CAMPAIGN_FILTER_STATUSES)
-  status?: CampaignStatus;
+  @IsEnum(ReturnedCampaignStatus)
+  status?: ReturnedCampaignStatus;
 
   @ApiPropertyOptional({
     default: DEFAULT_PAGINATION_LIMIT,

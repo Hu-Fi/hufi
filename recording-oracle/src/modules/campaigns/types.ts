@@ -6,6 +6,13 @@ export enum CampaignStatus {
   ACTIVE = 'active',
   PENDING_CANCELLATION = 'pending_cancellation',
   CANCELLED = 'cancelled',
+  PENDING_COMPLETION = 'pending_completion',
+  COMPLETED = 'completed',
+}
+
+export enum ReturnedCampaignStatus {
+  ACTIVE = 'active',
+  CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }
 

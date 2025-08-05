@@ -32,4 +32,8 @@ export class Web3ConfigService {
   get reputationOracle(): string {
     return this.configService.getOrThrow<string>('REPUTATION_ORACLE');
   }
+
+  get exchangeOracle(): string {
+    return this.configService.getOrThrow<string>('EXCHANGE_ORACLE');
+  }
 }

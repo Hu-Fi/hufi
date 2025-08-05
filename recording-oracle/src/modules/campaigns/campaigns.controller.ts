@@ -26,6 +26,33 @@ import {
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
+import { ReturnedCampaignStatus, CampaignStatus } from './types';
+
+const RETURNED_STATUS_TO_CAMPAIGN_STATUSES: Record<
+  ReturnedCampaignStatus,
+  CampaignStatus[]
+> = {
+  [CampaignStatus.ACTIVE]: [
+    CampaignStatus.ACTIVE,
+    CampaignStatus.PENDING_CANCELLATION,
+    CampaignStatus.PENDING_COMPLETION,
+  ],
+  [CampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
+  [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
+};
+
+const CAMPAIGN_STATUS_TO_RETURNED_STATUS: Record<
+  string,
+  ReturnedCampaignStatus
+> = {};
+for (const [returnedCampaignStatus, campaignStatuses] of Object.entries(
+  RETURNED_STATUS_TO_CAMPAIGN_STATUSES,
+)) {
+  for (const campaignStatus of campaignStatuses) {
+    CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaignStatus] =
+      returnedCampaignStatus as ReturnedCampaignStatus;
+  }
+}
 
 @ApiTags('Campaigns')
 @Controller('/campaigns')
@@ -76,8 +103,12 @@ export class CampaignsController {
   ): Promise<ListJoinedCampaignsSuccessDto> {
     const limit = query.limit;
 
+    const statuses: CampaignStatus[] = query.status
+      ? RETURNED_STATUS_TO_CAMPAIGN_STATUSES[query.status]
+      : [];
+
     const campaigns = await this.campaignsService.getJoined(request.user.id, {
-      status: query.status,
+      statuses,
       limit: limit + 1,
       skip: query.skip,
     });
@@ -88,7 +119,8 @@ export class CampaignsController {
         .map((campaign) => ({
           chainId: campaign.chainId,
           address: campaign.address,
-          status: campaign.status,
+          status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],
+          processingStatus: campaign.status,
           exchangeName: campaign.exchangeName,
           tradingPair: campaign.pair,
           startDate: campaign.startDate.toISOString(),
