@@ -109,7 +109,7 @@ export const constructCampaignDetails = (chainId: ChainId, address: string, data
     fund_amount: data.fund_amount,
     fund_token: '',
     fund_token_symbol: data.fund_token.toUpperCase(),
-    fund_token_decimals: data.fund_token === 'hmt' ? 18 : 6,
+    fund_token_decimals: 0,
     status: 'active',
     escrow_status: 'pending',
     launcher: address,

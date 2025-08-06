@@ -67,11 +67,6 @@ export type CampaignDetails = Campaign & {
   }[];
 }
 
-export type JoinedCampaignsResponse = {
-  campaigns: Campaign[];
-  has_more: boolean;
-}
-
 export type CampaignsResponse = {
   results: Campaign[];
   has_more: boolean;

@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid2';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { CampaignDetails } from '../../types';
+import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
 
@@ -89,15 +90,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-            <span>{campaign.fund_amount}</span>{' '} 
-            <span>{campaign.fund_token_symbol}</span>
+              {formatTokenAmount(campaign.fund_amount, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              <span>{campaign.amount_paid}</span>{' '}
-              <span>{campaign.fund_token_symbol}</span>
+              {formatTokenAmount(campaign.amount_paid, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
