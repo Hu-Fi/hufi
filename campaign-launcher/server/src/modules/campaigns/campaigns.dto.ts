@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsEnum,
-  IsEthereumAddress,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -17,7 +16,11 @@ import {
   DEFAULT_PAGINATION_LIMIT,
   type ReadableEscrowStatus,
 } from '@/common/constants';
-import { ExchangeNameValidator, IsChainId } from '@/common/validators';
+import {
+  EvmAddressValidator,
+  ExchangeNameValidator,
+  IsChainId,
+} from '@/common/validators';
 
 import { CampaignStatus } from './types';
 
@@ -41,7 +44,7 @@ export class GetCampaignsQueryDto {
     description: 'Address of campaign launcher',
   })
   @IsOptional()
-  @IsEthereumAddress()
+  @Validate(EvmAddressValidator)
   launcher?: string;
 
   @ApiPropertyOptional({
@@ -168,7 +171,7 @@ export class GetCampaignWithDetailsParamsDto {
   @ApiProperty({
     name: 'campaign_address',
   })
-  @IsEthereumAddress()
+  @Validate(EvmAddressValidator)
   campaignAddress: string;
 }
 
