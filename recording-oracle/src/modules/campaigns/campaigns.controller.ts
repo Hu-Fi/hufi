@@ -115,7 +115,7 @@ export class CampaignsController {
 
     return {
       hasMore: campaigns.length > limit,
-      campaigns: campaigns
+      results: campaigns
         .map((campaign) => ({
           chainId: campaign.chainId,
           address: campaign.address,

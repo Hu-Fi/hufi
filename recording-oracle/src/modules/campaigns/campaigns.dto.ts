@@ -98,5 +98,5 @@ export class ListJoinedCampaignsSuccessDto {
     type: JoinedCampaignDto,
     isArray: true,
   })
-  campaigns: JoinedCampaignDto[];
+  results: JoinedCampaignDto[];
 }
