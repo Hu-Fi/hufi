@@ -36,17 +36,15 @@ export class CampaignsController {
     @Query() query: GetCampaignsQueryDto,
   ): Promise<GetCampaignsResponseDto> {
     const chainId = query.chainId;
-    const filters = {
-      exchangeName: query.exchangeName,
-      launcher: query.launcher,
-      status: query.status,
-    };
-
     const limit = query.limit;
 
     const campaigns = await this.campaignsService.getCampaigns(
       chainId,
-      filters,
+      {
+        exchangeName: query.exchangeName,
+        launcherAddress: query.launcher,
+        status: query.status,
+      },
       {
         limit: limit + 1,
         skip: query.skip,
