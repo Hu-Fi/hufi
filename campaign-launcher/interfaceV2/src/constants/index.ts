@@ -2,7 +2,7 @@ import { ChainId } from '@human-protocol/sdk';
 
 export const ROUTES = {
   DASHBOARD: '/',
-  CAMPAIGN_DETAIL: '/campaign-detail/:chainId/:address',
+  CAMPAIGN_DETAILS: '/campaign-details/:address',
   ALL_CAMPAIGNS: '/all-campaigns',
   MY_CAMPAIGNS: '/my-campaigns',
   JOINED_CAMPAIGNS: '/joined-campaigns',

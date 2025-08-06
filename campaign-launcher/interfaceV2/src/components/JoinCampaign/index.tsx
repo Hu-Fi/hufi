@@ -1,51 +1,54 @@
 import { FC, useState } from 'react';
 
 import { Button } from '@mui/material';
-import { useAccount } from 'wagmi';
 
-import type { CampaignDataDto } from '../../api/client';
-import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { ExchangeType } from '../../types';
+import { useGetEnrolledExchanges, useGetJoinedCampaigns, useJoinCampaign } from '../../hooks/recording-oracle';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import { CampaignDetails } from '../../types';
 import JoinCampaignModal from '../modals/JoinCampaignModal';
 
 type Props = {
-  campaign: CampaignDataDto;
+  campaign: CampaignDetails;
 };
 
 const JoinCampaign: FC<Props> = ({ campaign }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const { isConnected } = useAccount();
-  const { exchangesMap } = useExchangesContext();
+  const { isAuthenticated } = useWeb3Auth();
+  const { data: enrolledExchanges } = useGetEnrolledExchanges();
+  const { data: joinedCampaigns } = useGetJoinedCampaigns();
+  const { mutate: joinCampaign, isPending } = useJoinCampaign();
 
-  const exchange = exchangesMap.get(campaign.exchangeName.toLowerCase());
+  const isAlreadyJoined = joinedCampaigns?.campaigns.some((joinedCampaign) => joinedCampaign.address === campaign.address);
 
-  const isButtonDisabled = !isConnected;
+  const isButtonDisabled = !isAuthenticated || isPending || isAlreadyJoined;
     
   const handleButtonClick = () => {
     if (isButtonDisabled) {
       return;
     }
 
-    if (exchange?.type === ExchangeType.CEX) {
+    if (!enrolledExchanges || !enrolledExchanges.includes(campaign.exchange_name)) {
       setModalOpen(true);
+      return;
     }
+    
+    joinCampaign({ chainId: campaign.chain_id, address: campaign.address });
   };
 
   return (
     <>
       <Button
         variant="contained"
-        size="large"
-        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast', fontWeight: 600 }}
+        size="medium"
+        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast' }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
       >
-        Join Campaign
+        {isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign'}
       </Button>
       <JoinCampaignModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        handleSubmitKeys={() => {}}
       />
     </>
   );

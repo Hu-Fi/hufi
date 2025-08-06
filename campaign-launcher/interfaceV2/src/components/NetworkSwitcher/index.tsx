@@ -4,14 +4,8 @@ import { ChainId } from '@human-protocol/sdk';
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
 import { useConfig, useChainId, useSwitchChain } from 'wagmi';
 
-import { CHAIN_ICONS } from '../../constants/chainIcons';
 import { ChevronIcon } from '../../icons';
-import { getSupportedChainIds } from '../../utils';
-
-const getChainIcon = (id?: number) => {
-  if (!id) return null;
-  return CHAIN_ICONS[id as ChainId] || null;
-};
+import { getChainIcon, getSupportedChainIds } from '../../utils';
 
 const NetworkSwitcher: FC = () => {
   const config = useConfig();

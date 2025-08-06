@@ -1,46 +1,21 @@
 import { FC } from 'react';
 
-import { yupResolver } from '@hookform/resolvers/yup';
-import {
-  Box,
-  Button,
-  FormControl,
-  FormHelperText,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { Controller, useForm } from 'react-hook-form';
-import * as yup from 'yup';
+import { Button, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
+import { ROUTES } from '../../../constants';
 import BaseModal from '../BaseModal';
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  handleSubmitKeys: (apiKey: string, secret: string) => void;
 };
 
-type APIKeyFormValues = {
-  apiKey: string;
-  secret: string;
-};
+const JoinCampaignModal: FC<Props> = ({ open, onClose }) => {
+  const navigate = useNavigate();
 
-const validationSchema = yup.object({
-  apiKey: yup.string().required('Required'),
-  secret: yup.string().required('Required'),
-});
-
-const JoinCampaignModal: FC<Props> = ({ open, onClose, handleSubmitKeys }) => {
-  const {
-    control,
-    formState: { errors },
-    handleSubmit,
-  } = useForm<APIKeyFormValues>({
-    resolver: yupResolver(validationSchema),
-  });
-
-  const onSubmit = (values: APIKeyFormValues) => {
-    handleSubmitKeys(values.apiKey, values.secret);
+  const handleButtonClick = () => {
+    navigate(ROUTES.MANAGE_API_KEYS);
   };
 
   return (
@@ -50,67 +25,16 @@ const JoinCampaignModal: FC<Props> = ({ open, onClose, handleSubmitKeys }) => {
       sx={{
         textAlign: 'center',
         color: 'text.primary',
-        px: { xs: 3, md: 14 },
+        px: { xs: 3, md: 4 },
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box display="flex" flexDirection="column">
-          <Typography variant="h4" py={1} mb={2}>
-            Join a Campaign
-          </Typography>
-          <Typography variant="h5" mb={1}>
-            Connect API key
-          </Typography>
-          <Typography component="p" mb={4}>
-            For you to join a running campaign you must connect your API key.{' '}
-            <br />
-            By connecting your API key, you agree to HUMAN Protocol{' '}
-            <strong>Terms of Service</strong> and consent to its{' '}
-            <strong>Privacy Policy</strong>.
-          </Typography>
-          <FormControl error={!!errors.apiKey} sx={{ mb: 4 }}>
-            <Controller
-              name="apiKey"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  id="api-key-input"
-                  label="API Key"
-                  placeholder="API KEY"
-                  {...field}
-                />
-              )}
-            />
-            {errors.apiKey && (
-              <FormHelperText>{errors.apiKey.message}</FormHelperText>
-            )}
-          </FormControl>
-          <FormControl error={!!errors.secret} sx={{ mb: 4 }}>
-            <Controller
-              name="secret"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  id="secret-input"
-                  label="Secret"
-                  placeholder="API SECRET KEY"
-                  {...field}
-                />
-              )}
-            />
-            {errors.secret && (
-              <FormHelperText>{errors.secret.message}</FormHelperText>
-            )}
-          </FormControl>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{ width: '185px', color: 'primary.contrast', mx: 'auto' }}
-          >
-            Connect API
-          </Button>
-        </Box>
-      </form>
+      <Typography variant="h4" py={1} mb={2}>Join Campaign</Typography>
+      <Typography variant="body2" mb={2} px={{ xs: 2, md: 10 }} textAlign="center">
+        To join the campaign, please make sure to add your API keys under the Manage KEYS page. This step is required to participate.
+      </Typography>
+      <Button variant="contained" size="large" onClick={handleButtonClick}>
+        Add API Keys
+      </Button>
     </BaseModal>
   );
 };

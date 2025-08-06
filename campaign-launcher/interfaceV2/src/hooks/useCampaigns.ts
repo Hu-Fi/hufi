@@ -1,5 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
+import { useChainId } from 'wagmi';
 
 import { api, launcherApi } from '../api';
 import { CampaignDataDto } from '../api/client';
@@ -30,6 +31,13 @@ export const useCampaigns = (params: CampaignsParams) => {
       const filteredParams = filterParams(params);
       return launcherApi.getCampaigns(filteredParams)
     },
+    select: (data) => ({
+      ...data,
+      results: data.results.map((campaign) => ({
+        ...campaign,
+        id: campaign.address,
+      })),
+    }),
     enabled: !!chain_id,
   });
 };
@@ -42,18 +50,26 @@ export const useMyCampaigns = (params: CampaignsParams) => {
       const filteredParams = filterParams(params);
       return launcherApi.getCampaigns(filteredParams)
     },
+    select: (data) => ({
+      ...data,
+      results: data.results.map((campaign) => ({
+        ...campaign,
+        id: campaign.address,
+      })),
+    }),
     enabled: !!chain_id && !!launcher,
   });
 };
 
-export const useCampaign = (chainId: ChainId, address: string) => {
+export const useCampaign = (address: string) => {
+  const chainId = useChainId();
   return useQuery({
     queryKey: ['campaign', chainId, address],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaign(chainId, address)
-        .then((res) => res.data),
+    queryFn: () => launcherApi.getCampaign(chainId, address),
+    enabled: !!chainId && !!address,
+    retry: false,
   });
+  
 };
 
 export const useCampaignsStats = (chainId: ChainId) => {

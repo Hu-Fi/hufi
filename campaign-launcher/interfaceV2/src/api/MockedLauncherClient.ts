@@ -1,6 +1,7 @@
+import { ChainId } from "@human-protocol/sdk";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Method } from "axios";
 
-import { CampaignsResponse, Exchange } from "../types";
+import { CampaignDetails, CampaignsResponse, Exchange } from "../types";
 import { HttpError } from "../utils/HttpError";
 
 export class MockedLauncherClient  {
@@ -64,6 +65,11 @@ export class MockedLauncherClient  {
 
   async getCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
     const response = await this.get<CampaignsResponse>('/campaigns', { params });
+    return response;
+  }
+
+  async getCampaign(chainId: ChainId, address: string): Promise<CampaignDetails> {
+    const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
     return response;
   }
 }

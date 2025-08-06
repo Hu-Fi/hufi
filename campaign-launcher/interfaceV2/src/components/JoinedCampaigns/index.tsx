@@ -32,7 +32,7 @@ const JoinedCampaigns: FC<Props> = ({
       {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {!isLoading && (
         <CampaignsTable
-          data={data?.results}
+          data={data?.campaigns || []}
           showPagination={showPagination}
           showAllCampaigns={showAllCampaigns}
           isJoinedCampaigns={true}

@@ -1,4 +1,5 @@
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
+import { useTheme } from '@mui/material';
 
 import {
   USDT_CONTRACT_ADDRESS,
@@ -6,6 +7,8 @@ import {
   TESTNET_CHAIN_IDS,
   LOCALHOST_CHAIN_IDS,
 } from '../constants';
+import { CHAIN_ICONS } from '../constants/chainIcons';
+import { Campaign, EscrowCreateDto } from '../types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -58,6 +61,62 @@ export const formatTokenAmount = (amount: string | number, decimals = 18): strin
   if (formattedAmount >= 1000) {
     return Math.round(formattedAmount);
   } else {
-    return parseFloat(formattedAmount.toFixed(3));
+    return parseFloat(formattedAmount.toFixed(4));
   }
 };
+
+export const mapStatusToColor = (status: Campaign['status'], startDate: string, endDate: string) => {
+  const theme = useTheme();
+  const today = new Date().toISOString();
+
+  switch (status) {
+    case 'active':
+      if (today < startDate) {
+        return theme.palette.warning.main;
+      } else if (today > endDate) {
+        return theme.palette.error.main;
+      } else {
+        return theme.palette.success.main;
+      }
+    case 'cancelled':
+      return theme.palette.primary.main;
+    case 'completed':
+      return theme.palette.secondary.main;
+    default:
+      return theme.palette.primary.main;
+  }
+};
+
+export const getChainIcon = (id?: ChainId) => {
+  if (!id) return null;
+  return CHAIN_ICONS[id] || null;
+};
+
+export const getNetworkName = (chainId?: ChainId): string | undefined => {
+  if (!chainId) return undefined;
+  return NETWORKS[chainId]?.title;
+};
+
+export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto) => {
+  return {
+    id: address,
+    chain_id: chainId,
+    address: address,
+    exchange_name: data.exchange,
+    trading_pair: data.pair,
+    start_date: data.start_date,
+    end_date: data.end_date,
+    fund_amount: data.fund_amount,
+    fund_token: '',
+    fund_token_symbol: data.fund_token.toUpperCase(),
+    fund_token_decimals: data.fund_token === 'hmt' ? 18 : 6,
+    status: 'active',
+    escrow_status: 'pending',
+    launcher: address,
+    exchange_oracle: '',
+    recording_oracle: '',
+    reputation_oracle: '',
+    amount_paid: '0',
+    daily_paid_amounts: [],
+  }
+}

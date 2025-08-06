@@ -17,7 +17,7 @@ const ModalError: FC<Props> = ({ error }) => {
         alignItems="center"
         mb={1}
         p="3px"
-        color="background.default"
+        color="white"
         bgcolor="error.main"
         borderRadius={100}
       >

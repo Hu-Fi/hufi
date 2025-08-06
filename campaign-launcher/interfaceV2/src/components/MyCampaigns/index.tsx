@@ -40,7 +40,7 @@ const MyCampaigns: FC<Props> = ({
         <Typography component="h3" variant={isXl ? 'h5' : 'h6'} color="text.primary">
           My Campaigns
         </Typography>
-        {data && data?.results.length > 0 && <LaunchCampaign variant="contained" />}
+        {data && data.results.length > 0 && <LaunchCampaign variant="contained" />}
       </Box>
       {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {!isLoading && (

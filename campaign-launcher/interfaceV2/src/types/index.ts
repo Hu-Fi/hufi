@@ -40,8 +40,9 @@ export type ExchangeApiKeyData = {
 };
 
 export type Campaign = {
+  id: string;
   chain_id: number;
-  address: string;
+  address: `0x${string}`;
   exchange_name: string;
   trading_pair: string;
   start_date: string;
@@ -50,8 +51,25 @@ export type Campaign = {
   fund_token: string;
   fund_token_symbol: string;
   fund_token_decimals: number;
-  status: string;
+  status: 'active' | 'cancelled' | 'completed';
+  escrow_status: string;
   launcher: string;
+  exchange_oracle: string;
+  recording_oracle: string;
+  reputation_oracle: string;
+}
+
+export type CampaignDetails = Campaign & {
+  amount_paid: string;
+  daily_paid_amounts: {
+    date: string;
+    totalAmountPaid: string;
+  }[];
+}
+
+export type JoinedCampaignsResponse = {
+  campaigns: Campaign[];
+  has_more: boolean;
 }
 
 export type CampaignsResponse = {
@@ -66,6 +84,7 @@ export type EscrowCreateDto = {
   end_date: Date;
   fund_token: string;
   fund_amount: number;
+  daily_volume_target: number;
 }
 
 export type ManifestUploadDto = {
@@ -73,7 +92,6 @@ export type ManifestUploadDto = {
   exchange: string;
   daily_volume_target: number;
   pair: string;
-  fund_token: string;
   start_date: string;
   end_date: string;
 }

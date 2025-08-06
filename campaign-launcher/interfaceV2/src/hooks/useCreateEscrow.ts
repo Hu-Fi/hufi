@@ -20,6 +20,7 @@ const calculateManifestHash = async (manifest: string): Promise<string> => {
 };
 
 const useCreateEscrow = () => {
+  const [escrowAddress, setEscrowAddress] = useState('');
   const [stepsCompleted, setStepsCompleted] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const chainId = useChainId();
@@ -49,9 +50,8 @@ const useCreateEscrow = () => {
       const manifest: ManifestUploadDto = {
         type: 'MARKET_MAKING',
         exchange: data.exchange,
-        daily_volume_target: 1,
+        daily_volume_target: data.daily_volume_target,
         pair: data.pair,
-        fund_token: data.fund_token,
         start_date: data.start_date.toISOString(),
         end_date: data.end_date.toISOString(),
       };
@@ -62,6 +62,7 @@ const useCreateEscrow = () => {
         uuidV4()
       );
       setStepsCompleted((prev) => prev + 1);
+      setEscrowAddress(escrowAddress);
 
       await escrowClient.fund(escrowAddress, fundAmount);
       setStepsCompleted((prev) => prev + 1);
@@ -84,7 +85,7 @@ const useCreateEscrow = () => {
     }
   };
 
-  return { createEscrow, isLoading, stepsCompleted };
+  return { escrowAddress, createEscrow, isLoading, stepsCompleted };
 };
 
 export default useCreateEscrow;

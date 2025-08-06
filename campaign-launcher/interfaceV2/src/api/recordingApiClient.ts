@@ -9,7 +9,7 @@ import axios, {
   Method
 } from 'axios';
 
-import { CampaignsResponse, ExchangeApiKeyData } from '../types';
+import { ExchangeApiKeyData, JoinedCampaignsResponse } from '../types';
 import { HttpError } from '../utils/HttpError';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
@@ -191,8 +191,8 @@ export class RecordingApiClient {
     await this.delete(`/exchange-api-keys/${exchangeName}`);
   }
 
-  async getJoinedCampaigns(): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns');
+  async getJoinedCampaigns(): Promise<JoinedCampaignsResponse> {
+    const response = await this.get<JoinedCampaignsResponse>('/campaigns');
     return response;
   }
 

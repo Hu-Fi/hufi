@@ -8,10 +8,13 @@ import {
   CircularProgress,
   FormControl,
   FormHelperText,
+  InputAdornment,
+  inputBaseClasses,
   InputLabel,
   Link,
   MenuItem,
   Select,
+  Stack,
   Step,
   StepLabel,
   Stepper,
@@ -23,15 +26,19 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { Controller, useForm } from 'react-hook-form';
-import { useAccount } from 'wagmi';
+import { useNavigate } from 'react-router-dom';
+import { useAccount, useChainId } from 'wagmi';
 import * as yup from 'yup';
 
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
+import { constructCampaignDetails } from '../../../utils';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
 import FormExchangeSelect from '../../FormExchangeSelect';
+import InfoTooltipInner from '../../InfoTooltipInner';
+import { ModalSuccess } from '../../ModalState';
 import BaseModal from '../BaseModal';
 
 type Props = {
@@ -46,6 +53,7 @@ type CampaignFormValues = {
   end_date: Date;
   fund_token: string;
   fund_amount: number;
+  daily_volume_target: number;
 };
 
 const validationSchema = yup.object({
@@ -54,6 +62,7 @@ const validationSchema = yup.object({
   fund_token: yup.string().required('Required'),
   fund_amount: yup.number().required('Required'),
   start_date: yup.date().required('Required'),
+  daily_volume_target: yup.number().min(1).required('Required'),
   end_date: yup
     .date()
     .required('Required')
@@ -61,9 +70,9 @@ const validationSchema = yup.object({
       'is-after-start',
       'Must be at least one day after start date',
       function (value) {
-        if (!value || !this.parent.startDate) return true;
+        if (!value || !this.parent.start_date) return true;
 
-        const startDate = new Date(this.parent.startDate);
+        const startDate = new Date(this.parent.start_date);
         startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(value);
         endDate.setHours(0, 0, 0, 0);
@@ -97,7 +106,8 @@ const menuProps = {
 const InfoTooltip = () => {
   return (
     <Tooltip 
-      arrow placement="right"
+      arrow 
+      placement="right"
       title={
         <>
           <Typography component="p" variant="tooltip" color="primary.contrast">
@@ -110,50 +120,25 @@ const InfoTooltip = () => {
           </Typography>
         </>
       }
-      slotProps={{
-        tooltip: {
-          sx: {
-            bgcolor: 'primary.main',
-          },
-        },
-        arrow: {
-          sx: {
-            '&::before': {
-              bgcolor: 'primary.main',
-            },
-          },
-        },
-      }}
     >
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
-        py={0.5} 
-        px={1.5}
-        borderRadius="100%"
-        sx={{
-          background: 'linear-gradient(13deg, rgba(247, 248, 253, 0.05) 20.33%, rgba(255, 255, 255, 0.05) 48.75%)',
-          cursor: 'pointer',
-        }}
-      >
-        <Typography component="span" variant="subtitle2" color="text.secondary">
-          i
-        </Typography>
-      </Box>
+      <InfoTooltipInner />
     </Tooltip>
   )
 };
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [activeStep] = useState(0);
-  const account = useAccount();
+  const [showFinalView, setShowFinalView] = useState(true);
+  const { isConnected } = useAccount();
+  const navigate = useNavigate();
   const {
     isLoading: isCreatingEscrow,
     createEscrow,
     stepsCompleted,
+    escrowAddress,
   } = useCreateEscrow();
   const queryClient = useQueryClient();
+  const chainId = useChainId();
 
   const isCampaignCreated = stepsCompleted === steps.length;
 
@@ -168,6 +153,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     formState: { errors },
     watch,
     handleSubmit,
+    reset,
+    getValues,
   } = useForm<CampaignFormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
@@ -177,20 +164,37 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       end_date: new Date(),
       fund_token: 'hmt',
       fund_amount: 0.0001,
+      daily_volume_target: 1,
     },
   });
 
   const exchange = watch('exchange');
+  const tradingPair = watch('pair');
   const { data: tradingPairs } = useTradingPairs(exchange);
 
   const submitForm = async (data: CampaignFormValues) => {
     await createEscrow(data);
   };
 
+  const onViewCampaignDetailsClick = () => {
+    const formData = getValues();
+    const payload = constructCampaignDetails(chainId, escrowAddress, formData);
+    const encodedData = btoa(JSON.stringify(payload));
+    navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
+    setShowFinalView(false);
+    reset();
+    onClose();
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
   return (
     <BaseModal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -198,211 +202,292 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
         justifyContent: 'center',
       }}
     >
-      <form onSubmit={handleSubmit(submitForm)}>
-        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-          <Typography variant="h4" color="text.primary" mb={4}>
-            Create Campaign
+      {showFinalView ? (
+        <Stack gap={2} alignItems="center" textAlign="center">
+          <ModalSuccess />
+          <Typography variant="h4" color="text.primary" mt={1}>
+            Congratulations!
           </Typography>
-          <Stepper activeStep={activeStep} sx={{ mb: 4, width: '100%' }}>
-            {steps.map((step, idx) => {
-              const stepProps: { completed?: boolean } = {};
-              const isAllCompleted = stepsCompleted === 4 && idx === 3;
-              if (idx < stepsCompleted) {
-                stepProps.completed = true;
-              }
-              return (
-                <Step key={step} {...stepProps}>
-                  <StepLabel
-                    slotProps={{
-                      stepIcon: {
-                        icon:
-                          isCreatingEscrow && idx === stepsCompleted ? (
-                            <CircularProgress size={24} />
-                          ) : (
-                            idx + 1
-                          ),
-                        sx: {
-                          '&.Mui-completed': {
-                            color: 'success.main',
+          <Typography variant="body1" fontWeight={500}>
+            Your campaign has been successfully created.<br /> 
+            Everything is set up and ready to go.
+          </Typography>
+          <Typography variant="body2">
+            Click the button below to view the campaign details.
+          </Typography>
+          <Button 
+            size="large" 
+            variant="contained" 
+            sx={{ mt: 2, mx: 'auto' }} 
+            onClick={onViewCampaignDetailsClick}
+          >
+            View campaign details page
+          </Button>
+        </Stack>
+      ) : (
+        <form onSubmit={handleSubmit(submitForm)}>
+          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <Typography variant="h4" color="text.primary" mb={4}>
+              Create Campaign
+            </Typography>
+            <Stepper activeStep={activeStep} sx={{ mb: 4, width: '100%' }}>
+              {steps.map((step, idx) => {
+                const stepProps: { completed?: boolean } = {};
+                const isAllCompleted = stepsCompleted === 4 && idx === 3;
+                if (idx < stepsCompleted) {
+                  stepProps.completed = true;
+                }
+                return (
+                  <Step key={step} {...stepProps}>
+                    <StepLabel
+                      slotProps={{
+                        stepIcon: {
+                          icon:
+                            isCreatingEscrow && idx === stepsCompleted ? (
+                              <CircularProgress size={24} />
+                            ) : (
+                              idx + 1
+                            ),
+                          sx: {
+                            '&.Mui-completed': {
+                              color: 'success.main',
+                            },
                           },
                         },
-                      },
-                    }}
-                    sx={{
-                      '& .MuiStepLabel-label': {
-                        color: isAllCompleted ? 'success.main' : 'inherit',
-                      },
-                    }}
-                  >
-                    {isAllCompleted ? 'Completed' : step}
-                  </StepLabel>
-                </Step>
-              );
-            })}
-          </Stepper>
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={3}
-            width={{ xs: '100%', sm: 625 }}
-          >
-            <Box display="flex" gap={2}>
-              <Box display="flex" gap={2} alignItems="center" width="100%">
-                <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+                      }}
+                      sx={{
+                        '& .MuiStepLabel-label': {
+                          color: isAllCompleted ? 'success.main' : 'inherit',
+                        },
+                      }}
+                    >
+                      {isAllCompleted ? 'Completed' : step}
+                    </StepLabel>
+                  </Step>
+                );
+              })}
+            </Stepper>
+            <Box
+              display="flex"
+              flexDirection="column"
+              gap={3}
+              width={{ xs: '100%', sm: 625 }}
+            >
+              <Box display="flex" gap={2}>
+                <Box display="flex" gap={2} alignItems="center" width="100%">
+                  <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+                    <Controller
+                      name="exchange"
+                      control={control}
+                      render={({ field }) => <FormExchangeSelect<CampaignFormValues, 'exchange'> field={field} />}
+                    />
+                    {errors.exchange && (
+                      <FormHelperText>{errors.exchange.message}</FormHelperText>
+                    )}
+                  </FormControl>
+                  <InfoTooltip />
+                </Box>
+                <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
                   <Controller
-                    name="exchange"
+                    name="pair"
                     control={control}
-                    render={({ field }) => <FormExchangeSelect<CampaignFormValues, 'exchange'> field={field} />}
+                    render={({ field }) => {
+                      return (
+                        <Autocomplete
+                          id="trading-pair-select"
+                          options={tradingPairs || []}
+                          slotProps={slotProps}
+                          renderInput={(params) => (
+                            <TextField {...params} label="Trading Pair" />
+                          )}
+                          renderOption={(props, option) => {
+                            return (
+                              <Box
+                                {...props}
+                                key={option}
+                                component="li"
+                                sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
+                              >
+                                <CryptoPairEntity symbol={option} />
+                              </Box>
+                            );
+                          }}
+                          {...field}
+                          onChange={(_, value) => field.onChange(value)}
+                        />
+                      );
+                    }}
                   />
-                  {errors.exchange && (
-                    <FormHelperText>{errors.exchange.message}</FormHelperText>
+                  {errors.pair && (
+                    <FormHelperText>{errors.pair.message}</FormHelperText>
                   )}
                 </FormControl>
-                <InfoTooltip />
               </Box>
-              <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
-                <Controller
-                  name="pair"
-                  control={control}
-                  render={({ field }) => {
-                    return (
-                      <Autocomplete
-                        id="trading-pair-select"
-                        options={tradingPairs || []}
-                        slotProps={slotProps}
-                        renderInput={(params) => (
-                          <TextField {...params} label="Trading Pair" />
-                        )}
-                        renderOption={(props, option) => {
-                          return (
-                            <Box
-                              {...props}
-                              key={option}
-                              component="li"
-                              sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
-                            >
-                              <CryptoPairEntity symbol={option} />
-                            </Box>
-                          );
-                        }}
+              <Box display="flex" gap={2}>
+                <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
+                  <Controller
+                    name="start_date"
+                    control={control}
+                    render={({ field }) => (
+                      <DatePicker
+                        label="Start Date"
+                        format="YYYY-MM-DD"
+                        closeOnSelect
+                        disablePast
                         {...field}
-                        onChange={(_, value) => field.onChange(value)}
+                        value={dayjs(field.value)}
                       />
-                    );
-                  }}
-                />
-                {errors.pair && (
-                  <FormHelperText>{errors.pair.message}</FormHelperText>
-                )}
-              </FormControl>
-            </Box>
-            <Box display="flex" gap={2}>
-              <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
-                <Controller
-                  name="start_date"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      label="Start Date"
-                      closeOnSelect
-                      disablePast
-                      {...field}
-                      value={dayjs(field.value)}
-                    />
+                    )}
+                  />
+                  {errors.start_date && (
+                    <FormHelperText>{errors.start_date.message}</FormHelperText>
                   )}
-                />
-                {errors.start_date && (
-                  <FormHelperText>{errors.start_date.message}</FormHelperText>
-                )}
-              </FormControl>
-              <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
-                <Controller
-                  name="end_date"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      label="End Date"
-                      closeOnSelect
-                      disablePast
-                      {...field}
-                      value={dayjs(field.value)}
-                    />
+                </FormControl>
+                <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
+                  <Controller
+                    name="end_date"
+                    control={control}
+                    render={({ field }) => (
+                      <DatePicker
+                        label="End Date"
+                        format="YYYY-MM-DD"
+                        closeOnSelect
+                        disablePast
+                        {...field}
+                        value={dayjs(field.value)}
+                      />
+                    )}
+                  />
+                  {errors.end_date && (
+                    <FormHelperText>{errors.end_date.message}</FormHelperText>
                   )}
-                />
-                {errors.end_date && (
-                  <FormHelperText>{errors.end_date.message}</FormHelperText>
-                )}
-              </FormControl>
-            </Box>
-            <Box display="flex" gap={2}>
-              <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-                <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
-                <Controller
-                  name="fund_token"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      labelId="fund-token-select-label"
-                      id="fund-token-select"
-                      label="Fund Token"
-                      MenuProps={menuProps}
-                      {...field}
-                    >
-                      {TOKENS.filter((token) =>
-                        FUND_TOKENS.includes(token.name)
-                      ).map((token) => (
-                        <MenuItem key={token.name} value={token.name}>
-                          <CryptoEntity name={token.name} />
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
+                </FormControl>
+              </Box>
+              <Box display="flex" gap={2}>
+                <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
+                  <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
+                  <Controller
+                    name="fund_token"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        labelId="fund-token-select-label"
+                        id="fund-token-select"
+                        label="Fund Token"
+                        MenuProps={menuProps}
+                        {...field}
+                      >
+                        {TOKENS.filter((token) =>
+                          FUND_TOKENS.includes(token.name)
+                        ).map((token) => (
+                          <MenuItem key={token.name} value={token.name}>
+                            <CryptoEntity name={token.name} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
 
-                {errors.fund_token && (
-                  <FormHelperText>{errors.fund_token.message}</FormHelperText>
-                )}
-              </FormControl>
-              <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
-                <Controller
-                  name="fund_amount"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      id="fund-amount-input"
-                      label="Fund Amount"
-                      error={!!errors.fund_amount}
-                      type="number"
-                      {...field}
-                    />
+                  {errors.fund_token && (
+                    <FormHelperText>{errors.fund_token.message}</FormHelperText>
                   )}
-                />
-                {errors.fund_amount && (
-                  <FormHelperText>{errors.fund_amount.message}</FormHelperText>
-                )}
-              </FormControl>
+                </FormControl>
+                <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
+                  <Controller
+                    name="fund_amount"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        id="fund-amount-input"
+                        label="Fund Amount"
+                        error={!!errors.fund_amount}
+                        type="number"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.fund_amount && (
+                    <FormHelperText>{errors.fund_amount.message}</FormHelperText>
+                  )}
+                </FormControl>
+                <FormControl error={!!errors.daily_volume_target} sx={{ width: '100%' }}>
+                  <Controller 
+                    name="daily_volume_target"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        id="daily-volume-target-input"
+                        label="Daily Volume Target"
+                        type="number"
+                        error={!!errors.daily_volume_target}
+                        {...field}
+                        slotProps={{
+                          htmlInput: {
+                            sx: {
+                              fieldSizing: 'content',
+                              maxWidth: '12ch',
+                              minWidth: '1ch',
+                              width: 'unset',
+                              '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
+                            },
+                          },
+                          input: {
+                            endAdornment: (
+                              <InputAdornment 
+                                position="end"
+                                sx={{
+                                  alignSelf: 'flex-end',
+                                  margin: 0,
+                                  mb: 2,
+                                  ml: 0.5,
+                                  height: '23px',
+                                  opacity: 0,
+                                  pointerEvents: 'none',
+                                  [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]: {
+                                    opacity: 1,
+                                  },
+                                }}
+                              >
+                                {tradingPair?.split('/')[1]?.slice(0, 4) || ''}
+                              </InputAdornment>
+                            ),
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                  {errors.daily_volume_target && (
+                    <FormHelperText>{errors.daily_volume_target.message}</FormHelperText>
+                  )}
+                </FormControl>
+              </Box>
+              {stepsCompleted < steps.length ? (
+                <Button
+                  size="large"
+                  variant="contained"
+                  type="submit"
+                  sx={{ mx: 'auto' }}
+                  disabled={!isConnected || isCreatingEscrow}
+                >
+                  Create Campaign
+                </Button>
+              ) : (
+                <Button
+                  size="large"
+                  variant="contained"
+                  sx={{ mx: 'auto' }}
+                  onClick={() => setShowFinalView(true)}
+                >
+                  Finish
+                </Button>
+              )}
             </Box>
-            {stepsCompleted < steps.length ? (
-              <Button
-                variant="contained"
-                type="submit"
-                sx={{ width: '185px', mx: 'auto' }}
-                disabled={!account.isConnected || isCreatingEscrow}
-              >
-                Create Campaign
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                sx={{ width: '185px', mx: 'auto' }}
-                onClick={onClose}
-              >
-                Finish
-              </Button>
-            )}
           </Box>
-        </Box>
-      </form>
+        </form>
+      )}
     </BaseModal>
   );
 };

@@ -1,18 +1,18 @@
-import { FC, MouseEvent } from 'react';
+import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
-import { Button, IconButton, Typography, Box } from '@mui/material';
+import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
 import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
-import { OpenInNewIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { Campaign } from '../../types';
-import { formatAddress, getExplorerUrl, formatTokenAmount } from '../../utils';
+import { formatTokenAmount, getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
+import AddressWithLink from '../AddressWithLink';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
+import InfoTooltipInner from '../InfoTooltipInner';
 import LaunchCampaign from '../LaunchCampaign';
 
 type Props = {
@@ -38,8 +38,8 @@ const getSuffix = (day: number) => {
   }
 };
 
-const formatDate = (block: number) => {
-  const date = new Date(block * 1000);
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
   const day = date.getDate();
   const month = date.toLocaleString('en-US', { month: 'long' });
   const year = date.getFullYear();
@@ -134,6 +134,61 @@ const CustomPagination: FC<{
   );
 };
 
+const statusTooltipData = [
+  {
+    status: 'Active',
+    color: 'success.main',
+  },
+  {
+    status: 'Awaiting start date',
+    color: 'warning.main',
+  },
+  {
+    status: 'End date is earlier than current date',
+    color: 'error.main',
+  },
+  {
+    status: 'Completed',
+    color: 'secondary.main',
+  },
+  {
+    status: 'Cancelled',
+    color: 'primary.main',
+    border: '1px solid',
+    borderColor: 'white',
+  },
+]
+
+const StatusTooltip = () => {
+  return (
+    <Tooltip 
+      arrow 
+      placement="left"
+      title={
+        <Stack gap={0.5}>
+          {
+            statusTooltipData.map((item) => (
+              <Box key={item.status} display="flex" alignItems="center" gap={0.5}>
+                <Box 
+                  width="8px" 
+                  height="8px" 
+                  borderRadius="100%" 
+                  bgcolor={item.color} 
+                  border={item.border ? '1px solid' : 'none'} 
+                  borderColor={item.borderColor ? item.borderColor : 'none'} 
+                />
+                <Typography variant="tooltip">{item.status}</Typography>
+              </Box>
+            ))
+          }
+        </Stack>
+      }
+    >
+      <InfoTooltipInner />
+    </Tooltip>
+  )
+}
+
 const CampaignsTable: FC<Props> = ({
   data,
   onViewAllClick,
@@ -153,16 +208,6 @@ const CampaignsTable: FC<Props> = ({
     showAllCampaigns || showPagination ? data : data?.slice(0, 3);
 
   const noRows = !(data && data.length > 0);
-  
-  const handleAddressClick = (
-    e: MouseEvent<HTMLButtonElement>,
-    chainId: ChainId,
-    address: string
-  ) => {
-    e.stopPropagation();
-    const explorerUrl = getExplorerUrl(chainId, address);
-    window.open(explorerUrl, '_blank');
-  };
 
   const columns: GridColDef[] = [
     {
@@ -179,7 +224,7 @@ const CampaignsTable: FC<Props> = ({
       headerName: 'Pair',
       flex: 2,
       minWidth: 250,
-      renderCell: (params) => <CryptoPairEntity symbol={params.row.symbol} size="medium" />,
+      renderCell: (params) => <CryptoPairEntity symbol={params.row.trading_pair} size="medium" />,
     },
     {
       field: 'exchange',
@@ -187,7 +232,7 @@ const CampaignsTable: FC<Props> = ({
       flex: 1.5,
       minWidth: 170,
       renderCell: (params) => {
-        const exchangeName = exchangesMap.get(params.row.exchangeName)?.display_name;
+        const exchangeName = exchangesMap.get(params.row.exchange_name)?.display_name;
         return (
           <Typography>
             {exchangeName}
@@ -200,24 +245,21 @@ const CampaignsTable: FC<Props> = ({
       headerName: 'Address',
       flex: 1.5,
       minWidth: 175,
+      renderCell: (params) => <AddressWithLink address={params.row.address} chainId={params.row.chain_id} />,
+    },
+    {
+      field: 'network',
+      headerName: 'Network',
+      flex: 1,
+      minWidth: 110,
       renderCell: (params) => {
+        const networkName = getNetworkName(params.row.chain_id);
         return (
-          <Typography variant="subtitle2" display="flex" alignItems="center">
-            {formatAddress(params.row.address)}
-            <IconButton
-              onClick={(e) =>
-                handleAddressClick(e, params.row.chainId, params.row.address)
-              }
-              sx={{
-                color: 'text.secondary',
-                ml: 1,
-                p: 0,
-                '&:hover': { background: 'none' },
-              }}
-            >
-              <OpenInNewIcon />
-            </IconButton>
-          </Typography>
+          <Tooltip title={networkName || "Unknown Network"}>
+            <Box display="flex" alignItems="center">
+              {getChainIcon(params.row.chain_id)}
+            </Box>
+          </Tooltip>
         );
       },
     },
@@ -225,18 +267,18 @@ const CampaignsTable: FC<Props> = ({
       field: 'startDate',
       headerName: 'Start Date',
       flex: 2,
-      minWidth: 125,
+      minWidth: 135,
       renderCell: (params) => {
-        return <Typography variant="subtitle2">{formatDate(params.row.startBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.start_date)}</Typography>;
       },
     },
     {
       field: 'endDate',
       headerName: 'End Date',
       flex: 2,
-      minWidth: 125,
+      minWidth: 135,
       renderCell: (params) => {
-        return <Typography variant="subtitle2">{formatDate(params.row.endBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.end_date)}</Typography>;
       },
     },
     {
@@ -245,11 +287,11 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 150,
       renderCell: (params) => {
-        const { fundAmount, tokenDecimals, tokenSymbol } = params.row;
+        const { fund_amount, fund_token_decimals, fund_token_symbol } = params.row;
         
         return (
           <Typography variant="subtitle2">
-            {formatTokenAmount(fundAmount, tokenDecimals)} {tokenSymbol}
+            {formatTokenAmount(fund_amount, fund_token_decimals)} {fund_token_symbol}
           </Typography>
         );
       },
@@ -258,15 +300,17 @@ const CampaignsTable: FC<Props> = ({
       field: 'status',
       headerName: 'Status',
       flex: 1,
-      minWidth: 100,
+      minWidth: 80,
+      renderHeader: () => <StatusTooltip />,
       renderCell: (params) => {
-        const isActive =
-          params.row.status === 'Pending' || params.row.status === 'Partial';
         return (
-          <Typography variant="subtitle2" color={isActive ? 'success.main' : 'error.main'} textTransform="uppercase">
-            {isActive ? 'Active' : params.row.status}
-          </Typography>
-        );
+          <Box
+            width="8px"
+            height="8px"
+            borderRadius="100%"
+            bgcolor={mapStatusToColor(params.row.status, params.row.start_date, params.row.end_date)}
+          />
+        )
       },
     },
     {
@@ -308,7 +352,7 @@ const CampaignsTable: FC<Props> = ({
       }}
       onRowClick={(params) => {
         navigate(
-          `/campaign-detail/${params.row.chainId}/${params.row.address}`
+          `/campaign-details/${params.row.address}`
         );
       }}
       slots={{
@@ -374,7 +418,7 @@ const CampaignsTable: FC<Props> = ({
             justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
           },
         },
         '& .MuiDataGrid-row': {
@@ -404,8 +448,8 @@ const CampaignsTable: FC<Props> = ({
           '&[data-field="fundAmount"]': {
             justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
-          '&[data-field="status"]': {
-            justifyContent: 'flex-end',
+          '&[data-field="status"], &[data-field="network"]': {
+            justifyContent: 'center',
           },
         },
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {

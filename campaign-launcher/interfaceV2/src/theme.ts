@@ -16,6 +16,7 @@ declare module '@mui/material/styles' {
   }
   interface PaletteColor {
     violet?: string;
+    contrast?: string;
   }
   interface TypographyVariants {
     'h4-mobile': React.CSSProperties;
@@ -184,6 +185,19 @@ const createAppTheme = (mode: PaletteMode) => {
             fontSize: '15px',
             lineHeight: '26px',
           },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: ({ theme }) => ({
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrast,
+          }),
+          arrow: ({ theme }) => ({
+            '&::before': {
+              backgroundColor: theme.palette.primary.main,
+            },
+          }),
         },
       },
     },

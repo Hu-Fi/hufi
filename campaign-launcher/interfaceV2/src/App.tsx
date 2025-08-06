@@ -34,7 +34,7 @@ const App: FC = () => {
                       <Routes>
                         <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
                         <Route
-                          path={ROUTES.CAMPAIGN_DETAIL}
+                          path={ROUTES.CAMPAIGN_DETAILS}
                           element={<Campaign />}
                         />
                         <Route
