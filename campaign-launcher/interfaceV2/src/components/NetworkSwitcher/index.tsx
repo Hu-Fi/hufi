@@ -53,7 +53,6 @@ const NetworkSwitcher: FC = () => {
           px: 1,
           height: '42px',
           textTransform: 'none',
-          fontWeight: 600,
         }}
       >
         {getChainIcon(chainId)}

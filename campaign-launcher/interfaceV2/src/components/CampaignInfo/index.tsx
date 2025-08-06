@@ -5,7 +5,7 @@ import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
 import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
-import AddressWithLink from '../AddressWithLink';
+import ExplorerLink from '../ExplorerLink';
 import JoinCampaign from '../JoinCampaign';
 
 const formatDate = (dateString: string): string => {
@@ -48,7 +48,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
       >
         {campaign.status}
       </Box>
-      <AddressWithLink address={campaign.address} chainId={campaign.chain_id} />
+      <ExplorerLink address={campaign.address} chainId={campaign.chain_id} />
       <Box display="flex" alignItems="center" gap={1} ml={{ xs: 0, md: 2 }}>
         {campaign?.start_date && campaign?.end_date && (
           <>

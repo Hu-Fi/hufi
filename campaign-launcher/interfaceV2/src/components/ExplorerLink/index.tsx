@@ -11,18 +11,17 @@ type Props = {
   chainId: ChainId;
 }
 
-const AddressWithLink: FC<Props> = ({ address, chainId }) => {
+const handleAddressClick = (
+  e: MouseEvent<HTMLButtonElement>,
+  chainId: ChainId,
+  address: string
+) => {
+  e.stopPropagation();
+  const explorerUrl = getExplorerUrl(chainId, address);
+  window.open(explorerUrl, '_blank');
+};
 
-  const handleAddressClick = (
-    e: MouseEvent<HTMLButtonElement>,
-    chainId: ChainId,
-    address: string
-  ) => {
-    e.stopPropagation();
-    const explorerUrl = getExplorerUrl(chainId, address);
-    window.open(explorerUrl, '_blank');
-  };
-  
+const ExplorerLink: FC<Props> = ({ address, chainId }) => {
   return (
     <Typography variant="subtitle2" display="flex" alignItems="center">
       {formatAddress(address)}
@@ -41,4 +40,4 @@ const AddressWithLink: FC<Props> = ({ address, chainId }) => {
   )
 }
 
-export default AddressWithLink;
+export default ExplorerLink;

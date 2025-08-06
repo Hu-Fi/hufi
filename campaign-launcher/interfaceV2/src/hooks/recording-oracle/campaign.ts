@@ -11,11 +11,11 @@ export const useGetJoinedCampaigns = () => {
   const { isAuthenticated } = useWeb3Auth();
 
   return useQuery({
-    queryKey: [QUERY_KEYS.USER_JOINED_CAMPAIGNS],
+    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS],
     queryFn: () => recordingApi.getJoinedCampaigns(),
     select: (data) => ({
       ...data,
-      campaigns: data.campaigns.map((campaign) => ({
+      results: data.results.map((campaign) => ({
         ...campaign,
         id: campaign.address,
       })),
@@ -30,7 +30,7 @@ export const useJoinCampaign = () => {
   return useMutation({
     mutationFn: ({ chainId, address }: { chainId: ChainId; address: `0x${string}` }) => recordingApi.joinCampaign(chainId, address),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER_JOINED_CAMPAIGNS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS] });
     },
   });
 };

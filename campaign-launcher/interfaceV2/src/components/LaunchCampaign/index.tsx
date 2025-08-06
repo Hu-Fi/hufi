@@ -5,8 +5,8 @@ import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useStakeContext } from '../../providers/StakeProvider';
-import CreateCampaignMenuModal from '../modals/CreateCampaignMenuModal';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
+import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
 
 type Props = {
   variant: 'outlined' | 'contained';
@@ -15,16 +15,13 @@ type Props = {
 
 const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   const [openCreateCampaignModal, setOpenCreateCampaignModal] = useState(false);
-  const [
-    openCreateCampaignMenuModal,
-    setOpenCreateCampaignMenuModal,
-  ] = useState(false);
+  const [openStakeHmtPromptModal, setOpenStakeHmtPromptModal] = useState(false);
   const { isConnected } = useAccount();
   const isXl = useIsXlDesktop();
   const { stakedAmount } = useStakeContext();
 
   const handleCloseCreateCampaignMenuModal = () => {
-    setOpenCreateCampaignMenuModal(false);
+    setOpenStakeHmtPromptModal(false);
   };
 
   const handleOpenCreateCampaignModal = () => {
@@ -37,7 +34,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
     if (+(stakedAmount ?? '0') > 0) {
       setOpenCreateCampaignModal(true);
     } else {
-      setOpenCreateCampaignMenuModal(true);
+      setOpenStakeHmtPromptModal(true);
     }
   };
 
@@ -56,8 +53,8 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
       >
         Launch Campaign
       </Button>
-      <CreateCampaignMenuModal
-        open={openCreateCampaignMenuModal}
+      <StakeHmtPromptModal
+        open={openStakeHmtPromptModal}
         onClose={handleCloseCreateCampaignMenuModal}
         handleOpenCreateCampaignModal={handleOpenCreateCampaignModal}
       />

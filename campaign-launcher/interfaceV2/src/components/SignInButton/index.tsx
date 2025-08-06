@@ -48,7 +48,7 @@ const SignInButton: FC = () => {
       <Button
         variant="contained"
         size="large"
-        sx={{ color: 'primary.contrast', fontWeight: 600 }}
+        sx={{ color: 'primary.contrast' }}
         disabled={isLoading}
         onClick={onSignInButtonClick}
       >

@@ -8,13 +8,13 @@ import HowToLaunch from '../../components/HowToLaunch';
 import JoinedCampaigns from '../../components/JoinedCampaigns';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
-import { useCampaign } from '../../hooks/useCampaigns';
-import { CampaignDetails } from '../../types';
+import { useCampaignDetails } from '../../hooks/useCampaigns';
+import { isCampaignDetails } from '../../utils';
 
 const Campaign: FC = () => {
   const { address } = useParams() as { address: string };
   const [searchParams] = useSearchParams();
-  const { data: campaign, isPending: isCampaignLoading } = useCampaign(address);
+  const { data: campaign, isPending: isCampaignLoading } = useCampaignDetails(address);
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
@@ -22,7 +22,13 @@ const Campaign: FC = () => {
     
     try {
       const decodedData = atob(encodedData);
-      const parsed = JSON.parse(decodedData) as CampaignDetails;
+      const parsed = JSON.parse(decodedData);
+      
+      if (!isCampaignDetails(parsed)) {
+        console.error('Invalid campaign data structure:', parsed);
+        return undefined;
+      }
+      
       return parsed;
     } catch (error) {
       console.error('Failed to parse form data:', error);

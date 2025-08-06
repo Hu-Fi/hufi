@@ -10,7 +10,7 @@ type Props = {
   handleOpenCreateCampaignModal: () => void;
 };
 
-const CreateCampaignMenuModal: FC<Props> = ({
+const StakeHmtPromptModal: FC<Props> = ({
   open,
   onClose,
   handleOpenCreateCampaignModal,
@@ -83,4 +83,4 @@ const CreateCampaignMenuModal: FC<Props> = ({
   );
 };
 
-export default CreateCampaignMenuModal;
+export default StakeHmtPromptModal;

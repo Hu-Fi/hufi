@@ -23,7 +23,6 @@ const CampaignsMenu: FC = () => {
       <Button
         variant="text"
         size="medium"
-        sx={{ color: 'primary.main', fontWeight: 600 }}
         aria-controls={open ? 'campaigns-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}

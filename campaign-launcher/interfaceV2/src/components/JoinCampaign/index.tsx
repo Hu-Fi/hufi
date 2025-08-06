@@ -5,7 +5,7 @@ import { Button } from '@mui/material';
 import { useGetEnrolledExchanges, useGetJoinedCampaigns, useJoinCampaign } from '../../hooks/recording-oracle';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails } from '../../types';
-import JoinCampaignModal from '../modals/JoinCampaignModal';
+import AddKeysPromptModal from '../modals/AddKeysPromptModal';
 
 type Props = {
   campaign: CampaignDetails;
@@ -14,13 +14,14 @@ type Props = {
 const JoinCampaign: FC<Props> = ({ campaign }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const { isAuthenticated } = useWeb3Auth();
-  const { data: enrolledExchanges } = useGetEnrolledExchanges();
-  const { data: joinedCampaigns } = useGetJoinedCampaigns();
+  const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } = useGetEnrolledExchanges();
+  const { data: joinedCampaigns, isLoading: isJoinedCampaignsLoading } = useGetJoinedCampaigns();
   const { mutate: joinCampaign, isPending } = useJoinCampaign();
 
-  const isAlreadyJoined = joinedCampaigns?.campaigns.some((joinedCampaign) => joinedCampaign.address === campaign.address);
+  const isAlreadyJoined = joinedCampaigns?.results.some((joinedCampaign) => joinedCampaign.address === campaign.address);
 
-  const isButtonDisabled = !isAuthenticated || isPending || isAlreadyJoined;
+  const isLoading = isEnrolledExchangesLoading || isJoinedCampaignsLoading || isPending;
+  const isButtonDisabled = !isAuthenticated || isLoading || isAlreadyJoined;
     
   const handleButtonClick = () => {
     if (isButtonDisabled) {
@@ -46,7 +47,7 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
       >
         {isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign'}
       </Button>
-      <JoinCampaignModal
+      <AddKeysPromptModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
       />

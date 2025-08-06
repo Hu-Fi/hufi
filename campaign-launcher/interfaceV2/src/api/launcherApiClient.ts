@@ -4,7 +4,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Method } from "ax
 import { CampaignDetails, CampaignsResponse, Exchange } from "../types";
 import { HttpError } from "../utils/HttpError";
 
-export class MockedLauncherClient  {
+export class LauncherApiClient  {
   private readonly axiosInstance: AxiosInstance;
 
   constructor({ baseUrl }: { baseUrl: string }) {
@@ -68,7 +68,7 @@ export class MockedLauncherClient  {
     return response;
   }
 
-  async getCampaign(chainId: ChainId, address: string): Promise<CampaignDetails> {
+  async getCampaignDetails(chainId: ChainId, address: string): Promise<CampaignDetails> {
     const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
     return response;
   }

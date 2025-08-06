@@ -4,6 +4,7 @@ import { useChainId } from 'wagmi';
 
 import { api, launcherApi } from '../api';
 import { CampaignDataDto } from '../api/client';
+import { QUERY_KEYS } from '../constants/queryKeys';
 import { CampaignsStats } from '../types';
 
 export type Campaign = CampaignDataDto;
@@ -26,7 +27,7 @@ const filterParams = (params: CampaignsParams) => {
 export const useCampaigns = (params: CampaignsParams) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: ['all-campaigns', chain_id, exchange_name, status, launcher, limit, skip],
+    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
     queryFn: () => {
       const filteredParams = filterParams(params);
       return launcherApi.getCampaigns(filteredParams)
@@ -45,7 +46,7 @@ export const useCampaigns = (params: CampaignsParams) => {
 export const useMyCampaigns = (params: CampaignsParams) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: ['my-campaigns', chain_id, exchange_name, status, launcher, limit, skip],
+    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
     queryFn: () => {
       const filteredParams = filterParams(params);
       return launcherApi.getCampaigns(filteredParams)
@@ -61,11 +62,11 @@ export const useMyCampaigns = (params: CampaignsParams) => {
   });
 };
 
-export const useCampaign = (address: string) => {
+export const useCampaignDetails = (address: string) => {
   const chainId = useChainId();
   return useQuery({
-    queryKey: ['campaign', chainId, address],
-    queryFn: () => launcherApi.getCampaign(chainId, address),
+    queryKey: ['campaign-details', chainId, address],
+    queryFn: () => launcherApi.getCampaignDetails(chainId, address),
     enabled: !!chainId && !!address,
     retry: false,
   });

@@ -8,7 +8,7 @@ import {
   LOCALHOST_CHAIN_IDS,
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
-import { Campaign, EscrowCreateDto } from '../types';
+import { Campaign, CampaignDetails, EscrowCreateDto } from '../types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -95,6 +95,25 @@ export const getChainIcon = (id?: ChainId) => {
 export const getNetworkName = (chainId?: ChainId): string | undefined => {
   if (!chainId) return undefined;
   return NETWORKS[chainId]?.title;
+};
+
+
+export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
+  if (!obj || typeof obj !== 'object') return false;
+  
+  const requiredCampaignFields = [
+    'id', 'chain_id', 'address', 'exchange_name', 'trading_pair',
+    'start_date', 'end_date', 'fund_amount', 'fund_token', 
+    'fund_token_symbol', 'fund_token_decimals', 'status',
+    'escrow_status', 'launcher', 'exchange_oracle', 
+    'recording_oracle', 'reputation_oracle', 'amount_paid', 'daily_paid_amounts'
+  ];
+  
+  for (const field of requiredCampaignFields) {
+    if (!(field in obj)) return false;
+  }
+  
+  return true;
 };
 
 export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto) => {

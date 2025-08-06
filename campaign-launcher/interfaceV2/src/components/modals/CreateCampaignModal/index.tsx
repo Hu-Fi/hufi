@@ -30,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAccount, useChainId } from 'wagmi';
 import * as yup from 'yup';
 
+import { QUERY_KEYS } from '../../../constants/queryKeys';
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
@@ -144,7 +145,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   useEffect(() => {
     if (isCampaignCreated) {
-      queryClient.invalidateQueries({ queryKey: ['myCampaigns'] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, QUERY_KEYS.MY_CAMPAIGNS] });
     }
   }, [isCampaignCreated]);
 
@@ -169,11 +170,16 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   });
 
   const exchange = watch('exchange');
-  const tradingPair = watch('pair');
+  const pair = watch('pair');
   const { data: tradingPairs } = useTradingPairs(exchange);
 
   const submitForm = async (data: CampaignFormValues) => {
     await createEscrow(data);
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
   };
 
   const onViewCampaignDetailsClick = () => {
@@ -182,13 +188,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     const encodedData = btoa(JSON.stringify(payload));
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);
-    reset();
-    onClose();
-  };
-
-  const handleClose = () => {
-    reset();
-    onClose();
+    handleClose();
   };
 
   return (
@@ -451,7 +451,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                   },
                                 }}
                               >
-                                {tradingPair?.split('/')[1]?.slice(0, 4) || ''}
+                                {pair?.split('/')[1]?.slice(0, 4) || ''}
                               </InputAdornment>
                             ),
                           }

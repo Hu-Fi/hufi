@@ -11,7 +11,7 @@ type Props = {
   onClose: () => void;
 };
 
-const JoinCampaignModal: FC<Props> = ({ open, onClose }) => {
+const AddKeysPromptModal: FC<Props> = ({ open, onClose }) => {
   const navigate = useNavigate();
 
   const handleButtonClick = () => {
@@ -39,4 +39,4 @@ const JoinCampaignModal: FC<Props> = ({ open, onClose }) => {
   );
 };
 
-export default JoinCampaignModal;
+export default AddKeysPromptModal;

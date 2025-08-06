@@ -9,9 +9,9 @@ import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { Campaign } from '../../types';
 import { formatTokenAmount, getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
-import AddressWithLink from '../AddressWithLink';
 import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
+import ExplorerLink from '../ExplorerLink';
 import InfoTooltipInner from '../InfoTooltipInner';
 import LaunchCampaign from '../LaunchCampaign';
 
@@ -87,7 +87,6 @@ const JoinedCampaignsNoRows: FC = () => {
             height: '42px',
             bgcolor: 'primary.main',
             color: 'primary.contrast', 
-            fontWeight: 600,
           }}
           onClick={() => navigate('/all-campaigns')}
         >
@@ -123,7 +122,7 @@ const CustomPagination: FC<{
         <Button
           variant="contained"
           size="medium"
-          sx={{ color: 'primary.contrast', fontWeight: 600 }}
+          sx={{ color: 'primary.contrast' }}
           onClick={onViewAllClick}
         >
           View All
@@ -245,7 +244,7 @@ const CampaignsTable: FC<Props> = ({
       headerName: 'Address',
       flex: 1.5,
       minWidth: 175,
-      renderCell: (params) => <AddressWithLink address={params.row.address} chainId={params.row.chain_id} />,
+      renderCell: (params) => <ExplorerLink address={params.row.address} chainId={params.row.chain_id} />,
     },
     {
       field: 'network',
@@ -287,6 +286,15 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 150,
       renderCell: (params) => {
+        if (isJoinedCampaigns) {
+          const { fund_amount, fund_token } = params.row
+          return (
+            <Typography variant="subtitle2">
+              <span>{fund_amount}</span>{' '}
+              <span>{fund_token.toUpperCase()}</span>
+            </Typography>
+          )
+        }
         const { fund_amount, fund_token_decimals, fund_token_symbol } = params.row;
         
         return (
