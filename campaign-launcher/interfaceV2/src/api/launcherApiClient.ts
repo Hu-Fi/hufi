@@ -68,9 +68,13 @@ export class LauncherApiClient  {
     return response;
   }
 
-  async getCampaignDetails(chainId: ChainId, address: string): Promise<CampaignDetails> {
-    const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
-    return response;
+  async getCampaignDetails(chainId: ChainId, address: string): Promise<CampaignDetails | null> {
+    try {
+      const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
+      return response;
+    } catch (error) {
+      return null;
+    }
   }
 }
 

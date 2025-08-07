@@ -54,13 +54,11 @@ export const useStake = () => {
       const stakingInfo = await stakingClient.getStakerInfo(address!);
       setStakingData(stakingInfo);
     } catch (error) {
-      console.error('Error fetching staking data');
+      console.error('Error fetching staking data: ', error);
     }
   };
 
   return {
-    stakedAmount: stakingData?.stakedAmount
-      ? formatTokenAmount(Number(stakingData?.stakedAmount))
-      : 0,
+    stakedAmount: formatTokenAmount(Number(stakingData?.stakedAmount) || 0)
   };
 };

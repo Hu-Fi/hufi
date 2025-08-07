@@ -143,7 +143,7 @@ const statusTooltipData = [
     color: 'warning.main',
   },
   {
-    status: 'End date is earlier than current date',
+    status: 'Campaign is finished, waiting for payouts',
     color: 'error.main',
   },
   {

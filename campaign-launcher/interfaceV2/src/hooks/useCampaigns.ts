@@ -65,12 +65,11 @@ export const useMyCampaigns = (params: CampaignsParams) => {
 export const useCampaignDetails = (address: string) => {
   const chainId = useChainId();
   return useQuery({
-    queryKey: ['campaign-details', chainId, address],
+    queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, chainId, address],
     queryFn: () => launcherApi.getCampaignDetails(chainId, address),
     enabled: !!chainId && !!address,
     retry: false,
   });
-  
 };
 
 export const useCampaignsStats = (chainId: ChainId) => {

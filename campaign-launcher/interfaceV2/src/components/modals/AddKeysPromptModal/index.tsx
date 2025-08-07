@@ -30,7 +30,7 @@ const AddKeysPromptModal: FC<Props> = ({ open, onClose }) => {
     >
       <Typography variant="h4" py={1} mb={2}>Join Campaign</Typography>
       <Typography variant="body2" mb={2} px={{ xs: 2, md: 10 }} textAlign="center">
-        To join the campaign, please make sure to add your API keys under the Manage KEYS page. This step is required to participate.
+        To join the campaign, please make sure to add your API keys under the Manage Keys page. This step is required to participate.
       </Typography>
       <Button variant="contained" size="large" onClick={handleButtonClick}>
         Add API Keys

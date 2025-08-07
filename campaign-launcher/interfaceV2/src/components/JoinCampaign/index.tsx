@@ -16,11 +16,11 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } = useGetEnrolledExchanges();
   const { data: joinedCampaigns, isLoading: isJoinedCampaignsLoading } = useGetJoinedCampaigns();
-  const { mutate: joinCampaign, isPending } = useJoinCampaign();
+  const { mutate: joinCampaign, isPending: isJoinPending } = useJoinCampaign();
 
   const isAlreadyJoined = joinedCampaigns?.results.some((joinedCampaign) => joinedCampaign.address === campaign.address);
 
-  const isLoading = isEnrolledExchangesLoading || isJoinedCampaignsLoading || isPending;
+  const isLoading = isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoinPending;
   const isButtonDisabled = !isAuthenticated || isLoading || isAlreadyJoined;
     
   const handleButtonClick = () => {

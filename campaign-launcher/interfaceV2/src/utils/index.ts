@@ -87,14 +87,12 @@ export const mapStatusToColor = (status: Campaign['status'], startDate: string, 
   }
 };
 
-export const getChainIcon = (id?: ChainId) => {
-  if (!id) return null;
-  return CHAIN_ICONS[id] || null;
+export const getChainIcon = (chainId: ChainId) => {
+  return CHAIN_ICONS[chainId] || null;
 };
 
-export const getNetworkName = (chainId?: ChainId): string | undefined => {
-  if (!chainId) return undefined;
-  return NETWORKS[chainId]?.title;
+export const getNetworkName = (chainId: ChainId): string | null => {
+  return NETWORKS[chainId]?.title || null;
 };
 
 
@@ -138,4 +136,18 @@ export const constructCampaignDetails = (chainId: ChainId, address: string, data
     amount_paid: '0',
     daily_paid_amounts: [],
   }
+}
+
+export const calculateManifestHash = async (manifest: string, algorithm: AlgorithmIdentifier = 'SHA-1'): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(manifest);
+  const hashBuffer = await crypto.subtle.digest(algorithm, data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+export const normalizeDateTime = (date: Date): string => {
+  const normalized = new Date(date);
+  normalized.setUTCHours(0, 0, 0, 0);
+  return normalized.toISOString();
 }

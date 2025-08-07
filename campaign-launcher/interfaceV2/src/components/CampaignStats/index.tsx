@@ -11,7 +11,7 @@ import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
 
 type Props = {
-  campaign: CampaignDetails | undefined;
+  campaign: CampaignDetails | null | undefined;
 };
 
 const StatsCard = styled(Box)(({ theme }) => ({

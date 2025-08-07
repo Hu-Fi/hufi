@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
@@ -17,19 +17,10 @@ const formatDate = (dateString: string): string => {
 };
 
 type Props = {
-  campaign: CampaignDetails | undefined;
-  isCampaignLoading: boolean;
+  campaign: CampaignDetails;
 };
 
-const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
-  if (!campaign) {
-    return null;
-  }
-
-  if (isCampaignLoading) {
-    return <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />;
-  }
-
+const CampaignInfo: FC<Props> = ({ campaign }) => {
   return (
     <>
       <Box

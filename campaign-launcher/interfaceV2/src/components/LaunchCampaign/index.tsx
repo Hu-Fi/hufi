@@ -20,10 +20,6 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   const isXl = useIsXlDesktop();
   const { stakedAmount } = useStakeContext();
 
-  const handleCloseCreateCampaignMenuModal = () => {
-    setOpenStakeHmtPromptModal(false);
-  };
-
   const handleOpenCreateCampaignModal = () => {
     setOpenCreateCampaignModal(true);
   };
@@ -55,7 +51,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
       </Button>
       <StakeHmtPromptModal
         open={openStakeHmtPromptModal}
-        onClose={handleCloseCreateCampaignMenuModal}
+        onClose={() => setOpenStakeHmtPromptModal(false)}
         handleOpenCreateCampaignModal={handleOpenCreateCampaignModal}
       />
       <CreateCampaignModal

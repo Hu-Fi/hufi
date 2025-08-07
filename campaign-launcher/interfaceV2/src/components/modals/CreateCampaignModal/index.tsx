@@ -61,7 +61,28 @@ const validationSchema = yup.object({
   exchange: yup.string().required('Required'),
   pair: yup.string().required('Required'),
   fund_token: yup.string().required('Required'),
-  fund_amount: yup.number().required('Required'),
+  fund_amount: yup
+    .number()
+    .transform((value, originalValue) => {
+      if (!originalValue) return undefined;
+      return value;
+    })
+    .required('Fund amount is required')
+    .test(
+      'min-amount',
+      function (value) {
+        if (!value) return this.createError({ message: 'Must be greater than 0' });
+        
+        const fundToken = this.parent.fund_token;
+        if (fundToken === 'usdt' && value < 0.001) {
+          return this.createError({ message: 'Minimum amount for USDT is 0.001' });
+        } else if (fundToken === 'hmt' && value < 0.1) {
+          return this.createError({ message: 'Minimum amount for HMT is 0.1' });
+        }
+        
+        return true;
+      }
+    ),
   start_date: yup.date().required('Required'),
   daily_volume_target: yup.number().min(1).required('Required'),
   end_date: yup
@@ -129,7 +150,7 @@ const InfoTooltip = () => {
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [activeStep] = useState(0);
-  const [showFinalView, setShowFinalView] = useState(true);
+  const [showFinalView, setShowFinalView] = useState(false);
   const { isConnected } = useAccount();
   const navigate = useNavigate();
   const {
@@ -164,7 +185,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       start_date: new Date(),
       end_date: new Date(),
       fund_token: 'hmt',
-      fund_amount: 0.0001,
+      fund_amount: 0.1,
       daily_volume_target: 1,
     },
   });

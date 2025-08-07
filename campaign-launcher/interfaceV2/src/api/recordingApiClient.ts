@@ -21,10 +21,6 @@ type RecordingApiClientConfig = {
   tokenManager: TokenManager;
 };
 
-type PostResponse = {
-  id: string;
-}
-
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
 
 export class RecordingApiClient {
@@ -179,8 +175,8 @@ export class RecordingApiClient {
     return response;
   }
 
-  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<PostResponse> {
-    const response = await this.post<PostResponse>(`/exchange-api-keys/${exchangeName}`, {
+  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<void> {
+    const response = await this.post<void>(`/exchange-api-keys/${exchangeName}`, {
       api_key: apiKey,
       secret_key: secret,
     });
@@ -196,8 +192,8 @@ export class RecordingApiClient {
     return response;
   }
 
-  async joinCampaign(chainId: ChainId, address: `0x${string}`): Promise<PostResponse> {
-    const response = await this.post<PostResponse>(`/campaigns/join`, {
+  async joinCampaign(chainId: ChainId, address: `0x${string}`): Promise<void> {
+    const response = await this.post<void>(`/campaigns/join`, {
       chain_id: chainId,
       address,
     });

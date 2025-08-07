@@ -1,5 +1,6 @@
 import { FC, useMemo } from 'react';
 
+import { CircularProgress } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import CampaignInfo from '../../components/CampaignInfo';
@@ -25,26 +26,26 @@ const Campaign: FC = () => {
       const parsed = JSON.parse(decodedData);
       
       if (!isCampaignDetails(parsed)) {
-        console.error('Invalid campaign data structure:', parsed);
+        console.error('Invalid campaign data structure', parsed);
         return undefined;
       }
       
       return parsed;
     } catch (error) {
-      console.error('Failed to parse form data:', error);
+      console.error('Failed to parse encoded campaign data:', error);
       return undefined;
     }
   }, [searchParams]);
 
+  const campaignData = campaign || parsedData;
+
   return (
     <PageWrapper>
       <PageTitle title="Campaign Data">
-        <CampaignInfo
-          campaign={campaign || parsedData}
-          isCampaignLoading={isCampaignLoading}
-        />
+        {isCampaignLoading && <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />}
+        {!!campaignData && <CampaignInfo campaign={campaignData} />}
       </PageTitle>
-      <CampaignStats campaign={campaign || parsedData} />
+      <CampaignStats campaign={campaignData} />
       <JoinedCampaigns showPagination={false} showAllCampaigns={false} />
       <HowToLaunch />
     </PageWrapper>

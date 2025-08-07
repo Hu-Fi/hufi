@@ -9,15 +9,7 @@ import useClientToSigner from './useClientToSigner';
 import ERC20ABI from '../abi/ERC20.json';
 import { oracles } from '../constants';
 import { EscrowCreateDto, ManifestUploadDto } from '../types';
-import { getTokenAddress } from '../utils';
-
-const calculateManifestHash = async (manifest: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(manifest);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-};
+import { calculateManifestHash, getTokenAddress, normalizeDateTime } from '../utils';
 
 const useCreateEscrow = () => {
   const [escrowAddress, setEscrowAddress] = useState('');
@@ -52,8 +44,8 @@ const useCreateEscrow = () => {
         exchange: data.exchange,
         daily_volume_target: data.daily_volume_target,
         pair: data.pair,
-        start_date: data.start_date.toISOString(),
-        end_date: data.end_date.toISOString(),
+        start_date: normalizeDateTime(data.start_date),
+        end_date: normalizeDateTime(data.end_date),
       };
 
       const escrowAddress = await escrowClient.createEscrow(

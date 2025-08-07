@@ -4,4 +4,5 @@ export const QUERY_KEYS = {
   ALL_CAMPAIGNS: 'all-campaigns',
   MY_CAMPAIGNS: 'my-campaigns',
   JOINED_CAMPAIGNS: 'joined-campaigns',
+  CAMPAIGN_DETAILS: 'campaign-details',
 };
