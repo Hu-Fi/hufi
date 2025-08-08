@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { ChainId, StakerInfo, StakingClient } from '@human-protocol/sdk';
+import { StakerInfo, StakingClient } from '@human-protocol/sdk';
 import { Eip1193Provider, ethers } from 'ethers';
 import { useAccount, useChainId, useWalletClient } from 'wagmi';
 
@@ -25,10 +25,9 @@ export const useStake = () => {
           const signer = await provider.getSigner();
           const client = await StakingClient.build(signer);
           setStakingClient(client);
-          await fetchStakingData(client);
         }
       } catch (error) {
-        console.error(error);
+        console.error('Failed to init staking client', error);
         resetData();
       }
     };
@@ -36,8 +35,14 @@ export const useStake = () => {
     initStakingClient();
   }, [walletClient, address, chainId, connector, appChainId]);
 
+  useEffect(() => {
+    if (stakingClient && address) {
+      fetchStakingData(stakingClient);
+    }
+  }, [stakingClient, address]);
+
   const checkSupportedChain = () => {
-    const isSupportedChain = getSupportedChainIds().includes(appChainId as ChainId);
+    const isSupportedChain = getSupportedChainIds().includes(appChainId);
     if (!isSupportedChain) {
       resetData();
       throw new Error(
@@ -58,7 +63,7 @@ export const useStake = () => {
       setStakingData(stakingInfo);
       return stakingInfo;
     } catch (error) {
-      console.error('Error fetching staking data: ', error);
+      console.error('Error fetching staking data ', error);
       return null;
     }
   };

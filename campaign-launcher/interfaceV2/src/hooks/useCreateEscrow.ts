@@ -10,7 +10,7 @@ import useClientToSigner from './useClientToSigner';
 import ERC20ABI from '../abi/ERC20.json';
 import { oracles } from '../constants';
 import { EscrowCreateDto, ManifestUploadDto } from '../types';
-import { calculateManifestHash, getTokenAddress } from '../utils';
+import { calculateHash, getTokenAddress } from '../utils';
 
 const transformManifestTime = (date: Date, isStartDate: boolean = true): string => {
   const pickedDate = dayjs(date);
@@ -22,6 +22,7 @@ const transformManifestTime = (date: Date, isStartDate: boolean = true): string 
 
 const useCreateEscrow = () => {
   const [escrowAddress, setEscrowAddress] = useState('');
+  const [tokenDecimals, setTokenDecimals] = useState(18);
   const [stepsCompleted, setStepsCompleted] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const chainId = useChainId();
@@ -43,9 +44,11 @@ const useCreateEscrow = () => {
       }
 
       const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
+      const tokenDecimals = await tokenContract.decimals();
+      setTokenDecimals(Number(tokenDecimals) || 18);
       const fundAmount = ethers.parseUnits(
         data.fund_amount.toString(),
-        await tokenContract.decimals()
+        tokenDecimals
       );
 
       const manifest: ManifestUploadDto = {
@@ -69,7 +72,7 @@ const useCreateEscrow = () => {
       setStepsCompleted((prev) => prev + 1);
 
       const manifestString = JSON.stringify(manifest);
-      const manifestHash = await calculateManifestHash(manifestString);
+      const manifestHash = await calculateHash(manifestString);
       
       const escrowConfig = {
         ...oracles,
@@ -86,7 +89,7 @@ const useCreateEscrow = () => {
     }
   };
 
-  return { escrowAddress, createEscrow, isLoading, stepsCompleted };
+  return { escrowAddress, tokenDecimals, createEscrow, isLoading, stepsCompleted };
 };
 
 export default useCreateEscrow;

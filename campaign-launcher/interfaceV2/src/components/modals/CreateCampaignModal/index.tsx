@@ -159,6 +159,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     createEscrow,
     stepsCompleted,
     escrowAddress,
+    tokenDecimals,
   } = useCreateEscrow();
   const queryClient = useQueryClient();
   const chainId = useChainId();
@@ -206,7 +207,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const onViewCampaignDetailsClick = () => {
     const formData = getValues();
-    const payload = constructCampaignDetails(chainId, escrowAddress, formData);
+    const payload = constructCampaignDetails(chainId, escrowAddress, formData, tokenDecimals);
     const encodedData = btoa(JSON.stringify(payload));
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);

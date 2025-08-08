@@ -73,7 +73,10 @@ export class LauncherApiClient  {
       const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
       return response;
     } catch (error) {
-      return null;
+      if (error instanceof AxiosError && error.response?.status === 404) {
+        return null;
+      }
+      throw error;
     }
   }
 }

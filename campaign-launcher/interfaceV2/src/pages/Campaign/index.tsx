@@ -32,7 +32,7 @@ const Campaign: FC = () => {
       
       return parsed;
     } catch (error) {
-      console.error('Failed to parse encoded campaign data:', error);
+      console.error('Failed to parse encoded campaign data', error);
       return undefined;
     }
   }, [searchParams]);

@@ -119,9 +119,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
   return true;
 };
 
-export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto) => {
-  const tokenDecimals = data.fund_token === 'hmt' ? 18 : 6;
-  
+export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto, tokenDecimals: number) => {
   const fundAmount = ethers.parseUnits(
     data.fund_amount.toString(),
     tokenDecimals
@@ -150,7 +148,7 @@ export const constructCampaignDetails = (chainId: ChainId, address: string, data
   }
 }
 
-export const calculateManifestHash = async (manifest: string, algorithm: AlgorithmIdentifier = 'SHA-1'): Promise<string> => {
+export const calculateHash = async (manifest: string, algorithm: AlgorithmIdentifier = 'SHA-1'): Promise<string> => {
   const encoder = new TextEncoder();
   const data = encoder.encode(manifest);
   const hashBuffer = await crypto.subtle.digest(algorithm, data);

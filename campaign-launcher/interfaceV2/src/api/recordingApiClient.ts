@@ -176,11 +176,10 @@ export class RecordingApiClient {
   }
 
   async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<void> {
-    const response = await this.post<void>(`/exchange-api-keys/${exchangeName}`, {
+    await this.post<void>(`/exchange-api-keys/${exchangeName}`, {
       api_key: apiKey,
       secret_key: secret,
     });
-    return response;
   }
 
   async deleteApiKeysForExchange(exchangeName: string): Promise<void> {
@@ -193,10 +192,9 @@ export class RecordingApiClient {
   }
 
   async joinCampaign(chainId: ChainId, address: `0x${string}`): Promise<void> {
-    const response = await this.post<void>(`/campaigns/join`, {
+    await this.post<void>(`/campaigns/join`, {
       chain_id: chainId,
       address,
     });
-    return response;
   }
 }
