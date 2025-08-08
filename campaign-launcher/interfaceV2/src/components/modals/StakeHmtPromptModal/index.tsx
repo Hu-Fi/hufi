@@ -2,6 +2,7 @@ import { FC } from 'react';
 
 import { Box, Button, Typography } from '@mui/material';
 
+import { useStakeContext } from '../../../providers/StakeProvider';
 import BaseModal from '../BaseModal';
 
 type Props = {
@@ -15,14 +16,19 @@ const StakeHmtPromptModal: FC<Props> = ({
   onClose,
   handleOpenCreateCampaignModal,
 }) => {
+  const { refetchStakingData } = useStakeContext();
+
   const handleClickOnStakeHMT = () => {
     onClose();
     window.open(import.meta.env.VITE_APP_STAKING_DASHBOARD_URL, '_blank');
   };
 
-  const handleClickOnContinue = () => {
-    onClose();
-    handleOpenCreateCampaignModal();
+  const handleClickOnContinue = async () => {
+    const refreshedStakedAmount = await refetchStakingData();
+    if (+(refreshedStakedAmount ?? '0') > 0) {
+      onClose();
+      handleOpenCreateCampaignModal();
+    }
   };
 
   return (

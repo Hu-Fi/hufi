@@ -84,7 +84,14 @@ const validationSchema = yup.object({
       }
     ),
   start_date: yup.date().required('Required'),
-  daily_volume_target: yup.number().min(1).required('Required'),
+  daily_volume_target: yup
+    .number()
+    .transform((value, originalValue) => {
+      if (!originalValue) return undefined;
+      return value;
+    })
+    .min(1)
+    .required('Daily volume target is required'),
   end_date: yup
     .date()
     .required('Required')

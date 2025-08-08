@@ -1,6 +1,8 @@
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import { useTheme } from '@mui/material';
+import { ethers, formatUnits } from 'ethers';
 
+import dayjs from './dayjs';
 import {
   USDT_CONTRACT_ADDRESS,
   MAINNET_CHAIN_IDS,
@@ -56,12 +58,16 @@ export const getExplorerUrl = (chainId: ChainId, address: string): string => {
 };
 
 export const formatTokenAmount = (amount: string | number, decimals = 18): string | number => {
-  const formattedAmount = +amount / Math.pow(10, decimals);
-  
-  if (formattedAmount >= 1000) {
-    return Math.round(formattedAmount);
+  const bigIntAmount = BigInt(amount);
+  const amountString = formatUnits(bigIntAmount, decimals);
+  const amountNumber = Number(amountString);
+
+  if (!Number.isFinite(amountNumber)) return amountString;
+
+  if (amountNumber >= 1000) {
+    return Math.round(amountNumber);
   } else {
-    return parseFloat(formattedAmount.toFixed(4));
+    return parseFloat(amountNumber.toFixed(4));
   }
 };
 
@@ -115,6 +121,13 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
 };
 
 export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto) => {
+  const tokenDecimals = data.fund_token === 'hmt' ? 18 : 6;
+  
+  const fundAmount = ethers.parseUnits(
+    data.fund_amount.toString(),
+    tokenDecimals
+  );
+
   return {
     id: address,
     chain_id: chainId,
@@ -123,10 +136,10 @@ export const constructCampaignDetails = (chainId: ChainId, address: string, data
     trading_pair: data.pair,
     start_date: data.start_date,
     end_date: data.end_date,
-    fund_amount: data.fund_amount,
+    fund_amount: fundAmount,
     fund_token: '',
     fund_token_symbol: data.fund_token.toUpperCase(),
-    fund_token_decimals: 0,
+    fund_token_decimals: tokenDecimals,
     status: 'active',
     escrow_status: 'pending',
     launcher: address,
@@ -146,8 +159,10 @@ export const calculateManifestHash = async (manifest: string, algorithm: Algorit
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
-export const normalizeDateTime = (date: Date): string => {
-  const normalized = new Date(date);
-  normalized.setUTCHours(0, 0, 0, 0);
-  return normalized.toISOString();
-}
+export const normalizeDateTime = (date: Date, isStartDate: boolean = true): string => {
+  const pickedDate = dayjs(date);
+  const localDate = isStartDate
+    ? (pickedDate.isSame(dayjs(), 'day') ? dayjs() : pickedDate.startOf('day'))
+    : pickedDate.endOf('day');
+  return localDate.toISOString();
+};

@@ -44,8 +44,8 @@ const useCreateEscrow = () => {
         exchange: data.exchange,
         daily_volume_target: data.daily_volume_target,
         pair: data.pair,
-        start_date: normalizeDateTime(data.start_date),
-        end_date: normalizeDateTime(data.end_date),
+        start_date: normalizeDateTime(data.start_date, true),
+        end_date: normalizeDateTime(data.end_date, false),
       };
 
       const escrowAddress = await escrowClient.createEscrow(
