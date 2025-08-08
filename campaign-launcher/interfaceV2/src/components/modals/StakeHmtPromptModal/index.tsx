@@ -16,7 +16,7 @@ const StakeHmtPromptModal: FC<Props> = ({
   onClose,
   handleOpenCreateCampaignModal,
 }) => {
-  const { refetchStakingData } = useStakeContext();
+  const { refetchStakingData, isRefetching } = useStakeContext();
 
   const handleClickOnStakeHMT = () => {
     onClose();
@@ -24,6 +24,8 @@ const StakeHmtPromptModal: FC<Props> = ({
   };
 
   const handleClickOnContinue = async () => {
+    if (isRefetching) return;
+    
     const refreshedStakedAmount = await refetchStakingData();
     if (+(refreshedStakedAmount ?? '0') > 0) {
       onClose();
@@ -80,6 +82,7 @@ const StakeHmtPromptModal: FC<Props> = ({
             size="large"
             sx={{ color: 'primary.contrast' }}
             onClick={handleClickOnContinue}
+            disabled={isRefetching}
           >
             Continue
           </Button>

@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 
 import { useGetEnrolledExchanges, useGetJoinedCampaigns, useJoinCampaign } from '../../hooks/recording-oracle';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
@@ -41,11 +41,12 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
       <Button
         variant="contained"
         size="medium"
-        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast' }}
+        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast', minWidth: '135px' }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
       >
-        {isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign'}
+        {isJoinPending && <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />}
+        {!isJoinPending && (isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign')}
       </Button>
       <AddKeysPromptModal
         open={modalOpen}

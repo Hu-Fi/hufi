@@ -133,7 +133,7 @@ export const constructCampaignDetails = (chainId: ChainId, address: string, data
     trading_pair: data.pair,
     start_date: data.start_date,
     end_date: data.end_date,
-    fund_amount: fundAmount,
+    fund_amount: fundAmount.toString(),
     fund_token: '',
     fund_token_symbol: data.fund_token.toUpperCase(),
     fund_token_decimals: tokenDecimals,

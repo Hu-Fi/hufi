@@ -302,7 +302,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     <Controller
                       name="exchange"
                       control={control}
-                      render={({ field }) => <FormExchangeSelect<CampaignFormValues, 'exchange'> field={field} />}
+                      render={({ field }) => <FormExchangeSelect<CampaignFormValues, 'exchange'> field={field} disabled={isCreatingEscrow} />}
                     />
                     {errors.exchange && (
                       <FormHelperText>{errors.exchange.message}</FormHelperText>
@@ -321,7 +321,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                           options={tradingPairs || []}
                           slotProps={slotProps}
                           renderInput={(params) => (
-                            <TextField {...params} label="Trading Pair" />
+                            <TextField {...params} label="Trading Pair" disabled={isCreatingEscrow} />
                           )}
                           renderOption={(props, option) => {
                             return (
@@ -358,6 +358,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         closeOnSelect
                         disablePast
                         {...field}
+                        disabled={isCreatingEscrow}
                         value={dayjs(field.value)}
                       />
                     )}
@@ -377,6 +378,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         closeOnSelect
                         disablePast
                         {...field}
+                        disabled={isCreatingEscrow}
                         value={dayjs(field.value)}
                       />
                     )}
@@ -399,6 +401,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         label="Fund Token"
                         MenuProps={menuProps}
                         {...field}
+                        disabled={isCreatingEscrow}
                       >
                         {TOKENS.filter((token) =>
                           FUND_TOKENS.includes(token.name)
@@ -426,6 +429,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         error={!!errors.fund_amount}
                         type="number"
                         {...field}
+                        disabled={isCreatingEscrow}
                       />
                     )}
                   />
@@ -444,6 +448,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         type="number"
                         error={!!errors.daily_volume_target}
                         {...field}
+                        disabled={isCreatingEscrow}
                         slotProps={{
                           htmlInput: {
                             sx: {

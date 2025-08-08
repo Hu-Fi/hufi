@@ -9,6 +9,7 @@ import { formatTokenAmount, getSupportedChainIds } from '../utils';
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
   const [stakingClient, setStakingClient] = useState<StakingClient | null>(null);
+  const [isRefetching, setIsRefetching] = useState(false);
   const { address, connector, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
   const appChainId = useChainId();
@@ -63,14 +64,16 @@ export const useStake = () => {
       setStakingData(stakingInfo);
       return stakingInfo;
     } catch (error) {
-      console.error('Error fetching staking data ', error);
+      console.error('Error fetching staking data', error);
       return null;
     }
   };
 
   const refetchStakingData = async () => {
     if (stakingClient && address) {
+      setIsRefetching(true);
       const info = await fetchStakingData(stakingClient);
+      setIsRefetching(false);
       return formatTokenAmount(Number(info?.stakedAmount) || 0);
     }
     return 0;
@@ -78,6 +81,7 @@ export const useStake = () => {
 
   return {
     stakedAmount: formatTokenAmount(Number(stakingData?.stakedAmount) || 0),
-    refetchStakingData
+    refetchStakingData,
+    isRefetching,
   };
 };
