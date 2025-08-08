@@ -63,10 +63,7 @@ const validationSchema = yup.object({
   fund_token: yup.string().required('Required'),
   fund_amount: yup
     .number()
-    .transform((value, originalValue) => {
-      if (!originalValue) return undefined;
-      return value;
-    })
+    .typeError('Fund amount is required')
     .required('Fund amount is required')
     .test(
       'min-amount',
@@ -86,11 +83,8 @@ const validationSchema = yup.object({
   start_date: yup.date().required('Required'),
   daily_volume_target: yup
     .number()
-    .transform((value, originalValue) => {
-      if (!originalValue) return undefined;
-      return value;
-    })
-    .min(1)
+    .typeError('Daily volume target is required')
+    .min(1, 'Daily volume target must be greater than or equal to 1')
     .required('Daily volume target is required'),
   end_date: yup
     .date()
