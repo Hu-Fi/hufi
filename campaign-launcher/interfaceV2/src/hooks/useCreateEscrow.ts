@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { EscrowClient } from '@human-protocol/sdk';
+import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 import { useChainId } from 'wagmi';
@@ -9,7 +10,15 @@ import useClientToSigner from './useClientToSigner';
 import ERC20ABI from '../abi/ERC20.json';
 import { oracles } from '../constants';
 import { EscrowCreateDto, ManifestUploadDto } from '../types';
-import { calculateManifestHash, getTokenAddress, normalizeDateTime } from '../utils';
+import { calculateManifestHash, getTokenAddress } from '../utils';
+
+const transformManifestTime = (date: Date, isStartDate: boolean = true): string => {
+  const pickedDate = dayjs(date);
+  const localDate = isStartDate
+    ? (pickedDate.isSame(dayjs(), 'day') ? pickedDate : pickedDate.startOf('day'))
+    : pickedDate.endOf('day');
+  return localDate.toISOString();
+}
 
 const useCreateEscrow = () => {
   const [escrowAddress, setEscrowAddress] = useState('');
@@ -44,8 +53,8 @@ const useCreateEscrow = () => {
         exchange: data.exchange,
         daily_volume_target: data.daily_volume_target,
         pair: data.pair,
-        start_date: normalizeDateTime(data.start_date, true),
-        end_date: normalizeDateTime(data.end_date, false),
+        start_date: transformManifestTime(data.start_date, true),
+        end_date: transformManifestTime(data.end_date, false),
       };
 
       const escrowAddress = await escrowClient.createEscrow(

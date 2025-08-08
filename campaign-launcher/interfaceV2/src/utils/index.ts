@@ -2,7 +2,6 @@ import { ChainId, NETWORKS } from '@human-protocol/sdk';
 import { useTheme } from '@mui/material';
 import { ethers, formatUnits } from 'ethers';
 
-import dayjs from './dayjs';
 import {
   USDT_CONTRACT_ADDRESS,
   MAINNET_CHAIN_IDS,
@@ -157,12 +156,4 @@ export const calculateManifestHash = async (manifest: string, algorithm: Algorit
   const hashBuffer = await crypto.subtle.digest(algorithm, data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
-export const normalizeDateTime = (date: Date, isStartDate: boolean = true): string => {
-  const pickedDate = dayjs(date);
-  const localDate = isStartDate
-    ? (pickedDate.isSame(dayjs(), 'day') ? dayjs() : pickedDate.startOf('day'))
-    : pickedDate.endOf('day');
-  return localDate.toISOString();
 };
