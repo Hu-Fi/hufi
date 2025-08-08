@@ -2,9 +2,10 @@ import { FC, useState } from 'react';
 
 import { Button, List, ListItemButton, Popover, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useDisconnect } from 'wagmi';
 
 import { AvatarIcon, ArrowDownIcon, PowerIcon, ApiKeyIcon } from '../../icons';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { formatAddress } from '../../utils';
 
@@ -30,12 +31,12 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const { address } = useAccount();
+  const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
   const { logout } = useWeb3Auth();
   const navigate = useNavigate();
 
-  const formattedAddress = formatAddress(address);
+  const formattedAddress = formatAddress(activeAddress);
 
   const handleClosePopover = () => setAnchorEl(null);
 

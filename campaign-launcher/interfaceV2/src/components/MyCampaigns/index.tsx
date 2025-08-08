@@ -2,10 +2,11 @@ import { FC } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useChainId } from 'wagmi';
+import { useChainId } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useMyCampaigns } from '../../hooks/useCampaigns';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import CampaignsTable from '../CampaignsTable';
 import LaunchCampaign from '../LaunchCampaign';
 
@@ -18,7 +19,7 @@ const MyCampaigns: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
 }) => {
-  const { address } = useAccount();
+  const { activeAddress } = useActiveAccount();
   const navigate = useNavigate();
   const isXl = useIsXlDesktop();
   const chain_id = useChainId();
@@ -26,7 +27,7 @@ const MyCampaigns: FC<Props> = ({
   const { data, isLoading } = useMyCampaigns(
     {
       chain_id,
-      launcher: address,
+      launcher: activeAddress,
     }
   );
 

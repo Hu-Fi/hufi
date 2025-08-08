@@ -13,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 import JoinedCampaignsPage from './pages/JoinedCampaigns';
 import ManageApiKeysPage from './pages/ManageApiKeys';
 import MyCampaignsPage from './pages/MyCampaigns';
+import ActiveAccountProvider from './providers/ActiveAccountProvider';
 import ExchangesProvider from './providers/ExchangesProvider';
 import QueryClientProvider from './providers/QueryClientProvider';
 import StakeProvider from './providers/StakeProvider';
@@ -24,7 +25,8 @@ const App: FC = () => {
   return (
     <WagmiProvider>
       <QueryClientProvider>
-        <Web3AuthProvider>
+        <ActiveAccountProvider>
+          <Web3AuthProvider>
           <ExchangesProvider>
             <StakeProvider>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -64,7 +66,8 @@ const App: FC = () => {
               </LocalizationProvider>
             </StakeProvider>
           </ExchangesProvider>
-        </Web3AuthProvider>
+          </Web3AuthProvider>
+        </ActiveAccountProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

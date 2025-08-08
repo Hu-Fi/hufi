@@ -4,20 +4,22 @@ import { StakerInfo, StakingClient } from '@human-protocol/sdk';
 import { Eip1193Provider, ethers } from 'ethers';
 import { useAccount, useChainId, useWalletClient } from 'wagmi';
 
+import { useActiveAccount } from '../providers/ActiveAccountProvider';
 import { formatTokenAmount, getSupportedChainIds } from '../utils';
 
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
   const [stakingClient, setStakingClient] = useState<StakingClient | null>(null);
   const [isRefetching, setIsRefetching] = useState(false);
-  const { address, connector, chainId } = useAccount();
+  const { connector, chainId } = useAccount();
+  const { activeAddress } = useActiveAccount();
   const { data: walletClient } = useWalletClient();
   const appChainId = useChainId();
 
   useEffect(() => {
     const initStakingClient = async () => {
       try {
-        if (walletClient && address && connector) {
+        if (walletClient && activeAddress && connector) {
           checkSupportedChain();
           const eeip193Provider = await connector?.getProvider();
           const provider = new ethers.BrowserProvider(
@@ -34,13 +36,13 @@ export const useStake = () => {
     };
 
     initStakingClient();
-  }, [walletClient, address, chainId, connector, appChainId]);
+  }, [walletClient, activeAddress, chainId, connector, appChainId]);
 
   useEffect(() => {
-    if (stakingClient && address) {
+    if (stakingClient && activeAddress) {
       fetchStakingData(stakingClient);
     }
-  }, [stakingClient, address]);
+  }, [stakingClient, activeAddress]);
 
   const checkSupportedChain = () => {
     const isSupportedChain = getSupportedChainIds().includes(appChainId);
@@ -60,7 +62,7 @@ export const useStake = () => {
   const fetchStakingData = async (stakingClient: StakingClient) => {
     checkSupportedChain();
     try {
-      const stakingInfo = await stakingClient.getStakerInfo(address!);
+      const stakingInfo = await stakingClient.getStakerInfo(activeAddress!);
       setStakingData(stakingInfo);
       return stakingInfo;
     } catch (error) {
@@ -70,7 +72,7 @@ export const useStake = () => {
   };
 
   const refetchStakingData = async () => {
-    if (stakingClient && address) {
+    if (stakingClient && activeAddress) {
       setIsRefetching(true);
       const info = await fetchStakingData(stakingClient);
       setIsRefetching(false);

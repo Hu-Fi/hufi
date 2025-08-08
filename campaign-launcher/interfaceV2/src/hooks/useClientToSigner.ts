@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 
 import { ChainId, NETWORKS } from '@human-protocol/sdk';
-import { Config, useAccount, useConnectorClient } from 'wagmi';
+import { Config, useChainId, useConnectorClient } from 'wagmi';
 
 import { clientToSigner } from '../utils/wagmiEthers';
 
 const useClientToSigner = () => {
-  const { chainId } = useAccount();
+  const chainId = useChainId();
   const { data: client } = useConnectorClient<Config>();
 
   return useMemo(() => {

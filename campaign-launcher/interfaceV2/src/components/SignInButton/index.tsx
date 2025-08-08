@@ -2,11 +2,12 @@ import { FC, useEffect, useRef, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { useAccount, useConnect } from 'wagmi';
+import { Connector, useAccount, useConnect } from 'wagmi';
 
 import coinbaseSvg from '../../assets/coinbase.svg';
 import metaMaskSvg from '../../assets/metamask.svg';
 import walletConnectSvg from '../../assets/walletconnect.svg';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 
 const WALLET_ICONS: Record<string, string> = {
@@ -18,15 +19,39 @@ const WALLET_ICONS: Record<string, string> = {
 const SignInButton: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const isAuthorizing = useRef(false);
+  const isConnectingWallet = useRef(false);
 
-  const { connect, connectors } = useConnect();
-  const { isConnected } = useAccount();
+  const { connectAsync, connectors } = useConnect();
+  const { isConnected, address } = useAccount();
   const { signIn, isLoading } = useWeb3Auth();
+  const { activeAddress, setActiveAddress } = useActiveAccount();
+
+  const handleConnect = async (connector: Connector) => {
+    isAuthorizing.current = true;
+    isConnectingWallet.current = true;
+    try {
+      await connectAsync({ connector });
+    } catch (e) {
+      const err = e as { message?: string; code?: number | string };
+      const message = (err?.message ?? '').toLowerCase();
+      const code = err?.code;
+      const isUserAborted =
+        code === 4001 || message.includes('user rejected') ||
+        message.includes('user denied') || message.includes('modal closed') ||
+        message.includes('request reset') || message.includes('action rejected');
+      if (isUserAborted) {
+        isAuthorizing.current = false;
+        isConnectingWallet.current = false;
+      }
+    } finally {
+      onClose();
+    }
+  };
 
   const onSignInButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isLoading) return;
 
-    if (isConnected) {
+    if (isConnected && activeAddress) {
       signIn();
     } else {
       setAnchorEl(e.currentTarget);
@@ -34,12 +59,19 @@ const SignInButton: FC = () => {
   };
 
   useEffect(() => {
-    if (isConnected && isAuthorizing.current) {
+    if (address && isConnectingWallet.current) {
+      setActiveAddress(address);
+      isConnectingWallet.current = false;
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (isConnected && isAuthorizing.current && activeAddress) {
       signIn().finally(() => {
         isAuthorizing.current = false;
       });
     }
-  }, [isConnected]);
+  }, [isConnected, activeAddress]);
 
   const onClose = () => setAnchorEl(null);
 
@@ -100,11 +132,7 @@ const SignInButton: FC = () => {
                 color: 'text.primary',
                 borderRadius: '4px',
               }}
-              onClick={() => {
-                isAuthorizing.current = true;
-                connect({ connector });
-                onClose();
-              }}
+              onClick={() => handleConnect(connector)}
             >
               <img
                 src={connector.icon ?? WALLET_ICONS[connector.id]}
