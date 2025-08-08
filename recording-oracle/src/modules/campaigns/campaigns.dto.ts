@@ -3,6 +3,7 @@ import { Transform } from 'class-transformer';
 import {
   IsEnum,
   IsEthereumAddress,
+  IsIn,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -18,7 +19,7 @@ import { ReturnedCampaignStatus } from './types';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
-  @IsEnum(ChainIds)
+  @IsIn(ChainIds)
   chainId: ChainId;
 
   @ApiProperty()

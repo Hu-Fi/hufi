@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
-  IsEnum,
+  IsIn,
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
@@ -42,7 +42,7 @@ export class ExchangeNameValidator implements ValidatorConstraintInterface {
  */
 export function IsChainId() {
   return applyDecorators(
-    IsEnum(ChainIds),
+    IsIn(ChainIds),
     Transform(({ value }) => Number(value)),
   );
 }
