@@ -2,12 +2,8 @@ import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useChainId } from 'wagmi';
 
-import { api, launcherApi } from '../api';
-import { CampaignDataDto } from '../api/client';
+import { launcherApi } from '../api';
 import { QUERY_KEYS } from '../constants/queryKeys';
-import { CampaignsStats } from '../types';
-
-export type Campaign = CampaignDataDto;
 
 type CampaignsParams = {
   chain_id: ChainId;
@@ -69,16 +65,5 @@ export const useCampaignDetails = (address: string) => {
     queryFn: () => launcherApi.getCampaignDetails(chainId, address),
     enabled: !!chainId && !!address,
     retry: false,
-  });
-};
-
-export const useCampaignsStats = (chainId: ChainId) => {
-  return useQuery({
-    queryKey: ['campaignsStats', chainId],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaignsStats({ chainId })
-        .then((res) => (res.data as unknown) as CampaignsStats),
-    enabled: false, // TODO: remove this
   });
 };
