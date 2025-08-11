@@ -41,7 +41,6 @@ export class CampaignsController {
     const campaigns = await this.campaignsService.getCampaigns(
       chainId,
       {
-        exchangeName: query.exchangeName,
         launcherAddress: query.launcher,
         status: query.status,
       },

@@ -49,7 +49,6 @@ export class CampaignsService {
   async getCampaigns(
     chainId: ChainId,
     filters?: Partial<{
-      exchangeName: string;
       launcherAddress: string;
       status: CampaignStatus;
     }>,
