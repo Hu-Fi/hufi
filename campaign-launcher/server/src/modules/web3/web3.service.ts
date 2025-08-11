@@ -156,7 +156,9 @@ export class Web3Service {
   }
 
   async getTokenPriceUsd(symbol: string): Promise<number | null> {
-    const cacheKey = `get-token-price-usd-${symbol}`;
+    const uppercasedSymbol = symbol.toUpperCase();
+    const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
+
     try {
       let tokenPriceUsd = tokenPriceCache.get(cacheKey);
 
@@ -168,7 +170,7 @@ export class Web3Service {
            * Seems that Alchemy API is not case-sensitive to symbol,
            * but always use upper just in case.
            */
-          symbol.toUpperCase(),
+          uppercasedSymbol,
         ]);
 
         const priceUsd =
@@ -177,6 +179,8 @@ export class Web3Service {
 
         if (priceUsd) {
           tokenPriceUsd = Number(priceUsd);
+        } else if (uppercasedSymbol === 'HMT') {
+          tokenPriceUsd = await this.getHmtPrice();
         } else {
           this.logger.warn('Token price in USD is not available', {
             symbol,
@@ -197,5 +201,21 @@ export class Web3Service {
 
       throw new Error('Failed to get token price');
     }
+  }
+
+  private async getHmtPrice(): Promise<number> {
+    const response = await fetch(
+      'https://api.coinlore.net/api/ticker/?id=53887',
+    );
+    const data: Array<{
+      price_usd: string;
+    }> = await response.json();
+
+    const value = data[0]?.price_usd;
+    if (!value) {
+      throw new Error('HMT price is missing on CoinLore');
+    }
+
+    return Number(value);
   }
 }
