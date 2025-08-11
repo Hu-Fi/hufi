@@ -1,16 +1,8 @@
 import { ChainId } from '@human-protocol/sdk';
-import axios, { 
-  AxiosError, 
-  AxiosInstance, 
-  AxiosRequestConfig, 
-  AxiosRequestHeaders, 
-  AxiosResponse, 
-  InternalAxiosRequestConfig, 
-  Method
-} from 'axios';
+import axios, { AxiosError, AxiosRequestHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 import { ExchangeApiKeyData, CampaignsResponse } from '../types';
-import { HttpError } from '../utils/HttpError';
+import { HttpClient, HttpError } from '../utils/HttpClient';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
 type RefreshPromise = Promise<AxiosResponse<TokenData>>;
@@ -23,19 +15,12 @@ type RecordingApiClientConfig = {
 
 export const REFRESH_FAILURE_EVENT = 'refresh-failure';
 
-export class RecordingApiClient {
-  private readonly axiosInstance: AxiosInstance;
+export class RecordingApiClient extends HttpClient {
   private readonly tokenManager: TokenManager;
   private refreshPromise: RefreshPromise | null = null;
   
   constructor(config: RecordingApiClientConfig) {
-    this.axiosInstance = axios.create({
-      baseURL: config.baseUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        ...config.headers,
-      },
-    });
+    super({ baseUrl: config.baseUrl });
     this.tokenManager = config.tokenManager;
 
     this.setupInterceptors();
@@ -104,44 +89,6 @@ export class RecordingApiClient {
     } finally {
       this.refreshPromise = null;
     }
-  }
-
-  private async request<T = unknown>(method: Method, url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response = await this.axiosInstance.request<T>({
-        method,
-        url,
-        data,
-        ...config,
-      });
-      return response.data;
-    } catch(e) {
-      if (e instanceof AxiosError) {
-        throw HttpError.fromAxiosError(e);
-      }
-      console.error('Failed to make request', e);
-      throw e;
-    }
-  }
-
-  async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('GET', url, undefined, config);
-  }
-
-  async post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('POST', url, data, config);
-  }
-
-  async put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('PUT', url, data, config);
-  }
-
-  async patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('PATCH', url, data, config);
-  }
-
-  async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('DELETE', url, undefined, config);
   }
 
   async getNonce(address: `0x${string}` | undefined): Promise<string> {
