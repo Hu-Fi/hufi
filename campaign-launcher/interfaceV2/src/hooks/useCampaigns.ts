@@ -20,7 +20,7 @@ const filterParams = (params: CampaignsParams) => {
   );
 };
 
-export const useCampaigns = (params: CampaignsParams) => {
+export const useCampaigns = (params: CampaignsParams, enabled?: boolean) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
@@ -35,11 +35,11 @@ export const useCampaigns = (params: CampaignsParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id,
+    enabled: !!chain_id && (enabled ?? true),
   });
 };
 
-export const useMyCampaigns = (params: CampaignsParams) => {
+export const useMyCampaigns = (params: CampaignsParams, enabled?: boolean) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
@@ -54,7 +54,7 @@ export const useMyCampaigns = (params: CampaignsParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id && !!launcher,
+    enabled: !!chain_id && !!launcher && (enabled ?? true),
   });
 };
 

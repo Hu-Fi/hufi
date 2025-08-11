@@ -5,6 +5,12 @@ export enum ExchangeType {
   DEX = 'dex',
 }
 
+export enum CampaignsView {
+  ALL = 'all',
+  JOINED = 'joined',
+  MY = 'my',
+}
+
 export type TokenData = {
   name: string;
   label?: string;

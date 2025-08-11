@@ -10,7 +10,6 @@ import { useExchangesContext } from '../../providers/ExchangesProvider';
 import CampaignsTable from '../CampaignsTable';
 import ExchangeSelect from '../ExchangeSelect';
 import LaunchCampaign from '../LaunchCampaign';
-import StatusSelect from '../StatusSelect';
 
 type Props = {
   showPagination?: boolean;
@@ -21,7 +20,6 @@ const AllCampaigns: FC<Props> = ({
   showPagination = false,
   showAllCampaigns = true,
 }) => {
-  const [status, setStatus] = useState('');
   const [exchange, setExchange] = useState('');
   const { exchanges } = useExchangesContext();
   const chainId = useChainId();
@@ -38,10 +36,6 @@ const AllCampaigns: FC<Props> = ({
 
   const isCampaignsExist = data?.results && data.results.length > 0;
 
-  const handleStatusChange = (value: string) => {
-    setStatus(value);
-  };
-
   const handleExchangeChange = (value: string) => {
     setExchange(value);
   };
@@ -56,7 +50,6 @@ const AllCampaigns: FC<Props> = ({
         <Typography component="h3" variant={isXl ? 'h5' : 'h6'} color="text.primary" order={{ xs: 1, md: 1 }}>
           All Campaigns
         </Typography>
-        <StatusSelect onChange={handleStatusChange} />
         <ExchangeSelect data={exchanges} onChange={handleExchangeChange} />
         <LaunchCampaign variant="contained" sx={{ ml: { xs: 0, md:'auto' }, order: { xs: 2, md: 4 } }} />
       </Box>

@@ -6,7 +6,7 @@ import { recordingApi } from '../../api';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 
-export const useGetJoinedCampaigns = () => {
+export const useGetJoinedCampaigns = (enabled?: boolean) => {
   const { isConnected } = useAccount();
   const { isAuthenticated } = useWeb3Auth();
 
@@ -20,7 +20,7 @@ export const useGetJoinedCampaigns = () => {
         id: campaign.address,
       })),
     }),
-    enabled: isAuthenticated && isConnected,
+    enabled: isAuthenticated && isConnected && (enabled ?? true),
   });
 };
 
