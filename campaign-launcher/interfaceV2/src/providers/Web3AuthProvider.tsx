@@ -10,6 +10,7 @@ import {
 import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '../api';
+import { useActiveAccount } from './ActiveAccountProvider';
 import { REFRESH_FAILURE_EVENT } from '../api/recordingApiClient';
 import { tokenManager } from '../utils/TokenManager';
 
@@ -28,16 +29,17 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { signMessageAsync } = useSignMessage();
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
+  const { activeAddress, clearActiveAddress } = useActiveAccount();
 
   const signIn = async () => {
     setIsLoading(true);
     try {
-      const nonce = await recordingApi.getNonce(address);
+      const nonce = await recordingApi.getNonce(activeAddress);
       const signature = await signMessageAsync({
         message: JSON.stringify(nonce),
       });
-      const authResponse = await recordingApi.auth(address, signature);
+      const authResponse = await recordingApi.auth(activeAddress, signature);
 
       tokenManager.setTokens({
         access_token: authResponse.access_token,
@@ -87,6 +89,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } finally {
       tokenManager.clearTokens();
       setIsAuthenticated(false);
+      clearActiveAddress();
       setIsLoading(false);
     }
   };

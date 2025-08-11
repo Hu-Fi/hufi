@@ -1,8 +1,10 @@
+import { ChainId } from "@human-protocol/sdk";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Method } from "axios";
 
+import { CampaignDetails, CampaignsResponse, Exchange } from "../types";
 import { HttpError } from "../utils/HttpError";
 
-export class MockedLauncherClient  {
+export class LauncherApiClient  {
   private readonly axiosInstance: AxiosInstance;
 
   constructor({ baseUrl }: { baseUrl: string }) {
@@ -50,6 +52,32 @@ export class MockedLauncherClient  {
 
   async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.request<T>('DELETE', url, undefined, config);
+  }
+
+  async getTradingPairs(exchangeName: string): Promise<string[]> {
+    return this.get<string[]>(`/exchanges/${exchangeName}/trading-pairs`);
+  }
+
+  async getExchanges(): Promise<Exchange[]> {
+    const response = await this.get<Exchange[]>('/exchanges');
+    return response;
+  }
+
+  async getCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns', { params });
+    return response;
+  }
+
+  async getCampaignDetails(chainId: ChainId, address: string): Promise<CampaignDetails | null> {
+    try {
+      const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
+      return response;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   }
 }
 

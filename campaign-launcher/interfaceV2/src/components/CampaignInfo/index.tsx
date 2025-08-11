@@ -1,13 +1,15 @@
 import { FC } from 'react';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
-import { CampaignDataDto } from '../../api/client';
 import { CalendarIcon } from '../../icons';
+import { CampaignDetails } from '../../types';
+import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
+import ExplorerLink from '../ExplorerLink';
 import JoinCampaign from '../JoinCampaign';
 
-const formatDate = (block: number): string => {
-  const date = new Date(block * 1000);
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
   const day = date.getDate();
   const month = date.toLocaleString('en-US', { month: 'short' });
   const year = date.getFullYear();
@@ -15,52 +17,47 @@ const formatDate = (block: number): string => {
 };
 
 type Props = {
-  campaign: CampaignDataDto | undefined;
-  isCampaignLoading: boolean;
+  campaign: CampaignDetails;
 };
 
-const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
-  const isActiveCampaign =
-    campaign?.status === 'Pending' || campaign?.status === 'Partial';
-
-  if (!campaign) {
-    return null;
-  }
-
-  if (isCampaignLoading) {
-    return <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />;
-  }
-
+const CampaignInfo: FC<Props> = ({ campaign }) => {
   return (
     <>
       <Box
         display="flex"
         alignItems="center"
         justifyContent="center"
-        width="185px"
-        py={1}
-        ml={{ xs: 0, md: 2 }}
+        py={0.5}
+        px="10px"
+        mx={{ xs: 0, md: 2 }}
         color="primary.contrast"
-        bgcolor={isActiveCampaign ? 'success.main' : 'error.main'}
-        fontSize="15px"
+        bgcolor={mapStatusToColor(campaign.status, campaign.start_date, campaign.end_date)}
+        fontSize="13px"
         fontWeight={600}
         borderRadius="4px"
+        textTransform="capitalize"
       >
-        {isActiveCampaign ? 'Active' : campaign?.status}
+        {campaign.status}
       </Box>
+      <ExplorerLink address={campaign.address} chainId={campaign.chain_id} />
       <Box display="flex" alignItems="center" gap={1} ml={{ xs: 0, md: 2 }}>
-        {campaign?.startBlock && campaign?.endBlock && (
+        {campaign?.start_date && campaign?.end_date && (
           <>
             <CalendarIcon />
             <Typography variant="subtitle2" color="text.primary">
-              {`${formatDate(campaign.startBlock)} - ${formatDate(
-                campaign.endBlock
+              {`${formatDate(campaign.start_date)} - ${formatDate(
+                campaign.end_date
               )}`}
             </Typography>
           </>
         )}
       </Box>
-      <JoinCampaign campaign={campaign}  />
+      <Tooltip title={getNetworkName(campaign.chain_id) || "Unknown Network"}>
+        <Box display="flex" ml={2} sx={{ cursor: 'pointer' }}>
+          {getChainIcon(campaign.chain_id)}
+        </Box>
+      </Tooltip>
+      <JoinCampaign campaign={campaign} />
     </>
   );
 };

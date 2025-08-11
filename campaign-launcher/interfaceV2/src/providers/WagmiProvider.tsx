@@ -19,6 +19,7 @@ declare module 'wagmi' {
 }
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
+const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 
 export const config = createConfig({
   chains: [
@@ -36,6 +37,7 @@ export const config = createConfig({
     walletConnect({ projectId }),
     coinbaseWallet({ appName: 'HuFi' }),
   ],
+  syncConnectedChain: false,
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
@@ -47,7 +49,18 @@ export const config = createConfig({
 });
 
 const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
-  return <WWagmiProvider config={config}>{children}</WWagmiProvider>;
+  const initialState = {
+    chainId: isMainnet ? ChainId.POLYGON : ChainId.POLYGON_AMOY,
+    connections: new Map(),
+    current: null,
+    status: 'disconnected' as const,
+  };
+
+  return (
+    <WWagmiProvider config={config} initialState={initialState}>
+      {children}
+    </WWagmiProvider>
+  );
 };
 
 export default WagmiProvider;

@@ -38,7 +38,7 @@ type Props = {
     date: string;
     totalAmountPaid: string;
   }[];
-  endDate: number;
+  endDate: string;
   tokenSymbol: string;
 };
 
@@ -48,11 +48,10 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
   useEffect(() => {
-    const today = new Date();
-    const endDateObj = new Date(endDate * 1000); 
-    const lastPayoutDate = data.length > 0 ? new Date(data[0].date) : endDateObj;
+    const today = new Date().toISOString(); 
+    const lastPayoutDate = data.length > 0 ? new Date(data[0].date) : endDate;
     
-    const chartStartDate = today > endDateObj ? lastPayoutDate : today;
+    const chartStartDate = today > endDate ? lastPayoutDate : today;
     
     const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(chartStartDate);

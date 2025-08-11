@@ -72,7 +72,7 @@ const Header: FC = () => {
               <Button
                 variant="text"
                 size="medium"
-                sx={{ color: 'primary.main', fontWeight: 600, height: '100%' }}
+                sx={{ color: 'primary.main', height: '100%' }}
               >
                 Stake HMT
               </Button>
@@ -145,7 +145,7 @@ const Header: FC = () => {
                 <Button
                   variant="text"
                   size="medium"
-                  sx={{ color: 'primary.main', fontWeight: 600, height: '100%' }}
+                  sx={{ color: 'primary.main', height: '100%' }}
                 >
                   Stake HMT
                 </Button>

@@ -13,7 +13,7 @@ const ModalSuccess: FC<PropsWithChildren> = ({ children }) => {
         alignItems="center"
         mb={1}
         p="3px"
-        color="background.default"
+        color="white"
         bgcolor="success.main"
         borderRadius={100}
       >

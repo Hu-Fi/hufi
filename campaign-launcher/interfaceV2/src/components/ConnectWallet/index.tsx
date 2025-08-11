@@ -26,7 +26,7 @@ const ConnectWallet: FC = () => {
       <Button
         variant="contained"
         size="large"
-        sx={{ color: 'primary.contrast', fontWeight: 600 }}
+        sx={{ color: 'primary.contrast' }}
         onClick={(event) => setAnchorEl(event.currentTarget)}
       >
         Connect Wallet
