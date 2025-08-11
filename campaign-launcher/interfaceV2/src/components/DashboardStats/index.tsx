@@ -1,11 +1,8 @@
 import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { useChainId } from 'wagmi';
 
-import { useCampaignsStats } from '../../hooks/useCampaigns';
 import useGetLiquidityScore from '../../hooks/useGetLiquidityScore';
 
 const StatsCard = styled(Box)(({ theme }) => ({
@@ -32,8 +29,6 @@ const Value = styled(Typography)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
-  const chainId = useChainId()
-  const { data: campaignsStats } = useCampaignsStats((chainId || ChainId.ALL));
   const { data: liquidityScore } = useGetLiquidityScore();
 
   return (
@@ -42,7 +37,7 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
-            <Value>${campaignsStats?.totalFundsUSD || 0}</Value>
+            <Value>$0</Value>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -54,7 +49,7 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Number of Active Campaigns</Typography>
-            <Value>{campaignsStats?.totalCampaigns || 0}</Value>
+            <Value>0</Value>
           </StatsCard>
         </Grid>
       </Grid>
