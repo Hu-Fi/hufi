@@ -1,8 +1,7 @@
 import { ChainId } from "@human-protocol/sdk";
-import { AxiosError } from "axios";
 
 import { CampaignDetails, CampaignsResponse, Exchange } from "../types";
-import { HttpClient } from "../utils/HttpClient";
+import { HttpClient, HttpError } from "../utils/HttpClient";
 
 export class LauncherApiClient extends HttpClient {
   constructor({ baseUrl }: { baseUrl: string }) {
@@ -28,7 +27,7 @@ export class LauncherApiClient extends HttpClient {
       const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
       return response;
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 404) {
+      if (error instanceof HttpError && error.status === 404) {
         return null;
       }
       throw error;
