@@ -9,6 +9,8 @@ const InfoTooltipInner = forwardRef((props, ref) => {
       display="flex" 
       justifyContent="center" 
       alignItems="center" 
+      width={32}
+      height={32}
       py={0.5} 
       px={1.5}
       borderRadius="100%"

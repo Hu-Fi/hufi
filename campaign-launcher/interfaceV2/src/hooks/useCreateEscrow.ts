@@ -40,6 +40,8 @@ const useCreateEscrow = () => {
 
     clearError();
     setIsLoading(true);
+    setStepsCompleted(0);
+    setEscrowAddress('');
 
     try {
       const escrowClient = await EscrowClient.build(signer);
@@ -91,6 +93,7 @@ const useCreateEscrow = () => {
     } catch (e) {
       console.error(e);
       setIsError(true);
+      setStepsCompleted(0);
     } finally {
       setIsLoading(false);
     }

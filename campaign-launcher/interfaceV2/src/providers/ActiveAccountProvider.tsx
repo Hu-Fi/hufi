@@ -21,12 +21,14 @@ const ActiveAccountContext = createContext<ActiveAccountContextType | undefined>
   undefined
 );
 
+const PERSISTED_ADDRESS_KEY = 'activeAddress';
+
 const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<`0x${string}` | undefined>(undefined);
   const { isConnected } = useAccount();
 
   useEffect(() => {
-    const persistedAddress = localStorage.getItem('activeAddress') as `0x${string}` | null;
+    const persistedAddress = localStorage.getItem(PERSISTED_ADDRESS_KEY) as `0x${string}` | null;
     if (isConnected && !activeAddress && persistedAddress) {
       setActiveAddressState(persistedAddress);
     }
@@ -34,11 +36,12 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const setActiveAddress = useCallback((address: `0x${string}`) => {
     setActiveAddressState(address);
-    localStorage.setItem('activeAddress', address);
+    localStorage.setItem(PERSISTED_ADDRESS_KEY, address);
   }, []);
 
   const clearActiveAddress = useCallback(() => {
     setActiveAddressState(undefined);
+    localStorage.removeItem(PERSISTED_ADDRESS_KEY);
   }, []);
 
   const value = useMemo(

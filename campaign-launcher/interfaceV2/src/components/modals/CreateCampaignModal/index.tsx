@@ -150,7 +150,6 @@ const InfoTooltip = () => {
 };
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
-  const [activeStep, setActiveStep] = useState(0);
   const [showFinalView, setShowFinalView] = useState(false);
   const { isConnected } = useAccount();
   const navigate = useNavigate();
@@ -170,7 +169,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   useEffect(() => {
     if (isCampaignCreated) {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, QUERY_KEYS.MY_CAMPAIGNS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MY_CAMPAIGNS] });
     }
   }, [isCampaignCreated]);
 
@@ -201,11 +201,6 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const submitForm = async (data: CampaignFormValues) => {
     await createEscrow(data);
   };
-
-  const handleTryAgain = () => {
-    clearError();
-    setActiveStep(0);
-  }
 
   const handleClose = () => {
     reset();
@@ -265,7 +260,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
             size="large"
             variant="contained"
             sx={{ mt: 4, mx: 'auto' }}
-            onClick={handleTryAgain}
+            onClick={clearError}
           >
             Try again
           </Button>
@@ -277,10 +272,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
             <Typography variant="h4" color="text.primary" mb={4}>
               Create Campaign
             </Typography>
-            <Stepper activeStep={activeStep} sx={{ mb: 4, width: '100%' }}>
+            <Stepper activeStep={stepsCompleted} sx={{ mb: 4, width: '100%' }}>
               {steps.map((step, idx) => {
                 const stepProps: { completed?: boolean } = {};
-                const isAllCompleted = stepsCompleted === 4 && idx === 3;
                 if (idx < stepsCompleted) {
                   stepProps.completed = true;
                 }
@@ -302,13 +296,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                           },
                         },
                       }}
-                      sx={{
-                        '& .MuiStepLabel-label': {
-                          color: isAllCompleted ? 'success.main' : 'inherit',
-                        },
-                      }}
                     >
-                      {isAllCompleted ? 'Completed' : step}
+                      {step}
                     </StepLabel>
                   </Step>
                 );
