@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { ChainId } from '@human-protocol/sdk';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { useAccount } from 'wagmi';
+import { useChainId } from 'wagmi';
 
 import { useCampaignsStats } from '../../hooks/useCampaigns';
 import useGetLiquidityScore from '../../hooks/useGetLiquidityScore';
@@ -32,8 +32,8 @@ const Value = styled(Typography)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
-  const { chain } = useAccount();
-  const { data: campaignsStats } = useCampaignsStats((chain?.id || ChainId.ALL) as ChainId);
+  const chainId = useChainId()
+  const { data: campaignsStats } = useCampaignsStats((chainId || ChainId.ALL));
   const { data: liquidityScore } = useGetLiquidityScore();
 
   return (

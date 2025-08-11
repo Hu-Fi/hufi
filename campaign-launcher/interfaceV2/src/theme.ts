@@ -16,14 +16,17 @@ declare module '@mui/material/styles' {
   }
   interface PaletteColor {
     violet?: string;
+    contrast?: string;
   }
   interface TypographyVariants {
     'h4-mobile': React.CSSProperties;
     'h6-mobile': React.CSSProperties;
+    tooltip: React.CSSProperties;
   }
   interface TypographyVariantsOptions {
     'h4-mobile'?: React.CSSProperties;
     'h6-mobile'?: React.CSSProperties;
+    tooltip?: React.CSSProperties;
   }
 }
 
@@ -31,6 +34,7 @@ declare module '@mui/material/Typography' {
   interface TypographyPropsVariantOverrides {
     'h4-mobile': true;
     'h6-mobile': true;
+    tooltip: true;
   }
 }
 
@@ -151,6 +155,12 @@ const createAppTheme = (mode: PaletteMode) => {
         lineHeight: '1.375rem',
         letterSpacing: '0.1px',
       },
+      tooltip: {
+        fontSize: 10,
+        fontWeight: 500,
+        lineHeight: '14px',
+        letterSpacing: 0,
+      },
     },
     components: {
       MuiButton: {
@@ -175,6 +185,19 @@ const createAppTheme = (mode: PaletteMode) => {
             fontSize: '15px',
             lineHeight: '26px',
           },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: ({ theme }) => ({
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrast,
+          }),
+          arrow: ({ theme }) => ({
+            '&::before': {
+              backgroundColor: theme.palette.primary.main,
+            },
+          }),
         },
       },
     },

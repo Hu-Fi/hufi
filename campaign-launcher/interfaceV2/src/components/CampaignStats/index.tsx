@@ -3,15 +3,15 @@ import { FC } from 'react';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { CampaignDetails } from '../../types';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
 
 type Props = {
-  campaign: CampaignDataDto | undefined;
+  campaign: CampaignDetails | null | undefined;
 };
 
 const StatsCard = styled(Box)(({ theme }) => ({
@@ -81,7 +81,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
 
   if (!campaign) return null;
 
-  const exchangeName = exchangesMap.get(campaign.exchangeName)?.displayName || campaign.exchangeName;
+  const exchangeName = exchangesMap.get(campaign.exchange_name)?.display_name || campaign.exchange_name;
 
   return (
     <Grid container spacing={2} width="100%">
@@ -90,13 +90,13 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatTokenAmount(campaign.totalFundedAmount, campaign.tokenDecimals)} <span>{campaign.tokenSymbol}</span>
+              {formatTokenAmount(campaign.fund_amount, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatTokenAmount(campaign.amountPaid, campaign.tokenDecimals)} <span>{campaign.tokenSymbol}</span>
+              {formatTokenAmount(campaign.amount_paid, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
@@ -108,7 +108,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Pair</Title>
             <CryptoPairEntity
-              symbol={campaign.symbol}
+              symbol={campaign.trading_pair}
               size={isXl ? 'large' : 'medium'}
             />
           </StatsCard>
@@ -125,7 +125,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           height="100%"
           p={2}
         >
-          <DailyAmountPaidChart data={campaign.dailyAmountPaid} endDate={campaign.endBlock} tokenSymbol={campaign.tokenSymbol} />
+          <DailyAmountPaidChart data={campaign.daily_paid_amounts} endDate={campaign.end_date} tokenSymbol={campaign.fund_token_symbol} />
         </Box>
       </Grid>
     </Grid>

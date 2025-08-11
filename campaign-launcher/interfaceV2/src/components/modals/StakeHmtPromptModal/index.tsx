@@ -2,6 +2,7 @@ import { FC } from 'react';
 
 import { Box, Button, Typography } from '@mui/material';
 
+import { useStakeContext } from '../../../providers/StakeProvider';
 import BaseModal from '../BaseModal';
 
 type Props = {
@@ -10,19 +11,26 @@ type Props = {
   handleOpenCreateCampaignModal: () => void;
 };
 
-const CreateCampaignMenuModal: FC<Props> = ({
+const StakeHmtPromptModal: FC<Props> = ({
   open,
   onClose,
   handleOpenCreateCampaignModal,
 }) => {
+  const { refetchStakingData, isRefetching } = useStakeContext();
+
   const handleClickOnStakeHMT = () => {
     onClose();
     window.open(import.meta.env.VITE_APP_STAKING_DASHBOARD_URL, '_blank');
   };
 
-  const handleClickOnContinue = () => {
-    onClose();
-    handleOpenCreateCampaignModal();
+  const handleClickOnContinue = async () => {
+    if (isRefetching) return;
+    
+    const refreshedStakedAmount = await refetchStakingData();
+    if (+(refreshedStakedAmount ?? '0') > 0) {
+      onClose();
+      handleOpenCreateCampaignModal();
+    }
   };
 
   return (
@@ -52,7 +60,7 @@ const CreateCampaignMenuModal: FC<Props> = ({
           <strong>HMT</strong> on the <strong>HUMAN Staking Dashboard</strong>.
         </Typography>
         <Typography color="text.primary" mb={4} textAlign="center">
-          To stake <strong>HMT</strong> click the button bellow, the staking
+          To stake <strong>HMT</strong> click the button below, the staking
           dashboard will open on another browser tab. After you complete the
           staking process you can return to this tab. If you already have{' '}
           <strong>HMT</strong> staked just click the continue button.
@@ -64,7 +72,6 @@ const CreateCampaignMenuModal: FC<Props> = ({
             sx={{
               bgcolor: 'secondary.main',
               color: 'secondary.contrast',
-              fontWeight: 600,
             }}
             onClick={handleClickOnStakeHMT}
           >
@@ -73,8 +80,9 @@ const CreateCampaignMenuModal: FC<Props> = ({
           <Button
             variant="contained"
             size="large"
-            sx={{ color: 'primary.contrast', fontWeight: 600 }}
+            sx={{ color: 'primary.contrast' }}
             onClick={handleClickOnContinue}
+            disabled={isRefetching}
           >
             Continue
           </Button>
@@ -84,4 +92,4 @@ const CreateCampaignMenuModal: FC<Props> = ({
   );
 };
 
-export default CreateCampaignMenuModal;
+export default StakeHmtPromptModal;

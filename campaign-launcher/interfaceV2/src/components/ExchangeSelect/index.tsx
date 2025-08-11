@@ -2,13 +2,7 @@ import { FC } from 'react';
 
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
-type Exchange = {
-  displayName: string;
-  logo: string;
-  name: string;
-  type: string;
-  url: string;
-};
+import { Exchange } from '../../types';
 
 type Props = {
   data: Exchange[] | undefined;
@@ -54,7 +48,7 @@ const ExchangeSelect: FC<Props> = ({ data, onChange }) => {
         <MenuItem value="all">All</MenuItem>
         {data?.map((exchange) => (
           <MenuItem value={exchange.name} key={exchange.name}>
-            {exchange.displayName}
+            {exchange.display_name}
           </MenuItem>
         ))}
       </Select>

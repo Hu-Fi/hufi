@@ -4,38 +4,33 @@ import { Button, SxProps } from '@mui/material';
 import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import useLeader from '../../hooks/useLeader';
-import CreateCampaignMenuModal from '../modals/CreateCampaignMenuModal';
+import { useStakeContext } from '../../providers/StakeProvider';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
-interface Props {
+import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
+
+type Props = {
   variant: 'outlined' | 'contained';
   sx?: SxProps;
 }
 
 const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   const [openCreateCampaignModal, setOpenCreateCampaignModal] = useState(false);
-  const [
-    openCreateCampaignMenuModal,
-    setOpenCreateCampaignMenuModal,
-  ] = useState(false);
+  const [openStakeHmtPromptModal, setOpenStakeHmtPromptModal] = useState(false);
   const { isConnected } = useAccount();
-  const { refetch } = useLeader({ enabled: false });
   const isXl = useIsXlDesktop();
-
-  const handleCloseCreateCampaignMenuModal = () => {
-    setOpenCreateCampaignMenuModal(false);
-  };
+  const { stakedAmount } = useStakeContext();
 
   const handleOpenCreateCampaignModal = () => {
     setOpenCreateCampaignModal(true);
   };
 
   const onClick = async () => {
-    const { data } = await refetch();
-    if (+(data?.amountStaked ?? '0') > 0) {
+    if (!isConnected) return null;
+    
+    if (+(stakedAmount ?? '0') > 0) {
       setOpenCreateCampaignModal(true);
     } else {
-      setOpenCreateCampaignMenuModal(true);
+      setOpenStakeHmtPromptModal(true);
     }
   };
 
@@ -47,7 +42,6 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
         sx={{
           color: variant === 'outlined' ? 'primary.main' : 'primary.contrast',
           height: '42px',
-          fontWeight: 600,
           ...sx,
         }}
         disabled={!isConnected}
@@ -55,9 +49,9 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
       >
         Launch Campaign
       </Button>
-      <CreateCampaignMenuModal
-        open={openCreateCampaignMenuModal}
-        onClose={handleCloseCreateCampaignMenuModal}
+      <StakeHmtPromptModal
+        open={openStakeHmtPromptModal}
+        onClose={() => setOpenStakeHmtPromptModal(false)}
         handleOpenCreateCampaignModal={handleOpenCreateCampaignModal}
       />
       <CreateCampaignModal

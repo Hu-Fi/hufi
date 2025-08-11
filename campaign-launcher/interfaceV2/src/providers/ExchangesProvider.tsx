@@ -1,14 +1,7 @@
 import { FC, PropsWithChildren, createContext, useContext, useMemo } from 'react';
 
 import { useExchanges } from '../hooks/useExchanges';
-
-type Exchange = {
-  displayName: string;
-  logo: string;
-  name: string;
-  type: string;
-  url: string;
-};
+import { Exchange } from '../types';
 
 type ExchangesContextType = {
   exchanges: Exchange[] | undefined;

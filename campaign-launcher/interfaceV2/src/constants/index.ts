@@ -2,7 +2,7 @@ import { ChainId } from '@human-protocol/sdk';
 
 export const ROUTES = {
   DASHBOARD: '/',
-  CAMPAIGN_DETAIL: '/campaign-detail/:chainId/:address',
+  CAMPAIGN_DETAILS: '/campaign-details/:address',
   ALL_CAMPAIGNS: '/all-campaigns',
   MY_CAMPAIGNS: '/my-campaigns',
   JOINED_CAMPAIGNS: '/joined-campaigns',
@@ -10,6 +10,7 @@ export const ROUTES = {
 };
 
 export const oracles = {
+  exchangeOracle: import.meta.env.VITE_APP_EXCHANGE_ORACLE_ADDRESS,
   exchangeOracleFee: BigInt(import.meta.env.VITE_APP_EXCHANGE_ORACLE_FEE),
   recordingOracle: import.meta.env.VITE_APP_RECORDING_ORACLE_ADDRESS,
   recordingOracleFee: BigInt(import.meta.env.VITE_APP_RECORDING_ORACLE_FEE),
@@ -36,7 +37,7 @@ export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['uniswap'];
 export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds
 
-export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
+export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY, ChainId.AURORA_TESTNET];
 export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 
