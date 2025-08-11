@@ -39,7 +39,7 @@ import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
 import FormExchangeSelect from '../../FormExchangeSelect';
 import InfoTooltipInner from '../../InfoTooltipInner';
-import { ModalSuccess } from '../../ModalState';
+import { ModalError, ModalSuccess } from '../../ModalState';
 import BaseModal from '../BaseModal';
 
 type Props = {
@@ -150,7 +150,7 @@ const InfoTooltip = () => {
 };
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
-  const [activeStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
   const [showFinalView, setShowFinalView] = useState(false);
   const { isConnected } = useAccount();
   const navigate = useNavigate();
@@ -160,6 +160,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     stepsCompleted,
     escrowAddress,
     tokenDecimals,
+    isError,
+    clearError,
   } = useCreateEscrow();
   const queryClient = useQueryClient();
   const chainId = useChainId();
@@ -200,6 +202,11 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     await createEscrow(data);
   };
 
+  const handleTryAgain = () => {
+    clearError();
+    setActiveStep(0);
+  }
+
   const handleClose = () => {
     reset();
     onClose();
@@ -225,7 +232,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
         justifyContent: 'center',
       }}
     >
-      {showFinalView ? (
+      {showFinalView && (
         <Stack gap={2} alignItems="center" textAlign="center">
           <ModalSuccess />
           <Typography variant="h4" color="text.primary" mt={1}>
@@ -247,7 +254,24 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
             View campaign details page
           </Button>
         </Stack>
-      ) : (
+      )} 
+      {isError && (
+        <Stack alignItems="center" textAlign="center">
+          <Typography variant="h4" color="text.primary" mb={4}>
+            Create Campaign
+          </Typography>
+          <ModalError />
+          <Button
+            size="large"
+            variant="contained"
+            sx={{ mt: 4, mx: 'auto' }}
+            onClick={handleTryAgain}
+          >
+            Try again
+          </Button>
+        </Stack>
+      )}
+      {!showFinalView && !isError && (
         <form onSubmit={handleSubmit(submitForm)}>
           <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
             <Typography variant="h4" color="text.primary" mb={4}>

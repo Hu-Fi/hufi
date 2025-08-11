@@ -25,14 +25,20 @@ const useCreateEscrow = () => {
   const [tokenDecimals, setTokenDecimals] = useState(18);
   const [stepsCompleted, setStepsCompleted] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const chainId = useChainId();
   const { signer, network } = useClientToSigner();
+
+  const clearError = () => {
+    setIsError(false);
+  }
 
   const createEscrow = async (data: EscrowCreateDto) => {
     if (!signer || !network) {
       return;
     }
 
+    clearError();
     setIsLoading(true);
 
     try {
@@ -84,12 +90,13 @@ const useCreateEscrow = () => {
       setStepsCompleted((prev) => prev + 1);
     } catch (e) {
       console.error(e);
+      setIsError(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { escrowAddress, tokenDecimals, createEscrow, isLoading, stepsCompleted };
+  return { escrowAddress, tokenDecimals, createEscrow, isLoading, stepsCompleted, isError, clearError };
 };
 
 export default useCreateEscrow;
