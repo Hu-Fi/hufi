@@ -118,6 +118,7 @@ export class CampaignsService {
         exchangeOracle: campaignEscrow.exchangeOracle as string,
         recordingOracle: campaignEscrow.recordingOracle as string,
         reputationOracle: campaignEscrow.reputationOracle as string,
+        balance: campaignEscrow.balance,
       });
     }
 
@@ -211,6 +212,7 @@ export class CampaignsService {
       exchangeOracle: campaignEscrow.exchangeOracle as string,
       recordingOracle: campaignEscrow.recordingOracle as string,
       reputationOracle: campaignEscrow.reputationOracle as string,
+      balance: campaignEscrow.balance,
     };
   }
 

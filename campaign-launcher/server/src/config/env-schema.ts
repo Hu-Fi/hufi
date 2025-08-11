@@ -29,4 +29,5 @@ export const envValidator = Joi.object({
   EXCHANGE_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
   RECORDING_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
   REPUTATION_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
+  ALCHEMY_API_KEY: Joi.string().required(),
 });

@@ -11,6 +11,7 @@ import { EnvConfigModule, envValidator } from './config';
 import { CampaignModule } from './modules/campaigns';
 import { ExchangesModule } from './modules/exchanges';
 import { HealthModule } from './modules/health';
+import { StatisticsModule } from './modules/statistics';
 
 @Module({
   providers: [
@@ -50,6 +51,7 @@ import { HealthModule } from './modules/health';
     EnvConfigModule,
     ExchangesModule,
     HealthModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
 })

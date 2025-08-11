@@ -134,6 +134,9 @@ export class CampaignData {
 
   @ApiProperty({ name: 'reputation_oracle' })
   reputationOracle: string;
+
+  @ApiProperty()
+  balance: string;
 }
 
 export class GetCampaignsResponseDto {
