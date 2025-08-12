@@ -9,17 +9,14 @@ type PaginationState = {
     page: number;
     pageSize: number;
   };
-  setPage: (page: number) => void;
   setNextPage: () => void;
   setPrevPage: () => void;
   setPageSize: (pageSize: number) => void;
 };
 
-const INITIAL_PAGE_SIZE = 1;
-
 const usePagination = (): PaginationState => {
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(INITIAL_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(5);
 
   const skip = page * pageSize;
 
@@ -45,7 +42,6 @@ const usePagination = (): PaginationState => {
       page,
       pageSize,
     },
-    setPage,
     setNextPage,
     setPrevPage,
     setPageSize: handleSetPageSize,

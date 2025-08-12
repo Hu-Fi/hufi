@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, Typography } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import CampaignInfo from '../../components/CampaignInfo';
@@ -46,7 +46,8 @@ const Campaign: FC = () => {
         {!!campaignData && <CampaignInfo campaign={campaignData} />}
       </PageTitle>
       <CampaignStats campaign={campaignData} />
-      <JoinedCampaigns showPagination={false} showAllCampaigns={false} />
+      <Typography variant="h6">Joined Campaigns</Typography>
+      <JoinedCampaigns showOnlyActiveCampaigns={false} showPagination={false} showViewAll={true} />
       <HowToLaunch />
     </PageWrapper>
   );

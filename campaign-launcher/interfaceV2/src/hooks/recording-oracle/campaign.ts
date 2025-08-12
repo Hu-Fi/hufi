@@ -10,7 +10,7 @@ import { filterFalsyQueryParams } from '../../utils';
 
 type JoinedCampaignsParams = Pick<CampaignsQueryParams, 'status' | 'limit' | 'skip'>;
 
-export const useGetJoinedCampaigns = (params: JoinedCampaignsParams, enabled?: boolean) => {
+export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
   const { isConnected } = useAccount();
   const { isAuthenticated } = useWeb3Auth();
   const { status, limit, skip } = params;
@@ -28,7 +28,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams, enabled?: b
         id: campaign.address,
       })),
     }),
-    enabled: isAuthenticated && isConnected && (enabled ?? true),
+    enabled: isAuthenticated && isConnected,
   });
 };
 

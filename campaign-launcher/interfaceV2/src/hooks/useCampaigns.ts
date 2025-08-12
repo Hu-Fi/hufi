@@ -6,7 +6,7 @@ import { QUERY_KEYS } from '../constants/queryKeys';
 import { CampaignsQueryParams } from '../types';
 import { filterFalsyQueryParams } from '../utils';
 
-export const useCampaigns = (params: CampaignsQueryParams, enabled?: boolean) => {
+export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
@@ -21,11 +21,11 @@ export const useCampaigns = (params: CampaignsQueryParams, enabled?: boolean) =>
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id && (enabled ?? true),
+    enabled: !!chain_id,
   });
 };
 
-export const useMyCampaigns = (params: CampaignsQueryParams, enabled?: boolean) => {
+export const useMyCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
@@ -40,7 +40,7 @@ export const useMyCampaigns = (params: CampaignsQueryParams, enabled?: boolean) 
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id && !!launcher && (enabled ?? true),
+    enabled: !!chain_id && !!launcher,
   });
 };
 
