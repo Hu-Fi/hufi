@@ -2,14 +2,13 @@ import { FC } from 'react';
 
 import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { Campaign } from '../../types';
 import { formatTokenAmount, getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
-import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import ExplorerLink from '../ExplorerLink';
 import InfoTooltipInner from '../InfoTooltipInner';
@@ -44,25 +43,12 @@ const formatDate = (dateString: string) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
-  const { isConnected } = useAccount();
-
-  if (isConnected) {
-    return (
-      <>
-        <Typography variant="subtitle2" component="p">
-          At the moment you are not running any campaign.
-        </Typography>
-        <LaunchCampaign variant="contained" />
-      </>
-    )
-  }
-
   return (
     <>
       <Typography variant="subtitle2" component="p">
-        To see your campaigns please connect your wallet
+        At the moment you are not running any campaign.
       </Typography>
-      <ConnectWallet />
+      <LaunchCampaign variant="contained" />
     </>
   )
 }
@@ -70,6 +56,9 @@ const MyCampaignsNoRows: FC = () => {
 const JoinedCampaignsNoRows: FC = () => {
   const { isConnected } = useAccount();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const isHomePage = pathname === '/';
 
   if (isConnected) {
     return (
@@ -81,11 +70,12 @@ const JoinedCampaignsNoRows: FC = () => {
           variant="contained"
           size="medium"
           sx={{ 
+            display: isHomePage ? 'none' : 'inline-flex',
             height: '42px',
             bgcolor: 'primary.main',
             color: 'primary.contrast', 
           }}
-          onClick={() => navigate('/all-campaigns')}
+          onClick={() => navigate('/')}
         >
           All Campaigns
         </Button>
@@ -94,12 +84,9 @@ const JoinedCampaignsNoRows: FC = () => {
   }
 
   return (
-    <>
-      <Typography variant="subtitle2" component="p">
-        To see joined campaigns please connect your wallet
-      </Typography>
-      <ConnectWallet />
-    </>
+    <Typography variant="subtitle2" component="p">
+      To see joined campaigns please sign in
+    </Typography>
   )
 }
 

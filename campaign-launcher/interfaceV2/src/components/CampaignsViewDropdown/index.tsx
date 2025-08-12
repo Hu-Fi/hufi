@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
 import { useAccount } from 'wagmi';
@@ -18,6 +18,12 @@ const CampaignsViewDropdown: FC<Props> = ({ campaignsView, onChange }) => {
   const { isAuthenticated } = useWeb3Auth()
   
   const open = !!anchorEl;
+
+  useEffect(() => {
+    if ((campaignsView === CampaignsView.JOINED && !isAuthenticated) || (campaignsView === CampaignsView.MY && !isConnected)) {
+      onChange(CampaignsView.ALL);
+    }
+  }, [campaignsView, isAuthenticated, isConnected]);
 
   const handleClose = () => setAnchorEl(null);
 

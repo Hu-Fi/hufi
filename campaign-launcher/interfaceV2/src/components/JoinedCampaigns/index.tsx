@@ -50,7 +50,7 @@ const JoinedCampaigns: FC<Props> = ({ showOnlyActiveCampaigns, showPagination = 
               setPrevPage={setPrevPage} 
             />
           )}
-          {showViewAll && (
+          {showViewAll && data?.has_more && (
             <Button variant="contained" sx={{ width: 'fit-content' }} onClick={onViewAllClick}>
               View All
             </Button>
