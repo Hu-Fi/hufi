@@ -1,14 +1,16 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { Box, CircularProgress } from '@mui/material';
 import { useChainId } from 'wagmi';
 
 import { useGetJoinedCampaigns } from '../../hooks/recording-oracle/campaign';
 import { useCampaigns, useMyCampaigns } from '../../hooks/useCampaigns';
+import usePagination from '../../hooks/usePagination';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
-import { CampaignsView } from '../../types';
+import { CampaignStatus, CampaignsView } from '../../types';
 import ActiveCampaignsFilter from '../ActiveCampaignsFilter';
 import CampaignsTable from '../CampaignsTable';
+import CampaignsTablePagination from '../CampaignsTablePagination';
 import CampaignsViewDropdown from '../CampaignsViewDropdown';
 
 const Campaigns: FC = () => {
@@ -16,25 +18,41 @@ const Campaigns: FC = () => {
   const [showActiveCampaigns, setShowActiveCampaigns] = useState(false);
   const chainId = useChainId();
   const { activeAddress } = useActiveAccount();
+  const { params, pagination, setPage, setPageSize, setNextPage, setPrevPage } = usePagination();
+  const { limit, skip } = params;
+  const { page, pageSize } = pagination;
 
   const { data: allCampaigns, isLoading: isAllCampaignsLoading } = useCampaigns(
     {
       chain_id: chainId,
-      status: showActiveCampaigns ? 'active' : undefined,
+      status: showActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
+      limit,
+      skip,
     },
     campaignsView === CampaignsView.ALL
   );
   const { data: joinedCampaigns, isLoading: isJoinedCampaignsLoading } = useGetJoinedCampaigns(
+    {
+      status: showActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
+      limit,
+      skip,
+    },
     campaignsView === CampaignsView.JOINED
   );
   const { data: myCampaigns, isLoading: isMyCampaignsLoading } = useMyCampaigns(
     {
       chain_id: chainId,
       launcher: activeAddress,
-      status: showActiveCampaigns ? 'active' : undefined,
+      status: showActiveCampaigns ? CampaignStatus.ACTIVE : undefined, 
+      limit,
+      skip,
     },
     campaignsView === CampaignsView.MY
   );
+
+  useEffect(() => {
+    setPage(0);
+  }, [campaignsView]);
 
   const data = useMemo(() => {
     if (campaignsView === CampaignsView.ALL) {
@@ -66,12 +84,22 @@ const Campaigns: FC = () => {
       </Box>
       {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {!isLoading && (
-        <CampaignsTable 
-          data={data?.results} 
-          showPagination 
-          isJoinedCampaigns={campaignsView === CampaignsView.JOINED} 
-          isMyCampaigns={campaignsView === CampaignsView.MY} 
-        />
+        <>
+          <CampaignsTable 
+            data={data?.results} 
+            isJoinedCampaigns={campaignsView === CampaignsView.JOINED} 
+            isMyCampaigns={campaignsView === CampaignsView.MY} 
+          />
+          <CampaignsTablePagination 
+            page={page}
+            resultsLength={data?.results?.length || 0}
+            hasMore={data?.has_more} 
+            pageSize={pageSize} 
+            setPageSize={setPageSize} 
+            setNextPage={setNextPage} 
+            setPrevPage={setPrevPage} 
+          />
+        </>
       )}
     </Box>
   );

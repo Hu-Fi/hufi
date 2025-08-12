@@ -1,31 +1,17 @@
-import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useChainId } from 'wagmi';
 
 import { launcherApi } from '../api';
 import { QUERY_KEYS } from '../constants/queryKeys';
+import { CampaignsQueryParams } from '../types';
+import { filterFalsyQueryParams } from '../utils';
 
-type CampaignsParams = {
-  chain_id: ChainId;
-  exchange_name?: string;
-  status?: string;
-  launcher?: string;
-  limit?: number;
-  skip?: number;
-}
-
-const filterParams = (params: CampaignsParams) => {
-  return Object.fromEntries(
-    Object.entries(params).filter(([, value]) => Boolean(value))
-  );
-};
-
-export const useCampaigns = (params: CampaignsParams, enabled?: boolean) => {
+export const useCampaigns = (params: CampaignsQueryParams, enabled?: boolean) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
     queryFn: () => {
-      const filteredParams = filterParams(params);
+      const filteredParams = filterFalsyQueryParams(params);
       return launcherApi.getCampaigns(filteredParams)
     },
     select: (data) => ({
@@ -39,12 +25,12 @@ export const useCampaigns = (params: CampaignsParams, enabled?: boolean) => {
   });
 };
 
-export const useMyCampaigns = (params: CampaignsParams, enabled?: boolean) => {
+export const useMyCampaigns = (params: CampaignsQueryParams, enabled?: boolean) => {
   const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
     queryFn: () => {
-      const filteredParams = filterParams(params);
+      const filteredParams = filterFalsyQueryParams(params);
       return launcherApi.getCampaigns(filteredParams)
     },
     select: (data) => ({

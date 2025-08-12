@@ -5,14 +5,22 @@ import { useAccount } from 'wagmi';
 import { recordingApi } from '../../api';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import { CampaignsQueryParams } from '../../types';
+import { filterFalsyQueryParams } from '../../utils';
 
-export const useGetJoinedCampaigns = (enabled?: boolean) => {
+type JoinedCampaignsParams = Pick<CampaignsQueryParams, 'status' | 'limit' | 'skip'>;
+
+export const useGetJoinedCampaigns = (params: JoinedCampaignsParams, enabled?: boolean) => {
   const { isConnected } = useAccount();
   const { isAuthenticated } = useWeb3Auth();
+  const { status, limit, skip } = params;
 
   return useQuery({
-    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS],
-    queryFn: () => recordingApi.getJoinedCampaigns(),
+    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS, status, limit, skip],
+    queryFn: () => {
+      const filteredParams = filterFalsyQueryParams(params);
+      return recordingApi.getJoinedCampaigns(filteredParams);
+    },
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({

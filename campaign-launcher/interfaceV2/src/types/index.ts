@@ -11,6 +11,12 @@ export enum CampaignsView {
   MY = 'my',
 }
 
+export enum CampaignStatus {
+  ACTIVE = 'active',
+  CANCELLED = 'cancelled',
+  COMPLETED = 'completed',
+}
+
 export type TokenData = {
   name: string;
   label?: string;
@@ -95,4 +101,13 @@ export type ManifestUploadDto = {
   pair: string;
   start_date: string;
   end_date: string;
+}
+
+export type CampaignsQueryParams = {
+  chain_id: ChainId;
+  exchange_name?: string;
+  status?: CampaignStatus;
+  launcher?: string;
+  limit?: number;
+  skip?: number;
 }

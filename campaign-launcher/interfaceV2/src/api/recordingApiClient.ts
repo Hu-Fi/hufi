@@ -133,8 +133,8 @@ export class RecordingApiClient extends HttpClient {
     await this.delete(`/exchange-api-keys/${exchangeName}`);
   }
 
-  async getJoinedCampaigns(): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns');
+  async getJoinedCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns', { params });
     return response;
   }
 
