@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Alchemy } from 'alchemy-sdk';
 import { ethers, JsonRpcProvider } from 'ethers';
+import { LRUCache } from 'lru-cache';
 
 import {
   ChainIds,
@@ -13,6 +15,19 @@ import type { Chain } from './types';
 
 const operationPromisesCache = new Map<string, Promise<unknown>>();
 
+const tokenPriceCache = new LRUCache<string, number>({
+  ttl: 1000 * 60 * 1,
+  max: 4200,
+  ttlAutopurge: false,
+  allowStale: false,
+  noDeleteOnStaleGet: false,
+  noUpdateTTL: false,
+  updateAgeOnGet: false,
+  updateAgeOnHas: false,
+});
+
+const MISSING_TOKEN_PRICE = -1;
+
 @Injectable()
 export class Web3Service {
   private readonly logger = logger.child({ context: Web3Service.name });
@@ -21,12 +36,19 @@ export class Web3Service {
     [chainId: number]: JsonRpcProvider;
   } = {};
 
+  private readonly alchemySdk: Alchemy;
+
   constructor(private readonly web3ConfigService: Web3ConfigService) {
     for (const chain of this.supportedChains) {
       this.providersByChainId[chain.id] = new ethers.JsonRpcProvider(
         chain.rpcUrl,
       );
     }
+
+    this.alchemySdk = new Alchemy({
+      apiKey: this.web3ConfigService.alchemyApiKey,
+      maxRetries: 5,
+    });
   }
 
   private get supportedChains(): Chain[] {
@@ -131,5 +153,69 @@ export class Web3Service {
 
       throw new Error(message);
     }
+  }
+
+  async getTokenPriceUsd(symbol: string): Promise<number | null> {
+    const uppercasedSymbol = symbol.toUpperCase();
+    const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
+
+    try {
+      let tokenPriceUsd = tokenPriceCache.get(cacheKey);
+
+      if (tokenPriceUsd === undefined) {
+        const {
+          data: [apiResult],
+        } = await this.alchemySdk.prices.getTokenPriceBySymbol([
+          /**
+           * Seems that Alchemy API is not case-sensitive to symbol,
+           * but always use upper just in case.
+           */
+          uppercasedSymbol,
+        ]);
+
+        const priceUsd =
+          apiResult.prices.find((price) => price.currency === 'usd')?.value ||
+          null;
+
+        if (priceUsd) {
+          tokenPriceUsd = Number(priceUsd);
+        } else if (uppercasedSymbol === 'HMT') {
+          tokenPriceUsd = await this.getHmtPrice();
+        } else {
+          this.logger.warn('Token price in USD is not available', {
+            symbol,
+            apiResult,
+          });
+          tokenPriceUsd = MISSING_TOKEN_PRICE;
+        }
+
+        tokenPriceCache.set(cacheKey, tokenPriceUsd);
+      }
+
+      return tokenPriceUsd === MISSING_TOKEN_PRICE ? null : tokenPriceUsd;
+    } catch (error) {
+      this.logger.error('Error while getting token price', {
+        symbol,
+        error,
+      });
+
+      throw new Error('Failed to get token price');
+    }
+  }
+
+  private async getHmtPrice(): Promise<number> {
+    const response = await fetch(
+      'https://api.coinlore.net/api/ticker/?id=53887',
+    );
+    const data: Array<{
+      price_usd: string;
+    }> = await response.json();
+
+    const value = data[0]?.price_usd;
+    if (!value) {
+      throw new Error('HMT price is missing on CoinLore');
+    }
+
+    return Number(value);
   }
 }

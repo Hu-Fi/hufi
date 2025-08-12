@@ -36,4 +36,8 @@ export class Web3ConfigService {
   get exchangeOracle(): string {
     return this.configService.getOrThrow<string>('EXCHANGE_ORACLE');
   }
+
+  get alchemyApiKey(): string {
+    return this.configService.getOrThrow('ALCHEMY_API_KEY');
+  }
 }

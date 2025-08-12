@@ -49,7 +49,6 @@ export class CampaignsService {
   async getCampaigns(
     chainId: ChainId,
     filters?: Partial<{
-      exchangeName: string;
       launcherAddress: string;
       status: CampaignStatus;
     }>,
@@ -119,6 +118,7 @@ export class CampaignsService {
         exchangeOracle: campaignEscrow.exchangeOracle as string,
         recordingOracle: campaignEscrow.recordingOracle as string,
         reputationOracle: campaignEscrow.reputationOracle as string,
+        balance: campaignEscrow.balance,
       });
     }
 
@@ -212,6 +212,7 @@ export class CampaignsService {
       exchangeOracle: campaignEscrow.exchangeOracle as string,
       recordingOracle: campaignEscrow.recordingOracle as string,
       reputationOracle: campaignEscrow.reputationOracle as string,
+      balance: campaignEscrow.balance,
     };
   }
 
