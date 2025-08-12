@@ -617,4 +617,25 @@ export class CampaignsService {
 
     this.logger.info('Campaigns completion tracking job finished');
   }
+
+  async checkUserJoined(
+    userId: string,
+    chainId: number,
+    campaignAddress: string,
+  ): Promise<boolean> {
+    const campaign = await this.campaignsRepository.findOneByChainIdAndAddress(
+      chainId,
+      campaignAddress,
+    );
+    if (!campaign) {
+      return false;
+    }
+
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
+        userId,
+        campaign.id,
+      );
+    return isUserJoined;
+  }
 }

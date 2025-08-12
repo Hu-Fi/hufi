@@ -19,6 +19,8 @@ import {
 import type { RequestWithUser } from '@/common/types';
 
 import {
+  CheckUserJoinedDto,
+  CheckUserJoinedResponseDto,
   JoinCampaignDto,
   JoinCampaignSuccessDto,
   ListJoinedCampaignsQueryDto,
@@ -56,38 +58,11 @@ for (const [returnedCampaignStatus, campaignStatuses] of Object.entries(
 
 @ApiTags('Campaigns')
 @Controller('/campaigns')
+@ApiBearerAuth()
 @UseFilters(CampaignsControllerErrorsFilter)
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 
-  @ApiBearerAuth()
-  @Post('/join')
-  @HttpCode(200)
-  @ApiOperation({
-    summary: 'Join campaign.',
-    description: 'Endpoint for joining the campaign.',
-  })
-  @ApiBody({ type: JoinCampaignDto })
-  @ApiResponse({
-    status: 200,
-    description: 'User joined successfully',
-    type: JoinCampaignSuccessDto,
-  })
-  async joinCampaign(
-    @Req() request: RequestWithUser,
-    @Body() data: JoinCampaignDto,
-  ): Promise<JoinCampaignSuccessDto> {
-    const campaignId = await this.campaignsService.join(
-      request.user.id,
-      data.chainId,
-      data.address,
-    );
-    return { id: campaignId };
-  }
-
-  @ApiBearerAuth()
-  @Get('/')
-  @HttpCode(200)
   @ApiOperation({
     summary: 'List joined campaigns.',
     description: 'Retrieve the list of campaign addresses user joined.',
@@ -97,6 +72,8 @@ export class CampaignsController {
     description: 'List retrieved successfully',
     type: ListJoinedCampaignsSuccessDto,
   })
+  @HttpCode(200)
+  @Get('/')
   async joinedCampaigns(
     @Req() request: RequestWithUser,
     @Query() query: ListJoinedCampaignsQueryDto,
@@ -129,6 +106,56 @@ export class CampaignsController {
           fundToken: campaign.fundToken,
         }))
         .slice(0, limit),
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Join campaign.',
+    description: 'Endpoint for joining the campaign.',
+  })
+  @ApiBody({ type: JoinCampaignDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User joined successfully',
+    type: JoinCampaignSuccessDto,
+  })
+  @HttpCode(200)
+  @Post('/join')
+  async joinCampaign(
+    @Req() request: RequestWithUser,
+    @Body() data: JoinCampaignDto,
+  ): Promise<JoinCampaignSuccessDto> {
+    const campaignId = await this.campaignsService.join(
+      request.user.id,
+      data.chainId,
+      data.address,
+    );
+    return { id: campaignId };
+  }
+
+  @ApiOperation({
+    summary: 'Check if user has joined the campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Result indicating if user joined the provided campaign',
+    type: CheckUserJoinedResponseDto,
+  })
+  @ApiBody({ type: CheckUserJoinedDto })
+  @HttpCode(200)
+  @Post('/check-is-joined')
+  async checkIsJoined(
+    @Req() request: RequestWithUser,
+    @Body() data: CheckUserJoinedDto,
+  ): Promise<CheckUserJoinedResponseDto> {
+    const isUserJoined = await this.campaignsService.checkUserJoined(
+      request.user.id,
+      data.chainId,
+      data.address,
+    );
+
+    return {
+      isJoined: isUserJoined,
     };
   }
 }
