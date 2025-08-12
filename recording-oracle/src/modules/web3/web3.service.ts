@@ -171,7 +171,9 @@ export class Web3Service {
   }
 
   async getTokenPriceUsd(symbol: string): Promise<number | null> {
-    const cacheKey = `get-token-price-usd-${symbol}`;
+    const uppercasedSymbol = symbol.toUpperCase();
+    const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
+
     try {
       let tokenPriceUsd = this.tokenPriceCache.get(cacheKey);
 
@@ -183,7 +185,7 @@ export class Web3Service {
            * Seems that Alchemy API is not case-sensitive to symbol,
            * but always use upper just in case.
            */
-          symbol.toUpperCase(),
+          uppercasedSymbol,
         ]);
 
         const priceUsd =

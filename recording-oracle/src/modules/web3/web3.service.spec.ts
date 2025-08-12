@@ -109,7 +109,7 @@ describe('Web3Service', () => {
   });
 
   describe('getTokenPriceUsd', () => {
-    const testTokenSymbol = faker.finance.currencySymbol();
+    const testTokenSymbol = faker.finance.currencyCode();
 
     const mockTokenPriceCache = new Map();
     const mockAlchemySdk = {
@@ -206,7 +206,7 @@ describe('Web3Service', () => {
     });
 
     it('should not cache and return price if available for different symbols', async () => {
-      const token1 = faker.finance.currencySymbol();
+      const token1 = faker.finance.currencyCode();
       const price1 = faker.number.float();
       mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
@@ -223,7 +223,7 @@ describe('Web3Service', () => {
           },
         ],
       });
-      const token2 = faker.finance.currencySymbol();
+      const token2 = faker.finance.currencyCode();
       const price2 = faker.number.float();
       mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
