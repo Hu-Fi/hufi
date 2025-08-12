@@ -49,7 +49,7 @@ const Campaigns: FC = () => {
     <Box component="section" display="flex" flexDirection="column" gap={4}>
       <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap={{ xs: 'wrap', md: 'nowrap' }}>
         <CampaignsViewDropdown campaignsView={campaignsView} onChange={handleCampaignsViewChange} />
-        {campaignsView !== CampaignsView.JOINED && <ActiveCampaignsFilter checked={showActiveCampaigns} onChange={handleActiveCampaignsChange} />}
+        <ActiveCampaignsFilter checked={showActiveCampaigns} onChange={handleActiveCampaignsChange} />
       </Box>
       {campaignsView === CampaignsView.ALL && (
         <AllCampaigns showOnlyActiveCampaigns={showActiveCampaigns} />
