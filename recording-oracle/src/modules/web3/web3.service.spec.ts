@@ -223,7 +223,7 @@ describe('Web3Service', () => {
           },
         ],
       });
-      const token2 = faker.finance.currencyCode();
+      const token2 = `${token1}2`;
       const price2 = faker.number.float();
       mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
