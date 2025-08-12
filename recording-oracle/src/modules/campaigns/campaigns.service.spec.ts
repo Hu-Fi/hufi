@@ -1595,4 +1595,89 @@ describe('CampaignsService', () => {
       expect(mockWeb3Service.getTokenPriceUsd).toHaveBeenCalledWith(quoteToken);
     });
   });
+
+  describe('checkUserJoined', () => {
+    let userId: string;
+    let chainId: number;
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      userId = faker.string.uuid();
+      chainId = generateTestnetChainId();
+      campaign = generateCampaignEntity();
+    });
+
+    it('should return false if campaign does not exist', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        null,
+      );
+
+      const result = await campaignsService.checkUserJoined(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe(false);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(0);
+    });
+
+    it('should return false if user not joined', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+
+      const result = await campaignsService.checkUserJoined(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe(false);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should return true if user joined', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        true,
+      );
+
+      const result = await campaignsService.checkUserJoined(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe(true);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+  });
 });

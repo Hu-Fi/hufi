@@ -101,3 +101,20 @@ export class ListJoinedCampaignsSuccessDto {
   })
   results: JoinedCampaignDto[];
 }
+
+export class CheckUserJoinedDto {
+  @ApiProperty({ name: 'chain_id', enum: ChainIds })
+  @IsIn(ChainIds)
+  chainId: ChainId;
+
+  @ApiProperty()
+  @IsEthereumAddress()
+  address: string;
+}
+
+export class CheckUserJoinedResponseDto {
+  @ApiProperty({
+    name: 'is_joined',
+  })
+  isJoined: boolean;
+}
