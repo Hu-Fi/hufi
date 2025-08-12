@@ -12,15 +12,10 @@ import {
 import {
   type ChainId,
   ChainIds,
-  SUPPORTED_EXCHANGE_NAMES,
   DEFAULT_PAGINATION_LIMIT,
   type ReadableEscrowStatus,
 } from '@/common/constants';
-import {
-  EvmAddressValidator,
-  ExchangeNameValidator,
-  IsChainId,
-} from '@/common/validators';
+import { EvmAddressValidator, IsChainId } from '@/common/validators';
 
 import { CampaignStatus } from './types';
 
@@ -31,14 +26,6 @@ export class GetCampaignsQueryDto {
   })
   @IsChainId()
   chainId: ChainId;
-
-  @ApiPropertyOptional({
-    name: 'exchange_name',
-    enum: SUPPORTED_EXCHANGE_NAMES,
-  })
-  @IsOptional()
-  @Validate(ExchangeNameValidator)
-  exchangeName?: string;
 
   @ApiPropertyOptional({
     description: 'Address of campaign launcher',
@@ -147,6 +134,9 @@ export class CampaignData {
 
   @ApiProperty({ name: 'reputation_oracle' })
   reputationOracle: string;
+
+  @ApiProperty()
+  balance: string;
 }
 
 export class GetCampaignsResponseDto {
