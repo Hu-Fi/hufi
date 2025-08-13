@@ -13,3 +13,9 @@ export enum CampaignStatus {
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }
+
+export type CampaignOracleFees = {
+  exchangeOracleFee: number;
+  recordingOracleFee: number;
+  reputationOracleFee: number;
+};

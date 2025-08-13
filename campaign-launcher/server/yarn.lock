@@ -1224,7 +1224,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:x":
+"@human-protocol/core@npm:^4.2.0, @human-protocol/core@npm:x":
   version: 4.2.0
   resolution: "@human-protocol/core@npm:4.2.0"
   peerDependencies:
@@ -4349,6 +4349,7 @@ __metadata:
     "@eslint/js": "npm:^9.31.0"
     "@faker-js/faker": "npm:^9.9.0"
     "@golevelup/ts-jest": "npm:^0.7.0"
+    "@human-protocol/core": "npm:^4.2.0"
     "@human-protocol/logger": "npm:^1.0.0"
     "@human-protocol/sdk": "npm:^4.2.0"
     "@nestjs/cli": "npm:^11.0.7"
