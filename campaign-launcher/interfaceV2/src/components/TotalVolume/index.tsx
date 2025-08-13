@@ -9,7 +9,7 @@ import FormattedNumber from '../FormattedNumber';
 
 const TotalVolume = () => {
   const [exchange, setExchange] = useState('');
-  const { exchanges, exchangesMap } = useExchangesContext();
+  const { exchanges } = useExchangesContext();
   const { data: totalVolume } = useGetTotalVolume(exchange || '');
 
   return (
@@ -23,12 +23,6 @@ const TotalVolume = () => {
             displayEmpty
             onChange={(e) => setExchange(e.target.value)}
             label="Exchange"
-            renderValue={(value) => {
-              if (value.length === 0) {
-                return 'Exchange';
-              }
-              return exchangesMap.get(value)?.display_name || '';
-            }}
             slotProps={{
               input: {
                 id: 'exchange-volume',
@@ -40,6 +34,7 @@ const TotalVolume = () => {
               },
             }}
           >
+            <MenuItem value="">All Exchanges</MenuItem>
             {exchanges?.map(({ name, display_name }) => (
               <MenuItem key={name} value={name}>
                 {display_name}

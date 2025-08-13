@@ -6,7 +6,6 @@ import { recordingApi } from '../../api';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignsQueryParams } from '../../types';
-import { filterFalsyQueryParams } from '../../utils';
 
 type JoinedCampaignsParams = Pick<CampaignsQueryParams, 'status' | 'limit' | 'skip'>;
 
@@ -17,10 +16,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
 
   return useQuery({
     queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS, status, limit, skip],
-    queryFn: () => {
-      const filteredParams = filterFalsyQueryParams(params);
-      return recordingApi.getJoinedCampaigns(filteredParams);
-    },
+    queryFn: () =>  recordingApi.getJoinedCampaigns(params),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({

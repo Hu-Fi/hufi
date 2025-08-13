@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGetJoinedCampaigns } from '../../hooks/recording-oracle/campaign';
 import usePagination from '../../hooks/usePagination';
 import { CampaignStatus } from '../../types';
+import { filterFalsyQueryParams } from '../../utils';
 import CampaignsTable from '../CampaignsTable';
 import CampaignsTablePagination from '../CampaignsTablePagination';
 
@@ -20,11 +21,14 @@ const JoinedCampaigns: FC<Props> = ({ showOnlyActiveCampaigns, showPagination = 
   const { params, pagination, setPageSize, setNextPage, setPrevPage } = usePagination();
   const { limit, skip } = params;
   const { page, pageSize } = pagination;
-  const { data, isLoading } = useGetJoinedCampaigns({
+
+  const queryParams = filterFalsyQueryParams({
     status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
     limit,
     skip,
   });
+
+  const { data, isLoading } = useGetJoinedCampaigns(queryParams);
 
   const onViewAllClick = () => {
     navigate('/?view=joined');

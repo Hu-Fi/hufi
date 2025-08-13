@@ -4,16 +4,12 @@ import { useChainId } from 'wagmi';
 import { launcherApi } from '../api';
 import { QUERY_KEYS } from '../constants/queryKeys';
 import { CampaignsQueryParams } from '../types';
-import { filterFalsyQueryParams } from '../utils';
 
 export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, status, launcher, limit, skip],
-    queryFn: () => {
-      const filteredParams = filterFalsyQueryParams(params);
-      return launcherApi.getCampaigns(filteredParams)
-    },
+    queryFn: () => launcherApi.getCampaigns(params),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -29,10 +25,7 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, status, launcher, limit, skip],
-    queryFn: () => {
-      const filteredParams = filterFalsyQueryParams(params);
-      return launcherApi.getCampaigns(filteredParams)
-    },
+    queryFn: () => launcherApi.getCampaigns(params),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({

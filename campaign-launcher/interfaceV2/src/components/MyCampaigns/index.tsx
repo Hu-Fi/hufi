@@ -6,7 +6,8 @@ import { useChainId } from 'wagmi';
 import { useMyCampaigns } from '../../hooks/useCampaigns';
 import usePagination from '../../hooks/usePagination';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
-import { CampaignStatus } from '../../types';
+import { CampaignStatus, CampaignsQueryParams } from '../../types';
+import { filterFalsyQueryParams } from '../../utils';
 import CampaignsTable from '../CampaignsTable';
 import CampaignsTablePagination from '../CampaignsTablePagination';
 
@@ -21,15 +22,15 @@ const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
   const { limit, skip } = params;
   const { page, pageSize } = pagination;
 
-  const { data, isLoading } = useMyCampaigns(
-    {
-      chain_id,
-      launcher: activeAddress,
-      status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
-      limit,
-      skip,
-    }
-  );
+  const queryParams = filterFalsyQueryParams({
+    chain_id,
+    launcher: activeAddress,
+    status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
+    limit,
+    skip,
+  }) as CampaignsQueryParams;
+
+  const { data, isLoading } = useMyCampaigns(queryParams);
 
   return (
     <>
