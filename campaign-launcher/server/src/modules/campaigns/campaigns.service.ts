@@ -75,21 +75,21 @@ export class CampaignsService {
     });
 
     for (const campaignEscrow of campaignEscrows) {
-      if (!campaignEscrow.manifestUrl) {
+      if (!campaignEscrow.manifest) {
         continue;
       }
 
       let manifest: CampaignManifest;
       try {
         manifest = await this.retrieveCampaignManifset(
-          campaignEscrow.manifestUrl,
+          campaignEscrow.manifest,
           campaignEscrow.manifestHash,
         );
       } catch (error) {
         this.logger.error('Failed to retrieve campaign manifest', {
           chainId,
           campaignAddress: campaignEscrow.address,
-          manifestUrl: campaignEscrow.manifestUrl,
+          manifest: campaignEscrow.manifest,
           manifestHash: campaignEscrow.manifestHash,
           error,
         });
@@ -138,18 +138,18 @@ export class CampaignsService {
       return null;
     }
 
-    if (!campaignEscrow.manifestUrl) {
+    if (!campaignEscrow.manifest) {
       throw new InvalidCampaignManifestError(
         chainId,
         escrowAddress,
-        'Manifest url is missing',
+        'Manifest is missing',
       );
     }
 
     let manifest: CampaignManifest;
     try {
       manifest = await this.retrieveCampaignManifset(
-        campaignEscrow.manifestUrl,
+        campaignEscrow.manifest,
         campaignEscrow.manifestHash,
       );
     } catch (error) {

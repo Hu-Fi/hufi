@@ -203,7 +203,7 @@ export class CampaignsService {
     if (!escrow.totalFundedAmount) {
       throw new InvalidCampaign(campaignAddress, 'Missing fund amount data');
     }
-    if (!escrow.manifestUrl) {
+    if (!escrow.manifest) {
       throw new InvalidCampaign(campaignAddress, 'Missing manifest data');
     }
     // Safety-belt for missing subgraph data END
@@ -233,10 +233,10 @@ export class CampaignsService {
     }
 
     let manifestString: string;
-    if (httpUtils.isValidHttpUrl(escrow.manifestUrl as string)) {
+    if (httpUtils.isValidHttpUrl(escrow.manifest as string)) {
       try {
         manifestString = await manifestUtils.downloadCampaignManifest(
-          escrow.manifestUrl as string,
+          escrow.manifest as string,
           escrow.manifestHash as string,
         );
       } catch (error) {
@@ -244,7 +244,7 @@ export class CampaignsService {
         throw new InvalidCampaign(campaignAddress, error.message as string);
       }
     } else {
-      manifestString = escrow.manifestUrl as string;
+      manifestString = escrow.manifest as string;
     }
 
     const manifest = manifestUtils.validateSchema(manifestString);
