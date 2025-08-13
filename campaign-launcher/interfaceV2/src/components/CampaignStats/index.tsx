@@ -9,6 +9,7 @@ import { CampaignDetails } from '../../types';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
+import FormattedNumber from '../FormattedNumber';
 
 type Props = {
   campaign: CampaignDetails | null | undefined;
@@ -74,6 +75,9 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
 
   const exchangeName = exchangesMap.get(campaign.exchange_name)?.display_name || campaign.exchange_name;
 
+  const totalFee = campaign.exchange_oracle_fee_percent + campaign.recording_oracle_fee_percent + campaign.reputation_oracle_fee_percent;
+  const formattedTokenAmount = +formatTokenAmount(campaign.fund_amount, campaign.fund_token_decimals);
+
   return (
     <Grid container spacing={2} width="100%">
       <Grid size={{ xs: 12, md: 6 }}>
@@ -81,7 +85,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Typography variant="subtitle2" mb={{ xs: 2, xl: 7 }}>Total Funded Amount</Typography>
             <Value>
-              {formatTokenAmount(campaign.fund_amount, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
+              {formattedTokenAmount} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
@@ -105,18 +109,21 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           </StatsCard>
           <StatsCard 
             sx={{ 
-              flexDirection: 'row', 
-              justifyContent: 'space-between',
-              alignItems: 'center', 
+              flexDirection: { xs: 'column', md: 'row' }, 
+              gap: 2,
+              alignItems: { xs: 'flex-start', md: 'center' }, 
               py: { xs: 1.5, md: 2 }, 
               height: { xs: 'unset' }, 
               flexBasis: '100%'
             }}
           >
             <Typography variant="subtitle2">Oracle fees</Typography>
+            <Typography variant="h6" color="primary.violet" fontWeight={700}>
+              <FormattedNumber value={formattedTokenAmount * totalFee / 100} suffix={' ' + campaign.fund_token_symbol} />
+              ({totalFee}%)
+            </Typography>
           </StatsCard>
         </FlexGrid>
-        
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <Box
