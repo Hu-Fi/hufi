@@ -3,9 +3,6 @@ import { ChainId } from '@human-protocol/sdk';
 export const ROUTES = {
   DASHBOARD: '/',
   CAMPAIGN_DETAILS: '/campaign-details/:address',
-  ALL_CAMPAIGNS: '/all-campaigns',
-  MY_CAMPAIGNS: '/my-campaigns',
-  JOINED_CAMPAIGNS: '/joined-campaigns',
   MANAGE_API_KEYS: '/manage-api-keys',
 };
 

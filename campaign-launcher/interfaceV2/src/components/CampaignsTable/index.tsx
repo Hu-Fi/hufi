@@ -1,15 +1,14 @@
 import { FC } from 'react';
 
 import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
-import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
-import { useNavigate } from 'react-router-dom';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { Campaign } from '../../types';
 import { formatTokenAmount, getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
-import ConnectWallet from '../ConnectWallet';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import ExplorerLink from '../ExplorerLink';
 import InfoTooltipInner from '../InfoTooltipInner';
@@ -17,11 +16,8 @@ import LaunchCampaign from '../LaunchCampaign';
 
 type Props = {
   data: Campaign[] | undefined;
-  showPagination?: boolean;
-  showAllCampaigns?: boolean;
   isJoinedCampaigns?: boolean;
   isMyCampaigns?: boolean;
-  onViewAllClick?: () => void;
 };
 
 const getSuffix = (day: number) => {
@@ -47,25 +43,12 @@ const formatDate = (dateString: string) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
-  const { isConnected } = useAccount();
-
-  if (isConnected) {
-    return (
-      <>
-        <Typography variant="subtitle2" component="p">
-          At the moment you are not running any campaign.
-        </Typography>
-        <LaunchCampaign variant="contained" />
-      </>
-    )
-  }
-
   return (
     <>
       <Typography variant="subtitle2" component="p">
-        To see your campaigns please connect your wallet
+        At the moment you are not running any campaign.
       </Typography>
-      <ConnectWallet />
+      <LaunchCampaign variant="contained" />
     </>
   )
 }
@@ -73,6 +56,9 @@ const MyCampaignsNoRows: FC = () => {
 const JoinedCampaignsNoRows: FC = () => {
   const { isConnected } = useAccount();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const isHomePage = pathname === '/';
 
   if (isConnected) {
     return (
@@ -84,11 +70,12 @@ const JoinedCampaignsNoRows: FC = () => {
           variant="contained"
           size="medium"
           sx={{ 
+            display: isHomePage ? 'none' : 'inline-flex',
             height: '42px',
             bgcolor: 'primary.main',
             color: 'primary.contrast', 
           }}
-          onClick={() => navigate('/all-campaigns')}
+          onClick={() => navigate('/')}
         >
           All Campaigns
         </Button>
@@ -97,41 +84,11 @@ const JoinedCampaignsNoRows: FC = () => {
   }
 
   return (
-    <>
-      <Typography variant="subtitle2" component="p">
-        To see joined campaigns please connect your wallet
-      </Typography>
-      <ConnectWallet />
-    </>
+    <Typography variant="subtitle2" component="p">
+      To see joined campaigns please sign in
+    </Typography>
   )
 }
-
-const CustomPagination: FC<{
-  showPagination: boolean;
-  showAllCampaigns: boolean;
-  onViewAllClick?: () => void;
-}> = ({ showPagination, showAllCampaigns, onViewAllClick }) => {
-  return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      width="100%"
-    >
-      {!showAllCampaigns && (
-        <Button
-          variant="contained"
-          size="medium"
-          sx={{ color: 'primary.contrast' }}
-          onClick={onViewAllClick}
-        >
-          View All
-        </Button>
-      )}
-      {showPagination && <GridPagination />}
-    </Box>
-  );
-};
 
 const statusTooltipData = [
   {
@@ -190,9 +147,6 @@ const StatusTooltip = () => {
 
 const CampaignsTable: FC<Props> = ({
   data,
-  onViewAllClick,
-  showPagination = false,
-  showAllCampaigns = true,
   isJoinedCampaigns = false,
   isMyCampaigns = false,
 }) => {
@@ -202,9 +156,6 @@ const CampaignsTable: FC<Props> = ({
   const isXl = useIsXlDesktop();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
-
-  const campaigns =
-    showAllCampaigns || showPagination ? data : data?.slice(0, 3);
 
   const noRows = !(data && data.length > 0);
 
@@ -334,7 +285,7 @@ const CampaignsTable: FC<Props> = ({
 
   return (
     <DataGrid
-      rows={campaigns}
+      rows={data || []}
       columns={columns}
       columnVisibilityModel={{
         status: !isJoinedCampaigns,
@@ -349,28 +300,15 @@ const CampaignsTable: FC<Props> = ({
       disableColumnResize
       disableRowSelectionOnClick
       getRowSpacing={({ isLastVisible }) => ({ bottom: isLastVisible ? 0 : 8 })}
-      pageSizeOptions={[5, 25, 50]}
       disableVirtualization={!data}
-      initialState={{
-        pagination: {
-          paginationModel: {
-            pageSize: 5,
-          },
-        },
-      }}
+      hideFooter
+      hideFooterPagination
       onRowClick={(params) => {
         navigate(
           `/campaign-details/${params.row.address}`
         );
       }}
       slots={{
-        pagination: !noRows ? () => (
-          <CustomPagination
-            showPagination={showPagination}
-            showAllCampaigns={showAllCampaigns}
-            onViewAllClick={onViewAllClick}
-          />
-        ) : null,
         noRowsOverlay: () => (
           <Box 
             display="flex" 
@@ -465,10 +403,6 @@ const CampaignsTable: FC<Props> = ({
         },
         '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within': {
           outline: 'none',
-        },
-        '& .MuiDataGrid-footerContainer': {
-          display: noRows ? 'none' : 'flex',
-          mt: '15px',
         },
       }}
     />

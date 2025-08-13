@@ -4,7 +4,7 @@ import { Button, List, ListItemButton, Popover, Typography } from '@mui/material
 import { useNavigate } from 'react-router-dom';
 import { useDisconnect } from 'wagmi';
 
-import { AvatarIcon, ArrowDownIcon, PowerIcon, ApiKeyIcon } from '../../icons';
+import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '../../icons';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { formatAddress } from '../../utils';
@@ -76,8 +76,9 @@ const Account: FC = () => {
         >
           {formattedAddress}
         </Typography>
-        <ArrowDownIcon
+        <ChevronIcon
           sx={{
+            color: 'primary.light',
             transform: anchorEl ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease-in-out',
           }}

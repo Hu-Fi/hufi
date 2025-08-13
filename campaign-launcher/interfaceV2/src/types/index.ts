@@ -5,25 +5,27 @@ export enum ExchangeType {
   DEX = 'dex',
 }
 
+export enum CampaignsView {
+  ALL = 'all',
+  JOINED = 'joined',
+  MY = 'my',
+}
+
+export enum CampaignStatus {
+  ACTIVE = 'active',
+  CANCELLED = 'cancelled',
+  COMPLETED = 'completed',
+}
+
 export type TokenData = {
   name: string;
   label?: string;
   icon?: string;
 };
 
-type Chain = {
-  averageFundingUSD: number;
-  chainId: ChainId;
-  chainName: string;
-  campaigns: number;
-  totalFundsUSD: number;
-};
-
 export type CampaignsStats = {
-  totalCampaigns: number;
-  totalFundsUSD: number;
-  averageFundingUSD: number;
-  chains: Chain[];
+  n_active_campaigns: number;
+  rewards_pool_usd: string;
 };
 
 export type Exchange = {
@@ -89,4 +91,12 @@ export type ManifestUploadDto = {
   pair: string;
   start_date: string;
   end_date: string;
+}
+
+export type CampaignsQueryParams = {
+  chain_id: ChainId;
+  status?: CampaignStatus;
+  launcher?: string;
+  limit?: number;
+  skip?: number;
 }

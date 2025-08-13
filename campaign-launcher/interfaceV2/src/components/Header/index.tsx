@@ -9,7 +9,6 @@ import logo from '../../assets/logo.svg';
 import { ROUTES } from '../../constants';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import Account from '../Account';
-import CampaignsMenu from '../CampaignsMenu';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
 import NetworkSwitcher from '../NetworkSwitcher';
@@ -63,7 +62,6 @@ const Header: FC = () => {
             >
               Dashboard
             </MuiLink>
-            <CampaignsMenu />
             <MuiLink
               to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
               target="_blank"
@@ -136,7 +134,6 @@ const Header: FC = () => {
               >
                 Dashboard
               </MuiLink>
-              <CampaignsMenu />
               <MuiLink
                 to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
                 target="_blank"

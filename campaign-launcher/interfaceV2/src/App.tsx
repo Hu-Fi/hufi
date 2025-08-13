@@ -7,12 +7,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ROUTES } from './constants';
-import AllCampaignsPage from './pages/AllCampaigns';
 import Campaign from './pages/Campaign';
 import Dashboard from './pages/Dashboard';
-import JoinedCampaignsPage from './pages/JoinedCampaigns';
 import ManageApiKeysPage from './pages/ManageApiKeys';
-import MyCampaignsPage from './pages/MyCampaigns';
 import ActiveAccountProvider from './providers/ActiveAccountProvider';
 import ExchangesProvider from './providers/ExchangesProvider';
 import QueryClientProvider from './providers/QueryClientProvider';
@@ -38,18 +35,6 @@ const App: FC = () => {
                         <Route
                           path={ROUTES.CAMPAIGN_DETAILS}
                           element={<Campaign />}
-                        />
-                        <Route
-                          path={ROUTES.ALL_CAMPAIGNS}
-                          element={<AllCampaignsPage />}
-                        />
-                        <Route
-                          path={ROUTES.MY_CAMPAIGNS}
-                          element={<MyCampaignsPage />}
-                        />
-                        <Route
-                          path={ROUTES.JOINED_CAMPAIGNS}
-                          element={<JoinedCampaignsPage />}
                         />
                         <Route
                           path={ROUTES.MANAGE_API_KEYS}
