@@ -16,7 +16,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
 
   return useQuery({
     queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS, status, limit, skip],
-    queryFn: () =>  recordingApi.getJoinedCampaigns(params),
+    queryFn: () => recordingApi.getJoinedCampaigns(params),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
