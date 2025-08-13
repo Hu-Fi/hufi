@@ -4,6 +4,7 @@ import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 import { useGetCampaignsStats } from '../../hooks/useCampaigns';
+import FormattedNumber from '../FormattedNumber';
 import TotalVolume from '../TotalVolume';
 
 export const StatsCard = styled(Box)(({ theme }) => ({
@@ -38,7 +39,9 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
-            <Value>${(Number(campaignsStats?.rewards_pool_usd) || 0).toFixed(3)}</Value>
+            <Value>
+              <FormattedNumber value={campaignsStats?.rewards_pool_usd} prefix='$' />
+            </Value>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -47,7 +50,9 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Number of Active Campaigns</Typography>
-            <Value>{campaignsStats?.n_active_campaigns || 0}</Value>
+            <Value>
+              <FormattedNumber value={campaignsStats?.n_active_campaigns} />
+            </Value>
           </StatsCard>
         </Grid>
       </Grid>

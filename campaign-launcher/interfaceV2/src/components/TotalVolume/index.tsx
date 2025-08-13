@@ -5,6 +5,7 @@ import { Box, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import { useGetTotalVolume } from '../../hooks/recording-oracle/stats';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { StatsCard, Value } from '../DashboardStats';
+import FormattedNumber from '../FormattedNumber';
 
 const TotalVolume = () => {
   const [exchange, setExchange] = useState('');
@@ -13,7 +14,7 @@ const TotalVolume = () => {
 
   return (
     <StatsCard>
-      <Box display="flex" alignItems="center" gap={2}>
+      <Box display="flex" alignItems="center" gap={{ xs: 1, lg: 4, xl: 8}}>
         <Typography variant="subtitle2">Liquidity Provided</Typography>
         <FormControl variant="standard" sx={{ flex: 1 }}>
           <Select
@@ -47,7 +48,9 @@ const TotalVolume = () => {
           </Select>
         </FormControl>
       </Box>
-      <Value>${(Number(totalVolume) || 0)}</Value>
+      <Value>
+        <FormattedNumber value={totalVolume} prefix='$' />
+      </Value>
     </StatsCard>
   );
 };
