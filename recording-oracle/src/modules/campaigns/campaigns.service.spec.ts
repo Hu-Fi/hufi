@@ -241,7 +241,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt().toString(),
-        manifestUrl: '',
+        manifest: '',
       } as any);
 
       let thrownError;
@@ -270,7 +270,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt().toString(),
-        manifestUrl: faker.internet.url(),
+        manifest: faker.internet.url(),
         recordingOracle: escrowRecordingOracle,
       } as any);
 
@@ -303,7 +303,7 @@ describe('CampaignsService', () => {
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount: faker.number.bigInt().toString(),
-          manifestUrl: faker.internet.url(),
+          manifest: faker.internet.url(),
           recordingOracle: mockWeb3ConfigService.operatorAddress,
         } as any);
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
@@ -340,7 +340,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt().toString(),
-        manifestUrl,
+        manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
@@ -382,7 +382,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt().toString(),
-        manifestUrl,
+        manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
@@ -419,7 +419,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt().toString(),
-        manifestUrl,
+        manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
@@ -457,7 +457,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount,
-        manifestUrl,
+        manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
@@ -494,7 +494,7 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount,
-        manifestUrl: JSON.stringify(mockedManifest),
+        manifest: JSON.stringify(mockedManifest),
         recordingOracle: mockWeb3ConfigService.operatorAddress,
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);

@@ -20,10 +20,10 @@ const MANIFEST_RESPONSE_KEYS = Object.keys(generateManifestResponse());
 
 describe('manifest utils', () => {
   describe('downloadCampaignManifest', () => {
-    let manifestUrl: string;
+    let manifest: string;
 
     beforeEach(() => {
-      manifestUrl = faker.internet.url();
+      manifest = faker.internet.url();
     });
 
     afterEach(() => {
@@ -35,12 +35,12 @@ describe('manifest utils', () => {
     });
 
     it('should throw when manifest not found', async () => {
-      const scope = nock(manifestUrl).get('/').reply(404);
+      const scope = nock(manifest).get('/').reply(404);
 
       let thrownError;
       try {
         await manifestUtils.downloadCampaignManifest(
-          manifestUrl,
+          manifest,
           faker.string.hexadecimal(),
         );
       } catch (error) {
@@ -56,11 +56,11 @@ describe('manifest utils', () => {
     it('should throw when invalid manifest hash', async () => {
       const mockedManifest = generateManifestResponse();
       const invalidHash = faker.string.hexadecimal();
-      const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
+      const scope = nock(manifest).get('/').reply(200, mockedManifest);
 
       let thrownError;
       try {
-        await manifestUtils.downloadCampaignManifest(manifestUrl, invalidHash);
+        await manifestUtils.downloadCampaignManifest(manifest, invalidHash);
       } catch (error) {
         thrownError = error;
       }
