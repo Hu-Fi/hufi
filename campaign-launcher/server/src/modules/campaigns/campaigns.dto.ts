@@ -186,4 +186,13 @@ export class CampaignDataWithDetails extends CampaignData {
     isArray: true,
   })
   dailyPaidAmounts: DailyPaidAmount[];
+
+  @ApiProperty({ name: 'exchange_oracle_fee_percent' })
+  exchangeOracleFeePercent: number;
+
+  @ApiProperty({ name: 'recording_oracle_fee_percent' })
+  recordingOracleFeePercent: number;
+
+  @ApiProperty({ name: 'reputation_oracle_fee_percent' })
+  reputationOracleFeePercent: number;
 }

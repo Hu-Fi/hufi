@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Header,
   NotFoundException,
   Param,
   Query,
@@ -64,6 +65,7 @@ export class CampaignsController {
     status: 200,
     type: CampaignDataWithDetails,
   })
+  @Header('Cache-Control', 'public, max-age=60')
   @Get('/:chain_id-:campaign_address')
   async getCampaignWithDetails(
     @Param() params: GetCampaignWithDetailsParamsDto,

@@ -21,6 +21,7 @@
     "test:e2e": "jest --config ./test/e2e/jest.config.json"
   },
   "dependencies": {
+    "@human-protocol/core": "^4.2.0",
     "@human-protocol/logger": "^1.0.0",
     "@human-protocol/sdk": "^4.2.0",
     "@nestjs/common": "^11.1.5",
