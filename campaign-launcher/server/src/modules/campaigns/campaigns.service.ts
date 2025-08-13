@@ -142,7 +142,7 @@ export class CampaignsService {
       throw new InvalidCampaignManifestError(
         chainId,
         escrowAddress,
-        'Manifest or manifest url is missing',
+        'Manifest is missing',
       );
     }
 
