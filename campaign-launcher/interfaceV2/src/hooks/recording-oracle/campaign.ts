@@ -1,6 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 
 import { recordingApi } from '../../api';
 import { QUERY_KEYS } from '../../constants/queryKeys';
@@ -36,5 +36,17 @@ export const useJoinCampaign = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS] });
     },
+  });
+};
+
+export const useCheckIsJoinedCampaign = (address: `0x${string}`) => {
+  const chainId = useChainId();
+  const { isAuthenticated } = useWeb3Auth();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN, chainId, address],
+    queryFn: () => recordingApi.checkIsJoinedCampaign(chainId, address),
+    select: (data) => data.is_joined,
+    enabled: isAuthenticated && !!chainId && !!address,
   });
 };

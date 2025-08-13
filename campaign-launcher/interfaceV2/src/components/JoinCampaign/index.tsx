@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 
 import { Button, CircularProgress } from '@mui/material';
 
-import { useGetEnrolledExchanges, useGetJoinedCampaigns, useJoinCampaign } from '../../hooks/recording-oracle';
+import { useCheckIsJoinedCampaign, useGetEnrolledExchanges, useJoinCampaign } from '../../hooks/recording-oracle';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails } from '../../types';
 import AddKeysPromptModal from '../modals/AddKeysPromptModal';
@@ -15,12 +15,10 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } = useGetEnrolledExchanges();
-  const { data: joinedCampaigns, isLoading: isJoinedCampaignsLoading } = useGetJoinedCampaigns();
   const { mutate: joinCampaign, isPending: isJoinPending } = useJoinCampaign();
+  const { data: isAlreadyJoined, isLoading: isJoinedLoading } = useCheckIsJoinedCampaign(campaign.address);
 
-  const isAlreadyJoined = joinedCampaigns?.results.some((joinedCampaign) => joinedCampaign.address === campaign.address);
-
-  const isLoading = isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoinPending;
+  const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoinPending;
   const isButtonDisabled = !isAuthenticated || isLoading || isAlreadyJoined;
     
   const handleButtonClick = () => {

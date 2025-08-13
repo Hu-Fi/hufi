@@ -9,4 +9,5 @@ export const QUERY_KEYS = {
   CAMPAIGNS_STATS: 'campaigns-stats',
   TOTAL_VOLUME: 'total-volume',
   TRADING_PAIRS: 'trading-pairs',
+  CHECK_IS_JOINED_CAMPAIGN: 'check-is-joined-campaign',
 };
