@@ -1,6 +1,6 @@
 import { ChainId } from "@human-protocol/sdk";
 
-import { CampaignDetails, CampaignsResponse, Exchange } from "../types";
+import { CampaignDetails, CampaignsResponse, CampaignsStats, Exchange } from "../types";
 import { HttpClient, HttpError } from "../utils/HttpClient";
 
 export class LauncherApiClient extends HttpClient {
@@ -32,6 +32,11 @@ export class LauncherApiClient extends HttpClient {
       }
       throw error;
     }
+  }
+
+  async getCampaignsStats(chain_id: ChainId): Promise<CampaignsStats> {
+    const response = await this.get<CampaignsStats>(`/stats/campaigns`, { params: { chain_id } });
+    return response;
   }
 }
 

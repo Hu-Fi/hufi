@@ -23,19 +23,9 @@ export type TokenData = {
   icon?: string;
 };
 
-type Chain = {
-  averageFundingUSD: number;
-  chainId: ChainId;
-  chainName: string;
-  campaigns: number;
-  totalFundsUSD: number;
-};
-
 export type CampaignsStats = {
-  totalCampaigns: number;
-  totalFundsUSD: number;
-  averageFundingUSD: number;
-  chains: Chain[];
+  n_active_campaigns: number;
+  rewards_pool_usd: string;
 };
 
 export type Exchange = {
@@ -105,7 +95,6 @@ export type ManifestUploadDto = {
 
 export type CampaignsQueryParams = {
   chain_id: ChainId;
-  exchange_name?: string;
   status?: CampaignStatus;
   launcher?: string;
   limit?: number;

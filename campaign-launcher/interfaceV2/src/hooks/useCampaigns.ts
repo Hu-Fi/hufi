@@ -7,9 +7,9 @@ import { CampaignsQueryParams } from '../types';
 import { filterFalsyQueryParams } from '../utils';
 
 export const useCampaigns = (params: CampaignsQueryParams) => {
-  const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
+  const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
+    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, status, launcher, limit, skip],
     queryFn: () => {
       const filteredParams = filterFalsyQueryParams(params);
       return launcherApi.getCampaigns(filteredParams)
@@ -26,9 +26,9 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
 };
 
 export const useMyCampaigns = (params: CampaignsQueryParams) => {
-  const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
+  const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
+    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, status, launcher, limit, skip],
     queryFn: () => {
       const filteredParams = filterFalsyQueryParams(params);
       return launcherApi.getCampaigns(filteredParams)
@@ -53,3 +53,12 @@ export const useCampaignDetails = (address: string) => {
     retry: false,
   });
 };
+
+export const useGetCampaignsStats = () => {
+  const chainId = useChainId();
+  return useQuery({
+    queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, chainId],
+    queryFn: () => launcherApi.getCampaignsStats(chainId),
+    enabled: !!chainId,
+  });
+}

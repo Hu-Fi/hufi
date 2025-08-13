@@ -144,4 +144,12 @@ export class RecordingApiClient extends HttpClient {
       address,
     });
   }
+
+  async getTotalVolume(exchange_name: string): Promise<{ total_volume: number }> {
+    const response = await this.get<{ total_volume: number }>(
+      `/stats/total-volume`,
+      exchange_name ? { params: { exchange_name } } : {}
+    );
+    return response;
+  }
 }

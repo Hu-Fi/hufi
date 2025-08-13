@@ -3,9 +3,10 @@ import { FC } from 'react';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import useGetLiquidityScore from '../../hooks/useGetLiquidityScore';
+import { useGetCampaignsStats } from '../../hooks/useCampaigns';
+import TotalVolume from '../TotalVolume';
 
-const StatsCard = styled(Box)(({ theme }) => ({
+export const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
@@ -20,7 +21,7 @@ const StatsCard = styled(Box)(({ theme }) => ({
   }
 }));
 
-const Value = styled(Typography)(({ theme }) => ({
+export const Value = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.violet,
   fontSize: '40px',
   fontWeight: 800,
@@ -29,7 +30,7 @@ const Value = styled(Typography)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
-  const { data: liquidityScore } = useGetLiquidityScore();
+  const { data: campaignsStats } = useGetCampaignsStats();
 
   return (
     <Box component="section" display="flex" flexWrap="wrap">
@@ -37,19 +38,16 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
-            <Value>$0</Value>
+            <Value>${(Number(campaignsStats?.rewards_pool_usd) || 0).toFixed(3)}</Value>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <StatsCard>
-            <Typography variant="subtitle2">Total Liquidity Provided</Typography>
-            <Value>${(liquidityScore as { total: number })?.total || 0}</Value>
-          </StatsCard>
+          <TotalVolume />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Number of Active Campaigns</Typography>
-            <Value>0</Value>
+            <Value>{campaignsStats?.n_active_campaigns || 0}</Value>
           </StatsCard>
         </Grid>
       </Grid>
