@@ -71,7 +71,7 @@ export class PayoutsService {
       try {
         const [manifest, intermediateResultsData] = await Promise.all([
           payoutsUtils.retrieveCampaignManifest(
-            campaign.manifestUrl,
+            campaign.manifest,
             campaign.manifestHash,
           ),
           payoutsUtils.downloadIntermediateResults(
@@ -293,7 +293,7 @@ export class PayoutsService {
       campaignsWithResults.push({
         chainId: escrow.chainId,
         address: escrow.address,
-        manifestUrl: escrow.manifestUrl as string,
+        manifest: escrow.manifest as string,
         manifestHash: escrow.manifestHash as string,
         intermediateResultsUrl: escrow.intermediateResultsUrl as string,
         fundTokenAddress: escrow.token,

@@ -14,7 +14,7 @@ export type CampaignWithResults = Required<
     IEscrow,
     | 'chainId'
     | 'address'
-    | 'manifestUrl'
+    | 'manifest'
     | 'manifestHash'
     | 'intermediateResultsUrl'
   > & {
