@@ -34,15 +34,6 @@ const StatsCard = styled(Box)(({ theme }) => ({
   },
 }));
 
-const Title = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.primary,
-  marginBottom: '56px',
-
-  [theme.breakpoints.down('xl')]: {
-    marginBottom: '16px',
-  },
-}));
-
 const Value = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.violet,
   fontSize: '40px',
@@ -88,31 +79,44 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
       <Grid size={{ xs: 12, md: 6 }}>
         <FlexGrid>
           <StatsCard>
-            <Title variant="subtitle2">Total Funded Amount</Title>
+            <Typography variant="subtitle2" mb={{ xs: 2, xl: 7 }}>Total Funded Amount</Typography>
             <Value>
               {formatTokenAmount(campaign.fund_amount, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
-            <Title variant="subtitle2">Amount Paid</Title>
+            <Typography variant="subtitle2" mb={{ xs: 2, xl: 7 }}>Amount Paid</Typography>
             <Value>
               {formatTokenAmount(campaign.amount_paid, campaign.fund_token_decimals)} <span>{campaign.fund_token_symbol}</span>
             </Value>
           </StatsCard>
           <StatsCard>
-            <Title variant="subtitle2">Exchange</Title>
+            <Typography variant="subtitle2" mb={{ xs: 2, xl: 7 }}>Exchange</Typography>
             <Typography variant={isXl ? 'h4' : 'h6-mobile'}>
               {exchangeName}
             </Typography>
           </StatsCard>
           <StatsCard>
-            <Title variant="subtitle2">Pair</Title>
+            <Typography variant="subtitle2" mb={{ xs: 2, xl: 7 }}>Pair</Typography>
             <CryptoPairEntity
               symbol={campaign.trading_pair}
               size={isXl ? 'large' : 'medium'}
             />
           </StatsCard>
+          <StatsCard 
+            sx={{ 
+              flexDirection: 'row', 
+              justifyContent: 'space-between',
+              alignItems: 'center', 
+              py: { xs: 1.5, md: 2 }, 
+              height: { xs: 'unset' }, 
+              flexBasis: '100%'
+            }}
+          >
+            <Typography variant="subtitle2">Oracle fees</Typography>
+          </StatsCard>
         </FlexGrid>
+        
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <Box

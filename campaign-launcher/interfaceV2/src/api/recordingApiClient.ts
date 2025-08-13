@@ -92,14 +92,14 @@ export class RecordingApiClient extends HttpClient {
   }
 
   async getNonce(address: `0x${string}` | undefined): Promise<string> {
-    const response = await this.post<'signup' | string>(`/auth/nonce`, {
+    const response = await this.post<'signup' | string>('/auth/nonce', {
       address,
     });
     return response;
   }
 
   async auth(address: `0x${string}` | undefined, signature: `0x${string}`): Promise<TokenData> {
-    const response = await this.post<TokenData>(`/auth`, {
+    const response = await this.post<TokenData>('/auth', {
       address,
       signature,
     });
@@ -138,18 +138,26 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async joinCampaign(chainId: ChainId, address: `0x${string}`): Promise<void> {
-    await this.post<void>(`/campaigns/join`, {
-      chain_id: chainId,
+  async joinCampaign(chain_id: ChainId, address: `0x${string}`): Promise<void> {
+    await this.post<void>('/campaigns/join', {
+      chain_id,
       address,
     });
   }
 
   async getTotalVolume(exchange_name: string): Promise<{ total_volume: number }> {
     const response = await this.get<{ total_volume: number }>(
-      `/stats/total-volume`,
+      '/stats/total-volume',
       exchange_name ? { params: { exchange_name } } : {}
     );
+    return response;
+  }
+
+  async checkIsJoinedCampaign(chain_id: ChainId, address: `0x${string}`): Promise<{is_joined: boolean}> {
+    const response = await this.post<{is_joined: boolean}>('/campaigns/check-is-joined', {
+      chain_id,
+      address,
+    });
     return response;
   }
 }
