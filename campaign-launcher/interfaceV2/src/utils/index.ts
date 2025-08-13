@@ -155,3 +155,17 @@ export const calculateHash = async (manifest: string, algorithm: AlgorithmIdenti
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
+
+export const filterFalsyQueryParams = (
+  params: Record<string, string | number | undefined>
+): Record<string, string | number> => {
+  const result: Record<string, string | number> = {};
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value) {
+      result[key] = value;
+    }
+  }
+  
+  return result;
+};

@@ -133,8 +133,8 @@ export class RecordingApiClient extends HttpClient {
     await this.delete(`/exchange-api-keys/${exchangeName}`);
   }
 
-  async getJoinedCampaigns(): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns');
+  async getJoinedCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns', { params });
     return response;
   }
 
@@ -143,5 +143,13 @@ export class RecordingApiClient extends HttpClient {
       chain_id: chainId,
       address,
     });
+  }
+
+  async getTotalVolume(exchange_name: string): Promise<{ total_volume: number }> {
+    const response = await this.get<{ total_volume: number }>(
+      `/stats/total-volume`,
+      exchange_name ? { params: { exchange_name } } : {}
+    );
+    return response;
   }
 }

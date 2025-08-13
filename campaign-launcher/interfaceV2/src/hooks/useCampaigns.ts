@@ -1,33 +1,15 @@
-import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useChainId } from 'wagmi';
 
 import { launcherApi } from '../api';
 import { QUERY_KEYS } from '../constants/queryKeys';
+import { CampaignsQueryParams } from '../types';
 
-type CampaignsParams = {
-  chain_id: ChainId;
-  exchange_name?: string;
-  status?: string;
-  launcher?: string;
-  limit?: number;
-  skip?: number;
-}
-
-const filterParams = (params: CampaignsParams) => {
-  return Object.fromEntries(
-    Object.entries(params).filter(([, value]) => Boolean(value))
-  );
-};
-
-export const useCampaigns = (params: CampaignsParams) => {
-  const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
+export const useCampaigns = (params: CampaignsQueryParams) => {
+  const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
-    queryFn: () => {
-      const filteredParams = filterParams(params);
-      return launcherApi.getCampaigns(filteredParams)
-    },
+    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, status, launcher, limit, skip],
+    queryFn: () => launcherApi.getCampaigns(params),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -39,14 +21,11 @@ export const useCampaigns = (params: CampaignsParams) => {
   });
 };
 
-export const useMyCampaigns = (params: CampaignsParams) => {
-  const { chain_id, exchange_name, status, launcher, limit = 10, skip } = params;
+export const useMyCampaigns = (params: CampaignsQueryParams) => {
+  const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, exchange_name, status, launcher, limit, skip],
-    queryFn: () => {
-      const filteredParams = filterParams(params);
-      return launcherApi.getCampaigns(filteredParams)
-    },
+    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, status, launcher, limit, skip],
+    queryFn: () => launcherApi.getCampaigns(params),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -67,3 +46,12 @@ export const useCampaignDetails = (address: string) => {
     retry: false,
   });
 };
+
+export const useGetCampaignsStats = () => {
+  const chainId = useChainId();
+  return useQuery({
+    queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, chainId],
+    queryFn: () => launcherApi.getCampaignsStats(chainId),
+    enabled: !!chainId,
+  });
+}

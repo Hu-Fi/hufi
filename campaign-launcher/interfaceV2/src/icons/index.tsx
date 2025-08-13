@@ -122,7 +122,7 @@ export const PowerIcon: FC<SvgIconProps> = (props) => {
 export const ArrowDownIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 25 24" fill="none">
-      <path d="M7.5 9.5L12.5 14.5L17.5 9.5H7.5Z" fill="#24046d" />
+      <path d="M7.5 9.5L12.5 14.5L17.5 9.5H7.5Z" fill="currentColor" />
     </SvgIcon>
   );
 };
