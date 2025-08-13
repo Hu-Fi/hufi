@@ -62,6 +62,9 @@ export type Campaign = {
 }
 
 export type CampaignDetails = Campaign & {
+  exchange_oracle_fee_percent: number;
+  recording_oracle_fee_percent: number;
+  reputation_oracle_fee_percent: number;
   amount_paid: string;
   daily_paid_amounts: {
     date: string;

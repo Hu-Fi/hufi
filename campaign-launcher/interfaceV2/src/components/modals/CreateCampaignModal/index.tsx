@@ -161,6 +161,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     tokenDecimals,
     isError,
     clearError,
+    exchangeOracleFee,
+    recordingOracleFee,
+    reputationOracleFee,
   } = useCreateEscrow();
   const queryClient = useQueryClient();
   const chainId = useChainId();
@@ -209,7 +212,12 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const onViewCampaignDetailsClick = () => {
     const formData = getValues();
-    const payload = constructCampaignDetails(chainId, escrowAddress, formData, tokenDecimals);
+    const fees = {
+      exchangeOracleFee,
+      recordingOracleFee,
+      reputationOracleFee,
+    };
+    const payload = constructCampaignDetails(chainId, escrowAddress, formData, tokenDecimals, fees);
     const encodedData = btoa(JSON.stringify(payload));
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);

@@ -119,7 +119,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
   return true;
 };
 
-export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto, tokenDecimals: number) => {
+export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto, tokenDecimals: number, fees: { exchangeOracleFee: bigint, recordingOracleFee: bigint, reputationOracleFee: bigint }) => {
   const fundAmount = ethers.parseUnits(
     data.fund_amount.toString(),
     tokenDecimals
@@ -141,8 +141,11 @@ export const constructCampaignDetails = (chainId: ChainId, address: string, data
     escrow_status: 'pending',
     launcher: address,
     exchange_oracle: '',
+    exchange_oracle_fee_percent: Number(fees.exchangeOracleFee),
     recording_oracle: '',
+    recording_oracle_fee_percent: Number(fees.recordingOracleFee),
     reputation_oracle: '',
+    reputation_oracle_fee_percent: Number(fees.reputationOracleFee),
     amount_paid: '0',
     daily_paid_amounts: [],
   }

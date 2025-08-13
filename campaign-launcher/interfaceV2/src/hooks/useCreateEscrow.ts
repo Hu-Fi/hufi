@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { EscrowClient } from '@human-protocol/sdk';
+import { EscrowClient, KVStoreKeys, KVStoreUtils } from '@human-protocol/sdk';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
@@ -24,6 +24,9 @@ const useCreateEscrow = () => {
   const [escrowAddress, setEscrowAddress] = useState('');
   const [tokenDecimals, setTokenDecimals] = useState(18);
   const [stepsCompleted, setStepsCompleted] = useState(0);
+  const [exchangeOracleFee, setExchangeOracleFee] = useState(BigInt(0));
+  const [recordingOracleFee, setRecordingOracleFee] = useState(BigInt(0));
+  const [reputationOracleFee, setReputationOracleFee] = useState(BigInt(0));
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const chainId = useChainId();
@@ -33,7 +36,7 @@ const useCreateEscrow = () => {
     setIsError(false);
   }
 
-  const createEscrow = async (data: EscrowCreateDto) => {
+  const createEscrow = useCallback(async (data: EscrowCreateDto) => {
     if (!signer || !network) {
       return;
     }
@@ -49,6 +52,45 @@ const useCreateEscrow = () => {
 
       if (!tokenAddress?.length) {
         throw new Error('Fund token is not supported.');
+      }
+
+      let _exchangeOracleFee: string;
+      try {
+        _exchangeOracleFee = await KVStoreUtils.get(chainId, oracles.exchangeOracle, KVStoreKeys.fee);
+        setExchangeOracleFee(BigInt(_exchangeOracleFee));
+      } catch (e) {
+        console.error('Error getting exchange oracle fee', e);
+        throw e
+      }
+
+      if (!_exchangeOracleFee) {
+        throw new Error('Exchange oracle fee is not set.');
+      }
+
+      let _recordingOracleFee: string;
+      try {
+        _recordingOracleFee = await KVStoreUtils.get(chainId, oracles.recordingOracle, KVStoreKeys.fee);
+        setRecordingOracleFee(BigInt(_recordingOracleFee));
+      } catch (e) {
+        console.error('Error getting recording oracle fee', e);
+        throw e;
+      }
+
+      if (!_recordingOracleFee) {
+        throw new Error('Recording oracle fee is not set.');
+      }
+
+      let _reputationOracleFee: string;
+      try {
+        _reputationOracleFee = await KVStoreUtils.get(chainId, oracles.reputationOracle, KVStoreKeys.fee);
+        setReputationOracleFee(BigInt(_reputationOracleFee));
+      } catch (e) {
+        console.error(e);
+        throw e;
+      }
+
+      if (!_reputationOracleFee) {
+        throw new Error('Reputation oracle fee is not set.');
       }
 
       const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
@@ -83,7 +125,12 @@ const useCreateEscrow = () => {
       const manifestHash = await calculateHash(manifestString);
       
       const escrowConfig = {
-        ...oracles,
+        exchangeOracle: oracles.exchangeOracle,
+        recordingOracle: oracles.recordingOracle,
+        reputationOracle: oracles.reputationOracle,
+        exchangeOracleFee: BigInt(_exchangeOracleFee),
+        recordingOracleFee: BigInt(_recordingOracleFee),
+        reputationOracleFee: BigInt(_reputationOracleFee),
         manifestUrl: manifestString,
         manifestHash: manifestHash,
       };
@@ -97,9 +144,20 @@ const useCreateEscrow = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [signer, network]);
 
-  return { escrowAddress, tokenDecimals, createEscrow, isLoading, stepsCompleted, isError, clearError };
+  return { 
+    escrowAddress, 
+    tokenDecimals, 
+    createEscrow, 
+    isLoading, 
+    stepsCompleted, 
+    isError, 
+    clearError,
+    exchangeOracleFee,
+    recordingOracleFee,
+    reputationOracleFee
+  };
 };
 
 export default useCreateEscrow;
