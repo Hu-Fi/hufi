@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 
-import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
+import {
+  EscrowClient,
+  EscrowStatus,
+  EscrowUtils,
+  TransactionUtils,
+} from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 
@@ -9,7 +14,7 @@ import { ContentType } from '@/common/enums';
 import * as decimalUtils from '@/common/utils/decimal';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import { Web3Service } from '@/modules/web3';
+import { WalletWithProvider, Web3Service } from '@/modules/web3';
 
 import * as payoutsUtils from './payouts.utils';
 import {
@@ -100,11 +105,24 @@ export class PayoutsService {
           intermediateResultsData,
         );
 
+        let bulkPayoutsCount = await this.getBulkPayoutsCount(
+          signer,
+          campaign.address,
+          campaign.chainId,
+        );
+
         for (const intermediateResult of intermediateResultsData.results) {
-          /**
-           * TODO: somehow check if this result was already paid before
-           */
           if (intermediateResult.total_volume === 0) {
+            continue;
+          }
+
+          /***
+           *  Temp fix for long-running campaigns.
+           *  In a nutshell: we are 100% sure that in case payouts are failing for some period, the next one won't be processed.
+           *  So as a temp fix we are counting the amount of bulkPayout events happened for the escrow and skipping first X time frames.
+           ***/
+          if (bulkPayoutsCount > 0) {
+            bulkPayoutsCount -= 1;
             continue;
           }
 
@@ -305,5 +323,34 @@ export class PayoutsService {
     }
 
     return campaignsWithResults;
+  }
+
+  private async getBulkPayoutsCount(
+    signer: WalletWithProvider,
+    escrowAddress: string,
+    chainId: ChainId,
+  ) {
+    const { block } = (
+      await TransactionUtils.getTransactions({
+        chainId: chainId as number,
+        escrow: escrowAddress,
+        method: 'setup',
+      })
+    )[0];
+
+    const bulkInterface = new ethers.Interface([
+      'event BulkTransferV2(uint256 indexed _txId, address[] _recipients, uint256[] _amounts, bool _isPartial, string finalResultsUrl)',
+    ]);
+
+    const topic = bulkInterface.getEvent('BulkTransferV2')!.topicHash;
+
+    const logs = await signer.provider.getLogs({
+      address: escrowAddress,
+      topics: [topic],
+      fromBlock: Number(block),
+      toBlock: 'latest',
+    });
+
+    return logs.length;
   }
 }
