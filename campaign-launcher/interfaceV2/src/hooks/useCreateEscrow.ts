@@ -163,8 +163,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       console.error(e);
       setStepsCompleted(0);
       throw e;
-    } finally {
-      setIsLoading(false);
     }
   }, [signer, network, chainId]);
 
@@ -177,6 +175,8 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       const err = e instanceof Error ? e : new Error('Unknown error occurred');
       setError(err);
       setData(undefined);
+    } finally {
+      setIsLoading(false);
     }
   }, [createEscrowMutation]);
 

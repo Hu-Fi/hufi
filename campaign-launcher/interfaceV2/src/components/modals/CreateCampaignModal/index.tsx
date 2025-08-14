@@ -198,7 +198,13 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       recordingOracleFee: recordingOracleFee,
       reputationOracleFee: reputationOracleFee,
     };
-    const payload = constructCampaignDetails(chainId, escrowAddress, formData, tokenDecimals, fees);
+    const payload = constructCampaignDetails({ 
+      chainId, 
+      address: escrowAddress, 
+      data: formData, 
+      tokenDecimals, 
+      fees,
+    });
     const encodedData = btoa(JSON.stringify(payload));
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);
