@@ -131,7 +131,7 @@ const useCreateEscrow = () => {
         exchangeOracleFee: BigInt(_exchangeOracleFee),
         recordingOracleFee: BigInt(_recordingOracleFee),
         reputationOracleFee: BigInt(_reputationOracleFee),
-        manifestUrl: manifestString,
+        manifest: manifestString,
         manifestHash: manifestHash,
       };
 
