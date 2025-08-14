@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -108,24 +108,6 @@ const validationSchema = yup.object({
 
 const steps = ['Create Escrow', 'Fund Escrow', 'Setup Escrow'];
 
-const slotProps = {
-  paper: {
-    elevation: 4,
-    sx: {
-      bgcolor: 'background.default',
-    },
-  },
-};
-
-const menuProps = {
-  PaperProps: {
-    elevation: 4,
-    sx: {
-      bgcolor: 'background.default',
-    },
-  },
-};
-
 const InfoTooltip = () => {
   return (
     <Tooltip 
@@ -154,16 +136,12 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const { isConnected } = useAccount();
   const navigate = useNavigate();
   const {
-    isLoading: isCreatingEscrow,
-    createEscrow,
+    data: escrowData,
     stepsCompleted,
-    escrowAddress,
-    tokenDecimals,
+    mutate: createEscrow,
+    reset: resetCreateEscrow,
+    isLoading: isCreatingEscrow,
     isError,
-    clearError,
-    exchangeOracleFee,
-    recordingOracleFee,
-    reputationOracleFee,
   } = useCreateEscrow();
   const queryClient = useQueryClient();
   const chainId = useChainId();
@@ -199,7 +177,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const exchange = watch('exchange');
   const pair = watch('pair');
-  const { data: tradingPairs } = useTradingPairs(exchange);
+  const { data: tradingPairs, isLoading: isLoadingTradingPairs } = useTradingPairs(exchange);
 
   const submitForm = async (data: CampaignFormValues) => {
     await createEscrow(data);
@@ -210,19 +188,25 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     onClose();
   };
 
-  const onViewCampaignDetailsClick = () => {
+  const onViewCampaignDetailsClick = useCallback(() => {
+    console.log('1');
+    if (!escrowData) return;
+
+    console.log('data', escrowData);
+
     const formData = getValues();
+    const { escrowAddress, tokenDecimals, exchangeOracleFee, recordingOracleFee, reputationOracleFee } = escrowData;
     const fees = {
-      exchangeOracleFee,
-      recordingOracleFee,
-      reputationOracleFee,
+      exchangeOracleFee: exchangeOracleFee,
+      recordingOracleFee: recordingOracleFee,
+      reputationOracleFee: reputationOracleFee,
     };
     const payload = constructCampaignDetails(chainId, escrowAddress, formData, tokenDecimals, fees);
     const encodedData = btoa(JSON.stringify(payload));
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);
     handleClose();
-  };
+  }, [escrowData]);
 
   return (
     <BaseModal
@@ -268,7 +252,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
             size="large"
             variant="contained"
             sx={{ mt: 4, mx: 'auto' }}
-            onClick={clearError}
+            onClick={resetCreateEscrow}
           >
             Try again
           </Button>
@@ -340,9 +324,32 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         <Autocomplete
                           id="trading-pair-select"
                           options={tradingPairs || []}
-                          slotProps={slotProps}
+                          loading={isLoadingTradingPairs}
+                          slotProps={{
+                            paper: {
+                              elevation: 4,
+                              sx: {
+                                bgcolor: 'background.default',
+                              },
+                            },
+                          }}
                           renderInput={(params) => (
-                            <TextField {...params} label="Trading Pair" disabled={isCreatingEscrow} />
+                            <TextField 
+                              {...params} 
+                              label="Trading Pair" 
+                              disabled={isCreatingEscrow}
+                              slotProps={{
+                                input: {
+                                  ...params.InputProps,
+                                  endAdornment: (
+                                    <>
+                                      {isLoadingTradingPairs ? <CircularProgress size={20} /> : null}
+                                      {params.InputProps.endAdornment}
+                                    </>
+                                  ),
+                                },
+                              }}
+                            />
                           )}
                           renderOption={(props, option) => {
                             return (
@@ -420,7 +427,14 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         labelId="fund-token-select-label"
                         id="fund-token-select"
                         label="Fund Token"
-                        MenuProps={menuProps}
+                        MenuProps={{
+                          PaperProps: {
+                            elevation: 4,
+                            sx: {
+                              bgcolor: 'background.default',
+                            },
+                          },
+                        }}
                         {...field}
                         disabled={isCreatingEscrow}
                       >
