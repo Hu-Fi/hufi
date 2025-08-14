@@ -4,9 +4,11 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 
+import * as cryptoUtils from '@/common/utils/crypto';
 import { AuthConfigService } from '@/config';
 
 export const ADMIN_API_KEY_HEADER = 'X-Admin-API-Key';
@@ -28,8 +30,13 @@ export class AdminApiKeyAuthGuard implements CanActivate {
 
     const providedApiKey =
       request.headers[ADMIN_API_KEY_HEADER.toLowerCase()] || '';
-    if (providedApiKey !== adminApiKey) {
-      throw new HttpException('Invalid API key', HttpStatus.UNAUTHORIZED);
+
+    if (typeof providedApiKey !== 'string') {
+      throw new UnauthorizedException();
+    }
+
+    if (!cryptoUtils.safeCompare(providedApiKey, adminApiKey)) {
+      throw new UnauthorizedException();
     }
 
     return true;
