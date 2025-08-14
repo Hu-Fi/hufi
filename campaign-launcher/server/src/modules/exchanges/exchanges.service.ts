@@ -46,7 +46,18 @@ export class ExchangesService {
       if (!tradingPairsCache.has(exchangeName)) {
         const exchange = new ccxt[exchangeName]();
         await exchange.loadMarkets();
-        tradingPairsCache.set(exchangeName, exchange.symbols);
+
+        const tradingPairs = (exchange.symbols || []).filter((symbol) => {
+          /**
+           * Filter out pairs with weird names that highly-likely
+           * won't be ever maked
+           */
+          const isWeirdPair = this.isWeirdTradingPair(symbol);
+
+          return !isWeirdPair;
+        });
+
+        tradingPairsCache.set(exchangeName, tradingPairs);
       }
 
       return tradingPairsCache.get(exchangeName) as string[];
@@ -59,5 +70,24 @@ export class ExchangesService {
 
       throw new Error(errorMessage);
     }
+  }
+
+  private isWeirdTradingPair(pair: string): boolean {
+    if (!pair) {
+      return true;
+    }
+
+    /**
+     * Each symbol <=10 + 'slash'
+     */
+    if (pair.length > 21) {
+      return true;
+    }
+
+    if (pair.includes(':')) {
+      return true;
+    }
+
+    return false;
   }
 }
