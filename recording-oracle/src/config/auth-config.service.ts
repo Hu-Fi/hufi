@@ -38,4 +38,8 @@ export class AuthConfigService {
       Number(this.configService.get('JWT_REFRESH_TOKEN_EXPIRES_IN')) || 3600;
     return configValueSeconds * 1000;
   }
+
+  get adminApiKey(): string | undefined {
+    return this.configService.get('ADMIN_API_KEY');
+  }
 }

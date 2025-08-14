@@ -22,6 +22,11 @@ import { VolumeStatsRepository } from './volume-stats.repository';
     PgAdvisoryLock,
   ],
   controllers: [CampaignsController],
-  exports: [VolumeStatsRepository],
+  exports: [
+    CampaignsRepository,
+    CampaignsService,
+    VolumeStatsRepository,
+    UserCampaignsRepository,
+  ],
 })
 export class CampaignsModule {}
