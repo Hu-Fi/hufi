@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+import { InvalidEvmAddressError } from '@/common/errors/web3';
 import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
@@ -24,6 +25,7 @@ import {
   CampaignAlreadyFinishedError,
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
+  InvalidEvmAddressError,
 )
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
@@ -34,11 +36,13 @@ export class CampaignsControllerErrorsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = HttpStatus.UNPROCESSABLE_ENTITY;
 
+    let status = HttpStatus.UNPROCESSABLE_ENTITY;
     let message: string = exception.message;
     if (exception instanceof InvalidCampaign) {
       message = exception.details;
+    } else if (exception instanceof InvalidEvmAddressError) {
+      status = HttpStatus.BAD_REQUEST;
     }
 
     return response.status(status).json({
