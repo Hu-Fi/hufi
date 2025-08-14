@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
+import { ethers } from 'ethers';
 
 import {
   generateExchangeName,
@@ -27,7 +28,7 @@ export function generateCampaignEntity(
   const campaign = {
     id: faker.string.uuid(),
     chainId: generateTestnetChainId(),
-    address: faker.finance.ethereumAddress(),
+    address: ethers.getAddress(faker.finance.ethereumAddress()),
     pair: generateTradingPair(),
     exchangeName: generateExchangeName(),
     startDate,

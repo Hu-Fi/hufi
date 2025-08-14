@@ -17,6 +17,7 @@ import { ContentType } from '@/common/enums';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
+import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -80,12 +81,26 @@ export class CampaignsService {
     private readonly moduleRef: ModuleRef,
   ) {}
 
+  async findOneByChainIdAndAddress(
+    chainId: number,
+    address: string,
+  ): Promise<CampaignEntity | null> {
+    web3Utils.assertValidEvmAddress(address);
+
+    const checksummedAddress = ethers.getAddress(address);
+
+    return this.campaignsRepository.findOneByChainIdAndAddress(
+      chainId,
+      checksummedAddress,
+    );
+  }
+
   async join(
     userId: string,
     chainId: number,
     campaignAddress: string,
   ): Promise<string> {
-    let campaign = await this.campaignsRepository.findOneByChainIdAndAddress(
+    let campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
     );
@@ -147,7 +162,7 @@ export class CampaignsService {
     const newCampaign = new CampaignEntity();
     newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
-    newCampaign.address = address;
+    newCampaign.address = ethers.getAddress(address);
     newCampaign.type = manifest.type;
     newCampaign.exchangeName = manifest.exchange;
     newCampaign.dailyVolumeTarget = manifest.daily_volume_target.toString();
@@ -623,7 +638,7 @@ export class CampaignsService {
     chainId: number,
     campaignAddress: string,
   ): Promise<boolean> {
-    const campaign = await this.campaignsRepository.findOneByChainIdAndAddress(
+    const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
     );

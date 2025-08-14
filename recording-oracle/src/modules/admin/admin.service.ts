@@ -1,17 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  CampaignsRepository,
-  CampaignsService,
-  UserCampaignsRepository,
-} from '@/modules/campaigns';
+import { CampaignsService, UserCampaignsRepository } from '@/modules/campaigns';
 
 import { CheckCampaignProgressDto } from './admin.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
-    private readonly campaignsRepository: CampaignsRepository,
     private readonly campaignsService: CampaignsService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
   ) {}
@@ -22,7 +17,7 @@ export class AdminService {
     fromDate,
     toDate,
   }: CheckCampaignProgressDto) {
-    const campaign = await this.campaignsRepository.findOneByChainIdAndAddress(
+    const campaign = await this.campaignsService.findOneByChainIdAndAddress(
       chainId,
       address,
     );
