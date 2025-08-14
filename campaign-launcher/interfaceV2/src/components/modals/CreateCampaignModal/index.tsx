@@ -189,10 +189,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   };
 
   const onViewCampaignDetailsClick = useCallback(() => {
-    console.log('1');
     if (!escrowData) return;
-
-    console.log('data', escrowData);
 
     const formData = getValues();
     const { escrowAddress, tokenDecimals, exchangeOracleFee, recordingOracleFee, reputationOracleFee } = escrowData;
