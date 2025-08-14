@@ -538,7 +538,7 @@ describe('CampaignsService', () => {
       const expectedCampaignData = {
         id: expect.any(String),
         chainId,
-        address: campaignAddress,
+        address: ethers.getAddress(campaignAddress),
         type: manifest.type,
         exchangeName: manifest.exchange,
         dailyVolumeTarget: manifest.daily_volume_target.toString(),
@@ -578,7 +578,12 @@ describe('CampaignsService', () => {
         true,
       );
 
-      const id = await campaignsService.join(userId, chainId, campaign.address);
+      const id = await campaignsService.join(
+        userId,
+        chainId,
+        // not checksummed address
+        campaign.address.toLowerCase(),
+      );
 
       expect(id).toBe(campaign.id);
 
@@ -1615,7 +1620,8 @@ describe('CampaignsService', () => {
       const result = await campaignsService.checkUserJoined(
         userId,
         chainId,
-        campaign.address,
+        // not checksummed address
+        campaign.address.toLowerCase(),
       );
 
       expect(result).toBe(false);
