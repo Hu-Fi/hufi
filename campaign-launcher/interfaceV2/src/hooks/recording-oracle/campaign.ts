@@ -35,6 +35,7 @@ export const useJoinCampaign = () => {
     mutationFn: ({ chainId, address }: { chainId: ChainId; address: `0x${string}` }) => recordingApi.joinCampaign(chainId, address),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN] });
     },
   });
 };

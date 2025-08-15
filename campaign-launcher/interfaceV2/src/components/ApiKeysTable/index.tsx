@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
@@ -38,6 +38,10 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     apiKey: api_key,
   }));
 
+  const longestApiKeyLength = useMemo(() => {
+    return Math.max(...data?.map(({ api_key }) => api_key.length) || [0]);
+  }, [data]);
+
   const columns: GridColDef[] = [
     { 
       field: 'exchangeName', 
@@ -60,6 +64,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       field: 'apiKey', 
       headerName: 'API Key', 
       flex: 1,
+      minWidth: longestApiKeyLength * 10 + 100,
       renderCell: (params) => {
         return (
           <Typography display="flex" alignItems="center" variant="body1">
@@ -96,7 +101,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   ];
 
   return (
-    <Box flexGrow={1}>
+    <Box width="100%" overflow="hidden">
       <DataGrid 
         columns={columns}
         rows={rows}
@@ -135,6 +140,9 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             '&[data-field="actions"]': {
               px: 0,
             },
+          },
+          '& .MuiDataGrid-cellEmpty': {
+            display: 'none',
           },
           '& .MuiDataGrid-columnHeader': {
             backgroundColor: 'rgba(255, 255, 255, 0.12) !important',

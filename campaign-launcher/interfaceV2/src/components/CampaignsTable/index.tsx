@@ -398,6 +398,9 @@ const CampaignsTable: FC<Props> = ({
             justifyContent: 'center',
           },
         },
+        '& .MuiDataGrid-cellEmpty': {
+          display: 'none',
+        },
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {
           outline: 'none',
         },

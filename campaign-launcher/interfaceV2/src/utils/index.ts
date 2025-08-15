@@ -119,7 +119,19 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
   return true;
 };
 
-export const constructCampaignDetails = (chainId: ChainId, address: string, data: EscrowCreateDto, tokenDecimals: number, fees: { exchangeOracleFee: bigint, recordingOracleFee: bigint, reputationOracleFee: bigint }) => {
+type ConstructCampaignDetailsProps = {
+  chainId: ChainId;
+  address: string;
+  data: EscrowCreateDto;
+  tokenDecimals: number;
+  fees: { 
+    exchangeOracleFee: bigint;
+    recordingOracleFee: bigint;
+    reputationOracleFee: bigint;
+  };
+};
+
+export const constructCampaignDetails = ({ chainId, address, data, tokenDecimals, fees }: ConstructCampaignDetailsProps) => {
   const fundAmount = ethers.parseUnits(
     data.fund_amount.toString(),
     tokenDecimals
