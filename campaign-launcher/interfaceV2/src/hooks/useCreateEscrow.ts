@@ -58,8 +58,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       return;
     }
 
-    setIsLoading(true);
-    setError(undefined);
     setStepsCompleted(0);
 
     try {
@@ -167,10 +165,11 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   }, [signer, network, chainId]);
 
   const mutate = useCallback(async (variables: EscrowCreateDto) => {
+    setIsLoading(true);
+    setError(undefined);
     try {
       const result = await createEscrowMutation(variables);
       setData(result);
-      setError(undefined);
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Unknown error occurred');
       setError(err);
