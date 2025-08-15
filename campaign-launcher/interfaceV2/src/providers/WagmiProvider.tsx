@@ -12,21 +12,24 @@ import {
 } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
-declare module 'wagmi' {
-  interface Register {
-    config: typeof config;
-  }
-}
-
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
 const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 
-export const config = createConfig({
+export const config = isMainnet ? createConfig({
+  chains: [polygon, mainnet],
+  connectors: [
+    walletConnect({ projectId }),
+    coinbaseWallet({ appName: 'HuFi' }),
+  ],
+  syncConnectedChain: false,
+  transports: {
+    [polygon.id]: http(),
+    [mainnet.id]: http(),
+  },
+}) : createConfig({
   chains: [
-    mainnet,
-    sepolia,
-    polygon,
-    polygonAmoy,
+    polygonAmoy, 
+    sepolia, 
     auroraTestnet,
     {
       ...localhost,
@@ -39,10 +42,8 @@ export const config = createConfig({
   ],
   syncConnectedChain: false,
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
-    [polygon.id]: http(),
     [polygonAmoy.id]: http(),
+    [sepolia.id]: http(),
     [auroraTestnet.id]: http(),
     [ChainId.LOCALHOST]: http(),
   },

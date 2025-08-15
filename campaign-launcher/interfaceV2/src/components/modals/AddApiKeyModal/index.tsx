@@ -30,7 +30,7 @@ type APIKeyFormValues = {
 };
 
 const validationSchema = yup.object({
-  apiKey: yup.string().required('Required').trim().max(50, 'Max 50 characters'),
+  apiKey: yup.string().required('Required').trim().max(100, 'Max 100 characters'),
   secret: yup.string().required('Required').trim().max(200, 'Max 200 characters'),
   exchange: yup.string().required('Required'),
 });
