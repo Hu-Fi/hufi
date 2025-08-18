@@ -13,15 +13,6 @@ const localhostChain = {
   id: ChainId.LOCALHOST,
 };
 
-export const ALL_CHAINS = [
-  mainnet,
-  auroraTestnet,
-  localhostChain,
-  polygon,
-  polygonAmoy,
-  sepolia,
-];
-
 export const MAINNET_CHAINS = [polygon, mainnet] as const;
 export const TESTNET_CHAINS = [
   polygonAmoy, 
