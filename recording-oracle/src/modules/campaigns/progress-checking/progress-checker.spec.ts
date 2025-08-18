@@ -19,7 +19,7 @@ const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 
 class TestCampaignProgressChecker extends BaseCampaignProgressChecker {
-  override tradeIdsSample = new Set<string>();
+  override tradeSamples = new Set<string>();
   override calculateTradeScore = jest.fn();
 }
 
@@ -188,7 +188,7 @@ describe('BaseCampaignProgressChecker', () => {
     );
 
     beforeEach(() => {
-      resultsChecker.tradeIdsSample.clear();
+      resultsChecker.tradeSamples.clear();
       /**
        * Always return some positive score in order to
        * make sure it's not counted when abuse detected
@@ -267,7 +267,29 @@ describe('BaseCampaignProgressChecker', () => {
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(trades);
       await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
 
-      expect(resultsChecker.tradeIdsSample.size).toBe(5);
+      expect(resultsChecker.tradeSamples.size).toBe(5);
+    });
+
+    it('should not detect self-trade as abuse', async () => {
+      const baseTrade = generateTrade();
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
+        {
+          ...baseTrade,
+          side: 'buy',
+        },
+        {
+          ...baseTrade,
+          side: 'sell',
+        },
+      ]);
+
+      const result = await resultsChecker.checkForParticipant(
+        generateParticipantAuthKeys(),
+      );
+      console.log(result);
+      expect(result.abuseDetected).toBe(false);
+      expect(result.score).toBeGreaterThan(0);
+      expect(result.totalVolume).toBeGreaterThan(0);
     });
   });
 });
