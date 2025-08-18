@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@human-protocol/core": "^4.2.0",
-    "@human-protocol/logger": "^1.0.0",
+    "@human-protocol/logger": "^1.1.0",
     "@human-protocol/sdk": "^4.2.0",
     "@nestjs/common": "^11.1.5",
     "@nestjs/config": "^4.0.2",
