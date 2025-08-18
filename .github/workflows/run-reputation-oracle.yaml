@@ -7,13 +7,23 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Which environment to run?"
+        description: "What environment to run?"
         required: true
         default: testnet
         type: choice
         options:
           - testnet
           - mainnet
+      log_level:
+        description: "What minimum level to log?"
+        required: false
+        default: info
+        type: choice
+        options:
+          - debug
+          - info
+          - warn
+          - error
   schedule:
     - cron: '0 12 * * *' # every day at noon UTC
 
@@ -85,6 +95,8 @@ jobs:
         env:
           HOSTNAME: github-action-${{ github.run_id }}
           NODE_ENV: ${{ vars.NODE_ENV }}
+          GIT_HASH: ${{ github.sha }}
+          LOG_LEVEL: ${{ inputs.log_level }}
 
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
           S3_PORT: ${{ vars.S3_PORT }}

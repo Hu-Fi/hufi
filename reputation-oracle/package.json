@@ -20,7 +20,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
-    "@human-protocol/logger": "^1.0.0",
+    "@human-protocol/logger": "^1.1.0",
     "@human-protocol/sdk": "^4.2.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
