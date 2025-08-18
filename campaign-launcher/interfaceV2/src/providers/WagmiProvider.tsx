@@ -4,10 +4,9 @@ import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
-import { MAINNET_CHAINS, TESTNET_CHAINS } from '../constants';
+import { isMainnet, MAINNET_CHAINS, TESTNET_CHAINS } from '../constants';
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
-const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 
 export const config = isMainnet ? createConfig({
   chains: MAINNET_CHAINS,

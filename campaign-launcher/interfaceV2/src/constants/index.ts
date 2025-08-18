@@ -8,6 +8,8 @@ import {
   sepolia,
 } from 'wagmi/chains';
 
+export const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
+
 const localhostChain = {
   ...localhost,
   id: ChainId.LOCALHOST,

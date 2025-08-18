@@ -4,21 +4,8 @@ import { ChainId, NETWORKS, StakerInfo, StakingClient } from '@human-protocol/sd
 import { ethers } from 'ethers';
 import { useChainId } from 'wagmi';
 
-import { MAINNET_CHAINS, TESTNET_CHAINS } from '../constants';
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
-import { formatTokenAmount, getSupportedChainIds } from '../utils';
-
-const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
-
-const getRpcUrl = (chainId: ChainId): string => {
-  const chains = isMainnet ? MAINNET_CHAINS : TESTNET_CHAINS;
-  for (const chain of Object.values(chains)) {
-    if (chain.id === chainId) {
-      return chain.rpcUrls.default.http[0];
-    }
-  }
-  return '';
-};
+import { formatTokenAmount, getRpcUrl, getSupportedChainIds } from '../utils';
 
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
@@ -52,7 +39,7 @@ export const useStake = () => {
     };
 
     activeAddress && appChainId && initStakingClient();
-  }, [activeAddress,appChainId]);
+  }, [activeAddress, appChainId]);
 
   useEffect(() => {
     if (stakingClient && activeAddress) {
