@@ -8,7 +8,12 @@ export const clientToSigner = (client: Client<Transport, Chain, Account>) => {
     name: chain.name,
     ensAddress: chain.contracts?.ensRegistry?.address,
   };
-  const provider = new BrowserProvider(transport, network);
-  const signer = new JsonRpcSigner(provider, account.address);
-  return signer;
+  try {
+    const provider = new BrowserProvider(transport, network);
+    const signer = new JsonRpcSigner(provider, account.address);
+    return signer;
+  } catch (error) {
+    console.error('Failed to create signer', error);
+    return null;
+  }
 };

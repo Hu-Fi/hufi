@@ -1,4 +1,34 @@
 import { ChainId } from '@human-protocol/sdk';
+import {
+  mainnet,
+  auroraTestnet,
+  localhost,
+  polygon,
+  polygonAmoy,
+  sepolia,
+} from 'wagmi/chains';
+
+const localhostChain = {
+  ...localhost,
+  id: ChainId.LOCALHOST,
+};
+
+export const ALL_CHAINS = [
+  mainnet,
+  auroraTestnet,
+  localhostChain,
+  polygon,
+  polygonAmoy,
+  sepolia,
+];
+
+export const MAINNET_CHAINS = [polygon, mainnet] as const;
+export const TESTNET_CHAINS = [
+  polygonAmoy, 
+  sepolia, 
+  auroraTestnet, 
+  localhostChain,
+] as const;
 
 export const ROUTES = {
   DASHBOARD: '/',

@@ -1,46 +1,62 @@
 import { useEffect, useState } from 'react';
 
-import { StakerInfo, StakingClient } from '@human-protocol/sdk';
-import { Eip1193Provider, ethers } from 'ethers';
-import { useAccount, useChainId, useWalletClient } from 'wagmi';
+import { ChainId, NETWORKS, StakerInfo, StakingClient } from '@human-protocol/sdk';
+import { ethers } from 'ethers';
+import { useChainId } from 'wagmi';
 
+import { ALL_CHAINS } from '../constants';
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
 import { formatTokenAmount, getSupportedChainIds } from '../utils';
+
+const getRpcUrl = (chainId: ChainId): string => {
+  for (const chain of Object.values(ALL_CHAINS)) {
+    if (chain.id === chainId) {
+      return chain.rpcUrls.default.http[0];
+    }
+  }
+  return '';
+};
 
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
   const [stakingClient, setStakingClient] = useState<StakingClient | null>(null);
+  const [isClientInitializing, setIsClientInitializing] = useState(false);
   const [isRefetching, setIsRefetching] = useState(false);
-  const { connector, chainId } = useAccount();
+  const [isFetchingInfo, setIsFetchingInfo] = useState(false);
+
   const { activeAddress } = useActiveAccount();
-  const { data: walletClient } = useWalletClient();
   const appChainId = useChainId();
 
   useEffect(() => {
     const initStakingClient = async () => {
+      setIsClientInitializing(true);
       try {
-        if (walletClient && activeAddress && connector) {
-          checkSupportedChain();
-          const eeip193Provider = await connector?.getProvider();
-          const provider = new ethers.BrowserProvider(
-            eeip193Provider as Eip1193Provider
-          );
-          const signer = await provider.getSigner();
-          const client = await StakingClient.build(signer);
-          setStakingClient(client);
+        checkSupportedChain();
+        const networkData = NETWORKS[appChainId as ChainId];
+        if (!networkData) {
+          throw new Error(`Unsupported chain ID: ${appChainId}`);
         }
+        
+        const provider = new ethers.JsonRpcProvider(getRpcUrl(appChainId));
+        const client = new StakingClient(provider, networkData);
+        setStakingClient(client);
       } catch (error) {
         console.error('Failed to init staking client', error);
         resetData();
+      } finally {
+        setIsClientInitializing(false);
       }
     };
 
-    initStakingClient();
-  }, [walletClient, activeAddress, chainId, connector, appChainId]);
+    activeAddress && appChainId && initStakingClient();
+  }, [activeAddress,appChainId]);
 
   useEffect(() => {
     if (stakingClient && activeAddress) {
-      fetchStakingData(stakingClient);
+      setIsFetchingInfo(true);
+      fetchStakingData(stakingClient).finally(() => {
+        setIsFetchingInfo(false);
+      });
     }
   }, [stakingClient, activeAddress]);
 
@@ -84,6 +100,8 @@ export const useStake = () => {
   return {
     stakedAmount: formatTokenAmount(Number(stakingData?.stakedAmount) || 0),
     refetchStakingData,
+    isClientInitializing,
+    isFetchingInfo,
     isRefetching,
   };
 };

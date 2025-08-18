@@ -2,51 +2,33 @@ import { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
-import {
-  mainnet,
-  auroraTestnet,
-  localhost,
-  polygon,
-  polygonAmoy,
-  sepolia,
-} from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
+
+import { MAINNET_CHAINS, TESTNET_CHAINS } from '../constants';
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
 const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 
 export const config = isMainnet ? createConfig({
-  chains: [polygon, mainnet],
+  chains: MAINNET_CHAINS,
   connectors: [
     walletConnect({ projectId }),
     coinbaseWallet({ appName: 'HuFi' }),
   ],
   syncConnectedChain: false,
-  transports: {
-    [polygon.id]: http(),
-    [mainnet.id]: http(),
-  },
+  transports: Object.fromEntries(
+    MAINNET_CHAINS.map(chain => [chain.id, http()])
+  ) as Record<(typeof MAINNET_CHAINS)[number]['id'], ReturnType<typeof http>>,
 }) : createConfig({
-  chains: [
-    polygonAmoy, 
-    sepolia, 
-    auroraTestnet,
-    {
-      ...localhost,
-      id: ChainId.LOCALHOST,
-    },
-  ],
+  chains: TESTNET_CHAINS,
   connectors: [
     walletConnect({ projectId }),
     coinbaseWallet({ appName: 'HuFi' }),
   ],
   syncConnectedChain: false,
-  transports: {
-    [polygonAmoy.id]: http(),
-    [sepolia.id]: http(),
-    [auroraTestnet.id]: http(),
-    [ChainId.LOCALHOST]: http(),
-  },
+  transports: Object.fromEntries(
+    TESTNET_CHAINS.map(chain => [chain.id, http()])
+  ) as Record<(typeof TESTNET_CHAINS)[number]['id'], ReturnType<typeof http>>,
 });
 
 const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
