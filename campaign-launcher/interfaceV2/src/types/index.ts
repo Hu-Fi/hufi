@@ -59,7 +59,7 @@ export type Campaign = {
   exchange_oracle: string;
   recording_oracle: string;
   reputation_oracle: string;
-}
+};
 
 export type CampaignDetails = Campaign & {
   exchange_oracle_fee_percent: number;
@@ -68,14 +68,14 @@ export type CampaignDetails = Campaign & {
   amount_paid: string;
   daily_paid_amounts: {
     date: string;
-    totalAmountPaid: string;
+    amount: string;
   }[];
-}
+};
 
 export type CampaignsResponse = {
   results: Campaign[];
   has_more: boolean;
-}
+};
 
 export type EscrowCreateDto = {
   exchange: string;
@@ -85,7 +85,7 @@ export type EscrowCreateDto = {
   fund_token: string;
   fund_amount: number;
   daily_volume_target: number;
-}
+};
 
 export type ManifestUploadDto = {
   type: string;
@@ -94,7 +94,7 @@ export type ManifestUploadDto = {
   pair: string;
   start_date: string;
   end_date: string;
-}
+};
 
 export type CampaignsQueryParams = {
   chain_id: ChainId;
@@ -102,4 +102,4 @@ export type CampaignsQueryParams = {
   launcher?: string;
   limit?: number;
   skip?: number;
-}
+};
