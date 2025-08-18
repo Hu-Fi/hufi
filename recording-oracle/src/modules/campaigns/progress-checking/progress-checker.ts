@@ -21,7 +21,7 @@ export abstract class BaseCampaignProgressChecker
   readonly tradingPeriodStart: Date;
   readonly tradingPeriodEnd: Date;
 
-  protected readonly tradeIdsSample = new Set<string>();
+  protected readonly tradeSamples = new Set<string>();
 
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
@@ -62,13 +62,14 @@ export abstract class BaseCampaignProgressChecker
           break;
         }
 
-        if (this.tradeIdsSample.has(trade.id)) {
+        const tradeFingerprint = this.getTradeFingerprint(trade);
+        if (this.tradeSamples.has(tradeFingerprint)) {
           abuseDetected = true;
           break;
         }
 
         if (nTradesSampled < N_TRADES_FOR_ABUSE_CHECK) {
-          this.tradeIdsSample.add(trade.id);
+          this.tradeSamples.add(tradeFingerprint);
           nTradesSampled += 1;
         }
 
@@ -85,6 +86,10 @@ export abstract class BaseCampaignProgressChecker
     }
 
     return { abuseDetected, score, totalVolume };
+  }
+
+  private getTradeFingerprint(trade: Trade): string {
+    return `${trade.id}-${trade.side}`;
   }
 
   protected abstract calculateTradeScore(trade: Trade): number;
