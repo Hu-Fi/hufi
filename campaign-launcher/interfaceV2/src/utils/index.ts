@@ -7,9 +7,6 @@ import {
   MAINNET_CHAIN_IDS,
   TESTNET_CHAIN_IDS,
   LOCALHOST_CHAIN_IDS,
-  isMainnet,
-  MAINNET_CHAINS,
-  TESTNET_CHAINS,
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
 import { Campaign, CampaignDetails, EscrowCreateDto } from '../types';
@@ -186,14 +183,4 @@ export const filterFalsyQueryParams = (
   }
   
   return result;
-};
-
-export const getRpcUrl = (chainId: ChainId): string => {
-  const chains = isMainnet ? MAINNET_CHAINS : TESTNET_CHAINS;
-  for (const chain of Object.values(chains)) {
-    if (chain.id === chainId) {
-      return chain.rpcUrls.default.http[0];
-    }
-  }
-  throw new Error(`Unsupported chain ID: ${chainId}`);
 };

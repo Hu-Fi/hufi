@@ -1,27 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
-import {
-  mainnet,
-  auroraTestnet,
-  localhost,
-  polygon,
-  polygonAmoy,
-  sepolia,
-} from 'wagmi/chains';
 
 export const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
-
-const localhostChain = {
-  ...localhost,
-  id: ChainId.LOCALHOST,
-};
-
-export const MAINNET_CHAINS = [polygon, mainnet] as const;
-export const TESTNET_CHAINS = [
-  polygonAmoy, 
-  sepolia, 
-  auroraTestnet, 
-  localhostChain,
-] as const;
 
 export const ROUTES = {
   DASHBOARD: '/',
