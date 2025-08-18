@@ -299,7 +299,7 @@ export class CampaignsService {
 
   @Cron(PROGRESS_RECORDING_SCHEDULE)
   async recordCampaignsProgress(): Promise<void> {
-    this.logger.info('Campaigns progress recording job started');
+    this.logger.debug('Campaigns progress recording job started');
 
     /**
      * Atm we don't expect many active campaigns
@@ -318,7 +318,7 @@ export class CampaignsService {
       await this.recordCampaignProgress(campaign);
     }
 
-    this.logger.info('Campaigns progress recording job finished');
+    this.logger.debug('Campaigns progress recording job finished');
   }
 
   async recordCampaignProgress(campaign: CampaignEntity): Promise<void> {
@@ -332,6 +332,8 @@ export class CampaignsService {
 
         const logger = this.logger.child({
           action: 'record-campaign-progress',
+          chainId: campaign.chainId,
+          campaignAdddress: campaign.address,
           campaignId: campaign.id,
         });
         logger.debug('Campaign progress recording started');
@@ -609,7 +611,7 @@ export class CampaignsService {
 
   @Cron(COMPLETION_TRACKING_SCHEDULE)
   async trackCampaignsCompletion(): Promise<void> {
-    this.logger.info('Campaigns completion tracking job started');
+    this.logger.debug('Campaigns completion tracking job started');
 
     const campaignsToTrack =
       await this.campaignsRepository.findForCompletionTracking();
@@ -630,7 +632,7 @@ export class CampaignsService {
       }
     }
 
-    this.logger.info('Campaigns completion tracking job finished');
+    this.logger.debug('Campaigns completion tracking job finished');
   }
 
   async checkUserJoined(

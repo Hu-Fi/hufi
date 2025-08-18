@@ -63,7 +63,7 @@ export class PayoutsService {
   ): Promise<void> {
     const logger = this.logger.child({
       chainId: campaign.chainId,
-      campaign: campaign.address,
+      campaignAddress: ethers.getAddress(campaign.address),
     });
 
     logger.info('Run payouts cycle for campaign');
