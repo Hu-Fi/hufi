@@ -515,11 +515,13 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                   opacity: 0,
                                   pointerEvents: 'none',
                                   [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]: {
-                                    opacity: 1,
+                                    opacity: isCreatingEscrow ? 0.5 : 1,
                                   },
                                 }}
                               >
-                                {pair?.split('/')[1]?.slice(0, 4) || ''}
+                                <Typography variant="body1" color="text.primary">
+                                  {pair?.split('/')[1]?.slice(0, 4) || ''}
+                                </Typography>
                               </InputAdornment>
                             ),
                           }
