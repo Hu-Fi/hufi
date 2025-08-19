@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 
-import { ChainId, NETWORKS, StakerInfo, StakingClient } from '@human-protocol/sdk';
-import { Eip1193Provider, ethers } from 'ethers';
-import { useAccount, useChainId } from 'wagmi';
+import { StakerInfo, StakingClient } from '@human-protocol/sdk';
 
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
+import { useNetwork } from '../providers/NetworkProvider';
 import { formatTokenAmount, getSupportedChainIds } from '../utils';
+import useClientToSigner from './useClientToSigner';
 
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
@@ -15,24 +15,16 @@ export const useStake = () => {
   const [isFetchingInfo, setIsFetchingInfo] = useState(false);
 
   const { activeAddress } = useActiveAccount();
-  const appChainId = useChainId();
-  const { connector, chainId: accountChainId } = useAccount();
-
-  const isProviderReady = connector && 'getProvider' in connector;
+  const { isSwitching, appChainId } = useNetwork();
+  const { signer, isCreatingSigner } = useClientToSigner();
 
   useEffect(() => {
     const initStakingClient = async () => {
       setIsClientInitializing(true);
-      if (activeAddress && isProviderReady) {
+      if (signer && activeAddress && !isSwitching && !isCreatingSigner) {
         try {
           checkSupportedChain();
-          const eeip193Provider = await connector?.getProvider({ chainId: appChainId }) as Eip1193Provider;
-          const provider = new ethers.BrowserProvider(eeip193Provider);
-          const networkData = NETWORKS[appChainId as ChainId];
-          if (!networkData) {
-            throw new Error(`Unsupported chain ID: ${appChainId}`);
-          }
-          const client = new StakingClient(provider, networkData);
+          const client = await StakingClient.build(signer);
           setStakingClient(client);
         } catch (error) {
           console.error('Failed to init staking client', error);
@@ -44,7 +36,7 @@ export const useStake = () => {
     };
 
     initStakingClient();
-  }, [activeAddress, appChainId, accountChainId, isProviderReady]);
+  }, [signer, activeAddress, isSwitching, isCreatingSigner]);
 
   useEffect(() => {
     if (!isClientInitializing && stakingClient && activeAddress) {
@@ -74,6 +66,7 @@ export const useStake = () => {
     checkSupportedChain();
     try {
       const stakingInfo = await stakingClient.getStakerInfo(activeAddress!);
+      console.log('stakingInfo', stakingInfo);
       setStakingData(stakingInfo);
       return stakingInfo;
     } catch (error) {

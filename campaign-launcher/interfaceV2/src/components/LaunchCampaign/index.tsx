@@ -1,9 +1,10 @@
 import { FC, useState } from 'react';
 
 import { Button, SxProps } from '@mui/material';
-import { useAccount, useChainId, useSwitchChain } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
+import { useNetwork } from '../../providers/NetworkProvider';
 import { useStakeContext } from '../../providers/StakeProvider';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
 import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
@@ -19,7 +20,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
 
   const { isConnected, chainId: accountChainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
-  const appChainId = useChainId();
+  const { appChainId } = useNetwork();
   const isXl = useIsXlDesktop();
   const { stakedAmount, isFetchingInfo, isClientInitializing } = useStakeContext();
   

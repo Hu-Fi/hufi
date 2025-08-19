@@ -65,5 +65,3 @@ export const useActiveAccount = (): ActiveAccountContextType => {
 };
 
 export default ActiveAccountProvider;
-
-

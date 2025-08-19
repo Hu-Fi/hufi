@@ -4,11 +4,11 @@ import { EscrowClient, KVStoreKeys, KVStoreUtils } from '@human-protocol/sdk';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
-import { useChainId } from 'wagmi';
 
 import useClientToSigner from './useClientToSigner';
 import ERC20ABI from '../abi/ERC20.json';
 import { oracles } from '../constants';
+import { useNetwork } from '../providers/NetworkProvider';
 import { EscrowCreateDto, ManifestUploadDto } from '../types';
 import { calculateHash, getTokenAddress } from '../utils';
 
@@ -46,15 +46,15 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   const [isLoading, setIsLoading] = useState(false);
   const [stepsCompleted, setStepsCompleted] = useState(0);
   
-  const chainId = useChainId();
-  const { signer, network } = useClientToSigner();
+  const { appChainId } = useNetwork();
+  const { signer } = useClientToSigner();
 
   const isError = !!error;
   const isSuccess = !!data && !error && !isLoading;
   const isIdle = !isLoading && !error && !data;
 
   const createEscrowMutation = useCallback(async (variables: EscrowCreateDto) => {
-    if (!signer || !network) {
+    if (!signer) {
       return;
     }
 
@@ -62,14 +62,14 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
 
     try {
       const escrowClient = await EscrowClient.build(signer);
-      const tokenAddress = getTokenAddress(chainId, variables.fund_token);
+      const tokenAddress = getTokenAddress(appChainId, variables.fund_token);
       if (!tokenAddress?.length) {
         throw new Error('Fund token is not supported.');
       }
 
       let _exchangeOracleFee: string;
       try {
-        _exchangeOracleFee = await KVStoreUtils.get(chainId, oracles.exchangeOracle, KVStoreKeys.fee);
+        _exchangeOracleFee = await KVStoreUtils.get(appChainId, oracles.exchangeOracle, KVStoreKeys.fee);
       } catch (e) {
         console.error('Error getting exchange oracle fee', e);
         throw e;
@@ -81,7 +81,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
 
       let _recordingOracleFee: string;
       try {
-        _recordingOracleFee = await KVStoreUtils.get(chainId, oracles.recordingOracle, KVStoreKeys.fee);
+        _recordingOracleFee = await KVStoreUtils.get(appChainId, oracles.recordingOracle, KVStoreKeys.fee);
       } catch (e) {
         console.error('Error getting recording oracle fee', e);
         throw e;
@@ -93,7 +93,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
 
       let _reputationOracleFee: string;
       try {
-        _reputationOracleFee = await KVStoreUtils.get(chainId, oracles.reputationOracle, KVStoreKeys.fee);
+        _reputationOracleFee = await KVStoreUtils.get(appChainId, oracles.reputationOracle, KVStoreKeys.fee);
       } catch (e) {
         console.error(e);
         throw e;
@@ -162,7 +162,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       setStepsCompleted(0);
       throw e;
     }
-  }, [signer, network, chainId]);
+  }, [signer, appChainId]);
 
   const mutate = useCallback(async (variables: EscrowCreateDto) => {
     setIsLoading(true);

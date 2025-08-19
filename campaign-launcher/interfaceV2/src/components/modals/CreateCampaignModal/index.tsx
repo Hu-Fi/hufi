@@ -27,13 +27,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
 import { QUERY_KEYS } from '../../../constants/queryKeys';
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
+import { useNetwork } from '../../../providers/NetworkProvider';
 import { constructCampaignDetails } from '../../../utils';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
@@ -144,7 +145,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     isError,
   } = useCreateEscrow();
   const queryClient = useQueryClient();
-  const chainId = useChainId();
+  const { appChainId } = useNetwork();
 
   const isCampaignCreated = stepsCompleted === steps.length;
 
@@ -185,6 +186,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const handleClose = () => {
     reset();
+    resetCreateEscrow();
     onClose();
   };
 
@@ -199,7 +201,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       reputationOracleFee: reputationOracleFee,
     };
     const payload = constructCampaignDetails({ 
-      chainId, 
+      chainId: appChainId, 
       address: escrowAddress, 
       data: formData, 
       tokenDecimals, 

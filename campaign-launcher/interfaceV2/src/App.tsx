@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import ManageApiKeysPage from './pages/ManageApiKeys';
 import ActiveAccountProvider from './providers/ActiveAccountProvider';
 import ExchangesProvider from './providers/ExchangesProvider';
+import { NetworkProvider } from './providers/NetworkProvider';
 import QueryClientProvider from './providers/QueryClientProvider';
 import StakeProvider from './providers/StakeProvider';
 import ThemeProvider from './providers/ThemeProvider';
@@ -22,37 +23,39 @@ const App: FC = () => {
   return (
     <WagmiProvider>
       <QueryClientProvider>
-        <ActiveAccountProvider>
-          <Web3AuthProvider>
-          <ExchangesProvider>
-            <StakeProvider>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <ThemeProvider>
-                  <BrowserRouter>
-                    <Layout>
-                      <Routes>
-                        <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                        <Route
-                          path={ROUTES.CAMPAIGN_DETAILS}
-                          element={<Campaign />}
-                        />
-                        <Route
-                          path={ROUTES.MANAGE_API_KEYS}
-                          element={
-                            <ProtectedRoute>
-                              <ManageApiKeysPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                      </Routes>
-                    </Layout>
-                  </BrowserRouter>
-                </ThemeProvider>
-              </LocalizationProvider>
-            </StakeProvider>
-          </ExchangesProvider>
-          </Web3AuthProvider>
-        </ActiveAccountProvider>
+        <NetworkProvider>
+          <ActiveAccountProvider>
+            <Web3AuthProvider>
+              <ExchangesProvider>
+                <StakeProvider> 
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <ThemeProvider>
+                      <BrowserRouter>
+                        <Layout>
+                          <Routes>
+                            <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+                            <Route
+                              path={ROUTES.CAMPAIGN_DETAILS}
+                              element={<Campaign />}
+                            />
+                            <Route
+                              path={ROUTES.MANAGE_API_KEYS}
+                              element={
+                                <ProtectedRoute>
+                                  <ManageApiKeysPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                          </Routes>
+                        </Layout>
+                      </BrowserRouter>
+                    </ThemeProvider>
+                  </LocalizationProvider>
+                </StakeProvider>
+              </ExchangesProvider>
+            </Web3AuthProvider>
+          </ActiveAccountProvider>
+        </NetworkProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
