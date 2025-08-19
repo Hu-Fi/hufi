@@ -66,7 +66,6 @@ export const useStake = () => {
     checkSupportedChain();
     try {
       const stakingInfo = await stakingClient.getStakerInfo(activeAddress!);
-      console.log('stakingInfo', stakingInfo);
       setStakingData(stakingInfo);
       return stakingInfo;
     } catch (error) {
