@@ -30,6 +30,10 @@ const useClientToSigner = () => {
           
           if (Number(network.chainId) !== appChainId) {
             await client.switchChain({ id: appChainId });
+            const newProvider = new BrowserProvider(client.transport);
+            const _signer = await newProvider.getSigner(activeAddress);
+            setSigner(_signer);
+            return;
           }
           
           const _signer = await provider.getSigner(activeAddress);
