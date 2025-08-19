@@ -17,10 +17,12 @@ const useClientToSigner = () => {
     chainId: appChainId,
   });
 
+  const isTransportReady = client && 'request' in client.transport;
+
   useEffect(() => {
     const getSigner = async () => {
       setIsCreatingSigner(true);
-      if (client) {
+      if (client && isTransportReady) {
         const provider = new BrowserProvider(client.transport);
         const _signer = await provider.getSigner(activeAddress);
         const signerChainId = await _signer.provider.getNetwork();
@@ -33,7 +35,7 @@ const useClientToSigner = () => {
     }
 
     getSigner();
-  }, [client, activeAddress, isSwitching]);
+  }, [client, activeAddress, isSwitching, isTransportReady]);
 
   return { signer, isCreatingSigner };
 };
