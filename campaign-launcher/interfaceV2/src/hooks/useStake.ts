@@ -5,7 +5,7 @@ import { StakerInfo, StakingClient } from '@human-protocol/sdk';
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
 import { useNetwork } from '../providers/NetworkProvider';
 import { formatTokenAmount, getSupportedChainIds } from '../utils';
-import useClientToSigner from './useClientToSigner';
+import useRetrieveSigner from './useRetrieveSigner';
 
 export const useStake = () => {
   const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
@@ -16,7 +16,7 @@ export const useStake = () => {
 
   const { activeAddress } = useActiveAccount();
   const { isSwitching, appChainId } = useNetwork();
-  const { signer, isCreatingSigner } = useClientToSigner();
+  const { signer, isCreatingSigner } = useRetrieveSigner();
 
   useEffect(() => {
     const initStakingClient = async () => {

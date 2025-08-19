@@ -6,9 +6,9 @@ import { Config, useWalletClient } from 'wagmi';
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
 import { useNetwork } from '../providers/NetworkProvider';
 
-const useClientToSigner = () => {
+const useRetrieveSigner = () => {
   const [signer, setSigner] = useState<JsonRpcSigner | undefined>(undefined);
-  const [isCreatingSigner, setIsCreatingSigner] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { appChainId, isSwitching } = useNetwork();
   const { activeAddress } = useActiveAccount();
@@ -21,19 +21,19 @@ const useClientToSigner = () => {
 
   useEffect(() => {
     const getSigner = async () => {
-      setIsCreatingSigner(true);
+      setIsLoading(true);
       try {
         setSigner(undefined);
         if (client && isTransportReady && !isSwitching) {
-          const provider = new BrowserProvider(client.transport);
+          let provider = new BrowserProvider(client.transport);
           const network = await provider.getNetwork();
           
           if (Number(network.chainId) !== appChainId) {
             await client.switchChain({ id: appChainId });
-            const newProvider = new BrowserProvider(client.transport);
-            const _signer = await newProvider.getSigner(activeAddress);
-            setSigner(_signer);
-            return;
+            /* 
+              Need to re-create provider after switching chain, because it uses previous chain and can't create signer
+            */
+            provider = new BrowserProvider(client.transport); 
           }
           
           const _signer = await provider.getSigner(activeAddress);
@@ -43,14 +43,14 @@ const useClientToSigner = () => {
         console.error('Error creating signer:', error);
         setSigner(undefined);
       } finally {
-        setIsCreatingSigner(false);
+        setIsLoading(false);
       }
     }
 
     getSigner();
   }, [client, activeAddress, isSwitching, isTransportReady]);
 
-  return { signer, isCreatingSigner };
+  return { signer, isCreatingSigner: isLoading };
 };
 
-export default useClientToSigner;
+export default useRetrieveSigner;

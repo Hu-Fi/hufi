@@ -1,10 +1,9 @@
 import { FC, useState } from 'react';
 
 import { Button, SxProps } from '@mui/material';
-import { useAccount, useSwitchChain } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import { useNetwork } from '../../providers/NetworkProvider';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useStakeContext } from '../../providers/StakeProvider';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
 import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
@@ -18,13 +17,11 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   const [openCreateCampaignModal, setOpenCreateCampaignModal] = useState(false);
   const [openStakeHmtPromptModal, setOpenStakeHmtPromptModal] = useState(false);
 
-  const { isConnected, chainId: accountChainId } = useAccount();
-  const { switchChainAsync } = useSwitchChain();
-  const { appChainId } = useNetwork();
+  const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
   const { stakedAmount, isFetchingInfo, isClientInitializing } = useStakeContext();
   
-  const isDisabled = !isConnected || isFetchingInfo || isClientInitializing;
+  const isDisabled = !signer || isClientInitializing || isFetchingInfo;
 
   const handleOpenCreateCampaignModal = () => {
     setOpenCreateCampaignModal(true);
@@ -32,10 +29,6 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
 
   const onClick = async () => {
     if (isDisabled) return null;
-
-    if (accountChainId !== appChainId) {
-      await switchChainAsync?.({ chainId: appChainId });
-    }
     
     if (+(stakedAmount ?? '0') > 0) {
       setOpenCreateCampaignModal(true);

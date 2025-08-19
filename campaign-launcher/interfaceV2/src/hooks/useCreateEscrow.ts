@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 
-import useClientToSigner from './useClientToSigner';
+import useRetrieveSigner from './useRetrieveSigner';
 import ERC20ABI from '../abi/ERC20.json';
 import { oracles } from '../constants';
 import { useNetwork } from '../providers/NetworkProvider';
@@ -47,7 +47,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   const [stepsCompleted, setStepsCompleted] = useState(0);
   
   const { appChainId } = useNetwork();
-  const { signer } = useClientToSigner();
+  const { signer } = useRetrieveSigner();
 
   const isError = !!error;
   const isSuccess = !!data && !error && !isLoading;
