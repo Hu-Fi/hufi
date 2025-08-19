@@ -88,6 +88,11 @@ export class CampaignData {
   tradingPair: string;
 
   @ApiProperty({
+    name: 'daily_volume_target',
+  })
+  dailyVolumeTarget: number;
+
+  @ApiProperty({
     name: 'start_date',
   })
   startDate: string;

@@ -112,6 +112,7 @@ export class CampaignsService {
         address: ethers.getAddress(campaignEscrow.address),
         exchangeName: manifest.exchange,
         tradingPair: manifest.pair,
+        dailyVolumeTarget: manifest.daily_volume_target,
         startDate: manifest.start_date.toISOString(),
         endDate: manifest.end_date.toISOString(),
         fundAmount: campaignEscrow.totalFundedAmount,
@@ -178,11 +179,12 @@ export class CampaignsService {
       method: 'bulkTransfer',
     });
 
+    let totalTransfersAmount = 0n;
     const amountsPerDay: Record<string, bigint> = {};
     for (const tx of transactions) {
-      let totalTransfersAmount = 0n;
+      let totalTransfersAmountInTx = 0n;
       for (const internalTx of tx.internalTransactions) {
-        totalTransfersAmount += BigInt(internalTx.value);
+        totalTransfersAmountInTx += BigInt(internalTx.value);
       }
 
       const txDate = dayjs(Number(tx.timestamp) * 1000);
@@ -192,7 +194,8 @@ export class CampaignsService {
         amountsPerDay[day] = 0n;
       }
 
-      amountsPerDay[day] += totalTransfersAmount;
+      amountsPerDay[day] += totalTransfersAmountInTx;
+      totalTransfersAmount += totalTransfersAmountInTx;
     }
 
     /**
@@ -205,6 +208,7 @@ export class CampaignsService {
       address: ethers.getAddress(escrowAddress),
       exchangeName: manifest.exchange,
       tradingPair: manifest.pair,
+      dailyVolumeTarget: manifest.daily_volume_target,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
       fundAmount: campaignEscrow.totalFundedAmount,
@@ -214,7 +218,7 @@ export class CampaignsService {
       status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
       escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
       // details
-      amountPaid: campaignEscrow.amountPaid,
+      amountPaid: totalTransfersAmount.toString(),
       dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
         date,
         amount: amount.toString(),
