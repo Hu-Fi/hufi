@@ -18,6 +18,8 @@ export const NetworkProvider: FC<PropsWithChildren> = ({ children }) => {
   const { switchChainAsync } = useSwitchChain();
 
   const handleSwitchChain = useCallback(async (chainId: ChainId) => {
+    if (appChainId === chainId) return;
+    
     setIsSwitching(true);
     try {
       config.setState((state) => ({

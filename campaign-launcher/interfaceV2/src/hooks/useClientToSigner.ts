@@ -22,14 +22,23 @@ const useClientToSigner = () => {
   useEffect(() => {
     const getSigner = async () => {
       setIsCreatingSigner(true);
-      if (client && isTransportReady) {
-        const provider = new BrowserProvider(client.transport);
-        const _signer = await provider.getSigner(activeAddress);
-        const signerChainId = await _signer.provider.getNetwork();
-        if (Number(signerChainId.chainId) !== appChainId && !isSwitching) {
-          await client.switchChain({ id: appChainId });
+      try {
+        setSigner(undefined);
+        if (client && isTransportReady && !isSwitching) {
+          const provider = new BrowserProvider(client.transport);
+          const network = await provider.getNetwork();
+          
+          if (Number(network.chainId) !== appChainId) {
+            await client.switchChain({ id: appChainId });
+          }
+          
+          const _signer = await provider.getSigner(activeAddress);
+          setSigner(_signer);
         }
-        setSigner(_signer);
+      } catch (error) {
+        console.error('Error creating signer:', error);
+        setSigner(undefined);
+      } finally {
         setIsCreatingSigner(false);
       }
     }
