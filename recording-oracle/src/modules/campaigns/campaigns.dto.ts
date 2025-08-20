@@ -118,3 +118,31 @@ export class CheckUserJoinedResponseDto {
   })
   isJoined: boolean;
 }
+
+export class CampaignParamsDto {
+  @ApiProperty({
+    name: 'chain_id',
+    enum: ChainIds,
+  })
+  @Transform(({ value }) => Number(value))
+  @IsIn(ChainIds)
+  chainId: ChainId;
+
+  @ApiProperty({
+    name: 'campaign_address',
+  })
+  @IsEthereumAddress()
+  campaignAddress: string;
+}
+
+export class GetUserProgressResponseDto {
+  @ApiProperty({
+    name: 'total_score',
+  })
+  totalScore: number;
+
+  @ApiProperty({
+    name: 'total_volume',
+  })
+  totalVolume: number;
+}

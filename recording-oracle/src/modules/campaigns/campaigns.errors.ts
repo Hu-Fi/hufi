@@ -1,13 +1,17 @@
 import { BaseError } from '@/common/errors/base';
 
 export class CampaignNotFoundError extends BaseError {
-  constructor(readonly address: string) {
+  constructor(
+    readonly chainId: number,
+    readonly address: string,
+  ) {
     super('Campaign not found');
   }
 }
 
 export class InvalidCampaign extends BaseError {
   constructor(
+    readonly chainId: number,
     readonly address: string,
     readonly details: string,
   ) {
@@ -16,7 +20,16 @@ export class InvalidCampaign extends BaseError {
 }
 
 export class CampaignAlreadyFinishedError extends BaseError {
-  constructor(readonly address: string) {
+  constructor(
+    readonly chainId: number,
+    readonly address: string,
+  ) {
     super('Campaign already finished');
+  }
+}
+
+export class UserIsNotParticipatingError extends BaseError {
+  constructor() {
+    super('User is not participating in campaign');
   }
 }

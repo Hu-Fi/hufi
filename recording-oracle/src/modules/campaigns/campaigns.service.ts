@@ -32,6 +32,7 @@ import {
   CampaignAlreadyFinishedError,
   CampaignNotFoundError,
   InvalidCampaign,
+  UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
@@ -133,7 +134,10 @@ export class CampaignsService {
        * Safety belt to disallow joining campaigns that already finished
        * but might be waiting for results recording or payouts
        */
-      throw new CampaignAlreadyFinishedError(campaign.address);
+      throw new CampaignAlreadyFinishedError(
+        campaign.chainId,
+        campaign.address,
+      );
     }
 
     const exchangeApiKeyId =
@@ -208,18 +212,30 @@ export class CampaignsService {
   }> {
     const escrow = await EscrowUtils.getEscrow(chainId, campaignAddress);
     if (!escrow) {
-      throw new CampaignNotFoundError(campaignAddress);
+      throw new CampaignNotFoundError(chainId, campaignAddress);
     }
 
     // Safety-belt for missing subgraph data START
     if (!escrow.token) {
-      throw new InvalidCampaign(campaignAddress, 'Missing fund token data');
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        'Missing fund token data',
+      );
     }
     if (!escrow.totalFundedAmount) {
-      throw new InvalidCampaign(campaignAddress, 'Missing fund amount data');
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        'Missing fund amount data',
+      );
     }
     if (!escrow.manifest) {
-      throw new InvalidCampaign(campaignAddress, 'Missing manifest data');
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        'Missing manifest data',
+      );
     }
     // Safety-belt for missing subgraph data END
 
@@ -229,6 +245,7 @@ export class CampaignsService {
 
     if (!isEscrowForThisOracle) {
       throw new InvalidCampaign(
+        chainId,
         campaignAddress,
         `Invalid recording oracle address: ${escrow.recordingOracle}`,
       );
@@ -242,6 +259,7 @@ export class CampaignsService {
       [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
+        chainId,
         campaignAddress,
         `Invalid status: ${EscrowStatus[escrowStatus]}`,
       );
@@ -256,7 +274,11 @@ export class CampaignsService {
         );
       } catch (error) {
         this.logger.error('Failed to download campaign manifest', error);
-        throw new InvalidCampaign(campaignAddress, error.message as string);
+        throw new InvalidCampaign(
+          chainId,
+          campaignAddress,
+          error.message as string,
+        );
       }
     } else {
       manifestString = escrow.manifest as string;
@@ -269,6 +291,7 @@ export class CampaignsService {
      */
     if (!isValidExchangeName(manifest.exchange)) {
       throw new InvalidCampaign(
+        chainId,
         campaignAddress,
         `Exchange not supported: ${manifest.exchange}`,
       );
@@ -276,6 +299,7 @@ export class CampaignsService {
 
     if (!SUPPORTED_CAMPAIGN_TYPES.includes(manifest.type as CampaignType)) {
       throw new InvalidCampaign(
+        chainId,
         campaignAddress,
         `Campaign type not supported: ${manifest.type}`,
       );
@@ -654,5 +678,51 @@ export class CampaignsService {
         campaign.id,
       );
     return isUserJoined;
+  }
+
+  async getUserProgress(
+    userId: string,
+    chainId: number,
+    campaignAddress: string,
+  ) {
+    const campaign = await this.findOneByChainIdAndAddress(
+      chainId,
+      campaignAddress,
+    );
+    if (!campaign) {
+      throw new CampaignNotFoundError(chainId, campaignAddress);
+    }
+
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
+        userId,
+        campaign.id,
+      );
+    if (!isUserJoined) {
+      throw new UserIsNotParticipatingError();
+    }
+
+    const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
+      userId,
+      campaign.exchangeName,
+    );
+
+    const campaignProgressChecker = this.getCampaignProgressChecker(
+      campaign.type,
+      {
+        exchangeName: campaign.exchangeName,
+        tradingPair: campaign.pair,
+        tradingPeriodStart: campaign.startDate,
+        tradingPeriodEnd: campaign.endDate,
+      },
+    );
+
+    const participantOutcomes =
+      await campaignProgressChecker.checkForParticipant({
+        apiKey: exchangeApiKey.apiKey,
+        secret: exchangeApiKey.secretKey,
+      });
+
+    return participantOutcomes;
   }
 }

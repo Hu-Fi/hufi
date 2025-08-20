@@ -17,6 +17,7 @@ import {
   CampaignAlreadyFinishedError,
   CampaignNotFoundError,
   InvalidCampaign,
+  UserIsNotParticipatingError,
 } from './campaigns.errors';
 
 @Catch(
@@ -26,6 +27,7 @@ import {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
   InvalidEvmAddressError,
+  UserIsNotParticipatingError,
 )
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
