@@ -520,7 +520,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                 }}
                               >
                                 <Typography variant="body1" color="text.primary">
-                                  {pair?.split('/')[1]?.slice(0, 4) || ''}
+                                  {pair?.split('/')[1] || ''}
                                 </Typography>
                               </InputAdornment>
                             ),
