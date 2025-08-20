@@ -12,8 +12,9 @@ import {
 } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
+import { isMainnet } from '../constants';
+
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
-const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 
 export const config = isMainnet ? createConfig({
   chains: [polygon, mainnet],

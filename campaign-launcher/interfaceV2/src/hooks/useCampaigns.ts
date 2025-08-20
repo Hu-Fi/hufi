@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { useChainId } from 'wagmi';
 
 import { launcherApi } from '../api';
 import { QUERY_KEYS } from '../constants/queryKeys';
+import { useNetwork } from '../providers/NetworkProvider';
 import { CampaignsQueryParams } from '../types';
 
 export const useCampaigns = (params: CampaignsQueryParams) => {
@@ -38,20 +38,20 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
 };
 
 export const useCampaignDetails = (address: string) => {
-  const chainId = useChainId();
+  const { appChainId } = useNetwork();
   return useQuery({
-    queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, chainId, address],
-    queryFn: () => launcherApi.getCampaignDetails(chainId, address),
-    enabled: !!chainId && !!address,
+    queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, appChainId, address],
+    queryFn: () => launcherApi.getCampaignDetails(appChainId, address),
+    enabled: !!appChainId && !!address,
     retry: false,
   });
 };
 
 export const useGetCampaignsStats = () => {
-  const chainId = useChainId();
+  const { appChainId } = useNetwork();
   return useQuery({
-    queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, chainId],
-    queryFn: () => launcherApi.getCampaignsStats(chainId),
-    enabled: !!chainId,
+    queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, appChainId],
+    queryFn: () => launcherApi.getCampaignsStats(appChainId),
+    enabled: !!appChainId,
   });
 }

@@ -1,9 +1,9 @@
 import { FC, useState } from 'react';
 
 import { Button, SxProps } from '@mui/material';
-import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useStakeContext } from '../../providers/StakeProvider';
 import CreateCampaignModal from '../modals/CreateCampaignModal';
 import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
@@ -16,16 +16,19 @@ type Props = {
 const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
   const [openCreateCampaignModal, setOpenCreateCampaignModal] = useState(false);
   const [openStakeHmtPromptModal, setOpenStakeHmtPromptModal] = useState(false);
-  const { isConnected } = useAccount();
+
+  const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
-  const { stakedAmount } = useStakeContext();
+  const { stakedAmount, isFetchingInfo, isClientInitializing } = useStakeContext();
+  
+  const isDisabled = !signer || isClientInitializing || isFetchingInfo;
 
   const handleOpenCreateCampaignModal = () => {
     setOpenCreateCampaignModal(true);
   };
 
   const onClick = async () => {
-    if (!isConnected) return null;
+    if (isDisabled) return null;
     
     if (+(stakedAmount ?? '0') > 0) {
       setOpenCreateCampaignModal(true);
@@ -44,7 +47,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
           height: '42px',
           ...sx,
         }}
-        disabled={!isConnected}
+        disabled={isDisabled}
         onClick={onClick}
       >
         Launch Campaign

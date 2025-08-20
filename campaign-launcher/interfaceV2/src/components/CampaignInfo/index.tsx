@@ -21,6 +21,7 @@ type Props = {
 };
 
 const CampaignInfo: FC<Props> = ({ campaign }) => {
+  const isCompleted = campaign.status === 'completed';
   return (
     <>
       <Box
@@ -30,7 +31,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
         py={0.5}
         px="10px"
         mx={{ xs: 0, md: 2 }}
-        color="primary.contrast"
+        color={isCompleted ? "text.primary" : "primary.contrast"}
         bgcolor={mapStatusToColor(campaign.status, campaign.start_date, campaign.end_date)}
         fontSize="13px"
         fontWeight={600}

@@ -1,5 +1,7 @@
 import { ChainId } from '@human-protocol/sdk';
 
+export const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
+
 export const ROUTES = {
   DASHBOARD: '/',
   CAMPAIGN_DETAILS: '/campaign-details/:address',

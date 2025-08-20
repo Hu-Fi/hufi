@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Line } from 'react-chartjs-2';
+import { numericFormatter } from 'react-number-format';
 
 import { formatTokenAmount } from '../../utils';
 
@@ -141,8 +142,12 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
         callbacks: {
           title: () => '',
           label: (context) => {
-            const value = context.raw;
-            return `${value} ${tokenSymbol}`;
+            const value = context.raw as number;
+            const formattedValue = numericFormatter(value.toString(), {
+              decimalScale: 2,
+              fixedDecimalScale: false,
+            });
+            return `${formattedValue} ${tokenSymbol}`;
           },
         },
       },
