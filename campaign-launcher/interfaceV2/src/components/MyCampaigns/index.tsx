@@ -1,11 +1,11 @@
 import { FC } from 'react';
 
 import { CircularProgress } from '@mui/material';
-import { useChainId } from 'wagmi';
 
 import { useMyCampaigns } from '../../hooks/useCampaigns';
 import usePagination from '../../hooks/usePagination';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
+import { useNetwork } from '../../providers/NetworkProvider';
 import { CampaignStatus, CampaignsQueryParams } from '../../types';
 import { filterFalsyQueryParams } from '../../utils';
 import CampaignsTable from '../CampaignsTable';
@@ -17,13 +17,13 @@ type Props = {
 
 const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
   const { activeAddress } = useActiveAccount();
-  const chain_id = useChainId();
+  const { appChainId } = useNetwork();
   const { params, pagination, setPageSize, setNextPage, setPrevPage } = usePagination();
   const { limit, skip } = params;
   const { page, pageSize } = pagination;
 
   const queryParams = filterFalsyQueryParams({
-    chain_id,
+    chain_id: appChainId,
     launcher: activeAddress,
     status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
     limit,
