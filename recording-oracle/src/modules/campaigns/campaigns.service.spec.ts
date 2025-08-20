@@ -39,6 +39,7 @@ import {
   CampaignAlreadyFinishedError,
   CampaignNotFoundError,
   InvalidCampaign,
+  UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
@@ -176,6 +177,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(CampaignNotFoundError);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
 
       expect(mockedEscrowUtils.getEscrow).toHaveBeenCalledWith(
@@ -201,6 +203,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
       expect(thrownError.details).toBe('Missing fund token data');
 
@@ -227,6 +230,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
       expect(thrownError.details).toBe('Missing fund amount data');
 
@@ -255,6 +259,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
       expect(thrownError.details).toBe('Missing manifest data');
 
@@ -285,6 +290,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
       expect(thrownError.details).toBe(
         `Invalid recording oracle address: ${escrowRecordingOracle}`,
@@ -319,6 +325,7 @@ describe('CampaignsService', () => {
         }
 
         expect(thrownError).toBeInstanceOf(InvalidCampaign);
+        expect(thrownError.chainId).toBe(chainId);
         expect(thrownError.address).toBe(campaignAddress);
         expect(thrownError.details).toBe(
           `Invalid status: ${EscrowStatus[escrowStatus]}`,
@@ -360,6 +367,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
@@ -405,6 +413,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
 
       expect(thrownError.details).toBe(
@@ -442,6 +451,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
       expect(thrownError.address).toBe(campaignAddress);
 
       expect(thrownError.details).toBe(
@@ -706,6 +716,7 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+      expect(thrownError.chainId).toBe(campaign.chainId);
       expect(thrownError.address).toBe(campaign.address);
 
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
@@ -916,6 +927,7 @@ describe('CampaignsService', () => {
       );
       mockExchangeApiKeysService.retrieve.mockImplementation(
         async (userId) => ({
+          id: faker.string.uuid(),
           apiKey: `${userId}-apiKey`,
           secretKey: `${userId}-secretKey`,
         }),
@@ -1684,6 +1696,154 @@ describe('CampaignsService', () => {
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+  });
+
+  describe('getUserProgress', () => {
+    const mockMarketMakingResultsChecker =
+      createMock<MarketMakingResultsChecker>();
+
+    let spyOnGetCampaignProgressChecker: jest.SpyInstance;
+
+    let userId: string;
+    let chainId: number;
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      userId = faker.string.uuid();
+      chainId = generateTestnetChainId();
+      campaign = generateCampaignEntity();
+
+      spyOnGetCampaignProgressChecker = jest.spyOn(
+        campaignsService as any,
+        'getCampaignProgressChecker',
+      );
+    });
+
+    beforeEach(() => {
+      spyOnGetCampaignProgressChecker.mockReturnValueOnce(
+        mockMarketMakingResultsChecker,
+      );
+    });
+
+    afterAll(() => {
+      spyOnGetCampaignProgressChecker.mockRestore();
+    });
+
+    it('should throw if campaign not found', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        null,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.getUserProgress(
+          userId,
+          chainId,
+          campaign.address,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(CampaignNotFoundError);
+      expect(thrownError.chainId).toBe(chainId);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(0);
+    });
+
+    it('should throw if user not joined', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.getUserProgress(
+          userId,
+          chainId,
+          campaign.address,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(UserIsNotParticipatingError);
+
+      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(0);
+    });
+
+    it('should return participant outcome', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        true,
+      );
+
+      const mockApiKey = `${userId}-apiKey`;
+      const mockSecretKey = `${userId}-secretKey`;
+      mockExchangeApiKeysService.retrieve.mockResolvedValueOnce({
+        id: faker.string.uuid(),
+        apiKey: mockApiKey,
+        secretKey: mockSecretKey,
+      });
+
+      const mockParticipantOutcome: ProgressCheckResult = {
+        totalVolume: faker.number.float(),
+        score: faker.number.float(),
+        abuseDetected: false,
+      };
+      mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValue(
+        mockParticipantOutcome,
+      );
+
+      const result = await campaignsService.getUserProgress(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toEqual(mockParticipantOutcome);
+
+      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledWith(
+        userId,
+        campaign.exchangeName,
+      );
+
+      expect(spyOnGetCampaignProgressChecker).toHaveBeenCalledWith(
+        campaign.type,
+        {
+          exchangeName: campaign.exchangeName,
+          tradingPair: campaign.pair,
+          tradingPeriodStart: campaign.startDate,
+          tradingPeriodEnd: campaign.endDate,
+        },
+      );
+
+      expect(
+        mockMarketMakingResultsChecker.checkForParticipant,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockMarketMakingResultsChecker.checkForParticipant,
+      ).toHaveBeenCalledWith({
+        apiKey: mockApiKey,
+        secret: mockSecretKey,
+      });
     });
   });
 });
