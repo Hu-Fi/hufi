@@ -51,7 +51,7 @@ export class JoinedCampaignDto {
   @ApiProperty({ name: 'trading_pair' })
   tradingPair: string;
 
-  @ApiProperty({ name: 'daily_volume_target '})
+  @ApiProperty({ name: 'daily_volume_target' })
   dailyVolumeTarget: number;
 
   @ApiProperty({ name: 'start_date' })
