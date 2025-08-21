@@ -107,6 +107,7 @@ export class CampaignsController {
           processingStatus: campaign.status,
           exchangeName: campaign.exchangeName,
           tradingPair: campaign.pair,
+          dailyVolumeTarget: Number(campaign.dailyVolumeTarget),
           startDate: campaign.startDate.toISOString(),
           endDate: campaign.endDate.toISOString(),
           fundAmount: Number(campaign.fundAmount),
