@@ -207,12 +207,13 @@ export class Web3Service {
 
       return tokenPriceUsd === MISSING_TOKEN_PRICE ? null : tokenPriceUsd;
     } catch (error) {
-      this.logger.error('Error while getting token price', {
+      const message = 'Failed to get token price';
+      this.logger.error(message, {
         symbol,
         error,
       });
 
-      throw new Error('Failed to get token price');
+      throw new Error(message);
     }
   }
 }

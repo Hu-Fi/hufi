@@ -163,13 +163,10 @@ describe('Web3Service', () => {
       expect(thrownError.message).toBe('Failed to get token price');
 
       expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error while getting token price',
-        {
-          symbol: testTokenSymbol,
-          error: testError,
-        },
-      );
+      expect(logger.error).toHaveBeenCalledWith('Failed to get token price', {
+        symbol: testTokenSymbol,
+        error: testError,
+      });
     });
 
     it('should cache and return price if available', async () => {
