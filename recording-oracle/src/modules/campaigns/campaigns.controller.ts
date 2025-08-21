@@ -2,7 +2,11 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
   Post,
   Query,
   Req,
@@ -19,14 +23,17 @@ import {
 import type { RequestWithUser } from '@/common/types';
 
 import {
+  CampaignParamsDto,
   CheckUserJoinedDto,
   CheckUserJoinedResponseDto,
+  GetUserProgressResponseDto,
   JoinCampaignDto,
   JoinCampaignSuccessDto,
   ListJoinedCampaignsQueryDto,
   ListJoinedCampaignsSuccessDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
+import { CampaignNotFoundError } from './campaigns.errors';
 import { CampaignsService } from './campaigns.service';
 import { ReturnedCampaignStatus, CampaignStatus } from './types';
 
@@ -157,5 +164,46 @@ export class CampaignsController {
     return {
       isJoined: isUserJoined,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Check user progress for the campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Details about user progress',
+    type: GetUserProgressResponseDto,
+  })
+  @Header('Cache-Control', 'private, max-age=60')
+  @HttpCode(200)
+  @Get('/:chain_id-:campaign_address/my-progress')
+  async getUserProgress(
+    @Req() request: RequestWithUser,
+    @Param() { chainId, campaignAddress }: CampaignParamsDto,
+  ): Promise<GetUserProgressResponseDto> {
+    try {
+      const userProgress = await this.campaignsService.getUserProgress(
+        request.user.id,
+        chainId,
+        campaignAddress,
+      );
+      return {
+        totalVolume: userProgress.totalVolume,
+        totalScore: userProgress.score,
+      };
+    } catch (error) {
+      if (error instanceof CampaignNotFoundError) {
+        throw new HttpException(
+          {
+            message: 'Campaign not found',
+            chainId,
+            campaignAddress,
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      throw error;
+    }
   }
 }
