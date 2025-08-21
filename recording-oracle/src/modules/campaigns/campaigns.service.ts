@@ -373,8 +373,13 @@ export class CampaignsService {
               -1,
             ) as IntermediateResult;
 
+            const isOngoingCampaign = campaign.endDate > new Date();
             const lastResultDate = new Date(lastResultAt);
-            if (dayjs().diff(lastResultAt, 'day') === 0) {
+            if (isOngoingCampaign && dayjs().diff(lastResultAt, 'day') === 0) {
+              /**
+               * If campaign is ongoing - check results only once in 24.
+               * If campaing ended - let it record results immediately to reduce the wait.
+               */
               logger.debug('Less than a day passed from previous check', {
                 lastResultAt,
               });
