@@ -286,7 +286,7 @@ describe('BaseCampaignProgressChecker', () => {
       const result = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
       );
-      console.log(result);
+
       expect(result.abuseDetected).toBe(false);
       expect(result.score).toBeGreaterThan(0);
       expect(result.totalVolume).toBeGreaterThan(0);
