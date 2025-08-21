@@ -1,15 +1,11 @@
 export const SUPPORTED_EXCHANGE_NAMES = [
   'bigone',
   'binance',
-  'bitget',
   'bybit',
-  'coinbaseexchange',
   'gate',
   'htx',
   'kraken',
-  'kucoin',
   'mexc',
-  'okx',
   'upbit',
   'xt',
 ] as const;
