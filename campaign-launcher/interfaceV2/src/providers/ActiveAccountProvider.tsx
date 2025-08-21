@@ -21,7 +21,7 @@ const ActiveAccountContext = createContext<ActiveAccountContextType | undefined>
   undefined
 );
 
-const PERSISTED_ADDRESS_KEY = 'activeAddress';
+const PERSISTED_ADDRESS_KEY = 'active-address';
 
 const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<`0x${string}` | undefined>(undefined);

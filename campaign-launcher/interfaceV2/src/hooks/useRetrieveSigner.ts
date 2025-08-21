@@ -15,6 +15,7 @@ const useRetrieveSigner = () => {
   const { data: client } = useWalletClient<Config>({
     account: activeAddress,
     chainId: appChainId,
+    query: { enabled: !!activeAddress },
   });
 
   const isTransportReady = client && 'request' in client.transport;
