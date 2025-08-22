@@ -45,10 +45,12 @@ export class PayoutsService {
     for (const chainId of this.web3Service.supportedChainIds) {
       const campaigns = await this.getCampaignsForPayouts(chainId);
 
-      logger.info('Found campaigns waiting for payouts', {
-        chainId,
-        campaigns: campaigns.map((c) => c.address),
-      });
+      if (campaigns.length > 0) {
+        logger.info('Found campaigns waiting for payouts', {
+          chainId,
+          campaigns: campaigns.map((c) => c.address),
+        });
+      }
 
       for (const campaign of campaigns) {
         await this.runPayoutsCycleForCampaign(campaign);
@@ -198,6 +200,7 @@ export class PayoutsService {
       }
 
       if (allResultsPaid) {
+        logger.info('Campaign is fully paid, completing it');
         try {
           await escrowClient.complete(campaign.address);
         } catch (error) {
