@@ -143,6 +143,7 @@ export const constructCampaignDetails = ({ chainId, address, data, tokenDecimals
     address: address,
     exchange_name: data.exchange,
     trading_pair: data.pair,
+    daily_volume_target: data.daily_volume_target,
     start_date: data.start_date,
     end_date: data.end_date,
     fund_amount: fundAmount.toString(),

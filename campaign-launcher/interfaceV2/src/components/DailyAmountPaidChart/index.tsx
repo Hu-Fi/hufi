@@ -84,8 +84,8 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
         borderWidth: 2,
         backgroundColor: (context: ScriptableContext<'line'>) => {
           const chart = context.chart;
-          const { ctx } = chart;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+          const { ctx, chartArea } = chart;
+          const gradient = ctx.createLinearGradient(0, 0, 0, chartArea.height + 80);
           gradient.addColorStop(0.3, 'rgba(202, 207, 232, 0.3)');
           gradient.addColorStop(1, 'rgba(233, 236, 255, 0)');
           return gradient;

@@ -159,7 +159,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
               </Typography>
             </ModalSuccess>
           )}
-          {isError && <ModalError error={error.message} />}
+          {isError && <ModalError message={error.message} />}
           <Box display="flex" gap={1} mx="auto">
             {isIdle && (
               <>

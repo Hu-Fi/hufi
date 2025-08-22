@@ -151,7 +151,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               </Typography>
             </ModalSuccess>
           )}
-          {isError && <ModalError error={error?.message} />}
+          {isError && <ModalError message={error?.message} />}
           {isIdle && (
             <Button
               size="large"
