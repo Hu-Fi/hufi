@@ -174,14 +174,14 @@ const CampaignsTable: FC<Props> = ({
       field: 'pair',
       headerName: 'Pair',
       flex: 2,
-      minWidth: 240,
+      minWidth: 250,
       renderCell: (params) => <CryptoPairEntity symbol={params.row.trading_pair} size="medium" />,
     },
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 1.5,
-      minWidth: 170,
+      flex: 1,
+      minWidth: 120,
       renderCell: (params) => {
         const exchangeName = exchangesMap.get(params.row.exchange_name)?.display_name;
         return (
@@ -202,7 +202,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'daily_volume_target',
       headerName: 'DVT',
       flex: 1.5,
-      minWidth: 130,
+      minWidth: 140,
       renderHeader: () => (
         <>
           <Typography variant="subtitle2" mr={1}>DVT</Typography>
@@ -260,7 +260,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'fundAmount',
       headerName: 'Fund Amount',
       flex: 2,
-      minWidth: 130,
+      minWidth: 140,
       renderCell: (params) => {
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row
