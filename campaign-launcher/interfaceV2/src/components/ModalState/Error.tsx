@@ -2,14 +2,12 @@ import { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { DEFAULT_ERROR_MESSAGE, INTERNAL_SERVER_ERROR } from '../../constants';
 import { CloseIcon } from '../../icons';
 
 type Props = {
   message?: string;
 };
-
-const DEFAULT_ERROR_MESSAGE = 'An error occurred, please try again.';
-const INTERNAL_SERVER_ERROR = 'Internal server error';
 
 const ModalError: FC<Props> = ({ message }) => {
   return (

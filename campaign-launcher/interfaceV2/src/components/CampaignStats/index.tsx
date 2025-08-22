@@ -102,13 +102,15 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formattedTokenAmount} <Suffix>{campaign.fund_token_symbol}</Suffix>
+              {formattedTokenAmount}
+              {' '}<Suffix>{campaign.fund_token_symbol}</Suffix>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formattedAmountPaid} <Suffix>{campaign.fund_token_symbol}</Suffix>
+              {formattedAmountPaid}
+              {' '}<Suffix>{campaign.fund_token_symbol}</Suffix>
             </Value>
           </StatsCard>
           <StatsCard>
