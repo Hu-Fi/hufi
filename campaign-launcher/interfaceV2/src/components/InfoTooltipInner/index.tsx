@@ -1,8 +1,8 @@
 import { forwardRef } from "react"
 
-import { Box, Typography } from "@mui/material";
+import { Box, BoxProps, Typography } from "@mui/material";
 
-const InfoTooltipInner = forwardRef((props, ref) => {
+const InfoTooltipInner = forwardRef((props: BoxProps, ref) => {
   return (
     <Box 
       ref={ref}

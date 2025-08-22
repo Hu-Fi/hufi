@@ -47,6 +47,7 @@ export type Campaign = {
   address: `0x${string}`;
   exchange_name: string;
   trading_pair: string;
+  daily_volume_target: number;
   start_date: string;
   end_date: string;
   fund_amount: string;

@@ -2,6 +2,7 @@ import { FC } from 'react';
 
 import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { numericFormatter } from 'react-number-format';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
@@ -173,7 +174,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'pair',
       headerName: 'Pair',
       flex: 2,
-      minWidth: 250,
+      minWidth: 240,
       renderCell: (params) => <CryptoPairEntity symbol={params.row.trading_pair} size="medium" />,
     },
     {
@@ -198,10 +199,34 @@ const CampaignsTable: FC<Props> = ({
       renderCell: (params) => <ExplorerLink address={params.row.address} chainId={params.row.chain_id} />,
     },
     {
+      field: 'daily_volume_target',
+      headerName: 'DVT',
+      flex: 1.5,
+      minWidth: 130,
+      renderHeader: () => (
+        <>
+          <Typography variant="subtitle2" mr={1}>DVT</Typography>
+          <Tooltip arrow placement="right" title="Daily Volume Target">
+            <InfoTooltipInner width={24} height={24} />
+          </Tooltip>
+        </>
+      ),
+      renderCell: (params) => {
+        const { daily_volume_target, trading_pair } = params.row;
+        const currency = trading_pair.split('/')[1];
+        const formattedDailyVolumeTarget = numericFormatter(daily_volume_target.toString(), {
+          decimalScale: 1,
+          fixedDecimalScale: false,
+          thousandSeparator: ',',
+        });
+        return <Typography variant="subtitle2">{formattedDailyVolumeTarget} {currency}</Typography>;
+      },
+    },
+    {
       field: 'network',
       headerName: 'Network',
       flex: 1,
-      minWidth: 110,
+      minWidth: 100,
       renderCell: (params) => {
         const networkName = getNetworkName(params.row.chain_id);
         return (
@@ -235,7 +260,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'fundAmount',
       headerName: 'Fund Amount',
       flex: 2,
-      minWidth: 150,
+      minWidth: 130,
       renderCell: (params) => {
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row
@@ -259,7 +284,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'status',
       headerName: 'Status',
       flex: 1,
-      minWidth: 80,
+      minWidth: 60,
       renderHeader: () => <StatusTooltip />,
       renderCell: (params) => {
         return (
@@ -358,14 +383,18 @@ const CampaignsTable: FC<Props> = ({
           px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
-          fontWeight: 500,
-          fontSize: '16px',
           '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: 'center',
           },
+        },
+        '& .MuiDataGrid-columnHeaderTitle': {
+          fontWeight: 600,
+          fontSize: '14px',
+          lineHeight: '22px',
+          letterSpacing: '0.1px',
         },
         '& .MuiDataGrid-row': {
           display: 'flex',
@@ -394,7 +423,10 @@ const CampaignsTable: FC<Props> = ({
           '&[data-field="fundAmount"]': {
             justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
-          '&[data-field="status"], &[data-field="network"]': {
+          '&[data-field="network"]': {
+            justifyContent: 'flex-start',
+          },
+          '&[data-field="status"]': {
             justifyContent: 'center',
           },
         },
