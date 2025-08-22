@@ -22,8 +22,8 @@ import {
 export function generateCampaignEntity(
   overrides: Partial<CampaignEntity> = {},
 ): CampaignEntity {
-  const startDate = new Date();
-  const durationInDays = faker.number.int({ min: 2, max: 7 });
+  const startDate = dayjs().subtract(1, 'days').toDate();
+  const durationInDays = faker.number.int({ min: 3, max: 7 });
 
   const campaign = {
     id: faker.string.uuid(),

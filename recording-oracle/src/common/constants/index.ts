@@ -6,15 +6,11 @@ export const JWT_STRATEGY_NAME = 'jwt-http';
 export const SUPPORTED_EXCHANGE_NAMES = [
   'bigone',
   'binance',
-  'bitget',
   'bybit',
-  'coinbaseexchange',
   'gate',
   'htx',
   'kraken',
-  'kucoin',
   'mexc',
-  'okx',
   'upbit',
   'xt',
 ] as const;

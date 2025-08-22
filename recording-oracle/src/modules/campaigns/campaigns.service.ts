@@ -325,21 +325,25 @@ export class CampaignsService {
   async recordCampaignsProgress(): Promise<void> {
     this.logger.debug('Campaigns progress recording job started');
 
-    /**
-     * Atm we don't expect many active campaigns
-     * so it's fine to get all at once, but later
-     * we might need to query them in batches or as stream.
-     */
-    const campaignsToCheck =
-      await this.campaignsRepository.findForProgressRecording();
-
-    for (const campaign of campaignsToCheck) {
+    try {
       /**
-       * Right now for simplicity process sequentially.
-       * Later we can add "fastq" usage for parallel processing
-       * and "backpressured" adding to the queue.
+       * Atm we don't expect many active campaigns
+       * so it's fine to get all at once, but later
+       * we might need to query them in batches or as stream.
        */
-      await this.recordCampaignProgress(campaign);
+      const campaignsToCheck =
+        await this.campaignsRepository.findForProgressRecording();
+
+      for (const campaign of campaignsToCheck) {
+        /**
+         * Right now for simplicity process sequentially.
+         * Later we can add "fastq" usage for parallel processing
+         * and "backpressured" adding to the queue.
+         */
+        await this.recordCampaignProgress(campaign);
+      }
+    } catch (error) {
+      this.logger.error('Error while recording campaigns progress', error);
     }
 
     this.logger.debug('Campaigns progress recording job finished');
@@ -373,8 +377,13 @@ export class CampaignsService {
               -1,
             ) as IntermediateResult;
 
+            const isOngoingCampaign = campaign.endDate > new Date();
             const lastResultDate = new Date(lastResultAt);
-            if (dayjs().diff(lastResultAt, 'day') === 0) {
+            if (isOngoingCampaign && dayjs().diff(lastResultAt, 'day') === 0) {
+              /**
+               * If campaign is ongoing - check results only once in 24.
+               * If campaing ended - let it record results immediately to reduce the wait.
+               */
               logger.debug('Less than a day passed from previous check', {
                 lastResultAt,
               });
@@ -637,23 +646,27 @@ export class CampaignsService {
   async trackCampaignsCompletion(): Promise<void> {
     this.logger.debug('Campaigns completion tracking job started');
 
-    const campaignsToTrack =
-      await this.campaignsRepository.findForCompletionTracking();
+    try {
+      const campaignsToTrack =
+        await this.campaignsRepository.findForCompletionTracking();
 
-    for (const campaign of campaignsToTrack) {
-      const escrow = await EscrowUtils.getEscrow(
-        campaign.chainId,
-        campaign.address,
-      );
+      for (const campaign of campaignsToTrack) {
+        const escrow = await EscrowUtils.getEscrow(
+          campaign.chainId,
+          campaign.address,
+        );
 
-      const completeStatusString = EscrowStatus[EscrowStatus.Complete];
-      if (escrow.status === completeStatusString) {
-        this.logger.info('Completing campaign', {
-          campaignId: campaign.id,
-        });
-        campaign.status = CampaignStatus.COMPLETED;
-        await this.campaignsRepository.save(campaign);
+        const completeStatusString = EscrowStatus[EscrowStatus.Complete];
+        if (escrow.status === completeStatusString) {
+          this.logger.info('Completing campaign', {
+            campaignId: campaign.id,
+          });
+          campaign.status = CampaignStatus.COMPLETED;
+          await this.campaignsRepository.save(campaign);
+        }
       }
+    } catch (error) {
+      this.logger.error('Error while tracking campaigns completion', error);
     }
 
     this.logger.debug('Campaigns completion tracking job finished');
