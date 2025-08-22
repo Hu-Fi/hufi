@@ -37,6 +37,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     try {
       const nonce = await recordingApi.getNonce(activeAddress);
       const signature = await signMessageAsync({
+        account: activeAddress,
         message: JSON.stringify(nonce),
       });
       const authResponse = await recordingApi.auth(activeAddress, signature);

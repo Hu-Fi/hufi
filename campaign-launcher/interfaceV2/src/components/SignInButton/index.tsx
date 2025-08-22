@@ -2,11 +2,12 @@ import { FC, useEffect, useRef, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { Connector, useAccount, useConnect } from 'wagmi';
+import { Connector, useAccount, useConnect, useDisconnect } from 'wagmi';
 
 import coinbaseSvg from '../../assets/coinbase.svg';
 import metaMaskSvg from '../../assets/metamask.svg';
 import walletConnectSvg from '../../assets/walletconnect.svg';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 
@@ -22,9 +23,11 @@ const SignInButton: FC = () => {
   const isConnectingWallet = useRef(false);
 
   const { connectAsync, connectors } = useConnect();
-  const { isConnected, address } = useAccount();
+  const { address } = useAccount();
   const { signIn, isLoading } = useWeb3Auth();
-  const { activeAddress, setActiveAddress } = useActiveAccount();
+  const { setActiveAddress } = useActiveAccount();
+  const { disconnectAsync } = useDisconnect();
+  const { signer } = useRetrieveSigner();
 
   const handleConnect = async (connector: Connector) => {
     isAuthorizing.current = true;
@@ -33,6 +36,10 @@ const SignInButton: FC = () => {
       await connectAsync({ connector });
     } catch (e) {
       const err = e as { message?: string; code?: number | string };
+      if (err.message?.includes('Connector already connected')){
+        await disconnectAsync();
+        await handleConnect(connector);
+      }
       const message = (err?.message ?? '').toLowerCase();
       const code = err?.code;
       const isUserAborted =
@@ -51,7 +58,7 @@ const SignInButton: FC = () => {
   const onSignInButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isLoading) return;
 
-    if (isConnected && activeAddress) {
+    if (signer) {
       signIn();
     } else {
       setAnchorEl(e.currentTarget);
@@ -66,12 +73,12 @@ const SignInButton: FC = () => {
   }, [address]);
 
   useEffect(() => {
-    if (isConnected && isAuthorizing.current && activeAddress) {
+    if (signer && isAuthorizing.current) {
       signIn().finally(() => {
         isAuthorizing.current = false;
       });
     }
-  }, [isConnected, activeAddress]);
+  }, [signer]);
 
   const onClose = () => setAnchorEl(null);
 
