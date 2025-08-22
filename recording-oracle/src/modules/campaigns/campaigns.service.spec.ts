@@ -1234,7 +1234,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should not check progress if less than a day from last results', async () => {
+    it('should not check progress if less than a day from last results for ongoing campaign', async () => {
       jest.useFakeTimers({ now: new Date() });
 
       const oneDayAgo = dayjs().subtract(1, 'day').toDate();
@@ -1259,6 +1259,31 @@ describe('CampaignsService', () => {
       jest.useRealTimers();
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+    });
+
+    it('should evaluate start date from last intermediate results if less than a day from last results but campaign ended', async () => {
+      const lastResultsEndDate = dayjs().subtract(42, 'minutes').toDate();
+
+      const intermediateResultsData = generateIntermediateResultsData({
+        results: [generateIntermediateResult(lastResultsEndDate)],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      campaign.endDate = dayjs().subtract(1, 'minutes').toDate();
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedStartDate = new Date(lastResultsEndDate.valueOf() + 1);
+      const expectedEndDate = campaign.endDate;
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+        campaign,
+        participants,
+        expectedStartDate,
+        expectedEndDate,
+      );
     });
 
     it('should use campaign end date if less than a day left to check', async () => {

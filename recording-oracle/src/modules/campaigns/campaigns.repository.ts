@@ -27,15 +27,21 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
   }
 
   async findForProgressRecording(): Promise<CampaignEntity[]> {
+    const now = new Date();
     const timeAgo = dayjs().subtract(1, 'day').toDate();
 
     const results = await this.createQueryBuilder('campaign')
       .where('campaign.status = :status', { status: CampaignStatus.ACTIVE })
       .andWhere('campaign.startDate <= :timeAgo', { timeAgo })
       .andWhere(
-        '(campaign.lastResultsAt IS NULL OR campaign.lastResultsAt <= :timeAgo)',
+        `
+          campaign.lastResultsAt IS NULL
+          OR campaign.lastResultsAt <= :timeAgo
+          OR campaign.endDate <= :now
+        `,
         {
           timeAgo,
+          now,
         },
       )
       .getMany();

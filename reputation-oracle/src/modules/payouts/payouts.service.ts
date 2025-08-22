@@ -133,6 +133,8 @@ export class PayoutsService {
           );
 
           logger.info('Rewards calculated', {
+            periodFrom: intermediateResult.from,
+            periodTo: intermediateResult.to,
             rewardsBatches,
           });
 
