@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
-import { Config, useWalletClient } from 'wagmi';
+import { Config, useAccount, useWalletClient } from 'wagmi';
 
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
 import { useNetwork } from '../providers/NetworkProvider';
@@ -12,9 +12,11 @@ const useRetrieveSigner = () => {
 
   const { appChainId, isSwitching } = useNetwork();
   const { activeAddress } = useActiveAccount();
+  const { isConnected } = useAccount();
   const { data: client } = useWalletClient<Config>({
     account: activeAddress,
     chainId: appChainId,
+    query: { enabled: !!activeAddress && isConnected },
   });
 
   const isTransportReady = client && 'request' in client.transport;
