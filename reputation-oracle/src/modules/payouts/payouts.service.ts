@@ -200,6 +200,7 @@ export class PayoutsService {
       }
 
       if (allResultsPaid) {
+        logger.info('Campaign is fully paid, completing it');
         try {
           await escrowClient.complete(campaign.address);
         } catch (error) {
