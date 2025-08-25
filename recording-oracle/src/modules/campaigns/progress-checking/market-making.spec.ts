@@ -52,7 +52,7 @@ describe('MarketMakingResultsChecker', () => {
       expect(score).toBe(trade.cost * 0.42);
     });
 
-    it('should return zero score for taker sell', () => {
+    it('should return proper score for taker sell', () => {
       const trade = generateTrade({
         takerOrMaker: TakerOrMakerFlag.TAKER,
         side: TradingSide.SELL,
@@ -60,7 +60,7 @@ describe('MarketMakingResultsChecker', () => {
 
       const score = resultsChecker['calculateTradeScore'](trade);
 
-      expect(score).toBe(0);
+      expect(score).toBe(trade.cost * 0.1);
     });
   });
 });

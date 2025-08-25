@@ -14,7 +14,7 @@ export class MarketMakingResultsChecker extends BaseCampaignProgressChecker {
       ratio = 0.42;
     } else {
       // "taker" sells
-      ratio = 0;
+      ratio = 0.1;
     }
 
     return ratio * trade.cost;
