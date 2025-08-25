@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Line } from 'react-chartjs-2';
+import { numericFormatter } from 'react-number-format';
 
 import { formatTokenAmount } from '../../utils';
 
@@ -36,9 +37,9 @@ type ProcessedData = {
 type Props = {
   data: {
     date: string;
-    totalAmountPaid: string;
+    amount: string;
   }[];
-  endDate: number;
+  endDate: string;
   tokenSymbol: string;
 };
 
@@ -48,32 +49,31 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
   useEffect(() => {
-    const today = new Date();
-    const endDateObj = new Date(endDate * 1000); 
-    const lastPayoutDate = data.length > 0 ? new Date(data[0].date) : endDateObj;
-    
-    const chartStartDate = today > endDateObj ? lastPayoutDate : today;
-    
+    const today = new Date().toISOString();
+    const lastPayoutDate = data.length > 0 ? new Date(data[0].date) : endDate;
+
+    const chartStartDate = today > endDate ? lastPayoutDate : today;
+
     const lastWeekDates = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(chartStartDate);
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     }).reverse();
-    
+
     const processed = lastWeekDates.map((date) => {
-      const foundData = data.find(item => item.date === date);
+      const foundData = data.find((item) => item.date === date);
       const [, month, day] = date.split('-');
       return {
         date: `${day}/${month}`,
-        value: foundData ? +formatTokenAmount(foundData.totalAmountPaid) : 0,
+        value: foundData ? +formatTokenAmount(foundData.amount) : 0,
       };
     });
 
     setProcessedData(processed);
   }, []);
 
-  const dates = processedData.map(item => item.date);
-  const values = processedData.map(item => item.value);
+  const dates = processedData.map((item) => item.date);
+  const values = processedData.map((item) => item.value);
 
   const chartData: ChartData<'line'> = {
     labels: dates,
@@ -84,8 +84,8 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
         borderWidth: 2,
         backgroundColor: (context: ScriptableContext<'line'>) => {
           const chart = context.chart;
-          const { ctx } = chart;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+          const { ctx, chartArea } = chart;
+          const gradient = ctx.createLinearGradient(0, 0, 0, chartArea.height + 80);
           gradient.addColorStop(0.3, 'rgba(202, 207, 232, 0.3)');
           gradient.addColorStop(1, 'rgba(233, 236, 255, 0)');
           return gradient;
@@ -142,8 +142,12 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
         callbacks: {
           title: () => '',
           label: (context) => {
-            const value = context.raw;
-            return `${value} ${tokenSymbol}`;
+            const value = context.raw as number;
+            const formattedValue = numericFormatter(value.toString(), {
+              decimalScale: 2,
+              fixedDecimalScale: false,
+            });
+            return `${formattedValue} ${tokenSymbol}`;
           },
         },
       },

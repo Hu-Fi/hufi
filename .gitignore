@@ -1,6 +1,6 @@
 .vscode
-node_modules
 .DS_Store
+node_modules
 
 # Modern Yarn files
 .pnp.*
@@ -11,3 +11,6 @@ node_modules
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Ignore developer-only local files
+.local

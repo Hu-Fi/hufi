@@ -1,21 +1,26 @@
 import {
-  BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   ValidationError,
   ValidationPipe,
-  ValidationPipeOptions,
+  type ValidationPipeOptions,
 } from '@nestjs/common';
 
 @Injectable()
 export class HttpValidationPipe extends ValidationPipe {
   constructor(options?: ValidationPipeOptions) {
     super({
-      exceptionFactory: (errors: ValidationError[]): BadRequestException =>
-        new BadRequestException(errors),
+      exceptionFactory: (errors: ValidationError[]) => {
+        const flattenErrors = this.flattenValidationErrors(errors);
+
+        return new HttpException(
+          { validationErrors: flattenErrors, message: 'Validation error' },
+          HttpStatus.BAD_REQUEST,
+        );
+      },
       transform: true,
       whitelist: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
       ...options,
     });
   }

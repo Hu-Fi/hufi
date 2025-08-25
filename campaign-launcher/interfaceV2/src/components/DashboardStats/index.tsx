@@ -1,14 +1,13 @@
 import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { useAccount } from 'wagmi';
 
-import { useCampaignsStats } from '../../hooks/useCampaigns';
-import useGetLiquidityScore from '../../hooks/useGetLiquidityScore';
+import { useGetCampaignsStats } from '../../hooks/useCampaigns';
+import FormattedNumber from '../FormattedNumber';
+import TotalVolume from '../TotalVolume';
 
-const StatsCard = styled(Box)(({ theme }) => ({
+export const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
@@ -23,7 +22,7 @@ const StatsCard = styled(Box)(({ theme }) => ({
   }
 }));
 
-const Value = styled(Typography)(({ theme }) => ({
+export const Value = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.violet,
   fontSize: '40px',
   fontWeight: 800,
@@ -32,9 +31,7 @@ const Value = styled(Typography)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
-  const { chain } = useAccount();
-  const { data: campaignsStats } = useCampaignsStats((chain?.id || ChainId.ALL) as ChainId);
-  const { data: liquidityScore } = useGetLiquidityScore();
+  const { data: campaignsStats } = useGetCampaignsStats();
 
   return (
     <Box component="section" display="flex" flexWrap="wrap">
@@ -42,19 +39,20 @@ const DashboardStats: FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
-            <Value>${campaignsStats?.totalFundsUSD || 0}</Value>
+            <Value>
+              <FormattedNumber value={campaignsStats?.rewards_pool_usd} prefix='$' />
+            </Value>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <StatsCard>
-            <Typography variant="subtitle2">Total Liquidity Provided</Typography>
-            <Value>${liquidityScore?.total || 0}</Value>
-          </StatsCard>
+          <TotalVolume />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Number of Active Campaigns</Typography>
-            <Value>{campaignsStats?.totalCampaigns || 0}</Value>
+            <Value>
+              <FormattedNumber value={campaignsStats?.n_active_campaigns} />
+            </Value>
           </StatsCard>
         </Grid>
       </Grid>

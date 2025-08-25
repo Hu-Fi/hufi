@@ -1,62 +1,109 @@
-version: "3.8"
 name: hufi
+
+x-service-default-config:
+  restart: &default-restart unless-stopped
+  logging: &default-logging
+    options:
+      max-size: 10m
+      max-file: 3
+
+x-hardcoded-vars:
+  minio_root_user: &minio_root_user minioadmin
+  minio_root_password: &minio_root_password minioadmin
+  minio_services_access_key: &minio_services_access_key pk_minio_hufi-service
+  minio_services_secret_key: &minio_services_secret_key sk_minio_hufi-service
+
 services:
   postgres:
-    container_name: hufi-db
-    image: postgres:latest
-    restart: always
+    container_name: hufi-postgres
+    image: postgres:16
+    restart: *default-restart
     logging:
-      options:
-        max-size: 10m
-        max-file: "3"
+      <<: *default-logging
+    networks:
+      - hufi
     ports:
-      - 5432:5432
-    command:
-      [
-        "postgres",
-        "-cshared_preload_libraries=pg_stat_statements",
-        "-cmax_connections=200",
-      ]
-    environment:
-      POSTGRES_HOST: 0.0.0.0
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_PORT: 5432
-      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+      - name: instance_port
+        target: 5432
+        published: 5433
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d
-      - ./db:/var/lib/postgresql/data
-  minio:
-    container_name: hufi-storage
-    image: minio/minio:RELEASE.2022-05-26T05-48-41Z
-    ports:
-      - 9001:9001
-      - 9000:9000
-    entrypoint: "sh"
-    command: -c "minio server /data --console-address ':9001'"
+      - postgres-data:/var/lib/postgresql/data
     environment:
-      MINIO_ROOT_USER: user
-      MINIO_ROOT_PASSWORD: password
+      POSTGRES_USER: default
+      POSTGRES_PASSWORD: qwerty
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    container_name: hufi-minio
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    restart: *default-restart
+    logging:
+      <<: *default-logging
+    entrypoint: 'sh'
+    networks:
+      - hufi
+    ports:
+      - name: instance_port
+        target: 9000
+        published: 9000
+      - name: console_port
+        target: 9001
+        published: 9001
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ROOT_USER: *minio_root_user
+      MINIO_ROOT_PASSWORD: *minio_root_password
+    command:
+      -c "minio server /data --console-address ':9001'"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s
       timeout: 5s
       retries: 3
-    volumes:
-      - ./storage:/data
+
   minio-mc:
-    container_name: hufi-storage-mc
-    image: minio/mc
+    container_name: hufi-minio-client
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
     depends_on:
       minio:
         condition: service_healthy
+    networks:
+      - hufi
+    environment:
+      MINIO_ROOT_USER: *minio_root_user
+      MINIO_ROOT_PASSWORD: *minio_root_password
+      SERVICES_ACCESS_KEY: *minio_services_access_key
+      SERVICES_SECRET_KEY: *minio_services_secret_key
+      BUCKET_NAME_MANIFESTS: manifests
+      BUCKET_NAME_RECORDINGS: recordings
+      BUCKET_NAME_REPUTATIONS: reputations
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 user password;
-      /usr/bin/mc mb myminio/manifests;
-      /usr/bin/mc anonymous set public myminio/manifests;
-      /usr/bin/mc mb myminio/recordings;
-      /usr/bin/mc anonymous set public myminio/recordings;
-      /usr/bin/mc mb myminio/reputations;
-      /usr/bin/mc anonymous set public myminio/reputations;
+        mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD
+
+        mc admin user add myminio $$SERVICES_ACCESS_KEY $$SERVICES_SECRET_KEY
+        mc admin policy attach myminio readwrite --user=$$SERVICES_ACCESS_KEY
+
+        mc mb myminio/$$BUCKET_NAME_MANIFESTS;
+        mc anonymous set public myminio/$$BUCKET_NAME_MANIFESTS;
+
+        mc mb myminio/$$BUCKET_NAME_RECORDINGS;
+        mc anonymous set public myminio/$$BUCKET_NAME_RECORDINGS;
+
+        mc mb myminio/$$BUCKET_NAME_REPUTATIONS;
+        mc anonymous set public myminio/$$BUCKET_NAME_REPUTATIONS;
       "
+
+volumes:
+  postgres-data:
+  minio-data:
+
+networks:
+  hufi:
+    name: hufi

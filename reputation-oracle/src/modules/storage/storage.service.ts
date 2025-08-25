@@ -1,68 +1,91 @@
-import crypto from 'crypto';
-
-import { ChainId, StorageClient } from '@human-protocol/sdk';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
 
-import { S3ConfigService } from '../../common/config/s3-config.service';
-import { LiquidityDto } from '../webhook/webhook.dto';
+import { ContentType } from '@/common/enums';
+import { S3ConfigService } from '@/config';
+import logger from '@/logger';
 
-import { SaveLiquidityDto } from './storage.dto';
+import { MinioErrorCodes } from './minio.constants';
 
 @Injectable()
 export class StorageService {
-  public readonly minioClient: Minio.Client;
+  private readonly logger = logger.child({
+    context: StorageService.name,
+  });
 
-  constructor(public readonly s3ConfigService: S3ConfigService) {
+  private readonly minioClient: Minio.Client;
+
+  constructor(private readonly s3ConfigService: S3ConfigService) {
     this.minioClient = new Minio.Client({
-      endPoint: this.s3ConfigService.endPoint,
+      endPoint: this.s3ConfigService.endpoint,
       port: this.s3ConfigService.port,
       accessKey: this.s3ConfigService.accessKey,
       secretKey: this.s3ConfigService.secretKey,
       useSSL: this.s3ConfigService.useSSL,
     });
   }
-  public getUrl(key: string): string {
+
+  private getUrl(key: string): string {
     return `${this.s3ConfigService.useSSL ? 'https' : 'http'}://${
-      this.s3ConfigService.endPoint
+      this.s3ConfigService.endpoint
     }:${this.s3ConfigService.port}/${this.s3ConfigService.bucket}/${key}`;
   }
 
-  public async download(url: string): Promise<any> {
+  private async checkFileExists(key: string): Promise<boolean> {
     try {
-      return await StorageClient.downloadFileFromUrl(url);
-    } catch {
-      return [];
+      await this.minioClient.statObject(this.s3ConfigService.bucket, key);
+      return true;
+    } catch (error) {
+      if (error?.code === MinioErrorCodes.NotFound) {
+        return false;
+      }
+      this.logger.error('Failed to check if file exists', {
+        fileKey: key,
+        error,
+      });
+      throw new Error('Error accessing storage');
     }
   }
 
-  public async uploadLiquidities(
-    escrowAddress: string,
-    chainId: ChainId,
-    liquidities: LiquidityDto[],
-  ): Promise<SaveLiquidityDto> {
-    if (!(await this.minioClient.bucketExists(this.s3ConfigService.bucket))) {
-      throw new BadRequestException('Bucket not found');
+  async uploadData(
+    content: string | Buffer,
+    fileName: string,
+    contentType: ContentType,
+  ): Promise<string> {
+    const isConfiguredBucketExists = await this.minioClient.bucketExists(
+      this.s3ConfigService.bucket,
+    );
+
+    if (!isConfiguredBucketExists) {
+      throw new Error("Can't find configured bucket");
     }
-    const content = JSON.stringify(liquidities);
+
     try {
-      const date = Date.now();
-      const hash = crypto.createHash('sha1').update(content).digest('hex');
-      const filename = `${escrowAddress}-${chainId}-${date}.json`;
+      const fileUrl = this.getUrl(fileName);
+
+      const isAlreadyUploaded = await this.checkFileExists(fileName);
+      if (isAlreadyUploaded) {
+        return fileUrl;
+      }
+
       await this.minioClient.putObject(
         this.s3ConfigService.bucket,
-        filename,
-        JSON.stringify(content),
-        content.length,
+        fileName,
+        content,
         {
-          'Content-Type': 'application/json',
+          'Content-Type': contentType,
           'Cache-Control': 'no-store',
         },
       );
 
-      return { url: this.getUrl(filename), hash };
-    } catch (e) {
-      throw new BadRequestException('File not uploaded');
+      return fileUrl;
+    } catch (error) {
+      this.logger.error('Failed to upload data', {
+        error,
+        fileName,
+        contentType,
+      });
+      throw new Error('Data not uploaded');
     }
   }
 }

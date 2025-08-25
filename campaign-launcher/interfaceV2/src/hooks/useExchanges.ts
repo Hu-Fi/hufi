@@ -1,21 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { api } from '../api';
-
-type Exchange = {
-  displayName: string;
-  logo: string;
-  name: string;
-  type: string;
-  url: string;
-};
+import { launcherApi } from '../api';
+import { QUERY_KEYS } from '../constants/queryKeys';
 
 export const useExchanges = () => {
   return useQuery({
-    queryKey: ['exchanges'],
-    queryFn: () =>
-      api.exchange
-        .exchangeControllerGetExchangeList()
-        .then((res) => res.data as Exchange[]),
+    queryKey: [QUERY_KEYS.EXCHANGES],
+    queryFn: () => launcherApi.getExchanges(),
   });
 };

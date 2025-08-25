@@ -1,6 +1,7 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
-import { useParams } from 'react-router-dom';
+import { CircularProgress, Typography } from '@mui/material';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import CampaignInfo from '../../components/CampaignInfo';
 import CampaignStats from '../../components/CampaignStats';
@@ -8,28 +9,45 @@ import HowToLaunch from '../../components/HowToLaunch';
 import JoinedCampaigns from '../../components/JoinedCampaigns';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
-import { useCampaign } from '../../hooks/useCampaigns';
+import { useCampaignDetails } from '../../hooks/useCampaigns';
+import { isCampaignDetails } from '../../utils';
 
 const Campaign: FC = () => {
-  const { chainId, address } = useParams() as {
-    chainId: string;
-    address: string;
-  };
-  const { data: campaign, isPending: isCampaignLoading } = useCampaign(
-    +chainId,
-    address
-  );
+  const { address } = useParams() as { address: string };
+  const [searchParams] = useSearchParams();
+  const { data: campaign, isPending: isCampaignLoading } = useCampaignDetails(address);
+
+  const parsedData = useMemo(() => {
+    const encodedData = searchParams.get('data');
+    if (!encodedData) return undefined;
+    
+    try {
+      const decodedData = atob(encodedData);
+      const parsed = JSON.parse(decodedData);
+      
+      if (!isCampaignDetails(parsed)) {
+        console.error('Invalid campaign data structure', parsed);
+        return undefined;
+      }
+      
+      return parsed;
+    } catch (error) {
+      console.error('Failed to parse encoded campaign data', error);
+      return undefined;
+    }
+  }, [searchParams]);
+
+  const campaignData = campaign || parsedData;
 
   return (
     <PageWrapper>
       <PageTitle title="Campaign Data">
-        <CampaignInfo
-          campaign={campaign}
-          isCampaignLoading={isCampaignLoading}
-        />
+        {isCampaignLoading && <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />}
+        {!!campaignData && <CampaignInfo campaign={campaignData} />}
       </PageTitle>
-      <CampaignStats campaign={campaign} />
-      <JoinedCampaigns showPagination={false} showAllCampaigns={false} />
+      <CampaignStats campaign={campaignData} />
+      <Typography variant="h6">Joined Campaigns</Typography>
+      <JoinedCampaigns showOnlyActiveCampaigns={false} showPagination={false} showViewAll={true} />
       <HowToLaunch />
     </PageWrapper>
   );

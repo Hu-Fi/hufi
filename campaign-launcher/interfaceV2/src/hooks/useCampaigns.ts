@@ -1,56 +1,57 @@
-import { ChainId } from '@human-protocol/sdk';
 import { useQuery } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
 
-import { api } from '../api';
-import { CampaignDataDto } from '../api/client';
-import { CampaignsStats } from '../types';
+import { launcherApi } from '../api';
+import { QUERY_KEYS } from '../constants/queryKeys';
+import { useNetwork } from '../providers/NetworkProvider';
+import { CampaignsQueryParams } from '../types';
 
-export type Campaign = CampaignDataDto;
-
-export const useCampaigns = (
-  chainId: ChainId,
-  status?: string,
-  exchangeName?: string
-) => {
+export const useCampaigns = (params: CampaignsQueryParams) => {
+  const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: ['campaigns', chainId, status, exchangeName],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaigns({ chainId, status, exchangeName })
-        .then((res) => res.data),
+    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, launcher, status, limit, skip],
+    queryFn: () => launcherApi.getCampaigns(params),
+    select: (data) => ({
+      ...data,
+      results: data.results.map((campaign) => ({
+        ...campaign,
+        id: campaign.address,
+      })),
+    }),
+    enabled: !!chain_id,
   });
 };
 
-export const useMyCampaigns = (chainId: ChainId, launcher?: string) => {
-  const { isConnected } = useAccount();
-
+export const useMyCampaigns = (params: CampaignsQueryParams) => {
+  const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: ['myCampaigns', chainId, launcher],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaigns({ chainId, launcher })
-        .then((res) => res.data),
-    enabled: !!chainId && !!launcher && !!isConnected,
+    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, launcher, status, limit, skip],
+    queryFn: () => launcherApi.getCampaigns(params),
+    select: (data) => ({
+      ...data,
+      results: data.results.map((campaign) => ({
+        ...campaign,
+        id: campaign.address,
+      })),
+    }),
+    enabled: !!chain_id && !!launcher,
   });
 };
 
-export const useCampaign = (chainId: ChainId, address: string) => {
+export const useCampaignDetails = (address: string) => {
+  const { appChainId } = useNetwork();
   return useQuery({
-    queryKey: ['campaign', chainId, address],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaign(chainId, address)
-        .then((res) => res.data),
+    queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, appChainId, address],
+    queryFn: () => launcherApi.getCampaignDetails(appChainId, address),
+    enabled: !!appChainId && !!address,
+    retry: false,
   });
 };
 
-export const useCampaignsStats = (chainId: ChainId) => {
+export const useGetCampaignsStats = () => {
+  const { appChainId } = useNetwork();
   return useQuery({
-    queryKey: ['campaignsStats', chainId],
-    queryFn: () =>
-      api.campaign
-        .campaignControllerGetCampaignsStats({ chainId })
-        .then((res) => (res.data as unknown) as CampaignsStats),
+    queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, appChainId],
+    queryFn: () => launcherApi.getCampaignsStats(appChainId),
+    enabled: !!appChainId,
   });
-};
+}

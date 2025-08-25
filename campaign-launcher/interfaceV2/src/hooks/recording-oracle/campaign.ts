@@ -1,147 +1,54 @@
-import { useEffect, useState } from 'react';
+import { ChainId } from '@human-protocol/sdk';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useQuery } from '@tanstack/react-query';
-import { getAddress } from 'ethers';
-import { useAccount } from 'wagmi';
+import { recordingApi } from '../../api';
+import { QUERY_KEYS } from '../../constants/queryKeys';
+import { useNetwork } from '../../providers/NetworkProvider';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import { CampaignsQueryParams } from '../../types';
+import useRetrieveSigner from '../useRetrieveSigner';
 
-import { requestWithAuth } from '../../api/recordingApi';
-import { useAuthentication } from '../../providers/AuthProvider';
+type JoinedCampaignsParams = Pick<CampaignsQueryParams, 'status' | 'limit' | 'skip'>;
 
-type JoinCampaignOptions = {
-  onSuccess?: () => void;
-};
-
-export const useJoinCampaign = ({ onSuccess }: JoinCampaignOptions) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const {
-    isAuthenticated,
-    isUserExists,
-    signInAsync,
-    signUpAsync,
-  } = useAuthentication();
-  const account = useAccount();
-
-  const joinCampaignAsync = async (campaignAddress: string) => {
-    setIsLoading(true);
-
-    try {
-      if (!isAuthenticated) {
-        if (!isUserExists) {
-          await signUpAsync();
-        } else {
-          await signInAsync();
-        }
-      }
-
-      const response = await requestWithAuth('/user/campaign', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chain_id: account.chainId,
-          address: getAddress(campaignAddress),
-        }),
-      });
-
-      if (!response.success) {
-        throw new Error('Failed to join campaign');
-      }
-
-      onSuccess?.();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return {
-    isLoading,
-    joinCampaignAsync,
-  };
-};
-
-export const useUserCampaignStatus = (address: string) => {
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated } = useAuthentication();
-
-  const fetchUserCampaignStatus = async () => {
-    setIsLoading(true);
-
-    try {
-      if (isAuthenticated) {
-        const response = await requestWithAuth(
-          `/user/campaign/${getAddress(address)}`,
-          {
-            method: 'GET',
-          }
-        );
-
-        setIsRegistered(response);
-      } else {
-        setIsRegistered(false);
-      }
-    } catch (e) {
-      setIsRegistered(false);
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserCampaignStatus();
-  }, [isAuthenticated]);
-
-  return {
-    isRegistered,
-    isLoading,
-    fetchUserCampaignStatus,
-  };
-};
-
-type JoinedCampaign = {
-  id: string;
-  address: string;
-  chain_id: number;
-  symbol: string;
-  exchange_name: string;
-  token: string;
-  start_date: Date;
-  end_date: Date;
-  fund_token: string;
-  fund_amount: string;
-  token_decimals: number;
-  token_symbol: string;
-};
-
-export const useGetUserJoinedCampaigns = (chainId: number | undefined) => {
-  const { isConnected } = useAccount();
-  const { isAuthenticated } = useAuthentication();
+export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
+  const { signer } = useRetrieveSigner();
+  const { isAuthenticated } = useWeb3Auth();
+  const { status, limit, skip } = params;
 
   return useQuery({
-    queryKey: ['user-joined-campaigns', chainId],
-    queryFn: () =>
-      requestWithAuth(`/user/joined-campaigns/${chainId}`, {
-        method: 'GET',
-      }),
-    select: (data) =>
-      data?.map((campaign: JoinedCampaign) => ({
-        id: campaign.id,
-        address: campaign.address,
-        chainId: campaign.chain_id,
-        symbol: campaign.token,
-        exchangeName: campaign.exchange_name,
-        startBlock: new Date(campaign.start_date).getTime() / 1000,
-        endBlock: new Date(campaign.end_date).getTime() / 1000,
-        fundAmount: campaign.fund_amount,
-        status: 'Pending',
-        token: campaign.fund_token,
-        tokenDecimals: campaign.token_decimals,
-        tokenSymbol: campaign.token_symbol,
+    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS, isAuthenticated, !!signer, status, limit, skip],
+    queryFn: () => recordingApi.getJoinedCampaigns(params),
+    select: (data) => ({
+      ...data,
+      results: data.results.map((campaign) => ({
+        ...campaign,
+        id: campaign.address,
       })),
-    enabled: !!chainId && isAuthenticated && isConnected,
+    }),
+    enabled: isAuthenticated && !!signer,
+  });
+};
+
+export const useJoinCampaign = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ chainId, address }: { chainId: ChainId; address: `0x${string}` }) => recordingApi.joinCampaign(chainId, address),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN] });
+    },
+  });
+};
+
+export const useCheckIsJoinedCampaign = (address: `0x${string}`) => {
+  const { appChainId } = useNetwork();
+  const { isAuthenticated } = useWeb3Auth();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN, appChainId, address],
+    queryFn: () => recordingApi.checkIsJoinedCampaign(appChainId, address),
+    select: (data) => data.is_joined,
+    enabled: isAuthenticated && !!appChainId && !!address,
   });
 };

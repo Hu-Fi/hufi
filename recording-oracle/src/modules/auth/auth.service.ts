@@ -1,139 +1,119 @@
-import { createHash } from 'crypto';
-
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { AuthConfigService } from '../../common/config/auth-config.service';
-import { ErrorAuth } from '../../common/constants/errors';
-import { TokenType } from '../../common/enums/token';
-import { SignatureType } from '../../common/enums/web3';
-import { ControlledError } from '../../common/errors/controlled';
-import { verifySignature } from '../../common/utils/signature';
-import { UserEntity, TokenEntity } from '../../database/entities';
-import { UserService } from '../user/user.service';
+import { DEFAULT_NONCE } from '@/common/constants';
+import * as web3Utils from '@/common/utils/web3';
+import { AuthConfigService } from '@/config';
+import logger from '@/logger';
+import { UserEntity, UsersRepository, UsersService } from '@/modules/users';
 
-import {
-  AuthDto,
-  RefreshTokenDto,
-  Web3SignInDto,
-  Web3SignUpDto,
-} from './auth.dto';
-import { TokenRepository } from './token.repository';
+import { AuthError, AuthErrorMessage } from './auth.errors';
+import { RefreshTokenEntity } from './refresh-token.entity';
+import { RefreshTokensRepository } from './refresh-tokens.repository';
+import type { AuthTokens } from './types';
 
 @Injectable()
 export class AuthService {
-  private readonly salt: string;
-
+  private readonly logger = logger.child({
+    context: AuthService.name,
+  });
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly userService: UserService,
-    private readonly tokenRepository: TokenRepository,
     private readonly authConfigService: AuthConfigService,
+    private readonly jwtService: JwtService,
+
+    private readonly refreshTokensRepository: RefreshTokensRepository,
+    private readonly usersRepository: UsersRepository,
+    private readonly usersService: UsersService,
   ) {}
 
-  public async auth(userEntity: UserEntity): Promise<AuthDto> {
-    const refreshTokenEntity =
-      await this.tokenRepository.findOneByUserIdAndType(
-        userEntity.id,
-        TokenType.REFRESH,
-      );
+  async auth(
+    signature: string,
+    address: string,
+  ): Promise<AuthTokens | undefined> {
+    let signedData;
+    let user = await this.usersService.findOneByEvmAddress(address);
 
-    const accessToken = await this.jwtService.signAsync(
-      {
-        userId: userEntity.id,
-        address: userEntity.evmAddress,
-      },
-      {
-        expiresIn: this.authConfigService.accessTokenExpiresIn,
-      },
-    );
-
-    if (refreshTokenEntity) {
-      await this.tokenRepository.deleteOne(refreshTokenEntity);
+    if (!user) {
+      signedData = { nonce: DEFAULT_NONCE };
+    } else {
+      signedData = { nonce: user.nonce };
     }
 
-    const newRefreshTokenEntity = new TokenEntity();
-    newRefreshTokenEntity.user = userEntity;
-    newRefreshTokenEntity.type = TokenType.REFRESH;
+    const isValidSignature = web3Utils.verifySignature(signedData, signature, [
+      address,
+    ]);
+
+    if (!isValidSignature) {
+      throw new AuthError(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
+    }
+
+    if (user) {
+      const nonce = web3Utils.generateNonce();
+      await this.usersRepository.updateOneById(user.id, { nonce });
+    } else {
+      user = await this.usersService.create(address);
+    }
+
+    return this.generateTokens(user);
+  }
+
+  async generateTokens(user: UserEntity): Promise<AuthTokens> {
+    const refreshTokenEntity =
+      await this.refreshTokensRepository.findOneByUserId(user.id);
+
+    if (refreshTokenEntity) {
+      await this.refreshTokensRepository.remove(refreshTokenEntity);
+    }
+
+    const newRefreshTokenEntity = new RefreshTokenEntity();
+    newRefreshTokenEntity.userId = user.id;
     const date = new Date();
     newRefreshTokenEntity.expiresAt = new Date(
-      date.getTime() + this.authConfigService.refreshTokenExpiresIn * 1000,
+      date.getTime() + this.authConfigService.refreshTokenExpiresIn,
     );
 
-    await this.tokenRepository.createUnique(newRefreshTokenEntity);
+    await this.refreshTokensRepository.insert(newRefreshTokenEntity);
+
+    const jwtPayload = {
+      user_id: user.id,
+      wallet_address: user.evmAddress,
+    };
+
+    const accessToken = await this.jwtService.signAsync(jwtPayload);
 
     return { accessToken, refreshToken: newRefreshTokenEntity.id };
   }
 
-  public async refreshToken(data: RefreshTokenDto): Promise<AuthDto> {
-    const tokenEntity = await this.tokenRepository.findOneById(
-      data.refreshToken,
+  async refresh(refreshToken: string): Promise<AuthTokens> {
+    const tokenEntity = await this.refreshTokensRepository.findOneById(
+      refreshToken,
+      {
+        relations: {
+          user: true,
+        },
+      },
     );
 
     if (!tokenEntity) {
-      throw new ControlledError(ErrorAuth.InvalidToken, HttpStatus.FORBIDDEN);
+      throw new AuthError(AuthErrorMessage.INVALID_REFRESH_TOKEN);
     }
 
     if (new Date() > tokenEntity.expiresAt) {
-      throw new ControlledError(ErrorAuth.TokenExpired, HttpStatus.FORBIDDEN);
+      throw new AuthError(AuthErrorMessage.REFRESH_TOKEN_EXPIRED);
     }
 
-    return this.auth(tokenEntity.user);
-  }
-
-  public async web3Signup(data: Web3SignUpDto): Promise<AuthDto> {
-    const preSignUpData = await this.userService.prepareSignatureBody(
-      SignatureType.SIGNUP,
-      data.address,
-    );
-
-    const verified = verifySignature(preSignUpData, data.signature, [
-      data.address,
-    ]);
-
-    if (!verified) {
-      throw new ControlledError(
-        ErrorAuth.InvalidSignature,
-        HttpStatus.UNAUTHORIZED,
-      );
+    if (!tokenEntity.user) {
+      this.logger.error('Related user is missing for refresh token', {
+        refreshToken: tokenEntity.id,
+        userId: tokenEntity.userId,
+      });
+      /**
+       * This should never happen, just a safety-belt,
+       * so throw it as unexpected error.
+       */
+      throw new Error(AuthErrorMessage.INVALID_REFRESH_TOKEN);
     }
 
-    const userEntity = await this.userService.createWeb3User(data.address);
-
-    return this.auth(userEntity);
-  }
-
-  public async web3Signin(data: Web3SignInDto): Promise<AuthDto> {
-    const userEntity = await this.userService.getByAddress(data.address);
-
-    const verified = verifySignature(
-      await this.userService.prepareSignatureBody(
-        SignatureType.SIGNIN,
-        data.address,
-      ),
-      data.signature,
-      [data.address],
-    );
-
-    if (!verified) {
-      throw new ControlledError(
-        ErrorAuth.InvalidSignature,
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    await this.userService.updateNonce(userEntity);
-
-    return this.auth(userEntity);
-  }
-
-  public hashToken(token: string): string {
-    const hash = createHash('sha256');
-    hash.update(token + this.salt);
-    return hash.digest('hex');
-  }
-
-  public compareToken(token: string, hashedToken: string): boolean {
-    return this.hashToken(token) === hashedToken;
+    return this.generateTokens(tokenEntity.user);
   }
 }

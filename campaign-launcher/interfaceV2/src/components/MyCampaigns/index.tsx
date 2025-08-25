@@ -1,56 +1,58 @@
 import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { CircularProgress } from '@mui/material';
 
-import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useMyCampaigns } from '../../hooks/useCampaigns';
+import usePagination from '../../hooks/usePagination';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
+import { useNetwork } from '../../providers/NetworkProvider';
+import { CampaignStatus, CampaignsQueryParams } from '../../types';
+import { filterFalsyQueryParams } from '../../utils';
 import CampaignsTable from '../CampaignsTable';
-import LaunchCampaign from '../LaunchCampaign';
+import CampaignsTablePagination from '../CampaignsTablePagination';
 
 type Props = {
-  showPagination?: boolean;
-  showAllCampaigns?: boolean;
+  showOnlyActiveCampaigns: boolean;
 };
 
-const MyCampaigns: FC<Props> = ({
-  showPagination = false,
-  showAllCampaigns = true,
-}) => {
-  const { address, chain } = useAccount();
-  const navigate = useNavigate();
-  const isXl = useIsXlDesktop();
+const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
+  const { activeAddress } = useActiveAccount();
+  const { appChainId } = useNetwork();
+  const { params, pagination, setPageSize, setNextPage, setPrevPage } = usePagination();
+  const { limit, skip } = params;
+  const { page, pageSize } = pagination;
 
-  const { data: campaigns, isLoading } = useMyCampaigns(
-    chain?.id as ChainId,
-    address?.toLowerCase(),
-  );
+  const queryParams = filterFalsyQueryParams({
+    chain_id: appChainId,
+    launcher: activeAddress,
+    status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
+    limit,
+    skip,
+  }) as CampaignsQueryParams;
 
-  const onViewAllClick = () => {
-    navigate('/my-campaigns');
-  };
+  const { data, isLoading } = useMyCampaigns(queryParams);
 
   return (
-    <Box component="section" display="flex" flexDirection="column" gap={4}>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Typography component="h3" variant={isXl ? 'h5' : 'h6'} color="text.primary">
-          My Campaigns
-        </Typography>
-        {campaigns && campaigns.length > 0 && <LaunchCampaign variant="contained" />}
-      </Box>
+    <>
       {isLoading && <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />}
       {!isLoading && (
-        <CampaignsTable
-          data={campaigns}
-          showPagination={showPagination}
-          showAllCampaigns={showAllCampaigns}
-          onViewAllClick={onViewAllClick}
-          isMyCampaigns={true}
-        />
+        <>
+          <CampaignsTable
+            data={data?.results || []}
+            isMyCampaigns={true}
+          />
+          <CampaignsTablePagination
+            page={page}
+            resultsLength={data?.results?.length || 0}
+            hasMore={data?.has_more} 
+            pageSize={pageSize} 
+            setPageSize={setPageSize} 
+            setNextPage={setNextPage} 
+            setPrevPage={setPrevPage} 
+          />
+        </>
       )}
-    </Box>
+    </>
   );
 };
 

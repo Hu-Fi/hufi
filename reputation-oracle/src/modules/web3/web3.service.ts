@@ -1,89 +1,120 @@
-import { ChainId } from '@human-protocol/sdk';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Wallet, ethers } from 'ethers';
 
-import { NetworkConfigService } from '../../common/config/network-config.service';
-import { Web3ConfigService } from '../../common/config/web3-config.service';
-import { ErrorWeb3 } from '../../common/constants/errors';
-import {
-  LOCALHOST_CHAIN_IDS,
-  MAINNET_CHAIN_IDS,
-  TESTNET_CHAIN_IDS,
-} from '../../common/constants/networks';
-import { Web3Env } from '../../common/enums/web3';
+import { type ChainId, ChainIds, ERC20_ABI_DECIMALS } from '@/common/constants';
+import { Web3ConfigService } from '@/config';
+import logger from '@/logger';
+
+import type { Chain, WalletWithProvider } from './types';
+
+const operationPromisesCache = new Map<string, Promise<unknown>>();
 
 @Injectable()
 export class Web3Service {
-  private signers: { [key: number]: Wallet } = {};
-  public readonly logger = new Logger(Web3Service.name);
+  private readonly logger = logger.child({
+    context: Web3Service.name,
+  });
 
-  constructor(
-    private readonly web3ConfigService: Web3ConfigService,
-    private readonly networkConfigService: NetworkConfigService,
-  ) {
+  private signersByChainId: {
+    [chainId: number]: WalletWithProvider;
+  } = {};
+
+  constructor(private readonly web3ConfigService: Web3ConfigService) {
     const privateKey = this.web3ConfigService.privateKey;
-    const validChains = this.getValidChains();
-    const validNetworks = this.networkConfigService.networks.filter((network) =>
-      validChains.includes(network.chainId),
-    );
 
-    if (!validNetworks.length) {
-      this.logger.error(ErrorWeb3.NoValidNetworks);
-      throw new BadRequestException(ErrorWeb3.NoValidNetworks);
-    }
-
-    for (const network of validNetworks) {
-      const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-      this.signers[network.chainId] = new Wallet(privateKey, provider);
+    for (const chain of this.supportedChains) {
+      const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
+      this.signersByChainId[chain.id] = new Wallet(
+        privateKey,
+        provider,
+      ) as WalletWithProvider;
     }
   }
 
-  public getSigner(chainId: number): Wallet {
-    this.validateChainId(chainId);
-    return this.signers[chainId];
-  }
+  private get supportedChains(): Chain[] {
+    const supportedChains: Chain[] = [];
 
-  public validateChainId(chainId: number): void {
-    const validChainIds = this.getValidChains();
-    if (!validChainIds.includes(chainId)) {
-      this.logger.error(`${ErrorWeb3.InvalidChainId}: ${chainId}`);
-      throw new BadRequestException(ErrorWeb3.InvalidChainId);
+    for (const chainId of ChainIds) {
+      const rpcUrl = this.web3ConfigService.getRpcUrlByChainId(chainId);
+      if (!rpcUrl) {
+        continue;
+      }
+
+      supportedChains.push({
+        id: chainId,
+        rpcUrl,
+      });
     }
-  }
 
-  public getValidChains(): ChainId[] {
-    switch (this.web3ConfigService.env) {
-      case Web3Env.MAINNET:
-        return MAINNET_CHAIN_IDS;
-      case Web3Env.TESTNET:
-        return TESTNET_CHAIN_IDS;
-      case Web3Env.LOCALHOST:
-        return LOCALHOST_CHAIN_IDS;
-      default:
-        return LOCALHOST_CHAIN_IDS;
+    if (!supportedChains.length) {
+      throw new Error('Supported chains not configured');
     }
+
+    return supportedChains;
   }
 
-  public async calculateGasPrice(chainId: number): Promise<bigint> {
+  get supportedChainIds(): ChainId[] {
+    return this.supportedChains.map((v) => v.id);
+  }
+
+  getSigner(chainId: number): WalletWithProvider {
+    const signer = this.signersByChainId[chainId];
+
+    if (signer) {
+      return signer;
+    }
+
+    throw new Error(`No signer for provided chain id: ${chainId}`);
+  }
+
+  async calculateGasPrice(chainId: number): Promise<bigint> {
     const signer = this.getSigner(chainId);
-    const multiplier = this.web3ConfigService.gasPriceMultiplier;
+    const { gasPrice } = await signer.provider.getFeeData();
+
+    if (gasPrice) {
+      return gasPrice * BigInt(this.web3ConfigService.gasPriceMultiplier);
+    }
+
+    throw new Error(`No gas price data for chain id: ${chainId}`);
+  }
+
+  async getTokenDecimals(
+    chainId: number,
+    tokenAddress: string,
+  ): Promise<number> {
+    const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
 
     try {
-      const feeData = await signer.provider?.getFeeData();
-      const gasPrice = feeData?.gasPrice;
+      if (!operationPromisesCache.has(cacheKey)) {
+        const signer = this.getSigner(chainId);
 
-      if (!gasPrice) throw new Error(ErrorWeb3.GasPriceError);
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_DECIMALS,
+          signer,
+        );
 
-      return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
+        operationPromisesCache.set(cacheKey, tokenContract.decimals());
+      }
+
+      const operationPromise = operationPromisesCache.get(
+        cacheKey,
+      ) as Promise<bigint>;
+
+      const decimals: bigint = await operationPromise;
+
+      return Number(decimals);
     } catch (error) {
-      this.logger.error(
-        `Error fetching gas price for chain ${chainId}: ${error.message}`,
-      );
-      throw new Error(ErrorWeb3.GasPriceError);
-    }
-  }
+      operationPromisesCache.delete(cacheKey);
 
-  public getOperatorAddress(): string {
-    return Object.values(this.signers)[0].address;
+      const message = 'Failed to get token decimals';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
+    }
   }
 }

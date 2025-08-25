@@ -4,12 +4,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, Button, Drawer, IconButton, Link as MuiLink, Toolbar } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import logo from '../../assets/logo.svg';
 import { ROUTES } from '../../constants';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import Account from '../Account';
-import CampaignsMenu from '../CampaignsMenu';
 import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
@@ -17,7 +16,7 @@ import NetworkSwitcher from '../NetworkSwitcher';
 
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { isConnected } = useAccount();
+  const { signer } = useRetrieveSigner();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -63,7 +62,6 @@ const Header: FC = () => {
             >
               Dashboard
             </MuiLink>
-            <CampaignsMenu />
             <MuiLink
               to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
               target="_blank"
@@ -72,15 +70,14 @@ const Header: FC = () => {
               <Button
                 variant="text"
                 size="medium"
-                sx={{ color: 'primary.main', fontWeight: 600, height: '100%' }}
+                sx={{ color: 'primary.main', height: '100%' }}
               >
                 Stake HMT
               </Button>
             </MuiLink>
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" />
-            {!isConnected && <ConnectWallet />}
-            {isConnected && <Account />}
+            {signer ? <Account /> : <ConnectWallet />}
           </Box>
 
           <IconButton
@@ -137,7 +134,6 @@ const Header: FC = () => {
               >
                 Dashboard
               </MuiLink>
-              <CampaignsMenu />
               <MuiLink
                 to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
                 target="_blank"
@@ -146,15 +142,14 @@ const Header: FC = () => {
                 <Button
                   variant="text"
                   size="medium"
-                  sx={{ color: 'primary.main', fontWeight: 600, height: '100%' }}
+                  sx={{ color: 'primary.main', height: '100%' }}
                 >
                   Stake HMT
                 </Button>
               </MuiLink>
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {!isConnected && <ConnectWallet />}
-              {isConnected && <Account />}
+              {signer ? <Account /> : <ConnectWallet />}
             </Box>
           </Drawer>
         </Toolbar>

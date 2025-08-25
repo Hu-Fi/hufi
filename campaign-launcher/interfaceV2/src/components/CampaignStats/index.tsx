@@ -3,15 +3,16 @@ import { FC } from 'react';
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { CampaignDetails } from '../../types';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import DailyAmountPaidChart from '../DailyAmountPaidChart';
+import FormattedNumber from '../FormattedNumber';
 
 type Props = {
-  campaign: CampaignDataDto | undefined;
+  campaign: CampaignDetails | null | undefined;
 };
 
 const StatsCard = styled(Box)(({ theme }) => ({
@@ -24,12 +25,15 @@ const StatsCard = styled(Box)(({ theme }) => ({
   border: '1px solid rgba(255, 255, 255, 0.1)',
 
   [theme.breakpoints.down('xl')]: {
-    height: '125px',
+    height: 'unset',
+    minHeight: '125px',
+    justifyContent: 'space-between',
     padding: '16px 32px 24px',
   },
 
   [theme.breakpoints.only('md')]: {
-    height: '125px',
+    height: 'unset',
+    minHeight: '125px',
     padding: '12px',
   },
 }));
@@ -49,10 +53,14 @@ const Value = styled(Typography)(({ theme }) => ({
   fontWeight: 800,
   letterSpacing: '-0.5px',
   lineHeight: '100%',
+}));
 
-  '& > span': {
-    fontSize: '30px',
-  },
+const Suffix = styled('span')(({ theme }) => ({
+  color: theme.palette.primary.violet,
+  fontSize: '30px',
+  fontWeight: 800,
+  letterSpacing: '-0.5px',
+  lineHeight: '100%',
 }));
 
 const FlexGrid = styled(Box)(({ theme }) => ({
@@ -76,17 +84,16 @@ const FlexGrid = styled(Box)(({ theme }) => ({
 }));
 
 const CampaignStats: FC<Props> = ({ campaign }) => {
-  const { exchanges } = useExchangesContext();
+  const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
 
-  const exchange = exchanges?.find(
-    (exchange) => exchange.name === campaign?.exchangeName
-  );
-  const exchangeName = exchange?.displayName;
+  if (!campaign) return null;
 
-  if (!campaign) {
-    return null;
-  }
+  const exchangeName = exchangesMap.get(campaign.exchange_name)?.display_name || campaign.exchange_name;
+
+  const totalFee = campaign.exchange_oracle_fee_percent + campaign.recording_oracle_fee_percent + campaign.reputation_oracle_fee_percent;
+  const formattedTokenAmount = +formatTokenAmount(campaign.fund_amount, campaign.fund_token_decimals);
+  const formattedAmountPaid = +formatTokenAmount(campaign.amount_paid, campaign.fund_token_decimals);
 
   return (
     <Grid container spacing={2} width="100%">
@@ -95,14 +102,33 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Value>
-              {formatTokenAmount(campaign.totalFundedAmount, campaign.tokenDecimals)} <span>{campaign.tokenSymbol}</span>
+              {formattedTokenAmount}
+              {' '}<Suffix>{campaign.fund_token_symbol}</Suffix>
             </Value>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
             <Value>
-              {formatTokenAmount(campaign.amountPaid, campaign.tokenDecimals)} <span>{campaign.tokenSymbol}</span>
+              {formattedAmountPaid}
+              {' '}<Suffix>{campaign.fund_token_symbol}</Suffix>
             </Value>
+          </StatsCard>
+          <StatsCard>
+            <Title variant="subtitle2">Oracle fees</Title>
+            <Value>
+              <FormattedNumber value={formattedTokenAmount * totalFee / 100} /> 
+              {' '}<Suffix>{campaign.fund_token_symbol}</Suffix>{' '}
+              <Typography variant="h6" fontWeight={700} component="span" color="rgba(255, 255, 255, 0.18)">
+                ({totalFee}%)
+              </Typography>
+            </Value>
+          </StatsCard>
+          <StatsCard>
+            <Title variant="subtitle2">Daily volume target</Title>
+            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+              <FormattedNumber value={campaign.daily_volume_target} decimals={3} />
+              {' '}<span>{campaign.trading_pair.split('/')[1]}</span>
+            </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Exchange</Title>
@@ -113,7 +139,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           <StatsCard>
             <Title variant="subtitle2">Pair</Title>
             <CryptoPairEntity
-              symbol={campaign.symbol}
+              symbol={campaign.trading_pair}
               size={isXl ? 'large' : 'medium'}
             />
           </StatsCard>
@@ -130,7 +156,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
           height="100%"
           p={2}
         >
-          <DailyAmountPaidChart data={campaign.dailyAmountPaid} endDate={campaign.endBlock} tokenSymbol={campaign.tokenSymbol} />
+          <DailyAmountPaidChart data={campaign.daily_paid_amounts} endDate={campaign.end_date} tokenSymbol={campaign.fund_token_symbol} />
         </Box>
       </Grid>
     </Grid>

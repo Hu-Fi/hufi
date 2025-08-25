@@ -1,12 +1,13 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { useConnect } from 'wagmi';
+import { Connector, useAccount, useConnect, useDisconnect } from 'wagmi';
 
 import coinbaseSvg from '../../assets/coinbase.svg';
 import metaMaskSvg from '../../assets/metamask.svg';
 import walletConnectSvg from '../../assets/walletconnect.svg';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
@@ -16,8 +17,47 @@ const WALLET_ICONS: Record<string, string> = {
 
 const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const isConnectingWallet = useRef(false);
 
-  const { connect, connectors } = useConnect();
+  const { connectAsync, connectors } = useConnect();
+  const { address } = useAccount();
+  const { setActiveAddress } = useActiveAccount();
+  const { disconnectAsync } = useDisconnect();
+
+  const handleConnect = async (connector: Connector) => {
+    isConnectingWallet.current = true;
+    try {
+      await connectAsync({ connector });
+    } catch (e) {
+      const err = e as { message?: string; code?: number | string };
+      if (err.message?.includes('Connector already connected')){
+        await disconnectAsync();
+        await handleConnect(connector);
+      }
+      const message = (err?.message ?? '').toLowerCase();
+      const code = err?.code;
+      const isUserAborted =
+        code === 4001 || message.includes('user rejected') ||
+        message.includes('user denied') || message.includes('modal closed') ||
+        message.includes('request reset') || message.includes('action rejected');
+      if (isUserAborted) {
+        isConnectingWallet.current = false;
+      }
+    } finally {
+      onClose();
+    }
+  };
+
+  const handleConnectWalletButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  useEffect(() => {
+    if (address && isConnectingWallet.current) {
+      setActiveAddress(address);
+      isConnectingWallet.current = false;
+    }
+  }, [address]);
 
   const onClose = () => setAnchorEl(null);
 
@@ -26,8 +66,9 @@ const ConnectWallet: FC = () => {
       <Button
         variant="contained"
         size="large"
-        sx={{ color: 'primary.contrast', fontWeight: 600 }}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
+        sx={{ color: 'primary.contrast' }}
+        disabled={!!isConnectingWallet.current}
+        onClick={handleConnectWalletButtonClick}
       >
         Connect Wallet
       </Button>
@@ -77,10 +118,7 @@ const ConnectWallet: FC = () => {
                 color: 'text.primary',
                 borderRadius: '4px',
               }}
-              onClick={() => {
-                connect({ connector });
-                onClose();
-              }}
+              onClick={() => handleConnect(connector)}
             >
               <img
                 src={connector.icon ?? WALLET_ICONS[connector.id]}

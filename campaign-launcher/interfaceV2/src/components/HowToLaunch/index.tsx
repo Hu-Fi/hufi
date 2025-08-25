@@ -90,7 +90,7 @@ const HowToLaunch = () => {
           <Card>
             <Circle>3</Circle>
             <Text>
-              Approve 4<br />
+              Approve 3<br />
               Transactions
             </Text>
           </Card>

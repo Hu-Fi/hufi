@@ -1,27 +1,25 @@
-import { FC, MouseEvent } from 'react';
+import { FC } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
-import { Button, IconButton, Typography, Box, Tooltip } from '@mui/material';
-import { DataGrid, GridColDef, GridPagination } from '@mui/x-data-grid';
-import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { numericFormatter } from 'react-number-format';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { CampaignDataDto } from '../../api/client';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
-import { OpenInNewIcon } from '../../icons';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { formatAddress, getExplorerUrl, formatTokenAmount, getChainIcon, getNetworkName } from '../../utils';
-import ConnectWallet from '../ConnectWallet';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import { Campaign } from '../../types';
+import { formatTokenAmount, getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
+import ExplorerLink from '../ExplorerLink';
+import InfoTooltipInner from '../InfoTooltipInner';
 import LaunchCampaign from '../LaunchCampaign';
 
 type Props = {
-  data: CampaignDataDto[] | undefined;
-  showPagination?: boolean;
-  showAllCampaigns?: boolean;
+  data: Campaign[] | undefined;
   isJoinedCampaigns?: boolean;
   isMyCampaigns?: boolean;
-  onViewAllClick?: () => void;
 };
 
 const getSuffix = (day: number) => {
@@ -38,8 +36,8 @@ const getSuffix = (day: number) => {
   }
 };
 
-const formatDate = (block: number) => {
-  const date = new Date(block * 1000);
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
   const day = date.getDate();
   const month = date.toLocaleString('en-US', { month: 'long' });
   const year = date.getFullYear();
@@ -47,15 +45,14 @@ const formatDate = (block: number) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
-  const { isConnected } = useAccount();
+  const { signer } = useRetrieveSigner();
 
-  if (isConnected) {
+  if (!signer) {
     return (
       <>
         <Typography variant="subtitle2" component="p">
-          At the moment you are not running any campaign.
+          To see your campaigns please connect your wallet
         </Typography>
-        <LaunchCampaign variant="contained" />
       </>
     )
   }
@@ -63,18 +60,21 @@ const MyCampaignsNoRows: FC = () => {
   return (
     <>
       <Typography variant="subtitle2" component="p">
-        To see your campaigns please connect your wallet
+        At the moment you are not running any campaign.
       </Typography>
-      <ConnectWallet />
+      <LaunchCampaign variant="contained" />
     </>
   )
 }
 
 const JoinedCampaignsNoRows: FC = () => {
-  const { isConnected } = useAccount();
+  const { isAuthenticated } = useWeb3Auth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
-  if (isConnected) {
+  const isHomePage = pathname === '/';
+
+  if (isAuthenticated) {
     return (
       <>
         <Typography variant="subtitle2" component="p">
@@ -84,12 +84,12 @@ const JoinedCampaignsNoRows: FC = () => {
           variant="contained"
           size="medium"
           sx={{ 
+            display: isHomePage ? 'none' : 'inline-flex',
             height: '42px',
             bgcolor: 'primary.main',
             color: 'primary.contrast', 
-            fontWeight: 600,
           }}
-          onClick={() => navigate('/all-campaigns')}
+          onClick={() => navigate('/')}
         >
           All Campaigns
         </Button>
@@ -98,71 +98,80 @@ const JoinedCampaignsNoRows: FC = () => {
   }
 
   return (
-    <>
-      <Typography variant="subtitle2" component="p">
-        To see joined campaigns please connect your wallet
-      </Typography>
-      <ConnectWallet />
-    </>
+    <Typography variant="subtitle2" component="p">
+      To see joined campaigns please sign in
+    </Typography>
   )
 }
 
-const CustomPagination: FC<{
-  showPagination: boolean;
-  showAllCampaigns: boolean;
-  onViewAllClick?: () => void;
-}> = ({ showPagination, showAllCampaigns, onViewAllClick }) => {
+const statusTooltipData = [
+  {
+    status: 'Active',
+    color: 'success.main',
+  },
+  {
+    status: 'Awaiting start date',
+    color: 'warning.main',
+  },
+  {
+    status: 'Campaign is finished, waiting for payouts',
+    color: 'error.main',
+  },
+  {
+    status: 'Completed',
+    color: 'secondary.main',
+  },
+  {
+    status: 'Cancelled',
+    color: 'primary.main',
+    border: '1px solid',
+    borderColor: 'white',
+  },
+]
+
+const StatusTooltip = () => {
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      width="100%"
+    <Tooltip 
+      arrow 
+      placement="left"
+      title={
+        <Stack gap={0.5}>
+          {
+            statusTooltipData.map((item) => (
+              <Box key={item.status} display="flex" alignItems="center" gap={0.5}>
+                <Box 
+                  width="8px" 
+                  height="8px" 
+                  borderRadius="100%" 
+                  bgcolor={item.color} 
+                  border={item.border ? '1px solid' : 'none'} 
+                  borderColor={item.borderColor ? item.borderColor : 'none'} 
+                />
+                <Typography variant="tooltip">{item.status}</Typography>
+              </Box>
+            ))
+          }
+        </Stack>
+      }
     >
-      {!showAllCampaigns && (
-        <Button
-          variant="contained"
-          size="medium"
-          sx={{ color: 'primary.contrast', fontWeight: 600 }}
-          onClick={onViewAllClick}
-        >
-          View All
-        </Button>
-      )}
-      {showPagination && <GridPagination />}
-    </Box>
-  );
-};
+      <InfoTooltipInner />
+    </Tooltip>
+  )
+}
 
 const CampaignsTable: FC<Props> = ({
   data,
-  onViewAllClick,
-  showPagination = false,
-  showAllCampaigns = true,
   isJoinedCampaigns = false,
   isMyCampaigns = false,
 }) => {
-  const { exchanges } = useExchangesContext();
+  const { exchangesMap } = useExchangesContext();
   const navigate = useNavigate();
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
 
-  const campaigns =
-    showAllCampaigns || showPagination ? data : data?.slice(0, 3);
-
   const noRows = !(data && data.length > 0);
-  
-  const handleAddressClick = (
-    e: MouseEvent<HTMLButtonElement>,
-    chainId: ChainId,
-    address: string
-  ) => {
-    e.stopPropagation();
-    const explorerUrl = getExplorerUrl(chainId, address);
-    window.open(explorerUrl, '_blank');
-  };
 
   const columns: GridColDef[] = [
     {
@@ -179,17 +188,15 @@ const CampaignsTable: FC<Props> = ({
       headerName: 'Pair',
       flex: 2,
       minWidth: 250,
-      renderCell: (params) => <CryptoPairEntity symbol={params.row.symbol} size="medium" />,
+      renderCell: (params) => <CryptoPairEntity symbol={params.row.trading_pair} size="medium" />,
     },
     {
       field: 'exchange',
       headerName: 'Exchange',
-      flex: 1.5,
-      minWidth: 170,
+      flex: 1,
+      minWidth: 120,
       renderCell: (params) => {
-        const exchangeName = exchanges?.find(
-          (exchange) => exchange.name === params.row.exchangeName
-        )?.displayName;
+        const exchangeName = exchangesMap.get(params.row.exchange_name)?.display_name;
         return (
           <Typography>
             {exchangeName}
@@ -202,25 +209,30 @@ const CampaignsTable: FC<Props> = ({
       headerName: 'Address',
       flex: 1.5,
       minWidth: 175,
+      renderCell: (params) => <ExplorerLink address={params.row.address} chainId={params.row.chain_id} />,
+    },
+    {
+      field: 'daily_volume_target',
+      headerName: 'DVT',
+      flex: 1.5,
+      minWidth: 140,
+      renderHeader: () => (
+        <>
+          <Typography variant="subtitle2" mr={1}>DVT</Typography>
+          <Tooltip arrow placement="right" title="Daily Volume Target">
+            <InfoTooltipInner width={24} height={24} />
+          </Tooltip>
+        </>
+      ),
       renderCell: (params) => {
-        return (
-          <Typography variant="subtitle2" display="flex" alignItems="center">
-            {formatAddress(params.row.address)}
-            <IconButton
-              onClick={(e) =>
-                handleAddressClick(e, params.row.chainId, params.row.address)
-              }
-              sx={{
-                color: 'text.secondary',
-                ml: 1,
-                p: 0,
-                '&:hover': { background: 'none' },
-              }}
-            >
-              <OpenInNewIcon />
-            </IconButton>
-          </Typography>
-        );
+        const { daily_volume_target, trading_pair } = params.row;
+        const currency = trading_pair.split('/')[1];
+        const formattedDailyVolumeTarget = numericFormatter(daily_volume_target.toString(), {
+          decimalScale: 1,
+          fixedDecimalScale: false,
+          thousandSeparator: ',',
+        });
+        return <Typography variant="subtitle2">{formattedDailyVolumeTarget} {currency}</Typography>;
       },
     },
     {
@@ -229,11 +241,11 @@ const CampaignsTable: FC<Props> = ({
       flex: 1,
       minWidth: 100,
       renderCell: (params) => {
-        const networkName = getNetworkName(params.row.chainId);
+        const networkName = getNetworkName(params.row.chain_id);
         return (
           <Tooltip title={networkName || "Unknown Network"}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {getChainIcon(params.row.chainId)}
+            <Box display="flex" alignItems="center">
+              {getChainIcon(params.row.chain_id)}
             </Box>
           </Tooltip>
         );
@@ -243,31 +255,40 @@ const CampaignsTable: FC<Props> = ({
       field: 'startDate',
       headerName: 'Start Date',
       flex: 2,
-      minWidth: 125,
+      minWidth: 135,
       renderCell: (params) => {
-        return <Typography variant="subtitle2">{formatDate(params.row.startBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.start_date)}</Typography>;
       },
     },
     {
       field: 'endDate',
       headerName: 'End Date',
       flex: 2,
-      minWidth: 125,
+      minWidth: 135,
       renderCell: (params) => {
-        return <Typography variant="subtitle2">{formatDate(params.row.endBlock)}</Typography>;
+        return <Typography variant="subtitle2">{formatDate(params.row.end_date)}</Typography>;
       },
     },
     {
       field: 'fundAmount',
       headerName: 'Fund Amount',
       flex: 2,
-      minWidth: 150,
+      minWidth: 140,
       renderCell: (params) => {
-        const { fundAmount, tokenDecimals, tokenSymbol } = params.row;
+        if (isJoinedCampaigns) {
+          const { fund_amount, fund_token } = params.row
+          return (
+            <Typography variant="subtitle2">
+              <span>{fund_amount}</span>{' '}
+              <span>{fund_token.toUpperCase()}</span>
+            </Typography>
+          )
+        }
+        const { fund_amount, fund_token_decimals, fund_token_symbol } = params.row;
         
         return (
           <Typography variant="subtitle2">
-            {formatTokenAmount(fundAmount, tokenDecimals)} {tokenSymbol}
+            {formatTokenAmount(fund_amount, fund_token_decimals)} {fund_token_symbol}
           </Typography>
         );
       },
@@ -276,15 +297,17 @@ const CampaignsTable: FC<Props> = ({
       field: 'status',
       headerName: 'Status',
       flex: 1,
-      minWidth: 100,
+      minWidth: 60,
+      renderHeader: () => <StatusTooltip />,
       renderCell: (params) => {
-        const isActive =
-          params.row.status === 'Pending' || params.row.status === 'Partial';
         return (
-          <Typography variant="subtitle2" color={isActive ? 'success.main' : 'error.main'} textTransform="uppercase">
-            {isActive ? 'Active' : params.row.status}
-          </Typography>
-        );
+          <Box
+            width="8px"
+            height="8px"
+            borderRadius="100%"
+            bgcolor={mapStatusToColor(params.row.status, params.row.start_date, params.row.end_date)}
+          />
+        )
       },
     },
     {
@@ -300,7 +323,7 @@ const CampaignsTable: FC<Props> = ({
 
   return (
     <DataGrid
-      rows={campaigns}
+      rows={data || []}
       columns={columns}
       columnVisibilityModel={{
         status: !isJoinedCampaigns,
@@ -315,28 +338,15 @@ const CampaignsTable: FC<Props> = ({
       disableColumnResize
       disableRowSelectionOnClick
       getRowSpacing={({ isLastVisible }) => ({ bottom: isLastVisible ? 0 : 8 })}
-      pageSizeOptions={[5, 25, 50]}
       disableVirtualization={!data}
-      initialState={{
-        pagination: {
-          paginationModel: {
-            pageSize: 5,
-          },
-        },
-      }}
+      hideFooter
+      hideFooterPagination
       onRowClick={(params) => {
         navigate(
-          `/campaign-detail/${params.row.chainId}/${params.row.address}`
+          `/campaign-details/${params.row.address}`
         );
       }}
       slots={{
-        pagination: !noRows ? () => (
-          <CustomPagination
-            showPagination={showPagination}
-            showAllCampaigns={showAllCampaigns}
-            onViewAllClick={onViewAllClick}
-          />
-        ) : null,
         noRowsOverlay: () => (
           <Box 
             display="flex" 
@@ -386,14 +396,18 @@ const CampaignsTable: FC<Props> = ({
           px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
-          fontWeight: 500,
-          fontSize: '16px',
           '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
           },
+        },
+        '& .MuiDataGrid-columnHeaderTitle': {
+          fontWeight: 600,
+          fontSize: '14px',
+          lineHeight: '22px',
+          letterSpacing: '0.1px',
         },
         '& .MuiDataGrid-row': {
           display: 'flex',
@@ -422,19 +436,21 @@ const CampaignsTable: FC<Props> = ({
           '&[data-field="fundAmount"]': {
             justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
           },
-          '&[data-field="status"]': {
-            justifyContent: 'flex-end',
+          '&[data-field="network"]': {
+            justifyContent: 'flex-start',
           },
+          '&[data-field="status"]': {
+            justifyContent: 'center',
+          },
+        },
+        '& .MuiDataGrid-cellEmpty': {
+          display: 'none',
         },
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {
           outline: 'none',
         },
         '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within': {
           outline: 'none',
-        },
-        '& .MuiDataGrid-footerContainer': {
-          display: noRows ? 'none' : 'flex',
-          mt: '15px',
         },
       }}
     />

@@ -2,15 +2,16 @@ import { FC, useState, MouseEvent } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
-import { useAccount, useSwitchChain, useConfig } from 'wagmi';
+import { useConfig } from 'wagmi';
 
 import { ChevronIcon } from '../../icons';
+import { useNetwork } from '../../providers/NetworkProvider';
 import { getChainIcon, getSupportedChainIds } from '../../utils';
 
 const NetworkSwitcher: FC = () => {
-  const { chain, isConnected } = useAccount();
-  const { switchChain } = useSwitchChain();
-  const { chains } = useConfig();
+  const config = useConfig();
+  const { chains } = config;
+  const { appChainId, setAppChainId } = useNetwork();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -21,12 +22,10 @@ const NetworkSwitcher: FC = () => {
 
   const handleClose = () => setAnchorEl(null);
 
-  const handleSelect = (chainId: number) => {
-    switchChain?.({ chainId });
+  const handleSelect = (selectedChainId: ChainId) => {
+    setAppChainId(selectedChainId);
     handleClose();
   };
-
-  if (!isConnected) return null;
 
   return (
     <>
@@ -50,13 +49,9 @@ const NetworkSwitcher: FC = () => {
           px: 1,
           height: '42px',
           textTransform: 'none',
-          fontWeight: 600,
         }}
       >
-        <Typography variant="body2" fontWeight={600}>
-          {getChainIcon(chain?.id as ChainId)}
-          {chain?.name ? null : 'Select Network'}
-        </Typography>
+        {getChainIcon(appChainId)}
       </Button>
 
       <Menu
@@ -89,7 +84,7 @@ const NetworkSwitcher: FC = () => {
             <MenuItem
               key={c.id}
               onClick={() => handleSelect(c.id)}
-              selected={c.id === chain?.id}
+              selected={c.id === appChainId}
             >
               <Typography variant="body2" fontWeight={600}>
                 {c.name}

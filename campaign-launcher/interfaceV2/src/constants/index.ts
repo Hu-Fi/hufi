@@ -1,22 +1,17 @@
 import { ChainId } from '@human-protocol/sdk';
 
+export const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
+
 export const ROUTES = {
   DASHBOARD: '/',
-  CAMPAIGN_DETAIL: '/campaign-detail/:chainId/:address',
-  ALL_CAMPAIGNS: '/all-campaigns',
-  MY_CAMPAIGNS: '/my-campaigns',
-  JOINED_CAMPAIGNS: '/joined-campaigns',
+  CAMPAIGN_DETAILS: '/campaign-details/:address',
+  MANAGE_API_KEYS: '/manage-api-keys',
 };
 
-export const ACCESS_TOKEN_KEY = 'ro-access-token';
-export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
-
 export const oracles = {
-  exchangeOracleFee: BigInt(import.meta.env.VITE_APP_EXCHANGE_ORACLE_FEE),
+  exchangeOracle: import.meta.env.VITE_APP_EXCHANGE_ORACLE_ADDRESS,
   recordingOracle: import.meta.env.VITE_APP_RECORDING_ORACLE_ADDRESS,
-  recordingOracleFee: BigInt(import.meta.env.VITE_APP_RECORDING_ORACLE_FEE),
   reputationOracle: import.meta.env.VITE_APP_REPUTATION_ORACLE_ADDRESS,
-  reputationOracleFee: BigInt(import.meta.env.VITE_APP_REPUTATION_ORACLE_FEE),
 };
 
 // TODO: Read USDT contract address from Human Protocol SDK
@@ -38,8 +33,11 @@ export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['uniswap'];
 export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds
 
-export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
+export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY, ChainId.AURORA_TESTNET];
 export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 
 export const MQ_MOBILE = 'screen and (max-width: 600px)';
+
+export const INTERNAL_SERVER_ERROR = 'Internal server error';
+export const DEFAULT_ERROR_MESSAGE = 'An error occurred, please try again.';

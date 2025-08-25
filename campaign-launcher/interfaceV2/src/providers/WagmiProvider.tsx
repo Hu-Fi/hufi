@@ -3,42 +3,35 @@ import { FC, PropsWithChildren } from 'react';
 import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
 import {
-  avalanche,
-  avalancheFuji,
-  bsc,
-  bscTestnet,
-  localhost,
   mainnet,
-  moonbaseAlpha,
-  moonbeam,
+  auroraTestnet,
+  localhost,
   polygon,
   polygonAmoy,
   sepolia,
-  skaleHumanProtocol,
 } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
-declare module 'wagmi' {
-  interface Register {
-    config: typeof config;
-  }
-}
+import { isMainnet } from '../constants';
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
 
-export const config = createConfig({
+export const config = isMainnet ? createConfig({
+  chains: [polygon, mainnet],
+  connectors: [
+    walletConnect({ projectId }),
+    coinbaseWallet({ appName: 'HuFi' }),
+  ],
+  syncConnectedChain: false,
+  transports: {
+    [polygon.id]: http(),
+    [mainnet.id]: http(),
+  },
+}) : createConfig({
   chains: [
-    mainnet,
-    sepolia,
-    bsc,
-    bscTestnet,
-    polygon,
-    polygonAmoy,
-    moonbeam,
-    moonbaseAlpha,
-    avalanche,
-    avalancheFuji,
-    skaleHumanProtocol,
+    polygonAmoy, 
+    sepolia, 
+    auroraTestnet,
     {
       ...localhost,
       id: ChainId.LOCALHOST,
@@ -48,24 +41,28 @@ export const config = createConfig({
     walletConnect({ projectId }),
     coinbaseWallet({ appName: 'HuFi' }),
   ],
+  syncConnectedChain: false,
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
-    [bsc.id]: http(),
-    [bscTestnet.id]: http(),
-    [polygon.id]: http(),
     [polygonAmoy.id]: http(),
-    [moonbeam.id]: http(),
-    [moonbaseAlpha.id]: http(),
-    [avalanche.id]: http(),
-    [avalancheFuji.id]: http(),
-    [skaleHumanProtocol.id]: http(),
+    [sepolia.id]: http(),
+    [auroraTestnet.id]: http(),
     [ChainId.LOCALHOST]: http(),
   },
 });
 
 const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
-  return <WWagmiProvider config={config}>{children}</WWagmiProvider>;
+  const initialState = {
+    chainId: isMainnet ? ChainId.POLYGON : ChainId.POLYGON_AMOY,
+    connections: new Map(),
+    current: null,
+    status: 'disconnected' as const,
+  };
+
+  return (
+    <WWagmiProvider config={config} initialState={initialState}>
+      {children}
+    </WWagmiProvider>
+  );
 };
 
 export default WagmiProvider;

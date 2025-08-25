@@ -1,80 +1,202 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { ChainId, EscrowClient } from '@human-protocol/sdk';
+import { EscrowClient, KVStoreKeys, KVStoreUtils } from '@human-protocol/sdk';
+import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
-import { useAccount } from 'wagmi';
 
-import useClientToSigner from './useClientToSigner';
+import useRetrieveSigner from './useRetrieveSigner';
 import ERC20ABI from '../abi/ERC20.json';
-import { ManifestUploadRequestDto } from '../api/client';
 import { oracles } from '../constants';
-import { getTokenAddress } from '../utils';
-import { useUploadManifest } from './useUploadManifest';
+import { useNetwork } from '../providers/NetworkProvider';
+import { EscrowCreateDto, ManifestUploadDto } from '../types';
+import { calculateHash, getTokenAddress } from '../utils';
 
-const useCreateEscrow = () => {
-  const [stepsCompleted, setStepsCompleted] = useState(0);
+type CreateEscrowMutationResult = {
+  escrowAddress: string;
+  tokenDecimals: number;
+  exchangeOracleFee: bigint;
+  recordingOracleFee: bigint;
+  reputationOracleFee: bigint;
+};
+
+type CreateEscrowMutationState = {
+  data: CreateEscrowMutationResult | undefined;
+  error: Error | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  isSuccess: boolean;
+  isIdle: boolean;
+  stepsCompleted: number;
+  mutate: (variables: EscrowCreateDto) => Promise<void>;
+  reset: () => void;
+};
+
+const transformManifestTime = (date: Date, isStartDate: boolean = true): string => {
+  const pickedDate = dayjs(date);
+  const localDate = isStartDate
+    ? (pickedDate.isSame(dayjs(), 'day') ? pickedDate : pickedDate.startOf('day'))
+    : pickedDate.endOf('day');
+  return localDate.toISOString();
+}
+
+const useCreateEscrow = (): CreateEscrowMutationState => {
+  const [data, setData] = useState<CreateEscrowMutationResult | undefined>(undefined);
+  const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const { chainId } = useAccount();
-  const { signer, network } = useClientToSigner();
-  const { mutateAsync: uploadManifest } = useUploadManifest();
+  const [stepsCompleted, setStepsCompleted] = useState(0);
+  
+  const { appChainId } = useNetwork();
+  const { signer } = useRetrieveSigner();
 
-  const createEscrow = async (
-    fundToken: string,
-    data: ManifestUploadRequestDto
-  ) => {
-    if (!signer || !network) {
+  const isError = !!error;
+  const isSuccess = !!data && !error && !isLoading;
+  const isIdle = !isLoading && !error && !data;
+
+  const createEscrowMutation = useCallback(async (variables: EscrowCreateDto) => {
+    if (!signer) {
       return;
     }
 
-    setIsLoading(true);
+    setStepsCompleted(0);
 
     try {
       const escrowClient = await EscrowClient.build(signer);
-      const tokenAddress = getTokenAddress(chainId as ChainId, fundToken);
-
+      const tokenAddress = getTokenAddress(appChainId, variables.fund_token);
       if (!tokenAddress?.length) {
         throw new Error('Fund token is not supported.');
       }
 
+      let _exchangeOracleFee: string;
+      try {
+        _exchangeOracleFee = await KVStoreUtils.get(appChainId, oracles.exchangeOracle, KVStoreKeys.fee);
+      } catch (e) {
+        console.error('Error getting exchange oracle fee', e);
+        throw e;
+      }
+
+      if (!_exchangeOracleFee) {
+        throw new Error('Exchange oracle fee is not set.');
+      }
+
+      let _recordingOracleFee: string;
+      try {
+        _recordingOracleFee = await KVStoreUtils.get(appChainId, oracles.recordingOracle, KVStoreKeys.fee);
+      } catch (e) {
+        console.error('Error getting recording oracle fee', e);
+        throw e;
+      }
+
+      if (!_recordingOracleFee) {
+        throw new Error('Recording oracle fee is not set.');
+      }
+
+      let _reputationOracleFee: string;
+      try {
+        _reputationOracleFee = await KVStoreUtils.get(appChainId, oracles.reputationOracle, KVStoreKeys.fee);
+      } catch (e) {
+        console.error(e);
+        throw e;
+      }
+
+      if (!_reputationOracleFee) {
+        throw new Error('Reputation oracle fee is not set.');
+      }
+
       const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
+      const tokenDecimals = await tokenContract.decimals();
+      const _tokenDecimals = Number(tokenDecimals) || 18;
+      
       const fundAmount = ethers.parseUnits(
-        data.fundAmount,
-        await tokenContract.decimals()
+        variables.fund_amount.toString(),
+        tokenDecimals
       );
 
-      const { data: manifest } = await uploadManifest({
-        ...data,
-        fundAmount: fundAmount.toString(),
-      });
+      const manifest: ManifestUploadDto = {
+        type: 'MARKET_MAKING',
+        exchange: variables.exchange,
+        daily_volume_target: variables.daily_volume_target,
+        pair: variables.pair,
+        start_date: transformManifestTime(variables.start_date, true),
+        end_date: transformManifestTime(variables.end_date, false),
+      };
 
       const escrowAddress = await escrowClient.createEscrow(
         tokenAddress,
         [signer.address],
         uuidV4()
       );
-      setStepsCompleted((prev) => prev + 1);
+      setStepsCompleted(1);
 
       await escrowClient.fund(escrowAddress, fundAmount);
-      setStepsCompleted((prev) => prev + 1);
+      setStepsCompleted(2);
 
+      const manifestString = JSON.stringify(manifest);
+      const manifestHash = await calculateHash(manifestString);
+      
       const escrowConfig = {
-        ...oracles,
-        exchangeOracle: signer.address,
-        manifestUrl: manifest.url,
-        manifestHash: manifest.hash,
+        exchangeOracle: oracles.exchangeOracle,
+        recordingOracle: oracles.recordingOracle,
+        reputationOracle: oracles.reputationOracle,
+        exchangeOracleFee: BigInt(_exchangeOracleFee),
+        recordingOracleFee: BigInt(_recordingOracleFee),
+        reputationOracleFee: BigInt(_reputationOracleFee),
+        manifest: manifestString,
+        manifestHash: manifestHash,
       };
 
       await escrowClient.setup(escrowAddress, escrowConfig);
-      setStepsCompleted((prev) => prev + 1);
+      setStepsCompleted(3);
+
+      const result = {
+        escrowAddress,
+        tokenDecimals: _tokenDecimals,
+        exchangeOracleFee: BigInt(_exchangeOracleFee),
+        recordingOracleFee: BigInt(_recordingOracleFee),
+        reputationOracleFee: BigInt(_reputationOracleFee),
+      };
+
+      return result;
     } catch (e) {
       console.error(e);
+      setStepsCompleted(0);
+      throw e;
+    }
+  }, [signer, appChainId]);
+
+  const mutate = useCallback(async (variables: EscrowCreateDto) => {
+    setIsLoading(true);
+    setError(undefined);
+    try {
+      const result = await createEscrowMutation(variables);
+      setData(result);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Unknown error occurred');
+      setError(err);
+      setData(undefined);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [createEscrowMutation]);
 
-  return { createEscrow, isLoading, stepsCompleted };
+  const reset = useCallback(() => {
+    setData(undefined);
+    setError(undefined);
+    setIsLoading(false);
+    setStepsCompleted(0);
+  }, []);
+
+  return {
+    data,
+    error,
+    isLoading,
+    isError,
+    isSuccess,
+    isIdle,
+    stepsCompleted,
+    mutate,
+    reset,
+  };
 };
 
 export default useCreateEscrow;

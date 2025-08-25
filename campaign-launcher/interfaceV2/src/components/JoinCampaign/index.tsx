@@ -1,110 +1,54 @@
 import { FC, useState } from 'react';
 
-import { Button } from '@mui/material';
-import { useQueryClient } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
+import { Button, CircularProgress } from '@mui/material';
 
-import type { CampaignDataDto } from '../../api/client';
-import {
-  useJoinCampaign,
-  useRegisterExchangeAPIKey,
-  useUserCampaignStatus,
-  useUserExchangeAPIKeyExists,
-} from '../../hooks/recording-oracle';
-import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { ExchangeType } from '../../types';
-import JoinCampaignModal from '../modals/JoinCampaignModal';
+import { useCheckIsJoinedCampaign, useGetEnrolledExchanges, useJoinCampaign } from '../../hooks/recording-oracle';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import { CampaignDetails } from '../../types';
+import AddKeysPromptModal from '../modals/AddKeysPromptModal';
 
 type Props = {
-  campaign: CampaignDataDto;
+  campaign: CampaignDetails;
 };
 
 const JoinCampaign: FC<Props> = ({ campaign }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const { address, isConnected } = useAccount();
-  const { exchanges } = useExchangesContext();
-  const queryClient = useQueryClient();
+  const { isAuthenticated } = useWeb3Auth();
+  const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } = useGetEnrolledExchanges();
+  const { mutate: joinCampaign, isPending: isJoinPending } = useJoinCampaign();
+  const { data: isAlreadyJoined, isLoading: isJoinedLoading } = useCheckIsJoinedCampaign(campaign.address);
 
-  const exchange = exchanges?.find(
-    (exchange) =>
-      exchange.name?.toLowerCase() === campaign?.exchangeName.toLowerCase()
-  );
-
-  const {
-    isRegistered,
-    isLoading: isROCampaignStatusLoading,
-    fetchUserCampaignStatus,
-  } = useUserCampaignStatus(campaign.address!);
-  const {
-    joinCampaignAsync,
-    isLoading: isJoinCampaignLoading,
-  } = useJoinCampaign({
-    onSuccess: () => {
-      fetchUserCampaignStatus();
-      queryClient.invalidateQueries({ queryKey: ['user-joined-campaigns'] });
-    },
-  });
-
-  const {
-    registerExchangeAPIKeyAsync,
-    isLoading: isRegisterExchangeAPIKeyLoading,
-  } = useRegisterExchangeAPIKey({
-    onSuccess: async () => {
-      if (campaign) {
-        await joinCampaignAsync(campaign.address);
-      }
-    },
-  });
-
-  const { data: userExchangeAPIKeyExists } = useUserExchangeAPIKeyExists(
-    address,
-    campaign?.exchangeName
-  );
-
-  const isButtonDisabled =
-    !isConnected ||
-    isRegistered ||
-    isROCampaignStatusLoading ||
-    isJoinCampaignLoading ||
-    isRegisterExchangeAPIKeyLoading;
-
+  const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoinPending;
+  const isButtonDisabled = !isAuthenticated || isLoading || isAlreadyJoined;
+    
   const handleButtonClick = () => {
     if (isButtonDisabled) {
       return;
     }
 
-    if (exchange?.type === ExchangeType.CEX && !userExchangeAPIKeyExists) {
+    if (!enrolledExchanges || !enrolledExchanges.includes(campaign.exchange_name)) {
       setModalOpen(true);
-    } else {
-      campaign?.address && joinCampaignAsync(campaign.address);
-    }
-  };
-
-  const handleSubmitKeys = async (apiKey: string, secret: string) => {
-    setModalOpen(false);
-
-    if (!campaign?.exchangeName) {
       return;
     }
-
-    await registerExchangeAPIKeyAsync(campaign?.exchangeName, apiKey, secret);
+    
+    joinCampaign({ chainId: campaign.chain_id, address: campaign.address });
   };
 
   return (
     <>
       <Button
         variant="contained"
-        size="large"
-        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast', fontWeight: 600 }}
+        size="medium"
+        sx={{ ml: { xs: 0, md: 'auto' }, color: 'primary.contrast', minWidth: '135px' }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
       >
-        {isRegistered ? 'Registered to Campaign' : 'Join Campaign'}
+        {isJoinPending && <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />}
+        {!isJoinPending && (isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign')}
       </Button>
-      <JoinCampaignModal
+      <AddKeysPromptModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        handleSubmitKeys={handleSubmitKeys}
       />
     </>
   );

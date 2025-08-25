@@ -1,194 +1,221 @@
-import { ChainId } from '@human-protocol/sdk';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable } from '@nestjs/common';
+import { Alchemy } from 'alchemy-sdk';
 import { ethers, JsonRpcProvider } from 'ethers';
+import { LRUCache } from 'lru-cache';
 
-import { NetworkConfigService } from '../../common/config/network-config.service';
-import { Web3ConfigService } from '../../common/config/web3-config.service';
-import { ErrorWeb3 } from '../../common/constants/errors';
 import {
-  LOCALHOST_CHAIN_IDS,
-  MAINNET_CHAIN_IDS,
-  TESTNET_CHAIN_IDS,
-  TOKENS,
-} from '../../common/constants/networks';
-import { Web3Env } from '../../common/enums/web3';
-import { ControlledError } from '../../common/errors/controlled';
+  ChainIds,
+  ERC20_ABI_DECIMALS,
+  ERC20_ABI_SYMBOL,
+} from '@/common/constants';
+import { Web3ConfigService } from '@/config';
+import logger from '@/logger';
+
+import type { Chain } from './types';
+
+const operationPromisesCache = new Map<string, Promise<unknown>>();
+
+const tokenPriceCache = new LRUCache<string, number>({
+  ttl: 1000 * 60 * 1,
+  max: 4200,
+  ttlAutopurge: false,
+  allowStale: false,
+  noDeleteOnStaleGet: false,
+  noUpdateTTL: false,
+  updateAgeOnGet: false,
+  updateAgeOnHas: false,
+});
+
+const MISSING_TOKEN_PRICE = -1;
 
 @Injectable()
 export class Web3Service {
-  private providers: { [key: number]: JsonRpcProvider } = {};
-  public readonly logger = new Logger(Web3Service.name);
+  private readonly logger = logger.child({ context: Web3Service.name });
 
-  constructor(
-    private readonly web3ConfigService: Web3ConfigService,
-    private readonly networkConfigService: NetworkConfigService,
-  ) {
-    const validChains = this.getValidChains();
-    const validNetworks = this.networkConfigService.networks.filter((network) =>
-      validChains.includes(network.chainId),
-    );
+  private providersByChainId: {
+    [chainId: number]: JsonRpcProvider;
+  } = {};
 
-    if (!validNetworks.length) {
-      this.logger.log(ErrorWeb3.NoValidNetworks, Web3Service.name);
-      throw new ControlledError(
-        ErrorWeb3.NoValidNetworks,
-        HttpStatus.BAD_REQUEST,
+  private readonly alchemySdk: Alchemy;
+
+  constructor(private readonly web3ConfigService: Web3ConfigService) {
+    for (const chain of this.supportedChains) {
+      this.providersByChainId[chain.id] = new ethers.JsonRpcProvider(
+        chain.rpcUrl,
       );
     }
 
-    for (const network of validNetworks) {
-      this.providers[network.chainId] = new ethers.JsonRpcProvider(
-        network.rpcUrl,
-      );
-    }
+    this.alchemySdk = new Alchemy({
+      apiKey: this.web3ConfigService.alchemyApiKey,
+      maxRetries: 5,
+    });
   }
 
-  public getValidChains(): ChainId[] {
-    switch (this.web3ConfigService.env) {
-      case Web3Env.MAINNET:
-        return MAINNET_CHAIN_IDS;
-      case Web3Env.TESTNET:
-        return TESTNET_CHAIN_IDS;
-      case Web3Env.LOCALHOST:
-        return LOCALHOST_CHAIN_IDS;
-      default:
-        return LOCALHOST_CHAIN_IDS;
-    }
-  }
+  private get supportedChains(): Chain[] {
+    const supportedChains: Chain[] = [];
 
-  public getRecordingOracle(): string {
-    return this.web3ConfigService.recordingOracle;
-  }
-
-  public getReputationOracle(): string {
-    return this.web3ConfigService.reputationOracle;
-  }
-
-  public getProvider(chainId: number): JsonRpcProvider {
-    this.validateChainId(chainId);
-    return this.providers[chainId];
-  }
-
-  public validateChainId(chainId: number): void {
-    const validChainIds = this.getValidChains();
-    if (!validChainIds.includes(chainId)) {
-      this.logger.log(ErrorWeb3.InvalidChainId, Web3Service.name);
-      throw new ControlledError(
-        ErrorWeb3.InvalidChainId,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  public async getTokenPriceUSD(
-    tokenAddress: string,
-    chainId: number,
-  ): Promise<number> {
-    const addr = tokenAddress.toLowerCase();
-
-    if (addr === '0xc2132d05d31c914a87c6611c10748aeb04b58e8f') {
-      // USDT (Polygon) - fixed price
-      return 1.0;
-    }
-
-    if (addr === '0xc748b2a084f8efc47e086ccddd9b7e67aeb571bf') {
-      // HUMAN token - fetch using known CoinGecko ID
-      try {
-        const url =
-          'https://api.coingecko.com/api/v3/simple/price?ids=human-protocol&vs_currencies=usd';
-        const res = await axios.get(url);
-        const price = res.data?.['human-protocol']?.usd;
-
-        if (!price) throw new Error('Price not found for human-protocol');
-        return price;
-      } catch (error) {
-        this.logger.warn(`Failed to fetch HUMAN token price: ${error.message}`);
-        throw new ControlledError(
-          'Failed to fetch HUMAN token price',
-          HttpStatus.BAD_REQUEST,
-        );
+    for (const chainId of ChainIds) {
+      const rpcUrl = this.web3ConfigService.getRpcUrlByChainId(chainId);
+      if (!rpcUrl) {
+        continue;
       }
+
+      supportedChains.push({
+        id: chainId,
+        rpcUrl,
+      });
     }
 
-    // Fallback: generic CoinGecko query by contract address
-    try {
-      const platform = this.mapChainIdToCoingeckoPlatform(chainId);
-      const url = `https://api.coingecko.com/api/v3/simple/token_price/${platform}?contract_addresses=${addr}&vs_currencies=usd`;
-
-      const res = await axios.get(url);
-      const price = res.data?.[addr]?.usd;
-
-      if (!price) throw new Error('Price not found for fallback address');
-      return price;
-    } catch (error) {
-      this.logger.warn(
-        `Generic CoinGecko token price failed: ${error.message}`,
-      );
-      throw new ControlledError(
-        'Token price fetch failed',
-        HttpStatus.BAD_REQUEST,
-      );
+    if (!supportedChains.length) {
+      throw new Error('Supported chains not configured');
     }
-  }
-  private mapChainIdToCoingeckoPlatform(chainId: number): string {
-    switch (chainId) {
-      case ChainId.MAINNET:
-        return 'ethereum';
-      case ChainId.POLYGON:
-        return 'polygon-pos';
-      case ChainId.BSC_MAINNET:
-        return 'binance-smart-chain';
-      default:
-        throw new ControlledError(
-          'Unsupported chain for price fetch',
-          HttpStatus.BAD_REQUEST,
-        );
-    }
+
+    return supportedChains;
   }
 
-  public async getTokenDecimals(
-    tokenAddress: string,
+  getProvider(chainId: number): JsonRpcProvider {
+    const provider = this.providersByChainId[chainId];
+
+    if (provider) {
+      return provider;
+    }
+
+    throw new Error(`No rpc provider for provided chain id: ${chainId}`);
+  }
+
+  async getTokenDecimals(
     chainId: number,
+    tokenAddress: string,
   ): Promise<number> {
-    const addr = tokenAddress.toLowerCase();
+    const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
 
-    if (TOKENS[`${addr}:${chainId}`]) {
-      return TOKENS[`${addr}:${chainId}`].decimals;
-    }
-    // Fallback: On-chain lookup for unknown tokens
     try {
-      const abi = ['function decimals() view returns (uint8)'];
-      const provider = this.getProvider(chainId);
-      const contract = new ethers.Contract(tokenAddress, abi, provider);
-      const decimals = Number(await contract.decimals());
-      return decimals;
-    } catch (err) {
-      this.logger.warn(
-        `Could not fetch decimals for token ${addr}, defaulting to 18`,
-      );
-      return 18; // Reasonable fallback
+      if (!operationPromisesCache.has(cacheKey)) {
+        const provider = this.getProvider(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_DECIMALS,
+          provider,
+        );
+
+        operationPromisesCache.set(cacheKey, tokenContract.decimals());
+      }
+
+      const operationPromise = operationPromisesCache.get(
+        cacheKey,
+      ) as Promise<bigint>;
+
+      const decimals: bigint = await operationPromise;
+
+      return Number(decimals);
+    } catch (error) {
+      operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token decimals';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
     }
   }
 
-  public async getTokenSymbol(
-    tokenAddress: string,
-    chainId: number,
-  ): Promise<string> {
-    const addr = tokenAddress.toLowerCase();
-    if (TOKENS[`${addr}:${chainId}`]) {
-      return TOKENS[`${addr}:${chainId}`].symbol;
-    }
+  async getTokenSymbol(chainId: number, tokenAddress: string): Promise<string> {
+    const cacheKey = `token-symbol-${chainId}-${tokenAddress}`;
+
     try {
-      const provider = this.getProvider(chainId);
-      const abi = ['function symbol() view returns (string)'];
-      const contract = new ethers.Contract(tokenAddress, abi, provider);
-      return await contract.symbol();
-    } catch (err) {
-      this.logger.warn(
-        `Could not fetch symbol for token ${addr}, defaulting to HMT`,
-      );
-      return 'HMT';
+      if (!operationPromisesCache.has(cacheKey)) {
+        const provider = this.getProvider(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_SYMBOL,
+          provider,
+        );
+
+        operationPromisesCache.set(cacheKey, tokenContract.symbol());
+      }
+
+      const symbol = await operationPromisesCache.get(cacheKey);
+      return symbol as string;
+    } catch (error) {
+      operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token symbol';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
     }
+  }
+
+  async getTokenPriceUsd(symbol: string): Promise<number | null> {
+    const uppercasedSymbol = symbol.toUpperCase();
+    const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
+
+    try {
+      let tokenPriceUsd = tokenPriceCache.get(cacheKey);
+
+      if (tokenPriceUsd === undefined) {
+        const {
+          data: [apiResult],
+        } = await this.alchemySdk.prices.getTokenPriceBySymbol([
+          /**
+           * Seems that Alchemy API is not case-sensitive to symbol,
+           * but always use upper just in case.
+           */
+          uppercasedSymbol,
+        ]);
+
+        const priceUsd =
+          apiResult.prices.find((price) => price.currency === 'usd')?.value ||
+          null;
+
+        if (priceUsd) {
+          tokenPriceUsd = Number(priceUsd);
+        } else if (uppercasedSymbol === 'HMT') {
+          tokenPriceUsd = await this.getHmtPrice();
+        } else {
+          this.logger.warn('Token price in USD is not available', {
+            symbol,
+            apiResult,
+          });
+          tokenPriceUsd = MISSING_TOKEN_PRICE;
+        }
+
+        tokenPriceCache.set(cacheKey, tokenPriceUsd);
+      }
+
+      return tokenPriceUsd === MISSING_TOKEN_PRICE ? null : tokenPriceUsd;
+    } catch (error) {
+      this.logger.error('Error while getting token price', {
+        symbol,
+        error,
+      });
+
+      throw new Error('Failed to get token price');
+    }
+  }
+
+  private async getHmtPrice(): Promise<number> {
+    const response = await fetch(
+      'https://api.coinlore.net/api/ticker/?id=53887',
+    );
+    const data: Array<{
+      price_usd: string;
+    }> = await response.json();
+
+    const value = data[0]?.price_usd;
+    if (!value) {
+      throw new Error('HMT price is missing on CoinLore');
+    }
+
+    return Number(value);
   }
 }

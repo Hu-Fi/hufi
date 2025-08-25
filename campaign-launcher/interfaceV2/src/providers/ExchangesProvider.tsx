@@ -1,17 +1,11 @@
-import { FC, PropsWithChildren, createContext, useContext } from 'react';
+import { FC, PropsWithChildren, createContext, useContext, useMemo } from 'react';
 
 import { useExchanges } from '../hooks/useExchanges';
-
-type Exchange = {
-  displayName: string;
-  logo: string;
-  name: string;
-  type: string;
-  url: string;
-};
+import { Exchange } from '../types';
 
 type ExchangesContextType = {
   exchanges: Exchange[] | undefined;
+  exchangesMap: Map<string, Omit<Exchange, 'name'>>;
   isPending: boolean;
   error: Error | null;
 };
@@ -33,8 +27,18 @@ export const useExchangesContext = () => {
 const ExchangesProvider: FC<PropsWithChildren> = ({ children }) => {
   const { data: exchanges, isPending, error } = useExchanges();
 
+  const exchangesMap = useMemo(() => {
+    const map = new Map<string, Omit<Exchange, 'name'>>();
+    if (exchanges) {
+      exchanges.forEach(({ name, ...exchange }) => {
+        map.set(name, exchange);
+      });
+    }
+    return map;
+  }, [exchanges]);
+
   return (
-    <ExchangesContext.Provider value={{ exchanges, isPending, error }}>
+    <ExchangesContext.Provider value={{ exchanges, exchangesMap, isPending, error }}>
       {children}
     </ExchangesContext.Provider>
   );
