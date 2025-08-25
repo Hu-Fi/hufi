@@ -30,7 +30,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
-  const { activeAddress, clearActiveAddress } = useActiveAccount();
+  const { activeAddress } = useActiveAccount();
 
   const signIn = async () => {
     setIsLoading(true);
@@ -90,7 +90,6 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } finally {
       tokenManager.clearTokens();
       setIsAuthenticated(false);
-      clearActiveAddress();
       setIsLoading(false);
     }
   };

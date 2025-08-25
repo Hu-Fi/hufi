@@ -1,10 +1,8 @@
 import { FC, useState } from 'react';
 
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
-import { useAccount } from 'wagmi';
 
 import { ArrowDownIcon } from '../../icons';
-import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignsView } from '../../types';
 
 type Props = {
@@ -14,8 +12,6 @@ type Props = {
 
 const CampaignsViewDropdown: FC<Props> = ({ campaignsView, onChange }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const { isConnected } = useAccount();
-  const { isAuthenticated } = useWeb3Auth()
   
   const open = !!anchorEl;
 
@@ -100,10 +96,10 @@ const CampaignsViewDropdown: FC<Props> = ({ campaignsView, onChange }) => {
         <MenuItem onClick={() => handleMenuItemClick(CampaignsView.ALL)}>
           All Campaigns
         </MenuItem>
-        <MenuItem disabled={!isAuthenticated} onClick={() => handleMenuItemClick(CampaignsView.JOINED)}>
+        <MenuItem onClick={() => handleMenuItemClick(CampaignsView.JOINED)}>
           Joined Campaigns
         </MenuItem>
-        <MenuItem disabled={!isConnected} onClick={() => handleMenuItemClick(CampaignsView.MY)}>
+        <MenuItem onClick={() => handleMenuItemClick(CampaignsView.MY)}>
           My Campaigns
         </MenuItem>
       </Menu>

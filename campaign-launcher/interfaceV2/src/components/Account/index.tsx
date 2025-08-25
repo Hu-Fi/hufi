@@ -1,9 +1,12 @@
 import { FC, useState } from 'react';
 
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { Button, List, ListItemButton, Popover, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDisconnect } from 'wagmi';
 
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '../../icons';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
@@ -31,9 +34,10 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const { activeAddress } = useActiveAccount();
+  const { activeAddress, clearActiveAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
-  const { logout } = useWeb3Auth();
+  const { signIn, logout, isAuthenticated } = useWeb3Auth();
+  const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
 
   const formattedAddress = formatAddress(activeAddress);
@@ -41,13 +45,21 @@ const Account: FC = () => {
   const handleClosePopover = () => setAnchorEl(null);
 
   const handleGoToManageApiKeys = () => {
-    handleClosePopover();
     navigate('/manage-api-keys');
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleSignIn = () => {
+    signIn();
+  };
+
+  const handleDisconnect = () => {
     disconnect();
+    clearActiveAddress();
+  };
+
+  const handleLogout = () => {
+    handleDisconnect();
+    logout();
   };
 
   return (
@@ -107,21 +119,43 @@ const Account: FC = () => {
           },
         }}
       >
-        <List sx={{ p: 0 }}>
-          <ListItemButton
-            sx={buttonSx}
-            onClick={handleGoToManageApiKeys}
-          >
-            <ApiKeyIcon />
-            Manage API Keys
-          </ListItemButton>
-          <ListItemButton
-            sx={buttonSx}
-            onClick={handleLogout}
-          >
-            <PowerIcon />
-            Disconnect wallet
-          </ListItemButton>
+        <List sx={{ p: 0 }} onClick={handleClosePopover}>
+          {!isAuthenticated && (
+            <ListItemButton
+              sx={buttonSx}
+              onClick={handleSignIn}
+            >
+              <LoginIcon />
+              Sign In
+            </ListItemButton>
+          )}
+          {!isAuthenticated && signer && (
+            <ListItemButton
+              sx={buttonSx}
+              onClick={handleDisconnect}
+            >
+              <PowerIcon />
+              Disconnect wallet
+            </ListItemButton>
+          )}
+          {isAuthenticated && (
+            <ListItemButton
+              sx={buttonSx}
+              onClick={handleGoToManageApiKeys}
+            >
+              <ApiKeyIcon />
+              Manage API Keys
+            </ListItemButton>
+          )}
+          {isAuthenticated && (
+            <ListItemButton
+              sx={buttonSx}
+              onClick={handleLogout}
+            >
+              <LogoutIcon />
+              Log Out
+            </ListItemButton>
+          )}
         </List>
       </Popover>
     </>

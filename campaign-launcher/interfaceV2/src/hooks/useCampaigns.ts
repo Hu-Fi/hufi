@@ -8,7 +8,7 @@ import { CampaignsQueryParams } from '../types';
 export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, status, launcher, limit, skip],
+    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, launcher, status, limit, skip],
     queryFn: () => launcherApi.getCampaigns(params),
     select: (data) => ({
       ...data,
@@ -24,7 +24,7 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
 export const useMyCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
-    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, status, launcher, limit, skip],
+    queryKey: [QUERY_KEYS.MY_CAMPAIGNS, chain_id, launcher, status, limit, skip],
     queryFn: () => launcherApi.getCampaigns(params),
     select: (data) => ({
       ...data,
