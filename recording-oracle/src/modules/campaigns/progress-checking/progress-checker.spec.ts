@@ -4,7 +4,6 @@ import { createMock } from '@golevelup/ts-jest';
 import {
   ExchangeApiClient,
   ExchangeApiClientFactory,
-  TradingSide,
 } from '@/modules/exchange';
 import { generateTrade } from '@/modules/exchange/fixtures';
 
@@ -132,7 +131,7 @@ describe('BaseCampaignProgressChecker', () => {
       );
     });
 
-    it('should count volume only for buy trades up to exclusive end date', async () => {
+    it('should count volume for trades up to exclusive end date', async () => {
       const tradesInRange = Array.from({ length: 3 }, () =>
         generateTrade({
           timestamp: faker.date
@@ -160,9 +159,10 @@ describe('BaseCampaignProgressChecker', () => {
       const result =
         await resultsChecker.checkForParticipant(participantAuthKeys);
 
-      const expectedTotalVolume = tradesInRange
-        .filter((t) => t.side === TradingSide.BUY)
-        .reduce((acc, curr) => acc + curr.cost, 0);
+      const expectedTotalVolume = tradesInRange.reduce(
+        (acc, curr) => acc + curr.cost,
+        0,
+      );
 
       expect(result.abuseDetected).toBe(false);
       expect(result.totalVolume).toBe(expectedTotalVolume);
