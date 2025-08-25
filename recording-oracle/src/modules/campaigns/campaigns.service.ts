@@ -516,6 +516,13 @@ export class CampaignsService {
         continue;
       }
 
+      /**
+       * !!! NOTE !!!
+       * There can be a situation where two campaign participants
+       * have a trade between each other, so total volume
+       * is not 100% accurate in this case, but probability of it is
+       * negligible so omit it here. Later RepO can verify it if needed.
+       */
       totalVolume += participantOutcomes.totalVolume;
 
       outcomes.push({
