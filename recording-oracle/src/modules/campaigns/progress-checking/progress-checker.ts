@@ -1,8 +1,4 @@
-import {
-  ExchangeApiClientFactory,
-  Trade,
-  TradingSide,
-} from '@/modules/exchange';
+import { ExchangeApiClientFactory, Trade } from '@/modules/exchange';
 
 import type {
   CampaignProgressChecker,
@@ -73,7 +69,7 @@ export abstract class BaseCampaignProgressChecker
           nTradesSampled += 1;
         }
 
-        totalVolume += trade.side === TradingSide.BUY ? trade.cost : 0;
+        totalVolume += trade.cost;
         score += this.calculateTradeScore(trade);
       }
 
