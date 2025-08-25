@@ -1,22 +1,22 @@
 import { ChainId } from '@human-protocol/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
 
 import { recordingApi } from '../../api';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { useNetwork } from '../../providers/NetworkProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignsQueryParams } from '../../types';
+import useRetrieveSigner from '../useRetrieveSigner';
 
 type JoinedCampaignsParams = Pick<CampaignsQueryParams, 'status' | 'limit' | 'skip'>;
 
 export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
-  const { isConnected } = useAccount();
+  const { signer } = useRetrieveSigner();
   const { isAuthenticated } = useWeb3Auth();
   const { status, limit, skip } = params;
 
   return useQuery({
-    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS, status, limit, skip],
+    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS, isAuthenticated, !!signer, status, limit, skip],
     queryFn: () => recordingApi.getJoinedCampaigns(params),
     select: (data) => ({
       ...data,
@@ -25,7 +25,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
         id: campaign.address,
       })),
     }),
-    enabled: isAuthenticated && isConnected,
+    enabled: isAuthenticated && !!signer,
   });
 };
 
