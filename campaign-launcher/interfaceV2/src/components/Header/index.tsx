@@ -7,16 +7,16 @@ import { Link } from 'react-router-dom';
 
 import logo from '../../assets/logo.svg';
 import { ROUTES } from '../../constants';
-import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import Account from '../Account';
+import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
 import NetworkSwitcher from '../NetworkSwitcher';
-import SignInButton from '../SignInButton';
 
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { isAuthenticated } = useWeb3Auth();
+  const { signer } = useRetrieveSigner();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -77,7 +77,7 @@ const Header: FC = () => {
             </MuiLink>
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" />
-            {isAuthenticated ? <Account /> : <SignInButton />}
+            {signer ? <Account /> : <ConnectWallet />}
           </Box>
 
           <IconButton
@@ -149,7 +149,7 @@ const Header: FC = () => {
               </MuiLink>
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {isAuthenticated ? <Account /> : <SignInButton />}
+              {signer ? <Account /> : <ConnectWallet />}
             </Box>
           </Drawer>
         </Toolbar>

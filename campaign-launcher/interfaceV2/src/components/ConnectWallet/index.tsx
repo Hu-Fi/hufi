@@ -7,9 +7,7 @@ import { Connector, useAccount, useConnect, useDisconnect } from 'wagmi';
 import coinbaseSvg from '../../assets/coinbase.svg';
 import metaMaskSvg from '../../assets/metamask.svg';
 import walletConnectSvg from '../../assets/walletconnect.svg';
-import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
-import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
@@ -17,20 +15,16 @@ const WALLET_ICONS: Record<string, string> = {
   walletConnect: walletConnectSvg,
 };
 
-const SignInButton: FC = () => {
+const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const isAuthorizing = useRef(false);
   const isConnectingWallet = useRef(false);
 
   const { connectAsync, connectors } = useConnect();
   const { address } = useAccount();
-  const { signIn, isLoading } = useWeb3Auth();
   const { setActiveAddress } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
-  const { signer } = useRetrieveSigner();
 
   const handleConnect = async (connector: Connector) => {
-    isAuthorizing.current = true;
     isConnectingWallet.current = true;
     try {
       await connectAsync({ connector });
@@ -47,7 +41,6 @@ const SignInButton: FC = () => {
         message.includes('user denied') || message.includes('modal closed') ||
         message.includes('request reset') || message.includes('action rejected');
       if (isUserAborted) {
-        isAuthorizing.current = false;
         isConnectingWallet.current = false;
       }
     } finally {
@@ -55,14 +48,8 @@ const SignInButton: FC = () => {
     }
   };
 
-  const onSignInButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (isLoading) return;
-
-    if (signer) {
-      signIn();
-    } else {
-      setAnchorEl(e.currentTarget);
-    }
+  const handleConnectWalletButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(e.currentTarget);
   };
 
   useEffect(() => {
@@ -72,14 +59,6 @@ const SignInButton: FC = () => {
     }
   }, [address]);
 
-  useEffect(() => {
-    if (signer && isAuthorizing.current) {
-      signIn().finally(() => {
-        isAuthorizing.current = false;
-      });
-    }
-  }, [signer]);
-
   const onClose = () => setAnchorEl(null);
 
   return (
@@ -88,10 +67,10 @@ const SignInButton: FC = () => {
         variant="contained"
         size="large"
         sx={{ color: 'primary.contrast' }}
-        disabled={isLoading}
-        onClick={onSignInButtonClick}
+        disabled={!!isConnectingWallet.current}
+        onClick={handleConnectWalletButtonClick}
       >
-        Sign In
+        Connect Wallet
       </Button>
       <Popover
         open={!!anchorEl}
@@ -160,4 +139,4 @@ const SignInButton: FC = () => {
   );
 };
 
-export default SignInButton;
+export default ConnectWallet;

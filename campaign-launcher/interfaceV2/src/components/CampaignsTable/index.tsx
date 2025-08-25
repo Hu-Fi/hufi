@@ -4,10 +4,11 @@ import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { numericFormatter } from 'react-number-format';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
+import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { Campaign } from '../../types';
 import { formatTokenAmount, getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
@@ -44,6 +45,18 @@ const formatDate = (dateString: string) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
+  const { signer } = useRetrieveSigner();
+
+  if (!signer) {
+    return (
+      <>
+        <Typography variant="subtitle2" component="p">
+          To see your campaigns please connect your wallet
+        </Typography>
+      </>
+    )
+  }
+
   return (
     <>
       <Typography variant="subtitle2" component="p">
@@ -55,13 +68,13 @@ const MyCampaignsNoRows: FC = () => {
 }
 
 const JoinedCampaignsNoRows: FC = () => {
-  const { isConnected } = useAccount();
+  const { isAuthenticated } = useWeb3Auth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
   const isHomePage = pathname === '/';
 
-  if (isConnected) {
+  if (isAuthenticated) {
     return (
       <>
         <Typography variant="subtitle2" component="p">
