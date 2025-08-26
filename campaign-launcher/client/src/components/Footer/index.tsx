@@ -35,6 +35,10 @@ const StyledLink = styled(Link)(({ theme }) => ({
   },
 }));
 
+const handleClickOnSocialButton = (url: string) => {
+  window.open(url, '_blank');
+}
+
 const Footer: FC = () => {
   return (
     <Box component="footer" sx={{ bgcolor: 'background.default' }}>
@@ -82,19 +86,34 @@ const Footer: FC = () => {
             width={{ xs: '100%', md: 'auto' }}
             justifyContent={{ xs: 'space-between', md: 'center' }}
           >
-            <SocialMediaIconButton aria-label="GitHub">
+            <SocialMediaIconButton 
+              aria-label="GitHub" 
+              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_GITHUB)}
+            >
               <GitHubIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton aria-label="Discord">
+            <SocialMediaIconButton 
+              aria-label="Discord" 
+              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_DISCORD)}
+            >
               <DiscordIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton aria-label="X">
+            <SocialMediaIconButton 
+              aria-label="X" 
+              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_X)}
+            >
               <TwitterIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton aria-label="Telegram">
+            <SocialMediaIconButton 
+              aria-label="Telegram" 
+              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_TELEGRAM)}
+            >
               <TelegramIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton aria-label="LinkedIn">
+            <SocialMediaIconButton 
+              aria-label="LinkedIn" 
+              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_LINKEDIN)}
+            >
               <LinkedInIcon />
             </SocialMediaIconButton>
           </Box>
