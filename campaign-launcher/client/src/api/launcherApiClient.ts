@@ -1,6 +1,6 @@
 import { ChainId } from "@human-protocol/sdk";
 
-import { CampaignDetails, CampaignsResponse, CampaignsStats, Exchange } from "../types";
+import { CampaignDetails, CampaignsResponse, CampaignsStats, Exchange, OracleFees } from "../types";
 import { HttpClient, HttpError } from "../utils/HttpClient";
 
 export class LauncherApiClient extends HttpClient {
@@ -36,6 +36,11 @@ export class LauncherApiClient extends HttpClient {
 
   async getCampaignsStats(chain_id: ChainId): Promise<CampaignsStats> {
     const response = await this.get<CampaignsStats>(`/stats/campaigns`, { params: { chain_id } });
+    return response;
+  }
+
+  async getOracleFees(chain_id: ChainId): Promise<OracleFees> {
+    const response = await this.get<OracleFees>(`/web3/oracle-fees`, { params: { chain_id } });
     return response;
   }
 }

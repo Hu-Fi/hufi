@@ -104,3 +104,9 @@ export type CampaignsQueryParams = {
   limit?: number;
   skip?: number;
 };
+
+export type OracleFees = {
+  exchange_oracle_fee: string;
+  recording_oracle_fee: string;
+  reputation_oracle_fee: string;
+};
