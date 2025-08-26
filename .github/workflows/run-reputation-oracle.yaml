@@ -107,6 +107,7 @@ jobs:
 
           WEB3_PRIVATE_KEY: ${{ secrets.WEB3_PRIVATE_KEY }}
           # mainnet URLs; will be empty in testnet env
+          RPC_URL_ETHEREUM: ${{ secrets.RPC_URL_ETHEREUM }}
           RPC_URL_POLYGON: ${{ secrets.RPC_URL_POLYGON }}
           # testnet URLs; will be empty in mainnet env
           RPC_URL_SEPOLIA: ${{ secrets.RPC_URL_SEPOLIA }}
