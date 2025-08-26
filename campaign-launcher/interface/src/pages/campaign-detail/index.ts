@@ -1,1 +1,0 @@
-export { CampaignDetail } from './CampaignDetail';

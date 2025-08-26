@@ -1,0 +1,41 @@
+import { Injectable } from '@nestjs/common';
+import { DataSource, FindManyOptions, Repository } from 'typeorm';
+
+import { RefreshTokenEntity } from './refresh-token.entity';
+
+type FindOptions = {
+  relations?: FindManyOptions<RefreshTokenEntity>['relations'];
+};
+
+@Injectable()
+export class RefreshTokensRepository extends Repository<RefreshTokenEntity> {
+  constructor(dataSource: DataSource) {
+    super(RefreshTokenEntity, dataSource.createEntityManager());
+  }
+
+  async findOneById(
+    id: string,
+    options: FindOptions = {},
+  ): Promise<RefreshTokenEntity | null> {
+    return this.findOne({
+      where: { id },
+      relations: options.relations,
+    });
+  }
+
+  async findOneByUserId(
+    userId: string,
+    options: FindOptions = {},
+  ): Promise<RefreshTokenEntity | null> {
+    return this.findOne({
+      where: {
+        userId,
+      },
+      relations: options.relations,
+    });
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await this.delete({ id });
+  }
+}

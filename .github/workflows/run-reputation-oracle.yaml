@@ -1,0 +1,130 @@
+name: Run Reputation Oracle
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "What environment to run?"
+        required: true
+        default: testnet
+        type: choice
+        options:
+          - testnet
+          - mainnet
+      log_level:
+        description: "What minimum level to log?"
+        required: false
+        default: info
+        type: choice
+        options:
+          - debug
+          - info
+          - warn
+          - error
+  schedule:
+    - cron: '0 12 * * *' # every day at noon UTC
+
+jobs:
+  define-env-names:
+    name: Define environments to run
+    runs-on: ubuntu-latest
+    outputs:
+      env_names: ${{ steps.get_env_names.outputs.env_names }}
+
+    steps:
+      - name: Define env names to run
+        id: get_env_names
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            ENV_NAMES='["testnet","mainnet"]'
+          else
+            INPUT_VAL="${{ inputs.environment }}"
+            ENV_NAMES="[\"${INPUT_VAL}\"]"
+          fi
+
+          echo "env_names=$ENV_NAMES" >> $GITHUB_OUTPUT
+
+      - name: Validate and print results
+        run: |
+          ENV_NAMES='${{ steps.get_env_names.outputs.env_names }}'
+
+          # Check if it's an empty string to prevent errors in job outputs
+          if [ "$ENV_NAMES" = "[]" ] || [ -z "$ENV_NAMES" ]; then
+            exit 1
+          else
+            echo "Env names: $ENV_NAMES"
+          fi
+
+  run-rep-o:
+    name: Run Reputation Oracle
+    needs: define-env-names
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: reputation-oracle
+    strategy:
+      matrix:
+        env_name: ${{ fromJSON(needs.define-env-names.outputs.env_names) }}
+    environment: ${{ fromJSON(vars.REPUTATION_ORACLE_GITHUB_ENV_MAP)[matrix.env_name] }}
+    concurrency:
+      group: reputation-oracle-run-${{ matrix.env_name }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Print job's github environment name
+        run: echo "Environment is '${{ fromJSON(vars.REPUTATION_ORACLE_GITHUB_ENV_MAP)[matrix.env_name] }}'"
+
+      - name: Start Reputation Oracle
+        run: yarn start | tee app.log
+        env:
+          HOSTNAME: github-action-${{ github.run_id }}
+          NODE_ENV: ${{ vars.NODE_ENV }}
+          GIT_HASH: ${{ github.sha }}
+          LOG_LEVEL: ${{ inputs.log_level }}
+
+          S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
+          S3_PORT: ${{ vars.S3_PORT }}
+          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          S3_USE_SSL: ${{ vars.S3_USE_SSL }}
+
+          WEB3_PRIVATE_KEY: ${{ secrets.WEB3_PRIVATE_KEY }}
+          # mainnet URLs; will be empty in testnet env
+          RPC_URL_POLYGON: ${{ secrets.RPC_URL_POLYGON }}
+          # testnet URLs; will be empty in mainnet env
+          RPC_URL_SEPOLIA: ${{ secrets.RPC_URL_SEPOLIA }}
+          RPC_URL_POLYGON_AMOY: ${{ secrets.RPC_URL_POLYGON_AMOY }}
+          RPC_URL_AURORA_TESTNET: ${{ secrets.RPC_URL_AURORA_TESTNET }}
+
+          SUBGRAPH_API_KEY: ${{ secrets.SUBGRAPH_API_KEY }}
+
+      - name: Send action logs to DataDog
+        env:
+          DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_HTTP_INTAKE_URL: ${{ vars.DATADOG_HTTP_INTAKE_URL }}
+        run: |
+          split -l 100 app.log app_log_chunk_
+          for app_log_chunk in app_log_chunk_*; do
+            jq -s . "$app_log_chunk" | curl -s -X POST \
+              -H "Content-Type: application/json" \
+              -H "DD-API-KEY: $DD_API_KEY" \
+              "$DATADOG_HTTP_INTAKE_URL" \
+              -d @-
+          done

@@ -1,41 +1,23 @@
-import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { json, urlencoded } from 'body-parser';
-import { useContainer } from 'class-validator';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
-import { ServerConfigService } from './common/config/server-config.service';
-import { GlobalExceptionsFilter } from './common/filter';
+import { ServerConfigService } from './config';
+import logger, { nestLoggerOverride } from './logger';
 
-async function bootstrap() {
-  const app = await NestFactory.create<INestApplication>(AppModule, {
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true,
+    logger: nestLoggerOverride,
   });
-
-  const configService: ConfigService = app.get(ConfigService);
-  const serverConfigService = new ServerConfigService(configService);
-
-  const host = serverConfigService.host;
-  const port = serverConfigService.port;
-
-  app.useGlobalFilters(new GlobalExceptionsFilter());
-  app.enableCors({
-    origin: true,
-    credentials: true,
-    exposedHeaders: ['Content-Disposition'],
-  });
-
-  useContainer(app.select(AppModule), { fallbackOnErrors: true });
-
-  app.use(json({ limit: '5mb' }));
-  app.use(urlencoded({ limit: '5mb', extended: true }));
+  app.enableShutdownHooks();
 
   const config = new DocumentBuilder()
-    .setTitle('HuFi Campaign Launcher API')
-    .setDescription('HuFi Campaign Launcher API')
+    .setTitle('Campaign Launcher API')
+    .setDescription('Swagger Campaign Launcher API')
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
@@ -43,9 +25,14 @@ async function bootstrap() {
 
   app.use(helmet());
 
+  const configService: ConfigService = app.get(ConfigService);
+  const serverConfigService = new ServerConfigService(configService);
+
+  const host = serverConfigService.host;
+  const port = serverConfigService.port;
+
   await app.listen(port, host, async () => {
-    // eslint-disable-next-line no-console
-    console.info(`API server is running on http://${host}:${port}`);
+    logger.info(`API server is running on http://${host}:${port}`);
   });
 }
 

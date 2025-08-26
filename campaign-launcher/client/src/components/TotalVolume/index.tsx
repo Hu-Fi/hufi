@@ -1,0 +1,53 @@
+import { useState } from 'react';
+
+import { Box, Typography, Select, MenuItem, FormControl } from '@mui/material';
+
+import { useGetTotalVolume } from '../../hooks/recording-oracle/stats';
+import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { StatsCard, Value } from '../DashboardStats';
+import FormattedNumber from '../FormattedNumber';
+
+const TotalVolume = () => {
+  const [exchange, setExchange] = useState('');
+  const { exchanges } = useExchangesContext();
+  const { data: totalVolume } = useGetTotalVolume(exchange || '');
+
+  return (
+    <StatsCard>
+      <Box display="flex" alignItems="center" gap={{ xs: 1, lg: 4, xl: 8 }}>
+        <Typography variant="subtitle2">Liquidity Provided</Typography>
+        <FormControl variant="standard" sx={{ flex: 1 }}>
+          <Select
+            id="exchange-volume-select"
+            value={exchange}
+            displayEmpty
+            onChange={(e) => setExchange(e.target.value)}
+            label="Exchange"
+            slotProps={{
+              input: {
+                id: 'exchange-volume',
+                sx: {
+                  py: 0,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                },
+              },
+            }}
+          >
+            <MenuItem value="">All Exchanges</MenuItem>
+            {exchanges?.map(({ name, display_name }) => (
+              <MenuItem key={name} value={name}>
+                {display_name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <Value>
+        <FormattedNumber value={totalVolume} prefix="$" />
+      </Value>
+    </StatsCard>
+  );
+};
+
+export default TotalVolume;

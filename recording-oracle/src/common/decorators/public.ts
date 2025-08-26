@@ -1,5 +1,10 @@
-import { SetMetadata } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const Public = (): ((target: any, key?: any, descriptor?: any) => any) =>
-  SetMetadata('isPublic', true);
+/**
+ * Decorator for HTTP endpoints to bypass JWT auth guard
+ * where JWT auth not needed
+ */
+export const Public = Reflector.createDecorator<boolean>({
+  key: 'isPublic',
+  transform: () => true,
+});

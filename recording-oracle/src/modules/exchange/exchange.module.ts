@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { Web3ConfigService } from '../../common/config/web3-config.service';
-
-import { CCXTService } from './ccxt.service';
-import { UniswapService } from './uniswap.service';
+import { ExchangeApiClientFactory } from './exchange-api-client-factory';
 
 @Module({
-  providers: [Web3ConfigService, CCXTService, UniswapService],
-  exports: [CCXTService, UniswapService],
+  imports: [],
+  providers: [ExchangeApiClientFactory],
+  exports: [ExchangeApiClientFactory],
 })
 export class ExchangeModule {}

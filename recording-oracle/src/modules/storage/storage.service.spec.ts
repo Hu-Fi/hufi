@@ -1,95 +1,138 @@
-import { StorageClient } from '@human-protocol/sdk';
-import { ConfigModule, registerAs } from '@nestjs/config';
+jest.mock('minio');
+
+import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
+import { Client as MinioClient } from 'minio';
 
-import {
-  MOCK_FILE_URL,
-  MOCK_S3_ACCESS_KEY,
-  MOCK_S3_BUCKET,
-  MOCK_S3_ENDPOINT,
-  MOCK_S3_PORT,
-  MOCK_S3_SECRET_KEY,
-  MOCK_S3_USE_SSL,
-} from '../../../test/constants';
+import { ContentType } from '@/common/enums';
+import { S3ConfigService } from '@/config';
 
+import { MinioErrorCodes } from './minio.constants';
 import { StorageService } from './storage.service';
 
-jest.mock('@human-protocol/sdk', () => ({
-  ...jest.requireActual('@human-protocol/sdk'),
-  StorageClient: {
-    downloadFileFromUrl: jest.fn(),
-  },
-}));
+const mockedMinioClientInstance = {
+  statObject: jest.fn(),
+  bucketExists: jest.fn(),
+  putObject: jest.fn(),
+};
+jest
+  .mocked(MinioClient)
+  .mockImplementation(
+    () => mockedMinioClientInstance as unknown as MinioClient,
+  );
 
-jest.mock('minio', () => {
-  class Client {
-    putObject = jest.fn();
-    bucketExists = jest.fn();
-    constructor() {
-      (this as any).protocol = 'http:';
-      (this as any).host = 'localhost';
-      (this as any).port = 9000;
-    }
-  }
+const mockS3ConfigService: Omit<S3ConfigService, 'configService'> = {
+  endpoint: faker.internet.domainName(),
+  port: faker.internet.port(),
+  accessKey: faker.internet.password(),
+  secretKey: faker.internet.password(),
+  bucket: faker.lorem.word(),
+  useSSL: true,
+};
 
-  return { Client };
-});
+function constructExpectedS3FileUrl(fileName: string) {
+  return (
+    'https://' +
+    `${mockS3ConfigService.endpoint}:${mockS3ConfigService.port}/` +
+    `${mockS3ConfigService.bucket}/${fileName}`
+  );
+}
 
-jest.mock('axios');
-
-describe('Web3Service', () => {
+describe('StorageService', () => {
   let storageService: StorageService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forFeature(
-          registerAs('s3', () => ({
-            accessKey: MOCK_S3_ACCESS_KEY,
-            secretKey: MOCK_S3_SECRET_KEY,
-            endPoint: MOCK_S3_ENDPOINT,
-            port: MOCK_S3_PORT,
-            useSSL: MOCK_S3_USE_SSL,
-            bucket: MOCK_S3_BUCKET,
-          })),
-        ),
+      providers: [
+        {
+          provide: S3ConfigService,
+          useValue: mockS3ConfigService,
+        },
+        StorageService,
       ],
-      providers: [StorageService],
     }).compile();
 
     storageService = moduleRef.get<StorageService>(StorageService);
   });
 
-  describe('download', () => {
-    it('should download the file correctly', async () => {
-      const exchangeAddress = '0x1234567890123456789012345678901234567892';
-      const workerAddress = '0x1234567890123456789012345678901234567891';
-      const solution = 'test';
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
 
-      const expectedJobFile = {
-        exchangeAddress,
-        solutions: [
-          {
-            workerAddress,
-            solution,
-          },
-        ],
-      };
+  describe('uploadData', () => {
+    it('should throw if configured bucket does not exist', async () => {
+      mockedMinioClientInstance.bucketExists.mockImplementation(
+        (bucketName) => {
+          if (bucketName === mockS3ConfigService.bucket) {
+            return false;
+          }
 
-      StorageClient.downloadFileFromUrl = jest
-        .fn()
-        .mockResolvedValueOnce(expectedJobFile);
-      const solutionsFile = await storageService.download(MOCK_FILE_URL);
-      expect(solutionsFile).toBe(expectedJobFile);
+          return true;
+        },
+      );
+
+      await expect(
+        storageService.uploadData(
+          faker.string.sample(),
+          faker.system.fileName(),
+          ContentType.PLAIN_TEXT,
+        ),
+      ).rejects.toThrow("Can't find configured bucket");
+
+      expect(mockedMinioClientInstance.putObject).toHaveBeenCalledTimes(0);
     });
 
-    it('should return empty array when file cannot be downloaded', async () => {
-      StorageClient.downloadFileFromUrl = jest
-        .fn()
-        .mockRejectedValue('Network error');
+    it('should not upload if file already exists', async () => {
+      mockedMinioClientInstance.bucketExists.mockResolvedValueOnce(true);
 
-      const solutionsFile = await storageService.download(MOCK_FILE_URL);
-      expect(solutionsFile).toStrictEqual([]);
+      const fileName = `${faker.lorem.word()}.json`;
+      mockedMinioClientInstance.statObject.mockImplementation(
+        (bucketName, key) => {
+          if (bucketName === mockS3ConfigService.bucket && key === fileName) {
+            return {};
+          }
+
+          throw {
+            code: MinioErrorCodes.NotFound,
+          };
+        },
+      );
+
+      const fileUrl = await storageService.uploadData(
+        JSON.stringify({ test: faker.string.sample() }),
+        fileName,
+        ContentType.JSON,
+      );
+      expect(fileUrl).toBe(constructExpectedS3FileUrl(fileName));
+      expect(mockedMinioClientInstance.putObject).toHaveBeenCalledTimes(0);
+    });
+
+    it('should upload if file does not exists', async () => {
+      mockedMinioClientInstance.bucketExists.mockResolvedValueOnce(true);
+
+      const fileName = faker.system.fileName();
+      mockedMinioClientInstance.statObject.mockRejectedValue({
+        code: MinioErrorCodes.NotFound,
+      });
+      const fileContent = Buffer.from(faker.string.sample());
+      const contentType = ContentType.BINARY;
+
+      const fileUrl = await storageService.uploadData(
+        fileContent,
+        fileName,
+        contentType,
+      );
+      expect(fileUrl).toBe(constructExpectedS3FileUrl(fileName));
+      expect(mockedMinioClientInstance.putObject).toHaveBeenCalledTimes(1);
+      expect(mockedMinioClientInstance.putObject).toHaveBeenCalledWith(
+        mockS3ConfigService.bucket,
+        fileName,
+        fileContent,
+        {
+          'Content-Type': contentType,
+          'Cache-Control': 'no-store',
+        },
+      );
     });
   });
 });
