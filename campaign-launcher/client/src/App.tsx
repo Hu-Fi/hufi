@@ -28,7 +28,7 @@ const App: FC = () => {
             <Web3AuthProvider>
               <ExchangesProvider>
                 <StakeProvider>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en">
                     <ThemeProvider>
                       <BrowserRouter>
                         <Layout>
