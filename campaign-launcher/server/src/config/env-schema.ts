@@ -12,6 +12,9 @@ export const envValidator = Joi.object({
    * because for the code it's the same case
    * as absence of value, but more conveninent for CI/CD.
    */
+  RPC_URL_ETHEREUM: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .allow(''),
   RPC_URL_SEPOLIA: Joi.string()
     .uri({ scheme: ['http', 'https'] })
     .allow(''),

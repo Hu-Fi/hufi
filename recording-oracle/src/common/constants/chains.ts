@@ -3,6 +3,7 @@ import { ChainId as SdkChainId } from '@human-protocol/sdk';
 import Environment from '@/common/utils/environment';
 
 export enum ProductionChainId {
+  ETHEREUM = SdkChainId.MAINNET,
   POLYGON_MAINNET = SdkChainId.POLYGON,
 }
 
