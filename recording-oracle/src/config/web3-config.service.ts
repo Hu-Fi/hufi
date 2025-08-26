@@ -36,6 +36,7 @@ export class Web3ConfigService {
       [DevelopmentChainId.POLYGON_AMOY]: this.configService.get(
         'RPC_URL_POLYGON_AMOY',
       ),
+      [ProductionChainId.ETHEREUM]: this.configService.get('RPC_URL_ETHEREUM'),
       [DevelopmentChainId.SEPOLIA]: this.configService.get('RPC_URL_SEPOLIA'),
       [DevelopmentChainId.AURORA_TESTNET]: this.configService.get(
         'RPC_URL_AURORA_TESTNET',
