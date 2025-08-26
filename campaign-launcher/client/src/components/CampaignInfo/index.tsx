@@ -20,7 +20,10 @@ const formatTime = (dateString: string): string => {
   if (+hours < 10) {
     hours = '0' + hours;
   }
-  const minutes = date.getMinutes();
+  let minutes = date.getMinutes().toString();
+  if (+minutes < 10) {
+    minutes = '0' + minutes;
+  }
   const tzOffset = date.getTimezoneOffset();
   const sign = tzOffset > 0 ? '-' : '+';
   const tzHours = Math.floor(Math.abs(tzOffset) / 60);
