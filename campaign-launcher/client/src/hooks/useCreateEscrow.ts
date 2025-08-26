@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 
-import { EscrowClient, KVStoreKeys, KVStoreUtils } from '@human-protocol/sdk';
+import { EscrowClient } from '@human-protocol/sdk';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 
 import useRetrieveSigner from './useRetrieveSigner';
 import ERC20ABI from '../abi/ERC20.json';
+import { launcherApi } from '../api';
 import { oracles } from '../constants';
 import { useNetwork } from '../providers/NetworkProvider';
 import { EscrowCreateDto, ManifestUploadDto } from '../types';
@@ -76,51 +77,16 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         }
 
         let _exchangeOracleFee: string;
-        try {
-          _exchangeOracleFee = await KVStoreUtils.get(
-            appChainId,
-            oracles.exchangeOracle,
-            KVStoreKeys.fee
-          );
-        } catch (e) {
-          console.error('Error getting exchange oracle fee', e);
-          throw e;
-        }
-
-        if (!_exchangeOracleFee) {
-          throw new Error('Exchange oracle fee is not set.');
-        }
-
         let _recordingOracleFee: string;
-        try {
-          _recordingOracleFee = await KVStoreUtils.get(
-            appChainId,
-            oracles.recordingOracle,
-            KVStoreKeys.fee
-          );
-        } catch (e) {
-          console.error('Error getting recording oracle fee', e);
-          throw e;
-        }
-
-        if (!_recordingOracleFee) {
-          throw new Error('Recording oracle fee is not set.');
-        }
-
         let _reputationOracleFee: string;
         try {
-          _reputationOracleFee = await KVStoreUtils.get(
-            appChainId,
-            oracles.reputationOracle,
-            KVStoreKeys.fee
-          );
+          const oracleFees = await launcherApi.getOracleFees(appChainId);
+          _exchangeOracleFee = oracleFees.exchange_oracle_fee;
+          _recordingOracleFee = oracleFees.recording_oracle_fee;
+          _reputationOracleFee = oracleFees.reputation_oracle_fee;
         } catch (e) {
-          console.error(e);
+          console.error('Error getting oracle fees', e);
           throw e;
-        }
-
-        if (!_reputationOracleFee) {
-          throw new Error('Reputation oracle fee is not set.');
         }
 
         const tokenContract = new ethers.Contract(
