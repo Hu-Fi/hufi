@@ -25,7 +25,7 @@ on:
           - warn
           - error
   schedule:
-    - cron: '0 12 * * *' # every day at noon UTC
+    - cron: '0 * * * *' # every hour UTC
 
 jobs:
   define-env-names:
