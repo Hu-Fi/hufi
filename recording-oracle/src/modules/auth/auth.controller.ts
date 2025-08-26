@@ -1,109 +1,97 @@
-import { Body, Controller, HttpCode, Logger, Post } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpCode, Post, UseFilters } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 
-import { Public } from '../../common/decorators';
-import { SignatureBodyDto } from '../user/user.dto';
-import { UserService } from '../user/user.service';
+import { Public } from '@/common/decorators';
+import { UsersService } from '@/modules/users';
 
 import {
   AuthDto,
-  PrepareSignatureDto,
-  RefreshTokenDto,
-  Web3SignInDto,
-  Web3SignUpDto,
+  ObtainNonceDto,
+  ObtainNonceSuccessDto,
+  RefreshDto,
+  SuccessAuthDto,
 } from './auth.dto';
+import { AuthControllerErrorsFilter } from './auth.error-filter';
 import { AuthService } from './auth.service';
+import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 @ApiTags('Auth')
+@Public()
 @Controller('/auth')
+@UseFilters(AuthControllerErrorsFilter)
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    private readonly usersService: UsersService,
+    private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
-  @Public()
-  @Post('/web3/signup')
-  @HttpCode(200)
   @ApiOperation({
-    summary: 'Web3 User Signup',
-    description: 'Endpoint for Web3 user registration.',
+    summary: 'Web3 signature body',
+    description: 'Endpoint for retrieving the nonce used for signing.',
   })
-  @ApiBody({ type: Web3SignUpDto })
   @ApiResponse({
     status: 200,
-    description: 'User registered successfully',
-    type: AuthDto,
+    description: 'Nonce retrieved successfully',
+    type: ObtainNonceSuccessDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized. Missing or invalid credentials.',
-  })
-  public async web3SignUp(@Body() data: Web3SignUpDto): Promise<AuthDto> {
-    return this.authService.web3Signup(data);
+  @ApiBody({ type: ObtainNonceDto })
+  @Post('/nonce')
+  @HttpCode(200)
+  async getNonce(@Body() data: ObtainNonceDto): Promise<ObtainNonceSuccessDto> {
+    const nonce = await this.usersService.getNonce(data.address);
+    return { nonce };
   }
 
-  @Public()
-  @Post('/web3/signin')
-  @HttpCode(200)
   @ApiOperation({
-    summary: 'Web3 User Signin',
-    description: 'Endpoint for Web3 user authentication.',
+    summary: 'Web3 auth',
+    description: 'Endpoint for Web3 authentication',
   })
-  @ApiBody({ type: Web3SignInDto })
   @ApiResponse({
     status: 200,
-    description: 'User authenticated successfully',
-    type: AuthDto,
+    description: 'User authed successfully',
+    type: SuccessAuthDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized. Missing or invalid credentials.',
-  })
-  public async web3SignIn(@Body() data: Web3SignInDto): Promise<AuthDto> {
-    return this.authService.web3Signin(data);
+  @ApiBody({ type: AuthDto })
+  @Post('/')
+  @HttpCode(200)
+  async auth(@Body() data: AuthDto): Promise<SuccessAuthDto | undefined> {
+    const authTokens = await this.authService.auth(
+      data.signature,
+      data.address,
+    );
+    return authTokens;
   }
 
-  @Public()
-  @Post('/refresh-token')
-  @HttpCode(200)
-  @ApiBody({ type: RefreshTokenDto })
   @ApiOperation({
-    summary: 'Refresh Token',
+    summary: 'Refresh token',
     description: 'Endpoint to refresh the authentication token.',
   })
   @ApiResponse({
     status: 200,
     description: 'Token refreshed successfully',
-    type: AuthDto,
+    type: SuccessAuthDto,
   })
-  async refreshToken(@Body() data: RefreshTokenDto): Promise<AuthDto> {
-    return this.authService.refreshToken(data);
+  @ApiBody({ type: RefreshDto })
+  @Post('/refresh')
+  @HttpCode(200)
+  async refreshToken(@Body() data: RefreshDto): Promise<SuccessAuthDto> {
+    const authTokens = await this.authService.refresh(data.refreshToken);
+    return authTokens;
   }
 
-  @Public()
-  @Post('/prepare-signature')
-  @HttpCode(200)
   @ApiOperation({
-    summary: 'Web3 signature body',
-    description:
-      'Endpoint for generating typed structured data objects compliant with EIP-712. The generated object should be convertible to a string format to ensure compatibility with signature mechanisms.',
-  })
-  @ApiBody({ type: PrepareSignatureDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Typed structured data object generated successfully',
-    type: SignatureBodyDto,
+    summary: 'User logout',
+    description: 'Endpoint to log out the user',
   })
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized. Missing or invalid credentials.',
+    status: 204,
+    description: 'User logged out successfully',
   })
-  public async prepareSignature(
-    @Body() data: PrepareSignatureDto,
-  ): Promise<SignatureBodyDto> {
-    return await this.userService.prepareSignatureBody(data.type, data.address);
+  @ApiBody({ type: RefreshDto })
+  @Post('/logout')
+  @HttpCode(204)
+  async logout(@Body() data: RefreshDto): Promise<void> {
+    await this.refreshTokensRepository.deleteById(data.refreshToken);
   }
 }

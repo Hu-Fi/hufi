@@ -1,133 +1,219 @@
-import { ChainId } from '@human-protocol/sdk';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Alchemy } from 'alchemy-sdk';
 import { Wallet, ethers } from 'ethers';
+import { LRUCache } from 'lru-cache';
 
-import { NetworkConfigService } from '../../common/config/network-config.service';
-import { Web3ConfigService } from '../../common/config/web3-config.service';
-import { ErrorWeb3 } from '../../common/constants/errors';
 import {
-  LOCALHOST_CHAIN_IDS,
-  MAINNET_CHAIN_IDS,
-  TESTNET_CHAIN_IDS,
-  TOKENS,
-} from '../../common/constants/networks';
-import { Web3Env } from '../../common/enums/web3';
-import { ControlledError } from '../../common/errors/controlled';
+  ChainIds,
+  ERC20_ABI_DECIMALS,
+  ERC20_ABI_SYMBOL,
+} from '@/common/constants';
+import { Web3ConfigService } from '@/config';
+import logger from '@/logger';
+
+import type { Chain, WalletWithProvider } from './types';
+
+const MISSING_TOKEN_PRICE = -1;
 
 @Injectable()
 export class Web3Service {
-  private signers: { [key: number]: Wallet } = {};
-  public readonly logger = new Logger(Web3Service.name);
+  private readonly logger = logger.child({ context: Web3Service.name });
 
-  constructor(
-    private readonly web3ConfigService: Web3ConfigService,
-    private readonly networkConfigService: NetworkConfigService,
-  ) {
+  private signersByChainId: {
+    [chainId: number]: WalletWithProvider;
+  } = {};
+
+  private readonly operationPromisesCache = new Map<string, Promise<unknown>>();
+
+  private readonly alchemySdk: Alchemy;
+
+  private readonly tokenPriceCache = new LRUCache<string, number>({
+    ttl: 1000 * 60 * 1,
+    max: 4200,
+    ttlAutopurge: false,
+    allowStale: false,
+    noDeleteOnStaleGet: false,
+    noUpdateTTL: false,
+    updateAgeOnGet: false,
+    updateAgeOnHas: false,
+  });
+
+  constructor(private readonly web3ConfigService: Web3ConfigService) {
     const privateKey = this.web3ConfigService.privateKey;
-    const validChains = this.getValidChains();
-    const validNetworks = this.networkConfigService.networks.filter((network) =>
-      validChains.includes(network.chainId),
-    );
 
-    if (!validNetworks.length) {
-      this.logger.log(ErrorWeb3.NoValidNetworks, Web3Service.name);
-      throw new ControlledError(
-        ErrorWeb3.NoValidNetworks,
-        HttpStatus.BAD_REQUEST,
-      );
+    for (const chain of this.supportedChains) {
+      const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
+      this.signersByChainId[chain.id] = new Wallet(
+        privateKey,
+        provider,
+      ) as WalletWithProvider;
     }
 
-    for (const network of validNetworks) {
-      const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-      this.signers[network.chainId] = new Wallet(privateKey, provider);
+    this.alchemySdk = new Alchemy({
+      apiKey: this.web3ConfigService.alchemyApiKey,
+      maxRetries: 5,
+    });
+  }
+
+  private get supportedChains(): Chain[] {
+    const supportedChains: Chain[] = [];
+
+    for (const chainId of ChainIds) {
+      const rpcUrl = this.web3ConfigService.getRpcUrlByChainId(chainId);
+      if (!rpcUrl) {
+        continue;
+      }
+
+      supportedChains.push({
+        id: chainId,
+        rpcUrl,
+      });
     }
-  }
 
-  public getSigner(chainId: number): Wallet {
-    this.validateChainId(chainId);
-    return this.signers[chainId];
-  }
-
-  public validateChainId(chainId: number): void {
-    const validChainIds = this.getValidChains();
-    if (!validChainIds.includes(chainId)) {
-      this.logger.log(ErrorWeb3.InvalidChainId, Web3Service.name);
-      throw new ControlledError(
-        ErrorWeb3.InvalidChainId,
-        HttpStatus.BAD_REQUEST,
-      );
+    if (!supportedChains.length) {
+      throw new Error('Supported chains not configured');
     }
+
+    return supportedChains;
   }
 
-  public getValidChains(): ChainId[] {
-    switch (this.web3ConfigService.env) {
-      case Web3Env.MAINNET:
-        return MAINNET_CHAIN_IDS;
-      case Web3Env.TESTNET:
-        return TESTNET_CHAIN_IDS;
-      case Web3Env.LOCALHOST:
-        return LOCALHOST_CHAIN_IDS;
-      default:
-        return LOCALHOST_CHAIN_IDS;
+  getSigner(chainId: number): WalletWithProvider {
+    const signer = this.signersByChainId[chainId];
+
+    if (signer) {
+      return signer;
     }
+
+    throw new Error(`No signer for provided chain id: ${chainId}`);
   }
 
-  public async calculateGasPrice(chainId: number): Promise<bigint> {
+  async calculateGasPrice(chainId: number): Promise<bigint> {
     const signer = this.getSigner(chainId);
-    const multiplier = this.web3ConfigService.gasPriceMultiplier;
-    const gasPrice = (await signer.provider?.getFeeData())?.gasPrice;
+    const { gasPrice } = await signer.provider.getFeeData();
+
     if (gasPrice) {
-      return (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
+      return gasPrice * BigInt(this.web3ConfigService.gasPriceMultiplier);
     }
-    throw new ControlledError(ErrorWeb3.GasPriceError, HttpStatus.CONFLICT);
+
+    throw new Error(`No gas price data for chain id: ${chainId}`);
   }
 
-  public getOperatorAddress(): string {
-    return Object.values(this.signers)[0].address;
-  }
-
-  public async getTokenDecimals(
-    tokenAddress: string,
+  async getTokenDecimals(
     chainId: number,
+    tokenAddress: string,
   ): Promise<number> {
-    const addr = tokenAddress.toLowerCase();
-
-    if (TOKENS[`${addr}:${chainId}`]) {
-      return TOKENS[`${addr}:${chainId}`].decimals;
-    }
+    const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
 
     try {
-      const abi = ['function decimals() view returns (uint8)'];
-      const provider = this.getSigner(chainId);
-      const contract = new ethers.Contract(tokenAddress, abi, provider);
-      const decimals = Number(await contract.decimals());
-      return decimals;
-    } catch (err) {
-      this.logger.warn(
-        `Could not fetch decimals for token ${addr}, defaulting to 18`,
-      );
-      return 18;
+      if (!this.operationPromisesCache.has(cacheKey)) {
+        const provider = this.getSigner(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_DECIMALS,
+          provider,
+        );
+
+        this.operationPromisesCache.set(cacheKey, tokenContract.decimals());
+      }
+
+      const operationPromise = this.operationPromisesCache.get(
+        cacheKey,
+      ) as Promise<bigint>;
+
+      const decimals: bigint = await operationPromise;
+
+      return Number(decimals);
+    } catch (error) {
+      this.operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token decimals';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
     }
   }
 
-  public async getTokenSymbol(
-    tokenAddress: string,
-    chainId: number,
-  ): Promise<string> {
-    const addr = tokenAddress.toLowerCase();
-    if (TOKENS[`${addr}:${chainId}`]) {
-      return TOKENS[`${addr}:${chainId}`].symbol;
-    }
+  async getTokenSymbol(chainId: number, tokenAddress: string): Promise<string> {
+    const cacheKey = `token-symbol-${chainId}-${tokenAddress}`;
+
     try {
-      const provider = this.getSigner(chainId);
-      const abi = ['function symbol() view returns (string)'];
-      const contract = new ethers.Contract(tokenAddress, abi, provider);
-      return await contract.symbol();
-    } catch (err) {
-      this.logger.warn(
-        `Could not fetch symbol for token ${addr}, defaulting to HMT`,
-      );
-      return 'HMT';
+      if (!this.operationPromisesCache.has(cacheKey)) {
+        const provider = this.getSigner(chainId);
+
+        const tokenContract = new ethers.Contract(
+          tokenAddress,
+          ERC20_ABI_SYMBOL,
+          provider,
+        );
+
+        this.operationPromisesCache.set(cacheKey, tokenContract.symbol());
+      }
+
+      const symbol = await this.operationPromisesCache.get(cacheKey);
+      return symbol as string;
+    } catch (error) {
+      this.operationPromisesCache.delete(cacheKey);
+
+      const message = 'Failed to get token symbol';
+      this.logger.error(message, {
+        error,
+        chainId,
+        tokenAddress,
+      });
+
+      throw new Error(message);
+    }
+  }
+
+  async getTokenPriceUsd(symbol: string): Promise<number | null> {
+    const uppercasedSymbol = symbol.toUpperCase();
+    const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
+
+    try {
+      let tokenPriceUsd = this.tokenPriceCache.get(cacheKey);
+
+      if (tokenPriceUsd === undefined) {
+        const {
+          data: [apiResult],
+        } = await this.alchemySdk.prices.getTokenPriceBySymbol([
+          /**
+           * Seems that Alchemy API is not case-sensitive to symbol,
+           * but always use upper just in case.
+           */
+          uppercasedSymbol,
+        ]);
+
+        const priceUsd =
+          apiResult.prices.find((price) => price.currency === 'usd')?.value ||
+          null;
+
+        if (priceUsd) {
+          tokenPriceUsd = Number(priceUsd);
+        } else {
+          this.logger.warn('Token price in USD is not available', {
+            symbol,
+            apiResult,
+          });
+          tokenPriceUsd = MISSING_TOKEN_PRICE;
+        }
+
+        this.tokenPriceCache.set(cacheKey, tokenPriceUsd);
+      }
+
+      return tokenPriceUsd === MISSING_TOKEN_PRICE ? null : tokenPriceUsd;
+    } catch (error) {
+      const message = 'Failed to get token price';
+      this.logger.error(message, {
+        symbol,
+        error,
+      });
+
+      throw new Error(message);
     }
   }
 }

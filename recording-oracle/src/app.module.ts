@@ -1,39 +1,48 @@
-import { join } from 'path';
-
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { AppController } from './app.controller';
-import { EnvConfigModule } from './common/config/config.module';
-import { envValidator } from './common/config/env-schema';
-import { ExceptionFilter } from './common/exceptions/exception.filter';
-import { SnakeCaseInterceptor } from './common/interceptors/snake-case';
+import { ExceptionFilter } from './common/filters/exception';
+import { JwtAuthGuard } from './common/guards';
+import { TransformInterceptor } from './common/interceptors';
 import { HttpValidationPipe } from './common/pipes';
-import { DatabaseModule } from './database/database.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { CampaignModule } from './modules/campaign/campaign.module';
-import { ExchangeModule } from './modules/exchange/exchange.module';
-import { HealthModule } from './modules/health/health.module';
-import { LiquidityScoreModule } from './modules/liquidity-score/liquidity-score.module';
-import { MrMarketModule } from './modules/mr-market/mr-market.module';
-import { RecordsModule } from './modules/records/records.module';
-import { StorageModule } from './modules/storage/storage.module';
-import { UserModule } from './modules/user/user.module';
-import { Web3Module } from './modules/web3/web3.module';
-import { Web3TransactionModule } from './modules/web3-transaction/web3-transaction.module';
+import Environment from './common/utils/environment';
+import { EnvConfigModule, envValidator } from './config';
+import { DatabaseModule } from './database';
+import { AdminModule } from './modules/admin';
+import { AuthModule } from './modules/auth';
+import { CampaignsModule } from './modules/campaigns';
+import { ExchangeApiKeysModule } from './modules/exchange-api-keys';
+import { HealthModule } from './modules/health';
+import { StatisticsModule } from './modules/statistics';
+import { UsersModule } from './modules/users';
 
 @Module({
   providers: [
     {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
       provide: APP_PIPE,
       useClass: HttpValidationPipe,
     },
+    /**
+     * Interceptors are called:
+     * - for request: in direct order
+     * - for response: in reverse order
+     *
+     * So order matters here for serialization.
+     */
     {
       provide: APP_INTERCEPTOR,
-      useClass: SnakeCaseInterceptor,
+      useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
     },
     {
       provide: APP_FILTER,
@@ -41,29 +50,23 @@ import { Web3TransactionModule } from './modules/web3-transaction/web3-transacti
     },
   ],
   imports: [
+    AdminModule,
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV
-        ? `.env.${process.env.NODE_ENV as string}`
-        : '.env',
+      /**
+       * First value found takes precendece
+       */
+      envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
       validationSchema: envValidator,
     }),
-    EnvConfigModule,
     ScheduleModule.forRoot(),
-    DatabaseModule,
-    HealthModule,
     AuthModule,
-    UserModule,
-    CampaignModule,
-    ExchangeModule,
-    RecordsModule,
-    StorageModule,
-    Web3Module,
-    LiquidityScoreModule,
-    MrMarketModule,
-    Web3TransactionModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '././modules/', 'node_modules/swagger-ui-dist'),
-    }),
+    CampaignsModule,
+    DatabaseModule,
+    EnvConfigModule,
+    ExchangeApiKeysModule,
+    HealthModule,
+    UsersModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
 })
