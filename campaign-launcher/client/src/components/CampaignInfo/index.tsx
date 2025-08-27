@@ -1,10 +1,11 @@
 import { FC } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
 import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
+import CustomTooltip from '../CustomTooltip';
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -53,26 +54,26 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
       >
         {campaign.status}
       </Box>
-      <Tooltip title={getNetworkName(campaign.chain_id) || "Unknown Network"} placement="top">
+      <CustomTooltip title={getNetworkName(campaign.chain_id) || "Unknown Network"} placement="top">
         <Box display="flex" sx={{ cursor: 'pointer' }}>
           {getChainIcon(campaign.chain_id)}
         </Box>
-      </Tooltip>
+      </CustomTooltip>
       <Box display="flex" alignItems="center" gap={1}>
         {campaign?.start_date && campaign?.end_date && (
           <>
             <CalendarIcon />
-            <Tooltip placement="top" title={formatTime(campaign.start_date)}>
+            <CustomTooltip placement="top" title={formatTime(campaign.start_date)}>
               <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
                 {formatDate(campaign.start_date)}
               </Typography>
-            </Tooltip>
+            </CustomTooltip>
             <Typography component="span" variant="subtitle2">-</Typography>
-            <Tooltip placement="top" title={formatTime(campaign.end_date)}>
+            <CustomTooltip placement="top" title={formatTime(campaign.end_date)}>
               <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
                 {formatDate(campaign.end_date)}
               </Typography>
-            </Tooltip>
+            </CustomTooltip>
           </>
         )}
       </Box>
