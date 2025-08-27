@@ -118,16 +118,6 @@ export class PayoutsService {
             continue;
           }
 
-          /***
-           *  Temp fix for long-running campaigns.
-           *  In a nutshell: we are 100% sure that in case payouts are failing for some period, the next one won't be processed.
-           *  So as a temp fix we are counting the amount of bulkPayout events happened for the escrow and skipping first X time frames.
-           ***/
-          if (bulkPayoutsCount > 0) {
-            bulkPayoutsCount -= 1;
-            continue;
-          }
-
           const rewardsBatches = this.calculateRewardsForDailyResult(
             intermediateResult,
             dailyReward,
@@ -142,8 +132,17 @@ export class PayoutsService {
 
           for (const rewardsBatch of rewardsBatches) {
             /**
-             * TODO: somehow check if this rewards batch was already paid before
+             * Temp hack to avoid double-payouts until payoutId is added to escrow.
+             *
+             * Rationale: payout batches are run sequentially and in case
+             * some payouts batch fails - the next one won't be processed,
+             * so as a temp fix we are counting the number of bulkPayout events
+             * happened for the escrow and skipping first X items.
              */
+            if (bulkPayoutsCount > 0) {
+              bulkPayoutsCount -= 1;
+              continue;
+            }
 
             const recipientToAmountMap = new Map<string, bigint>();
             for (const { address, amount } of rewardsBatch.rewards) {

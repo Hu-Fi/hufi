@@ -360,9 +360,11 @@ export class CampaignsService {
 
         const logger = this.logger.child({
           action: 'record-campaign-progress',
+          campaignId: campaign.id,
           chainId: campaign.chainId,
           campaignAdddress: campaign.address,
-          campaignId: campaign.id,
+          exchangeName: campaign.exchangeName,
+          pair: campaign.pair,
         });
         logger.debug('Campaign progress recording started');
 
@@ -437,23 +439,18 @@ export class CampaignsService {
             endDate,
           );
 
-          logger.debug('Campaign progress checked', {
-            from: progress.from,
-            to: progress.to,
-            total_volume: progress.total_volume,
-            participants_outcomes_batches:
-              progress.participants_outcomes_batches.map((b) => ({
-                id: b.id,
-                n_results: b.results.length,
-              })),
-          });
           await this.recordGeneratedVolume(campaign, progress);
 
           intermediateResults.results.push(progress);
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(intermediateResults);
 
-          logger.debug('Campaign progress recorded', storedResultsMeta);
+          logger.info('Campaign progress recorded', {
+            from: progress.from,
+            to: progress.to,
+            total_volume: progress.total_volume,
+            resultsUrl: storedResultsMeta.url,
+          });
 
           /**
            * There might be situations when due to delays/failures in processing

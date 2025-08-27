@@ -7,6 +7,7 @@ import {
   generateTradingPair,
 } from '@/modules/exchange/fixtures';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
+import { generateRandomHashString } from '~/test/fixtures/crypto';
 
 import { CampaignEntity } from '../campaign.entity';
 import type {
@@ -96,4 +97,11 @@ export function generateIntermediateResultsData(
   Object.assign(data, overrides);
 
   return data;
+}
+
+export function generateStoredResultsMeta(): { url: string; hash: string } {
+  return {
+    url: faker.internet.url(),
+    hash: generateRandomHashString('sha256'),
+  };
 }
