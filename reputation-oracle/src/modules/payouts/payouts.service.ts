@@ -146,18 +146,24 @@ export class PayoutsService {
 
             const recipientToAmountMap = new Map<string, bigint>();
             for (const { address, amount } of rewardsBatch.rewards) {
+              const truncatedAmount = decimalUtils.truncate(
+                amount,
+                campaign.fundTokenDecimals,
+              );
               /**
                * Escrow contract doesn't allow payout of 0 amount,
-               * so just skip it for final payouts
+               * so just skip it for final payouts. It covers cases when:
+               * - 0 reward in general
+               * - reward became 0 after truncating, i.e. it was too small
                */
-              if (amount === 0) {
+              if (truncatedAmount === 0) {
                 continue;
               }
 
               recipientToAmountMap.set(
                 address,
                 ethers.parseUnits(
-                  amount.toString(),
+                  truncatedAmount.toString(),
                   campaign.fundTokenDecimals,
                 ),
               );
