@@ -5,12 +5,14 @@ import {
   InternalServerErrorException,
   Query,
 } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 
 import { GetOracleFeesQueryDto } from './web3.dto';
 
+@ApiExcludeController()
 @Controller('web3')
 export class Web3Controller {
   private readonly logger = logger.child({ context: Web3Controller.name });
@@ -23,58 +25,56 @@ export class Web3Controller {
     recordingOracleFee: string;
     reputationOracleFee: string;
   }> {
-    let exchangeOracleFee: string;
+    const { exchangeOracle, recordingOracle, reputationOracle } =
+      this.web3ConfigService;
+
+    let exchangeOracleFee: string | undefined;
     try {
       exchangeOracleFee = await KVStoreUtils.get(
         chainId as number,
-        this.web3ConfigService.exchangeOracle,
+        exchangeOracle,
         KVStoreKeys.fee,
       );
     } catch (error) {
-      const message = 'Error while getting exchange oracle fee';
-      this.logger.error(message, {
+      this.logger.warn('Error while getting exchange oracle fee', {
         chainId,
-        oracleAddress: this.web3ConfigService.exchangeOracle,
+        oracleAddress: exchangeOracle,
         error,
       });
-
-      throw new InternalServerErrorException(message);
     }
 
-    let recordingOracleFee: string;
+    let recordingOracleFee: string | undefined;
     try {
       recordingOracleFee = await KVStoreUtils.get(
         chainId as number,
-        this.web3ConfigService.recordingOracle,
+        recordingOracle,
         KVStoreKeys.fee,
       );
     } catch (error) {
-      const message = 'Error while getting recording oracle fee';
-      this.logger.error(message, {
+      this.logger.warn('Error while getting recording oracle fee', {
         chainId,
-        oracleAddress: this.web3ConfigService.recordingOracle,
+        oracleAddress: recordingOracle,
         error,
       });
-
-      throw new InternalServerErrorException(message);
     }
 
-    let reputationOracleFee: string;
+    let reputationOracleFee: string | undefined;
     try {
       reputationOracleFee = await KVStoreUtils.get(
         chainId as number,
-        this.web3ConfigService.reputationOracle,
+        reputationOracle,
         KVStoreKeys.fee,
       );
     } catch (error) {
-      const message = 'Error while getting reputation oracle fee';
-      this.logger.error(message, {
+      this.logger.warn('Error while getting reputation oracle fee', {
         chainId,
-        oracleAddress: this.web3ConfigService.reputationOracle,
+        oracleAddress: reputationOracle,
         error,
       });
+    }
 
-      throw new InternalServerErrorException(message);
+    if (!exchangeOracleFee || !recordingOracleFee || !reputationOracleFee) {
+      throw new InternalServerErrorException('Some of oracle fees are missing');
     }
 
     return {
