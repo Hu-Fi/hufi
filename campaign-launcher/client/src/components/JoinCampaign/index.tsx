@@ -51,8 +51,9 @@ const JoinCampaign: FC<Props> = ({ campaign }) => {
         size="medium"
         sx={{
           ml: { xs: 0, md: 'auto' },
+          mt: { xs: 2, md: 0 },
           color: 'primary.contrast',
-          minWidth: '135px',
+          minWidth: { xs: '100%', md: '135px' },
         }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}

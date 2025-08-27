@@ -17,7 +17,7 @@ const PageTitle: FC<PropsWithChildren<Props>> = ({ title, children }) => {
       flexWrap={{ xs: 'wrap', md: 'nowrap' }}
     >
       <JobsIcon sx={{ width: 66, height: 66 }} />
-      <Typography component="h1" variant="h4-mobile">
+      <Typography component="h1" variant="h4-mobile" minWidth="fit-content">
         {title}
       </Typography>
       {children}

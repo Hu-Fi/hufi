@@ -4,8 +4,9 @@ import { ChainId } from "@human-protocol/sdk"
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, Tooltip, Typography } from "@mui/material"
 
+import { useIsMobile } from "../../hooks/useBreakpoints";
 import { OpenInNewIcon } from "../../icons"
-import { getExplorerUrl } from "../../utils"
+import { formatAddress, getExplorerUrl } from "../../utils"
 
 type Props = {
   address: string;
@@ -25,6 +26,8 @@ const handleAddressClick = (
 const CampaignAddress: FC<Props> = ({ address, chainId }) => {
   const [isCopied, setIsCopied] = useState(false);
 
+  const isMobile = useIsMobile();
+
   const handleCopy = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     navigator.clipboard.writeText(address);
@@ -35,9 +38,27 @@ const CampaignAddress: FC<Props> = ({ address, chainId }) => {
   }
 
   return (
-    <Box display="flex" alignItems="center" width={{ xs: "100%", md: "auto" }} gap={1} py={2} px={3} borderRadius="40px" border="1px solid" borderColor="divider">
-      <Typography variant="subtitle2" textOverflow="ellipsis" overflow="hidden" whiteSpace="nowrap">
-        {address}
+    <Box 
+      display="flex" 
+      alignItems="center" 
+      minWidth="250px"
+      maxWidth={{ xs: "100%", sm: "fit-content" }}
+      flexGrow={1}
+      flexShrink={1}
+      gap={1} 
+      py={2} 
+      px={3} 
+      borderRadius="40px" 
+      border="1px solid" 
+      borderColor="divider"
+    >
+      <Typography 
+        variant="subtitle2" 
+        textOverflow="ellipsis" 
+        overflow="hidden" 
+        whiteSpace="nowrap"
+      >
+        {isMobile ? formatAddress(address) : address}
       </Typography>
       <IconButton
         onClick={(e) => handleCopy(e)}

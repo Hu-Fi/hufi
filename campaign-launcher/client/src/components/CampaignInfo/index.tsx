@@ -37,7 +37,7 @@ type Props = {
 const CampaignInfo: FC<Props> = ({ campaign }) => {
   const isCompleted = campaign.status === 'completed';
   return (
-    <Box display="flex" alignItems="center" gap={3}>
+    <Box display="flex" alignItems="center" gap={3} flexWrap={{ xs: "wrap", md: "nowrap" }}>
       <Box
         display="flex"
         alignItems="center"
