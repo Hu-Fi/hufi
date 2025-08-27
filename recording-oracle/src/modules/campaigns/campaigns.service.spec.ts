@@ -48,6 +48,7 @@ import {
   generateIntermediateResult,
   generateIntermediateResultsData,
   generateProgressCheckerSetup,
+  generateStoredResultsMeta,
 } from './fixtures';
 import { generateCampaignEntity } from './fixtures';
 import * as manifestUtils from './manifest.utils';
@@ -1362,6 +1363,9 @@ describe('CampaignsService', () => {
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         generateIntermediateResult(),
       );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
+      );
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
@@ -1393,6 +1397,9 @@ describe('CampaignsService', () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         generateIntermediateResult(lastResultsEndDate),
+      );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
       );
 
       jest.useFakeTimers({ now });
@@ -1431,6 +1438,9 @@ describe('CampaignsService', () => {
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         generateIntermediateResult(campaign.endDate),
       );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
+      );
 
       jest.useFakeTimers({ now });
 
@@ -1458,6 +1468,9 @@ describe('CampaignsService', () => {
         generateIntermediateResultsData({
           results: [generateIntermediateResult(campaign.endDate)],
         }),
+      );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
       );
 
       const now = new Date();
@@ -1500,6 +1513,31 @@ describe('CampaignsService', () => {
         campaign,
         intermediateResult,
       );
+    });
+
+    it('should log recording details once results recorded', async () => {
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const intermediateResult = generateIntermediateResult();
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        intermediateResult,
+      );
+      const storedResultsMeta = generateStoredResultsMeta();
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        storedResultsMeta,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Campaign progress recorded', {
+        from: intermediateResult.from,
+        to: intermediateResult.to,
+        total_volume: intermediateResult.total_volume,
+        resultsUrl: storedResultsMeta.url,
+      });
+
+      expect(logger.error).toHaveBeenCalledTimes(0);
     });
   });
 
