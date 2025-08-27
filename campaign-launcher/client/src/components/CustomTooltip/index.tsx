@@ -23,7 +23,20 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
           onClose={handleTooltipClose}
           slotProps={{
             popper: {
-              disablePortal: true,
+              sx: {
+                '.MuiTooltip-tooltipPlacementTop': {
+                  mb: '8px !important',
+                },
+                '.MuiTooltip-tooltipPlacementBottom': {
+                  mt: '8px !important',
+                },
+                '.MuiTooltip-tooltipPlacementLeft': {
+                  mr: '8px !important',
+                },
+                '.MuiTooltip-tooltipPlacementRight': {
+                  ml: '8px !important',
+                },
+              },
             },
           }}
           {...props}

@@ -107,6 +107,7 @@ const Header: FC = () => {
             onClose={() => toggleDrawer(false)}
             slotProps={{
               paper: {
+                elevation: 0,
                 sx: { width: '75%', bgcolor: 'background.default' },
               },
             }}

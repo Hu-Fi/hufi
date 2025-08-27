@@ -54,7 +54,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
       >
         {campaign.status}
       </Box>
-      <CustomTooltip title={getNetworkName(campaign.chain_id) || "Unknown Network"} placement="top">
+      <CustomTooltip arrow title={getNetworkName(campaign.chain_id) || "Unknown Network"} placement="top">
         <Box display="flex" sx={{ cursor: 'pointer' }}>
           {getChainIcon(campaign.chain_id)}
         </Box>
@@ -63,13 +63,13 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
         {campaign?.start_date && campaign?.end_date && (
           <>
             <CalendarIcon />
-            <CustomTooltip placement="top" title={formatTime(campaign.start_date)}>
+            <CustomTooltip arrow placement="top" title={formatTime(campaign.start_date)}>
               <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
                 {formatDate(campaign.start_date)}
               </Typography>
             </CustomTooltip>
             <Typography component="span" variant="subtitle2">-</Typography>
-            <CustomTooltip placement="top" title={formatTime(campaign.end_date)}>
+            <CustomTooltip arrow placement="top" title={formatTime(campaign.end_date)}>
               <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
                 {formatDate(campaign.end_date)}
               </Typography>
