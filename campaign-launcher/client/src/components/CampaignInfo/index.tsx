@@ -1,19 +1,20 @@
 import { FC } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
 import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
-import ExplorerLink from '../ExplorerLink';
-import JoinCampaign from '../JoinCampaign';
+import dayjs from '../../utils/dayjs';
+import CustomTooltip from '../CustomTooltip';
 
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.toLocaleString('en-US', { month: 'short' });
-  const year = date.getFullYear();
-  return `${day} ${month} ${year}`;
+  return dayjs(dateString).format('D MMM YYYY');
+};
+
+const formatTime = (dateString: string): string => {
+  const date = dayjs(dateString);
+  return date.format('HH:mm [GMT]Z');
 };
 
 type Props = {
@@ -23,20 +24,15 @@ type Props = {
 const CampaignInfo: FC<Props> = ({ campaign }) => {
   const isCompleted = campaign.status === 'completed';
   return (
-    <>
+    <Box display="flex" alignItems="center" gap={3} flexWrap={{ xs: "wrap", md: "nowrap" }}>
       <Box
         display="flex"
         alignItems="center"
         justifyContent="center"
         py={0.5}
         px="10px"
-        mx={{ xs: 0, md: 2 }}
-        color={isCompleted ? 'text.primary' : 'primary.contrast'}
-        bgcolor={mapStatusToColor(
-          campaign.status,
-          campaign.start_date,
-          campaign.end_date
-        )}
+        color={isCompleted ? "text.primary" : "primary.contrast"}
+        bgcolor={mapStatusToColor(campaign.status, campaign.start_date, campaign.end_date)}
         fontSize="13px"
         fontWeight={600}
         borderRadius="4px"
@@ -44,26 +40,30 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
       >
         {campaign.status}
       </Box>
-      <ExplorerLink address={campaign.address} chainId={campaign.chain_id} />
-      <Box display="flex" alignItems="center" gap={1} ml={{ xs: 0, md: 2 }}>
+      <CustomTooltip arrow title={getNetworkName(campaign.chain_id) || "Unknown Network"} placement="top">
+        <Box display="flex" sx={{ cursor: 'pointer' }}>
+          {getChainIcon(campaign.chain_id)}
+        </Box>
+      </CustomTooltip>
+      <Box display="flex" alignItems="center" gap={1}>
         {campaign?.start_date && campaign?.end_date && (
           <>
             <CalendarIcon />
-            <Typography variant="subtitle2" color="text.primary">
-              {`${formatDate(campaign.start_date)} - ${formatDate(
-                campaign.end_date
-              )}`}
-            </Typography>
+            <CustomTooltip arrow placement="top" title={formatTime(campaign.start_date)}>
+              <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
+                {formatDate(campaign.start_date)}
+              </Typography>
+            </CustomTooltip>
+            <Typography component="span" variant="subtitle2">-</Typography>
+            <CustomTooltip arrow placement="top" title={formatTime(campaign.end_date)}>
+              <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
+                {formatDate(campaign.end_date)}
+              </Typography>
+            </CustomTooltip>
           </>
         )}
       </Box>
-      <Tooltip title={getNetworkName(campaign.chain_id) || 'Unknown Network'}>
-        <Box display="flex" ml={2} sx={{ cursor: 'pointer' }}>
-          {getChainIcon(campaign.chain_id)}
-        </Box>
-      </Tooltip>
-      <JoinCampaign campaign={campaign} />
-    </>
+    </Box>
   );
 };
 

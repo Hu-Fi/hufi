@@ -3,9 +3,11 @@ import { FC, useMemo } from 'react';
 import { CircularProgress, Typography } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import CampaignAddress from '../../components/CampaignAddress';
 import CampaignInfo from '../../components/CampaignInfo';
 import CampaignStats from '../../components/CampaignStats';
 import HowToLaunch from '../../components/HowToLaunch';
+import JoinCampaign from '../../components/JoinCampaign';
 import JoinedCampaigns from '../../components/JoinedCampaigns';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
@@ -43,11 +45,15 @@ const Campaign: FC = () => {
   return (
     <PageWrapper>
       <PageTitle title="Campaign Data">
-        {isCampaignLoading && (
-          <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />
+        {isCampaignLoading && <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />}
+        {!!campaignData && (
+          <>
+            <CampaignAddress address={campaignData.address} chainId={campaignData.chain_id} />
+            <JoinCampaign campaign={campaignData} />
+          </>
         )}
-        {!!campaignData && <CampaignInfo campaign={campaignData} />}
       </PageTitle>
+      {!!campaignData && <CampaignInfo campaign={campaignData} />}
       <CampaignStats campaign={campaignData} />
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns
