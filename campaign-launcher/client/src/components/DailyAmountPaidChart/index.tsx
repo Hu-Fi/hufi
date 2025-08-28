@@ -41,9 +41,10 @@ type Props = {
   }[];
   endDate: string;
   tokenSymbol: string;
+  tokenDecimals: number;
 };
 
-const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
+const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol, tokenDecimals }) => {
   const theme = useTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
@@ -65,7 +66,7 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol }) => {
       const [, month, day] = date.split('-');
       return {
         date: `${day}/${month}`,
-        value: foundData ? +formatTokenAmount(foundData.amount) : 0,
+        value: foundData ? +formatTokenAmount(foundData.amount, tokenDecimals) : 0,
       };
     });
 
