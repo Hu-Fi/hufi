@@ -37,6 +37,8 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           py: 4,
           px: 4,
           width: 870,
+          maxHeight: '80vh',
+          overflowY: 'auto',
           bgcolor: 'background.default',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: 4,

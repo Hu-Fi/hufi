@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { Button, Typography, Box, Tooltip, Stack } from '@mui/material';
+import { Button, Typography, Box, Stack } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { numericFormatter } from 'react-number-format';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import {
   mapStatusToColor,
 } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
+import CustomTooltip from '../CustomTooltip';
 import ExplorerLink from '../ExplorerLink';
 import InfoTooltipInner from '../InfoTooltipInner';
 import LaunchCampaign from '../LaunchCampaign';
@@ -137,7 +138,7 @@ const statusTooltipData = [
 
 const StatusTooltip = () => {
   return (
-    <Tooltip
+    <CustomTooltip
       arrow
       placement="left"
       title={
@@ -159,7 +160,7 @@ const StatusTooltip = () => {
       }
     >
       <InfoTooltipInner />
-    </Tooltip>
+    </CustomTooltip>
   );
 };
 
@@ -230,9 +231,9 @@ const CampaignsTable: FC<Props> = ({
           <Typography variant="subtitle2" mr={1}>
             DVT
           </Typography>
-          <Tooltip arrow placement="right" title="Daily Volume Target">
+          <CustomTooltip arrow placement="right" title="Daily Volume Target">
             <InfoTooltipInner width={24} height={24} />
-          </Tooltip>
+          </CustomTooltip>
         </>
       ),
       renderCell: (params) => {
@@ -261,11 +262,11 @@ const CampaignsTable: FC<Props> = ({
       renderCell: (params) => {
         const networkName = getNetworkName(params.row.chain_id);
         return (
-          <Tooltip title={networkName || 'Unknown Network'}>
+          <CustomTooltip title={networkName || 'Unknown Network'} placement="top">
             <Box display="flex" alignItems="center">
               {getChainIcon(params.row.chain_id)}
             </Box>
-          </Tooltip>
+          </CustomTooltip>
         );
       },
     },

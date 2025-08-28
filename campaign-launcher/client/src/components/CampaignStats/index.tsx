@@ -181,6 +181,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
             data={campaign.daily_paid_amounts}
             endDate={campaign.end_date}
             tokenSymbol={campaign.fund_token_symbol}
+            tokenDecimals={campaign.fund_token_decimals}
           />
         </Box>
       </Grid>

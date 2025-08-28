@@ -19,7 +19,6 @@ import {
   StepLabel,
   Stepper,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -32,12 +31,14 @@ import * as yup from 'yup';
 
 import { QUERY_KEYS } from '../../../constants/queryKeys';
 import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
+import { useIsMobile } from '../../../hooks/useBreakpoints';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
 import { useNetwork } from '../../../providers/NetworkProvider';
 import { constructCampaignDetails } from '../../../utils';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
+import CustomTooltip from '../../CustomTooltip';
 import FormExchangeSelect from '../../FormExchangeSelect';
 import InfoTooltipInner from '../../InfoTooltipInner';
 import { ModalError, ModalSuccess } from '../../ModalState';
@@ -110,10 +111,11 @@ const validationSchema = yup.object({
 const steps = ['Create Escrow', 'Fund Escrow', 'Setup Escrow'];
 
 const InfoTooltip = () => {
+  const isMobile = useIsMobile();
   return (
-    <Tooltip
+    <CustomTooltip
       arrow
-      placement="right"
+      placement={isMobile ? 'top' : 'right'}
       title={
         <>
           <Typography component="p" variant="tooltip" color="primary.contrast">
@@ -133,7 +135,7 @@ const InfoTooltip = () => {
       }
     >
       <InfoTooltipInner />
-    </Tooltip>
+    </CustomTooltip>
   );
 };
 
@@ -233,7 +235,6 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
       }}
     >
       {showFinalView && (
@@ -324,7 +325,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
               gap={3}
               width={{ xs: '100%', sm: 625 }}
             >
-              <Box display="flex" gap={2}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
                 <Box display="flex" gap={2} alignItems="center" width="100%">
                   <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
                     <Controller
@@ -403,8 +404,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     <FormHelperText>{errors.pair.message}</FormHelperText>
                   )}
                 </FormControl>
-              </Box>
-              <Box display="flex" gap={2}>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
                 <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
                   <Controller
                     name="start_date"
@@ -445,8 +446,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     <FormHelperText>{errors.end_date.message}</FormHelperText>
                   )}
                 </FormControl>
-              </Box>
-              <Box display="flex" gap={2}>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
                 <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
                   <InputLabel id="fund-token-select-label">
                     Fund Token
@@ -575,7 +576,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     </FormHelperText>
                   )}
                 </FormControl>
-              </Box>
+              </Stack>
               {stepsCompleted < steps.length ? (
                 <Button
                   size="large"
