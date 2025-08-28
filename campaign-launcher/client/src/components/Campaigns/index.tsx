@@ -11,6 +11,7 @@ import JoinedCampaigns from '../JoinedCampaigns';
 import MyCampaigns from '../MyCampaigns';
 
 const Campaigns: FC = () => {
+  const [showActiveCampaigns, setShowActiveCampaigns] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [campaignsView, setCampaignsView] = useState(() => {
     if (searchParams.size === 0) {
@@ -24,8 +25,7 @@ const Campaigns: FC = () => {
 
     return CampaignsView.ALL;
   });
-  const [showActiveCampaigns, setShowActiveCampaigns] = useState(false);
-
+  
   useEffect(() => {
     const viewFromUrl = searchParams.get('view');
     if (viewFromUrl) {

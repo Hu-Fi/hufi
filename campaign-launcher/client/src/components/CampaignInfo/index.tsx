@@ -14,10 +14,7 @@ const formatDate = (dateString: string): string => {
 
 const formatTime = (dateString: string): string => {
   const date = dayjs(dateString);
-  const offset = date.utcOffset();
-  const sign = offset >= 0 ? '+' : '-';
-  const hours = Math.floor(Math.abs(offset) / 60);
-  return `${date.format('HH:mm')} GMT${sign}${hours}`;
+  return date.format('HH:mm [GMT]Z');
 };
 
 type Props = {
