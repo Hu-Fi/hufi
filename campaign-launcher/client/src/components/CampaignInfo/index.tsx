@@ -5,30 +5,19 @@ import { Box, Typography } from '@mui/material';
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
 import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
+import dayjs from '../../utils/dayjs';
 import CustomTooltip from '../CustomTooltip';
 
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.toLocaleString('en-US', { month: 'short' });
-  const year = date.getFullYear();
-  return `${day} ${month} ${year}`;
+  return dayjs(dateString).format('D MMM YYYY');
 };
 
 const formatTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  let hours = date.getHours().toString();
-  if (+hours < 10) {
-    hours = '0' + hours;
-  }
-  let minutes = date.getMinutes().toString();
-  if (+minutes < 10) {
-    minutes = '0' + minutes;
-  }
-  const tzOffset = date.getTimezoneOffset();
-  const sign = tzOffset > 0 ? '-' : '+';
-  const tzHours = Math.floor(Math.abs(tzOffset) / 60);
-  return `${hours}:${minutes} GMT${sign}${tzHours}`;
+  const date = dayjs(dateString);
+  const offset = date.utcOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const hours = Math.floor(Math.abs(offset) / 60);
+  return `${date.format('HH:mm')} GMT${sign}${hours}`;
 };
 
 type Props = {

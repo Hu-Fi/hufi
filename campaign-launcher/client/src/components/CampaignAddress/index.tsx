@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useState } from "react"
+import { FC, MouseEvent, useEffect, useRef, useState } from "react"
 
 import { ChainId } from "@human-protocol/sdk"
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -13,7 +13,7 @@ type Props = {
   chainId: ChainId;
 }
 
-const handleAddressClick = (
+const handleOpenInExplorerClick = (
   e: MouseEvent<HTMLButtonElement>,
   chainId: ChainId,
   address: string
@@ -25,14 +25,30 @@ const handleAddressClick = (
 
 const CampaignAddress: FC<Props> = ({ address, chainId }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const isMobile = useIsMobile();
 
-  const handleCopy = (e: MouseEvent<HTMLButtonElement>) => {
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyClick = (e: MouseEvent<HTMLButtonElement>) => {
+    if (isCopied) return;
+    
     e.stopPropagation();
     navigator.clipboard.writeText(address);
     setIsCopied(true);
-    setTimeout(() => {
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
       setIsCopied(false);
     }, 1500);
   }
@@ -61,7 +77,8 @@ const CampaignAddress: FC<Props> = ({ address, chainId }) => {
         {isMobile ? formatAddress(address) : address}
       </Typography>
       <IconButton
-        onClick={(e) => handleCopy(e)}
+        disabled={isCopied}
+        onClick={handleCopyClick}
         sx={{
           color: 'text.secondary',
           p: 0,
@@ -74,7 +91,7 @@ const CampaignAddress: FC<Props> = ({ address, chainId }) => {
         </Tooltip>
       </IconButton>
       <IconButton
-        onClick={(e) => handleAddressClick(e, chainId, address)}
+        onClick={(e) => handleOpenInExplorerClick(e, chainId, address)}
         sx={{
           color: 'text.secondary',
           p: 0,
