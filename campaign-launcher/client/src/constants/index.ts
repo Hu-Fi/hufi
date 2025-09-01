@@ -25,7 +25,7 @@ export const USDT_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
 export const USDC_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
   [ChainId.POLYGON]: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
   [ChainId.POLYGON_AMOY]: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
-  [ChainId.SEPOLIA]: '0xf08A50178dfcDe18524640EA6618a1f965821715',
+  [ChainId.SEPOLIA]: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
 };
 
 export const TESTNET_CHAIN_IDS = [

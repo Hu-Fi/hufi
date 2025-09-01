@@ -59,6 +59,12 @@ type CampaignFormValues = {
   daily_volume_target: number;
 };
 
+const mapTokenToMinValue = {
+  usdt: 0.001,
+  usdc: 0.001,
+  hmt: 0.1,
+}
+
 const validationSchema = yup.object({
   exchange: yup.string().required('Required'),
   pair: yup.string().required('Required'),
@@ -68,16 +74,13 @@ const validationSchema = yup.object({
     .typeError('Fund amount is required')
     .required('Fund amount is required')
     .test('min-amount', function (value) {
-      if (!value)
-        return this.createError({ message: 'Must be greater than 0' });
-
-      const fundToken: string = this.parent.fund_token;
-      if ((fundToken === 'usdt' || fundToken === 'usdc') && value < 0.001) {
+      if (!value) return this.createError({ message: 'Must be greater than 0' });
+      const fundToken: keyof typeof mapTokenToMinValue = this.parent.fund_token;
+      const minValue = mapTokenToMinValue[fundToken];
+      if (mapTokenToMinValue[fundToken] && value < minValue) {
         return this.createError({
-          message:`Minimum amount for ${fundToken.toUpperCase()} is 0.001`,
+          message:`Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
         });
-      } else if (fundToken === 'hmt' && value < 0.1) {
-        return this.createError({ message: 'Minimum amount for HMT is 0.1' });
       }
 
       return true;

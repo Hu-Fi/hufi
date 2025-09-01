@@ -15,7 +15,7 @@ export const TOKENS: TokenData[] = [
   },
   {
     name: 'usdt',
-    label: 'USDT',
+    label: 'USDT0',
     icon: usdtLogo,
   },
   {
