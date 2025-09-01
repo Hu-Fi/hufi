@@ -30,7 +30,7 @@ import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
 import { QUERY_KEYS } from '../../../constants/queryKeys';
-import { FUND_TOKENS, TOKENS } from '../../../constants/tokens';
+import { FUND_TOKENS, FundToken } from '../../../constants/tokens';
 import { useIsMobile } from '../../../hooks/useBreakpoints';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
@@ -59,6 +59,12 @@ type CampaignFormValues = {
   daily_volume_target: number;
 };
 
+const mapTokenToMinValue: Record<FundToken, number> = {
+  usdt: 0.001,
+  usdc: 0.001,
+  hmt: 0.1,
+}
+
 const validationSchema = yup.object({
   exchange: yup.string().required('Required'),
   pair: yup.string().required('Required'),
@@ -68,16 +74,13 @@ const validationSchema = yup.object({
     .typeError('Fund amount is required')
     .required('Fund amount is required')
     .test('min-amount', function (value) {
-      if (!value)
-        return this.createError({ message: 'Must be greater than 0' });
-
-      const fundToken = this.parent.fund_token;
-      if (fundToken === 'usdt' && value < 0.001) {
+      if (!value) return this.createError({ message: 'Must be greater than 0' });
+      const fundToken: FundToken = this.parent.fund_token;
+      const minValue = mapTokenToMinValue[fundToken];
+      if (value < minValue) {
         return this.createError({
-          message: 'Minimum amount for USDT is 0.001',
+          message:`Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
         });
-      } else if (fundToken === 'hmt' && value < 0.1) {
-        return this.createError({ message: 'Minimum amount for HMT is 0.1' });
       }
 
       return true;
@@ -471,13 +474,13 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         {...field}
                         disabled={isCreatingEscrow}
                       >
-                        {TOKENS.filter((token) =>
-                          FUND_TOKENS.includes(token.name)
-                        ).map((token) => (
-                          <MenuItem key={token.name} value={token.name}>
-                            <CryptoEntity name={token.name} />
-                          </MenuItem>
-                        ))}
+                        {
+                          FUND_TOKENS.map((token) => (
+                            <MenuItem key={token} value={token}>
+                              <CryptoEntity name={token} />
+                            </MenuItem>
+                          ))
+                        }
                       </Select>
                     )}
                   />
