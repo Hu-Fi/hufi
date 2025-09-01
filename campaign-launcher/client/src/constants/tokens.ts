@@ -9,6 +9,21 @@ import { TokenData } from '../types';
 
 export const TOKENS: TokenData[] = [
   {
+    name: 'hmt',
+    label: 'HMT',
+    icon: hmtLogo,
+  },
+  {
+    name: 'usdt',
+    label: 'USDT',
+    icon: usdtLogo,
+  },
+  {
+    name: 'usdc',
+    label: 'USDC',
+    icon: usdcLogo,
+  },
+  {
     name: 'btc',
     label: 'BTC',
     icon: btcLogo,
@@ -24,16 +39,6 @@ export const TOKENS: TokenData[] = [
     icon: bnbLogo,
   },
   {
-    name: 'usdt',
-    label: 'USDT',
-    icon: usdtLogo,
-  },
-  {
-    name: 'usdc',
-    label: 'USDC',
-    icon: usdcLogo,
-  },
-  {
     name: 'husd',
     label: 'HUSD',
     icon: usdcLogo,
@@ -42,12 +47,7 @@ export const TOKENS: TokenData[] = [
     name: 'xin',
     label: 'XIN',
     icon: xinLogo,
-  },
-  {
-    name: 'hmt',
-    label: 'HMT',
-    icon: hmtLogo,
-  },
+  }, 
 ];
 
-export const FUND_TOKENS = ['usdt', 'hmt'];
+export const FUND_TOKENS = ['hmt', 'usdt', 'usdc'];

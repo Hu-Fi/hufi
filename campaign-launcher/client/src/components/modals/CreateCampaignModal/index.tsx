@@ -71,10 +71,10 @@ const validationSchema = yup.object({
       if (!value)
         return this.createError({ message: 'Must be greater than 0' });
 
-      const fundToken = this.parent.fund_token;
-      if (fundToken === 'usdt' && value < 0.001) {
+      const fundToken: string = this.parent.fund_token;
+      if ((fundToken === 'usdt' || fundToken === 'usdc') && value < 0.001) {
         return this.createError({
-          message: 'Minimum amount for USDT is 0.001',
+          message:`Minimum amount for ${fundToken.toUpperCase()} is 0.001`,
         });
       } else if (fundToken === 'hmt' && value < 0.1) {
         return this.createError({ message: 'Minimum amount for HMT is 0.1' });
