@@ -25,13 +25,8 @@ export class AdminService {
       throw new Error('Campaign not found');
     }
 
-    const participants = await this.userCampaignsRepository.findCampaignUsers(
-      campaign.id,
-    );
-
     const progress = await this.campaignsService.checkCampaignProgressForPeriod(
       campaign,
-      participants,
       new Date(fromDate),
       new Date(toDate),
     );

@@ -139,13 +139,24 @@ export class CampaignParamsDto {
 }
 
 export class GetUserProgressResponseDto {
-  @ApiProperty({
-    name: 'total_score',
-  })
-  totalScore: number;
+  @ApiProperty()
+  from: string;
+
+  @ApiProperty()
+  to: string;
 
   @ApiProperty({
     name: 'total_volume',
   })
   totalVolume: number;
+
+  @ApiProperty({
+    name: 'my_score',
+  })
+  myScore: number;
+
+  @ApiProperty({
+    name: 'my_volume',
+  })
+  myVolume: number;
 }

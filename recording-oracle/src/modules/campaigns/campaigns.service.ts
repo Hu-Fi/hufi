@@ -12,6 +12,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
 import Environment from '@/common/utils/environment';
@@ -24,13 +25,14 @@ import logger from '@/logger';
 import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
-import type { UserEntity } from '@/modules/users';
+import { UsersRepository } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
   CampaignNotFoundError,
+  CampaignNotStartedError,
   InvalidCampaign,
   UserIsNotParticipatingError,
 } from './campaigns.errors';
@@ -45,6 +47,7 @@ import {
 import {
   CampaignEscrowInfo,
   CampaignManifest,
+  CampaignProgress,
   CampaignStatus,
   CampaignType,
   IntermediateResult,
@@ -64,6 +67,16 @@ const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_HOUR;
 
+const campaignsProgressCache = new LRUCache({
+  ttl: 1000 * 60 * 10,
+  max: 4200,
+  ttlAutopurge: true,
+  allowStale: false,
+  noUpdateTTL: false,
+  updateAgeOnGet: false,
+  updateAgeOnHas: false,
+});
+
 @Injectable()
 export class CampaignsService {
   private readonly logger = logger.child({
@@ -74,6 +87,7 @@ export class CampaignsService {
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
+    private readonly userRepository: UsersRepository,
     private readonly storageService: StorageService,
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
@@ -429,12 +443,8 @@ export class CampaignsService {
             return;
           }
 
-          const campaignParticipants =
-            await this.userCampaignsRepository.findCampaignUsers(campaign.id);
-
           const progress = await this.checkCampaignProgressForPeriod(
             campaign,
-            campaignParticipants,
             startDate,
             endDate,
           );
@@ -475,7 +485,6 @@ export class CampaignsService {
 
   async checkCampaignProgressForPeriod(
     campaign: CampaignEntity,
-    participants: UserEntity[],
     startDate: Date,
     endDate: Date,
   ): Promise<IntermediateResult> {
@@ -487,6 +496,10 @@ export class CampaignsService {
         tradingPeriodStart: startDate,
         tradingPeriodEnd: endDate,
       },
+    );
+
+    const participants = await this.userCampaignsRepository.findCampaignUsers(
+      campaign.id,
     );
 
     let totalVolume = 0;
@@ -719,27 +732,53 @@ export class CampaignsService {
       throw new UserIsNotParticipatingError();
     }
 
-    const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
-      userId,
-      campaign.exchangeName,
-    );
+    const user = await this.userRepository.findOneById(userId);
 
-    const campaignProgressChecker = this.getCampaignProgressChecker(
-      campaign.type,
-      {
-        exchangeName: campaign.exchangeName,
-        tradingPair: campaign.pair,
-        tradingPeriodStart: campaign.startDate,
-        tradingPeriodEnd: campaign.endDate,
-      },
-    );
+    const now = dayjs(new Date());
+    if (now.isBefore(campaign.startDate)) {
+      throw new CampaignNotStartedError(chainId, campaignAddress);
+    }
+    if (now.isAfter(campaign.endDate)) {
+      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
+    }
 
-    const participantOutcomes =
-      await campaignProgressChecker.checkForParticipant({
-        apiKey: exchangeApiKey.apiKey,
-        secret: exchangeApiKey.secretKey,
+    // Calculate start of the active timeframe (end is now)
+    const timeframesPassed = now.diff(dayjs(campaign.startDate), 'day');
+
+    const timeframeStart = dayjs(campaign.startDate)
+      .add(timeframesPassed, 'day')
+      .toDate();
+
+    const cacheKey = `${campaign.chainId}-${campaign.address}-${timeframeStart}`;
+
+    if (!campaignsProgressCache.has(cacheKey)) {
+      const progress = await this.checkCampaignProgressForPeriod(
+        campaign,
+        timeframeStart,
+        now.toDate(),
+      );
+
+      campaignsProgressCache.set(cacheKey, {
+        from: progress.from,
+        to: progress.to,
+        total_volume: progress.total_volume,
+        participants_outcomes: progress.participants_outcomes_batches.flatMap(
+          (batch) => batch.results,
+        ),
       });
+    }
 
-    return participantOutcomes;
+    const progress = campaignsProgressCache.get(cacheKey) as CampaignProgress;
+    const participant = progress.participants_outcomes.find(
+      (p) => p.address === user?.evmAddress,
+    );
+
+    return {
+      from: progress.from,
+      to: progress.to,
+      totalVolume: progress.total_volume,
+      myScore: participant?.score ?? 0,
+      myVolume: participant?.total_volume ?? 0,
+    };
   }
 }

@@ -28,6 +28,15 @@ export class CampaignAlreadyFinishedError extends BaseError {
   }
 }
 
+export class CampaignNotStartedError extends BaseError {
+  constructor(
+    readonly chainId: number,
+    readonly address: string,
+  ) {
+    super('Campaign not started yet');
+  }
+}
+
 export class UserIsNotParticipatingError extends BaseError {
   constructor() {
     super('User is not participating in campaign');

@@ -183,15 +183,11 @@ export class CampaignsController {
     @Param() { chainId, campaignAddress }: CampaignParamsDto,
   ): Promise<GetUserProgressResponseDto> {
     try {
-      const userProgress = await this.campaignsService.getUserProgress(
+      return this.campaignsService.getUserProgress(
         request.user.id,
         chainId,
         campaignAddress,
       );
-      return {
-        totalVolume: userProgress.totalVolume,
-        totalScore: userProgress.score,
-      };
     } catch (error) {
       if (error instanceof CampaignNotFoundError) {
         throw new HttpException(

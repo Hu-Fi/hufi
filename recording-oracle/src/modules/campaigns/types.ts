@@ -59,3 +59,10 @@ export type IntermediateResultsData = {
   pair: string;
   results: IntermediateResult[];
 };
+
+export type CampaignProgress = {
+  from: string;
+  to: string;
+  total_volume: number;
+  participants_outcomes: ParticipantOutcome[];
+};
