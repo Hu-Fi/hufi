@@ -175,7 +175,7 @@ export class CampaignsController {
     description: 'Details about user progress',
     type: GetUserProgressResponseDto,
   })
-  @Header('Cache-Control', 'private, max-age=60')
+  @Header('Cache-Control', 'private, max-age=30')
   @HttpCode(200)
   @Get('/:chain_id-:campaign_address/my-progress')
   async getUserProgress(
@@ -185,6 +185,7 @@ export class CampaignsController {
     try {
       return this.campaignsService.getUserProgress(
         request.user.id,
+        request.user.evmAddress,
         chainId,
         campaignAddress,
       );

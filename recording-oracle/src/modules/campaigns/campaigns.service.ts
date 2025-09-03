@@ -70,8 +70,9 @@ const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
 const campaignsProgressCache = new LRUCache({
   ttl: 1000 * 60 * 10,
   max: 4200,
-  ttlAutopurge: true,
+  ttlAutopurge: false,
   allowStale: false,
+  noDeleteOnStaleGet: false,
   noUpdateTTL: false,
   updateAgeOnGet: false,
   updateAgeOnHas: false,
@@ -87,7 +88,6 @@ export class CampaignsService {
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
-    private readonly userRepository: UsersRepository,
     private readonly storageService: StorageService,
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
@@ -712,6 +712,7 @@ export class CampaignsService {
 
   async getUserProgress(
     userId: string,
+    evmAddress: string,
     chainId: number,
     campaignAddress: string,
   ) {
@@ -732,30 +733,29 @@ export class CampaignsService {
       throw new UserIsNotParticipatingError();
     }
 
-    const user = await this.userRepository.findOneById(userId);
-
-    const now = dayjs(new Date());
-    if (now.isBefore(campaign.startDate)) {
+    const now = new Date();
+    if (now < campaign.startDate) {
       throw new CampaignNotStartedError(chainId, campaignAddress);
     }
-    if (now.isAfter(campaign.endDate)) {
+    if (now > campaign.endDate) {
       throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
     // Calculate start of the active timeframe (end is now)
-    const timeframesPassed = now.diff(dayjs(campaign.startDate), 'day');
+    const timeframesPassed = dayjs(now).diff(campaign.startDate, 'day');
 
     const timeframeStart = dayjs(campaign.startDate)
       .add(timeframesPassed, 'day')
       .toDate();
 
+    // Using timeframeStart in a key to prevent situations where new timeframe has started but the value in cache is still here
     const cacheKey = `${campaign.chainId}-${campaign.address}-${timeframeStart}`;
 
     if (!campaignsProgressCache.has(cacheKey)) {
       const progress = await this.checkCampaignProgressForPeriod(
         campaign,
         timeframeStart,
-        now.toDate(),
+        now,
       );
 
       campaignsProgressCache.set(cacheKey, {
@@ -770,7 +770,7 @@ export class CampaignsService {
 
     const progress = campaignsProgressCache.get(cacheKey) as CampaignProgress;
     const participant = progress.participants_outcomes.find(
-      (p) => p.address === user?.evmAddress,
+      (p) => p.address === evmAddress,
     );
 
     return {
