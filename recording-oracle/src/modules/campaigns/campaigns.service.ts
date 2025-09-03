@@ -25,7 +25,6 @@ import logger from '@/logger';
 import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
-import { UsersRepository } from '@/modules/users';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
