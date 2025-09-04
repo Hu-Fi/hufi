@@ -46,8 +46,10 @@ import { CampaignsService } from './campaigns.service';
 import {
   generateCampaignEntity,
   generateCampaignManifest,
+  generateCampaignProgress,
   generateIntermediateResult,
   generateIntermediateResultsData,
+  generateParticipantOutcome,
   generateProgressCheckerSetup,
   generateStoredResultsMeta,
 } from './fixtures';
@@ -56,7 +58,7 @@ import {
   MarketMakingResultsChecker,
   ProgressCheckResult,
 } from './progress-checking';
-import { CampaignStatus } from './types';
+import { CampaignStatus, IntermediateResultsData } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 import { ExchangeApiClientFactory } from '../exchange';
@@ -899,14 +901,14 @@ describe('CampaignsService', () => {
     let periodStart: Date;
     let periodEnd: Date;
     let campaign: CampaignEntity;
-    let mockParticipantOutcome: ProgressCheckResult;
+    let mockParticipantResult: ProgressCheckResult;
 
     beforeAll(() => {
       periodEnd = new Date();
       periodStart = dayjs(periodEnd).subtract(1, 'day').toDate();
       campaign = generateCampaignEntity();
 
-      mockParticipantOutcome = {
+      mockParticipantResult = {
         abuseDetected: false,
         totalVolume: faker.number.float(),
         score: faker.number.float(),
@@ -924,7 +926,7 @@ describe('CampaignsService', () => {
 
     beforeEach(() => {
       mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValue(
-        mockParticipantOutcome,
+        mockParticipantResult,
       );
       mockExchangeApiKeysService.retrieve.mockImplementation(
         async (userId) => ({
@@ -952,26 +954,23 @@ describe('CampaignsService', () => {
 
       expect(progress.from).toBe(periodStart.toISOString());
       expect(progress.to).toBe(periodEnd.toISOString());
-      expect(progress.total_volume).toBe(mockParticipantOutcome.totalVolume);
-      expect(progress.participants_outcomes_batches.length).toBe(1);
-
-      const participantsOutcomeBatch =
-        progress.participants_outcomes_batches[0];
-      expect(isUuidV4(participantsOutcomeBatch.id)).toBe(true);
-      expect(participantsOutcomeBatch.results).toEqual([
+      expect(progress.total_volume).toBe(mockParticipantResult.totalVolume);
+      expect(progress.participants_outcomes).toEqual([
         {
           address: participant.evmAddress,
-          score: mockParticipantOutcome.score,
-          total_volume: mockParticipantOutcome.totalVolume,
+          score: mockParticipantResult.score,
+          total_volume: mockParticipantResult.totalVolume,
         },
       ]);
     });
 
     it('should calculate results for each participant', async () => {
       const participants = [generateUserEntity(), generateUserEntity()];
+
       mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce(
         participants,
       );
+
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
         periodStart,
@@ -979,7 +978,7 @@ describe('CampaignsService', () => {
       );
 
       expect(progress.total_volume).toBe(
-        mockParticipantOutcome.totalVolume * participants.length,
+        mockParticipantResult.totalVolume * participants.length,
       );
 
       for (const { id: participantId } of participants) {
@@ -994,30 +993,6 @@ describe('CampaignsService', () => {
           secret: `${participantId}-secretKey`,
         });
       }
-    });
-
-    it('should return batched results', async () => {
-      const participants = [
-        generateUserEntity(),
-        generateUserEntity(),
-        generateUserEntity(),
-      ];
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce(
-        participants,
-      );
-
-      const progress = await campaignsService.checkCampaignProgressForPeriod(
-        campaign,
-        periodStart,
-        periodEnd,
-      );
-
-      expect(progress.total_volume).toBe(
-        mockParticipantOutcome.totalVolume * participants.length,
-      );
-      expect(progress.participants_outcomes_batches.length).toBe(2);
-      expect(progress.participants_outcomes_batches[0].results.length).toBe(2);
-      expect(progress.participants_outcomes_batches[1].results.length).toBe(1);
     });
 
     it('should skip participant results if abuse detected', async () => {
@@ -1049,13 +1024,13 @@ describe('CampaignsService', () => {
       );
 
       expect(progress.total_volume).toBe(normalParticipantResult.totalVolume);
-      expect(progress.participants_outcomes_batches.length).toBe(1);
-      expect(progress.participants_outcomes_batches[0].results.length).toBe(1);
-      expect(progress.participants_outcomes_batches[0].results[0]).toEqual({
-        address: normalParticipant.evmAddress,
-        score: normalParticipantResult.score,
-        total_volume: normalParticipantResult.totalVolume,
-      });
+      expect(progress.participants_outcomes).toEqual([
+        {
+          address: normalParticipant.evmAddress,
+          score: normalParticipantResult.score,
+          total_volume: normalParticipantResult.totalVolume,
+        },
+      ]);
 
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
@@ -1071,7 +1046,6 @@ describe('CampaignsService', () => {
   });
 
   describe('recordCampaignProgress', () => {
-    const participants = [generateUserEntity()];
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;
@@ -1117,9 +1091,6 @@ describe('CampaignsService', () => {
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
       });
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce(
-        participants,
-      );
     });
 
     it('should run with pessimistic lock', async () => {
@@ -1171,7 +1142,7 @@ describe('CampaignsService', () => {
       it('should log errors when fails to record intermediate results', async () => {
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-          generateIntermediateResult(),
+          generateCampaignProgress(),
         );
 
         const syntheticError = new Error(faker.lorem.word());
@@ -1315,9 +1286,9 @@ describe('CampaignsService', () => {
     it('should record campaign progress when no results yet', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const intermediateResult = generateIntermediateResult();
+      const campaignProgress = generateCampaignProgress();
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        intermediateResult,
+        campaignProgress,
       );
 
       await campaignsService.recordCampaignProgress(campaign);
@@ -1328,7 +1299,15 @@ describe('CampaignsService', () => {
         address: campaign.address,
         exchange: campaign.exchangeName,
         pair: campaign.pair,
-        results: [intermediateResult],
+        results: [
+          {
+            from: campaignProgress.from,
+            to: campaignProgress.to,
+            total_volume: 0,
+            reserved_funds: 0,
+            participants_outcomes_batches: [],
+          },
+        ],
       });
     });
 
@@ -1341,14 +1320,23 @@ describe('CampaignsService', () => {
         intermediateResultsData,
       );
 
-      const newIntermediateResult = generateIntermediateResult();
+      const newCampaignProgress = generateCampaignProgress();
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        newIntermediateResult,
+        newCampaignProgress,
       );
 
       const expectedNewIntermediateResultsData = {
         ...intermediateResultsData,
-        results: [...intermediateResultsData.results, newIntermediateResult],
+        results: [
+          ...intermediateResultsData.results,
+          {
+            from: newCampaignProgress.from,
+            to: newCampaignProgress.to,
+            total_volume: 0,
+            reserved_funds: 0,
+            participants_outcomes_batches: [],
+          },
+        ],
       };
 
       await campaignsService.recordCampaignProgress(campaign);
@@ -1359,13 +1347,92 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should record correctly calculated reserved funds', async () => {
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const totalVolume = faker.number.float({
+        min: 0,
+        max: Number(campaign.dailyVolumeTarget) * 2,
+      });
+
+      const campaignProgress = generateCampaignProgress();
+      campaignProgress.total_volume = totalVolume;
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedRewardPool = campaignsService.calculateRewardPool({
+        maxRewardPool: campaignsService.calculateDailyReward(campaign),
+        totalGeneratedVolume: totalVolume,
+        volumeTarget: Number(campaign.dailyVolumeTarget),
+      });
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith({
+        chain_id: campaign.chainId,
+        address: campaign.address,
+        exchange: campaign.exchangeName,
+        pair: campaign.pair,
+        results: [
+          {
+            from: campaignProgress.from,
+            to: campaignProgress.to,
+            total_volume: totalVolume,
+            reserved_funds: expectedRewardPool,
+            participants_outcomes_batches: [],
+          },
+        ],
+      });
+    });
+
+    it('should record participant results in batches', async () => {
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const participantOutcomes = [
+        generateParticipantOutcome(),
+        generateParticipantOutcome(),
+        generateParticipantOutcome(),
+      ];
+
+      const campaignProgress = generateCampaignProgress();
+      campaignProgress.participants_outcomes = participantOutcomes;
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+
+      const intermediateResultsData = spyOnRecordCampaignIntermediateResults
+        .mock.calls[0][0] as IntermediateResultsData;
+
+      const recordedIntermediateResult = intermediateResultsData.results[0];
+
+      const firstBatch =
+        recordedIntermediateResult.participants_outcomes_batches[0];
+
+      expect(isUuidV4(firstBatch.id)).toBe(true);
+      expect(firstBatch.results.length).toBe(2);
+      expect(firstBatch.results[0]).toEqual(participantOutcomes[0]);
+      expect(firstBatch.results[1]).toEqual(participantOutcomes[1]);
+
+      const secondBatch =
+        recordedIntermediateResult.participants_outcomes_batches[1];
+      expect(isUuidV4(secondBatch.id)).toBe(true);
+      expect(secondBatch.results.length).toBe(1);
+      expect(secondBatch.results[0]).toEqual(participantOutcomes[2]);
+    });
+
     it('should not move campaign to "pending_completion" if not ended yet', async () => {
       const now = new Date();
       jest.useFakeTimers({ now });
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        generateIntermediateResult(),
+        generateCampaignProgress(),
       );
       spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
         generateStoredResultsMeta(),
@@ -1400,7 +1467,7 @@ describe('CampaignsService', () => {
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        generateIntermediateResult(lastResultsEndDate),
+        generateCampaignProgress(lastResultsEndDate),
       );
       spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
         generateStoredResultsMeta(),
@@ -1440,7 +1507,7 @@ describe('CampaignsService', () => {
         }),
       );
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        generateIntermediateResult(campaign.endDate),
+        generateCampaignProgress(campaign.endDate),
       );
       spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
         generateStoredResultsMeta(),
@@ -1505,26 +1572,32 @@ describe('CampaignsService', () => {
     it('should record generated volume stat', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const intermediateResult = generateIntermediateResult();
+      const campaignProgress = generateCampaignProgress();
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        intermediateResult,
+        campaignProgress,
+      );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
       );
 
       await campaignsService.recordCampaignProgress(campaign);
 
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(
-        campaign,
-        intermediateResult,
-      );
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
+        from: campaignProgress.from,
+        to: campaignProgress.to,
+        total_volume: 0,
+        reserved_funds: 0,
+        participants_outcomes_batches: [],
+      });
     });
 
     it('should log recording details once results recorded', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const intermediateResult = generateIntermediateResult();
+      const campaignProgress = generateCampaignProgress();
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        intermediateResult,
+        campaignProgress,
       );
       const storedResultsMeta = generateStoredResultsMeta();
       spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
@@ -1535,9 +1608,10 @@ describe('CampaignsService', () => {
 
       expect(logger.info).toHaveBeenCalledTimes(1);
       expect(logger.info).toHaveBeenCalledWith('Campaign progress recorded', {
-        from: intermediateResult.from,
-        to: intermediateResult.to,
-        total_volume: intermediateResult.total_volume,
+        from: campaignProgress.from,
+        to: campaignProgress.to,
+        total_volume: 0,
+        reserved_funds: 0,
         resultsUrl: storedResultsMeta.url,
       });
 
@@ -1872,13 +1946,15 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
-      const mockCheckCampaignProgressForPeriod = generateIntermediateResult();
 
       campaign.startDate = dayjs().subtract(2, 'day').toDate();
       const now = dayjs(campaign.startDate).add(2, 'day').add(4, 'h').toDate();
+
       jest.useFakeTimers({ now });
+
+      const campaignProgress = generateCampaignProgress();
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        mockCheckCampaignProgressForPeriod,
+        campaignProgress,
       );
 
       await campaignsService.getUserProgress(
@@ -1887,6 +1963,8 @@ describe('CampaignsService', () => {
         chainId,
         campaign.address,
       );
+
+      jest.useRealTimers();
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(2, 'day')

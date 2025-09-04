@@ -612,7 +612,7 @@ export class CampaignsService {
     return JSON.parse(intermediateResults.toString());
   }
 
-  private calculateDailyReward(campaign: CampaignEntity): number {
+  calculateDailyReward(campaign: CampaignEntity): number {
     const campaignDurationDays = Math.ceil(
       dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
     );
@@ -622,7 +622,7 @@ export class CampaignsService {
     return decimalUtils.div(fundAmount, campaignDurationDays);
   }
 
-  private calculateRewardPool(input: {
+  calculateRewardPool(input: {
     maxRewardPool: number;
     totalGeneratedVolume: number;
     volumeTarget: number;
@@ -807,9 +807,7 @@ export class CampaignsService {
         from: progress.from,
         to: progress.to,
         total_volume: progress.total_volume,
-        participants_outcomes: progress.participants_outcomes_batches.flatMap(
-          (batch) => batch.results,
-        ),
+        participants_outcomes: progress.participants_outcomes,
       });
     }
 

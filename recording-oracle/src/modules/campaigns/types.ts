@@ -40,13 +40,6 @@ export type ParticipantOutcome = {
   total_volume: number;
 };
 
-export type CampaignProgress = {
-  from: string;
-  to: string;
-  total_volume: number;
-  participants_outcomes: ParticipantOutcome[];
-};
-
 export type ParticipantsOutcomesBatch = {
   id: string;
   results: ParticipantOutcome[];
