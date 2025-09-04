@@ -44,13 +44,13 @@ import {
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
 import {
+  generateCampaignEntity,
   generateCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
   generateProgressCheckerSetup,
   generateStoredResultsMeta,
 } from './fixtures';
-import { generateCampaignEntity } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
   MarketMakingResultsChecker,
@@ -940,10 +940,12 @@ describe('CampaignsService', () => {
 
     it('should return results in correct format', async () => {
       const participant = generateUserEntity();
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
+        participant,
+      ]);
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
-        [participant],
         periodStart,
         periodEnd,
       );
@@ -967,10 +969,11 @@ describe('CampaignsService', () => {
 
     it('should calculate results for each participant', async () => {
       const participants = [generateUserEntity(), generateUserEntity()];
-
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce(
+        participants,
+      );
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
-        participants,
         periodStart,
         periodEnd,
       );
@@ -999,10 +1002,12 @@ describe('CampaignsService', () => {
         generateUserEntity(),
         generateUserEntity(),
       ];
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce(
+        participants,
+      );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
-        participants,
         periodStart,
         periodEnd,
       );
@@ -1018,6 +1023,10 @@ describe('CampaignsService', () => {
     it('should skip participant results if abuse detected', async () => {
       const abuseParticipant = generateUserEntity();
       const normalParticipant = generateUserEntity();
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
+        abuseParticipant,
+        normalParticipant,
+      ]);
 
       const normalParticipantResult = {
         abuseDetected: false,
@@ -1035,7 +1044,6 @@ describe('CampaignsService', () => {
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
-        [abuseParticipant, normalParticipant],
         periodStart,
         periodEnd,
       );
@@ -1205,7 +1213,6 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        participants,
         expectedStartDate,
         expectedEndDate,
       );
@@ -1229,7 +1236,6 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        participants,
         expectedStartDate,
         expectedEndDate,
       );
@@ -1281,7 +1287,6 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        participants,
         expectedStartDate,
         expectedEndDate,
       );
@@ -1302,7 +1307,6 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        participants,
         expectedStartDate,
         expectedEndDate,
       );
@@ -1767,13 +1771,16 @@ describe('CampaignsService', () => {
       createMock<MarketMakingResultsChecker>();
 
     let spyOnGetCampaignProgressChecker: jest.SpyInstance;
+    let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
 
     let userId: string;
+    let evmAddress: string;
     let chainId: number;
     let campaign: CampaignEntity;
 
     beforeAll(() => {
       userId = faker.string.uuid();
+      evmAddress = faker.finance.ethereumAddress();
       chainId = generateTestnetChainId();
       campaign = generateCampaignEntity();
 
@@ -1781,6 +1788,12 @@ describe('CampaignsService', () => {
         campaignsService as any,
         'getCampaignProgressChecker',
       );
+
+      spyOnCheckCampaignProgressForPeriod = jest.spyOn(
+        campaignsService,
+        'checkCampaignProgressForPeriod',
+      );
+      spyOnCheckCampaignProgressForPeriod.mockImplementation();
     });
 
     beforeEach(() => {
@@ -1791,6 +1804,7 @@ describe('CampaignsService', () => {
 
     afterAll(() => {
       spyOnGetCampaignProgressChecker.mockRestore();
+      spyOnCheckCampaignProgressForPeriod.mockRestore();
     });
 
     it('should throw if campaign not found', async () => {
@@ -1802,6 +1816,7 @@ describe('CampaignsService', () => {
       try {
         await campaignsService.getUserProgress(
           userId,
+          evmAddress,
           chainId,
           campaign.address,
         );
@@ -1837,6 +1852,7 @@ describe('CampaignsService', () => {
       try {
         await campaignsService.getUserProgress(
           userId,
+          evmAddress,
           chainId,
           campaign.address,
         );
@@ -1856,57 +1872,30 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
+      const mockCheckCampaignProgressForPeriod = generateIntermediateResult();
 
-      const mockApiKey = `${userId}-apiKey`;
-      const mockSecretKey = `${userId}-secretKey`;
-      mockExchangeApiKeysService.retrieve.mockResolvedValueOnce({
-        id: faker.string.uuid(),
-        apiKey: mockApiKey,
-        secretKey: mockSecretKey,
-      });
-
-      const mockParticipantOutcome: ProgressCheckResult = {
-        totalVolume: faker.number.float(),
-        score: faker.number.float(),
-        abuseDetected: false,
-      };
-      mockMarketMakingResultsChecker.checkForParticipant.mockResolvedValue(
-        mockParticipantOutcome,
+      campaign.startDate = dayjs().subtract(2, 'day').toDate();
+      const now = dayjs(campaign.startDate).add(2, 'day').add(4, 'h').toDate();
+      jest.useFakeTimers({ now });
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        mockCheckCampaignProgressForPeriod,
       );
 
-      const result = await campaignsService.getUserProgress(
+      await campaignsService.getUserProgress(
         userId,
+        evmAddress,
         chainId,
         campaign.address,
       );
 
-      expect(result).toEqual(mockParticipantOutcome);
-
-      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(1);
-      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledWith(
-        userId,
-        campaign.exchangeName,
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(2, 'day')
+        .toDate();
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+        campaign,
+        expectedTimeframeStart,
+        now,
       );
-
-      expect(spyOnGetCampaignProgressChecker).toHaveBeenCalledWith(
-        campaign.type,
-        {
-          exchangeName: campaign.exchangeName,
-          tradingPair: campaign.pair,
-          tradingPeriodStart: campaign.startDate,
-          tradingPeriodEnd: campaign.endDate,
-        },
-      );
-
-      expect(
-        mockMarketMakingResultsChecker.checkForParticipant,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockMarketMakingResultsChecker.checkForParticipant,
-      ).toHaveBeenCalledWith({
-        apiKey: mockApiKey,
-        secret: mockSecretKey,
-      });
     });
   });
 });

@@ -22,8 +22,8 @@ export class JwtHttpStrategy extends PassportStrategy(
   async validate(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Req() _request: any,
-    payload: { user_id: string },
-  ): Promise<{ id: string }> {
-    return { id: payload.user_id };
+    payload: { user_id: string; wallet_address: string },
+  ): Promise<{ id: string; evmAddress: string }> {
+    return { id: payload.user_id, evmAddress: payload.wallet_address };
   }
 }
