@@ -62,7 +62,7 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_30_MINUTES;
 
-const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
+const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_HOUR;
 
@@ -348,6 +348,22 @@ export class CampaignsService {
         await this.campaignsRepository.findForProgressRecording();
 
       for (const campaign of campaignsToCheck) {
+        const signer = this.web3Service.getSigner(campaign.chainId);
+        const escrowClient = await EscrowClient.build(signer);
+        const escrowStatus = await escrowClient.getStatus(campaign.address);
+        /**
+         * Safety-belt for case when tracking job
+         * has not cancelled this campaign yet, but
+         * it's already cancelled on blockchain
+         */
+        if (escrowStatus === EscrowStatus.Cancelled) {
+          this.logger.warn('Campaign cancelled, skipping progress recording', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          continue;
+        }
         /**
          * Right now for simplicity process sequentially.
          * Later we can add "fastq" usage for parallel processing
@@ -375,7 +391,7 @@ export class CampaignsService {
           action: 'record-campaign-progress',
           campaignId: campaign.id,
           chainId: campaign.chainId,
-          campaignAdddress: campaign.address,
+          campaignAddress: campaign.address,
           exchangeName: campaign.exchangeName,
           pair: campaign.pair,
         });
@@ -544,6 +560,8 @@ export class CampaignsService {
       if (participantOutcomes.abuseDetected) {
         this.logger.warn('Abuse detected. Skipping participant outcome', {
           campaignId: campaign.id,
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
           participantId: participant.id,
           startDate,
           endDate,
@@ -701,13 +719,13 @@ export class CampaignsService {
     }
   }
 
-  @Cron(COMPLETION_TRACKING_SCHEDULE)
-  async trackCampaignsCompletion(): Promise<void> {
-    this.logger.debug('Campaigns completion tracking job started');
+  @Cron(CAMPAIGNS_FINISH_TRACKING_SCHEDULE)
+  async trackCampaignsFinish(): Promise<void> {
+    this.logger.debug('Campaigns finish tracking job started');
 
     try {
       const campaignsToTrack =
-        await this.campaignsRepository.findForCompletionTracking();
+        await this.campaignsRepository.findForFinishTracking();
 
       for (const campaign of campaignsToTrack) {
         const escrow = await EscrowUtils.getEscrow(
@@ -715,20 +733,29 @@ export class CampaignsService {
           campaign.address,
         );
 
-        const completeStatusString = EscrowStatus[EscrowStatus.Complete];
-        if (escrow.status === completeStatusString) {
-          this.logger.info('Completing campaign', {
+        if (escrow.status === EscrowStatus[EscrowStatus.Complete]) {
+          this.logger.info('Marking campaign as completed', {
             campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
           });
           campaign.status = CampaignStatus.COMPLETED;
+          await this.campaignsRepository.save(campaign);
+        } else if (escrow.status === EscrowStatus[EscrowStatus.Cancelled]) {
+          this.logger.info('Marking campaign as cancelled', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          campaign.status = CampaignStatus.CANCELLED;
           await this.campaignsRepository.save(campaign);
         }
       }
     } catch (error) {
-      this.logger.error('Error while tracking campaigns completion', error);
+      this.logger.error('Error while tracking campaigns finish', error);
     }
 
-    this.logger.debug('Campaigns completion tracking job finished');
+    this.logger.debug('Campaigns finish tracking job finished');
   }
 
   async checkUserJoined(

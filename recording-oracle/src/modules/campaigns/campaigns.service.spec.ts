@@ -1629,6 +1629,8 @@ describe('CampaignsService', () => {
   describe('recordCampaignsProgress', () => {
     let spyOnRecordCampaignProgress: jest.SpyInstance;
 
+    const mockedGetEscrowStatus = jest.fn();
+
     beforeAll(() => {
       spyOnRecordCampaignProgress = jest.spyOn(
         campaignsService,
@@ -1637,11 +1639,19 @@ describe('CampaignsService', () => {
       spyOnRecordCampaignProgress.mockImplementation();
     });
 
+    beforeEach(() => {
+      mockedEscrowClient.build.mockResolvedValue({
+        getStatus: mockedGetEscrowStatus,
+      } as unknown as EscrowClient);
+    });
+
     afterAll(() => {
       spyOnRecordCampaignProgress.mockRestore();
     });
 
     it('should trigger campaign progress recording for each campaign', async () => {
+      mockedGetEscrowStatus.mockResolvedValue(EscrowStatus.Pending);
+
       const nCampaigns = faker.number.int({ min: 2, max: 5 });
       const campaigns = Array.from({ length: nCampaigns }, () =>
         generateCampaignEntity(),
@@ -1658,28 +1668,52 @@ describe('CampaignsService', () => {
         expect(spyOnRecordCampaignProgress).toHaveBeenCalledWith(campaign);
       }
     });
-  });
 
-  describe('trackCampaignsCompletion', () => {
-    const nCampaigns = faker.number.int({ min: 2, max: 5 });
-    let campaigns: CampaignEntity[];
+    it('should skip campaigns that cancelled on blockchain', async () => {
+      mockedGetEscrowStatus.mockResolvedValue(EscrowStatus.Cancelled);
 
-    beforeEach(() => {
-      campaigns = Array.from({ length: nCampaigns }, () =>
-        generateCampaignEntity({ status: CampaignStatus.PENDING_COMPLETION }),
+      const nCampaigns = 2;
+      const campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity(),
       );
-      mockCampaignsRepository.findForCompletionTracking.mockResolvedValueOnce(
+      mockCampaignsRepository.findForProgressRecording.mockResolvedValueOnce(
         campaigns,
       );
-    });
 
-    it('should complete campaigns when detects completed escrow', async () => {
+      await campaignsService.recordCampaignsProgress();
+
+      expect(spyOnRecordCampaignProgress).toHaveBeenCalledTimes(0);
+      expect(logger.warn).toHaveBeenCalledTimes(nCampaigns);
+
+      for (const campaign of campaigns) {
+        expect(logger.warn).toHaveBeenCalledWith(
+          'Campaign cancelled, skipping progress recording',
+          {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAdddress: campaign.address,
+          },
+        );
+      }
+    });
+  });
+
+  describe('trackCampaignsFinish', () => {
+    const nCampaigns = faker.number.int({ min: 2, max: 5 });
+
+    it('should finish campaigns when detects completed escrow', async () => {
+      const campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity({ status: CampaignStatus.PENDING_COMPLETION }),
+      );
+      mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+        campaigns,
+      );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValue({
         status: EscrowStatus[EscrowStatus.Complete],
       } as any);
 
-      await campaignsService.trackCampaignsCompletion();
+      await campaignsService.trackCampaignsFinish();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(nCampaigns);
 
@@ -1688,19 +1722,58 @@ describe('CampaignsService', () => {
           ...campaign,
           status: 'completed',
         });
-        expect(logger.info).toHaveBeenCalledWith('Completing campaign', {
-          campaignId: campaign.id,
-        });
+        expect(logger.info).toHaveBeenCalledWith(
+          'Marking campaign as completed',
+          {
+            campaignId: campaign.id,
+          },
+        );
       }
     });
 
-    it('should not complete campaigns when detects not completed escrow', async () => {
+    it('should finish campaigns when detects cancelled escrow', async () => {
+      const campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity({ status: CampaignStatus.ACTIVE }),
+      );
+      mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+        campaigns,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValue({
+        status: EscrowStatus[EscrowStatus.Cancelled],
+      } as any);
+
+      await campaignsService.trackCampaignsFinish();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(nCampaigns);
+
+      for (const campaign of campaigns) {
+        expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+          ...campaign,
+          status: 'cancelled',
+        });
+        expect(logger.info).toHaveBeenCalledWith(
+          'Marking campaign as cancelled',
+          {
+            campaignId: campaign.id,
+          },
+        );
+      }
+    });
+
+    it('should not finish campaigns when detects not finished escrow', async () => {
+      const campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity({ status: CampaignStatus.ACTIVE }),
+      );
+      mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+        campaigns,
+      );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       mockedEscrowUtils.getEscrow.mockResolvedValue({
         status: EscrowStatus[EscrowStatus.Partial],
       } as any);
 
-      await campaignsService.trackCampaignsCompletion();
+      await campaignsService.trackCampaignsFinish();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
     });
