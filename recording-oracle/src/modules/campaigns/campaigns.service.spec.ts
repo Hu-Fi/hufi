@@ -20,6 +20,7 @@ import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 
+import * as decimalUtils from '@/common/utils/decimal';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
@@ -1974,6 +1975,95 @@ describe('CampaignsService', () => {
         expectedTimeframeStart,
         now,
       );
+    });
+  });
+
+  describe('calculateDailyReward', () => {
+    it('should correctly calculate reward when duration is integer number of days', () => {
+      const duration = faker.number.int({ min: 1, max: 15 });
+      const campaign = generateCampaignEntity();
+      campaign.endDate = dayjs(campaign.startDate)
+        .add(duration, 'days')
+        .toDate();
+
+      const dailyReward = campaignsService.calculateDailyReward(campaign);
+
+      const expectedDailyReward = decimalUtils.div(
+        Number(campaign.fundAmount),
+        duration,
+      );
+      expect(dailyReward).toBe(expectedDailyReward);
+    });
+
+    it('should correctly calculate reward when duration is not integer number of days', () => {
+      /**
+       * E.g. if duration is 5 days and 2 hours -
+       * then there are 6 "day intervals" to distribute reward
+       */
+
+      const duration = faker.number.int({ min: 1, max: 15 });
+      const campaign = generateCampaignEntity();
+      campaign.endDate = dayjs(campaign.startDate)
+        .add(duration, 'days')
+        .add(1, 'millisecond')
+        .toDate();
+
+      const dailyReward = campaignsService.calculateDailyReward(campaign);
+
+      const expectedDailyReward = decimalUtils.div(
+        Number(campaign.fundAmount),
+        duration + 1,
+      );
+      expect(dailyReward).toBe(expectedDailyReward);
+    });
+  });
+
+  describe('calculateRewardPool', () => {
+    let maxRewardPool: number;
+    let volumeTarget: number;
+
+    beforeEach(() => {
+      maxRewardPool = faker.number.int({ min: 10, max: 100 });
+      volumeTarget = faker.number.int({ min: 1, max: 1000 });
+    });
+
+    it('should return 0 reward pool when generated volume is 0', () => {
+      const rewardPool = campaignsService.calculateRewardPool({
+        maxRewardPool,
+        totalGeneratedVolume: 0,
+        volumeTarget,
+      });
+
+      expect(rewardPool).toBe(0);
+    });
+
+    it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
+      const generatedVolumeRatio = faker.number.float({ min: 0.01, max: 1 });
+      const totalGeneratedVolume = generatedVolumeRatio * volumeTarget;
+
+      const rewardPool = campaignsService.calculateRewardPool({
+        maxRewardPool,
+        totalGeneratedVolume,
+        volumeTarget,
+      });
+
+      const expectedRewardPool = generatedVolumeRatio * maxRewardPool;
+      expect(rewardPool).toBe(expectedRewardPool);
+    });
+
+    it('should correctly calculate reward pool when generated volume meets target', () => {
+      const totalGeneratedVolume = faker.number.float({
+        min: volumeTarget,
+        max: volumeTarget * 10,
+      });
+
+      const rewardPool = campaignsService.calculateRewardPool({
+        maxRewardPool,
+        totalGeneratedVolume,
+        volumeTarget,
+      });
+
+      expect(rewardPool).toBe(maxRewardPool);
     });
   });
 });
