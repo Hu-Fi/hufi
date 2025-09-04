@@ -1044,6 +1044,8 @@ describe('CampaignsService', () => {
         'Abuse detected. Skipping participant outcome',
         {
           campaignId: campaign.id,
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
           participantId: abuseParticipant.id,
           startDate: periodStart,
           endDate: periodEnd,
@@ -1691,7 +1693,7 @@ describe('CampaignsService', () => {
           {
             campaignId: campaign.id,
             chainId: campaign.chainId,
-            campaignAdddress: campaign.address,
+            campaignAddress: campaign.address,
           },
         );
       }
@@ -1726,6 +1728,8 @@ describe('CampaignsService', () => {
           'Marking campaign as completed',
           {
             campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
           },
         );
       }
@@ -1756,6 +1760,8 @@ describe('CampaignsService', () => {
           'Marking campaign as cancelled',
           {
             campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
           },
         );
       }
