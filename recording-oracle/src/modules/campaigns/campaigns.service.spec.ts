@@ -2234,8 +2234,11 @@ describe('CampaignsService', () => {
     });
 
     it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
-      const generatedVolumeRatio = faker.number.float({ min: 0.01, max: 1 });
-      const totalGeneratedVolume = generatedVolumeRatio * volumeTarget;
+      volumeTarget = 42;
+      const totalGeneratedVolume = faker.number.float({
+        min: 1,
+        max: volumeTarget,
+      });
 
       const rewardPool = campaignsService.calculateRewardPool({
         maxRewardPool,
@@ -2243,7 +2246,8 @@ describe('CampaignsService', () => {
         volumeTarget,
       });
 
-      const expectedRewardPool = generatedVolumeRatio * maxRewardPool;
+      const expectedRewardRatio = totalGeneratedVolume / volumeTarget;
+      const expectedRewardPool = expectedRewardRatio * maxRewardPool;
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
