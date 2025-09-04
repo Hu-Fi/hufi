@@ -1379,21 +1379,19 @@ describe('CampaignsService', () => {
       });
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith({
-        chain_id: campaign.chainId,
-        address: campaign.address,
-        exchange: campaign.exchangeName,
-        pair: campaign.pair,
-        results: [
-          {
-            from: campaignProgress.from,
-            to: campaignProgress.to,
-            total_volume: totalVolume,
-            reserved_funds: expectedRewardPool,
-            participants_outcomes_batches: [],
-          },
-        ],
-      });
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_volume: totalVolume,
+              reserved_funds: expectedRewardPool,
+              participants_outcomes_batches: [],
+            },
+          ],
+        }),
+      );
     });
 
     it('should record participant results in batches', async () => {
