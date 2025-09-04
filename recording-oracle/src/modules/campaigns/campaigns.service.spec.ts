@@ -19,6 +19,7 @@ import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
+import _ from 'lodash';
 
 import * as decimalUtils from '@/common/utils/decimal';
 import * as httpUtils from '@/common/utils/http';
@@ -39,6 +40,7 @@ import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
   CampaignNotFoundError,
+  CampaignNotStartedError,
   InvalidCampaign,
   UserIsNotParticipatingError,
 } from './campaigns.errors';
@@ -59,7 +61,11 @@ import {
   MarketMakingResultsChecker,
   ProgressCheckResult,
 } from './progress-checking';
-import { CampaignStatus, IntermediateResultsData } from './types';
+import {
+  CampaignProgress,
+  CampaignStatus,
+  IntermediateResultsData,
+} from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 import { ExchangeApiClientFactory } from '../exchange';
@@ -1857,7 +1863,6 @@ describe('CampaignsService', () => {
       userId = faker.string.uuid();
       evmAddress = faker.finance.ethereumAddress();
       chainId = generateTestnetChainId();
-      campaign = generateCampaignEntity();
 
       spyOnGetCampaignProgressChecker = jest.spyOn(
         campaignsService as any,
@@ -1872,6 +1877,8 @@ describe('CampaignsService', () => {
     });
 
     beforeEach(() => {
+      campaign = generateCampaignEntity();
+
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
         mockMarketMakingResultsChecker,
       );
@@ -1915,6 +1922,84 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
+    it('should throw if campaign not started yet', async () => {
+      jest.useFakeTimers({
+        now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
+      });
+
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.getUserProgress(
+          userId,
+          evmAddress,
+          chainId,
+          campaign.address,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      jest.useRealTimers();
+
+      expect(thrownError).toBeInstanceOf(CampaignNotStartedError);
+      expect(thrownError.chainId).toBe(chainId);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(0);
+    });
+
+    it('should throw if campaign not started yet', async () => {
+      jest.useFakeTimers({
+        now: dayjs(campaign.endDate).add(1, 'millisecond').toDate(),
+      });
+
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.getUserProgress(
+          userId,
+          evmAddress,
+          chainId,
+          campaign.address,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      jest.useRealTimers();
+
+      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+      expect(thrownError.chainId).toBe(chainId);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(0);
+    });
+
     it('should throw if user not joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
@@ -1940,7 +2025,7 @@ describe('CampaignsService', () => {
       expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(0);
     });
 
-    it('should return participant outcome', async () => {
+    it('should return campaign progress for participant', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1948,17 +2033,44 @@ describe('CampaignsService', () => {
         true,
       );
 
-      campaign.startDate = dayjs().subtract(2, 'day').toDate();
-      const now = dayjs(campaign.startDate).add(2, 'day').add(4, 'h').toDate();
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
 
-      jest.useFakeTimers({ now });
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(campaignDaysPassed, 'days')
+        .toDate();
+      const expectedTimeframeIsoString = expectedTimeframeStart.toISOString();
 
-      const campaignProgress = generateCampaignProgress();
+      const now = new Date();
+      const nowIsoString = now.toISOString();
+
+      const participantOutcome = generateParticipantOutcome({
+        address: evmAddress,
+      });
+      const campaignProgress: CampaignProgress = {
+        from: expectedTimeframeIsoString,
+        to: nowIsoString,
+        total_volume: 0,
+        participants_outcomes: [
+          generateParticipantOutcome(),
+          participantOutcome,
+          generateParticipantOutcome(),
+        ],
+      };
+      campaignProgress.total_volume = _.sumBy(
+        campaignProgress.participants_outcomes,
+        'total_volume',
+      );
+
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         campaignProgress,
       );
 
-      await campaignsService.getUserProgress(
+      jest.useFakeTimers({ now });
+
+      const progress = await campaignsService.getUserProgress(
         userId,
         evmAddress,
         chainId,
@@ -1967,14 +2079,19 @@ describe('CampaignsService', () => {
 
       jest.useRealTimers();
 
-      const expectedTimeframeStart = dayjs(campaign.startDate)
-        .add(2, 'day')
-        .toDate();
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
         expectedTimeframeStart,
         now,
       );
+
+      expect(progress).toEqual({
+        from: expectedTimeframeIsoString,
+        to: nowIsoString,
+        totalVolume: campaignProgress.total_volume,
+        myScore: participantOutcome.score,
+        myVolume: participantOutcome.total_volume,
+      });
     });
   });
 

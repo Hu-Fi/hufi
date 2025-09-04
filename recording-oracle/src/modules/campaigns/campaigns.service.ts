@@ -766,6 +766,14 @@ export class CampaignsService {
       throw new CampaignNotFoundError(chainId, campaignAddress);
     }
 
+    const now = new Date();
+    if (now < campaign.startDate) {
+      throw new CampaignNotStartedError(chainId, campaignAddress);
+    }
+    if (now > campaign.endDate) {
+      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
+    }
+
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
@@ -773,14 +781,6 @@ export class CampaignsService {
       );
     if (!isUserJoined) {
       throw new UserIsNotParticipatingError();
-    }
-
-    const now = new Date();
-    if (now < campaign.startDate) {
-      throw new CampaignNotStartedError(chainId, campaignAddress);
-    }
-    if (now > campaign.endDate) {
-      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
     // Calculate start of the active timeframe (end is now)
@@ -812,7 +812,7 @@ export class CampaignsService {
     }
 
     const progress = campaignsProgressCache.get(cacheKey) as CampaignProgress;
-    const participant = progress.participants_outcomes.find(
+    const participantOutcome = progress.participants_outcomes.find(
       (p) => p.address === evmAddress,
     );
 
@@ -820,8 +820,8 @@ export class CampaignsService {
       from: progress.from,
       to: progress.to,
       totalVolume: progress.total_volume,
-      myScore: participant?.score ?? 0,
-      myVolume: participant?.total_volume ?? 0,
+      myScore: participantOutcome?.score ?? 0,
+      myVolume: participantOutcome?.total_volume ?? 0,
     };
   }
 }
