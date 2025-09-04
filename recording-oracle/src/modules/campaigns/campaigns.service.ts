@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -52,7 +53,6 @@ import {
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
-  ParticipantsOutcomesBatch,
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -448,18 +448,44 @@ export class CampaignsService {
             endDate,
           );
 
-          await this.recordGeneratedVolume(campaign, progress);
+          const dailyReward = this.calculateDailyReward(campaign);
+          const rewardPool = this.calculateRewardPool({
+            maxRewardPool: dailyReward,
+            totalGeneratedVolume: progress.total_volume,
+            volumeTarget: Number(campaign.dailyVolumeTarget),
+          });
 
-          intermediateResults.results.push(progress);
+          const intermediateResult: IntermediateResult = {
+            from: progress.from,
+            to: progress.to,
+            total_volume: progress.total_volume,
+            reserved_funds: rewardPool,
+            participants_outcomes_batches: [],
+          };
+
+          for (const chunk of _.chunk(
+            progress.participants_outcomes,
+            ESCROW_BULK_PAYOUT_MAX_ITEMS,
+          )) {
+            intermediateResult.participants_outcomes_batches.push({
+              id: crypto.randomUUID(),
+              results: chunk,
+            });
+          }
+
+          intermediateResults.results.push(intermediateResult);
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(intermediateResults);
 
           logger.info('Campaign progress recorded', {
-            from: progress.from,
-            to: progress.to,
-            total_volume: progress.total_volume,
+            from: intermediateResult.from,
+            to: intermediateResult.to,
+            total_volume: intermediateResult.total_volume,
+            reserved_funds: intermediateResult.reserved_funds,
             resultsUrl: storedResultsMeta.url,
           });
+
+          void this.recordGeneratedVolume(campaign, intermediateResult);
 
           /**
            * There might be situations when due to delays/failures in processing
@@ -486,7 +512,7 @@ export class CampaignsService {
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-  ): Promise<IntermediateResult> {
+  ): Promise<CampaignProgress> {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
       {
@@ -541,19 +567,11 @@ export class CampaignsService {
       });
     }
 
-    const outcomesBatches: ParticipantsOutcomesBatch[] = [];
-    for (const chunk of _.chunk(outcomes, ESCROW_BULK_PAYOUT_MAX_ITEMS)) {
-      outcomesBatches.push({
-        id: crypto.randomUUID(),
-        results: chunk,
-      });
-    }
-
     return {
       from: startDate.toISOString(),
       to: endDate.toISOString(),
       total_volume: totalVolume,
-      participants_outcomes_batches: outcomesBatches,
+      participants_outcomes: outcomes,
     };
   }
 
@@ -592,6 +610,31 @@ export class CampaignsService {
     );
 
     return JSON.parse(intermediateResults.toString());
+  }
+
+  private calculateDailyReward(campaign: CampaignEntity): number {
+    const campaignDurationDays = Math.ceil(
+      dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
+    );
+
+    const fundAmount = Number(campaign.fundAmount);
+
+    return decimalUtils.div(fundAmount, campaignDurationDays);
+  }
+
+  private calculateRewardPool(input: {
+    maxRewardPool: number;
+    totalGeneratedVolume: number;
+    volumeTarget: number;
+  }): number {
+    const rewardRatio = Math.min(
+      input.totalGeneratedVolume / input.volumeTarget,
+      1,
+    );
+
+    const rewardPool = rewardRatio * input.maxRewardPool;
+
+    return rewardPool;
   }
 
   private async recordCampaignIntermediateResults(
