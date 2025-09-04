@@ -66,7 +66,7 @@ const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_HOUR;
 
-const campaignsProgressCache = new LRUCache({
+const campaignsProgressCache = new LRUCache<string, CampaignProgress>({
   ttl: 1000 * 60 * 10,
   max: 4200,
   ttlAutopurge: false,
@@ -747,7 +747,10 @@ export class CampaignsService {
       .add(timeframesPassed, 'day')
       .toDate();
 
-    // Using timeframeStart in a key to prevent situations where new timeframe has started but the value in cache is still here
+    /**
+     * Using timeframeStart in a key to prevent situations
+     * where new timeframe has started but cached value is not expired yet
+     */
     const cacheKey = `${campaign.chainId}-${campaign.address}-${timeframeStart}`;
 
     if (!campaignsProgressCache.has(cacheKey)) {
