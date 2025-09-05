@@ -169,14 +169,11 @@ export class PayoutsService {
           }
         }
 
-        const escrowBalance = await escrowClient.getBalance(campaign.address);
-        /**
-         * TODO: get "reservedFunds" once we have it available in SDK
-         */
-        if (decimalUtils.sub(Number(escrowBalance), totalReservedFunds) < 0) {
-          throw new Error(
-            `Expected payouts amount higher than campaign balance`,
-          );
+        const fundsReservedOnEscrow = await escrowClient.getReservedFunds(
+          campaign.address,
+        );
+        if (totalReservedFunds > fundsReservedOnEscrow) {
+          throw new Error('Expected payouts amount higher than reserved funds');
         }
 
         for (const rewardsBatchToPay of rewardsBatchesToPay) {
@@ -198,10 +195,7 @@ export class PayoutsService {
             Array.from(recipientToAmountMap.values()),
             finalResultsMeta.url,
             finalResultsMeta.hash,
-            /**
-             * TODO: replace it with batch id when SDK is updated
-             */
-            1,
+            rewardsBatchToPay.id,
             false,
             {
               gasPrice,
