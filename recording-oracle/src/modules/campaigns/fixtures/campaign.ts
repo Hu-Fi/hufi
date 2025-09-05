@@ -15,9 +15,12 @@ import type {
   ParticipantAuthKeys,
 } from '../progress-checking';
 import {
+  CampaignProgress,
   CampaignStatus,
+  CampaignType,
   IntermediateResult,
   IntermediateResultsData,
+  ParticipantOutcome,
 } from '../types';
 
 export function generateCampaignEntity(
@@ -26,16 +29,21 @@ export function generateCampaignEntity(
   const startDate = dayjs().subtract(1, 'days').toDate();
   const durationInDays = faker.number.int({ min: 3, max: 7 });
 
-  const campaign = {
+  const campaign: Omit<CampaignEntity, 'beforeInsert' | 'beforeUpdate'> = {
     id: faker.string.uuid(),
     chainId: generateTestnetChainId(),
     address: ethers.getAddress(faker.finance.ethereumAddress()),
-    pair: generateTradingPair(),
+    type: CampaignType.MARKET_MAKING,
+    dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }).toString(),
     exchangeName: generateExchangeName(),
+    pair: generateTradingPair(),
     startDate,
     endDate: dayjs(startDate).add(durationInDays, 'days').toDate(),
-    status: CampaignStatus.ACTIVE,
+    fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),
+    fundToken: faker.finance.currencyCode(),
+    fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
     lastResultsAt: null,
+    status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };
@@ -67,19 +75,40 @@ export function generateParticipantAuthKeys(): ParticipantAuthKeys {
   };
 }
 
+export function generateParticipantOutcome(
+  overrides: Partial<ParticipantOutcome> = {},
+): ParticipantOutcome {
+  const outcome: ParticipantOutcome = {
+    address: ethers.getAddress(faker.finance.ethereumAddress()),
+    total_volume: faker.number.float(),
+    score: faker.number.float(),
+  };
+
+  Object.assign(outcome, overrides);
+
+  return outcome;
+}
+
+export function generateCampaignProgress(endDate?: Date): CampaignProgress {
+  const to = endDate || faker.date.past();
+
+  return {
+    from: dayjs(to).subtract(1, 'day').toISOString(),
+    to: to.toISOString(),
+    total_volume: 0,
+    participants_outcomes: [],
+  };
+}
+
 export function generateIntermediateResult(endDate?: Date): IntermediateResult {
   const to = endDate || faker.date.past();
 
   return {
     from: dayjs(to).subtract(1, 'day').toISOString(),
     to: to.toISOString(),
-    total_volume: faker.number.float(),
-    participants_outcomes_batches: [
-      {
-        id: faker.string.uuid(),
-        results: [],
-      },
-    ],
+    total_volume: 0,
+    reserved_funds: faker.number.float(),
+    participants_outcomes_batches: [],
   };
 }
 
