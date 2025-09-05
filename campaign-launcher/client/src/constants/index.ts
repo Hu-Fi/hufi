@@ -22,16 +22,11 @@ export const USDT_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
   [ChainId.SEPOLIA]: '0x6A3267e048B80FC2Fbd52510508c1eb884F0fDb1',
 };
 
-// TODO: Read HUSD contract address from Human Protocol SDK
-export const HUSD_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
-  [ChainId.LOCALHOST]: '0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E',
-  [ChainId.POLYGON_AMOY]: '0x6d15C4c6B58F9C80e1e34cbeB717aa7c4FF7B87c',
-  [ChainId.SEPOLIA]: '0xF15D41e06FE329427c643Ed2203F14C409cb4b85',
+export const USDC_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
+  [ChainId.POLYGON]: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+  [ChainId.POLYGON_AMOY]: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
+  [ChainId.SEPOLIA]: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
 };
-
-// TODO: Make these values configurable
-export const HUSD_MARKET_MAKING_CAMPAIGN_EXCHANGES = ['uniswap'];
-export const HUSD_MARKET_MAKING_CAMPAIGN_DURATION = 2592000; // 30 days in seconds
 
 export const TESTNET_CHAIN_IDS = [
   ChainId.SEPOLIA,

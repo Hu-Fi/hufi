@@ -3,6 +3,7 @@ import { useTheme } from '@mui/material';
 import { ethers, formatUnits } from 'ethers';
 
 import {
+  USDC_CONTRACT_ADDRESS,
   USDT_CONTRACT_ADDRESS,
   MAINNET_CHAIN_IDS,
   TESTNET_CHAIN_IDS,
@@ -21,10 +22,12 @@ export const getTokenAddress = (
   name: string
 ): string | undefined => {
   switch (name) {
-    case 'usdt':
-      return USDT_CONTRACT_ADDRESS[chainId];
     case 'hmt':
       return NETWORKS[chainId]?.hmtAddress;
+    case 'usdt':
+      return USDT_CONTRACT_ADDRESS[chainId];
+    case 'usdc':
+      return USDC_CONTRACT_ADDRESS[chainId];
   }
 };
 

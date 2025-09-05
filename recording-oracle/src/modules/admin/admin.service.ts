@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
-import { CampaignsService, UserCampaignsRepository } from '@/modules/campaigns';
+import { CampaignsService } from '@/modules/campaigns';
 
 import { CheckCampaignProgressDto } from './admin.dto';
 
 @Injectable()
 export class AdminService {
-  constructor(
-    private readonly campaignsService: CampaignsService,
-    private readonly userCampaignsRepository: UserCampaignsRepository,
-  ) {}
+  constructor(private readonly campaignsService: CampaignsService) {}
 
   async checkCampaignProgress({
     chainId,
@@ -25,13 +22,8 @@ export class AdminService {
       throw new Error('Campaign not found');
     }
 
-    const participants = await this.userCampaignsRepository.findCampaignUsers(
-      campaign.id,
-    );
-
     const progress = await this.campaignsService.checkCampaignProgressForPeriod(
       campaign,
-      participants,
       new Date(fromDate),
       new Date(toDate),
     );
