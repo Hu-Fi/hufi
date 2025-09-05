@@ -741,20 +741,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:4.2.1":
-  version: 4.2.1
-  resolution: "@human-protocol/core@npm:4.2.1"
+"@human-protocol/core@npm:^5.0.0-beta.0":
+  version: 5.0.0-beta.0
+  resolution: "@human-protocol/core@npm:5.0.0-beta.0"
   peerDependencies:
     ethers: ~6.15.0
-  checksum: 10c0/f2e3f97040063a7b1264c35d969f8b241f919fcd012c05d9c687c9d7b407b9250c0cfc63cd1a0e7ccdd993e40a8633832ae5389b8e2128e4deec3ddb749367fc
+  checksum: 10c0/277222570a565a589715284587cb0766a419f88f92844b95681544eaeb3053708fccd321c9ead34d39ef4a57d398c6e8c8fb8eaee9937c7443abf0524768061e
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "@human-protocol/sdk@npm:4.3.0"
+"@human-protocol/sdk@npm:^5.0.0-beta.0":
+  version: 5.0.0-beta.0
+  resolution: "@human-protocol/sdk@npm:5.0.0-beta.0"
   dependencies:
-    "@human-protocol/core": "npm:4.2.1"
+    "@human-protocol/core": "npm:x"
     axios: "npm:^1.4.0"
     ethers: "npm:~6.15.0"
     graphql: "npm:^16.8.1"
@@ -764,7 +764,7 @@ __metadata:
     openpgp: "npm:^5.11.2"
     secp256k1: "npm:^5.0.1"
     vitest: "npm:^3.0.9"
-  checksum: 10c0/9591d4ea2bdc88f6a1567c7a731cd8b34821f296facd44a42cda45e5df40eaa99c2a5143d6407398f556530b6ea098d9f98beb82b7ea438dfe696434fefef08a
+  checksum: 10c0/c8312000a7b918e74242c3ccf0fd6fdbc4ae5f129d8060dcfb499227cc13cd28933279a023ee65336916eddc7a25c096ada1e45b0606e488428ddc31b5d21e0c
   languageName: node
   linkType: hard
 
@@ -3818,7 +3818,7 @@ __metadata:
     "@emotion/react": "npm:^11.11.4"
     "@emotion/styled": "npm:^11.11.5"
     "@hookform/resolvers": "npm:^3.3.4"
-    "@human-protocol/sdk": "npm:^4.3.0"
+    "@human-protocol/sdk": "npm:^5.0.0-beta.0"
     "@mui/icons-material": "npm:^6.4.10"
     "@mui/material": "npm:^6.4.10"
     "@mui/x-data-grid": "npm:^7.28.3"

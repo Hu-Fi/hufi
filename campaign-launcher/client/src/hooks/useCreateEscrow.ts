@@ -111,11 +111,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           end_date: transformManifestTime(variables.end_date, false),
         };
 
-        const escrowAddress = await escrowClient.createEscrow(
-          tokenAddress,
-          [signer.address],
-          uuidV4()
-        );
+        const escrowAddress = await escrowClient.createEscrow(tokenAddress, uuidV4());
         setStepsCompleted(1);
 
         await escrowClient.fund(escrowAddress, fundAmount);
