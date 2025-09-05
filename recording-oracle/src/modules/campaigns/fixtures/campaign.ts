@@ -41,6 +41,7 @@ export function generateCampaignEntity(
     endDate: dayjs(startDate).add(durationInDays, 'days').toDate(),
     fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),
     fundToken: faker.finance.currencyCode(),
+    fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
     lastResultsAt: null,
     status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),

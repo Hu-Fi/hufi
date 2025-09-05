@@ -140,7 +140,7 @@ describe('CampaignsService', () => {
 
   describe('retrieveCampaignData', () => {
     const TEST_TOKEN_SYMBOL = faker.finance.currencyCode();
-    const TEST_TOKEN_DECIMALS = 18;
+    const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
 
     const mockedGetEscrowStatus = jest.fn();
 
@@ -498,6 +498,7 @@ describe('CampaignsService', () => {
           ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
         ),
         fundTokenSymbol: TEST_TOKEN_SYMBOL,
+        fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
       expect(spyOnDownloadCampaignManifest).toHaveBeenCalledTimes(1);
@@ -529,6 +530,7 @@ describe('CampaignsService', () => {
           ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
         ),
         fundTokenSymbol: TEST_TOKEN_SYMBOL,
+        fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
       expect(spyOnDownloadCampaignManifest).not.toHaveBeenCalled();
@@ -542,6 +544,7 @@ describe('CampaignsService', () => {
       const manifest = generateCampaignManifest();
       const fundAmount = faker.number.float();
       const fundTokenSymbol = faker.finance.currencyCode();
+      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -550,6 +553,7 @@ describe('CampaignsService', () => {
         {
           fundAmount,
           fundTokenSymbol,
+          fundTokenDecimals,
         },
       );
 
@@ -569,6 +573,7 @@ describe('CampaignsService', () => {
         status: 'active',
         fundAmount: fundAmount.toString(),
         fundToken: fundTokenSymbol,
+        fundTokenDecimals,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -872,10 +877,10 @@ describe('CampaignsService', () => {
         .createHash('sha256')
         .update(stringifieResultsData)
         .digest('hex');
-
+      const fundsToReserve = faker.number.bigInt({ min: 1 });
       const recordingResult = await campaignsService[
         'recordCampaignIntermediateResults'
-      ](intermediateResultsData);
+      ](intermediateResultsData, fundsToReserve);
 
       expect(recordingResult.url).toBe(mockedResultsFileUrl);
       expect(recordingResult.hash).toBe(resultsHash);
@@ -892,6 +897,7 @@ describe('CampaignsService', () => {
         intermediateResultsData.address,
         mockedResultsFileUrl,
         resultsHash,
+        fundsToReserve,
         {
           gasPrice: mockGasPrice,
         },
@@ -1303,21 +1309,24 @@ describe('CampaignsService', () => {
       await campaignsService.recordCampaignProgress(campaign);
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith({
-        chain_id: campaign.chainId,
-        address: campaign.address,
-        exchange: campaign.exchangeName,
-        pair: campaign.pair,
-        results: [
-          {
-            from: campaignProgress.from,
-            to: campaignProgress.to,
-            total_volume: 0,
-            reserved_funds: 0,
-            participants_outcomes_batches: [],
-          },
-        ],
-      });
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        {
+          chain_id: campaign.chainId,
+          address: campaign.address,
+          exchange: campaign.exchangeName,
+          pair: campaign.pair,
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_volume: 0,
+              reserved_funds: 0,
+              participants_outcomes_batches: [],
+            },
+          ],
+        },
+        0n,
+      );
     });
 
     it('should record campaign progress to existing results', async () => {
@@ -1353,6 +1362,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
         expectedNewIntermediateResultsData,
+        0n,
       );
     });
 
@@ -1372,11 +1382,14 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool: campaignsService.calculateDailyReward(campaign),
-        totalGeneratedVolume: totalVolume,
-        volumeTarget: Number(campaign.dailyVolumeTarget),
-      });
+      const expectedRewardPool = decimalUtils.truncate(
+        campaignsService.calculateRewardPool({
+          maxRewardPool: campaignsService.calculateDailyReward(campaign),
+          totalGeneratedVolume: totalVolume,
+          volumeTarget: Number(campaign.dailyVolumeTarget),
+        }),
+        campaign.fundTokenDecimals,
+      );
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -1391,6 +1404,10 @@ describe('CampaignsService', () => {
             },
           ],
         }),
+        ethers.parseUnits(
+          expectedRewardPool.toString(),
+          campaign.fundTokenDecimals,
+        ),
       );
     });
 
@@ -2182,9 +2199,9 @@ describe('CampaignsService', () => {
 
       const dailyReward = campaignsService.calculateDailyReward(campaign);
 
-      const expectedDailyReward = decimalUtils.div(
-        Number(campaign.fundAmount),
-        duration,
+      const expectedDailyReward = decimalUtils.truncate(
+        decimalUtils.div(Number(campaign.fundAmount), duration),
+        campaign.fundTokenDecimals,
       );
       expect(dailyReward).toBe(expectedDailyReward);
     });
@@ -2195,18 +2212,18 @@ describe('CampaignsService', () => {
        * then there are 6 "day intervals" to distribute reward
        */
 
-      const duration = faker.number.int({ min: 1, max: 15 });
+      const duration = faker.number.int({ min: 2, max: 15 });
       const campaign = generateCampaignEntity();
       campaign.endDate = dayjs(campaign.startDate)
-        .add(duration, 'days')
-        .add(1, 'millisecond')
+        .add(duration - 1, 'days')
+        .add(1, 'minute')
         .toDate();
 
       const dailyReward = campaignsService.calculateDailyReward(campaign);
 
-      const expectedDailyReward = decimalUtils.div(
-        Number(campaign.fundAmount),
-        duration + 1,
+      const expectedDailyReward = decimalUtils.truncate(
+        decimalUtils.div(Number(campaign.fundAmount), duration),
+        campaign.fundTokenDecimals,
       );
       expect(dailyReward).toBe(expectedDailyReward);
     });

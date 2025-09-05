@@ -32,6 +32,7 @@ export type CampaignManifest = {
 export type CampaignEscrowInfo = {
   fundAmount: number;
   fundTokenSymbol: string;
+  fundTokenDecimals: number;
 };
 
 export type ParticipantOutcome = {

@@ -39,3 +39,10 @@ export function sub(a: number, b: number): number {
 
   return result.toNumber();
 }
+
+export function truncate(n: number, decimals: number): number {
+  const valueDecimal = new Decimal(n);
+  const result = valueDecimal.toFixed(decimals, Decimal.ROUND_DOWN);
+
+  return Number(result);
+}

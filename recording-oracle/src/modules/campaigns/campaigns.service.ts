@@ -190,6 +190,7 @@ export class CampaignsService {
     newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
+    newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -330,6 +331,7 @@ export class CampaignsService {
           ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
         ),
         fundTokenSymbol: campaignTokenSymbol,
+        fundTokenDecimals: campaignTokenDecimals,
       },
     };
   }
@@ -470,12 +472,16 @@ export class CampaignsService {
             totalGeneratedVolume: progress.total_volume,
             volumeTarget: Number(campaign.dailyVolumeTarget),
           });
+          const truncatedRewardPool = decimalUtils.truncate(
+            rewardPool,
+            campaign.fundTokenDecimals,
+          );
 
           const intermediateResult: IntermediateResult = {
             from: progress.from,
             to: progress.to,
             total_volume: progress.total_volume,
-            reserved_funds: rewardPool,
+            reserved_funds: truncatedRewardPool,
             participants_outcomes_batches: [],
           };
 
@@ -490,8 +496,16 @@ export class CampaignsService {
           }
 
           intermediateResults.results.push(intermediateResult);
+          const fundsToReserve = ethers.parseUnits(
+            truncatedRewardPool.toString(),
+            campaign.fundTokenDecimals,
+          );
+
           const storedResultsMeta =
-            await this.recordCampaignIntermediateResults(intermediateResults);
+            await this.recordCampaignIntermediateResults(
+              intermediateResults,
+              fundsToReserve,
+            );
 
           logger.info('Campaign progress recorded', {
             from: intermediateResult.from,
@@ -637,7 +651,14 @@ export class CampaignsService {
 
     const fundAmount = Number(campaign.fundAmount);
 
-    return decimalUtils.div(fundAmount, campaignDurationDays);
+    const dailyReward = decimalUtils.div(fundAmount, campaignDurationDays);
+
+    const truncatedDailyReward = decimalUtils.truncate(
+      dailyReward,
+      campaign.fundTokenDecimals,
+    );
+
+    return truncatedDailyReward;
   }
 
   calculateRewardPool(input: {
@@ -657,6 +678,7 @@ export class CampaignsService {
 
   private async recordCampaignIntermediateResults(
     intermediateResults: IntermediateResultsData,
+    fundsToReserve: bigint,
   ): Promise<{ url: string; hash: string }> {
     const chainId = intermediateResults.chain_id;
     const campaignAddress = intermediateResults.address;
@@ -680,9 +702,15 @@ export class CampaignsService {
 
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
-    await escrowClient.storeResults(campaignAddress, resultsUrl, resultsHash, {
-      gasPrice,
-    });
+    await escrowClient.storeResults(
+      campaignAddress,
+      resultsUrl,
+      resultsHash,
+      fundsToReserve,
+      {
+        gasPrice,
+      },
+    );
 
     return { url: resultsUrl, hash: resultsHash };
   }
