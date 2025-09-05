@@ -32,6 +32,7 @@ export type CampaignManifest = {
 export type CampaignEscrowInfo = {
   fundAmount: number;
   fundTokenSymbol: string;
+  fundTokenDecimals: number;
 };
 
 export type ParticipantOutcome = {
@@ -49,6 +50,7 @@ export type IntermediateResult = {
   from: string;
   to: string;
   total_volume: number;
+  reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
 };
 
