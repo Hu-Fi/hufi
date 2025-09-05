@@ -39,7 +39,7 @@ jobs:
         id: get_env_names
         run: |
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            ENV_NAMES='["testnet","mainnet"]'
+            ENV_NAMES='["mainnet"]'
           else
             INPUT_VAL="${{ inputs.environment }}"
             ENV_NAMES="[\"${INPUT_VAL}\"]"
