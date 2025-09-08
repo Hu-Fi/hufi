@@ -21,9 +21,9 @@
     "test:e2e": "jest --config ./test/e2e/jest.config.json"
   },
   "dependencies": {
-    "@human-protocol/core": "^4.2.0",
+    "@human-protocol/core": "5.0.0-beta.0",
     "@human-protocol/logger": "^1.1.0",
-    "@human-protocol/sdk": "^4.2.0",
+    "@human-protocol/sdk": "5.0.0-beta.0",
     "@nestjs/common": "^11.1.5",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.5",
@@ -77,5 +77,8 @@
       "eslint --fix"
     ]
   },
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.9.1",
+  "resolutions": {
+    "@human-protocol/core": "^5.0.0-beta.0"
+  }
 }
