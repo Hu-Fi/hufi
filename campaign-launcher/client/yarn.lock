@@ -750,7 +750,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^4.2.0":
+"@human-protocol/sdk@npm:^4.3.0":
   version: 4.3.0
   resolution: "@human-protocol/sdk@npm:4.3.0"
   dependencies:
@@ -3818,7 +3818,7 @@ __metadata:
     "@emotion/react": "npm:^11.11.4"
     "@emotion/styled": "npm:^11.11.5"
     "@hookform/resolvers": "npm:^3.3.4"
-    "@human-protocol/sdk": "npm:^4.2.0"
+    "@human-protocol/sdk": "npm:^4.3.0"
     "@mui/icons-material": "npm:^6.4.10"
     "@mui/material": "npm:^6.4.10"
     "@mui/x-data-grid": "npm:^7.28.3"
