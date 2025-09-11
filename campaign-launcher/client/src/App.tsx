@@ -10,6 +10,7 @@ import { ROUTES } from './constants';
 import Campaign from './pages/Campaign';
 import Dashboard from './pages/Dashboard';
 import ManageApiKeysPage from './pages/ManageApiKeys';
+import Support from './pages/Support';
 import ActiveAccountProvider from './providers/ActiveAccountProvider';
 import ExchangesProvider from './providers/ExchangesProvider';
 import { NetworkProvider } from './providers/NetworkProvider';
@@ -48,6 +49,10 @@ const App: FC = () => {
                                   <ManageApiKeysPage />
                                 </ProtectedRoute>
                               }
+                            />
+                            <Route
+                              path={ROUTES.SUPPORT}
+                              element={<Support />}
                             />
                           </Routes>
                         </Layout>
