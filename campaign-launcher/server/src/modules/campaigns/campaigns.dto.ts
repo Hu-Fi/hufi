@@ -123,7 +123,7 @@ export class CampaignData {
   fundTokenDecimals: number;
 
   @ApiProperty({
-    name: 'reserved_funds'
+    name: 'reserved_funds',
   })
   reservedFunds: string;
 
