@@ -4,6 +4,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography } from '@mui/material';
 
+import { CampaignsDiscovery, Prerequisites, RewardsCalculation, SignIn, StepByStepProcess } from '../../components/FaqAccordionDetailsHub';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
 
@@ -72,9 +73,7 @@ const Support: FC = () => {
               <Typography variant="body1">Prerequisites</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2">
-                Details
-              </Typography>
+              <Prerequisites />
             </AccordionDetails>
           </Accordion>
           <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
@@ -86,9 +85,7 @@ const Support: FC = () => {
               <Typography variant="body1">Step-by-step-process</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2">
-                Details
-              </Typography>
+              <StepByStepProcess />
             </AccordionDetails>
           </Accordion>
         </Stack>
@@ -121,7 +118,7 @@ const Support: FC = () => {
               <Typography variant="body1">Sign in</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2">Sign in</Typography>
+              <SignIn />
             </AccordionDetails>
           </Accordion>
           <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
@@ -133,7 +130,7 @@ const Support: FC = () => {
               <Typography variant="body1">Campaigns discovery</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2">Campaigns discovery</Typography>
+              <CampaignsDiscovery />
             </AccordionDetails>
           </Accordion>
           <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
@@ -180,15 +177,7 @@ const Support: FC = () => {
             <Typography variant="body1">How do we calculate the rewards?</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="body2">
-              Every campaign has 3 parameters: fund amount, duration and daily volume target. 
-              The first step is calculating the daily reward pool: dailyRewardPool = fundAmount  duration (in days). 
-              For the duration we use <code>Math.ceil()</code> function which means that 25 hours will be considered as 2 days.
-              For each campaign, we track progress in 24-hour periods from its start by fetching all trades made by participants 
-              and check whether the combined generated volume reaches the daily volume target.
-              If yes, the daily reward pool is fully distributed based on each participant&apos;s performance.
-              If not, the daily reward pool is reduced proportionally, based on the ratio between total generated volume and the daily volume target.
-            </Typography>
+            <RewardsCalculation />
           </AccordionDetails>
         </Accordion>
         <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
