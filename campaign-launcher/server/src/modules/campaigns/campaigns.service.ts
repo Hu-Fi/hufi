@@ -107,6 +107,11 @@ export class CampaignsService {
         this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
       ]);
 
+      const reservedFunds = await this.getReservedFunds(
+        chainId,
+        campaignEscrow.address,
+      );
+
       campaigns.push({
         chainId,
         address: ethers.getAddress(campaignEscrow.address),
@@ -121,6 +126,7 @@ export class CampaignsService {
         fundTokenDecimals: campaignTokenDecimals,
         status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
         escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
+        reservedFunds,
         launcher: ethers.getAddress(campaignEscrow.launcher),
         exchangeOracle: campaignEscrow.exchangeOracle as string,
         recordingOracle: campaignEscrow.recordingOracle as string,
@@ -203,6 +209,8 @@ export class CampaignsService {
      */
     const oracleFees = await this.getCampaignOracleFees(chainId, escrowAddress);
 
+    const reservedFunds = await this.getReservedFunds(chainId, escrowAddress);
+
     return {
       chainId,
       address: ethers.getAddress(escrowAddress),
@@ -217,6 +225,7 @@ export class CampaignsService {
       fundTokenDecimals: campaignTokenDecimals,
       status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
       escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
+      reservedFunds,
       // details
       amountPaid: totalTransfersAmount.toString(),
       dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
@@ -299,5 +308,43 @@ export class CampaignsService {
     }
 
     return campaignOraclesFeesCache.get(cacheKey) as CampaignOracleFees;
+  }
+
+  private async getReservedFunds(
+    chainId: ChainId,
+    campaignAddress: string,
+  ): Promise<string> {
+    try {
+      const provider = this.web3Service.getProvider(chainId);
+      const escrowContract = Escrow__factory.connect(campaignAddress, provider);
+
+      // Contract returns BigInt by default, so casting to Number.
+      const status = Number(await escrowContract.status());
+
+      /**
+       * This is to eliminate escrows that have been completed before `reservedFunds()` were introduced.
+       * We know for sure that there will be no escrows in these statuses when contracts are upgraded.
+       */
+      if (
+        ![
+          EscrowStatus.Pending,
+          EscrowStatus.Partial,
+          EscrowStatus.ToCancel,
+        ].includes(status)
+      ) {
+        return '0';
+      }
+      const reservedFunds = await escrowContract.reservedFunds();
+
+      return reservedFunds.toString();
+    } catch (error) {
+      const message = 'Failed to get reserved funds';
+      this.logger.error(message, {
+        chainId,
+        campaignAddress,
+        error,
+      });
+      throw new Error(message);
+    }
   }
 }
