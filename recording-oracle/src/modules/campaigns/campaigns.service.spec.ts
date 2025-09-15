@@ -312,7 +312,11 @@ describe('CampaignsService', () => {
       );
     });
 
-    it.each([EscrowStatus.Cancelled, EscrowStatus.Complete])(
+    it.each([
+      EscrowStatus.Cancelled,
+      EscrowStatus.Complete,
+      EscrowStatus.ToCancel,
+    ])(
       'should throw when escrow has invalid status [%#]',
       async (escrowStatus) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

@@ -133,15 +133,6 @@ export class CampaignsService {
       );
     }
 
-    const isUserJoined =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
-        userId,
-        campaign.id,
-      );
-    if (isUserJoined) {
-      return campaign.id;
-    }
-
     if (campaign.endDate.valueOf() <= Date.now()) {
       /**
        * Safety belt to disallow joining campaigns that already finished
@@ -151,6 +142,14 @@ export class CampaignsService {
         campaign.chainId,
         campaign.address,
       );
+    }
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
+        userId,
+        campaign.id,
+      );
+    if (isUserJoined) {
+      return campaign.id;
     }
 
     const exchangeApiKeyId =
@@ -270,7 +269,11 @@ export class CampaignsService {
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
 
     if (
-      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
+      [
+        EscrowStatus.Cancelled,
+        EscrowStatus.Complete,
+        EscrowStatus.ToCancel,
+      ].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
         chainId,
