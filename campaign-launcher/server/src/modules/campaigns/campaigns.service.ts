@@ -318,11 +318,27 @@ export class CampaignsService {
       const provider = this.web3Service.getProvider(chainId);
       const escrowContract = Escrow__factory.connect(campaignAddress, provider);
 
+      // Contract returns BigInt by default, so casting to Number.
+      const status = Number(await escrowContract.status());
+
+      /**
+       * This is to eliminate escrows that have been completed before `reservedFunds()` were introduced.
+       * We know for sure that there will be no escrows in these statuses when contracts are upgraded.
+       */
+      if (
+        ![
+          EscrowStatus.Pending,
+          EscrowStatus.Partial,
+          EscrowStatus.ToCancel,
+        ].includes(status)
+      ) {
+        return '0';
+      }
       const reservedFunds = await escrowContract.reservedFunds();
 
       return reservedFunds.toString();
     } catch (error) {
-      const message = 'Failed to get oracles fees';
+      const message = 'Failed to get reserved funds';
       this.logger.error(message, {
         chainId,
         campaignAddress,
