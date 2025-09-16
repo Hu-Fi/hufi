@@ -110,3 +110,11 @@ export type OracleFees = {
   recording_oracle_fee: string;
   reputation_oracle_fee: string;
 };
+
+export type UserProgress = {
+  from: string;
+  to: string;
+  total_volume: number;
+  my_score: number;
+  my_volume: number;
+};

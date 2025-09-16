@@ -2,15 +2,21 @@ import { FC, MouseEvent, useEffect, useRef, useState } from "react"
 
 import { ChainId } from "@human-protocol/sdk"
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Box, IconButton, Tooltip, Typography } from "@mui/material"
+import { IconButton, Tooltip, Typography } from "@mui/material"
 
-import { useIsMobile } from "../../hooks/useBreakpoints";
 import { OpenInNewIcon } from "../../icons"
 import { formatAddress, getExplorerUrl } from "../../utils"
 
 type Props = {
   address: string;
   chainId: ChainId;
+  withCopy?: boolean;
+}
+
+const iconButtonSx = {
+  color: 'text.secondary',
+  p: 0,
+  '&:hover': { background: 'none' },
 }
 
 const handleOpenInExplorerClick = (
@@ -23,11 +29,9 @@ const handleOpenInExplorerClick = (
   window.open(explorerUrl, '_blank');
 };
 
-const CampaignAddress: FC<Props> = ({ address, chainId }) => {
+const CampaignAddress: FC<Props> = ({ address, chainId, withCopy = false }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
-
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     return () => {
@@ -54,53 +58,31 @@ const CampaignAddress: FC<Props> = ({ address, chainId }) => {
   }
 
   return (
-    <Box 
+    <Typography 
+      variant="subtitle2"
       display="flex" 
       alignItems="center" 
-      minWidth="250px"
-      maxWidth={{ xs: "100%", sm: "fit-content" }}
-      flexGrow={1}
-      flexShrink={1}
       gap={1} 
-      py={2} 
-      px={3} 
-      borderRadius="40px" 
-      border="1px solid" 
-      borderColor="divider"
     >
-      <Typography 
-        variant="subtitle2" 
-        textOverflow="ellipsis" 
-        overflow="hidden" 
-        whiteSpace="nowrap"
-      >
-        {isMobile ? formatAddress(address) : address}
-      </Typography>
-      <IconButton
-        disabled={isCopied}
-        onClick={handleCopyClick}
-        sx={{
-          color: 'text.secondary',
-          p: 0,
-          ml: 2,
-          '&:hover': { background: 'none' },
-        }}
-      >
-        <Tooltip title="Copied" placement="top" open={isCopied}>
-          <ContentCopyIcon />
-        </Tooltip>
-      </IconButton>
+      {formatAddress(address)}
+      {withCopy && (
+        <IconButton
+          disabled={isCopied}
+          onClick={handleCopyClick}
+          sx={iconButtonSx}
+        >
+          <Tooltip title="Copied" placement="top" open={isCopied}>
+            <ContentCopyIcon />
+          </Tooltip>
+        </IconButton>
+      )}
       <IconButton
         onClick={(e) => handleOpenInExplorerClick(e, chainId, address)}
-        sx={{
-          color: 'text.secondary',
-          p: 0,
-          '&:hover': { background: 'none' },
-        }}
+        sx={iconButtonSx}
       >
         <OpenInNewIcon />
       </IconButton>
-    </Box>
+    </Typography>
   )
 }
 

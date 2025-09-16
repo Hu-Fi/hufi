@@ -1,9 +1,8 @@
 import { FC, useMemo } from 'react';
 
-import { CircularProgress, Typography } from '@mui/material';
+import { Box,CircularProgress, Typography } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import CampaignAddress from '../../components/CampaignAddress';
 import CampaignInfo from '../../components/CampaignInfo';
 import CampaignStats from '../../components/CampaignStats';
 import HowToLaunch from '../../components/HowToLaunch';
@@ -11,14 +10,15 @@ import JoinCampaign from '../../components/JoinCampaign';
 import JoinedCampaigns from '../../components/JoinedCampaigns';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
+import { useCheckIsJoinedCampaign } from '../../hooks/recording-oracle';
 import { useCampaignDetails } from '../../hooks/useCampaigns';
 import { isCampaignDetails } from '../../utils';
 
 const Campaign: FC = () => {
-  const { address } = useParams() as { address: string };
+  const { address } = useParams() as { address: `0x${string}` };
   const [searchParams] = useSearchParams();
-  const { data: campaign, isPending: isCampaignLoading } =
-    useCampaignDetails(address);
+  const { data: campaign, isLoading: isCampaignLoading } = useCampaignDetails(address);
+  const { data: isAlreadyJoined, isLoading: isJoinedLoading } = useCheckIsJoinedCampaign(address);
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
@@ -44,17 +44,16 @@ const Campaign: FC = () => {
 
   return (
     <PageWrapper>
-      <PageTitle title="Campaign Data">
-        {isCampaignLoading && <CircularProgress sx={{ width: '32px', height: '32px', ml: 3 }} />}
-        {!!campaignData && (
-          <>
-            <CampaignAddress address={campaignData.address} chainId={campaignData.chain_id} />
-            <JoinCampaign campaign={campaignData} />
-          </>
-        )}
-      </PageTitle>
-      {!!campaignData && <CampaignInfo campaign={campaignData} />}
-      <CampaignStats campaign={campaignData} />
+      <PageTitle title="Campaign Data" />
+      {isCampaignLoading && <CircularProgress sx={{ width: '40px', height: '40px', margin: '0 auto' }} />}
+      {!!campaignData && (
+        <Box display="flex" flexWrap="wrap" gap={2}>
+          <CampaignInfo campaign={campaignData} />
+          <JoinCampaign campaign={campaignData} isAlreadyJoined={!!isAlreadyJoined} isJoinedLoading={isJoinedLoading} />
+        </Box>
+      )}
+      {isCampaignLoading && <CircularProgress sx={{ width: '40px', height: '40px', margin: '40px auto' }} />}
+      <CampaignStats campaign={campaignData} isJoined={!!isAlreadyJoined} />
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns
         showOnlyActiveCampaigns={false}
