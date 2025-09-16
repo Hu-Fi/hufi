@@ -9,8 +9,11 @@ import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails } from '../../types';
 import { formatTokenAmount } from '../../utils';
+import CampaignResultsWidget, { StatusTooltip } from '../CampaignResultsWidget';
 import { CryptoPairEntity } from '../CryptoPairEntity';
+import CustomTooltip from '../CustomTooltip';
 import FormattedNumber from '../FormattedNumber';
+import InfoTooltipInner from '../InfoTooltipInner';
 import UserProgressWidget from '../UserProgressWidget';
 
 type Props = {
@@ -187,7 +190,13 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
-            <Title variant="subtitle2">Campaign results</Title>
+            <Title variant="subtitle2" display="flex" alignItems="center" justifyContent="space-between">
+              Campaign results
+              <CustomTooltip title={<StatusTooltip />} arrow placement="top">
+                <InfoTooltipInner />
+              </CustomTooltip>
+            </Title>
+            <CampaignResultsWidget finalResultsUrl={campaign.final_results_url} intermediateResultsUrl={campaign.intermediate_results_url} />
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
