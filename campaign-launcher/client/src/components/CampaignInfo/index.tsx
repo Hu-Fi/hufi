@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
@@ -65,6 +65,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
           {getChainIcon(campaign.chain_id)}
         </Box>
       </CustomTooltip>
+      <Button variant="outlined" size="medium">View Chart</Button>
     </Box>
   );
 };
