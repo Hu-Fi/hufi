@@ -5,8 +5,10 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import {
   Button,
   List,
+  ListItem,
   ListItemButton,
   Popover,
+  Stack,
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +19,8 @@ import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '../../icons';
 import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { formatAddress } from '../../utils';
+import CustomTooltip from '../CustomTooltip';
+import InfoTooltipInner from '../InfoTooltipInner';
 
 const buttonSx = {
   color: 'text.secondary',
@@ -129,7 +133,29 @@ const Account: FC = () => {
           {!isAuthenticated && (
             <ListItemButton sx={buttonSx} onClick={handleSignIn}>
               <LoginIcon />
-              Sign In
+              Log In
+              <CustomTooltip 
+                arrow
+                placement="left"
+                sx={{ ml: 'auto', width: '20px', height: '20px', px: 1, bgcolor: 'text.secondary', '& > span': { color: 'white' } }}
+                title={
+                  <Stack>
+                    <Typography variant="tooltip">
+                      Sign in for additional features:
+                    </Typography>
+                    <List sx={{ p: 0, listStyle: 'disc', pl: 1.5 }}>
+                      <ListItem sx={{ p: 0, display: 'list-item', lineHeight: '12px' }}>
+                        <Typography variant="tooltip">Manage API keys</Typography>
+                      </ListItem>
+                      <ListItem sx={{ p: 0, display: 'list-item', lineHeight: '12px' }}>
+                        <Typography variant="tooltip">Join campaigns</Typography>
+                      </ListItem>
+                    </List>
+                  </Stack>
+                }
+              >
+                <InfoTooltipInner />
+              </CustomTooltip>
             </ListItemButton>
           )}
           {!isAuthenticated && signer && (

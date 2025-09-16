@@ -12,10 +12,11 @@ import {
   Toolbar,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import logo from '../../assets/logo.svg';
 import { ROUTES } from '../../constants';
-import useRetrieveSigner from '../../hooks/useRetrieveSigner';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import Account from '../Account';
 import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
@@ -24,7 +25,8 @@ import NetworkSwitcher from '../NetworkSwitcher';
 
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { signer } = useRetrieveSigner();
+  const { activeAddress } = useActiveAccount();
+  const { isConnected } = useAccount();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -90,7 +92,7 @@ const Header: FC = () => {
             </MuiLink>
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" />
-            {signer ? <Account /> : <ConnectWallet />}
+            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
           <IconButton
@@ -163,7 +165,7 @@ const Header: FC = () => {
               </MuiLink>
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {signer ? <Account /> : <ConnectWallet />}
+              {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
             </Box>
           </Drawer>
         </Toolbar>

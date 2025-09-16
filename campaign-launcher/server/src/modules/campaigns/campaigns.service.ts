@@ -126,6 +126,8 @@ export class CampaignsService {
         recordingOracle: campaignEscrow.recordingOracle as string,
         reputationOracle: campaignEscrow.reputationOracle as string,
         balance: campaignEscrow.balance,
+        intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
+        finalResultsUrl: campaignEscrow.finalResultsUrl,
       });
     }
 
@@ -231,6 +233,8 @@ export class CampaignsService {
       exchangeOracleFeePercent: oracleFees.exchangeOracleFee,
       recordingOracleFeePercent: oracleFees.recordingOracleFee,
       reputationOracleFeePercent: oracleFees.reputationOracleFee,
+      intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
+      finalResultsUrl: campaignEscrow.finalResultsUrl,
     };
   }
 
