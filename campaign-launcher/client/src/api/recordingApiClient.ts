@@ -1,7 +1,7 @@
 import { ChainId } from '@human-protocol/sdk';
 import axios, { AxiosError, AxiosRequestHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-import { ExchangeApiKeyData, CampaignsResponse } from '../types';
+import { ExchangeApiKeyData, CampaignsResponse, UserProgress } from '../types';
 import { HttpClient, HttpError } from '../utils/HttpClient';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
@@ -158,6 +158,17 @@ export class RecordingApiClient extends HttpClient {
       chain_id,
       address,
     });
+    return response;
+  }
+
+  async getUserProgress(chain_id: ChainId, campaign_address: `0x${string}`): Promise<UserProgress>{
+    const response = await this.get<UserProgress>(`/campaigns/${chain_id}-${campaign_address}/my-progress`, {
+      params: {
+        chain_id,
+        campaign_address,
+      },
+    });
+
     return response;
   }
 }

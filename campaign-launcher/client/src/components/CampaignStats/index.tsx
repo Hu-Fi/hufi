@@ -1,18 +1,21 @@
-import { FC } from 'react';
+import { Children, FC, PropsWithChildren } from 'react';
 
 import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
+import { useGetUserProgress } from '../../hooks/recording-oracle';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails } from '../../types';
 import { formatTokenAmount } from '../../utils';
 import { CryptoPairEntity } from '../CryptoPairEntity';
-import DailyAmountPaidChart from '../DailyAmountPaidChart';
 import FormattedNumber from '../FormattedNumber';
+import UserProgressWidget from '../UserProgressWidget';
 
 type Props = {
   campaign: CampaignDetails | null | undefined;
+  isJoined: boolean;
 };
 
 const StatsCard = styled(Box)(({ theme }) => ({
@@ -47,22 +50,6 @@ const Title = styled(Typography)(({ theme }) => ({
   },
 }));
 
-const Value = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.violet,
-  fontSize: '40px',
-  fontWeight: 800,
-  letterSpacing: '-0.5px',
-  lineHeight: '100%',
-}));
-
-const Suffix = styled('span')(({ theme }) => ({
-  color: theme.palette.primary.violet,
-  fontSize: '30px',
-  fontWeight: 800,
-  letterSpacing: '-0.5px',
-  lineHeight: '100%',
-}));
-
 const FlexGrid = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexWrap: 'wrap',
@@ -83,16 +70,44 @@ const FlexGrid = styled(Box)(({ theme }) => ({
   },
 }));
 
-const CampaignStats: FC<Props> = ({ campaign }) => {
+const now = new Date().toISOString();
+
+const FirstRowWrapper: FC<PropsWithChildren<{ showProgressWidget: boolean }>> = ({ showProgressWidget, children }) => {
+  if (showProgressWidget) {
+    return (
+      <Grid size={{ xs: 12, md: 6 }}>
+        <FlexGrid>
+          {children}
+        </FlexGrid>
+      </Grid>
+    );
+  }
+
+  return (
+    <>
+      {Children.map(children, (child) => (
+        <Grid size={{ xs: 12, md: 3 }}>
+          {child}
+        </Grid>
+      ))}
+    </>
+  );
+}
+
+const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
+  const { isAuthenticated } = useWeb3Auth();
+
+  const showProgressWidget = isAuthenticated && isJoined && campaign?.status === 'active' && now >= campaign?.start_date && now <= campaign?.end_date;
+
+  const { data: userProgress, isLoading: isUserProgressLoading } = useGetUserProgress(campaign?.address, showProgressWidget);
 
   if (!campaign) return null;
 
   const exchangeName =
     exchangesMap.get(campaign.exchange_name)?.display_name ||
     campaign.exchange_name;
-
   const totalFee =
     campaign.exchange_oracle_fee_percent +
     campaign.recording_oracle_fee_percent +
@@ -107,30 +122,26 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
   );
 
   return (
-    <Grid container spacing={2} width="100%">
-      <Grid size={{ xs: 12, md: 6 }}>
-        <FlexGrid>
+    <>
+      <Grid container spacing={2} width="100%">
+        <FirstRowWrapper showProgressWidget={showProgressWidget}>
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
-            <Value>
-              {formattedTokenAmount}{' '}
-              <Suffix>{campaign.fund_token_symbol}</Suffix>
-            </Value>
+            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+              {formattedTokenAmount}{' '}{campaign.fund_token_symbol}
+            </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
-            <Value>
-              {formattedAmountPaid}{' '}
-              <Suffix>{campaign.fund_token_symbol}</Suffix>
-            </Value>
+            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+              {formattedAmountPaid}{' '}{campaign.fund_token_symbol}
+            </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Oracle fees</Title>
-            <Value>
-              <FormattedNumber
-                value={(formattedTokenAmount * totalFee) / 100}
-              />{' '}
-              <Suffix>{campaign.fund_token_symbol}</Suffix>{' '}
+            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+              <FormattedNumber value={(formattedTokenAmount * totalFee) / 100} />{' '}
+              {campaign.fund_token_symbol}{' '}
               <Typography
                 variant="h6"
                 fontWeight={700}
@@ -139,7 +150,7 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
               >
                 ({totalFee}%)
               </Typography>
-            </Value>
+            </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Daily volume target</Title>
@@ -150,13 +161,44 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
               />{' '}
               <span>{campaign.trading_pair.split('/')[1]}</span>
             </Typography>
+          </StatsCard>  
+        </FirstRowWrapper>
+        {showProgressWidget && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box
+              display="flex"
+              py={2}
+              px={3}
+              bgcolor="background.default"
+              borderRadius="16px"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              height="100%"
+            >
+              <UserProgressWidget data={userProgress} loading={isUserProgressLoading} />
+            </Box>
+          </Grid>
+        )}
+      </Grid>
+      <Grid container spacing={2} width="100%">
+        <Grid size={{ xs: 12, md: 3 }}>
+          <StatsCard>
+            <Title variant="subtitle2">Reserved funds</Title>
           </StatsCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <StatsCard>
+            <Title variant="subtitle2">Campaign results</Title>
+          </StatsCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Exchange</Title>
             <Typography variant={isXl ? 'h4' : 'h6-mobile'}>
               {exchangeName}
             </Typography>
           </StatsCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Pair</Title>
             <CryptoPairEntity
@@ -164,28 +206,9 @@ const CampaignStats: FC<Props> = ({ campaign }) => {
               size={isXl ? 'large' : 'medium'}
             />
           </StatsCard>
-        </FlexGrid>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          bgcolor="background.default"
-          borderRadius="16px"
-          border="1px solid rgba(255, 255, 255, 0.1)"
-          height="100%"
-          p={2}
-        >
-          <DailyAmountPaidChart
-            data={campaign.daily_paid_amounts}
-            endDate={campaign.end_date}
-            tokenSymbol={campaign.fund_token_symbol}
-            tokenDecimals={campaign.fund_token_decimals}
-          />
-        </Box>
-      </Grid>
-    </Grid>
+    </>
   );
 };
 
