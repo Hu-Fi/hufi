@@ -1,4 +1,3 @@
-
 import { Children, FC, PropsWithChildren } from 'react';
 
 import { Box, styled, Typography } from '@mui/material';
