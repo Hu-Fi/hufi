@@ -1,10 +1,12 @@
-import { Children, FC, PropsWithChildren } from 'react';
+import { Children, FC, PropsWithChildren, useState } from 'react';
 
-import { Box, styled, Typography } from '@mui/material';
+import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+import { Box, IconButton, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 import { useGetUserProgress } from '../../hooks/recording-oracle';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
+import { MiniChartIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails } from '../../types';
@@ -14,6 +16,7 @@ import { CryptoPairEntity } from '../CryptoPairEntity';
 import CustomTooltip from '../CustomTooltip';
 import FormattedNumber from '../FormattedNumber';
 import InfoTooltipInner from '../InfoTooltipInner';
+import ChartModal from '../modals/ChartModal';
 import UserProgressWidget from '../UserProgressWidget';
 
 type Props = {
@@ -34,7 +37,7 @@ const StatsCard = styled(Box)(({ theme }) => ({
     height: 'unset',
     minHeight: '125px',
     justifyContent: 'space-between',
-    padding: '16px 32px 24px',
+    padding: '16px 24px 24px',
   },
 
   [theme.breakpoints.only('md')]: {
@@ -98,6 +101,7 @@ const FirstRowWrapper: FC<PropsWithChildren<{ showProgressWidget: boolean }>> = 
 }
 
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
+  const [openChartModal, setOpenChartModal] = useState(false);
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
   const { isAuthenticated } = useWeb3Auth();
@@ -123,6 +127,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
     campaign.amount_paid,
     campaign.fund_token_decimals
   );
+  const volumeTokenSymbol = campaign.trading_pair.split('/')[1];
 
   return (
     <>
@@ -162,7 +167,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
                 value={campaign.daily_volume_target}
                 decimals={3}
               />{' '}
-              <span>{campaign.trading_pair.split('/')[1]}</span>
+              <span>{volumeTokenSymbol}</span>
             </Typography>
           </StatsCard>  
         </FirstRowWrapper>
@@ -177,28 +182,12 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
               border="1px solid rgba(255, 255, 255, 0.1)"
               height="100%"
             >
-              <UserProgressWidget data={userProgress} loading={isUserProgressLoading} />
+              <UserProgressWidget data={userProgress} loading={isUserProgressLoading} volumeTokenSymbol={volumeTokenSymbol} />
             </Box>
           </Grid>
         )}
       </Grid>
-      <Grid container spacing={2} width="100%">
-        <Grid size={{ xs: 12, md: 3 }}>
-          <StatsCard>
-            <Title variant="subtitle2">Reserved funds</Title>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <StatsCard>
-            <Title variant="subtitle2" display="flex" alignItems="center" justifyContent="space-between">
-              Campaign results
-              <CustomTooltip title={<StatusTooltip />} arrow placement="top">
-                <InfoTooltipInner />
-              </CustomTooltip>
-            </Title>
-            <CampaignResultsWidget finalResultsUrl={campaign.final_results_url} intermediateResultsUrl={campaign.intermediate_results_url} />
-          </StatsCard>
-        </Grid>
+      <Grid container spacing={2} width="100%" mt={-2}>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Exchange</Title>
@@ -216,7 +205,45 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             />
           </StatsCard>
         </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <StatsCard>
+            <Title variant="subtitle2" display="flex" alignItems="center" justifyContent="space-between">
+              Campaign results
+              <CustomTooltip title={<StatusTooltip />} arrow placement="top">
+                <InfoTooltipInner />
+              </CustomTooltip>
+            </Title>
+            <CampaignResultsWidget finalResultsUrl={campaign.final_results_url} intermediateResultsUrl={campaign.intermediate_results_url} />
+          </StatsCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <StatsCard>
+            <Title variant="subtitle2" display="flex" alignItems="center" justifyContent="space-between">
+              Campaign chart
+              <IconButton
+                disableRipple
+                sx={{
+                  p: 0,
+                  ml: 'auto',
+                  '&:hover': { background: 'none' }, 
+                }}
+                onClick={() => setOpenChartModal(true)}
+              >
+                <ZoomOutMapIcon />
+              </IconButton>
+            </Title>
+            <MiniChartIcon sx={{ width: '100%', height: 'auto' }} />
+          </StatsCard>
+        </Grid>
       </Grid>
+      <ChartModal 
+        open={openChartModal} 
+        onClose={() => setOpenChartModal(false)}
+        data={campaign.daily_paid_amounts} 
+        endDate={campaign.end_date}
+        tokenSymbol={campaign.fund_token_symbol}
+        tokenDecimals={campaign.fund_token_decimals}
+      />
     </>
   );
 };

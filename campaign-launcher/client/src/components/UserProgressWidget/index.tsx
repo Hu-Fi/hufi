@@ -7,6 +7,7 @@ import dayjs from '../../utils/dayjs';
 
 type Props = {
   data: UserProgress | undefined;
+  volumeTokenSymbol: string;
   loading: boolean;
 }
 
@@ -24,7 +25,7 @@ const formatDate = (dateString: string | undefined) => {
   return `${day} ${month} ${year} ${formatTime(dateString)}`;
 };
 
-const UserProgressWidget: FC<Props> = ({ data, loading }) => {
+const UserProgressWidget: FC<Props> = ({ data, volumeTokenSymbol, loading }) => {
   return (
     <Stack justifyContent="space-between" gap={{ xs: 2, md: 0 }}>
       <Typography variant="subtitle2">My Campaign Progress</Typography>
@@ -41,7 +42,7 @@ const UserProgressWidget: FC<Props> = ({ data, loading }) => {
       <Stack gap={1}>
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="subtitle2" width={90}>Total Volume</Typography>
-          {loading ? <Skeleton variant="text" width={180} height={32} /> : <Typography variant="h6" color="primary.violet" fontWeight={700}>{data?.total_volume}</Typography>}
+          {loading ? <Skeleton variant="text" width={180} height={32} /> : <Typography variant="h6" color="primary.violet" fontWeight={700}>{data?.total_volume} {volumeTokenSymbol}</Typography>}
         </Box>
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="subtitle2" width={90}>My Score</Typography>
@@ -49,7 +50,7 @@ const UserProgressWidget: FC<Props> = ({ data, loading }) => {
         </Box>
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="subtitle2" width={90}>My Volume</Typography>
-          {loading ? <Skeleton variant="text" width={180} height={32} /> : <Typography variant="h6" color="primary.violet" fontWeight={700}>{data?.my_volume}</Typography>}
+          {loading ? <Skeleton variant="text" width={180} height={32} /> : <Typography variant="h6" color="primary.violet" fontWeight={700}>{data?.my_volume} {volumeTokenSymbol}</Typography>}
         </Box>
       </Stack>
     </Stack>

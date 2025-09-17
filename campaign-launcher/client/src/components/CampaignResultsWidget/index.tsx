@@ -17,14 +17,17 @@ const handleOpenUrl = (e: MouseEvent<HTMLButtonElement>, url: string) => {
 const STATUS = {
   none: {
     label: 'N/A',
+    description: 'Campaign is active but no results have been recorded yet.',
     bgcolor: 'error.main',
   },
   intermediate: {
     label: 'Intermediate',
+    description: 'Campaign is active. Results show progress so far.',
     bgcolor: 'warning.main',
   },
   final: {
     label: 'Final',
+    description: 'Campaign has ended. These are the final results of the campaign.',
     bgcolor: 'success.main',
   },
 }
@@ -33,15 +36,15 @@ export const StatusTooltip = () => (
   <Stack width={150} gap={0.5}>
     <Box display="flex" alignItems="baseline" gap={0.5}>
       <Box p={0.5} borderRadius="50%" bgcolor={STATUS.final.bgcolor} />
-      <Typography variant="tooltip"><strong>Final:</strong>{' '}Campaign has ended. These are the final results of the campaign.</Typography>
+      <Typography variant="tooltip"><strong>Final:</strong>{' '}{STATUS.final.description}</Typography>
     </Box>
     <Box display="flex" alignItems="baseline" gap={0.5}>
       <Box p={0.5} borderRadius="50%" bgcolor={STATUS.intermediate.bgcolor} />
-      <Typography variant="tooltip"><strong>Intermediate:</strong>{' '}Campaign is active. Results show progress so far.</Typography>
+      <Typography variant="tooltip"><strong>Intermediate:</strong>{' '}{STATUS.intermediate.description}</Typography>
     </Box>
     <Box display="flex" alignItems="baseline" gap={0.5}>
       <Box p={0.5} borderRadius="50%" bgcolor={STATUS.none.bgcolor} />
-      <Typography variant="tooltip"><strong>N/A:</strong>{' '}Campaign is active but no results have been recorded yet.</Typography>
+      <Typography variant="tooltip"><strong>N/A:</strong>{' '}{STATUS.none.description}</Typography>
     </Box>
   </Stack>
 );
