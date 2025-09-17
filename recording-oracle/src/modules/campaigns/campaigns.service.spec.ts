@@ -312,7 +312,11 @@ describe('CampaignsService', () => {
       );
     });
 
-    it.each([EscrowStatus.Cancelled, EscrowStatus.Complete])(
+    it.each([
+      EscrowStatus.Cancelled,
+      EscrowStatus.Complete,
+      EscrowStatus.ToCancel,
+    ])(
       'should throw when escrow has invalid status [%#]',
       async (escrowStatus) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -589,10 +593,16 @@ describe('CampaignsService', () => {
     let userId: string;
     let chainId: number;
 
+    const mockedGetEscrowStatus = jest.fn();
+
     beforeEach(() => {
       campaign = generateCampaignEntity();
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
+
+      mockedEscrowClient.build.mockResolvedValue({
+        getStatus: mockedGetEscrowStatus,
+      } as unknown as EscrowClient);
     });
 
     it('should return campaign id if exists and user already joined', async () => {
@@ -736,6 +746,35 @@ describe('CampaignsService', () => {
 
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
     });
+
+    it.each([EscrowStatus.Cancelled, EscrowStatus.ToCancel])(
+      'should throw when escrow has invalid status [%#]',
+      async (escrowStatus) => {
+        mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+          campaign,
+        );
+        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+          false,
+        );
+        mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
+
+        let thrownError;
+        try {
+          await campaignsService.join(userId, chainId, campaign.address);
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(InvalidCampaign);
+        expect(thrownError.chainId).toBe(chainId);
+        expect(thrownError.address).toBe(campaign.address);
+        expect(thrownError.details).toBe(
+          `Invalid status: ${EscrowStatus[escrowStatus]}`,
+        );
+
+        expect(mockedGetEscrowStatus).toHaveBeenCalledWith(campaign.address);
+      },
+    );
   });
 
   describe('getJoined', () => {
