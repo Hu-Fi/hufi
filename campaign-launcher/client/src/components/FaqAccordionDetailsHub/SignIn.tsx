@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
+import { Link, List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
 
 import { listItemWithNumberProps, listItemTextProps } from './styles';
 
@@ -62,8 +62,25 @@ const SignIn = () => {
         </ListItem>
         <ListItem disablePadding sx={listItemWithNumberProps}>
           <ListItemText 
-            primary="In the top-right corner, click on your wallet address and go to 'Manage API keys'. 
-              (This is where all your API keys with different exchanges are stored and managed)"
+            primary={
+              <>
+                <Typography variant="body2">
+                  To add a new API key, click on &apos;Add new key&apos;. Then select the exchange and paste the keys there.
+                </Typography>
+                <Typography variant="body2">
+                  Remember: we require only read-only API keys with permissions to only fetch trades.
+                  Please, check{' '}
+                  <Link 
+                    href="https://docs.google.com/document/d/1ruuIAiC95o4DZd_cVDeDcxZcILGOmiueveeIffqEjE0" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    sx={{ color: 'primary', textDecoration: 'underline' }}
+                  >
+                    here
+                  </Link>{' '}on how to generate these keys on the exchange.
+                </Typography>
+              </>
+            }
             slotProps={listItemTextProps}
           />
         </ListItem>

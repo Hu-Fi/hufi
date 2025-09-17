@@ -10,11 +10,11 @@ const CampaignsDiscovery = () => {
         By default, &apos;Only Active Campaigns&apos; filter should be applied, however you might be interested in all campaigns.
         To do that you need to toggle the switch in a right side of a page.
       </Typography>
-      <Typography variant="body2" fontWeight={700}>
+      <Typography variant="body2" mb={2} fontWeight={700}>
         Lets break down the information about a campaign showed on a dashboard:
       </Typography>
-      {/* TODO: Add image */}
-      <Typography variant="body2">
+      <img src="/tableImage.png" alt="Campaigns discovery" width="100%" height="auto" />
+      <Typography variant="body2" mt={2}>
         <strong>Pair:{' '}</strong>A pair of tokens you will need to trade
       </Typography>
       <Typography variant="body2">
