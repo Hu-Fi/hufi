@@ -143,6 +143,21 @@ export class CampaignsService {
         campaign.address,
       );
     }
+
+    const signer = this.web3Service.getSigner(chainId);
+    const escrowClient = await EscrowClient.build(signer);
+    const escrowStatus = await escrowClient.getStatus(campaignAddress);
+
+    if (
+      [EscrowStatus.Cancelled, EscrowStatus.ToCancel].includes(escrowStatus)
+    ) {
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        `Invalid status: ${EscrowStatus[escrowStatus]}`,
+      );
+    }
+
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
