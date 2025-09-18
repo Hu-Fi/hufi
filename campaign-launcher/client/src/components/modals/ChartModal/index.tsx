@@ -26,7 +26,7 @@ const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
       }}
     >
       <Typography variant="h4" color="text.primary" mb={{ xs: 3, md: 7 }}>
-        Daily amount paid chart
+        Paid Amount Chart
       </Typography>
       <DailyAmountPaidChart 
         data={campaign.daily_paid_amounts} 
