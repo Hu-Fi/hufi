@@ -239,10 +239,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
       <ChartModal 
         open={openChartModal} 
         onClose={() => setOpenChartModal(false)}
-        data={campaign.daily_paid_amounts} 
-        endDate={campaign.end_date}
-        tokenSymbol={campaign.fund_token_symbol}
-        tokenDecimals={campaign.fund_token_decimals}
+        campaign={campaign}
       />
     </>
   );

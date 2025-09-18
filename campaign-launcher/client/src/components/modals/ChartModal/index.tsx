@@ -2,22 +2,17 @@ import { FC } from "react";
 
 import { Typography } from "@mui/material";
 
+import { CampaignDetails } from "../../../types";
 import DailyAmountPaidChart from "../../DailyAmountPaidChart";
 import BaseModal from "../BaseModal"
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  data: {
-    date: string;
-    amount: string;
-  }[];
-  endDate: string;
-  tokenSymbol: string;
-  tokenDecimals: number;
+  campaign: CampaignDetails;
 };
 
-const ChartModal: FC<Props> = ({ open, onClose, data, endDate, tokenSymbol, tokenDecimals }) => {
+const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
   return (
     <BaseModal
       open={open}
@@ -33,7 +28,12 @@ const ChartModal: FC<Props> = ({ open, onClose, data, endDate, tokenSymbol, toke
       <Typography variant="h4" color="text.primary" mb={{ xs: 3, md: 7 }}>
         Daily amount paid chart
       </Typography>
-      <DailyAmountPaidChart data={data} endDate={endDate} tokenSymbol={tokenSymbol} tokenDecimals={tokenDecimals} />
+      <DailyAmountPaidChart 
+        data={campaign.daily_paid_amounts} 
+        endDate={campaign.end_date} 
+        tokenSymbol={campaign.fund_token_symbol} 
+        tokenDecimals={campaign.fund_token_decimals} 
+      />
     </BaseModal>
   )
 }
