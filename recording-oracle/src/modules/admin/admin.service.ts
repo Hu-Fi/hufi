@@ -32,9 +32,7 @@ export class AdminService {
       from: progress.from,
       to: progress.to,
       totalVolume: progress.total_volume,
-      participantOutcomes: progress.participants_outcomes_batches.flatMap(
-        (batch) => batch.results,
-      ),
+      participantOutcomes: progress.participants_outcomes,
     };
   }
 }
