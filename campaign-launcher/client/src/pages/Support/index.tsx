@@ -50,7 +50,11 @@ const SectionHeader = ({ title }: { title: string }) => (
 )
 
 const VideoPlaceholder = () => (
-  <Box bgcolor="background.default" borderRadius="24px" width="480px" height="270px" />
+  <Box display="flex" justifyContent="center" alignItems="center" bgcolor="background.default" borderRadius="24px" width="480px" height="270px">
+    <Typography variant="body2">
+      The video will be coming soon
+    </Typography>
+  </Box>
 )
 
 const Support: FC = () => {
