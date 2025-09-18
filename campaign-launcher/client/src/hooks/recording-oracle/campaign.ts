@@ -66,7 +66,7 @@ export const useCheckIsJoinedCampaign = (address: `0x${string}`) => {
   const { isAuthenticated } = useWeb3Auth();
 
   return useQuery({
-    queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN, appChainId, address],
+    queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN, appChainId, address, isAuthenticated],
     queryFn: () => recordingApi.checkIsJoinedCampaign(appChainId, address),
     select: (data) => data.is_joined,
     enabled: isAuthenticated && !!appChainId && !!address,
