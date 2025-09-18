@@ -16,9 +16,9 @@ import {
   getNetworkName,
   mapStatusToColor,
 } from '../../utils';
+import CampaignAddress from '../CampaignAddress';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import CustomTooltip from '../CustomTooltip';
-import ExplorerLink from '../ExplorerLink';
 import InfoTooltipInner from '../InfoTooltipInner';
 import LaunchCampaign from '../LaunchCampaign';
 
@@ -45,7 +45,7 @@ const getSuffix = (day: number) => {
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   const day = date.getDate();
-  const month = date.toLocaleString('en-US', { month: 'long' });
+  const month = date.toLocaleString('en-US', { month: 'short' });
   const year = date.getFullYear();
   return `${day}${getSuffix(day)} ${month} ${year}`;
 };
@@ -215,10 +215,7 @@ const CampaignsTable: FC<Props> = ({
       flex: 1.5,
       minWidth: 175,
       renderCell: (params) => (
-        <ExplorerLink
-          address={params.row.address}
-          chainId={params.row.chain_id}
-        />
+        <CampaignAddress address={params.row.address} chainId={params.row.chain_id} />
       ),
     },
     {
@@ -258,7 +255,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'network',
       headerName: 'Network',
       flex: 1,
-      minWidth: 100,
+      minWidth: 90,
       renderCell: (params) => {
         const networkName = getNetworkName(params.row.chain_id);
         return (

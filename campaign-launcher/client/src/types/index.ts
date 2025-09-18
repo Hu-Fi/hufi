@@ -50,10 +50,12 @@ export type Campaign = {
   daily_volume_target: number;
   start_date: string;
   end_date: string;
+  final_results_url: string | null;
   fund_amount: string;
   fund_token: string;
   fund_token_symbol: string;
   fund_token_decimals: number;
+  intermediate_results_url: string | null;
   status: 'active' | 'cancelled' | 'completed';
   escrow_status: string;
   launcher: string;
@@ -109,4 +111,12 @@ export type OracleFees = {
   exchange_oracle_fee: string;
   recording_oracle_fee: string;
   reputation_oracle_fee: string;
+};
+
+export type UserProgress = {
+  from: string;
+  to: string;
+  total_volume: number;
+  my_score: number;
+  my_volume: number;
 };
