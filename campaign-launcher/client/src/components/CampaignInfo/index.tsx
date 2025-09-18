@@ -1,6 +1,6 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
@@ -8,6 +8,7 @@ import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
 import dayjs from '../../utils/dayjs';
 import CampaignAddress from '../CampaignAddress';
 import CustomTooltip from '../CustomTooltip';
+import ChartModal from '../modals/ChartModal';
 
 const formatDate = (dateString: string): string => {
   return dayjs(dateString).format('D MMM YYYY');
@@ -23,6 +24,8 @@ type Props = {
 };
 
 const CampaignInfo: FC<Props> = ({ campaign }) => {
+  const [openChartModal, setOpenChartModal] = useState(false);
+
   const isCompleted = campaign.status === 'completed';
   return (
     <Box display="flex" alignItems="center" height={{ xs: 'auto', md: '40px' }} gap={4} flexWrap={{ xs: "wrap", md: "nowrap" }}>
@@ -65,6 +68,14 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
           {getChainIcon(campaign.chain_id)}
         </Box>
       </CustomTooltip>
+      <Button variant="outlined" size="medium" onClick={() => setOpenChartModal(true)}>
+        Paid Amount Chart
+      </Button>
+      <ChartModal 
+        open={openChartModal} 
+        onClose={() => setOpenChartModal(false)}
+        campaign={campaign}
+      />
     </Box>
   );
 };
