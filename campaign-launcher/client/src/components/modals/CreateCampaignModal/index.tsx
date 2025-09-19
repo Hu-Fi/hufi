@@ -196,7 +196,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   };
 
   const handleOnTryAgainClick = () => {
-    stepsCompleted > 1 ? createEscrow(getValues()) : resetCreateEscrow();
+    stepsCompleted > 0 ? createEscrow(getValues()) : resetCreateEscrow();
   }
 
   const handleClose = () => {
