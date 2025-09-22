@@ -4,12 +4,11 @@ import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { Box, IconButton, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { useGetUserProgress } from '../../hooks/recording-oracle';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { MiniChartIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
-import { CampaignDetails } from '../../types';
+import { CampaignDetails, CampaignStatus } from '../../types';
 import { formatTokenAmount } from '../../utils';
 import CampaignResultsWidget, { StatusTooltip } from '../CampaignResultsWidget';
 import { CryptoPairEntity } from '../CryptoPairEntity';
@@ -101,14 +100,13 @@ const FirstRowWrapper: FC<PropsWithChildren<{ showProgressWidget: boolean }>> = 
 }
 
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
-  const [openChartModal, setOpenChartModal] = useState(false);
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
   const { isAuthenticated } = useWeb3Auth();
 
-  const showProgressWidget = isAuthenticated && isJoined && campaign?.status === 'active' && now >= campaign?.start_date && now <= campaign?.end_date;
-
-  const { data: userProgress, isLoading: isUserProgressLoading } = useGetUserProgress(campaign?.address, showProgressWidget);
+  const showProgressWidget = isAuthenticated && isJoined && 
+    campaign?.status === CampaignStatus.ACTIVE && now >= campaign?.start_date && now <= campaign?.end_date;
 
   if (!campaign) return null;
 
@@ -182,7 +180,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
               border="1px solid rgba(255, 255, 255, 0.1)"
               height="100%"
             >
-              <UserProgressWidget data={userProgress} loading={isUserProgressLoading} volumeTokenSymbol={volumeTokenSymbol} />
+              <UserProgressWidget campaign={campaign} />
             </Box>
           </Grid>
         )}
@@ -227,7 +225,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
                   ml: 'auto',
                   '&:hover': { background: 'none' }, 
                 }}
-                onClick={() => setOpenChartModal(true)}
+                onClick={() => setIsChartModalOpen(true)}
               >
                 <ZoomOutMapIcon />
               </IconButton>
@@ -237,8 +235,8 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         </Grid>
       </Grid>
       <ChartModal 
-        open={openChartModal} 
-        onClose={() => setOpenChartModal(false)}
+        open={isChartModalOpen} 
+        onClose={() => setIsChartModalOpen(false)}
         campaign={campaign}
       />
     </>

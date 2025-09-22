@@ -52,7 +52,6 @@ const Campaign: FC = () => {
           <JoinCampaign campaign={campaignData} isAlreadyJoined={!!isAlreadyJoined} isJoinedLoading={isJoinedLoading} />
         </Box>
       )}
-      {isCampaignLoading && <CircularProgress sx={{ width: '40px', height: '40px', margin: '40px auto' }} />}
       <CampaignStats campaign={campaignData} isJoined={!!isAlreadyJoined} />
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns
