@@ -61,8 +61,15 @@ const Support: FC = () => {
   return (
     <PageWrapper>
       <PageTitle title="How to / F.A.Q" />
-      <Box component="section" display="flex" gap={4} pb={4} borderBottom="1px solid rgba(255, 255, 255, 0.04)">
-        <Stack maxWidth="50%" flex={1}>
+      <Box 
+        component="section" 
+        display="flex" 
+        flexDirection={{ xs: 'column', md: 'row' }}
+        gap={4} 
+        pb={4} 
+        borderBottom="1px solid rgba(255, 255, 255, 0.04)"
+      >
+        <Stack maxWidth={{ xs: '100%', md: '50%' }} flex={1}>
           <SectionHeader title="How to launch a campaign" />
           <Typography variant="body2" mb={4}>
             Learn how to launch your campaign with ease—follow the written
@@ -95,19 +102,26 @@ const Support: FC = () => {
         </Stack>
         <Box 
           display="flex" 
-          maxWidth="50%" 
+          maxWidth={{ xs: '100%', md: '50%' }} 
           flex={1} 
-          justifyContent="flex-end"
-          position="sticky"
-          top={32}
-          bottom={32}
+          justifyContent={{ xs: "flex-start", md: "flex-end"}}
+          position={{ xs: "relative", md: "sticky"}}
+          top={{ xs: 0, md: 32}}
+          bottom={{ xs: 0, md: 32}}
           height="fit-content"
         >
           <VideoPlaceholder />
         </Box>
       </Box>
-      <Box component="section" display="flex" gap={4} pb={4} borderBottom="1px solid rgba(255, 255, 255, 0.04)">
-        <Stack maxWidth="50%" flex={1}>
+      <Box 
+        component="section" 
+        display="flex" 
+        flexDirection={{ xs: 'column', md: 'row' }}
+        gap={4} 
+        pb={4} 
+        borderBottom="1px solid rgba(255, 255, 255, 0.04)"
+      >
+        <Stack maxWidth={{ xs: '100%', md: '50%' }} flex={1}>
           <SectionHeader title="How to participate in a campaign" />
           <Typography variant="body2" mb={4}>
             Discover how to participate in a campaign with ease. Choose between 
@@ -155,12 +169,12 @@ const Support: FC = () => {
         </Stack>
         <Box 
           display="flex" 
-          maxWidth="50%" 
+          maxWidth={{ xs: '100%', md: '50%' }} 
           flex={1} 
-          justifyContent="flex-end"
-          position="sticky"
-          top={32}
-          bottom={32}
+          justifyContent={{ xs: "flex-start", md: "flex-end"}}
+          position={{ xs: "relative", md: "sticky"}}
+          top={{ xs: 0, md: 32}}
+          bottom={{ xs: 0, md: 32}}
           height="fit-content"
         >
           <VideoPlaceholder />

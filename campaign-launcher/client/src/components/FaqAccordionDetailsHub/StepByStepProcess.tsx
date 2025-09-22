@@ -63,7 +63,7 @@ const StepByStepProcess = () => {
                 <Typography variant="body2" fontWeight={700}>Start date:</Typography>
                 <Typography variant="body2">
                   Date when the campaign will start. If you choose today&apos;s date, the campaign will start immediately,
-                  otherwise it will start at 00:00 UTC of the date you chose.
+                  otherwise it will start at 00:00 your timezone of the date you chose.
                 </Typography>
                 <Typography variant="body2" fontWeight={700}>End date:</Typography>
                 <Typography variant="body2">
@@ -82,7 +82,7 @@ const StepByStepProcess = () => {
                 </Typography>
                 <Typography variant="body2" fontWeight={700}>Daily volume target:</Typography>
                 <Typography variant="body2" mb={2}>
-                  A targer you want to set for a quote token that should be reached daily.
+                  A target you want to set for a quote token that should be reached daily.
                   If participants reach this target (and above), the daily reward pool will be distributed fully,
                   otherwise proportionally to the target you set.
                 </Typography>
@@ -118,7 +118,7 @@ const StepByStepProcess = () => {
         </ListItem>
         <ListItem disablePadding sx={{ ...listItemWithNumberProps, mt: 2 }}>
           <ListItemText 
-            primary="After everythin is completed, you will be redirected to the page 
+            primary="After everything is completed, you will be redirected to the page 
               where you can see details about the campaign you've recently created"
             slotProps={listItemTextProps}
           />

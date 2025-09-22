@@ -2,6 +2,8 @@ import { Link, List, ListItem, ListItemText, Stack, Typography } from '@mui/mate
 
 import { listItemTextProps, listItemWithMarkerProps } from './styles';
 
+const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
+
 const Prerequisites = () => {
   return (
     <Stack>
@@ -42,11 +44,11 @@ const Prerequisites = () => {
                   <Typography variant="body2">
                     Going directly to{' '}
                     <Link 
-                      href="https://staking.humanprotocol.org/" 
+                      href={STAKING_DASHBOARD_URL}
                       target="_blank" 
                       sx={{ textDecoration: 'underline' }}
                     >
-                      https://staking.humanprotocol.org/
+                      {STAKING_DASHBOARD_URL}
                     </Link> 
                     {' '}or
                   </Typography>
@@ -92,7 +94,7 @@ const Prerequisites = () => {
           <List component="ul" sx={{ listStyleType: 'disc', p: 0, pl: 2, listStylePosition: 'outside' }}>
             <ListItem sx={listItemWithMarkerProps}>
               <ListItemText 
-                primary="Gas fees (for campaign creation/escrow)" 
+                primary="Gas fees (for campaign/escrow creation)" 
                 slotProps={listItemTextProps} 
               />
             </ListItem>

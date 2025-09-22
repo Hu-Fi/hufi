@@ -11,7 +11,7 @@ const RewardsCalculation = () => {
       </Typography>
       <Typography variant="body2">
         <Typography component="span" fontSize={14} fontStyle="italic" fontFamily="Inria Serif">
-          dailyRewardPool = fundAmount * duration (in days).
+          dailyRewardPool = fundAmount / duration (in days).
         </Typography>
         {' '}For the duration we use <code>Math.ceil()</code> function which means that 25 hours will be considered as 2 days.
       </Typography>
