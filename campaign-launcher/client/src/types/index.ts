@@ -73,6 +73,7 @@ export type Campaign = {
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
+  reserved_funds: string;
 };
 
 export type CampaignDetails = Campaign & {
@@ -127,19 +128,19 @@ export type OracleFees = {
 
 export type HoldingResult = {
   token_balance: number;
-}
+};
 
 export type HoldingMeta = {
   total_balance: number;
-}
+};
 
 export type MarketMakingResult = {
   total_volume: number;
-}
+};
 
 export type MarketMakingMeta = {
   total_volume: number;
-}
+};
 
 export type MyMeta = HoldingResult | MarketMakingResult;
 export type TotalMeta = HoldingMeta | MarketMakingMeta;
