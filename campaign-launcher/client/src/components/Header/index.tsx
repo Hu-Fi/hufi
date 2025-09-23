@@ -5,26 +5,56 @@ import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Box,
-  Button,
   Drawer,
   IconButton,
   Link as MuiLink,
+  SxProps,
   Toolbar,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import logo from '../../assets/logo.svg';
 import { ROUTES } from '../../constants';
-import useRetrieveSigner from '../../hooks/useRetrieveSigner';
+import { useActiveAccount } from '../../providers/ActiveAccountProvider';
 import Account from '../Account';
 import ConnectWallet from '../ConnectWallet';
 import Container from '../Container';
 import LaunchCampaign from '../LaunchCampaign';
 import NetworkSwitcher from '../NetworkSwitcher';
 
+type StyledLinkProps = {
+  to: string;
+  text: string;
+  sx?: SxProps;
+  target?: string;
+}
+
+const StyledLink = ({ to, text, sx, target }: StyledLinkProps) => {
+  return (
+    <MuiLink
+      to={to}
+      component={Link}
+      target={target}
+      sx={{
+        textDecoration: 'none',
+        color: 'primary.main',
+        fontWeight: 600,
+        fontSize: '14px',
+        ...sx,
+      }}
+    >
+      {text}
+    </MuiLink>
+  )
+}
+
+const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
+
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { signer } = useRetrieveSigner();
+  const { activeAddress } = useActiveAccount();
+  const { isConnected } = useAccount();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -63,34 +93,12 @@ const Header: FC = () => {
             alignItems="center"
             height="100%"
           >
-            <MuiLink
-              to={ROUTES.DASHBOARD}
-              component={Link}
-              sx={{
-                textDecoration: 'none',
-                color: 'primary.main',
-                fontWeight: 600,
-                fontSize: '14px',
-              }}
-            >
-              Dashboard
-            </MuiLink>
-            <MuiLink
-              to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
-              target="_blank"
-              component={Link}
-            >
-              <Button
-                variant="text"
-                size="medium"
-                sx={{ color: 'primary.main', height: '100%' }}
-              >
-                Stake HMT
-              </Button>
-            </MuiLink>
+            <StyledLink to={ROUTES.SUPPORT} text="Support" />
+            <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
+            <StyledLink to={STAKING_DASHBOARD_URL} text="Stake HMT" target="_blank" />
             <NetworkSwitcher />
-            <LaunchCampaign variant="outlined" />
-            {signer ? <Account /> : <ConnectWallet />}
+            <LaunchCampaign variant="outlined" withTooltip />
+            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
           <IconButton
@@ -136,34 +144,12 @@ const Header: FC = () => {
               >
                 <CloseIcon />
               </IconButton>
-              <MuiLink
-                to={ROUTES.DASHBOARD}
-                component={Link}
-                sx={{
-                  textDecoration: 'none',
-                  color: 'primary.main',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                }}
-              >
-                Dashboard
-              </MuiLink>
-              <MuiLink
-                to={import.meta.env.VITE_APP_STAKING_DASHBOARD_URL}
-                target="_blank"
-                component={Link}
-              >
-                <Button
-                  variant="text"
-                  size="medium"
-                  sx={{ color: 'primary.main', height: '100%' }}
-                >
-                  Stake HMT
-                </Button>
-              </MuiLink>
+              <StyledLink to={ROUTES.SUPPORT} text="Support" />
+              <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
+              <StyledLink to={STAKING_DASHBOARD_URL} text="Stake HMT" target="_blank"/>
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {signer ? <Account /> : <ConnectWallet />}
+              {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
             </Box>
           </Drawer>
         </Toolbar>
