@@ -135,6 +135,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
     'reputation_oracle',
     'amount_paid',
     'daily_paid_amounts',
+    'reserved_funds',
   ];
 
   for (const field of requiredCampaignFields) {
@@ -186,6 +187,7 @@ export const constructCampaignDetails = ({
     status: 'active',
     escrow_status: 'pending',
     launcher: address,
+    reserved_funds: '0',
     exchange_oracle: '',
     exchange_oracle_fee_percent: Number(fees.exchangeOracleFee),
     recording_oracle: '',
