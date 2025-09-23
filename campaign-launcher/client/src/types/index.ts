@@ -73,6 +73,7 @@ export type Campaign = {
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
+  reserved_funds: string;
 };
 
 export type CampaignDetails = Campaign & {
