@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { EscrowClient } from '@human-protocol/sdk';
 import dayjs from 'dayjs';
@@ -65,7 +65,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [stepsCompleted, setStepsCompleted] = useState(0);
-  const [escrowClient, setEscrowClient] = useState<EscrowClient | undefined>(undefined);
 
   const escrowState = useRef<EscrowState>(initialEscrowState);
 
@@ -76,27 +75,20 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   const isSuccess = !!data && !error && !isLoading;
   const isIdle = !isLoading && !error && !data;
 
-  useEffect(() => {
-    const initEscrowClient = async () => {
-      if (signer) {
-        try {
-          const _escrowClient = await EscrowClient.build(signer);
-          setEscrowClient(_escrowClient);
-        } catch (e) {
-          console.error('Failed to initialize escrow client', e);
-          setError(e instanceof Error ? e : new Error('Failed to initialize escrow client'));
-        }
-      }
-    };
-
-    initEscrowClient();
-  }, [signer]);
-
   const createEscrowMutation = useCallback(async (variables: EscrowCreateDto) => {
-    if (!escrowClient || !signer) {
+    if (!signer) {
       throw new Error('Escrow client not initialized');
     }
 
+    let escrowClient: EscrowClient;
+
+    try {
+      escrowClient = await EscrowClient.build(signer);
+    } catch (e) {
+      console.error('Failed to initialize escrow client', e);
+      throw new Error('Failed to initialize escrow client');
+    }
+    
     const tokenAddress = getTokenAddress(appChainId, variables.fund_token);
     if (!tokenAddress?.length) {
       throw new Error('Fund token is not supported.');
@@ -129,6 +121,10 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
 
     try {
       if (_stepsCompleted < 1) {
+        /*
+          Before creating the escrow, we need to get the oracle fees in order to
+          make sure the backend won't interrupt the process and users won't lose their funds
+        */
         const oracleFees = await launcherApi.getOracleFees(appChainId);
         const _escrowAddress = await escrowClient.createEscrow(tokenAddress, uuidV4());
 
@@ -138,13 +134,13 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         escrowState.current.reputationOracleFee = oracleFees.reputation_oracle_fee;
 
         _stepsCompleted = 1;
-        setStepsCompleted(1);
+        setStepsCompleted(_stepsCompleted);
       }
 
       if (_stepsCompleted < 2) {
         await escrowClient.fund(escrowState.current.escrowAddress, fundAmount);
         _stepsCompleted = 2;
-        setStepsCompleted(2);
+        setStepsCompleted(_stepsCompleted);
       }
 
       if (_stepsCompleted < 3) {
@@ -164,7 +160,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
 
         await escrowClient.setup(escrowState.current.escrowAddress, escrowConfig);
         _stepsCompleted = 3;
-        setStepsCompleted(3);
+        setStepsCompleted(_stepsCompleted);
       }
 
       const result = {
@@ -180,17 +176,16 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       console.error(e);
       throw e;
     }
-  },[signer, appChainId, escrowClient, stepsCompleted]);
+  },[signer, appChainId, stepsCompleted]);
 
   const mutate = useCallback(async (variables: EscrowCreateDto) => {
     setIsLoading(true);
     setError(undefined);
     try {
       const result = await createEscrowMutation(variables);
-      if (result) {
-        setData(result);
-      }
+      setData(result);
     } catch (e) {
+      console.error(e);
       const err = e instanceof Error ? e : new Error('Unknown error occurred');
       setError(err);
       setData(undefined);
