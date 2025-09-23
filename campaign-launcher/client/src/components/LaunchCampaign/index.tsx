@@ -1,6 +1,6 @@
-import { FC, useState } from 'react';
+import { FC, PropsWithChildren, useState } from 'react';
 
-import { Button, SxProps } from '@mui/material';
+import { Box, Button, SxProps, Tooltip, Typography } from '@mui/material';
 
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import useRetrieveSigner from '../../hooks/useRetrieveSigner';
@@ -11,9 +11,45 @@ import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
 type Props = {
   variant: 'outlined' | 'contained';
   sx?: SxProps;
+  withTooltip?: boolean;
 };
 
-const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
+type ButtonWrapperProps = {
+  isDisabled: boolean;
+  withTooltip: boolean;
+};
+
+const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({ isDisabled, withTooltip, children }) => {
+  if (isDisabled && withTooltip) {
+    return (
+      <Tooltip 
+        title={
+          <Typography variant="tooltip">
+            You&apos;ll need to connect your wallet before launching a campaign
+          </Typography>
+        }
+        slotProps={{
+          tooltip: {
+            sx: {
+              width: '150px',
+              lineHeight: '14px',
+            }
+          }
+        }}
+        arrow 
+        placement="left"
+      >
+        <Box sx={{ cursor: 'pointer' }}>
+          {children}
+        </Box>
+      </Tooltip>
+    )
+  }
+
+  return children
+}
+
+const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
   const [openCreateCampaignModal, setOpenCreateCampaignModal] = useState(false);
   const [openStakeHmtPromptModal, setOpenStakeHmtPromptModal] = useState(false);
 
@@ -40,19 +76,21 @@ const LaunchCampaign: FC<Props> = ({ variant, sx }) => {
 
   return (
     <>
-      <Button
-        variant={variant}
-        size={isXl ? 'large' : 'medium'}
-        sx={{
-          color: variant === 'outlined' ? 'primary.main' : 'primary.contrast',
-          height: '42px',
-          ...sx,
-        }}
-        disabled={isDisabled}
-        onClick={onClick}
-      >
-        Launch Campaign
-      </Button>
+      <ButtonWrapper isDisabled={isDisabled} withTooltip={withTooltip}>
+        <Button
+          variant={variant}
+          size={isXl ? 'large' : 'medium'}
+          sx={{
+            color: variant === 'outlined' ? 'primary.main' : 'primary.contrast',
+            height: '42px',
+            ...sx,
+          }}
+          disabled={isDisabled}
+          onClick={onClick}
+        >
+          Launch Campaign
+        </Button>
+      </ButtonWrapper>
       <StakeHmtPromptModal
         open={openStakeHmtPromptModal}
         onClose={() => setOpenStakeHmtPromptModal(false)}
