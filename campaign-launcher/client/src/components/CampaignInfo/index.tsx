@@ -1,10 +1,11 @@
-import type { FC } from 'react';
+import { useState, type FC } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import CustomTooltip from '@/components/CustomTooltip';
+import ChartModal from '@/components/modals/ChartModal';
 import { CalendarIcon } from '@/icons';
 import type { CampaignDetails } from '@/types';
 import { getChainIcon, getNetworkName, mapStatusToColor } from '@/utils';
@@ -24,6 +25,8 @@ type Props = {
 };
 
 const CampaignInfo: FC<Props> = ({ campaign }) => {
+  const [openChartModal, setOpenChartModal] = useState(false);
+
   const isCompleted = campaign.status === 'completed';
   return (
     <Box
@@ -106,6 +109,18 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
           {getChainIcon(campaign.chain_id)}
         </Box>
       </CustomTooltip>
+      <Button
+        variant="outlined"
+        size="medium"
+        onClick={() => setOpenChartModal(true)}
+      >
+        Paid Amount Chart
+      </Button>
+      <ChartModal
+        open={openChartModal}
+        onClose={() => setOpenChartModal(false)}
+        campaign={campaign}
+      />
     </Box>
   );
 };

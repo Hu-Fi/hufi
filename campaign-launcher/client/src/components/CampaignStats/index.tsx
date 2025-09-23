@@ -1,7 +1,6 @@
-import { type FC, type PropsWithChildren, Children, useState } from 'react';
+import { type FC, type PropsWithChildren, Children } from 'react';
 
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-import { Box, IconButton, styled, Typography } from '@mui/material';
+import { Box, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 import CampaignResultsWidget, {
@@ -11,10 +10,8 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
-import ChartModal from '@/components/modals/ChartModal';
 import UserProgressWidget from '@/components/UserProgressWidget';
 import { useIsXlDesktop } from '@/hooks/useBreakpoints';
-import { MiniChartIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, CampaignType, type CampaignDetails } from '@/types';
@@ -128,7 +125,6 @@ const getDailyTargetValue = (campaign: CampaignDetails) => {
 };
 
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
-  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
   const { isAuthenticated } = useWeb3Auth();
@@ -160,6 +156,10 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
+  const formattedReservedFunds = +formatTokenAmount(
+    campaign.reserved_funds,
+    campaign.fund_token_decimals
+  );
 
   return (
     <>
@@ -226,20 +226,10 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
       <Grid container spacing={2} width="100%" mt={-2}>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
-            <Title variant="subtitle2">Exchange</Title>
-            <Typography variant={isXl ? 'h4' : 'h6-mobile'}>
-              {exchangeName}
+            <Title variant="subtitle2">Reserved funds</Title>
+            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+              {formattedReservedFunds} {campaign.fund_token_symbol}
             </Typography>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <StatsCard>
-            <Title variant="subtitle2">Symbol</Title>
-            <CampaignSymbol
-              symbol={campaign.symbol}
-              campaignType={campaign.type}
-              size={isXl ? 'large' : 'medium'}
-            />
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
@@ -264,34 +254,23 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
-            <Title
-              variant="subtitle2"
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              Campaign chart
-              <IconButton
-                disableRipple
-                sx={{
-                  p: 0,
-                  ml: 'auto',
-                  '&:hover': { background: 'none' },
-                }}
-                onClick={() => setIsChartModalOpen(true)}
-              >
-                <ZoomOutMapIcon />
-              </IconButton>
-            </Title>
-            <MiniChartIcon sx={{ width: '100%', height: 'auto' }} />
+            <Title variant="subtitle2">Exchange</Title>
+            <Typography variant={isXl ? 'h4' : 'h6-mobile'}>
+              {exchangeName}
+            </Typography>
+          </StatsCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <StatsCard>
+            <Title variant="subtitle2">Symbol</Title>
+            <CampaignSymbol
+              symbol={campaign.symbol}
+              campaignType={campaign.type}
+              size={isXl ? 'large' : 'medium'}
+            />
           </StatsCard>
         </Grid>
       </Grid>
-      <ChartModal
-        open={isChartModalOpen}
-        onClose={() => setIsChartModalOpen(false)}
-        campaign={campaign}
-      />
     </>
   );
 };
