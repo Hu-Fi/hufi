@@ -97,7 +97,7 @@ const Header: FC = () => {
             <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
             <StyledLink to={STAKING_DASHBOARD_URL} text="Stake HMT" target="_blank" />
             <NetworkSwitcher />
-            <LaunchCampaign variant="outlined" />
+            <LaunchCampaign variant="outlined" withTooltip />
             {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
