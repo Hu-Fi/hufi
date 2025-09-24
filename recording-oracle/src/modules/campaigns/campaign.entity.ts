@@ -47,6 +47,9 @@ export class CampaignEntity {
   @Column('varchar', { length: 20 })
   fundToken: string;
 
+  @Column('int')
+  fundTokenDecimals: number;
+
   @Column({ type: 'timestamptz', nullable: true })
   lastResultsAt: Date | null;
 

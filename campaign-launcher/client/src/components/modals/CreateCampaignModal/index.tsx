@@ -195,6 +195,10 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     await createEscrow(data);
   };
 
+  const handleTryAgainClick = () => {
+    stepsCompleted > 0 ? createEscrow(getValues()) : resetCreateEscrow();
+  }
+
   const handleClose = () => {
     reset();
     resetCreateEscrow();
@@ -274,7 +278,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
             size="large"
             variant="contained"
             sx={{ mt: 4, mx: 'auto' }}
-            onClick={resetCreateEscrow}
+            onClick={handleTryAgainClick}
           >
             Try again
           </Button>

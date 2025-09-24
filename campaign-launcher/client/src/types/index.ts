@@ -62,6 +62,7 @@ export type Campaign = {
   exchange_oracle: string;
   recording_oracle: string;
   reputation_oracle: string;
+  reserved_funds: string;
 };
 
 export type CampaignDetails = Campaign & {
