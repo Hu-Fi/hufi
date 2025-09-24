@@ -12,10 +12,11 @@ import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
 import { useCheckIsJoinedCampaign } from '../../hooks/recording-oracle';
 import { useCampaignDetails } from '../../hooks/useCampaigns';
+import { Address } from '../../types';
 import { isCampaignDetails } from '../../utils';
 
 const Campaign: FC = () => {
-  const { address } = useParams() as { address: `0x${string}` };
+  const { address } = useParams() as { address: Address };
   const [searchParams] = useSearchParams();
   const { data: campaign, isLoading: isCampaignLoading } = useCampaignDetails(address);
   const { data: isAlreadyJoined, isLoading: isJoinedLoading } = useCheckIsJoinedCampaign(address);

@@ -211,6 +211,13 @@ const createAppTheme = (mode: PaletteMode) => {
           },
         },
       },
+      MuiSkeleton: {
+        styleOverrides: {
+          root: {
+            transform: 'scale(1,1)',
+          },
+        },
+      },
     },
   });
 };
