@@ -15,10 +15,19 @@ import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
-import { CampaignData, CampaignDataWithDetails } from './campaigns.dto';
+import {
+  CampaignData,
+  CampaignDataWithDetails,
+  CampaignDetails,
+} from './campaigns.dto';
 import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
-import { CampaignManifest, CampaignOracleFees, CampaignStatus } from './types';
+import {
+  CampaignManifest,
+  CampaignOracleFees,
+  CampaignStatus,
+  CampaignType,
+} from './types';
 
 const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
@@ -107,12 +116,27 @@ export class CampaignsService {
         this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
       ]);
 
+      let details: CampaignDetails;
+
+      if (manifestUtils.isVolumeManifest(manifest)) {
+        details = {
+          dailyVolumeTarget: manifest.daily_volume_target,
+        };
+      } else if (manifestUtils.isLiquidityManifest(manifest)) {
+        details = {
+          dailyBalanceTarget: manifest.daily_balance_target,
+        };
+      } else {
+        // Should not happen, just for typescript types
+        details = {};
+      }
       campaigns.push({
         chainId,
         address: ethers.getAddress(campaignEscrow.address),
+        type: manifest.type as CampaignType,
         exchangeName: manifest.exchange,
-        tradingPair: manifest.pair,
-        dailyVolumeTarget: manifest.daily_volume_target,
+        symbol: manifest.symbol,
+        details,
         startDate: manifest.start_date.toISOString(),
         endDate: manifest.end_date.toISOString(),
         fundAmount: campaignEscrow.totalFundedAmount,
@@ -205,12 +229,28 @@ export class CampaignsService {
      */
     const oracleFees = await this.getCampaignOracleFees(chainId, escrowAddress);
 
+    let details: CampaignDetails;
+
+    if (manifestUtils.isVolumeManifest(manifest)) {
+      details = {
+        dailyVolumeTarget: manifest.daily_volume_target,
+      };
+    } else if (manifestUtils.isLiquidityManifest(manifest)) {
+      details = {
+        dailyBalanceTarget: manifest.daily_balance_target,
+      };
+    } else {
+      // Should not happen, just for typescript types
+      details = {};
+    }
+
     return {
       chainId,
       address: ethers.getAddress(escrowAddress),
+      type: manifest.type as CampaignType,
       exchangeName: manifest.exchange,
-      tradingPair: manifest.pair,
-      dailyVolumeTarget: manifest.daily_volume_target,
+      symbol: manifest.symbol,
+      details,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
       fundAmount: campaignEscrow.totalFundedAmount,

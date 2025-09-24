@@ -1,12 +1,22 @@
-export type CampaignManifest = {
+type BaseCampaignManifest = {
   type: string;
-  daily_volume_target: number;
   exchange: string;
-  pair: string;
-  fund_token: string;
+  symbol: string;
   start_date: Date;
   end_date: Date;
 };
+
+export type LiquidityCampaignManifest = BaseCampaignManifest & {
+  daily_balance_target: number;
+};
+
+export type VolumeCampaignManifest = BaseCampaignManifest & {
+  daily_volume_target: number;
+};
+
+export type CampaignManifest =
+  | LiquidityCampaignManifest
+  | VolumeCampaignManifest;
 
 export enum CampaignStatus {
   ACTIVE = 'active',
@@ -19,3 +29,8 @@ export type CampaignOracleFees = {
   recordingOracleFee: number;
   reputationOracleFee: number;
 };
+
+export enum CampaignType {
+  VOLUME = 'VOLUME',
+  LIQUIDITY = 'LIQUIDITY',
+}

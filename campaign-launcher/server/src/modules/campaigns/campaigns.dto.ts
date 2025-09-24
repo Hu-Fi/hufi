@@ -17,7 +17,7 @@ import {
 } from '@/common/constants';
 import { EvmAddressValidator, IsChainId } from '@/common/validators';
 
-import { CampaignStatus } from './types';
+import { CampaignStatus, CampaignType } from './types';
 
 export class GetCampaignsQueryDto {
   @ApiProperty({
@@ -68,6 +68,18 @@ export class GetCampaignsQueryDto {
   skip?: number;
 }
 
+export class CampaignDetails {
+  @ApiPropertyOptional({
+    name: 'daily_volume_target',
+  })
+  dailyVolumeTarget?: number;
+
+  @ApiPropertyOptional({
+    name: 'daily_balance_target',
+  })
+  dailyBalanceTarget?: number;
+}
+
 export class CampaignData {
   @ApiProperty({
     name: 'chain_id',
@@ -77,20 +89,21 @@ export class CampaignData {
   @ApiProperty()
   address: string;
 
+  @ApiProperty()
+  type: CampaignType;
+
   @ApiProperty({
     name: 'exchange_name',
   })
   exchangeName: string;
 
   @ApiProperty({
-    name: 'trading_pair',
+    name: 'symbol',
   })
-  tradingPair: string;
+  symbol: string;
 
-  @ApiProperty({
-    name: 'daily_volume_target',
-  })
-  dailyVolumeTarget: number;
+  @ApiProperty()
+  details: CampaignDetails;
 
   @ApiProperty({
     name: 'start_date',
@@ -143,10 +156,10 @@ export class CampaignData {
   @ApiProperty()
   balance: string;
 
-  @ApiProperty({ name: 'intermediate_results_url' })
+  @ApiPropertyOptional({ name: 'intermediate_results_url' })
   intermediateResultsUrl?: string;
 
-  @ApiProperty({ name: 'final_results_url' })
+  @ApiPropertyOptional({ name: 'final_results_url' })
   finalResultsUrl?: string;
 }
 
