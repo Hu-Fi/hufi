@@ -30,7 +30,7 @@ import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
 import { QUERY_KEYS } from '../../../constants/queryKeys';
-import { FUND_TOKENS, FundToken } from '../../../constants/tokens';
+import { FUND_TOKENS, FundToken, TOKENS } from '../../../constants/tokens';
 import { useIsMobile } from '../../../hooks/useBreakpoints';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
@@ -353,11 +353,18 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     control={control}
                     render={({ field }) => {
                       return (
-                        <Autocomplete
-                          id="trading-pair-select"
-                          options={tradingPairs || []}
-                          loading={isLoadingTradingPairs}
-                          slotProps={{
+                          <Autocomplete
+                            id="trading-pair-select"
+                            options={tradingPairs || []}
+                            loading={isLoadingTradingPairs}
+                            getOptionLabel={(option) => {
+                              if (!option) return '';
+                              const [base, quote] = option.split('/');
+                              const baseToken = TOKENS.find(token => token.name.toLowerCase() === base.toLowerCase());
+                              const quoteToken = TOKENS.find(token => token.name.toLowerCase() === quote.toLowerCase());
+                              return `${baseToken?.label ?? base}/${quoteToken?.label ?? quote}`;
+                            }}
+                            slotProps={{
                             paper: {
                               elevation: 4,
                               sx: {
@@ -564,7 +571,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                   variant="body1"
                                   color="text.primary"
                                 >
-                                  {pair?.split('/')[1] || ''}
+                                  {TOKENS.find(
+                                    (token) => token.name.toLowerCase() === pair?.split('/')[1]?.toLowerCase()
+                                  )?.label || pair?.split('/')[1] || ''}
                                 </Typography>
                               </InputAdornment>
                             ),
