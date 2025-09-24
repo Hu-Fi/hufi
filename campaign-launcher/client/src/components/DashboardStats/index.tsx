@@ -63,7 +63,7 @@ const DashboardStats: FC = () => {
             </Typography>
             <Value>
               {isLoading ? (
-                <Skeleton variant="text" sx={{ width: '150px', fontSize: '40px' }} />
+                <Skeleton variant="text" sx={{ fontSize: '40px' }} />
               ) : (
                 <FormattedNumber value={campaignsStats?.n_active_campaigns} />
               )}
