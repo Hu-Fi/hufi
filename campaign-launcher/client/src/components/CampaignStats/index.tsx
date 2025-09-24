@@ -4,6 +4,7 @@ import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { Box, IconButton, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
+import { TOKENS } from '../../constants/tokens';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { MiniChartIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
@@ -125,7 +126,11 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
     campaign.amount_paid,
     campaign.fund_token_decimals
   );
-  const volumeTokenSymbol = campaign.trading_pair.split('/')[1];
+
+  const volumeToken = campaign.trading_pair.split('/')[1];
+  const { label: volumeTokenSymbol } = TOKENS.find(
+    (token) => token.name.toLowerCase() === volumeToken.toLowerCase()
+  ) || { label: volumeToken };
 
   return (
     <>
@@ -211,7 +216,11 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
                 <InfoTooltipInner />
               </CustomTooltip>
             </Title>
-            <CampaignResultsWidget finalResultsUrl={campaign.final_results_url} intermediateResultsUrl={campaign.intermediate_results_url} />
+            <CampaignResultsWidget 
+              campaignStatus={campaign.status}
+              finalResultsUrl={campaign.final_results_url} 
+              intermediateResultsUrl={campaign.intermediate_results_url} 
+            />
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>

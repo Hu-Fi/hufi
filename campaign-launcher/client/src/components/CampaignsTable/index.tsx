@@ -5,6 +5,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { numericFormatter } from 'react-number-format';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { TOKENS } from '../../constants/tokens';
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
 import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
@@ -235,7 +236,10 @@ const CampaignsTable: FC<Props> = ({
       ),
       renderCell: (params) => {
         const { daily_volume_target, trading_pair } = params.row;
-        const currency = trading_pair.split('/')[1];
+        const volumeToken = trading_pair.split('/')[1];
+        const { label: tokenLabel } = TOKENS.find(
+          (token) => token.name.toLowerCase() === volumeToken.toLowerCase()
+        ) || { label: volumeToken };
         const formattedDailyVolumeTarget = numericFormatter(
           daily_volume_target.toString(),
           {
@@ -246,7 +250,7 @@ const CampaignsTable: FC<Props> = ({
         );
         return (
           <Typography variant="subtitle2">
-            {formattedDailyVolumeTarget} {currency}
+            {formattedDailyVolumeTarget} {tokenLabel}
           </Typography>
         );
       },
