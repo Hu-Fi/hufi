@@ -17,27 +17,49 @@ export enum ReturnedCampaignStatus {
 }
 
 export enum CampaignType {
-  MARKET_MAKING = 'MARKET_MAKING',
+  VOLUME = 'VOLUME',
+  LIQUIDITY = 'LIQUIDITY',
 }
+
+export type VolumeCampaignDetails = {
+  dailyVolumeTarget: number;
+};
+
+export type LiquidityCampaignDetails = {
+  dailyBalanceTarget: number;
+};
+
+export type CampaignDetails = VolumeCampaignDetails | LiquidityCampaignDetails;
 
 export type CampaignManifest = {
   type: string;
-  daily_volume_target: number;
   exchange: string;
-  pair: string;
+  symbol: string;
   start_date: Date;
   end_date: Date;
+};
+
+export type VolumeCampaignManifest = CampaignManifest & {
+  type: CampaignType.VOLUME;
+  daily_volume_target: number;
+};
+
+export type LiquidityCampaignManifest = CampaignManifest & {
+  type: CampaignType.LIQUIDITY;
+  daily_balance_target: number;
 };
 
 export type CampaignEscrowInfo = {
   fundAmount: number;
   fundTokenSymbol: string;
+  fundTokenDecimals: number;
 };
 
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [x: string]: any;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -48,15 +70,16 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: string;
   to: string;
-  total_volume: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [x: string]: any;
 };
 
 export type IntermediateResultsData = {
   chain_id: number;
   address: string;
   exchange: string;
-  pair: string;
+  symbol: string;
   results: IntermediateResult[];
 };
 
