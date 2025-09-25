@@ -103,15 +103,16 @@ export class CampaignsController {
         .map((campaign) => ({
           chainId: campaign.chainId,
           address: campaign.address,
-          status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],
-          processingStatus: campaign.status,
+          type: campaign.type,
           exchangeName: campaign.exchangeName,
-          tradingPair: campaign.pair,
-          dailyVolumeTarget: Number(campaign.dailyVolumeTarget),
+          symbol: campaign.symbol,
           startDate: campaign.startDate.toISOString(),
           endDate: campaign.endDate.toISOString(),
           fundAmount: Number(campaign.fundAmount),
           fundToken: campaign.fundToken,
+          details: campaign.details,
+          status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],
+          processingStatus: campaign.status,
         }))
         .slice(0, limit),
     };

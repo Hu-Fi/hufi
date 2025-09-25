@@ -1,4 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsEnum,
@@ -15,7 +20,7 @@ import {
   type ChainId,
 } from '@/common/constants';
 
-import { ReturnedCampaignStatus } from './types';
+import { CampaignDetails, CampaignType, ReturnedCampaignStatus } from './types';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
@@ -32,27 +37,18 @@ export class JoinCampaignSuccessDto {
   id: string;
 }
 
-export class JoinedCampaignDto {
+class JoinedCampaignDto {
   @ApiProperty({ name: 'chain_id' })
   chainId: number;
 
   @ApiProperty()
   address: string;
 
-  @ApiProperty()
-  status: string;
-
-  @ApiProperty({ name: 'processing_status' })
-  processingStatus: string;
-
   @ApiProperty({ name: 'exchange_name' })
   exchangeName: string;
 
-  @ApiProperty({ name: 'trading_pair' })
-  tradingPair: string;
-
-  @ApiProperty({ name: 'daily_volume_target' })
-  dailyVolumeTarget: number;
+  @ApiProperty()
+  symbol: string;
 
   @ApiProperty({ name: 'start_date' })
   startDate: string;
@@ -65,6 +61,42 @@ export class JoinedCampaignDto {
 
   @ApiProperty({ name: 'fund_token' })
   fundToken: string;
+
+  @ApiProperty()
+  status: string;
+
+  @ApiProperty({ name: 'processing_status' })
+  processingStatus: string;
+
+  type: CampaignType;
+
+  details: CampaignDetails;
+}
+
+class VolumeCampaignDetailsDto {
+  @ApiProperty({ name: 'daily_volume_target' })
+  dailyVolumeTarget: number;
+}
+
+class VolumeCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.VOLUME] })
+  declare type: CampaignType.VOLUME;
+
+  @ApiProperty()
+  declare details: VolumeCampaignDetailsDto;
+}
+
+class LiquidityCampaignDetailsDto {
+  @ApiProperty({ name: 'daily_balance_target' })
+  dailyBalanceTarget: number;
+}
+
+class LiquidityCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.LIQUIDITY] })
+  declare type: CampaignType.LIQUIDITY;
+
+  @ApiProperty()
+  declare details: LiquidityCampaignDetailsDto;
 }
 
 export class ListJoinedCampaignsQueryDto {
@@ -92,6 +124,7 @@ export class ListJoinedCampaignsQueryDto {
   skip?: number;
 }
 
+@ApiExtraModels(VolumeCampaignDto, LiquidityCampaignDto)
 export class ListJoinedCampaignsSuccessDto {
   @ApiProperty({
     name: 'has_more',
@@ -99,7 +132,17 @@ export class ListJoinedCampaignsSuccessDto {
   hasMore: boolean;
 
   @ApiProperty({
-    type: JoinedCampaignDto,
+    oneOf: [
+      { $ref: getSchemaPath(VolumeCampaignDto) },
+      { $ref: getSchemaPath(LiquidityCampaignDto) },
+    ],
+    discriminator: {
+      propertyName: 'type',
+      mapping: {
+        [CampaignType.VOLUME]: getSchemaPath(VolumeCampaignDto),
+        [CampaignType.LIQUIDITY]: getSchemaPath(LiquidityCampaignDto),
+      },
+    },
     isArray: true,
   })
   results: JoinedCampaignDto[];

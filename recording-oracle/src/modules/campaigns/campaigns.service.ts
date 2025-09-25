@@ -36,16 +36,17 @@ import {
   UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
-import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  MarketMakingResultsChecker,
+  VolumeResultsChecker,
 } from './progress-checking';
+import { isVolumeCampaign } from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
+  CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -180,16 +181,17 @@ export class CampaignsService {
     newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
     newCampaign.address = ethers.getAddress(address);
-    newCampaign.type = manifest.type;
+    newCampaign.type = manifest.type as CampaignType;
     newCampaign.exchangeName = manifest.exchange;
-    newCampaign.dailyVolumeTarget = manifest.daily_volume_target.toString();
-    newCampaign.pair = manifest.pair;
-    newCampaign.lastResultsAt = null;
+    newCampaign.symbol = manifest.symbol;
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
-    newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
+    newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
+    newCampaign.details = manifestUtils.extractCampaignDetails(manifest);
+    newCampaign.status = CampaignStatus.ACTIVE;
+    newCampaign.lastResultsAt = null;
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -297,7 +299,35 @@ export class CampaignsService {
       manifestString = escrow.manifest as string;
     }
 
-    const manifest = manifestUtils.validateSchema(manifestString);
+    let manifest: CampaignManifestBase;
+    try {
+      manifest = manifestUtils.validateBaseSchema(manifestString);
+    } catch (error) {
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        error.message as string,
+      );
+    }
+
+    try {
+      switch (manifest.type) {
+        case CampaignType.VOLUME:
+          manifestUtils.assertValidVolumeCampaignManifest(manifest);
+          break;
+        // case CampaignType.LIQUIDITY:
+        //   manifestUtils.assertValidLiquidityCampaignManifest(manifest);
+        //   break;
+        default:
+          throw new Error(`Campaign type not supported: ${manifest.type}`);
+      }
+    } catch (error) {
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        error.message as string,
+      );
+    }
 
     /*
      * Not including this into Joi schema to send meaningful errors
@@ -307,14 +337,6 @@ export class CampaignsService {
         chainId,
         campaignAddress,
         `Exchange not supported: ${manifest.exchange}`,
-      );
-    }
-
-    if (!SUPPORTED_CAMPAIGN_TYPES.includes(manifest.type as CampaignType)) {
-      throw new InvalidCampaign(
-        chainId,
-        campaignAddress,
-        `Campaign type not supported: ${manifest.type}`,
       );
     }
 
@@ -330,6 +352,7 @@ export class CampaignsService {
           ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
         ),
         fundTokenSymbol: campaignTokenSymbol,
+        fundTokenDecimals: campaignTokenDecimals,
       },
     };
   }
@@ -377,7 +400,7 @@ export class CampaignsService {
           chainId: campaign.chainId,
           campaignAdddress: campaign.address,
           exchangeName: campaign.exchangeName,
-          pair: campaign.pair,
+          symbol: campaign.symbol,
         });
         logger.debug('Campaign progress recording started');
 
@@ -414,7 +437,7 @@ export class CampaignsService {
               chain_id: campaign.chainId,
               address: campaign.address,
               exchange: campaign.exchangeName,
-              pair: campaign.pair,
+              symbol: campaign.symbol,
               results: [],
             };
           }
@@ -448,7 +471,9 @@ export class CampaignsService {
             endDate,
           );
 
-          await this.recordGeneratedVolume(campaign, progress);
+          if (isVolumeCampaign(campaign)) {
+            await this.recordGeneratedVolume(campaign, progress);
+          }
 
           intermediateResults.results.push(progress);
           const storedResultsMeta =
@@ -491,7 +516,7 @@ export class CampaignsService {
       campaign.type,
       {
         exchangeName: campaign.exchangeName,
-        tradingPair: campaign.pair,
+        symbol: campaign.symbol,
         tradingPeriodStart: startDate,
         tradingPeriodEnd: endDate,
       },
@@ -504,6 +529,12 @@ export class CampaignsService {
     let totalVolume = 0;
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
+      /**
+       * TODO
+       *
+       * Add error handling for case when we fail to check
+       * participant progress because of invalid API keys/access.
+       */
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
         participant.id,
         campaign.exchangeName,
@@ -567,11 +598,13 @@ export class CampaignsService {
     );
 
     switch (campaignType) {
-      default:
-        return new MarketMakingResultsChecker(
+      case CampaignType.VOLUME:
+        return new VolumeResultsChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );
+      default:
+        throw new Error(`No progress checker for ${campaignType} campaign`);
     }
   }
 
@@ -631,7 +664,7 @@ export class CampaignsService {
     intermediateResult: IntermediateResult,
   ): Promise<void> {
     try {
-      const [_baseTokenSymbol, quoteTokenSymbol] = campaign.pair.split('/');
+      const [_baseTokenSymbol, quoteTokenSymbol] = campaign.symbol.split('/');
 
       const quoteTokenPriceUsd =
         await this.web3Service.getTokenPriceUsd(quoteTokenSymbol);

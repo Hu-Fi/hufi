@@ -1,6 +1,6 @@
 export type CampaignProgressCheckerSetup = {
   exchangeName: string;
-  tradingPair: string;
+  symbol: string;
   tradingPeriodStart: Date;
   tradingPeriodEnd: Date;
 };

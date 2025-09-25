@@ -1,3 +1,3 @@
-export { MarketMakingResultsChecker } from './market-making';
+export { MarketMakingResultsChecker as VolumeResultsChecker } from './market-making';
 
 export type * from './types';

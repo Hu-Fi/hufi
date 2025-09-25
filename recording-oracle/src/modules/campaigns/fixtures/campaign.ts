@@ -15,32 +15,51 @@ import type {
   ParticipantAuthKeys,
 } from '../progress-checking';
 import {
+  CampaignDetails,
   CampaignStatus,
+  CampaignType,
   IntermediateResult,
   IntermediateResultsData,
 } from '../types';
 
+/**
+ * TODO
+ *
+ * Add other campaign types
+ */
 export function generateCampaignEntity(
-  overrides: Partial<CampaignEntity> = {},
+  type: CampaignType.VOLUME = CampaignType.VOLUME,
 ): CampaignEntity {
   const startDate = dayjs().subtract(1, 'days').toDate();
   const durationInDays = faker.number.int({ min: 3, max: 7 });
 
-  const campaign = {
+  let details: CampaignDetails;
+  switch (type) {
+    case CampaignType.VOLUME:
+      details = {
+        dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
+      };
+      break;
+  }
+
+  const campaign: Omit<CampaignEntity, 'beforeInsert' | 'beforeUpdate'> = {
     id: faker.string.uuid(),
     chainId: generateTestnetChainId(),
     address: ethers.getAddress(faker.finance.ethereumAddress()),
-    pair: generateTradingPair(),
+    type,
     exchangeName: generateExchangeName(),
+    symbol: generateTradingPair(),
     startDate,
     endDate: dayjs(startDate).add(durationInDays, 'days').toDate(),
-    status: CampaignStatus.ACTIVE,
+    fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),
+    fundToken: faker.finance.currencyCode(),
+    fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
+    details,
     lastResultsAt: null,
+    status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };
-
-  Object.assign(campaign, overrides);
 
   return campaign as CampaignEntity;
 }
@@ -50,7 +69,7 @@ export function generateProgressCheckerSetup(
 ): CampaignProgressCheckerSetup {
   const input: CampaignProgressCheckerSetup = {
     exchangeName: generateExchangeName(),
-    tradingPair: generateTradingPair(),
+    symbol: generateTradingPair(),
     tradingPeriodStart: faker.date.recent(),
     tradingPeriodEnd: faker.date.future(),
   };
@@ -89,7 +108,7 @@ export function generateIntermediateResultsData(
   const data: IntermediateResultsData = {
     chain_id: generateTestnetChainId(),
     address: faker.finance.ethereumAddress(),
-    pair: generateTradingPair(),
+    symbol: generateTradingPair(),
     exchange: generateExchangeName(),
     results: [generateIntermediateResult()],
   };
