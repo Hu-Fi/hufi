@@ -12,6 +12,7 @@ declare module 'ccxt' {
      * 'undefined' until successfull call of 'loadMarkets'
      */
     symbols?: string[];
+    currencies?: Record<string, Record<string, unknown>>;
     name: string;
     urls: {
       www: string;
