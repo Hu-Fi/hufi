@@ -9,7 +9,6 @@ const queryClient = new QueryClient({
       retry: false,
       refetchOnMount: true,
       gcTime: 1_000 * 60 * 5, // 5 minutes
-      staleTime: 1_000 * 60 * 2, // 2 minutes
     },
     mutations: {
       retry: false,
