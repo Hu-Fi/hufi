@@ -25,7 +25,7 @@ const marketMakingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.MARKET_MAKING).required(),
   exchange: Joi.string().required(),
   daily_volume_target: Joi.number().greater(0).required(),
-  pair: Joi.string()
+  symbol: Joi.string()
     .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
     .required(),
   start_date: Joi.date().iso().required(),
