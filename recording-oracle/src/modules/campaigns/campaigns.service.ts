@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -53,7 +54,6 @@ import {
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
-  ParticipantsOutcomesBatch,
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -410,6 +410,10 @@ export class CampaignsService {
           return;
         }
 
+        if (!isVolumeCampaign(campaign)) {
+          return;
+        }
+
         const logger = this.logger.child({
           action: 'record-campaign-progress',
           campaignId: campaign.id,
@@ -487,11 +491,36 @@ export class CampaignsService {
             endDate,
           );
 
-          if (isVolumeCampaign(campaign)) {
-            await this.recordGeneratedVolume(campaign, progress);
+          const dailyReward = this.calculateDailyReward(campaign);
+          const rewardPool = this.calculateRewardPool({
+            maxRewardPool: dailyReward,
+            totalMarketMakersValue: progress.total_volume,
+            valueTarget: Number(campaign.details.dailyVolumeTarget),
+          });
+          const truncatedRewardPool = decimalUtils.truncate(
+            rewardPool,
+            campaign.fundTokenDecimals,
+          );
+
+          const intermediateResult: IntermediateResult = {
+            from: progress.from,
+            to: progress.to,
+            total_volume: progress.total_volume,
+            reserved_funds: truncatedRewardPool,
+            participants_outcomes_batches: [],
+          };
+          for (const chunk of _.chunk(
+            progress.participants_outcomes,
+            ESCROW_BULK_PAYOUT_MAX_ITEMS,
+          )) {
+            intermediateResult.participants_outcomes_batches.push({
+              id: crypto.randomUUID(),
+              results: chunk,
+            });
           }
 
-          intermediateResults.results.push(progress);
+          intermediateResults.results.push(intermediateResult);
+
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(intermediateResults);
 
@@ -499,8 +528,11 @@ export class CampaignsService {
             from: progress.from,
             to: progress.to,
             total_volume: progress.total_volume,
+            reserved_funds: truncatedRewardPool,
             resultsUrl: storedResultsMeta.url,
           });
+
+          void this.recordGeneratedVolume(campaign, intermediateResult);
 
           /**
            * There might be situations when due to delays/failures in processing
@@ -527,7 +559,7 @@ export class CampaignsService {
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-  ): Promise<IntermediateResult> {
+  ): Promise<CampaignProgress> {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
       {
@@ -590,19 +622,11 @@ export class CampaignsService {
       });
     }
 
-    const outcomesBatches: ParticipantsOutcomesBatch[] = [];
-    for (const chunk of _.chunk(outcomes, ESCROW_BULK_PAYOUT_MAX_ITEMS)) {
-      outcomesBatches.push({
-        id: crypto.randomUUID(),
-        results: chunk,
-      });
-    }
-
     return {
       from: startDate.toISOString(),
       to: endDate.toISOString(),
       total_volume: totalVolume,
-      participants_outcomes_batches: outcomesBatches,
+      participants_outcomes: outcomes,
     };
   }
 
@@ -643,6 +667,38 @@ export class CampaignsService {
     );
 
     return JSON.parse(intermediateResults.toString());
+  }
+
+  calculateDailyReward(campaign: CampaignEntity): number {
+    const campaignDurationDays = Math.ceil(
+      dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
+    );
+
+    const fundAmount = Number(campaign.fundAmount);
+
+    const dailyReward = decimalUtils.div(fundAmount, campaignDurationDays);
+
+    const truncatedDailyReward = decimalUtils.truncate(
+      dailyReward,
+      campaign.fundTokenDecimals,
+    );
+
+    return truncatedDailyReward;
+  }
+
+  calculateRewardPool(input: {
+    maxRewardPool: number;
+    totalMarketMakersValue: number;
+    valueTarget: number;
+  }): number {
+    const rewardRatio = Math.min(
+      input.totalMarketMakersValue / input.valueTarget,
+      1,
+    );
+
+    const rewardPool = rewardRatio * input.maxRewardPool;
+
+    return rewardPool;
   }
 
   private async recordCampaignIntermediateResults(
@@ -783,6 +839,14 @@ export class CampaignsService {
       throw new CampaignNotFoundError(chainId, campaignAddress);
     }
 
+    const now = new Date();
+    if (now < campaign.startDate) {
+      throw new CampaignNotStartedError(chainId, campaignAddress);
+    }
+    if (now > campaign.endDate) {
+      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
+    }
+
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
@@ -790,14 +854,6 @@ export class CampaignsService {
       );
     if (!isUserJoined) {
       throw new UserIsNotParticipatingError();
-    }
-
-    const now = new Date();
-    if (now < campaign.startDate) {
-      throw new CampaignNotStartedError(chainId, campaignAddress);
-    }
-    if (now > campaign.endDate) {
-      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
     // Calculate start of the active timeframe (end is now)
@@ -824,14 +880,12 @@ export class CampaignsService {
         from: progress.from,
         to: progress.to,
         total_volume: progress.total_volume,
-        participants_outcomes: progress.participants_outcomes_batches.flatMap(
-          (batch) => batch.results,
-        ),
+        participants_outcomes: progress.participants_outcomes,
       });
     }
 
     const progress = campaignsProgressCache.get(cacheKey) as CampaignProgress;
-    const participant = progress.participants_outcomes.find(
+    const participantOutcome = progress.participants_outcomes.find(
       (p) => p.address === evmAddress,
     );
 
@@ -839,8 +893,8 @@ export class CampaignsService {
       from: progress.from,
       to: progress.to,
       totalVolume: progress.total_volume,
-      myScore: participant?.score ?? 0,
-      myVolume: participant?.total_volume ?? 0,
+      myScore: participantOutcome?.score ?? 0,
+      myVolume: participantOutcome?.total_volume ?? 0,
     };
   }
 }
