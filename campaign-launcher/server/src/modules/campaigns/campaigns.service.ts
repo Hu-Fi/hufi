@@ -127,9 +127,11 @@ export class CampaignsService {
           dailyBalanceTarget: manifest.daily_balance_target,
         };
       } else {
-        // Should not happen, just for typescript types
-        details = {};
+        // Should not happen at this point, just for typescript types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        throw new Error(`Unknown campaign type: ${(manifest as any).type}`);
       }
+
       campaigns.push({
         chainId,
         address: ethers.getAddress(campaignEscrow.address),
@@ -240,8 +242,9 @@ export class CampaignsService {
         dailyBalanceTarget: manifest.daily_balance_target,
       };
     } else {
-      // Should not happen, just for typescript types
-      details = {};
+      // Should not happen at this point, just for typescript types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      throw new Error(`Unknown campaign type: ${(manifest as any).type}`);
     }
 
     return {

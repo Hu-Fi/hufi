@@ -63,7 +63,10 @@ export class ExchangesService {
            * Filter out pairs with weird names that highly-likely
            * won't be ever maked
            */
-          const isWeirdPair = this.isWeirdSymbol(symbol);
+
+          const isWeirdPair = symbol
+            .split('/')
+            .some((token) => this.isWeirdSymbol(token));
 
           return !isWeirdPair;
         });
@@ -131,18 +134,10 @@ export class ExchangesService {
       return true;
     }
 
-    /**
-     * Doesn't matter if it's a pair or a single token
-     */
     if (symbol.includes(':')) {
       return true;
     }
 
-    /**
-     * Splitting symbol to check each token separately
-     */
-    const tokens = symbol.split('/');
-
-    return tokens.some((token) => token.length < 3 || token.length > 10);
+    return symbol.length < 3 || symbol.length > 10;
   }
 }
