@@ -1,6 +1,6 @@
 import { ChainId } from '@human-protocol/sdk';
 
-export type Address = `0x${string}`;
+export type EvmAddress = `0x${string}`;
 
 export enum ExchangeType {
   CEX = 'cex',
@@ -46,7 +46,7 @@ export type ExchangeApiKeyData = {
 export type Campaign = {
   id: string;
   chain_id: number;
-  address: Address;
+  address: EvmAddress;
   exchange_name: string;
   trading_pair: string;
   daily_volume_target: number;

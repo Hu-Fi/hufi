@@ -5,7 +5,7 @@ import { recordingApi } from '../../api';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { useNetwork } from '../../providers/NetworkProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
-import { Address, CampaignsQueryParams } from '../../types';
+import { EvmAddress, CampaignsQueryParams } from '../../types';
 import useRetrieveSigner from '../useRetrieveSigner';
 
 type JoinedCampaignsParams = Pick<
@@ -48,7 +48,7 @@ export const useJoinCampaign = () => {
       address,
     }: {
       chainId: ChainId;
-      address: Address;
+      address: EvmAddress;
     }) => recordingApi.joinCampaign(chainId, address),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -61,7 +61,7 @@ export const useJoinCampaign = () => {
   });
 };
 
-export const useCheckIsJoinedCampaign = (address: Address) => {
+export const useCheckIsJoinedCampaign = (address: EvmAddress) => {
   const { appChainId } = useNetwork();
   const { isAuthenticated } = useWeb3Auth();
 
