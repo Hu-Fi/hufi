@@ -35,9 +35,9 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
       .andWhere('campaign.startDate <= :timeAgo', { timeAgo })
       .andWhere(
         `
-          campaign.lastResultsAt IS NULL
+          (campaign.lastResultsAt IS NULL
           OR campaign.lastResultsAt <= :timeAgo
-          OR campaign.endDate <= :now
+          OR campaign.endDate <= :now)
         `,
         {
           timeAgo,
