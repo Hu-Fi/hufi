@@ -1,33 +1,26 @@
 import { FC, PropsWithChildren } from 'react';
 
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { deserialize, serialize } from 'wagmi';
+import { QueryClient, QueryClientProvider as ReactQueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      gcTime: 1_000 * 60 * 60 * 24, // 24 hours
+      retry: false,
+      refetchOnMount: true,
+      gcTime: 1_000 * 60 * 5, // 5 minutes
+    },
+    mutations: {
+      retry: false,
     },
   },
 });
 
-const persister = createSyncStoragePersister({
-  serialize,
-  storage: window.localStorage,
-  deserialize,
-});
-
 const QueryClientProvider: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister }}
-    >
+    <ReactQueryClientProvider client={queryClient}>
       {children}
-    </PersistQueryClientProvider>
+    </ReactQueryClientProvider>
   );
 };
 

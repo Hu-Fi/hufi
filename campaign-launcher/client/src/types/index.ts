@@ -1,5 +1,7 @@
 import { ChainId } from '@human-protocol/sdk';
 
+export type EvmAddress = `0x${string}`;
+
 export enum ExchangeType {
   CEX = 'cex',
   DEX = 'dex',
@@ -44,7 +46,7 @@ export type ExchangeApiKeyData = {
 export type Campaign = {
   id: string;
   chain_id: number;
-  address: `0x${string}`;
+  address: EvmAddress;
   exchange_name: string;
   trading_pair: string;
   daily_volume_target: number;
@@ -56,7 +58,7 @@ export type Campaign = {
   fund_token_symbol: string;
   fund_token_decimals: number;
   intermediate_results_url: string | null;
-  status: 'active' | 'cancelled' | 'completed';
+  status: CampaignStatus;
   escrow_status: string;
   launcher: string;
   exchange_oracle: string;

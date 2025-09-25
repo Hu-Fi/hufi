@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Box, Typography, Select, MenuItem, FormControl } from '@mui/material';
+import { Box, Typography, Select, MenuItem, FormControl, Skeleton } from '@mui/material';
 
 import { useGetTotalVolume } from '../../hooks/recording-oracle/stats';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
@@ -10,7 +10,7 @@ import FormattedNumber from '../FormattedNumber';
 const TotalVolume = () => {
   const [exchange, setExchange] = useState('');
   const { exchanges } = useExchangesContext();
-  const { data: totalVolume } = useGetTotalVolume(exchange || '');
+  const { data: totalVolume, isLoading } = useGetTotalVolume(exchange || '');
 
   return (
     <StatsCard>
@@ -44,7 +44,11 @@ const TotalVolume = () => {
         </FormControl>
       </Box>
       <Value>
-        <FormattedNumber value={totalVolume} prefix="$" />
+        {isLoading ? (
+          <Skeleton variant="text" sx={{ fontSize: '40px' }} />
+        ) : (
+          <FormattedNumber value={totalVolume} prefix="$" />
+        )}
       </Value>
     </StatsCard>
   );

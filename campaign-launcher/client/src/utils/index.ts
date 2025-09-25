@@ -10,6 +10,7 @@ import {
   LOCALHOST_CHAIN_IDS,
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
+import { TOKENS } from '../constants/tokens';
 import { Campaign, CampaignDetails, EscrowCreateDto } from '../types';
 
 export const formatAddress = (address?: string) => {
@@ -220,4 +221,12 @@ export const filterFalsyQueryParams = (
   }
 
   return result;
+};
+
+export const getTokenInfo = (token: string) => {
+  return TOKENS.find((t) => t.name.toLowerCase() === token.toLowerCase()) || {
+    name: token,
+    label: token,
+    icon: null,
+  };
 };

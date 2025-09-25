@@ -48,6 +48,9 @@ export const usePostExchangeApiKey = () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
       });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES],
+      });
     },
   });
 };
@@ -60,6 +63,9 @@ export const useDeleteApiKeyByExchange = (exchangeName: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES],
       });
     },
   });
