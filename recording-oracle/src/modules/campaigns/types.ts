@@ -31,7 +31,7 @@ export type LiquidityCampaignDetails = {
 
 export type CampaignDetails = VolumeCampaignDetails | LiquidityCampaignDetails;
 
-export type CampaignManifest = {
+export type CampaignManifestBase = {
   type: string;
   exchange: string;
   symbol: string;
@@ -39,15 +39,19 @@ export type CampaignManifest = {
   end_date: Date;
 };
 
-export type VolumeCampaignManifest = CampaignManifest & {
+export type VolumeCampaignManifest = CampaignManifestBase & {
   type: CampaignType.VOLUME;
   daily_volume_target: number;
 };
 
-export type LiquidityCampaignManifest = CampaignManifest & {
+export type LiquidityCampaignManifest = CampaignManifestBase & {
   type: CampaignType.LIQUIDITY;
   daily_balance_target: number;
 };
+
+export type CampaignManifest =
+  | VolumeCampaignManifest
+  | LiquidityCampaignManifest;
 
 export type CampaignEscrowInfo = {
   fundAmount: number;
@@ -58,8 +62,7 @@ export type CampaignEscrowInfo = {
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [x: string]: any;
+  total_volume: number;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -71,8 +74,7 @@ export type IntermediateResult = {
   from: string;
   to: string;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [x: string]: any;
+  total_volume: number;
 };
 
 export type IntermediateResultsData = {

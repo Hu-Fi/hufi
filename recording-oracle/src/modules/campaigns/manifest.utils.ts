@@ -1,11 +1,10 @@
-import * as crypto from 'crypto';
-
 import Joi from 'joi';
 
 import * as httpUtils from '@/common/utils/http';
 
 import {
   CampaignDetails,
+  CampaignManifestBase,
   CampaignType,
   LiquidityCampaignDetails,
   VolumeCampaignDetails,
@@ -15,14 +14,9 @@ import {
 } from './types';
 
 const baseManifestSchema = Joi.object({
-  type: Joi.string().required(),
-  exchange: Joi.string().required(),
-  symbol: Joi.alternatives()
-    .try(
-      Joi.string().pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/),
-      Joi.string().pattern(/^[A-Z]{3,10}/),
-    )
-    .required(),
+  type: Joi.string().min(2).required(),
+  exchange: Joi.string().min(2).required(),
+  symbol: Joi.string().min(2).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: false });
@@ -40,11 +34,7 @@ export async function downloadCampaignManifest(
   return manifestData.toString();
 }
 
-export function calculateManifestHash(manifest: string): string {
-  return crypto.createHash('sha1').update(manifest).digest('hex');
-}
-
-export function validateBaseSchema(manifest: string): CampaignManifest {
+export function validateBaseSchema(manifest: string): CampaignManifestBase {
   let manifestJson;
   try {
     manifestJson = JSON.parse(manifest);
@@ -62,10 +52,14 @@ export function validateBaseSchema(manifest: string): CampaignManifest {
 }
 
 const volumeManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.VOLUME),
+  symbol: Joi.string()
+    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
+    .required(),
   daily_volume_target: Joi.number().greater(0).required(),
 });
 export function assertValidVolumeCampaignManifest(
-  manifest: CampaignManifest,
+  manifest: CampaignManifestBase,
 ): asserts manifest is VolumeCampaignManifest {
   try {
     Joi.assert(manifest, volumeManifestSchema);
@@ -75,10 +69,14 @@ export function assertValidVolumeCampaignManifest(
 }
 
 const liquidityManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.LIQUIDITY),
+  symbol: Joi.string()
+    .pattern(/^[A-Z]{3,10}$/)
+    .required(),
   daily_balance_target: Joi.number().greater(0).required(),
 });
 export function assertValidLiquidityCampaignManifest(
-  manifest: CampaignManifest,
+  manifest: CampaignManifestBase,
 ): asserts manifest is LiquidityCampaignManifest {
   try {
     Joi.assert(manifest, liquidityManifestSchema);
@@ -106,6 +104,9 @@ export function extractCampaignDetails(
       return details;
     }
     default:
-      throw new Error(`Can't extract ${manifest.type} campaign details`);
+      throw new Error(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        `Can't extract ${(manifest as any).type} campaign details`,
+      );
   }
 }

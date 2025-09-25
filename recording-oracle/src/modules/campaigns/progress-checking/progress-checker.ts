@@ -24,7 +24,7 @@ export abstract class BaseCampaignProgressChecker
     setupData: CampaignProgressCheckerSetup,
   ) {
     this.exchangeName = setupData.exchangeName;
-    this.tradingPair = setupData.tradingPair;
+    this.tradingPair = setupData.symbol;
     this.tradingPeriodStart = setupData.tradingPeriodStart;
     this.tradingPeriodEnd = setupData.tradingPeriodEnd;
   }

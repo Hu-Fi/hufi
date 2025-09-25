@@ -40,12 +40,13 @@ import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  MarketMakingResultsChecker,
+  VolumeResultsChecker,
 } from './progress-checking';
 import { isVolumeCampaign } from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
+  CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -298,7 +299,7 @@ export class CampaignsService {
       manifestString = escrow.manifest as string;
     }
 
-    let manifest: CampaignManifest;
+    let manifest: CampaignManifestBase;
     try {
       manifest = manifestUtils.validateBaseSchema(manifestString);
     } catch (error) {
@@ -470,7 +471,9 @@ export class CampaignsService {
             endDate,
           );
 
-          await this.recordGeneratedVolume(campaign, progress);
+          if (isVolumeCampaign(campaign)) {
+            await this.recordGeneratedVolume(campaign, progress);
+          }
 
           intermediateResults.results.push(progress);
           const storedResultsMeta =
@@ -513,7 +516,7 @@ export class CampaignsService {
       campaign.type,
       {
         exchangeName: campaign.exchangeName,
-        tradingPair: campaign.symbol,
+        symbol: campaign.symbol,
         tradingPeriodStart: startDate,
         tradingPeriodEnd: endDate,
       },
@@ -526,6 +529,12 @@ export class CampaignsService {
     let totalVolume = 0;
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
+      /**
+       * TODO
+       *
+       * Add error handling for case when we fail to check
+       * participant progress because of invalid API keys/access.
+       */
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
         participant.id,
         campaign.exchangeName,
@@ -589,11 +598,13 @@ export class CampaignsService {
     );
 
     switch (campaignType) {
-      default:
-        return new MarketMakingResultsChecker(
+      case CampaignType.VOLUME:
+        return new VolumeResultsChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );
+      default:
+        throw new Error(`No progress checker for ${campaignType} campaign`);
     }
   }
 
@@ -653,10 +664,6 @@ export class CampaignsService {
     intermediateResult: IntermediateResult,
   ): Promise<void> {
     try {
-      if (!isVolumeCampaign(campaign)) {
-        return;
-      }
-
       const [_baseTokenSymbol, quoteTokenSymbol] = campaign.symbol.split('/');
 
       const quoteTokenPriceUsd =
