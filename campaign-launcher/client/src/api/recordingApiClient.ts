@@ -1,7 +1,7 @@
 import { ChainId } from '@human-protocol/sdk';
 import axios, { AxiosError, AxiosRequestHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-import { ExchangeApiKeyData, CampaignsResponse, UserProgress } from '../types';
+import { EvmAddress, ExchangeApiKeyData, CampaignsResponse, UserProgress } from '../types';
 import { HttpClient, HttpError } from '../utils/HttpClient';
 import { TokenData, TokenManager } from "../utils/TokenManager";
 
@@ -91,14 +91,14 @@ export class RecordingApiClient extends HttpClient {
     }
   }
 
-  async getNonce(address: `0x${string}` | undefined): Promise<string> {
+  async getNonce(address: EvmAddress | undefined): Promise<string> {
     const response = await this.post<'signup' | string>('/auth/nonce', {
       address,
     });
     return response;
   }
 
-  async auth(address: `0x${string}` | undefined, signature: `0x${string}`): Promise<TokenData> {
+  async auth(address: EvmAddress | undefined, signature: EvmAddress): Promise<TokenData> {
     const response = await this.post<TokenData>('/auth', {
       address,
       signature,
@@ -138,7 +138,7 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async joinCampaign(chain_id: ChainId, address: `0x${string}`): Promise<void> {
+  async joinCampaign(chain_id: ChainId, address: EvmAddress): Promise<void> {
     await this.post<void>('/campaigns/join', {
       chain_id,
       address,
@@ -153,7 +153,7 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async checkIsJoinedCampaign(chain_id: ChainId, address: `0x${string}`): Promise<{is_joined: boolean}> {
+  async checkIsJoinedCampaign(chain_id: ChainId, address: EvmAddress): Promise<{is_joined: boolean}> {
     const response = await this.post<{is_joined: boolean}>('/campaigns/check-is-joined', {
       chain_id,
       address,
@@ -161,7 +161,7 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async getUserProgress(chain_id: ChainId, campaign_address: `0x${string}`): Promise<UserProgress>{
+  async getUserProgress(chain_id: ChainId, campaign_address: EvmAddress): Promise<UserProgress>{
     const response = await this.get<UserProgress>(`/campaigns/${chain_id}-${campaign_address}/my-progress`, {
       params: {
         chain_id,
