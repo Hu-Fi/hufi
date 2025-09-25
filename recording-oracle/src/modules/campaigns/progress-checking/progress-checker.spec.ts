@@ -116,17 +116,17 @@ describe('BaseCampaignProgressChecker', () => {
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(3);
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         1,
-        progressCheckerSetup.tradingPair,
+        progressCheckerSetup.symbol,
         progressCheckerSetup.tradingPeriodStart.valueOf(),
       );
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         2,
-        progressCheckerSetup.tradingPair,
+        progressCheckerSetup.symbol,
         pages[0].at(-1)!.timestamp + 1,
       );
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         3,
-        progressCheckerSetup.tradingPair,
+        progressCheckerSetup.symbol,
         pages[1].at(-1)!.timestamp + 1,
       );
     });
