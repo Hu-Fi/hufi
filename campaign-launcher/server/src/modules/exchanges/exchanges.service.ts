@@ -19,6 +19,17 @@ const tradingPairsCache = new LRUCache<string, string[]>({
   updateAgeOnHas: false,
 });
 
+const currenciesCache = new LRUCache<string, string[]>({
+  ttl: 1000 * 60 * 60 * 24, // new currencies do not appear often
+  max: 20, // we don't expect more than that exchanges to be actively used
+  ttlAutopurge: false,
+  allowStale: false,
+  noDeleteOnStaleGet: false,
+  noUpdateTTL: false,
+  updateAgeOnGet: false,
+  updateAgeOnHas: false,
+});
+
 @Injectable()
 export class ExchangesService {
   private readonly logger = logger.child({ context: ExchangesService.name });
@@ -52,7 +63,7 @@ export class ExchangesService {
            * Filter out pairs with weird names that highly-likely
            * won't be ever maked
            */
-          const isWeirdPair = this.isWeirdTradingPair(symbol);
+          const isWeirdPair = this.isWeirdSymbol(symbol);
 
           return !isWeirdPair;
         });
@@ -72,22 +83,66 @@ export class ExchangesService {
     }
   }
 
-  private isWeirdTradingPair(pair: string): boolean {
-    if (!pair) {
+  async getExchangeCurrencies(exchangeName: string): Promise<string[]> {
+    try {
+      if (!currenciesCache.has(exchangeName)) {
+        const exchange = new ccxt[exchangeName]();
+        await exchange.loadMarkets();
+
+        const currencies = Object.keys(exchange.currencies || []).filter(
+          (symbol) => {
+            /**
+             * Filter out tokens with weird names that highly-likely
+             * won't be ever maked
+             */
+            const isWeirdSymbol = this.isWeirdSymbol(symbol);
+
+            return !isWeirdSymbol;
+          },
+        );
+
+        /**
+         * Adding manually some tokens in case they're not returned by the exchange
+         */
+        if (exchangeName === 'mexc') {
+          const hmtSymbol = 'HMT';
+          if (!currencies.includes(hmtSymbol)) {
+            currencies.push(hmtSymbol);
+          }
+        }
+
+        currenciesCache.set(exchangeName, currencies);
+      }
+
+      return currenciesCache.get(exchangeName) as string[];
+    } catch (error) {
+      const errorMessage = 'Failed to load currencies for exchange';
+      this.logger.error(errorMessage, {
+        exchangeName,
+        error,
+      });
+
+      throw new Error(errorMessage);
+    }
+  }
+
+  private isWeirdSymbol(symbol: string): boolean {
+    if (!symbol) {
       return true;
     }
 
     /**
-     * Each symbol <=10 + 'slash'
+     * Doesn't matter if it's a pair or a single token
      */
-    if (pair.length > 21) {
+    if (symbol.includes(':')) {
       return true;
     }
 
-    if (pair.includes(':')) {
-      return true;
-    }
+    /**
+     * Splitting symbol to check each token separately
+     */
+    const tokens = symbol.split('/');
 
-    return false;
+    return tokens.some((token) => token.length < 3 || token.length > 10);
   }
 }
