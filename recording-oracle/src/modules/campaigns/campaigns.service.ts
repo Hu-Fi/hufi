@@ -597,6 +597,12 @@ export class CampaignsService {
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
+      /**
+       * TODO
+       *
+       * Add error handling for case when we fail to check
+       * participant progress because of invalid API keys/access.
+       */
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
         participant.id,
         campaign.exchangeName,
