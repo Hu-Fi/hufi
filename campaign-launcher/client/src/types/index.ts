@@ -56,7 +56,7 @@ export type Campaign = {
   fund_token_symbol: string;
   fund_token_decimals: number;
   intermediate_results_url: string | null;
-  status: 'active' | 'cancelled' | 'completed';
+  status: CampaignStatus;
   escrow_status: string;
   launcher: string;
   exchange_oracle: string;

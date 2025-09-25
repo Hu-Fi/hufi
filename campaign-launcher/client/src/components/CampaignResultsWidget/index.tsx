@@ -3,8 +3,10 @@ import { FC, MouseEvent } from 'react';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 
 import { OpenInNewIcon } from '../../icons';
+import { CampaignStatus } from '../../types';
 
 type Props = {
+  campaignStatus: CampaignStatus;
   finalResultsUrl: string | null;
   intermediateResultsUrl: string | null;
 };
@@ -14,7 +16,7 @@ const handleOpenUrl = (e: MouseEvent<HTMLButtonElement>, url: string) => {
   window.open(url, '_blank');
 };
 
-const STATUS = {
+const RESULT = {
   none: {
     label: 'N/A',
     description: 'Campaign is active but no results have been recorded yet.',
@@ -35,28 +37,29 @@ const STATUS = {
 export const StatusTooltip = () => (
   <Stack width={150} gap={0.5}>
     <Box display="flex" alignItems="baseline" gap={0.5}>
-      <Box p={0.5} borderRadius="50%" bgcolor={STATUS.final.bgcolor} />
-      <Typography variant="tooltip"><strong>Final:</strong>{' '}{STATUS.final.description}</Typography>
+      <Box p={0.5} borderRadius="50%" bgcolor={RESULT.final.bgcolor} />
+      <Typography variant="tooltip"><strong>Final:</strong>{' '}{RESULT.final.description}</Typography>
     </Box>
     <Box display="flex" alignItems="baseline" gap={0.5}>
-      <Box p={0.5} borderRadius="50%" bgcolor={STATUS.intermediate.bgcolor} />
-      <Typography variant="tooltip"><strong>Intermediate:</strong>{' '}{STATUS.intermediate.description}</Typography>
+      <Box p={0.5} borderRadius="50%" bgcolor={RESULT.intermediate.bgcolor} />
+      <Typography variant="tooltip"><strong>Intermediate:</strong>{' '}{RESULT.intermediate.description}</Typography>
     </Box>
     <Box display="flex" alignItems="baseline" gap={0.5}>
-      <Box p={0.5} borderRadius="50%" bgcolor={STATUS.none.bgcolor} />
-      <Typography variant="tooltip"><strong>N/A:</strong>{' '}{STATUS.none.description}</Typography>
+      <Box p={0.5} borderRadius="50%" bgcolor={RESULT.none.bgcolor} />
+      <Typography variant="tooltip"><strong>N/A:</strong>{' '}{RESULT.none.description}</Typography>
     </Box>
   </Stack>
 );
 
-const CampaignResultsWidget: FC<Props> = ({ finalResultsUrl, intermediateResultsUrl }) => {
-  const status = finalResultsUrl ? STATUS.final : intermediateResultsUrl ? STATUS.intermediate : STATUS.none;
+const CampaignResultsWidget: FC<Props> = ({ campaignStatus, finalResultsUrl, intermediateResultsUrl }) => {
+  const isFinished = campaignStatus !== CampaignStatus.ACTIVE;
+  const result = isFinished && finalResultsUrl ? RESULT.final : intermediateResultsUrl ? RESULT.intermediate : RESULT.none;
 
   return (
     <Box display="flex" alignItems="center">
-      <Box p={0.5} borderRadius="50%" bgcolor={status.bgcolor} mr={1} />
-      <Typography variant="h6">{status.label}</Typography>
-      {status !== STATUS.none && (
+      <Box p={0.5} borderRadius="50%" bgcolor={result.bgcolor} mr={1} />
+      <Typography variant="h6">{result.label}</Typography>
+      {result !== RESULT.none && (
         <IconButton 
           sx={{
             color: 'text.secondary',

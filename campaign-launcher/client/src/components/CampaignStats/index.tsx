@@ -9,7 +9,7 @@ import { MiniChartIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails, CampaignStatus } from '../../types';
-import { formatTokenAmount } from '../../utils';
+import { formatTokenAmount, getTokenInfo } from '../../utils';
 import CampaignResultsWidget, { StatusTooltip } from '../CampaignResultsWidget';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import CustomTooltip from '../CustomTooltip';
@@ -125,7 +125,9 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
     campaign.amount_paid,
     campaign.fund_token_decimals
   );
-  const volumeTokenSymbol = campaign.trading_pair.split('/')[1];
+
+  const volumeToken = campaign.trading_pair.split('/')[1];
+  const { label: volumeTokenSymbol } = getTokenInfo(volumeToken);
 
   return (
     <>
@@ -211,7 +213,11 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
                 <InfoTooltipInner />
               </CustomTooltip>
             </Title>
-            <CampaignResultsWidget finalResultsUrl={campaign.final_results_url} intermediateResultsUrl={campaign.intermediate_results_url} />
+            <CampaignResultsWidget 
+              campaignStatus={campaign.status}
+              finalResultsUrl={campaign.final_results_url} 
+              intermediateResultsUrl={campaign.intermediate_results_url} 
+            />
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>

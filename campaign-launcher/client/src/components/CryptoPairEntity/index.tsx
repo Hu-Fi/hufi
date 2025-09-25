@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { TOKENS } from '../../constants/tokens';
+import { getTokenInfo } from '../../utils';
 
 export type CryptoPairEntityProps = {
   symbol: string;
@@ -59,13 +59,8 @@ export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({
 }) => {
   const [base, quote] = symbol.split('/');
 
-  const { icon: baseIcon, label: baseLabel } = TOKENS.find(
-    (token) => token.name.toLowerCase() === base.toLowerCase()
-  ) || { label: base };
-
-  const { icon: quoteIcon, label: quoteLabel } = TOKENS.find(
-    (token) => token.name.toLowerCase() === quote.toLowerCase()
-  ) || { label: quote };
+  const { icon: baseIcon, label: baseLabel } = getTokenInfo(base);
+  const { icon: quoteIcon, label: quoteLabel } = getTokenInfo(quote);
 
   const isLarge = size === 'large';
 

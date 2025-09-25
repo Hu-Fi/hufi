@@ -14,6 +14,7 @@ import {
   formatTokenAmount,
   getChainIcon,
   getNetworkName,
+  getTokenInfo,
   mapStatusToColor,
 } from '../../utils';
 import CampaignAddress from '../CampaignAddress';
@@ -235,7 +236,8 @@ const CampaignsTable: FC<Props> = ({
       ),
       renderCell: (params) => {
         const { daily_volume_target, trading_pair } = params.row;
-        const currency = trading_pair.split('/')[1];
+        const volumeToken = trading_pair.split('/')[1];
+        const { label: tokenLabel } = getTokenInfo(volumeToken);
         const formattedDailyVolumeTarget = numericFormatter(
           daily_volume_target.toString(),
           {
@@ -246,7 +248,7 @@ const CampaignsTable: FC<Props> = ({
         );
         return (
           <Typography variant="subtitle2">
-            {formattedDailyVolumeTarget} {currency}
+            {formattedDailyVolumeTarget} {tokenLabel}
           </Typography>
         );
       },

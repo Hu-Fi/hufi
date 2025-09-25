@@ -35,7 +35,7 @@ import { useIsMobile } from '../../../hooks/useBreakpoints';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
 import { useNetwork } from '../../../providers/NetworkProvider';
-import { constructCampaignDetails } from '../../../utils';
+import { constructCampaignDetails, getTokenInfo } from '../../../utils';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
 import CustomTooltip from '../../CustomTooltip';
@@ -188,6 +188,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const exchange = watch('exchange');
   const pair = watch('pair');
+  const volumeToken = pair?.split('/')[1] || '';
   const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
     useTradingPairs(exchange);
 
@@ -353,11 +354,18 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     control={control}
                     render={({ field }) => {
                       return (
-                        <Autocomplete
-                          id="trading-pair-select"
-                          options={tradingPairs || []}
-                          loading={isLoadingTradingPairs}
-                          slotProps={{
+                          <Autocomplete
+                            id="trading-pair-select"
+                            options={tradingPairs || []}
+                            loading={isLoadingTradingPairs}
+                            getOptionLabel={(option) => {
+                              if (!option) return '';
+                              const [base, quote] = option.split('/');
+                              const { label: baseToken } = getTokenInfo(base);
+                              const { label: quoteToken } = getTokenInfo(quote);
+                              return `${baseToken}/${quoteToken}`;
+                            }}
+                            slotProps={{
                             paper: {
                               elevation: 4,
                               sx: {
@@ -564,7 +572,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                   variant="body1"
                                   color="text.primary"
                                 >
-                                  {pair?.split('/')[1] || ''}
+                                  {getTokenInfo(volumeToken).label || ''}
                                 </Typography>
                               </InputAdornment>
                             ),
