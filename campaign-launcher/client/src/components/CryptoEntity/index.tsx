@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { TOKENS } from '../../constants/tokens';
+import { getTokenInfo } from '../../utils';
 
 export type CryptoEntityProps = {
   name: string;
@@ -15,16 +15,12 @@ export const CryptoEntity: FC<CryptoEntityProps> = ({
   displayName,
   logo,
 }) => {
-  const { icon, label } = TOKENS.find(
-    (token) => token.name?.toLowerCase() === name?.toLowerCase()
-  ) || {
-    icon: logo,
-    label: displayName ?? name,
-  };
-
+  const { icon, label } = getTokenInfo(name);
+  const entityIcon = icon || logo;
+  
   return (
     <Box display="flex" alignItems="center" gap={1}>
-      {icon && <img src={icon} alt={name} width={24} />}
+      {entityIcon && <img src={entityIcon} alt={name} width={24} />}
       <Typography
         color="primary"
         variant="body2"

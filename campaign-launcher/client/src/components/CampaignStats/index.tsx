@@ -4,13 +4,12 @@ import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { Box, IconButton, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { TOKENS } from '../../constants/tokens';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { MiniChartIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
 import { CampaignDetails, CampaignStatus } from '../../types';
-import { formatTokenAmount } from '../../utils';
+import { formatTokenAmount, getTokenInfo } from '../../utils';
 import CampaignResultsWidget, { StatusTooltip } from '../CampaignResultsWidget';
 import { CryptoPairEntity } from '../CryptoPairEntity';
 import CustomTooltip from '../CustomTooltip';
@@ -128,9 +127,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   );
 
   const volumeToken = campaign.trading_pair.split('/')[1];
-  const { label: volumeTokenSymbol } = TOKENS.find(
-    (token) => token.name.toLowerCase() === volumeToken.toLowerCase()
-  ) || { label: volumeToken };
+  const { label: volumeTokenSymbol } = getTokenInfo(volumeToken);
 
   return (
     <>

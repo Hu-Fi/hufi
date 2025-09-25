@@ -30,12 +30,12 @@ import { useAccount } from 'wagmi';
 import * as yup from 'yup';
 
 import { QUERY_KEYS } from '../../../constants/queryKeys';
-import { FUND_TOKENS, FundToken, TOKENS } from '../../../constants/tokens';
+import { FUND_TOKENS, FundToken } from '../../../constants/tokens';
 import { useIsMobile } from '../../../hooks/useBreakpoints';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useTradingPairs } from '../../../hooks/useTradingPairs';
 import { useNetwork } from '../../../providers/NetworkProvider';
-import { constructCampaignDetails } from '../../../utils';
+import { constructCampaignDetails, getTokenInfo } from '../../../utils';
 import { CryptoEntity } from '../../CryptoEntity';
 import { CryptoPairEntity } from '../../CryptoPairEntity';
 import CustomTooltip from '../../CustomTooltip';
@@ -188,6 +188,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
 
   const exchange = watch('exchange');
   const pair = watch('pair');
+  const volumeToken = pair?.split('/')[1] || '';
   const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
     useTradingPairs(exchange);
 
@@ -360,9 +361,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                             getOptionLabel={(option) => {
                               if (!option) return '';
                               const [base, quote] = option.split('/');
-                              const baseToken = TOKENS.find(token => token.name.toLowerCase() === base.toLowerCase());
-                              const quoteToken = TOKENS.find(token => token.name.toLowerCase() === quote.toLowerCase());
-                              return `${baseToken?.label ?? base}/${quoteToken?.label ?? quote}`;
+                              const { label: baseToken } = getTokenInfo(base);
+                              const { label: quoteToken } = getTokenInfo(quote);
+                              return `${baseToken}/${quoteToken}`;
                             }}
                             slotProps={{
                             paper: {
@@ -571,9 +572,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                   variant="body1"
                                   color="text.primary"
                                 >
-                                  {TOKENS.find(
-                                    (token) => token.name.toLowerCase() === pair?.split('/')[1]?.toLowerCase()
-                                  )?.label || pair?.split('/')[1] || ''}
+                                  {getTokenInfo(volumeToken).label || ''}
                                 </Typography>
                               </InputAdornment>
                             ),
