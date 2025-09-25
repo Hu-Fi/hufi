@@ -35,14 +35,8 @@ export async function downloadCampaignManifest(
 }
 
 export function validateBaseSchema(manifest: string): CampaignManifestBase {
-  let manifestJson;
   try {
-    manifestJson = JSON.parse(manifest);
-  } catch {
-    throw new Error('Failed to parse manifest JSON');
-  }
-
-  try {
+    const manifestJson = JSON.parse(manifest);
     const validatedManifest = Joi.attempt(manifestJson, baseManifestSchema);
 
     return validatedManifest;

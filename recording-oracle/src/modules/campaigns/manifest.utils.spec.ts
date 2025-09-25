@@ -5,19 +5,13 @@ import nock from 'nock';
 
 import { generateTradingPair } from '@/modules/exchange/fixtures';
 
-import { generateCampaignManifest } from './fixtures';
+import {
+  generateManifestResponse,
+  generateVolumeCampaignManifest,
+  generateLiquidityCampaignManifest,
+} from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import { CampaignType } from './types';
-
-function generateManifestResponse(type?: string) {
-  const manifest = generateCampaignManifest(type);
-
-  return {
-    ...manifest,
-    start_date: manifest.start_date.toISOString(),
-    end_date: manifest.end_date.toISOString(),
-  };
-}
 
 describe('manifest utils', () => {
   describe('downloadCampaignManifest', () => {
@@ -183,7 +177,7 @@ describe('manifest utils', () => {
   });
 
   describe('assertValidVolumeCampaignManifest', () => {
-    const validManifest = generateCampaignManifest(CampaignType.VOLUME);
+    const validManifest = generateVolumeCampaignManifest();
 
     it('should not throw for valid manifest', () => {
       expect(
@@ -231,7 +225,7 @@ describe('manifest utils', () => {
   });
 
   describe('assertValidLiquidityCampaignManifest', () => {
-    const validManifest = generateCampaignManifest(CampaignType.LIQUIDITY);
+    const validManifest = generateLiquidityCampaignManifest();
 
     it('should not throw for valid manifest', () => {
       expect(
