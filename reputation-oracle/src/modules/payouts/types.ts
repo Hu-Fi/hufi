@@ -4,7 +4,7 @@ export type CampaignManifest = {
   type: string;
   daily_volume_target: number;
   exchange: string;
-  pair: string;
+  symbol: string;
   start_date: string;
   end_date: string;
 };
@@ -47,7 +47,7 @@ export type IntermediateResultsData = {
   chain_id: number;
   address: string;
   exchange: string;
-  pair: string;
+  symbol: string;
   results: IntermediateResult[];
 };
 

@@ -32,9 +32,7 @@ const intermedateResultsSchema = Joi.object({
     .required(),
   address: Joi.string().required(),
   exchange: Joi.string().required(),
-  pair: Joi.string()
-    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
-    .required(),
+  symbol: Joi.string().required(),
   results: Joi.array().items(intermediateResultSchema).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
 
