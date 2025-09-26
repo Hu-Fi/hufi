@@ -423,6 +423,10 @@ export class CampaignsService {
           return;
         }
 
+        if (!isVolumeCampaign(campaign)) {
+          return;
+        }
+
         const logger = this.logger.child({
           action: 'record-campaign-progress',
           campaignId: campaign.id,

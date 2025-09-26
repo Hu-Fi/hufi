@@ -56,7 +56,6 @@ import {
   generateMarketMakingCampaignManifest,
   generateCampaignProgress,
   generateParticipantOutcome,
-  generateCampaignManifest,
   MockCampaignProgressChecker,
   MockProgressCheckResult,
 } from './fixtures';
