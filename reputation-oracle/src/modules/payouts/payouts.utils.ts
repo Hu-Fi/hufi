@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { ChainIds } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 
-import { CampaignManifest, IntermediateResultsData } from './types';
+import { BaseCampaignManifest, IntermediateResultsData } from './types';
 
 const participantOutcome = Joi.object({
   address: Joi.string().required(),
@@ -30,7 +30,6 @@ const intermedateResultsSchema = Joi.object({
     .required(),
   address: Joi.string().required(),
   exchange: Joi.string().required(),
-  symbol: Joi.string().required(),
   results: Joi.array().items(intermediateResultSchema).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
 
@@ -55,7 +54,7 @@ export async function downloadIntermediateResults(
 export async function retrieveCampaignManifest(
   manifestOrUrl: string,
   manifestHash: string,
-): Promise<CampaignManifest> {
+): Promise<BaseCampaignManifest> {
   let manifestData;
   if (httpUtils.isValidHttpUrl(manifestOrUrl)) {
     const manifestContent = await httpUtils.downloadFileAndVerifyHash(
