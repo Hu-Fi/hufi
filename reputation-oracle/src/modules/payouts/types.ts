@@ -4,7 +4,7 @@ export type CampaignManifest = {
   type: string;
   daily_volume_target: number;
   exchange: string;
-  pair: string;
+  symbol: string;
   start_date: string;
   end_date: string;
 };
@@ -39,6 +39,7 @@ export type IntermediateResult = {
   from: Date;
   to: Date;
   total_volume: number;
+  reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
 };
 
@@ -46,7 +47,7 @@ export type IntermediateResultsData = {
   chain_id: number;
   address: string;
   exchange: string;
-  pair: string;
+  symbol: string;
   results: IntermediateResult[];
 };
 

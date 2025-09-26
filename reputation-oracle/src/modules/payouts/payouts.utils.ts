@@ -1,15 +1,9 @@
-import dayjs from 'dayjs';
 import Joi from 'joi';
 
 import { ChainIds } from '@/common/constants';
-import * as decimalUtils from '@/common/utils/decimal';
 import * as httpUtils from '@/common/utils/http';
 
-import {
-  CampaignManifest,
-  CampaignWithResults,
-  IntermediateResultsData,
-} from './types';
+import { CampaignManifest, IntermediateResultsData } from './types';
 
 const participantOutcome = Joi.object({
   address: Joi.string().required(),
@@ -26,6 +20,7 @@ const intermediateResultSchema = Joi.object({
   from: Joi.date().iso().required(),
   to: Joi.date().iso().greater(Joi.ref('from')).required(),
   total_volume: Joi.number().min(0).required(),
+  reserved_funds: Joi.number().min(0).required(),
   participants_outcomes_batches: Joi.array()
     .items(participantsOutcomesBatchSchema)
     .required(),
@@ -37,9 +32,7 @@ const intermedateResultsSchema = Joi.object({
     .required(),
   address: Joi.string().required(),
   exchange: Joi.string().required(),
-  pair: Joi.string()
-    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
-    .required(),
+  symbol: Joi.string().required(),
   results: Joi.array().items(intermediateResultSchema).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
 
@@ -80,15 +73,4 @@ export async function retrieveCampaignManifest(
   }
 
   return JSON.parse(manifestData);
-}
-
-export function calculateDailyReward(
-  campaign: CampaignWithResults,
-  manifest: CampaignManifest,
-): number {
-  const campaignDurationDays = Math.ceil(
-    dayjs(manifest.end_date).diff(manifest.start_date, 'days', true),
-  );
-
-  return decimalUtils.div(campaign.fundAmount, campaignDurationDays);
 }

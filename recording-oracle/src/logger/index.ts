@@ -11,7 +11,6 @@ import Environment from '@/common/utils/environment';
 const isDevelopment = Environment.isDevelopment();
 
 const LOG_LEVEL_OVERRIDE = process.env.LOG_LEVEL;
-const LOG_PRETTY_OVERRIDE = process.env.LOG_PRETTY;
 
 let logLevel = LogLevel.INFO;
 if (isLogLevel(LOG_LEVEL_OVERRIDE)) {
@@ -24,7 +23,7 @@ const defaultLogger = createLogger(
   {
     name: 'DefaultLogger',
     level: logLevel,
-    pretty: isDevelopment || LOG_PRETTY_OVERRIDE === 'true',
+    pretty: isDevelopment || process.env.LOG_PRETTY === 'true',
     disabled: Environment.isTest(),
   },
   {
