@@ -17,41 +17,44 @@ export enum ReturnedCampaignStatus {
 }
 
 export enum CampaignType {
-  VOLUME = 'VOLUME',
-  LIQUIDITY = 'LIQUIDITY',
+  MARKET_MAKING = 'MARKET_MAKING',
+  HOLDING = 'HOLDING',
 }
 
-export type VolumeCampaignDetails = {
+export type MarketMakingCampaignDetails = {
   dailyVolumeTarget: number;
 };
 
-export type LiquidityCampaignDetails = {
+export type HoldingCampaignDetails = {
   dailyBalanceTarget: number;
 };
 
-export type CampaignDetails = VolumeCampaignDetails | LiquidityCampaignDetails;
+export type CampaignDetails =
+  | MarketMakingCampaignDetails
+  | HoldingCampaignDetails;
 
 export type CampaignManifestBase = {
   type: string;
   exchange: string;
-  symbol: string;
   start_date: Date;
   end_date: Date;
 };
 
-export type VolumeCampaignManifest = CampaignManifestBase & {
-  type: CampaignType.VOLUME;
+export type MarketMakingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.MARKET_MAKING;
+  pair: string;
   daily_volume_target: number;
 };
 
-export type LiquidityCampaignManifest = CampaignManifestBase & {
-  type: CampaignType.LIQUIDITY;
+export type HoldingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.HOLDING;
+  symbol: string;
   daily_balance_target: number;
 };
 
 export type CampaignManifest =
-  | VolumeCampaignManifest
-  | LiquidityCampaignManifest;
+  | MarketMakingCampaignManifest
+  | HoldingCampaignManifest;
 
 export type CampaignEscrowInfo = {
   fundAmount: number;

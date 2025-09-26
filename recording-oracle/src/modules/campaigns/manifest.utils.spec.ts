@@ -7,8 +7,8 @@ import { generateTradingPair } from '@/modules/exchange/fixtures';
 
 import {
   generateManifestResponse,
-  generateVolumeCampaignManifest,
-  generateLiquidityCampaignManifest,
+  generateMarketMakingCampaignManifest,
+  generateHoldingCampaignManifest,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import { CampaignType } from './types';
@@ -93,7 +93,6 @@ describe('manifest utils', () => {
       {
         type: faker.string.symbol(),
         exchange: faker.string.symbol(),
-        symbol: faker.string.symbol(),
         // dates are not in ISO format
         start_date: faker.date.recent().toDateString(),
         end_date: faker.date.future().toDateString(),
@@ -176,27 +175,27 @@ describe('manifest utils', () => {
     });
   });
 
-  describe('assertValidVolumeCampaignManifest', () => {
-    const validManifest = generateVolumeCampaignManifest();
+  describe('assertValidMarketMakingCampaignManifest', () => {
+    const validManifest = generateMarketMakingCampaignManifest();
 
     it('should not throw for valid manifest', () => {
       expect(
-        manifestUtils.assertValidVolumeCampaignManifest(validManifest),
+        manifestUtils.assertValidMarketMakingCampaignManifest(validManifest),
       ).toBeUndefined();
     });
 
     it.each([
       // invalid (lowercased) type
       Object.assign({}, validManifest, {
-        type: CampaignType.VOLUME.toLowerCase(),
+        type: CampaignType.MARKET_MAKING.toLowerCase(),
       }),
       // invalid trading pair symbol
       Object.assign({}, validManifest, {
-        symbol: generateTradingPair().replace('/', '-'),
+        pair: generateTradingPair().replace('/', '-'),
       }),
       // token symbol instead of trading pair
       Object.assign({}, validManifest, {
-        symbol: faker.finance.currencyCode(),
+        pair: faker.finance.currencyCode(),
       }),
       // invalid volume target
       Object.assign({}, validManifest, {
@@ -206,37 +205,34 @@ describe('manifest utils', () => {
       Object.assign({}, validManifest, {
         daily_volume_target: undefined,
       }),
-    ])(
-      'should throw when invalid base manifest schema [%#]',
-      async (manifest) => {
-        let thrownError;
-        try {
-          manifestUtils.assertValidVolumeCampaignManifest(manifest);
-        } catch (error) {
-          thrownError = error;
-        }
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError;
+      try {
+        manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
+      } catch (error) {
+        thrownError = error;
+      }
 
-        expect(thrownError).toBeInstanceOf(Error);
-        expect(thrownError.message).toBe(
-          'Invalid volume campaign manifest schema',
-        );
-      },
-    );
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid market making campaign manifest schema',
+      );
+    });
   });
 
-  describe('assertValidLiquidityCampaignManifest', () => {
-    const validManifest = generateLiquidityCampaignManifest();
+  describe('assertValidHoldingCampaignManifest', () => {
+    const validManifest = generateHoldingCampaignManifest();
 
     it('should not throw for valid manifest', () => {
       expect(
-        manifestUtils.assertValidLiquidityCampaignManifest(validManifest),
+        manifestUtils.assertValidHoldingCampaignManifest(validManifest),
       ).toBeUndefined();
     });
 
     it.each([
       // invalid (lowercased) type
       Object.assign({}, validManifest, {
-        type: CampaignType.LIQUIDITY.toLowerCase(),
+        type: CampaignType.HOLDING.toLowerCase(),
       }),
       // trading pair instead of token symbol
       Object.assign({}, validManifest, {
@@ -250,21 +246,18 @@ describe('manifest utils', () => {
       Object.assign({}, validManifest, {
         daily_balance_target: undefined,
       }),
-    ])(
-      'should throw when invalid base manifest schema [%#]',
-      async (manifest) => {
-        let thrownError;
-        try {
-          manifestUtils.assertValidLiquidityCampaignManifest(manifest);
-        } catch (error) {
-          thrownError = error;
-        }
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError;
+      try {
+        manifestUtils.assertValidHoldingCampaignManifest(manifest);
+      } catch (error) {
+        thrownError = error;
+      }
 
-        expect(thrownError).toBeInstanceOf(Error);
-        expect(thrownError.message).toBe(
-          'Invalid liquidity campaign manifest schema',
-        );
-      },
-    );
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid holding campaign manifest schema',
+      );
+    });
   });
 });

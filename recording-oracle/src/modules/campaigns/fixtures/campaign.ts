@@ -26,14 +26,14 @@ import {
  * Add other campaign types
  */
 export function generateCampaignEntity(
-  type: CampaignType.VOLUME = CampaignType.VOLUME,
+  type: CampaignType.MARKET_MAKING = CampaignType.MARKET_MAKING,
 ): CampaignEntity {
   const startDate = dayjs().subtract(1, 'days').toDate();
   const durationInDays = faker.number.int({ min: 3, max: 7 });
 
   let details: CampaignDetails;
   switch (type) {
-    case CampaignType.VOLUME:
+    case CampaignType.MARKET_MAKING:
       details = {
         dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
       };

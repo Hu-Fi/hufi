@@ -43,7 +43,7 @@ import {
   CampaignProgressCheckerSetup,
   MarketMakingProgressChecker,
 } from './progress-checking';
-import { isVolumeCampaign } from './type-guards';
+import { isMarketMakingCampaign } from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
@@ -177,19 +177,21 @@ export class CampaignsService {
     manifest: CampaignManifest,
     escrowInfo: CampaignEscrowInfo,
   ): Promise<CampaignEntity> {
+    const { symbol, details } = manifestUtils.extractCampaignDetails(manifest);
+
     const newCampaign = new CampaignEntity();
     newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
     newCampaign.address = ethers.getAddress(address);
     newCampaign.type = manifest.type as CampaignType;
     newCampaign.exchangeName = manifest.exchange;
-    newCampaign.symbol = manifest.symbol;
+    newCampaign.symbol = symbol;
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
-    newCampaign.details = manifestUtils.extractCampaignDetails(manifest);
+    newCampaign.details = details;
     newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.lastResultsAt = null;
 
@@ -312,11 +314,11 @@ export class CampaignsService {
 
     try {
       switch (manifest.type) {
-        case CampaignType.VOLUME:
-          manifestUtils.assertValidVolumeCampaignManifest(manifest);
+        case CampaignType.MARKET_MAKING:
+          manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
           break;
-        // case CampaignType.LIQUIDITY:
-        //   manifestUtils.assertValidLiquidityCampaignManifest(manifest);
+        // case CampaignType.HOLDING:
+        //   manifestUtils.assertValidHoldingCampaignManifest(manifest);
         //   break;
         default:
           throw new Error(`Campaign type not supported: ${manifest.type}`);
@@ -410,7 +412,7 @@ export class CampaignsService {
           return;
         }
 
-        if (!isVolumeCampaign(campaign)) {
+        if (!isMarketMakingCampaign(campaign)) {
           return;
         }
 
@@ -640,7 +642,7 @@ export class CampaignsService {
     );
 
     switch (campaignType) {
-      case CampaignType.VOLUME:
+      case CampaignType.MARKET_MAKING:
         return new MarketMakingProgressChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,

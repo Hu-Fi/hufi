@@ -7,8 +7,8 @@ import {
 
 import {
   CampaignType,
-  type LiquidityCampaignManifest,
-  type VolumeCampaignManifest,
+  type HoldingCampaignManifest,
+  type MarketMakingCampaignManifest,
   type CampaignManifestBase,
 } from '../types';
 
@@ -16,7 +16,6 @@ export function generateBaseCampaignManifest(): CampaignManifestBase {
   const manifestBase: CampaignManifestBase = {
     type: faker.lorem.word(),
     exchange: generateExchangeName(),
-    symbol: faker.lorem.word(),
     start_date: faker.date.recent(),
     end_date: faker.date.future(),
   };
@@ -24,24 +23,24 @@ export function generateBaseCampaignManifest(): CampaignManifestBase {
   return manifestBase;
 }
 
-export function generateVolumeCampaignManifest(): VolumeCampaignManifest {
+export function generateMarketMakingCampaignManifest(): MarketMakingCampaignManifest {
   const manifestBase = generateBaseCampaignManifest();
 
-  const manifest: VolumeCampaignManifest = {
+  const manifest: MarketMakingCampaignManifest = {
     ...manifestBase,
-    type: CampaignType.VOLUME,
-    symbol: generateTradingPair(),
+    type: CampaignType.MARKET_MAKING,
+    pair: generateTradingPair(),
     daily_volume_target: faker.number.float(),
   };
   return manifest;
 }
 
-export function generateLiquidityCampaignManifest(): LiquidityCampaignManifest {
+export function generateHoldingCampaignManifest(): HoldingCampaignManifest {
   const manifestBase = generateBaseCampaignManifest();
 
-  const manifest: LiquidityCampaignManifest = {
+  const manifest: HoldingCampaignManifest = {
     ...manifestBase,
-    type: CampaignType.LIQUIDITY,
+    type: CampaignType.HOLDING,
     symbol: faker.finance.currencyCode(),
     daily_balance_target: faker.number.float(),
   };

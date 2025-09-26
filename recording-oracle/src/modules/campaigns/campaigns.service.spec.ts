@@ -51,9 +51,9 @@ import {
   generateCampaignEntity,
   generateIntermediateResult,
   generateIntermediateResultsData,
-  generateLiquidityCampaignManifest,
+  generateHoldingCampaignManifest,
   generateStoredResultsMeta,
-  generateVolumeCampaignManifest,
+  generateMarketMakingCampaignManifest,
   generateCampaignProgress,
   generateParticipantOutcome,
 } from './fixtures';
@@ -67,7 +67,7 @@ import {
   CampaignStatus,
   CampaignType,
   IntermediateResultsData,
-  VolumeCampaignDetails,
+  MarketMakingCampaignDetails,
 } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
@@ -440,7 +440,7 @@ describe('CampaignsService', () => {
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
-      const mockedManifest = generateVolumeCampaignManifest();
+      const mockedManifest = generateMarketMakingCampaignManifest();
       mockedManifest.exchange = faker.lorem.word();
       spyOnDownloadCampaignManifest.mockResolvedValueOnce(
         JSON.stringify(mockedManifest),
@@ -517,7 +517,7 @@ describe('CampaignsService', () => {
       } as any);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
-      const mockedManifest = generateVolumeCampaignManifest();
+      const mockedManifest = generateMarketMakingCampaignManifest();
       spyOnDownloadCampaignManifest.mockResolvedValueOnce(
         JSON.stringify(mockedManifest),
       );
@@ -543,8 +543,8 @@ describe('CampaignsService', () => {
     });
 
     it.each([
-      generateVolumeCampaignManifest(),
-      // generateLiquidityCampaignManifest(),
+      generateMarketMakingCampaignManifest(),
+      // generateHoldingCampaignManifest(),
     ])(
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {
@@ -577,10 +577,10 @@ describe('CampaignsService', () => {
   });
 
   describe('createCampaign', () => {
-    it('should create volume campaign with proper data', async () => {
+    it('should create market making campaign with proper data', async () => {
       const chainId = generateTestnetChainId();
       const campaignAddress = faker.finance.ethereumAddress();
-      const manifest = generateVolumeCampaignManifest();
+      const manifest = generateMarketMakingCampaignManifest();
       const fundAmount = faker.number.float();
       const fundTokenSymbol = faker.finance.currencyCode();
       const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
@@ -604,7 +604,7 @@ describe('CampaignsService', () => {
         address: ethers.getAddress(campaignAddress),
         type: manifest.type,
         exchangeName: manifest.exchange,
-        symbol: manifest.symbol,
+        symbol: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
         fundAmount: fundAmount.toString(),
@@ -624,10 +624,10 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should create liquidity campaign with proper data', async () => {
+    it('should create hodling campaign with proper data', async () => {
       const chainId = generateTestnetChainId();
       const campaignAddress = faker.finance.ethereumAddress();
-      const manifest = generateLiquidityCampaignManifest();
+      const manifest = generateHoldingCampaignManifest();
       const fundAmount = faker.number.float();
       const fundTokenSymbol = faker.finance.currencyCode();
       const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
@@ -678,7 +678,7 @@ describe('CampaignsService', () => {
     let chainId: number;
 
     beforeEach(() => {
-      campaign = generateCampaignEntity(CampaignType.VOLUME);
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
     });
@@ -745,7 +745,7 @@ describe('CampaignsService', () => {
         campaignsService,
         'createCampaign',
       );
-      const campaignManifest = generateVolumeCampaignManifest();
+      const campaignManifest = generateMarketMakingCampaignManifest();
       const escrowInfo = {
         fundAmount: faker.number.float(),
         fundTokenSymbol: faker.finance.currencyCode(),
@@ -830,7 +830,7 @@ describe('CampaignsService', () => {
     it('should return data of campaigns where user is participant', async () => {
       const userId = faker.string.uuid();
       const userCampaigns = Array.from({ length: 3 }, () =>
-        generateCampaignEntity(CampaignType.VOLUME),
+        generateCampaignEntity(CampaignType.MARKET_MAKING),
       );
       mockUserCampaignsRepository.findByUserId.mockResolvedValueOnce(
         userCampaigns,
@@ -859,8 +859,8 @@ describe('CampaignsService', () => {
   });
 
   describe('getCampaignProgressChecker', () => {
-    it('should return volume checker for volume type', () => {
-      const campaign = generateCampaignEntity(CampaignType.VOLUME);
+    it('should return market making checker for its type', () => {
+      const campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       const checker = campaignsService['getCampaignProgressChecker'](
         campaign.type,
@@ -876,7 +876,7 @@ describe('CampaignsService', () => {
     });
 
     it('should throw for unknown campaign type', () => {
-      const campaign = generateCampaignEntity(CampaignType.VOLUME);
+      const campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       campaign.type = faker.lorem.word() as any;
 
       let thrownError;
@@ -907,7 +907,7 @@ describe('CampaignsService', () => {
       spyOnDownloadFile = jest.spyOn(httpUtils, 'downloadFile');
       spyOnDownloadFile.mockImplementation();
 
-      campaign = generateCampaignEntity(CampaignType.VOLUME);
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
     });
 
     afterAll(() => {
@@ -1032,7 +1032,7 @@ describe('CampaignsService', () => {
     beforeAll(() => {
       periodEnd = new Date();
       periodStart = dayjs(periodEnd).subtract(1, 'day').toDate();
-      campaign = generateCampaignEntity(CampaignType.VOLUME);
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       mockParticipantResult = {
         abuseDetected: false,
@@ -1215,7 +1215,7 @@ describe('CampaignsService', () => {
     });
 
     beforeEach(() => {
-      campaign = generateCampaignEntity(CampaignType.VOLUME);
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
@@ -1497,7 +1497,7 @@ describe('CampaignsService', () => {
           maxRewardPool: campaignsService.calculateDailyReward(campaign),
           totalMarketMakersValue: totalVolume,
           valueTarget: Number(
-            (campaign.details as VolumeCampaignDetails).dailyVolumeTarget,
+            (campaign.details as MarketMakingCampaignDetails).dailyVolumeTarget,
           ),
         }),
         campaign.fundTokenDecimals,
@@ -1780,7 +1780,7 @@ describe('CampaignsService', () => {
 
       const nCampaigns = faker.number.int({ min: 2, max: 5 });
       const campaigns = Array.from({ length: nCampaigns }, () =>
-        generateCampaignEntity(CampaignType.VOLUME),
+        generateCampaignEntity(CampaignType.MARKET_MAKING),
       );
       mockCampaignsRepository.findForProgressRecording.mockResolvedValueOnce(
         campaigns,
@@ -1916,7 +1916,7 @@ describe('CampaignsService', () => {
   });
 
   describe('recordGeneratedVolume', () => {
-    const campaign = generateCampaignEntity(CampaignType.VOLUME);
+    const campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
     const intermediateResult = generateIntermediateResult();
 
     it('should not record if quote token usd price is null', async () => {
@@ -1978,7 +1978,7 @@ describe('CampaignsService', () => {
     beforeAll(() => {
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
-      campaign = generateCampaignEntity(CampaignType.VOLUME);
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
     });
 
     it('should return false if campaign does not exist', async () => {
@@ -2086,7 +2086,7 @@ describe('CampaignsService', () => {
     });
 
     beforeEach(() => {
-      campaign = generateCampaignEntity(CampaignType.VOLUME);
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
         mockMarketMakingProgressChecker,
