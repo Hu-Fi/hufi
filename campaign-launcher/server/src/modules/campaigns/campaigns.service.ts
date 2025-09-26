@@ -117,12 +117,15 @@ export class CampaignsService {
       ]);
 
       let details: CampaignDetails;
+      let symbol: string;
 
-      if (manifestUtils.isVolumeManifest(manifest)) {
+      if (manifestUtils.isMarketMakingManifest(manifest)) {
+        symbol = manifest.pair;
         details = {
           dailyVolumeTarget: manifest.daily_volume_target,
         };
-      } else if (manifestUtils.isLiquidityManifest(manifest)) {
+      } else if (manifestUtils.isHoldingManifest(manifest)) {
+        symbol = manifest.symbol;
         details = {
           dailyBalanceTarget: manifest.daily_balance_target,
         };
@@ -137,7 +140,7 @@ export class CampaignsService {
         address: ethers.getAddress(campaignEscrow.address),
         type: manifest.type as CampaignType,
         exchangeName: manifest.exchange,
-        symbol: manifest.symbol,
+        symbol,
         details,
         startDate: manifest.start_date.toISOString(),
         endDate: manifest.end_date.toISOString(),
@@ -232,12 +235,15 @@ export class CampaignsService {
     const oracleFees = await this.getCampaignOracleFees(chainId, escrowAddress);
 
     let details: CampaignDetails;
+    let symbol: string;
 
-    if (manifestUtils.isVolumeManifest(manifest)) {
+    if (manifestUtils.isMarketMakingManifest(manifest)) {
+      symbol = manifest.pair;
       details = {
         dailyVolumeTarget: manifest.daily_volume_target,
       };
-    } else if (manifestUtils.isLiquidityManifest(manifest)) {
+    } else if (manifestUtils.isHoldingManifest(manifest)) {
+      symbol = manifest.symbol;
       details = {
         dailyBalanceTarget: manifest.daily_balance_target,
       };
@@ -252,7 +258,7 @@ export class CampaignsService {
       address: ethers.getAddress(escrowAddress),
       type: manifest.type as CampaignType,
       exchangeName: manifest.exchange,
-      symbol: manifest.symbol,
+      symbol,
       details,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
