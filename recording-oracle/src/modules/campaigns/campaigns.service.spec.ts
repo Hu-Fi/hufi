@@ -52,7 +52,6 @@ import {
   generateIntermediateResult,
   generateIntermediateResultsData,
   generateLiquidityCampaignManifest,
-  generateProgressCheckerSetup,
   generateStoredResultsMeta,
   generateVolumeCampaignManifest,
   generateCampaignProgress,
@@ -862,7 +861,12 @@ describe('CampaignsService', () => {
 
       const checker = campaignsService['getCampaignProgressChecker'](
         campaign.type,
-        generateProgressCheckerSetup(),
+        {
+          exchangeName: campaign.exchangeName,
+          symbol: campaign.symbol,
+          periodStart: faker.date.recent(),
+          periodEnd: faker.date.soon(),
+        },
       );
 
       expect(checker).toBeInstanceOf(VolumeResultsChecker);
@@ -874,10 +878,12 @@ describe('CampaignsService', () => {
 
       let thrownError;
       try {
-        campaignsService['getCampaignProgressChecker'](
-          campaign.type,
-          generateProgressCheckerSetup(),
-        );
+        campaignsService['getCampaignProgressChecker'](campaign.type, {
+          exchangeName: campaign.exchangeName,
+          symbol: campaign.symbol,
+          periodStart: faker.date.recent(),
+          periodEnd: faker.date.soon(),
+        });
       } catch (error) {
         thrownError = error;
       }

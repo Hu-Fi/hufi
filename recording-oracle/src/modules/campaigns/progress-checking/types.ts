@@ -1,8 +1,8 @@
 export type CampaignProgressCheckerSetup = {
   exchangeName: string;
   symbol: string;
-  tradingPeriodStart: Date;
-  tradingPeriodEnd: Date;
+  periodStart: Date;
+  periodEnd: Date;
 };
 
 export type ProgressCheckResult = {

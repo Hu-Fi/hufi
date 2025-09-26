@@ -565,8 +565,8 @@ export class CampaignsService {
       {
         exchangeName: campaign.exchangeName,
         symbol: campaign.symbol,
-        tradingPeriodStart: startDate,
-        tradingPeriodEnd: endDate,
+        periodStart: startDate,
+        periodEnd: endDate,
       },
     );
 

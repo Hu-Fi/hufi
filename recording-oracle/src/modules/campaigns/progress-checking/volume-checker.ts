@@ -1,4 +1,9 @@
-import { ExchangeApiClientFactory, Trade } from '@/modules/exchange';
+import {
+  ExchangeApiClientFactory,
+  TakerOrMakerFlag,
+  Trade,
+  TradingSide,
+} from '@/modules/exchange';
 
 import type {
   CampaignProgressChecker,
@@ -9,9 +14,7 @@ import type {
 
 const N_TRADES_FOR_ABUSE_CHECK = 5;
 
-export abstract class BaseCampaignProgressChecker
-  implements CampaignProgressChecker
-{
+export class VolumeCampaignProgressChecker implements CampaignProgressChecker {
   readonly exchangeName: string;
   readonly tradingPair: string;
   readonly tradingPeriodStart: Date;
@@ -25,8 +28,8 @@ export abstract class BaseCampaignProgressChecker
   ) {
     this.exchangeName = setupData.exchangeName;
     this.tradingPair = setupData.symbol;
-    this.tradingPeriodStart = setupData.tradingPeriodStart;
-    this.tradingPeriodEnd = setupData.tradingPeriodEnd;
+    this.tradingPeriodStart = setupData.periodStart;
+    this.tradingPeriodEnd = setupData.periodEnd;
   }
 
   async checkForParticipant(
@@ -88,5 +91,20 @@ export abstract class BaseCampaignProgressChecker
     return `${trade.id}-${trade.side}`;
   }
 
-  protected abstract calculateTradeScore(trade: Trade): number;
+  protected calculateTradeScore(trade: Trade): number {
+    let ratio: number;
+
+    if (trade.takerOrMaker === TakerOrMakerFlag.MAKER) {
+      // Market making trade, no matter which side
+      ratio = 1;
+    } else if (trade.side === TradingSide.BUY) {
+      // "taker" trade on "buy" side
+      ratio = 0.42;
+    } else {
+      // "taker" sells
+      ratio = 0.1;
+    }
+
+    return ratio * trade.cost;
+  }
 }

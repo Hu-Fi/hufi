@@ -10,10 +10,6 @@ import { generateTestnetChainId } from '@/modules/web3/fixtures';
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
 import { CampaignEntity } from '../campaign.entity';
-import type {
-  CampaignProgressCheckerSetup,
-  ParticipantAuthKeys,
-} from '../progress-checking';
 import {
   CampaignDetails,
   CampaignProgress,
@@ -64,28 +60,6 @@ export function generateCampaignEntity(
   };
 
   return campaign as CampaignEntity;
-}
-
-export function generateProgressCheckerSetup(
-  overrides?: Partial<CampaignProgressCheckerSetup>,
-): CampaignProgressCheckerSetup {
-  const input: CampaignProgressCheckerSetup = {
-    exchangeName: generateExchangeName(),
-    symbol: generateTradingPair(),
-    tradingPeriodStart: faker.date.recent(),
-    tradingPeriodEnd: faker.date.future(),
-  };
-
-  Object.assign(input, overrides);
-
-  return input;
-}
-
-export function generateParticipantAuthKeys(): ParticipantAuthKeys {
-  return {
-    apiKey: faker.string.sample(),
-    secret: faker.string.sample(),
-  };
 }
 
 export function generateParticipantOutcome(
