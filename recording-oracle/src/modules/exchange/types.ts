@@ -1,4 +1,8 @@
-import type { Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
+import type {
+  Order as CcxtOrder,
+  Trade as CcxtTrade,
+  AccountBalance as CcxtAccountBalance,
+} from 'ccxt';
 
 export enum TradingSide {
   SELL = 'sell',
@@ -34,3 +38,5 @@ export type Trade = Pick<
   | 'amount'
   | 'cost'
 >;
+
+export type AccountBalance = CcxtAccountBalance;

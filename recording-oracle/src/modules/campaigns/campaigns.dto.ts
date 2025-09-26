@@ -73,30 +73,30 @@ class JoinedCampaignDto {
   details: CampaignDetails;
 }
 
-class VolumeCampaignDetailsDto {
+class MarketMakingCampaignDetailsDto {
   @ApiProperty({ name: 'daily_volume_target' })
   dailyVolumeTarget: number;
 }
 
-class VolumeCampaignDto extends JoinedCampaignDto {
-  @ApiProperty({ enum: [CampaignType.VOLUME] })
-  declare type: CampaignType.VOLUME;
+class MarketMakingCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.MARKET_MAKING] })
+  declare type: CampaignType.MARKET_MAKING;
 
   @ApiProperty()
-  declare details: VolumeCampaignDetailsDto;
+  declare details: MarketMakingCampaignDetailsDto;
 }
 
-class LiquidityCampaignDetailsDto {
+class HoldingCampaignDetailsDto {
   @ApiProperty({ name: 'daily_balance_target' })
   dailyBalanceTarget: number;
 }
 
-class LiquidityCampaignDto extends JoinedCampaignDto {
-  @ApiProperty({ enum: [CampaignType.LIQUIDITY] })
-  declare type: CampaignType.LIQUIDITY;
+class HoldingCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.HOLDING] })
+  declare type: CampaignType.HOLDING;
 
   @ApiProperty()
-  declare details: LiquidityCampaignDetailsDto;
+  declare details: HoldingCampaignDetailsDto;
 }
 
 export class ListJoinedCampaignsQueryDto {
@@ -124,7 +124,7 @@ export class ListJoinedCampaignsQueryDto {
   skip?: number;
 }
 
-@ApiExtraModels(VolumeCampaignDto, LiquidityCampaignDto)
+@ApiExtraModels(MarketMakingCampaignDto, HoldingCampaignDto)
 export class ListJoinedCampaignsSuccessDto {
   @ApiProperty({
     name: 'has_more',
@@ -133,14 +133,14 @@ export class ListJoinedCampaignsSuccessDto {
 
   @ApiProperty({
     oneOf: [
-      { $ref: getSchemaPath(VolumeCampaignDto) },
-      { $ref: getSchemaPath(LiquidityCampaignDto) },
+      { $ref: getSchemaPath(MarketMakingCampaignDto) },
+      { $ref: getSchemaPath(HoldingCampaignDto) },
     ],
     discriminator: {
       propertyName: 'type',
       mapping: {
-        [CampaignType.VOLUME]: getSchemaPath(VolumeCampaignDto),
-        [CampaignType.LIQUIDITY]: getSchemaPath(LiquidityCampaignDto),
+        [CampaignType.MARKET_MAKING]: getSchemaPath(MarketMakingCampaignDto),
+        [CampaignType.HOLDING]: getSchemaPath(HoldingCampaignDto),
       },
     },
     isArray: true,
@@ -189,17 +189,17 @@ export class GetUserProgressResponseDto {
   to: string;
 
   @ApiProperty({
-    name: 'total_volume',
-  })
-  totalVolume: number;
-
-  @ApiProperty({
     name: 'my_score',
   })
   myScore: number;
 
   @ApiProperty({
-    name: 'my_volume',
+    name: 'my_meta',
   })
-  myVolume: number;
+  myMeta: object;
+
+  @ApiProperty({
+    name: 'total_meta',
+  })
+  totalMeta: object;
 }

@@ -1,18 +1,18 @@
 import type { CampaignEntity } from './campaign.entity';
 import {
   CampaignType,
-  type LiquidityCampaignDetails,
-  type VolumeCampaignDetails,
+  type HoldingCampaignDetails,
+  type MarketMakingCampaignDetails,
 } from './types';
 
-export function isVolumeCampaign(
+export function isMarketMakingCampaign(
   campaign: CampaignEntity,
-): campaign is CampaignEntity & { details: VolumeCampaignDetails } {
-  return campaign.type === CampaignType.VOLUME;
+): campaign is CampaignEntity & { details: MarketMakingCampaignDetails } {
+  return campaign.type === CampaignType.MARKET_MAKING;
 }
 
-export function isLiquidityCampaign(
+export function isHoldingCampaign(
   campaign: CampaignEntity,
-): campaign is CampaignEntity & { details: LiquidityCampaignDetails } {
-  return campaign.type === CampaignType.LIQUIDITY;
+): campaign is CampaignEntity & { details: HoldingCampaignDetails } {
+  return campaign.type === CampaignType.HOLDING;
 }

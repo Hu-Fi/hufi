@@ -17,41 +17,44 @@ export enum ReturnedCampaignStatus {
 }
 
 export enum CampaignType {
-  VOLUME = 'VOLUME',
-  LIQUIDITY = 'LIQUIDITY',
+  MARKET_MAKING = 'MARKET_MAKING',
+  HOLDING = 'HOLDING',
 }
 
-export type VolumeCampaignDetails = {
+export type MarketMakingCampaignDetails = {
   dailyVolumeTarget: number;
 };
 
-export type LiquidityCampaignDetails = {
+export type HoldingCampaignDetails = {
   dailyBalanceTarget: number;
 };
 
-export type CampaignDetails = VolumeCampaignDetails | LiquidityCampaignDetails;
+export type CampaignDetails =
+  | MarketMakingCampaignDetails
+  | HoldingCampaignDetails;
 
 export type CampaignManifestBase = {
   type: string;
   exchange: string;
-  symbol: string;
   start_date: Date;
   end_date: Date;
 };
 
-export type VolumeCampaignManifest = CampaignManifestBase & {
-  type: CampaignType.VOLUME;
+export type MarketMakingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.MARKET_MAKING;
+  pair: string;
   daily_volume_target: number;
 };
 
-export type LiquidityCampaignManifest = CampaignManifestBase & {
-  type: CampaignType.LIQUIDITY;
+export type HoldingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.HOLDING;
+  symbol: string;
   daily_balance_target: number;
 };
 
 export type CampaignManifest =
-  | VolumeCampaignManifest
-  | LiquidityCampaignManifest;
+  | MarketMakingCampaignManifest
+  | HoldingCampaignManifest;
 
 export type CampaignEscrowInfo = {
   fundAmount: number;
@@ -62,7 +65,7 @@ export type CampaignEscrowInfo = {
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume: number;
+  [meta: string]: unknown;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -75,7 +78,7 @@ export type IntermediateResult = {
   to: string;
   reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
-  total_volume: number;
+  [meta: string]: unknown;
 };
 
 export type IntermediateResultsData = {
@@ -86,9 +89,9 @@ export type IntermediateResultsData = {
   results: IntermediateResult[];
 };
 
-export type CampaignProgress = {
+export type CampaignProgress<M> = {
   from: string;
   to: string;
-  total_volume: number;
   participants_outcomes: ParticipantOutcome[];
+  meta: M;
 };

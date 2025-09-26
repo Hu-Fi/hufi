@@ -6,17 +6,16 @@ import {
   CampaignDetails,
   CampaignManifestBase,
   CampaignType,
-  LiquidityCampaignDetails,
-  VolumeCampaignDetails,
+  HoldingCampaignDetails,
+  MarketMakingCampaignDetails,
   type CampaignManifest,
-  type LiquidityCampaignManifest,
-  type VolumeCampaignManifest,
+  type HoldingCampaignManifest,
+  type MarketMakingCampaignManifest,
 } from './types';
 
 const baseManifestSchema = Joi.object({
   type: Joi.string().min(2).required(),
   exchange: Joi.string().min(2).required(),
-  symbol: Joi.string().min(2).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: false });
@@ -45,57 +44,64 @@ export function validateBaseSchema(manifest: string): CampaignManifestBase {
   }
 }
 
-const volumeManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.VOLUME),
-  symbol: Joi.string()
+const marketMakingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.MARKET_MAKING),
+  pair: Joi.string()
     .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
     .required(),
   daily_volume_target: Joi.number().greater(0).required(),
 });
-export function assertValidVolumeCampaignManifest(
+export function assertValidMarketMakingCampaignManifest(
   manifest: CampaignManifestBase,
-): asserts manifest is VolumeCampaignManifest {
+): asserts manifest is MarketMakingCampaignManifest {
   try {
-    Joi.assert(manifest, volumeManifestSchema);
+    Joi.assert(manifest, marketMakingManifestSchema);
   } catch {
-    throw new Error('Invalid volume campaign manifest schema');
+    throw new Error('Invalid market making campaign manifest schema');
   }
 }
 
-const liquidityManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.LIQUIDITY),
+const holdingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.HOLDING),
   symbol: Joi.string()
     .pattern(/^[A-Z]{3,10}$/)
     .required(),
   daily_balance_target: Joi.number().greater(0).required(),
 });
-export function assertValidLiquidityCampaignManifest(
+export function assertValidHoldingCampaignManifest(
   manifest: CampaignManifestBase,
-): asserts manifest is LiquidityCampaignManifest {
+): asserts manifest is HoldingCampaignManifest {
   try {
-    Joi.assert(manifest, liquidityManifestSchema);
+    Joi.assert(manifest, holdingManifestSchema);
   } catch {
-    throw new Error('Invalid liquidity campaign manifest schema');
+    throw new Error('Invalid holding campaign manifest schema');
   }
 }
 
-export function extractCampaignDetails(
-  manifest: CampaignManifest,
-): CampaignDetails {
+export function extractCampaignDetails(manifest: CampaignManifest): {
+  symbol: string;
+  details: CampaignDetails;
+} {
   switch (manifest.type) {
-    case CampaignType.VOLUME: {
-      const details: VolumeCampaignDetails = {
-        dailyVolumeTarget: (manifest as VolumeCampaignManifest)
-          .daily_volume_target,
+    case CampaignType.MARKET_MAKING: {
+      const _manifest = manifest as MarketMakingCampaignManifest;
+      const details: MarketMakingCampaignDetails = {
+        dailyVolumeTarget: _manifest.daily_volume_target,
       };
-      return details;
+      return {
+        symbol: _manifest.pair,
+        details,
+      };
     }
-    case CampaignType.LIQUIDITY: {
-      const details: LiquidityCampaignDetails = {
-        dailyBalanceTarget: (manifest as LiquidityCampaignManifest)
-          .daily_balance_target,
+    case CampaignType.HOLDING: {
+      const _manifest = manifest as HoldingCampaignManifest;
+      const details: HoldingCampaignDetails = {
+        dailyBalanceTarget: _manifest.daily_balance_target,
       };
-      return details;
+      return {
+        symbol: _manifest.symbol,
+        details,
+      };
     }
     default:
       throw new Error(
