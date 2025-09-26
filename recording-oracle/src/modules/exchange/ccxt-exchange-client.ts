@@ -6,7 +6,7 @@ import type { Logger } from '@/logger';
 
 import { ExchangeApiClientError } from './errors';
 import type { ExchangeApiClient } from './exchange-api-client.interface';
-import { Order, Trade } from './types';
+import { AccountBalance, Order, Trade } from './types';
 
 type InitOptions = {
   apiKey: string;
@@ -109,5 +109,11 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     const trades = await this.ccxtClient.fetchMyTrades(symbol, since);
 
     return trades.map(mapCcxtTrade);
+  }
+
+  async fetchBalance(): Promise<AccountBalance> {
+    const balance = await this.ccxtClient.fetchBalance();
+
+    return balance;
   }
 }

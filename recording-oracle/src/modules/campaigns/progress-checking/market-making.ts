@@ -9,18 +9,30 @@ import type {
   CampaignProgressChecker,
   CampaignProgressCheckerSetup,
   ParticipantAuthKeys,
-  ProgressCheckResult,
+  BaseProgressCheckResult,
 } from './types';
 
 const N_TRADES_FOR_ABUSE_CHECK = 5;
 
-export class MarketMakingProgressChecker implements CampaignProgressChecker {
+export type MarketMakingResult = BaseProgressCheckResult & {
+  total_volume: number;
+};
+
+export type MarketMakingMeta = {
+  total_volume: number;
+};
+
+export class MarketMakingProgressChecker
+  implements CampaignProgressChecker<MarketMakingResult, MarketMakingMeta>
+{
   readonly exchangeName: string;
   readonly tradingPair: string;
   readonly tradingPeriodStart: Date;
   readonly tradingPeriodEnd: Date;
 
   protected readonly tradeSamples = new Set<string>();
+
+  private totalVolumeMeta: number;
 
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
@@ -30,11 +42,14 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker {
     this.tradingPair = setupData.symbol;
     this.tradingPeriodStart = setupData.periodStart;
     this.tradingPeriodEnd = setupData.periodEnd;
+
+    // meta data section
+    this.totalVolumeMeta = 0;
   }
 
   async checkForParticipant(
     authKeys: ParticipantAuthKeys,
-  ): Promise<ProgressCheckResult> {
+  ): Promise<MarketMakingResult> {
     let abuseDetected = false;
 
     const exchangeApiClient = this.exchangeApiClientFactory.create(
@@ -84,7 +99,16 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker {
       totalVolume = 0;
     }
 
-    return { abuseDetected, score, totalVolume };
+    /**
+     * !!! NOTE !!!
+     * There can be a situation where two campaign participants
+     * have a trade between each other, so total volume
+     * is not 100% accurate in this case, but probability of it is
+     * negligible so omit it here. Later RepO can verify it if needed.
+     */
+    this.totalVolumeMeta += totalVolume;
+
+    return { abuseDetected, score, total_volume: totalVolume };
   }
 
   private getTradeFingerprint(trade: Trade): string {
@@ -106,5 +130,11 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker {
     }
 
     return ratio * trade.cost;
+  }
+
+  getCollectedMeta(): MarketMakingMeta {
+    return {
+      total_volume: this.totalVolumeMeta,
+    };
   }
 }

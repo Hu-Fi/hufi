@@ -65,7 +65,7 @@ export type CampaignEscrowInfo = {
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume: number;
+  [meta: string]: unknown;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -78,7 +78,7 @@ export type IntermediateResult = {
   to: string;
   reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
-  total_volume: number;
+  [meta: string]: unknown;
 };
 
 export type IntermediateResultsData = {
@@ -89,9 +89,9 @@ export type IntermediateResultsData = {
   results: IntermediateResult[];
 };
 
-export type CampaignProgress = {
+export type CampaignProgress<M> = {
   from: string;
   to: string;
-  total_volume: number;
   participants_outcomes: ParticipantOutcome[];
+  meta: M;
 };

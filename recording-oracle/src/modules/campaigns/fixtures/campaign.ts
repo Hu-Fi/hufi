@@ -10,6 +10,7 @@ import { generateTestnetChainId } from '@/modules/web3/fixtures';
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
 import { CampaignEntity } from '../campaign.entity';
+import { MarketMakingMeta } from '../progress-checking/market-making';
 import {
   CampaignDetails,
   CampaignProgress,
@@ -76,13 +77,17 @@ export function generateParticipantOutcome(
   return outcome;
 }
 
-export function generateCampaignProgress(endDate?: Date): CampaignProgress {
+export function generateCampaignProgress(
+  endDate?: Date,
+): CampaignProgress<MarketMakingMeta> {
   const to = endDate || faker.date.past();
 
   return {
     from: dayjs(to).subtract(1, 'day').toISOString(),
     to: to.toISOString(),
-    total_volume: 0,
+    meta: {
+      total_volume: 0,
+    },
     participants_outcomes: [],
   };
 }

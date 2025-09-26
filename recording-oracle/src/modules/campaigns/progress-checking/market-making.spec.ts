@@ -125,7 +125,7 @@ describe('MarketMakingProgressChecker', () => {
 
       expect(result).toEqual({
         abuseDetected: false,
-        totalVolume: 0,
+        total_volume: 0,
         score: 0,
       });
 
@@ -145,7 +145,7 @@ describe('MarketMakingProgressChecker', () => {
 
       expect(result).toEqual({
         abuseDetected: false,
-        totalVolume: 0,
+        total_volume: 0,
         score: 0,
       });
     });
@@ -206,7 +206,7 @@ describe('MarketMakingProgressChecker', () => {
       const result =
         await resultsChecker.checkForParticipant(participantAuthKeys);
 
-      const expectedTotalVolume = tradesInRange.reduce(
+      const expectedTotal_volume = tradesInRange.reduce(
         (acc, curr) => acc + curr.cost,
         0,
       );
@@ -216,7 +216,7 @@ describe('MarketMakingProgressChecker', () => {
       );
 
       expect(result.abuseDetected).toBe(false);
-      expect(result.totalVolume).toBe(expectedTotalVolume);
+      expect(result.total_volume).toBe(expectedTotal_volume);
       expect(result.score).toBe(expectedScore);
     });
   });
@@ -287,14 +287,14 @@ describe('MarketMakingProgressChecker', () => {
       );
       expect(normalResult.abuseDetected).toBe(false);
       expect(normalResult.score).toBeGreaterThan(0);
-      expect(normalResult.totalVolume).toBeGreaterThan(0);
+      expect(normalResult.total_volume).toBeGreaterThan(0);
 
       const abuseResult = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
       );
       expect(abuseResult.abuseDetected).toBe(true);
       expect(abuseResult.score).toBe(0);
-      expect(abuseResult.totalVolume).toBe(0);
+      expect(abuseResult.total_volume).toBe(0);
     });
 
     it('should avoid extra trades fetch if abuse detected', async () => {
@@ -343,7 +343,13 @@ describe('MarketMakingProgressChecker', () => {
 
       expect(result.abuseDetected).toBe(false);
       expect(result.score).toBeGreaterThan(0);
-      expect(result.totalVolume).toBeGreaterThan(0);
+      expect(result.total_volume).toBeGreaterThan(0);
     });
   });
+
+  /**
+   * TODO
+   *
+   * Add tests for meta data retrieval
+   */
 });

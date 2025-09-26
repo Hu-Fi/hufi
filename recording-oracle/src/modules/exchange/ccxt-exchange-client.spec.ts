@@ -262,5 +262,32 @@ describe('CcxtExchangeClient', () => {
         );
       });
     });
+
+    describe('fetchBalance', () => {
+      it('should fetch account balance and return it as is', async () => {
+        const tokenSymbol = faker.finance.currencyCode();
+        const mockedBalance = {
+          free: {
+            [tokenSymbol]: faker.number.float(),
+          },
+          used: {
+            [tokenSymbol]: faker.number.float(),
+          },
+          total: {
+            [tokenSymbol]: -1,
+          },
+        };
+        mockedBalance.total[tokenSymbol] =
+          mockedBalance.free[tokenSymbol] + mockedBalance.used[tokenSymbol];
+
+        mockedExchange.fetchBalance.mockResolvedValueOnce(mockedBalance);
+
+        const balance = await ccxtExchangeApiClient.fetchBalance();
+
+        expect(balance).toEqual(mockedBalance);
+
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 });

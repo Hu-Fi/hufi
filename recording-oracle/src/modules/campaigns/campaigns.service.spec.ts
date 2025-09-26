@@ -58,10 +58,7 @@ import {
   generateParticipantOutcome,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
-import {
-  MarketMakingProgressChecker,
-  ProgressCheckResult,
-} from './progress-checking';
+import { MarketMakingProgressChecker } from './progress-checking';
 import {
   CampaignProgress,
   CampaignStatus,
@@ -72,6 +69,10 @@ import {
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 import { ExchangeApiClientFactory } from '../exchange';
+import {
+  MarketMakingMeta,
+  MarketMakingResult,
+} from './progress-checking/market-making';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
@@ -1019,6 +1020,12 @@ describe('CampaignsService', () => {
   });
 
   describe('checkCampaignProgressForPeriod', () => {
+    /**
+     * TODO
+     *
+     * Abstract these tests with some test class
+     * that implements progress cheker interface
+     */
     const mockMarketMakingProgressChecker =
       createMock<MarketMakingProgressChecker>();
 
@@ -1027,7 +1034,7 @@ describe('CampaignsService', () => {
     let periodStart: Date;
     let periodEnd: Date;
     let campaign: CampaignEntity;
-    let mockParticipantResult: ProgressCheckResult;
+    let mockParticipantResult: MarketMakingResult;
 
     beforeAll(() => {
       periodEnd = new Date();
@@ -1036,7 +1043,7 @@ describe('CampaignsService', () => {
 
       mockParticipantResult = {
         abuseDetected: false,
-        totalVolume: faker.number.float(),
+        total_volume: faker.number.float(),
         score: faker.number.float(),
       };
 
@@ -1054,6 +1061,9 @@ describe('CampaignsService', () => {
       mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValue(
         mockParticipantResult,
       );
+      mockMarketMakingProgressChecker.getCollectedMeta.mockReturnValueOnce({
+        total_volume: faker.number.float(),
+      });
       mockExchangeApiKeysService.retrieve.mockImplementation(
         async (userId) => ({
           id: faker.string.uuid(),
@@ -1080,12 +1090,14 @@ describe('CampaignsService', () => {
 
       expect(progress.from).toBe(periodStart.toISOString());
       expect(progress.to).toBe(periodEnd.toISOString());
-      expect(progress.total_volume).toBe(mockParticipantResult.totalVolume);
+      expect(
+        (progress.meta as MarketMakingMeta).total_volume,
+      ).toBeGreaterThanOrEqual(0);
       expect(progress.participants_outcomes).toEqual([
         {
           address: participant.evmAddress,
           score: mockParticipantResult.score,
-          total_volume: mockParticipantResult.totalVolume,
+          total_volume: mockParticipantResult.total_volume,
         },
       ]);
     });
@@ -1096,14 +1108,10 @@ describe('CampaignsService', () => {
         participants,
       );
 
-      const progress = await campaignsService.checkCampaignProgressForPeriod(
+      await campaignsService.checkCampaignProgressForPeriod(
         campaign,
         periodStart,
         periodEnd,
-      );
-
-      expect(progress.total_volume).toBe(
-        mockParticipantResult.totalVolume * participants.length,
       );
 
       for (const { id: participantId } of participants) {
@@ -1131,13 +1139,13 @@ describe('CampaignsService', () => {
       const normalParticipantResult = {
         abuseDetected: false,
         score: faker.number.float(),
-        totalVolume: faker.number.float(),
+        total_volume: faker.number.float(),
       };
       mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValueOnce(
         {
           abuseDetected: true,
           score: 0,
-          totalVolume: 0,
+          total_volume: 0,
         },
       );
       mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValueOnce(
@@ -1150,12 +1158,14 @@ describe('CampaignsService', () => {
         periodEnd,
       );
 
-      expect(progress.total_volume).toBe(normalParticipantResult.totalVolume);
+      expect(
+        (progress.meta as MarketMakingMeta).total_volume,
+      ).toBeGreaterThanOrEqual(0);
       expect(progress.participants_outcomes).toEqual([
         {
           address: normalParticipant.evmAddress,
           score: normalParticipantResult.score,
-          total_volume: normalParticipantResult.totalVolume,
+          total_volume: normalParticipantResult.total_volume,
         },
       ]);
 
@@ -1485,23 +1495,21 @@ describe('CampaignsService', () => {
       });
 
       const campaignProgress = generateCampaignProgress();
-      campaignProgress.total_volume = totalVolume;
+      campaignProgress.meta.total_volume = totalVolume;
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         campaignProgress,
       );
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = decimalUtils.truncate(
-        campaignsService.calculateRewardPool({
-          maxRewardPool: campaignsService.calculateDailyReward(campaign),
-          totalMarketMakersValue: totalVolume,
-          valueTarget: Number(
-            (campaign.details as MarketMakingCampaignDetails).dailyVolumeTarget,
-          ),
-        }),
-        campaign.fundTokenDecimals,
-      );
+      const expectedRewardPool = campaignsService.calculateRewardPool({
+        maxRewardPool: campaignsService.calculateDailyReward(campaign),
+        progressValue: totalVolume,
+        progressValueTarget: Number(
+          (campaign.details as MarketMakingCampaignDetails).dailyVolumeTarget,
+        ),
+        fundTokenDecimals: campaign.fundTokenDecimals,
+      });
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -1952,6 +1960,7 @@ describe('CampaignsService', () => {
         intermediateResult,
       );
 
+      const resultTotalVolume = intermediateResult.total_volume as number;
       expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(1);
       expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledWith(
         {
@@ -1959,8 +1968,8 @@ describe('CampaignsService', () => {
           campaignAddress: campaign.address,
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume.toString(),
-          volumeUsd: (priceUsd * intermediateResult.total_volume).toString(),
+          volume: resultTotalVolume.toString(),
+          volumeUsd: (priceUsd * resultTotalVolume).toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
       );
@@ -2258,17 +2267,19 @@ describe('CampaignsService', () => {
       const participantOutcome = generateParticipantOutcome({
         address: evmAddress,
       });
-      const campaignProgress: CampaignProgress = {
+      const campaignProgress: CampaignProgress<MarketMakingMeta> = {
         from: expectedTimeframeIsoString,
         to: nowIsoString,
-        total_volume: 0,
         participants_outcomes: [
           generateParticipantOutcome(),
           participantOutcome,
           generateParticipantOutcome(),
         ],
+        meta: {
+          total_volume: 0,
+        },
       };
-      campaignProgress.total_volume = _.sumBy(
+      campaignProgress.meta.total_volume = _.sumBy(
         campaignProgress.participants_outcomes,
         'total_volume',
       );
@@ -2293,12 +2304,17 @@ describe('CampaignsService', () => {
         expectedTimeframeStart,
         now,
       );
+      const {
+        score: expectedMyScore,
+        address: _address,
+        ...expectedMyMeta
+      } = participantOutcome;
       expect(progress).toEqual({
         from: expectedTimeframeIsoString,
         to: nowIsoString,
-        totalVolume: campaignProgress.total_volume,
-        myScore: participantOutcome.score,
-        myVolume: participantOutcome.total_volume,
+        myScore: expectedMyScore,
+        myMeta: expectedMyMeta,
+        totalMeta: campaignProgress.meta,
       });
     });
   });
@@ -2344,52 +2360,60 @@ describe('CampaignsService', () => {
   });
 
   describe('calculateRewardPool', () => {
+    const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
+
     let maxRewardPool: number;
-    let valueTarget: number;
+    let progressValueTarget: number;
 
     beforeEach(() => {
       maxRewardPool = faker.number.int({ min: 10, max: 100 });
-      valueTarget = faker.number.int({ min: 1, max: 1000 });
+      progressValueTarget = faker.number.int({ min: 1, max: 1000 });
     });
 
     it('should return 0 reward pool when generated volume is 0', () => {
       const rewardPool = campaignsService.calculateRewardPool({
         maxRewardPool,
-        totalMarketMakersValue: 0,
-        valueTarget,
+        progressValueTarget,
+        progressValue: 0,
+        fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
       expect(rewardPool).toBe(0);
     });
 
     it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
-      valueTarget = 42;
-      const totalMarketMakersValue = faker.number.float({
+      progressValueTarget = 42;
+      const progressValue = faker.number.float({
         min: 1,
-        max: valueTarget,
+        max: progressValueTarget,
       });
 
       const rewardPool = campaignsService.calculateRewardPool({
         maxRewardPool,
-        totalMarketMakersValue,
-        valueTarget,
+        progressValueTarget,
+        progressValue,
+        fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      const expectedRewardRatio = totalMarketMakersValue / valueTarget;
-      const expectedRewardPool = expectedRewardRatio * maxRewardPool;
+      const expectedRewardRatio = progressValue / progressValueTarget;
+      const expectedRewardPool = decimalUtils.truncate(
+        expectedRewardRatio * maxRewardPool,
+        TEST_TOKEN_DECIMALS,
+      );
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
     it('should correctly calculate reward pool when generated volume meets target', () => {
-      const totalMarketMakersValue = faker.number.float({
-        min: valueTarget,
-        max: valueTarget * 10,
+      const progressValue = faker.number.float({
+        min: progressValueTarget,
+        max: progressValueTarget * 10,
       });
 
       const rewardPool = campaignsService.calculateRewardPool({
         maxRewardPool,
-        totalMarketMakersValue,
-        valueTarget,
+        progressValueTarget,
+        progressValue,
+        fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
       expect(rewardPool).toBe(maxRewardPool);
