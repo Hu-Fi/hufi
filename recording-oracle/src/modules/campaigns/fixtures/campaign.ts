@@ -16,10 +16,12 @@ import type {
 } from '../progress-checking';
 import {
   CampaignDetails,
+  CampaignProgress,
   CampaignStatus,
   CampaignType,
   IntermediateResult,
   IntermediateResultsData,
+  ParticipantOutcome,
 } from '../types';
 
 /**
@@ -86,19 +88,40 @@ export function generateParticipantAuthKeys(): ParticipantAuthKeys {
   };
 }
 
+export function generateParticipantOutcome(
+  overrides: Partial<ParticipantOutcome> = {},
+): ParticipantOutcome {
+  const outcome: ParticipantOutcome = {
+    address: ethers.getAddress(faker.finance.ethereumAddress()),
+    total_volume: faker.number.float(),
+    score: faker.number.float(),
+  };
+
+  Object.assign(outcome, overrides);
+
+  return outcome;
+}
+
+export function generateCampaignProgress(endDate?: Date): CampaignProgress {
+  const to = endDate || faker.date.past();
+
+  return {
+    from: dayjs(to).subtract(1, 'day').toISOString(),
+    to: to.toISOString(),
+    total_volume: 0,
+    participants_outcomes: [],
+  };
+}
+
 export function generateIntermediateResult(endDate?: Date): IntermediateResult {
   const to = endDate || faker.date.past();
 
   return {
     from: dayjs(to).subtract(1, 'day').toISOString(),
     to: to.toISOString(),
-    total_volume: faker.number.float(),
-    participants_outcomes_batches: [
-      {
-        id: faker.string.uuid(),
-        results: [],
-      },
-    ],
+    total_volume: 0,
+    reserved_funds: faker.number.float(),
+    participants_outcomes_batches: [],
   };
 }
 

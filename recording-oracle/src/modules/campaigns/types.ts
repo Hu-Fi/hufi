@@ -73,6 +73,7 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: string;
   to: string;
+  reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
   total_volume: number;
 };
