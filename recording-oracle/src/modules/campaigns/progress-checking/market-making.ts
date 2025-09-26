@@ -14,7 +14,7 @@ import type {
 
 const N_TRADES_FOR_ABUSE_CHECK = 5;
 
-export class VolumeCampaignProgressChecker implements CampaignProgressChecker {
+export class MarketMakingProgressChecker implements CampaignProgressChecker {
   readonly exchangeName: string;
   readonly tradingPair: string;
   readonly tradingPeriodStart: Date;

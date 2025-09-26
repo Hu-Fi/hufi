@@ -41,7 +41,7 @@ import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  VolumeResultsChecker,
+  MarketMakingProgressChecker,
 } from './progress-checking';
 import { isVolumeCampaign } from './type-guards';
 import {
@@ -641,7 +641,7 @@ export class CampaignsService {
 
     switch (campaignType) {
       case CampaignType.VOLUME:
-        return new VolumeResultsChecker(
+        return new MarketMakingProgressChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );

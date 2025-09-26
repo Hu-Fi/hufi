@@ -58,7 +58,10 @@ import {
   generateParticipantOutcome,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
-import { VolumeResultsChecker, ProgressCheckResult } from './progress-checking';
+import {
+  MarketMakingProgressChecker,
+  ProgressCheckResult,
+} from './progress-checking';
 import {
   CampaignProgress,
   CampaignStatus,
@@ -869,7 +872,7 @@ describe('CampaignsService', () => {
         },
       );
 
-      expect(checker).toBeInstanceOf(VolumeResultsChecker);
+      expect(checker).toBeInstanceOf(MarketMakingProgressChecker);
     });
 
     it('should throw for unknown campaign type', () => {
@@ -1016,7 +1019,8 @@ describe('CampaignsService', () => {
   });
 
   describe('checkCampaignProgressForPeriod', () => {
-    const mockVolumeResultsChecker = createMock<VolumeResultsChecker>();
+    const mockMarketMakingProgressChecker =
+      createMock<MarketMakingProgressChecker>();
 
     let spyOnGetCampaignProgressChecker: jest.SpyInstance;
 
@@ -1047,7 +1051,7 @@ describe('CampaignsService', () => {
     });
 
     beforeEach(() => {
-      mockVolumeResultsChecker.checkForParticipant.mockResolvedValue(
+      mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValue(
         mockParticipantResult,
       );
       mockExchangeApiKeysService.retrieve.mockImplementation(
@@ -1058,7 +1062,7 @@ describe('CampaignsService', () => {
         }),
       );
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
-        mockVolumeResultsChecker,
+        mockMarketMakingProgressChecker,
       );
     });
 
@@ -1108,7 +1112,7 @@ describe('CampaignsService', () => {
           campaign.exchangeName,
         );
         expect(
-          mockVolumeResultsChecker.checkForParticipant,
+          mockMarketMakingProgressChecker.checkForParticipant,
         ).toHaveBeenCalledWith({
           apiKey: `${participantId}-apiKey`,
           secret: `${participantId}-secretKey`,
@@ -1129,12 +1133,14 @@ describe('CampaignsService', () => {
         score: faker.number.float(),
         totalVolume: faker.number.float(),
       };
-      mockVolumeResultsChecker.checkForParticipant.mockResolvedValueOnce({
-        abuseDetected: true,
-        score: 0,
-        totalVolume: 0,
-      });
-      mockVolumeResultsChecker.checkForParticipant.mockResolvedValueOnce(
+      mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValueOnce(
+        {
+          abuseDetected: true,
+          score: 0,
+          totalVolume: 0,
+        },
+      );
+      mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValueOnce(
         normalParticipantResult,
       );
 
@@ -2051,7 +2057,8 @@ describe('CampaignsService', () => {
   });
 
   describe('getUserProgress', () => {
-    const mockVolumeResultsChecker = createMock<VolumeResultsChecker>();
+    const mockMarketMakingProgressChecker =
+      createMock<MarketMakingProgressChecker>();
 
     let spyOnGetCampaignProgressChecker: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
@@ -2082,7 +2089,7 @@ describe('CampaignsService', () => {
       campaign = generateCampaignEntity(CampaignType.VOLUME);
 
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
-        mockVolumeResultsChecker,
+        mockMarketMakingProgressChecker,
       );
     });
 

@@ -14,7 +14,7 @@ export function generateParticipantAuthKeys(): ParticipantAuthKeys {
   };
 }
 
-export function generateVolumeCheckerSetup(
+export function generateMarketMakingCheckerSetup(
   overrides?: Partial<CampaignProgressCheckerSetup>,
 ): CampaignProgressCheckerSetup {
   const input: CampaignProgressCheckerSetup = {

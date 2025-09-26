@@ -11,16 +11,16 @@ import {
 import { generateTrade } from '@/modules/exchange/fixtures';
 
 import {
-  generateVolumeCheckerSetup,
+  generateMarketMakingCheckerSetup,
   generateParticipantAuthKeys,
 } from './fixtures';
+import { MarketMakingProgressChecker } from './market-making';
 import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from './types';
-import { VolumeCampaignProgressChecker } from './volume-checker';
 
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 
-class TestCampaignProgressChecker extends VolumeCampaignProgressChecker {
+class TestCampaignProgressChecker extends MarketMakingProgressChecker {
   override tradeSamples = new Set<string>();
 
   override calculateTradeScore(trade: Trade): number {
@@ -28,7 +28,7 @@ class TestCampaignProgressChecker extends VolumeCampaignProgressChecker {
   }
 }
 
-describe('VolumeCampaignProgressChecker', () => {
+describe('MarketMakingProgressChecker', () => {
   beforeEach(() => {
     mockedExchangeApiClientFactory.create.mockReturnValue(
       mockedExchangeApiClient,
@@ -43,7 +43,7 @@ describe('VolumeCampaignProgressChecker', () => {
   it('should be defined', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
-      generateVolumeCheckerSetup(),
+      generateMarketMakingCheckerSetup(),
     );
     expect(resultsChecker).toBeDefined();
   });
@@ -51,7 +51,7 @@ describe('VolumeCampaignProgressChecker', () => {
   describe('calculateTradeScore', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
-      generateVolumeCheckerSetup(),
+      generateMarketMakingCheckerSetup(),
     );
 
     it.each(Object.values(TradingSide))(
@@ -98,7 +98,7 @@ describe('VolumeCampaignProgressChecker', () => {
     let resultsChecker: TestCampaignProgressChecker;
 
     beforeEach(() => {
-      progressCheckerSetup = generateVolumeCheckerSetup();
+      progressCheckerSetup = generateMarketMakingCheckerSetup();
       participantAuthKeys = generateParticipantAuthKeys();
 
       resultsChecker = new TestCampaignProgressChecker(
@@ -110,7 +110,7 @@ describe('VolumeCampaignProgressChecker', () => {
     it('should properly init api client and return zeros for same date range', async () => {
       const anytime = faker.date.anytime();
 
-      const setup = generateVolumeCheckerSetup({
+      const setup = generateMarketMakingCheckerSetup({
         periodStart: anytime,
         periodEnd: anytime,
       });
@@ -224,7 +224,7 @@ describe('VolumeCampaignProgressChecker', () => {
   describe('abuse detection', () => {
     let spyOnCalculateTradeScore: jest.SpyInstance;
 
-    const checkerSetup = generateVolumeCheckerSetup();
+    const checkerSetup = generateMarketMakingCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
       checkerSetup,

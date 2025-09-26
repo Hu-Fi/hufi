@@ -1,3 +1,3 @@
-export { VolumeCampaignProgressChecker as VolumeResultsChecker } from './volume-checker';
+export { MarketMakingProgressChecker } from './market-making';
 
 export type * from './types';
