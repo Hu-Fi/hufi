@@ -111,12 +111,6 @@ export class PayoutsService {
             totalReservedFunds,
             intermediateResult.reserved_funds,
           );
-          /**
-           * Zero volume -> nothing to pay
-           */
-          if (intermediateResult.total_volume === 0) {
-            continue;
-          }
 
           const rewardsBatches = this.calculateRewardsForIntermediateResult(
             intermediateResult,

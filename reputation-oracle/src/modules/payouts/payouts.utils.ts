@@ -8,7 +8,6 @@ import { CampaignManifest, IntermediateResultsData } from './types';
 const participantOutcome = Joi.object({
   address: Joi.string().required(),
   score: Joi.number().required(),
-  total_volume: Joi.number().min(0).required(),
 });
 
 const participantsOutcomesBatchSchema = Joi.object({
@@ -19,7 +18,6 @@ const participantsOutcomesBatchSchema = Joi.object({
 const intermediateResultSchema = Joi.object({
   from: Joi.date().iso().required(),
   to: Joi.date().iso().greater(Joi.ref('from')).required(),
-  total_volume: Joi.number().min(0).required(),
   reserved_funds: Joi.number().min(0).required(),
   participants_outcomes_batches: Joi.array()
     .items(participantsOutcomesBatchSchema)

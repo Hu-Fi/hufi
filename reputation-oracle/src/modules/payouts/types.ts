@@ -27,7 +27,6 @@ export type CampaignWithResults = Required<
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume: number;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -38,7 +37,6 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: Date;
   to: Date;
-  total_volume: number;
   reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
 };
