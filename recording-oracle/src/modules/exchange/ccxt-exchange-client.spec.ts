@@ -31,6 +31,8 @@ import logger from '@/logger';
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiClientError } from './errors';
 import {
+  generateAccountBalance,
+  generateAddressStructure,
   generateCcxtOpenOrder,
   generateCcxtTrade,
   generateExchangeName,
@@ -165,8 +167,32 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
       });
 
-      it('should return true if can fetch the balance', async () => {
-        mockedExchange.fetchBalance.mockResolvedValueOnce({});
+      it("should return false if can't fetch deposit address", async () => {
+        mockedExchange.fetchBalance.mockResolvedValueOnce(
+          generateAccountBalance([faker.finance.currencyCode()]),
+        );
+
+        const syntheticAuthError = new Error(faker.lorem.sentence());
+        mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
+          syntheticAuthError,
+        );
+
+        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+
+        expect(result).toBe(false);
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith('ETH');
+      });
+
+      it('should return true if has all necessary permissions', async () => {
+        mockedExchange.fetchBalance.mockResolvedValueOnce(
+          generateAccountBalance([faker.finance.currencyCode()]),
+        );
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          generateAddressStructure(),
+        );
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess();
 
@@ -266,19 +292,7 @@ describe('CcxtExchangeClient', () => {
     describe('fetchBalance', () => {
       it('should fetch account balance and return it as is', async () => {
         const tokenSymbol = faker.finance.currencyCode();
-        const mockedBalance = {
-          free: {
-            [tokenSymbol]: faker.number.float(),
-          },
-          used: {
-            [tokenSymbol]: faker.number.float(),
-          },
-          total: {
-            [tokenSymbol]: -1,
-          },
-        };
-        mockedBalance.total[tokenSymbol] =
-          mockedBalance.free[tokenSymbol] + mockedBalance.used[tokenSymbol];
+        const mockedBalance = generateAccountBalance([tokenSymbol]);
 
         mockedExchange.fetchBalance.mockResolvedValueOnce(mockedBalance);
 
@@ -287,6 +301,27 @@ describe('CcxtExchangeClient', () => {
         expect(balance).toEqual(mockedBalance);
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('fetchDepositAddress', () => {
+      it('should fetch deposit address infor and return just address', async () => {
+        const mockedAddressStructure = generateAddressStructure();
+
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          mockedAddressStructure,
+        );
+
+        const address = await ccxtExchangeApiClient.fetchDepositAddress(
+          mockedAddressStructure.currency,
+        );
+
+        expect(address).toEqual(mockedAddressStructure.address);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          mockedAddressStructure.currency,
+        );
       });
     });
   });

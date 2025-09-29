@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { Order, Trade } from 'ccxt';
+import type { AccountBalance, AddressStructure, Order, Trade } from 'ccxt';
 
 import { generateTradingPair } from './exchange';
 import { TakerOrMakerFlag, TradingSide } from '../types';
@@ -72,4 +72,35 @@ export function generateCcxtOpenOrder(
   Object.assign(order, overrides);
 
   return order;
+}
+
+export function generateAccountBalance(tokens: string[] = []) {
+  if (tokens.length === 0) {
+    throw new Error('At least one token must be specified');
+  }
+
+  const accountBalance: AccountBalance = {
+    free: {},
+    used: {},
+    total: {},
+  };
+
+  for (const token of tokens) {
+    accountBalance.free[token] = faker.number.float({ max: 42 });
+    accountBalance.used[token] = faker.number.float({ max: 42 });
+    accountBalance.total[token] =
+      accountBalance.free[token] + accountBalance.used[token];
+  }
+
+  return accountBalance;
+}
+
+export function generateAddressStructure(
+  token: string = faker.finance.currencyCode(),
+): AddressStructure {
+  return {
+    currency: token,
+    address: faker.finance.ethereumAddress(),
+    network: faker.helpers.arrayElement([null, undefined, 'ERC20']),
+  };
 }

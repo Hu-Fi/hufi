@@ -34,7 +34,7 @@ declare module 'ccxt' {
     [x: string]: unknown;
   };
 
-  type TokenBalances = {
+  export type TokenBalances = {
     [token: string]: number;
   };
 
@@ -44,12 +44,19 @@ declare module 'ccxt' {
     total: TokenBalances;
   };
 
+  export type AddressStructure = {
+    currency: string;
+    address: string;
+    network?: string | null;
+  };
+
   export interface Exchange {
     setSandboxMode(enabled: boolean): void;
     checkRequiredCredentials(throwError?: boolean): boolean;
     fetchBalance(): Promise<AccountBalance>;
     fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
     fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
+    fetchDepositAddress(symbol: string): Promise<AddressStructure>;
   }
 
   const ccxt: {

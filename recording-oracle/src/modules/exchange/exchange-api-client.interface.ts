@@ -17,4 +17,6 @@ export interface ExchangeApiClient {
   fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
 
   fetchBalance(): Promise<AccountBalance>;
+
+  fetchDepositAddress(symbol: string): Promise<string>;
 }

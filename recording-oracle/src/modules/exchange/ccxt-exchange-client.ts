@@ -1,6 +1,7 @@
 import * as ccxt from 'ccxt';
 import type { Exchange, Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 
+import { ETH_TOKEN_SYMBOL } from '@/common/constants';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
@@ -75,6 +76,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   async checkRequiredAccess(): Promise<boolean> {
     try {
       await this.ccxtClient.fetchBalance();
+      await this.ccxtClient.fetchDepositAddress(ETH_TOKEN_SYMBOL);
       return true;
     } catch (error) {
       if (error instanceof ccxt.NetworkError) {
@@ -115,5 +117,11 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     const balance = await this.ccxtClient.fetchBalance();
 
     return balance;
+  }
+
+  async fetchDepositAddress(symbol: string): Promise<string> {
+    const result = await this.ccxtClient.fetchDepositAddress(symbol);
+
+    return result.address;
   }
 }

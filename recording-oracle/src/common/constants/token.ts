@@ -5,3 +5,5 @@ export const ERC20_ABI_DECIMALS = [
 export const ERC20_ABI_SYMBOL = [
   'function symbol() view returns (string)',
 ] as const;
+
+export const ETH_TOKEN_SYMBOL = 'ETH';
