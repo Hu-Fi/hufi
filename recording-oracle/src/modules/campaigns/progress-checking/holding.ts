@@ -27,7 +27,7 @@ export class HoldingProgressChecker
   readonly exchangeName: string;
   readonly holdingTokenSymbol: string;
 
-  private totalBalanceMeta: number;
+  private totalBalanceMeta: number = 0;
 
   protected readonly ethDepositAddresses = new Set<string>();
 
@@ -37,9 +37,6 @@ export class HoldingProgressChecker
   ) {
     this.exchangeName = setupData.exchangeName;
     this.holdingTokenSymbol = setupData.symbol;
-
-    // meta data section
-    this.totalBalanceMeta = 0;
   }
 
   async checkForParticipant(

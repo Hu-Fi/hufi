@@ -206,7 +206,7 @@ describe('MarketMakingProgressChecker', () => {
       const result =
         await resultsChecker.checkForParticipant(participantAuthKeys);
 
-      const expectedTotal_volume = tradesInRange.reduce(
+      const expectedTotalVolume = tradesInRange.reduce(
         (acc, curr) => acc + curr.cost,
         0,
       );
@@ -216,7 +216,7 @@ describe('MarketMakingProgressChecker', () => {
       );
 
       expect(result.abuseDetected).toBe(false);
-      expect(result.total_volume).toBe(expectedTotal_volume);
+      expect(result.total_volume).toBe(expectedTotalVolume);
       expect(result.score).toBe(expectedScore);
     });
   });
@@ -257,12 +257,7 @@ describe('MarketMakingProgressChecker', () => {
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
         generateTrade(),
         sameTrade,
-        generateTrade({
-          /**
-           * Override it to 'buy' to always have volume
-           */
-          side: 'buy',
-        }),
+        generateTrade(),
         generateTrade({
           /**
            * Last trade is out of configured period,
@@ -341,9 +336,65 @@ describe('MarketMakingProgressChecker', () => {
     });
   });
 
-  /**
-   * TODO
-   *
-   * Add tests for meta data retrieval
-   */
+  describe('meta data collection', () => {
+    let progressCheckerSetup: CampaignProgressCheckerSetup;
+
+    let resultsChecker: TestCampaignProgressChecker;
+
+    beforeEach(() => {
+      progressCheckerSetup = generateMarketMakingCheckerSetup();
+
+      resultsChecker = new TestCampaignProgressChecker(
+        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        progressCheckerSetup,
+      );
+    });
+
+    it('should collect total volume for all checked participants', async () => {
+      const nParticipants = faker.number.int({ min: 2, max: 5 });
+
+      let expectedTotalVolume = 0;
+      for (let i = 0; i < nParticipants; i += 1) {
+        const trade = generateTrade();
+        mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([trade]);
+        expectedTotalVolume += trade.cost;
+
+        await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
+      }
+
+      const meta = resultsChecker.getCollectedMeta();
+      expect(meta.total_volume).toBe(expectedTotalVolume);
+    });
+
+    it('should not count volume of abuse participants', async () => {
+      // mock normal trades
+      const sameTrade = generateTrade();
+      const normalTrades = [
+        generateTrade(),
+        sameTrade,
+        generateTrade(),
+        generateTrade({
+          /**
+           * Last trade is out of configured period,
+           * so no more pages fetched for the first participant
+           */
+          timestamp: progressCheckerSetup.periodEnd.valueOf(),
+        }),
+      ];
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(normalTrades);
+      // mock abuse trades
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
+        generateTrade(),
+        sameTrade,
+      ]);
+
+      const normalResult = await resultsChecker.checkForParticipant(
+        generateParticipantAuthKeys(),
+      );
+      await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
+
+      const meta = resultsChecker.getCollectedMeta();
+      expect(meta.total_volume).toBe(normalResult.total_volume);
+    });
+  });
 });
