@@ -32,7 +32,7 @@ export class MarketMakingProgressChecker
 
   protected readonly tradeSamples = new Set<string>();
 
-  private totalVolumeMeta: number;
+  private totalVolumeMeta: number = 0;
 
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
@@ -42,9 +42,6 @@ export class MarketMakingProgressChecker
     this.tradingPair = setupData.symbol;
     this.tradingPeriodStart = setupData.periodStart;
     this.tradingPeriodEnd = setupData.periodEnd;
-
-    // meta data section
-    this.totalVolumeMeta = 0;
   }
 
   async checkForParticipant(
@@ -96,17 +93,16 @@ export class MarketMakingProgressChecker
 
     if (abuseDetected) {
       score = 0;
-      totalVolume = 0;
+    } else {
+      /**
+       * !!! NOTE !!!
+       * There can be a situation where two campaign participants
+       * have a trade between each other, so total volume
+       * is not 100% accurate in this case, but probability of it is
+       * negligible so omit it here. Later RepO can verify it if needed.
+       */
+      this.totalVolumeMeta += totalVolume;
     }
-
-    /**
-     * !!! NOTE !!!
-     * There can be a situation where two campaign participants
-     * have a trade between each other, so total volume
-     * is not 100% accurate in this case, but probability of it is
-     * negligible so omit it here. Later RepO can verify it if needed.
-     */
-    this.totalVolumeMeta += totalVolume;
 
     return { abuseDetected, score, total_volume: totalVolume };
   }

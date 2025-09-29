@@ -252,7 +252,7 @@ describe('MarketMakingProgressChecker', () => {
       );
     });
 
-    it('should return zeros when abuse detected', async () => {
+    it('should return zero score when abuse detected', async () => {
       const sameTrade = generateTrade();
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
         generateTrade(),
@@ -271,14 +271,8 @@ describe('MarketMakingProgressChecker', () => {
           timestamp: checkerSetup.periodEnd.valueOf(),
         }),
       ]);
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValue([
-        generateTrade({
-          /**
-           * Override it to buy to make sure it always has some volume
-           * but it's not counted if abuse detected
-           */
-          side: 'buy',
-        }),
+      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
+        generateTrade(),
         sameTrade,
       ]);
 
@@ -294,7 +288,7 @@ describe('MarketMakingProgressChecker', () => {
       );
       expect(abuseResult.abuseDetected).toBe(true);
       expect(abuseResult.score).toBe(0);
-      expect(abuseResult.total_volume).toBe(0);
+      expect(abuseResult.total_volume).toBeGreaterThan(0);
     });
 
     it('should avoid extra trades fetch if abuse detected', async () => {

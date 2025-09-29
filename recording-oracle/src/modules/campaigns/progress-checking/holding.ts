@@ -1,3 +1,4 @@
+import { ETH_TOKEN_SYMBOL } from '@/common/constants';
 import { ExchangeApiClientFactory } from '@/modules/exchange';
 
 import type {
@@ -28,6 +29,8 @@ export class HoldingProgressChecker
 
   private totalBalanceMeta: number;
 
+  protected readonly ethDepositAddresses = new Set<string>();
+
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     setupData: CampaignProgressCheckerSetup,
@@ -47,19 +50,26 @@ export class HoldingProgressChecker
       authKeys,
     );
 
-    const accountBalance = await exchangeApiClient.fetchBalance();
+    const [ethDepositAddress, accountBalance] = await Promise.all([
+      exchangeApiClient.fetchDepositAddress(ETH_TOKEN_SYMBOL),
+      exchangeApiClient.fetchBalance(),
+    ]);
 
-    /**
-     * TODO
-     *
-     * Add abuse check based on some account id info
-     */
     const tokenBalance = accountBalance.total[this.holdingTokenSymbol] || 0;
-    const score = tokenBalance;
 
-    this.totalBalanceMeta += tokenBalance;
+    if (this.ethDepositAddresses.has(ethDepositAddress)) {
+      return { abuseDetected: true, score: 0, token_balance: tokenBalance };
+    } else {
+      this.ethDepositAddresses.add(ethDepositAddress);
 
-    return { abuseDetected: false, score, token_balance: tokenBalance };
+      this.totalBalanceMeta += tokenBalance;
+
+      return {
+        abuseDetected: false,
+        score: tokenBalance,
+        token_balance: tokenBalance,
+      };
+    }
   }
 
   getCollectedMeta(): HoldingMeta {
