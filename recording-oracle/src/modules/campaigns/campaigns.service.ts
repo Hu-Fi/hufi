@@ -506,8 +506,9 @@ export class CampaignsService {
             progressValueTarget = campaign.details.dailyBalanceTarget;
             progressValue = (progress.meta as HoldingMeta).total_balance;
           } else {
-            progressValueTarget = 1;
-            progressValue = 1;
+            throw new Error(
+              `Unknown campaign type for reward pool calculation: ${campaign.type}`,
+            );
           }
           const rewardPool = this.calculateRewardPool({
             maxRewardPool: this.calculateDailyReward(campaign),
