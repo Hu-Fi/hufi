@@ -11,7 +11,7 @@ import {
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
 import { TOKENS } from '../constants/tokens';
-import { Campaign, CampaignDetails, EscrowCreateDto } from '../types';
+import { Campaign, CampaignDetails, CampaignType, EscrowCreateDto } from '../types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -100,6 +100,26 @@ export const mapStatusToColor = (
       return theme.palette.secondary.main;
     default:
       return theme.palette.primary.main;
+  }
+};
+
+export const mapTypeToLabel = (type: CampaignType) => {
+  switch (type) {
+    case 'MARKET_MAKING':
+      return 'Market Making';
+    case 'HOLDING':
+      return 'Holding';
+  }
+};
+
+export const getDailyTargetTokenSymbol = (campaignType: CampaignType, symbol: string) => {
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      return symbol.split('/')[1];
+    case CampaignType.HOLDING:
+      return symbol;
+    default:
+      return symbol.split('/')[1];
   }
 };
 

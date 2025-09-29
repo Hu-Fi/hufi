@@ -63,7 +63,7 @@ const mapTokenToMinValue: Record<FundToken, number> = {
   usdt: 0.001,
   usdc: 0.001,
   hmt: 0.1,
-}
+};
 
 const validationSchema = yup.object({
   exchange: yup.string().required('Required'),
@@ -74,12 +74,13 @@ const validationSchema = yup.object({
     .typeError('Fund amount is required')
     .required('Fund amount is required')
     .test('min-amount', function (value) {
-      if (!value) return this.createError({ message: 'Must be greater than 0' });
+      if (!value)
+        return this.createError({ message: 'Must be greater than 0' });
       const fundToken: FundToken = this.parent.fund_token;
       const minValue = mapTokenToMinValue[fundToken];
       if (value < minValue) {
         return this.createError({
-          message:`Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
+          message: `Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
         });
       }
 
@@ -189,8 +190,10 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const exchange = watch('exchange');
   const pair = watch('pair');
   const volumeToken = pair?.split('/')[1] || '';
-  const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
-    useTradingPairs(exchange);
+  const {
+    data: tradingPairs,
+    isLoading: isLoadingTradingPairs,
+  } = useTradingPairs(exchange);
 
   const submitForm = async (data: CampaignFormValues) => {
     await createEscrow(data);
@@ -354,18 +357,18 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                     control={control}
                     render={({ field }) => {
                       return (
-                          <Autocomplete
-                            id="trading-pair-select"
-                            options={tradingPairs || []}
-                            loading={isLoadingTradingPairs}
-                            getOptionLabel={(option) => {
-                              if (!option) return '';
-                              const [base, quote] = option.split('/');
-                              const { label: baseToken } = getTokenInfo(base);
-                              const { label: quoteToken } = getTokenInfo(quote);
-                              return `${baseToken}/${quoteToken}`;
-                            }}
-                            slotProps={{
+                        <Autocomplete
+                          id="trading-pair-select"
+                          options={tradingPairs || []}
+                          loading={isLoadingTradingPairs}
+                          getOptionLabel={(option) => {
+                            if (!option) return '';
+                            const [base, quote] = option.split('/');
+                            const { label: baseToken } = getTokenInfo(base);
+                            const { label: quoteToken } = getTokenInfo(quote);
+                            return `${baseToken}/${quoteToken}`;
+                          }}
+                          slotProps={{
                             paper: {
                               elevation: 4,
                               sx: {
@@ -482,13 +485,11 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                         {...field}
                         disabled={isCreatingEscrow}
                       >
-                        {
-                          FUND_TOKENS.map((token) => (
-                            <MenuItem key={token} value={token}>
-                              <CryptoEntity name={token} />
-                            </MenuItem>
-                          ))
-                        }
+                        {FUND_TOKENS.map((token) => (
+                          <MenuItem key={token} value={token}>
+                            <CryptoEntity symbol={token} />
+                          </MenuItem>
+                        ))}
                       </Select>
                     )}
                   />
@@ -543,11 +544,10 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                               maxWidth: '12ch',
                               minWidth: '1ch',
                               width: 'unset',
-                              '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button':
-                                {
-                                  WebkitAppearance: 'none',
-                                  margin: 0,
-                                },
+                              '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                              },
                             },
                           },
                           input: {
@@ -562,10 +562,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
                                   height: '23px',
                                   opacity: 0,
                                   pointerEvents: 'none',
-                                  [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
-                                    {
-                                      opacity: isCreatingEscrow ? 0.5 : 1,
-                                    },
+                                  [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]: {
+                                    opacity: isCreatingEscrow ? 0.5 : 1,
+                                  },
                                 }}
                               >
                                 <Typography

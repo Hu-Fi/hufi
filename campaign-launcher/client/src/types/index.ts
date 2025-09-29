@@ -7,6 +7,11 @@ export enum ExchangeType {
   DEX = 'dex',
 }
 
+export enum CampaignType {
+  MARKET_MAKING = 'MARKET_MAKING',
+  HOLDING = 'HOLDING',
+}
+
 export enum CampaignsView {
   ALL = 'all',
   JOINED = 'joined',
@@ -45,36 +50,40 @@ export type ExchangeApiKeyData = {
 
 export type Campaign = {
   id: string;
-  chain_id: number;
   address: EvmAddress;
-  exchange_name: string;
-  trading_pair: string;
-  daily_volume_target: number;
-  start_date: string;
+  chain_id: number;
+  details: {
+    daily_volume_target?: number;
+    daily_balance_target?: number;
+  };
   end_date: string;
+  escrow_status: string;
+  exchange_name: string;
+  exchange_oracle: string;
   final_results_url: string | null;
   fund_amount: string;
   fund_token: string;
-  fund_token_symbol: string;
   fund_token_decimals: number;
+  fund_token_symbol: string;
   intermediate_results_url: string | null;
-  status: CampaignStatus;
-  escrow_status: string;
   launcher: string;
-  exchange_oracle: string;
   recording_oracle: string;
   reputation_oracle: string;
+  start_date: string;
+  status: CampaignStatus;
+  symbol: string;
+  type: CampaignType;
 };
 
 export type CampaignDetails = Campaign & {
-  exchange_oracle_fee_percent: number;
-  recording_oracle_fee_percent: number;
-  reputation_oracle_fee_percent: number;
   amount_paid: string;
   daily_paid_amounts: {
     date: string;
     amount: string;
   }[];
+  exchange_oracle_fee_percent: number;
+  recording_oracle_fee_percent: number;
+  reputation_oracle_fee_percent: number;
 };
 
 export type CampaignsResponse = {
