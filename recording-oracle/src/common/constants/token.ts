@@ -7,3 +7,5 @@ export const ERC20_ABI_SYMBOL = [
 ] as const;
 
 export const ETH_TOKEN_SYMBOL = 'ETH';
+
+export const ETH_USDT_PAIR = 'ETH/USDT';

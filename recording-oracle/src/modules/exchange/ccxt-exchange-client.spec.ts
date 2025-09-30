@@ -157,7 +157,27 @@ describe('CcxtExchangeClient', () => {
         expect(logger.error).toHaveBeenCalledWith(expectedMessage, testError);
       });
 
+      it("should return false if can't fetch trades", async () => {
+        const now = Date.now();
+        const syntheticAuthError = new Error(faker.lorem.sentence());
+        mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
+
+        jest.useFakeTimers({ now });
+
+        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+
+        jest.useRealTimers();
+
+        expect(result).toBe(false);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
+          'ETH/USDT',
+          now,
+        );
+      });
+
       it("should return false if can't fetch the balance", async () => {
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         const syntheticAuthError = new Error(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
 
@@ -168,6 +188,7 @@ describe('CcxtExchangeClient', () => {
       });
 
       it("should return false if can't fetch deposit address", async () => {
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         mockedExchange.fetchBalance.mockResolvedValueOnce(
           generateAccountBalance([faker.finance.currencyCode()]),
         );
@@ -187,6 +208,7 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should return true if has all necessary permissions', async () => {
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         mockedExchange.fetchBalance.mockResolvedValueOnce(
           generateAccountBalance([faker.finance.currencyCode()]),
         );

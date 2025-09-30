@@ -1,7 +1,7 @@
 import * as ccxt from 'ccxt';
 import type { Exchange, Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 
-import { ETH_TOKEN_SYMBOL } from '@/common/constants';
+import { ETH_TOKEN_SYMBOL, ETH_USDT_PAIR } from '@/common/constants';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
@@ -75,6 +75,9 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
   async checkRequiredAccess(): Promise<boolean> {
     try {
+      // for MARKET_MAKING campaigns
+      await this.ccxtClient.fetchMyTrades(ETH_USDT_PAIR, Date.now());
+      // for HOLDING campaigns
       await this.ccxtClient.fetchBalance();
       await this.ccxtClient.fetchDepositAddress(ETH_TOKEN_SYMBOL);
       return true;
