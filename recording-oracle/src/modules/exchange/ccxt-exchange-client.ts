@@ -5,7 +5,7 @@ import { ETH_TOKEN_SYMBOL, ETH_USDT_PAIR } from '@/common/constants';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
-import { ExchangeApiClientError } from './errors';
+import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import type { ExchangeApiClient } from './exchange-api-client.interface';
 import { AccountBalance, Order, Trade } from './types';
 
@@ -39,6 +39,52 @@ export function mapCcxtTrade(trade: CcxtTrade): Trade {
     price: trade.price,
     amount: trade.amount,
     cost: trade.cost,
+  };
+}
+
+const ccxtApiAccessErrors = [
+  ccxt.AccountNotEnabled,
+  ccxt.AccountSuspended,
+  ccxt.AuthenticationError,
+  ccxt.BadSymbol,
+  ccxt.PermissionDenied,
+] as const;
+
+type CcxtApiAccessError = InstanceType<(typeof ccxtApiAccessErrors)[number]>;
+
+function isCcxtApiAccessError(error: unknown): error is CcxtApiAccessError {
+  if (
+    ccxtApiAccessErrors.some(
+      (ccxtApiAccessError) => error instanceof ccxtApiAccessError,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function CatchApiAccessErrors() {
+  return function (
+    _target: unknown,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    const original = descriptor.value;
+    descriptor.value = async function (...args: unknown[]) {
+      try {
+        return await original.apply(this, args);
+      } catch (error) {
+        if (isCcxtApiAccessError(error)) {
+          throw new ExchangeApiAccessError(
+            `Api access failed for ${propertyKey}`,
+            error.message,
+          );
+        }
+
+        throw error;
+      }
+    };
   };
 }
 
@@ -76,10 +122,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   async checkRequiredAccess(): Promise<boolean> {
     try {
       // for MARKET_MAKING campaigns
-      await this.ccxtClient.fetchMyTrades(ETH_USDT_PAIR, Date.now());
+      await this.fetchMyTrades(ETH_USDT_PAIR, Date.now());
       // for HOLDING campaigns
-      await this.ccxtClient.fetchBalance();
-      await this.ccxtClient.fetchDepositAddress(ETH_TOKEN_SYMBOL);
+      await this.fetchBalance();
+      await this.fetchDepositAddress(ETH_TOKEN_SYMBOL);
       return true;
     } catch (error) {
       if (error instanceof ccxt.NetworkError) {
@@ -92,6 +138,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     }
   }
 
+  @CatchApiAccessErrors()
   async fetchOpenOrders(symbol: string, since: number): Promise<Order[]> {
     /**
      * Use default value for "limit" because it varies
@@ -106,6 +153,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
    * Returns all historical trades, both for fully and partially filled orders,
    * i.e. returns historical data for actual buy/sell that happened.
    */
+  @CatchApiAccessErrors()
   async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
     /**
      * Use default value for "limit" because it varies
@@ -116,12 +164,14 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     return trades.map(mapCcxtTrade);
   }
 
+  @CatchApiAccessErrors()
   async fetchBalance(): Promise<AccountBalance> {
     const balance = await this.ccxtClient.fetchBalance();
 
     return balance;
   }
 
+  @CatchApiAccessErrors()
   async fetchDepositAddress(symbol: string): Promise<string> {
     const result = await this.ccxtClient.fetchDepositAddress(symbol);
 

@@ -29,7 +29,7 @@ import type { Exchange } from 'ccxt';
 import logger from '@/logger';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
-import { ExchangeApiClientError } from './errors';
+import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import {
   generateAccountBalance,
   generateDepositAddressStructure,
@@ -41,6 +41,14 @@ import {
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
+
+const testCcxtApiAccessErrors = [
+  ccxt.AccountNotEnabled,
+  ccxt.AccountSuspended,
+  ccxt.AuthenticationError,
+  ccxt.BadSymbol,
+  ccxt.PermissionDenied,
+] as const;
 
 describe('CcxtExchangeClient', () => {
   describe('constructor', () => {
@@ -265,6 +273,28 @@ describe('CcxtExchangeClient', () => {
           tradesSince.valueOf(),
         );
       });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchMyTrades.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchMyTrades(
+            tradingPair,
+            tradesSince.valueOf(),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe('Api access failed for fetchMyTrades');
+        expect(thrownError.cause).toBe(testError.message);
+      });
     });
 
     describe('fetchOpenOrders', () => {
@@ -309,6 +339,30 @@ describe('CcxtExchangeClient', () => {
           ordersSince.valueOf(),
         );
       });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchOpenOrders.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchOpenOrders(
+            tradingPair,
+            ordersSince.valueOf(),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe(
+          'Api access failed for fetchOpenOrders',
+        );
+        expect(thrownError.cause).toBe(testError.message);
+      });
     });
 
     describe('fetchBalance', () => {
@@ -323,6 +377,25 @@ describe('CcxtExchangeClient', () => {
         expect(balance).toEqual(mockedBalance);
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchBalance.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchBalance();
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe('Api access failed for fetchBalance');
+        expect(thrownError.cause).toBe(testError.message);
       });
     });
 
@@ -344,6 +417,29 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
           mockedAddressStructure.currency,
         );
+      });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchDepositAddress(
+            faker.finance.currencyCode(),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe(
+          'Api access failed for fetchDepositAddress',
+        );
+        expect(thrownError.cause).toBe(testError.message);
       });
     });
   });

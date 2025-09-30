@@ -62,6 +62,11 @@ declare module 'ccxt' {
   const ccxt: {
     version: string;
     exchanges: string[];
+    AccountNotEnabled: ErrorConstructor;
+    AccountSuspended: ErrorConstructor;
+    AuthenticationError: ErrorConstructor;
+    BadSymbol: ErrorConstructor;
+    PermissionDenied: ErrorConstructor;
     NetworkError: ErrorConstructor;
     [x: string]: new (options: { apiKey: string; secret: string }) => Exchange;
   };

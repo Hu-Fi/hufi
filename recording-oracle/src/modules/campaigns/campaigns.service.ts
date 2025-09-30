@@ -23,7 +23,10 @@ import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import { ExchangeApiClientFactory } from '@/modules/exchange';
+import {
+  ExchangeApiAccessError,
+  ExchangeApiClientFactory,
+} from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -593,42 +596,50 @@ export class CampaignsService {
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
-      /**
-       * TODO
-       *
-       * Add error handling for case when we fail to check
-       * participant progress because of e.g.:
-       * - expired API keys
-       * - invalid API keys access or IP whitelist
-       * - lack of access to symbol
-       */
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
         participant.id,
         campaign.exchangeName,
       );
 
-      const { abuseDetected, ...participantOutcomes } =
-        await campaignProgressChecker.checkForParticipant({
-          apiKey: exchangeApiKey.apiKey,
-          secret: exchangeApiKey.secretKey,
-        });
+      try {
+        const { abuseDetected, ...participantOutcomes } =
+          await campaignProgressChecker.checkForParticipant({
+            apiKey: exchangeApiKey.apiKey,
+            secret: exchangeApiKey.secretKey,
+          });
 
-      if (abuseDetected) {
-        this.logger.warn('Abuse detected. Skipping participant outcome', {
-          campaignId: campaign.id,
-          chainId: campaign.chainId,
-          campaignAddress: campaign.address,
-          participantId: participant.id,
-          startDate,
-          endDate,
+        if (abuseDetected) {
+          this.logger.warn('Abuse detected. Skipping participant outcome', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            startDate,
+            endDate,
+          });
+          continue;
+        }
+
+        outcomes.push({
+          address: participant.evmAddress,
+          ...participantOutcomes,
         });
-        continue;
+      } catch (error) {
+        if (error instanceof ExchangeApiAccessError) {
+          this.logger.warn('Participant lacks necessary exchange API access', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            startDate,
+            endDate,
+            error,
+          });
+          continue;
+        }
+
+        throw error;
       }
-
-      outcomes.push({
-        address: participant.evmAddress,
-        ...participantOutcomes,
-      });
     }
 
     return {

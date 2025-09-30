@@ -68,7 +68,11 @@ import {
 } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
-import { ExchangeApiClientFactory } from '../exchange';
+import {
+  ExchangeApiAccessError,
+  ExchangeApiClientError,
+  ExchangeApiClientFactory,
+} from '../exchange';
 import {
   MarketMakingMeta,
   MarketMakingResult,
@@ -1181,6 +1185,94 @@ describe('CampaignsService', () => {
           endDate: periodEnd,
         },
       );
+    });
+
+    it('should skip participant if it lacks exchange api access', async () => {
+      const normalParticipant = generateUserEntity();
+      const noAccessParticipant = generateUserEntity();
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
+        normalParticipant,
+        noAccessParticipant,
+      ]);
+
+      const normalParticipantResult = {
+        abuseDetected: false,
+        score: faker.number.float(),
+        total_volume: faker.number.float(),
+      };
+      mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValueOnce(
+        normalParticipantResult,
+      );
+      const syntheticError = new ExchangeApiAccessError(
+        `Api access failed for fetch_test_${faker.lorem.word()}`,
+        faker.lorem.sentence(),
+      );
+      mockMarketMakingProgressChecker.checkForParticipant.mockRejectedValueOnce(
+        syntheticError,
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(
+        (progress.meta as MarketMakingMeta).total_volume,
+      ).toBeGreaterThanOrEqual(0);
+      expect(progress.participants_outcomes).toEqual([
+        {
+          address: normalParticipant.evmAddress,
+          score: normalParticipantResult.score,
+          total_volume: normalParticipantResult.total_volume,
+        },
+      ]);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Participant lacks necessary exchange API access',
+        {
+          campaignId: campaign.id,
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
+          participantId: noAccessParticipant.id,
+          startDate: periodStart,
+          endDate: periodEnd,
+          error: syntheticError,
+        },
+      );
+    });
+
+    it('should throw if should retry some participant', async () => {
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
+        generateUserEntity(),
+        generateUserEntity(),
+      ]);
+
+      mockMarketMakingProgressChecker.checkForParticipant.mockResolvedValueOnce(
+        {
+          abuseDetected: false,
+          score: faker.number.float(),
+          total_volume: faker.number.float(),
+        },
+      );
+      const syntheticError = new ExchangeApiClientError(faker.lorem.sentence());
+      mockMarketMakingProgressChecker.checkForParticipant.mockRejectedValueOnce(
+        syntheticError,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.checkCampaignProgressForPeriod(
+          campaign,
+          periodStart,
+          periodEnd,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toEqual(syntheticError);
     });
   });
 
