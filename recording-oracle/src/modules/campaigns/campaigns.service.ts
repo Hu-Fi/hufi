@@ -23,7 +23,10 @@ import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import { ExchangeApiClientFactory } from '@/modules/exchange';
+import {
+  ExchangeApiAccessError,
+  ExchangeApiClientFactory,
+} from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -41,9 +44,14 @@ import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  VolumeResultsChecker,
+  CampaignProgressMeta,
+  HoldingProgressChecker,
+  MarketMakingProgressChecker,
+  ProgressCheckResult,
 } from './progress-checking';
-import { isVolumeCampaign } from './type-guards';
+import { HoldingMeta } from './progress-checking/holding';
+import { MarketMakingMeta } from './progress-checking/market-making';
+import { isHoldingCampaign, isMarketMakingCampaign } from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
@@ -67,7 +75,10 @@ const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_HOUR;
 
-const campaignsProgressCache = new LRUCache<string, CampaignProgress>({
+const campaignsProgressCache = new LRUCache<
+  string,
+  CampaignProgress<CampaignProgressMeta>
+>({
   ttl: 1000 * 60 * 10,
   max: 4200,
   ttlAutopurge: false,
@@ -177,19 +188,21 @@ export class CampaignsService {
     manifest: CampaignManifest,
     escrowInfo: CampaignEscrowInfo,
   ): Promise<CampaignEntity> {
+    const { symbol, details } = manifestUtils.extractCampaignDetails(manifest);
+
     const newCampaign = new CampaignEntity();
     newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
     newCampaign.address = ethers.getAddress(address);
     newCampaign.type = manifest.type as CampaignType;
     newCampaign.exchangeName = manifest.exchange;
-    newCampaign.symbol = manifest.symbol;
+    newCampaign.symbol = symbol;
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
-    newCampaign.details = manifestUtils.extractCampaignDetails(manifest);
+    newCampaign.details = details;
     newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.lastResultsAt = null;
 
@@ -312,12 +325,12 @@ export class CampaignsService {
 
     try {
       switch (manifest.type) {
-        case CampaignType.VOLUME:
-          manifestUtils.assertValidVolumeCampaignManifest(manifest);
+        case CampaignType.MARKET_MAKING:
+          manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
           break;
-        // case CampaignType.LIQUIDITY:
-        //   manifestUtils.assertValidLiquidityCampaignManifest(manifest);
-        //   break;
+        case CampaignType.HOLDING:
+          manifestUtils.assertValidHoldingCampaignManifest(manifest);
+          break;
         default:
           throw new Error(`Campaign type not supported: ${manifest.type}`);
       }
@@ -410,10 +423,6 @@ export class CampaignsService {
           return;
         }
 
-        if (!isVolumeCampaign(campaign)) {
-          return;
-        }
-
         const logger = this.logger.child({
           action: 'record-campaign-progress',
           campaignId: campaign.id,
@@ -491,23 +500,32 @@ export class CampaignsService {
             endDate,
           );
 
-          const dailyReward = this.calculateDailyReward(campaign);
+          let progressValueTarget: number;
+          let progressValue: number;
+          if (isMarketMakingCampaign(campaign)) {
+            progressValueTarget = campaign.details.dailyVolumeTarget;
+            progressValue = (progress.meta as MarketMakingMeta).total_volume;
+          } else if (isHoldingCampaign(campaign)) {
+            progressValueTarget = campaign.details.dailyBalanceTarget;
+            progressValue = (progress.meta as HoldingMeta).total_balance;
+          } else {
+            throw new Error(
+              `Unknown campaign type for reward pool calculation: ${campaign.type}`,
+            );
+          }
           const rewardPool = this.calculateRewardPool({
-            maxRewardPool: dailyReward,
-            totalMarketMakersValue: progress.total_volume,
-            valueTarget: Number(campaign.details.dailyVolumeTarget),
+            maxRewardPool: this.calculateDailyReward(campaign),
+            progressValueTarget,
+            progressValue,
+            fundTokenDecimals: campaign.fundTokenDecimals,
           });
-          const truncatedRewardPool = decimalUtils.truncate(
-            rewardPool,
-            campaign.fundTokenDecimals,
-          );
 
           const intermediateResult: IntermediateResult = {
             from: progress.from,
             to: progress.to,
-            total_volume: progress.total_volume,
-            reserved_funds: truncatedRewardPool,
+            reserved_funds: rewardPool,
             participants_outcomes_batches: [],
+            ...progress.meta,
           };
           for (const chunk of _.chunk(
             progress.participants_outcomes,
@@ -527,12 +545,14 @@ export class CampaignsService {
           logger.info('Campaign progress recorded', {
             from: progress.from,
             to: progress.to,
-            total_volume: progress.total_volume,
-            reserved_funds: truncatedRewardPool,
+            reserved_funds: rewardPool,
+            ...progress.meta,
             resultsUrl: storedResultsMeta.url,
           });
 
-          void this.recordGeneratedVolume(campaign, intermediateResult);
+          if (isMarketMakingCampaign(campaign)) {
+            void this.recordGeneratedVolume(campaign, intermediateResult);
+          }
 
           /**
            * There might be situations when due to delays/failures in processing
@@ -559,14 +579,14 @@ export class CampaignsService {
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-  ): Promise<CampaignProgress> {
+  ): Promise<CampaignProgress<CampaignProgressMeta>> {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
       {
         exchangeName: campaign.exchangeName,
         symbol: campaign.symbol,
-        tradingPeriodStart: startDate,
-        tradingPeriodEnd: endDate,
+        periodStart: startDate,
+        periodEnd: endDate,
       },
     );
 
@@ -574,74 +594,79 @@ export class CampaignsService {
       campaign.id,
     );
 
-    let totalVolume = 0;
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
-      /**
-       * TODO
-       *
-       * Add error handling for case when we fail to check
-       * participant progress because of invalid API keys/access.
-       */
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
         participant.id,
         campaign.exchangeName,
       );
 
-      const participantOutcomes =
-        await campaignProgressChecker.checkForParticipant({
-          apiKey: exchangeApiKey.apiKey,
-          secret: exchangeApiKey.secretKey,
-        });
+      try {
+        const { abuseDetected, ...participantOutcomes } =
+          await campaignProgressChecker.checkForParticipant({
+            apiKey: exchangeApiKey.apiKey,
+            secret: exchangeApiKey.secretKey,
+          });
 
-      if (participantOutcomes.abuseDetected) {
-        this.logger.warn('Abuse detected. Skipping participant outcome', {
-          campaignId: campaign.id,
-          chainId: campaign.chainId,
-          campaignAddress: campaign.address,
-          participantId: participant.id,
-          startDate,
-          endDate,
+        if (abuseDetected) {
+          this.logger.warn('Abuse detected. Skipping participant outcome', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            startDate,
+            endDate,
+          });
+          continue;
+        }
+
+        outcomes.push({
+          address: participant.evmAddress,
+          ...participantOutcomes,
         });
-        continue;
+      } catch (error) {
+        if (error instanceof ExchangeApiAccessError) {
+          this.logger.warn('Participant lacks necessary exchange API access', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            startDate,
+            endDate,
+            error,
+          });
+          continue;
+        }
+
+        throw error;
       }
-
-      /**
-       * !!! NOTE !!!
-       * There can be a situation where two campaign participants
-       * have a trade between each other, so total volume
-       * is not 100% accurate in this case, but probability of it is
-       * negligible so omit it here. Later RepO can verify it if needed.
-       */
-      totalVolume += participantOutcomes.totalVolume;
-
-      outcomes.push({
-        address: participant.evmAddress,
-        score: participantOutcomes.score,
-        total_volume: participantOutcomes.totalVolume,
-      });
     }
 
     return {
       from: startDate.toISOString(),
       to: endDate.toISOString(),
-      total_volume: totalVolume,
       participants_outcomes: outcomes,
+      meta: campaignProgressChecker.getCollectedMeta(),
     };
   }
 
   private getCampaignProgressChecker(
     campaignType: string,
     campaignCheckerSetup: CampaignProgressCheckerSetup,
-  ): CampaignProgressChecker {
+  ): CampaignProgressChecker<ProgressCheckResult, CampaignProgressMeta> {
     const exchangeApiClientFactory = this.moduleRef.get(
       ExchangeApiClientFactory,
       { strict: false },
     );
 
     switch (campaignType) {
-      case CampaignType.VOLUME:
-        return new VolumeResultsChecker(
+      case CampaignType.MARKET_MAKING:
+        return new MarketMakingProgressChecker(
+          exchangeApiClientFactory,
+          campaignCheckerSetup,
+        );
+      case CampaignType.HOLDING:
+        return new HoldingProgressChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );
@@ -688,17 +713,23 @@ export class CampaignsService {
 
   calculateRewardPool(input: {
     maxRewardPool: number;
-    totalMarketMakersValue: number;
-    valueTarget: number;
+    progressValueTarget: number;
+    progressValue: number;
+    fundTokenDecimals: number;
   }): number {
     const rewardRatio = Math.min(
-      input.totalMarketMakersValue / input.valueTarget,
+      input.progressValue / input.progressValueTarget,
       1,
     );
 
     const rewardPool = rewardRatio * input.maxRewardPool;
 
-    return rewardPool;
+    const truncatedRewardPool = decimalUtils.truncate(
+      rewardPool,
+      input.fundTokenDecimals,
+    );
+
+    return truncatedRewardPool;
   }
 
   private async recordCampaignIntermediateResults(
@@ -747,7 +778,8 @@ export class CampaignsService {
         return;
       }
 
-      const volumeUsd = intermediateResult.total_volume * quoteTokenPriceUsd;
+      const volumeUsd =
+        (intermediateResult.total_volume as number) * quoteTokenPriceUsd;
 
       await this.volumeStatsRepository.upsert(
         {
@@ -755,7 +787,7 @@ export class CampaignsService {
           campaignAddress: campaign.address,
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume.toString(),
+          volume: (intermediateResult.total_volume as number).toString(),
           volumeUsd: volumeUsd.toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
@@ -879,22 +911,30 @@ export class CampaignsService {
       campaignsProgressCache.set(cacheKey, {
         from: progress.from,
         to: progress.to,
-        total_volume: progress.total_volume,
+        meta: progress.meta,
         participants_outcomes: progress.participants_outcomes,
       });
     }
 
-    const progress = campaignsProgressCache.get(cacheKey) as CampaignProgress;
-    const participantOutcome = progress.participants_outcomes.find(
+    const progress = campaignsProgressCache.get(
+      cacheKey,
+    ) as CampaignProgress<CampaignProgressMeta>;
+    const {
+      score: myScore,
+      address: _address,
+      ...myMeta
+    } = progress.participants_outcomes.find(
       (p) => p.address === evmAddress,
-    );
+    ) || {
+      score: 0,
+    };
 
     return {
       from: progress.from,
       to: progress.to,
-      totalVolume: progress.total_volume,
-      myScore: participantOutcome?.score ?? 0,
-      myVolume: participantOutcome?.total_volume ?? 0,
+      myScore,
+      myMeta,
+      totalMeta: progress.meta,
     };
   }
 }

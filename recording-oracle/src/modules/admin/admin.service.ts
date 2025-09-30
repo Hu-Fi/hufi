@@ -31,8 +31,8 @@ export class AdminService {
     return {
       from: progress.from,
       to: progress.to,
-      totalVolume: progress.total_volume,
       participantOutcomes: progress.participants_outcomes,
+      meta: progress.meta,
     };
   }
 }

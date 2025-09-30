@@ -34,17 +34,39 @@ declare module 'ccxt' {
     [x: string]: unknown;
   };
 
+  export type TokenBalances = {
+    [token: string]: number;
+  };
+
+  export type AccountBalance = {
+    free: TokenBalances;
+    used: TokenBalances;
+    total: TokenBalances;
+  };
+
+  export type AddressStructure = {
+    currency: string;
+    address: string;
+    network?: string | null;
+  };
+
   export interface Exchange {
     setSandboxMode(enabled: boolean): void;
     checkRequiredCredentials(throwError?: boolean): boolean;
-    fetchBalance(): Promise<unknown>;
+    fetchBalance(): Promise<AccountBalance>;
     fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
     fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
+    fetchDepositAddress(symbol: string): Promise<AddressStructure>;
   }
 
   const ccxt: {
     version: string;
     exchanges: string[];
+    AccountNotEnabled: ErrorConstructor;
+    AccountSuspended: ErrorConstructor;
+    AuthenticationError: ErrorConstructor;
+    BadSymbol: ErrorConstructor;
+    PermissionDenied: ErrorConstructor;
     NetworkError: ErrorConstructor;
     [x: string]: new (options: { apiKey: string; secret: string }) => Exchange;
   };

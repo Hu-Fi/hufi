@@ -1,4 +1,4 @@
-import { Order, Trade } from './types';
+import { AccountBalance, Order, Trade } from './types';
 
 export type ExchangeApiClientInitOptions = {
   apiKey: string;
@@ -15,4 +15,8 @@ export interface ExchangeApiClient {
   fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
 
   fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
+
+  fetchBalance(): Promise<AccountBalance>;
+
+  fetchDepositAddress(symbol: string): Promise<string>;
 }
