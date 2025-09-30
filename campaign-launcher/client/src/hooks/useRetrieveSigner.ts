@@ -12,11 +12,11 @@ const useRetrieveSigner = () => {
 
   const { appChainId, isSwitching } = useNetwork();
   const { activeAddress } = useActiveAccount();
-  const { isConnected } = useAccount();
+  const { isConnected, chainId: walletChainId } = useAccount();
   const { data: client } = useWalletClient<Config>({
     account: activeAddress,
-    chainId: appChainId,
-    query: { enabled: !!activeAddress && isConnected },
+    chainId: walletChainId, // this is crucial to avoid the mismatch error
+    query: { enabled: !!activeAddress && isConnected && !isSwitching },
   });
 
   const isTransportReady = client && 'request' in client.transport;
@@ -33,7 +33,8 @@ const useRetrieveSigner = () => {
           if (Number(network.chainId) !== appChainId) {
             await client.switchChain({ id: appChainId });
             /* 
-              Need to re-create provider after switching chain, because it uses previous chain and can't create signer
+              Need to re-create provider after switching chain, 
+              because it uses previous chain and can't create signer
             */
             provider = new BrowserProvider(client.transport);
           }
