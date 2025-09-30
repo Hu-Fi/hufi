@@ -423,10 +423,6 @@ export class CampaignsService {
           return;
         }
 
-        if (!isVolumeCampaign(campaign)) {
-          return;
-        }
-
         const logger = this.logger.child({
           action: 'record-campaign-progress',
           campaignId: campaign.id,
@@ -517,7 +513,6 @@ export class CampaignsService {
               `Unknown campaign type for reward pool calculation: ${campaign.type}`,
             );
           }
-
           const rewardPool = this.calculateRewardPool({
             maxRewardPool: this.calculateDailyReward(campaign),
             progressValueTarget,
@@ -601,12 +596,6 @@ export class CampaignsService {
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
-      /**
-       * TODO
-       *
-       * Add error handling for case when we fail to check
-       * participant progress because of invalid API keys/access.
-       */
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
         participant.id,
         campaign.exchangeName,
