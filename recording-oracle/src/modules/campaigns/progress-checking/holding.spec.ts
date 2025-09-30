@@ -120,7 +120,7 @@ describe('HoldingProgressChecker', () => {
       resultsChecker.ethDepositAddresses.clear();
     });
 
-    it('should return zero score if abuse detected', async () => {
+    it('should return zeros if abuse detected', async () => {
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValue(
         faker.finance.ethereumAddress(),
       );
@@ -147,7 +147,7 @@ describe('HoldingProgressChecker', () => {
 
       expect(abuseResult.abuseDetected).toBe(true);
       expect(abuseResult.score).toBe(0);
-      expect(abuseResult.token_balance).toBe(expectedBalance);
+      expect(abuseResult.token_balance).toBe(0);
     });
   });
 

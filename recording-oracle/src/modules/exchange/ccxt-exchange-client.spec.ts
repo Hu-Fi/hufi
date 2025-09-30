@@ -32,7 +32,7 @@ import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiClientError } from './errors';
 import {
   generateAccountBalance,
-  generateAddressStructure,
+  generateDepositAddressStructure,
   generateCcxtOpenOrder,
   generateCcxtTrade,
   generateExchangeName,
@@ -191,7 +191,7 @@ describe('CcxtExchangeClient', () => {
           generateAccountBalance([faker.finance.currencyCode()]),
         );
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
-          generateAddressStructure(),
+          generateDepositAddressStructure(),
         );
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess();
@@ -305,8 +305,8 @@ describe('CcxtExchangeClient', () => {
     });
 
     describe('fetchDepositAddress', () => {
-      it('should fetch deposit address infor and return just address', async () => {
-        const mockedAddressStructure = generateAddressStructure();
+      it('should fetch deposit address info and return just address', async () => {
+        const mockedAddressStructure = generateDepositAddressStructure();
 
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
           mockedAddressStructure,

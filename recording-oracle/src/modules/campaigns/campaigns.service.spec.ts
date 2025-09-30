@@ -545,7 +545,7 @@ describe('CampaignsService', () => {
 
     it.each([
       generateMarketMakingCampaignManifest(),
-      // generateHoldingCampaignManifest(),
+      generateHoldingCampaignManifest(),
     ])(
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {

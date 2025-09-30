@@ -95,7 +95,7 @@ export function generateAccountBalance(tokens: string[] = []) {
   return accountBalance;
 }
 
-export function generateAddressStructure(
+export function generateDepositAddressStructure(
   token: string = faker.finance.currencyCode(),
 ): AddressStructure {
   return {

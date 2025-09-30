@@ -16,11 +16,6 @@ export type HoldingMeta = {
   total_balance: number;
 };
 
-/**
- * TODO
- *
- * Unit-test coverage
- */
 export class HoldingProgressChecker
   implements CampaignProgressChecker<HoldingResult, HoldingMeta>
 {
@@ -52,21 +47,21 @@ export class HoldingProgressChecker
       exchangeApiClient.fetchBalance(),
     ]);
 
-    const tokenBalance = accountBalance.total[this.holdingTokenSymbol] || 0;
+    let tokenBalance = accountBalance.total[this.holdingTokenSymbol] || 0;
+    let score = tokenBalance;
 
+    let abuseDetected = false;
     if (this.ethDepositAddresses.has(ethDepositAddress)) {
-      return { abuseDetected: true, score: 0, token_balance: tokenBalance };
+      abuseDetected = true;
+      score = 0;
+      tokenBalance = 0;
     } else {
       this.ethDepositAddresses.add(ethDepositAddress);
-
-      this.totalBalanceMeta += tokenBalance;
-
-      return {
-        abuseDetected: false,
-        score: tokenBalance,
-        token_balance: tokenBalance,
-      };
     }
+
+    this.totalBalanceMeta += tokenBalance;
+
+    return { abuseDetected, score, token_balance: tokenBalance };
   }
 
   getCollectedMeta(): HoldingMeta {
