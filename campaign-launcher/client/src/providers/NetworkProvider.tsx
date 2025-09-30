@@ -4,6 +4,7 @@ import {
   PropsWithChildren,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -24,8 +25,20 @@ const NetworkProviderContext = createContext<
 export const NetworkProvider: FC<PropsWithChildren> = ({ children }) => {
   const config = useConfig();
   const [appChainId, setAppChainId] = useState<ChainId>(config.chains[0].id);
-  const [isSwitching, setIsSwitching] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(true);
   const { switchChainAsync } = useSwitchChain();
+
+  useEffect(() => {
+    const initChainId = async () => {
+      const savedChainId = await config?.storage?.getItem('chainId') as ChainId | null;
+      if (savedChainId) {
+        setAppChainId(savedChainId);
+      }
+      setIsSwitching(false);
+    };
+    
+    initChainId();
+  }, [config]);
 
   const handleSwitchChain = useCallback(
     async (chainId: ChainId) => {
@@ -39,6 +52,7 @@ export const NetworkProvider: FC<PropsWithChildren> = ({ children }) => {
         }));
         setAppChainId(chainId);
         await switchChainAsync?.({ chainId });
+        await config?.storage?.setItem('chainId', chainId);
       } catch (error) {
         console.error('Failed to switch chain', error);
       } finally {
