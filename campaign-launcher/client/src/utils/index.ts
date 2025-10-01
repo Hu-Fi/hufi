@@ -11,7 +11,7 @@ import {
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
 import { TOKENS } from '../constants/tokens';
-import { Campaign, CampaignDetails, CampaignType, EscrowCreateDto } from '../types';
+import { Campaign, CampaignDetails, CampaignFormValues, CampaignType } from '../types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -168,7 +168,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
 type ConstructCampaignDetailsProps = {
   chainId: ChainId;
   address: string;
-  data: EscrowCreateDto;
+  data: CampaignFormValues;
   tokenDecimals: number;
   fees: {
     exchangeOracleFee: bigint;
@@ -193,9 +193,14 @@ export const constructCampaignDetails = ({
     id: address,
     chain_id: chainId,
     address: address,
+    type: data.type,
     exchange_name: data.exchange,
-    trading_pair: data.pair,
-    daily_volume_target: data.daily_volume_target,
+    ...(data.type === CampaignType.MARKET_MAKING && { trading_pair: data.pair }),
+    ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
+    details: {
+      ...(data.type === CampaignType.MARKET_MAKING && { daily_volume_target: data.daily_volume_target }),
+      ...(data.type === CampaignType.HOLDING && { daily_balance_target: data.daily_balance_target }),
+    },
     start_date: data.start_date,
     end_date: data.end_date,
     final_results_url: null,
@@ -249,4 +254,8 @@ export const getTokenInfo = (token: string) => {
     label: token,
     icon: null,
   };
+};
+
+export const convertFromSnakeCaseToTitleCase = (str: string) => {
+  return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };

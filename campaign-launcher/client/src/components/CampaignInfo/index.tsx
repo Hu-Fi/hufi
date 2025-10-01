@@ -4,14 +4,10 @@ import { Box, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
-import {
-  getChainIcon,
-  getNetworkName,
-  mapStatusToColor,
-  mapTypeToLabel,
-} from '../../utils';
+import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
 import dayjs from '../../utils/dayjs';
 import CampaignAddress from '../CampaignAddress';
+import CampaignTypeLabel from '../CampaignTypeLabel';
 import CustomTooltip from '../CustomTooltip';
 
 const formatDate = (dateString: string): string => {
@@ -37,19 +33,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
       gap={4}
       flexWrap={{ xs: 'wrap', md: 'nowrap' }}
     >
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        px={2}
-        py="6px"
-        bgcolor="primary.violet"
-        borderRadius="4px"
-      >
-        <Typography variant="subtitle2" color="secondary.contrast">
-          {mapTypeToLabel(campaign.type)}
-        </Typography>
-      </Box>
+      <CampaignTypeLabel campaignType={campaign.type} />
       <Box
         display="flex"
         alignItems="center"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { StakerInfo, StakingClient } from '@human-protocol/sdk';
+import { StakingClient } from '@human-protocol/sdk';
 
 import { useActiveAccount } from '../providers/ActiveAccountProvider';
 import { useNetwork } from '../providers/NetworkProvider';
@@ -8,13 +8,9 @@ import { formatTokenAmount, getSupportedChainIds } from '../utils';
 import useRetrieveSigner from './useRetrieveSigner';
 
 export const useStake = () => {
-  const [stakingData, setStakingData] = useState<StakerInfo | null>(null);
-  const [stakingClient, setStakingClient] = useState<StakingClient | null>(
-    null
-  );
+  const [stakingClient, setStakingClient] = useState<StakingClient | null>(null);
   const [isClientInitializing, setIsClientInitializing] = useState(false);
-  const [isRefetching, setIsRefetching] = useState(false);
-  const [isFetchingInfo, setIsFetchingInfo] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const { activeAddress } = useActiveAccount();
   const { isSwitching, appChainId } = useNetwork();
@@ -40,15 +36,6 @@ export const useStake = () => {
     initStakingClient();
   }, [signer, activeAddress, isSwitching, isCreatingSigner]);
 
-  useEffect(() => {
-    if (!isClientInitializing && stakingClient && activeAddress) {
-      setIsFetchingInfo(true);
-      fetchStakingData(stakingClient).finally(() => {
-        setIsFetchingInfo(false);
-      });
-    }
-  }, [stakingClient, activeAddress, isClientInitializing]);
-
   const checkSupportedChain = () => {
     const isSupportedChain = getSupportedChainIds().includes(appChainId);
     if (!isSupportedChain) {
@@ -60,37 +47,29 @@ export const useStake = () => {
   };
 
   const resetData = () => {
-    setStakingData(null);
     setStakingClient(null);
   };
 
-  const fetchStakingData = async (stakingClient: StakingClient) => {
+  const fetchStakingData = async () => {
     checkSupportedChain();
-    try {
-      const stakingInfo = await stakingClient.getStakerInfo(activeAddress!);
-      setStakingData(stakingInfo);
-      return stakingInfo;
-    } catch (error) {
-      console.error('Error fetching staking data', error);
-      return null;
-    }
-  };
-
-  const refetchStakingData = async () => {
     if (stakingClient && activeAddress) {
-      setIsRefetching(true);
-      const info = await fetchStakingData(stakingClient);
-      setIsRefetching(false);
-      return formatTokenAmount(Number(info?.stakedAmount) || 0);
+      setIsFetching(true);
+      try {
+        const stakingInfo = await stakingClient.getStakerInfo(activeAddress);
+        return formatTokenAmount(Number(stakingInfo?.stakedAmount) || 0)
+      } catch (error) {
+        console.error('Error fetching staking data', error);
+        return null;
+      } finally {
+        setIsFetching(false);
+      }
     }
     return 0;
   };
 
   return {
-    stakedAmount: formatTokenAmount(Number(stakingData?.stakedAmount) || 0),
-    refetchStakingData,
+    fetchStakingData,
     isClientInitializing,
-    isFetchingInfo,
-    isRefetching,
+    isFetching,
   };
 };

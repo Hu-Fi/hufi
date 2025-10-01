@@ -91,24 +91,25 @@ export type CampaignsResponse = {
   has_more: boolean;
 };
 
-export type EscrowCreateDto = {
+type BaseManifestDto = {
   exchange: string;
-  pair: string;
-  start_date: Date;
-  end_date: Date;
-  fund_token: string;
-  fund_amount: number;
-  daily_volume_target: number;
-};
-
-export type ManifestUploadDto = {
-  type: string;
-  exchange: string;
-  daily_volume_target: number;
-  pair: string;
   start_date: string;
   end_date: string;
 };
+
+export type MarketMakingManifestDto = BaseManifestDto & {
+  type: CampaignType.MARKET_MAKING;
+  pair: string;
+  daily_volume_target: number;
+};
+
+export type HoldingManifestDto = BaseManifestDto & {
+  type: CampaignType.HOLDING;
+  symbol: string;
+  daily_balance_target: number;
+};
+
+export type ManifestUploadDto = MarketMakingManifestDto | HoldingManifestDto;
 
 export type CampaignsQueryParams = {
   chain_id: ChainId;
@@ -131,3 +132,25 @@ export type UserProgress = {
   my_score: number;
   my_volume: number;
 };
+
+type BaseCampaignFormValues = {
+  exchange: string;
+  start_date: Date;
+  end_date: Date;
+  fund_token: string;
+  fund_amount: number;
+};
+
+export type MarketMakingFormValues = BaseCampaignFormValues & {
+  type: CampaignType.MARKET_MAKING;
+  pair: string;
+  daily_volume_target: number;
+};
+
+export type HoldingFormValues = BaseCampaignFormValues & {
+  type: CampaignType.HOLDING;
+  symbol: string;
+  daily_balance_target: number;
+};
+
+export type CampaignFormValues = MarketMakingFormValues | HoldingFormValues;
