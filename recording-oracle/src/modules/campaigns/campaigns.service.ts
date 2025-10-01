@@ -323,6 +323,17 @@ export class CampaignsService {
       );
     }
 
+    /*
+     * Not including this into Joi schema to send meaningful errors
+     */
+    if (!isValidExchangeName(manifest.exchange)) {
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        `Exchange not supported: ${manifest.exchange}`,
+      );
+    }
+
     try {
       switch (manifest.type) {
         case CampaignType.MARKET_MAKING:
@@ -339,17 +350,6 @@ export class CampaignsService {
         chainId,
         campaignAddress,
         error.message as string,
-      );
-    }
-
-    /*
-     * Not including this into Joi schema to send meaningful errors
-     */
-    if (!isValidExchangeName(manifest.exchange)) {
-      throw new InvalidCampaign(
-        chainId,
-        campaignAddress,
-        `Exchange not supported: ${manifest.exchange}`,
       );
     }
 
