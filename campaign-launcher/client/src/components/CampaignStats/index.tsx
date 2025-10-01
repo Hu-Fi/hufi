@@ -110,6 +110,17 @@ const getDailyTargetCardLabel = (campaignType: CampaignType) => {
   }
 }
 
+const getDailyTargetValue = (campaign: CampaignDetails) => {
+  switch (campaign.type) {
+    case CampaignType.MARKET_MAKING:
+      return campaign.details.daily_volume_target;
+    case CampaignType.HOLDING:
+      return campaign.details.daily_balance_target;
+    default:
+      return 0;
+  }
+}
+
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const { exchangesMap } = useExchangesContext();
@@ -181,7 +192,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             </Title>
             <Typography variant="h5" color="primary.violet" fontWeight={700}>
               <FormattedNumber
-                value={campaign.details?.daily_volume_target}
+                value={getDailyTargetValue(campaign)}
                 decimals={3}
               />{' '}
               <span>{targetTokenSymbol}</span>

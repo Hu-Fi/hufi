@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
 
 import { useGetUserProgress } from '../../hooks/recording-oracle';
-import { CampaignDetails, CampaignType } from '../../types';
+import { CampaignDetails, CampaignType, UserProgress } from '../../types';
 import { getDailyTargetTokenSymbol } from '../../utils';
 import dayjs from '../../utils/dayjs';
 
@@ -42,6 +42,44 @@ const getLabels = (campaignType: CampaignType) => {
         total: 'Total Volume',
         my: 'My Volume',
       };
+  }
+}
+
+const getMyMeta = (campaignType: CampaignType, data: UserProgress | undefined) => {
+  if (!data) return null;
+
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      if ('total_volume' in data.my_meta) {
+        return data.my_meta.total_volume;
+      }
+      return 0;
+    case CampaignType.HOLDING:
+      if ('token_balance' in data.my_meta) {
+        return data.my_meta.token_balance;
+      }
+      return 0;
+    default:
+      return 0;
+  }
+}
+
+const getTotalMeta = (campaignType: CampaignType, data: UserProgress | undefined) => {
+  if (!data) return null;
+
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      if ('total_volume' in data.total_meta) {
+        return data.total_meta.total_volume;
+      }
+      return 0;
+    case CampaignType.HOLDING:
+      if ('total_balance' in data.total_meta) {
+        return data.total_meta.total_balance;
+      }
+      return 0;
+    default:
+      return 0;
   }
 }
 
@@ -85,7 +123,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
             <Skeleton variant="text" width={180} height={32} />
           ) : (
             <Typography variant="h6" color="primary.violet" fontWeight={700}>
-              {data?.total_volume} {targetTokenSymbol}
+              {getTotalMeta(campaign.type, data)} {targetTokenSymbol}
             </Typography>
           )}
         </Box>
@@ -109,7 +147,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
             <Skeleton variant="text" width={180} height={32} />
           ) : (
             <Typography variant="h6" color="primary.violet" fontWeight={700}>
-              {data?.my_volume} {targetTokenSymbol}
+              {getMyMeta(campaign.type, data)} {targetTokenSymbol}
             </Typography>
           )}
         </Box>
