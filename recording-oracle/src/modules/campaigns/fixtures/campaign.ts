@@ -13,8 +13,8 @@ import { CampaignEntity } from '../campaign.entity';
 import type {
   BaseProgressCheckResult,
   CampaignProgressChecker,
+  CampaignProgressMeta,
 } from '../progress-checking';
-import { MarketMakingMeta } from '../progress-checking/market-making';
 import {
   CampaignDetails,
   CampaignProgress,
@@ -81,16 +81,29 @@ export function generateParticipantOutcome(
 }
 
 export function generateCampaignProgress(
+  type: CampaignType,
   endDate?: Date,
-): CampaignProgress<MarketMakingMeta> {
+): CampaignProgress<CampaignProgressMeta> {
   const to = endDate || faker.date.past();
+
+  let meta: CampaignProgressMeta;
+  switch (type) {
+    case CampaignType.MARKET_MAKING:
+      meta = {
+        total_volume: 0,
+      };
+      break;
+    case CampaignType.HOLDING:
+      meta = {
+        total_balance: 0,
+      };
+      break;
+  }
 
   return {
     from: dayjs(to).subtract(1, 'day').toISOString(),
     to: to.toISOString(),
-    meta: {
-      total_volume: 0,
-    },
+    meta,
     participants_outcomes: [],
   };
 }
