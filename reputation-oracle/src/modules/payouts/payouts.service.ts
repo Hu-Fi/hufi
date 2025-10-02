@@ -7,11 +7,11 @@ import {
   TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 
 import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
-import * as decimalUtils from '@/common/utils/decimal';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { WalletWithProvider, Web3Service } from '@/modules/web3';
@@ -105,10 +105,9 @@ export class PayoutsService {
         );
 
         const rewardsBatchesToPay: CalculatedRewardsBatch[] = [];
-        let totalReservedFunds = 0;
+        let totalReservedFunds = new Decimal(0);
         for (const intermediateResult of intermediateResultsData.results) {
-          totalReservedFunds = decimalUtils.add(
-            totalReservedFunds,
+          totalReservedFunds = totalReservedFunds.plus(
             intermediateResult.reserved_funds,
           );
 
@@ -145,18 +144,12 @@ export class PayoutsService {
                * Also subtract amount of this paid batch
                * from total reserved value for check
                */
-              let batchTotalReward = 0;
+              let batchTotalReward = new Decimal(0);
               for (const reward of rewardsBatch.rewards) {
-                batchTotalReward = decimalUtils.add(
-                  batchTotalReward,
-                  reward.amount,
-                );
+                batchTotalReward = batchTotalReward.plus(reward.amount);
               }
 
-              totalReservedFunds = decimalUtils.sub(
-                totalReservedFunds,
-                batchTotalReward,
-              );
+              totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
               continue;
             }
 
@@ -165,33 +158,16 @@ export class PayoutsService {
         }
 
         const escrowBalance = await escrowClient.getBalance(campaign.address);
-        if (totalReservedFunds > escrowBalance) {
+        if (totalReservedFunds.greaterThan(escrowBalance)) {
           throw new Error('Expected payouts amount higher than reserved funds');
         }
 
         for (const rewardsBatchToPay of rewardsBatchesToPay) {
           const recipientToAmountMap = new Map<string, bigint>();
           for (const { address, amount } of rewardsBatchToPay.rewards) {
-            const truncatedAmount = decimalUtils.truncate(
-              amount,
-              campaign.fundTokenDecimals,
-            );
-            /**
-             * Escrow contract doesn't allow payout of 0 amount,
-             * so just skip it for final payouts. It covers cases when:
-             * - 0 reward in general
-             * - reward became 0 after truncating, i.e. it was too small
-             */
-            if (truncatedAmount === 0) {
-              continue;
-            }
-
             recipientToAmountMap.set(
               address,
-              ethers.parseUnits(
-                truncatedAmount.toString(),
-                campaign.fundTokenDecimals,
-              ),
+              ethers.parseUnits(amount.toString(), campaign.fundTokenDecimals),
             );
           }
 
@@ -252,10 +228,10 @@ export class PayoutsService {
   ): CalculatedRewardsBatch[] {
     const rewardPool = intermediateResult.reserved_funds;
 
-    let totalScore = 0;
+    let totalScore = new Decimal(0);
     for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
       for (const outcome of outcomesBatch.results) {
-        totalScore += outcome.score;
+        totalScore = totalScore.plus(outcome.score);
       }
     }
 
@@ -267,12 +243,12 @@ export class PayoutsService {
       };
 
       for (const outcome of outcomesBatch.results) {
-        let rewardAmount = 0;
+        let rewardAmount = new Decimal(0);
 
         if (outcome.score > 0) {
-          const participantShare = decimalUtils.div(totalScore, outcome.score);
+          const participantShare = Decimal.div(outcome.score, totalScore);
 
-          rewardAmount = decimalUtils.div(rewardPool, participantShare);
+          rewardAmount = Decimal.mul(rewardPool, participantShare);
         }
 
         /**
@@ -280,14 +256,13 @@ export class PayoutsService {
          * In case if the participant's share is so small
          * that it's lower than minumum payable amount - omit it.
          */
-        const truncatedRewardAmount = decimalUtils.truncate(
-          rewardAmount,
-          tokenDecimals,
+        const truncatedRewardAmount = Number(
+          rewardAmount.toFixed(tokenDecimals, Decimal.ROUND_DOWN),
         );
         if (truncatedRewardAmount > 0) {
           rewardsBatch.rewards.push({
             address: outcome.address,
-            amount: rewardAmount,
+            amount: truncatedRewardAmount,
           });
         }
       }
@@ -311,7 +286,7 @@ export class PayoutsService {
       .update(stringifiedResults)
       .digest('hex');
 
-    const fileName = `${campaign.address}.json`;
+    const fileName = `${campaign.address}/${resultsHash}.json`;
 
     const resultsUrl = await this.storageService.uploadData(
       stringifiedResults,
