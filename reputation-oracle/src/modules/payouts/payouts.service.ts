@@ -286,7 +286,7 @@ export class PayoutsService {
       .update(stringifiedResults)
       .digest('hex');
 
-    const fileName = `${campaign.address}.json`;
+    const fileName = `${campaign.address}/${resultsHash}.json`;
 
     const resultsUrl = await this.storageService.uploadData(
       stringifiedResults,
