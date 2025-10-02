@@ -3,57 +3,14 @@ import { FC } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { getTokenInfo } from '../../utils';
+import { getSymbolStyles } from '../CampaignSymbol';
 
-export type CryptoPairEntityProps = {
+type Props = {
   symbol: string;
   size?: 'small' | 'medium' | 'large';
 };
 
-const getStyles = (size: 'small' | 'medium' | 'large') => {
-  switch (size) {
-    case 'small':
-      return {
-        image: {
-          width: 24,
-          border: '1px solid white',
-        },
-        text: {
-          fontWeight: 400,
-          fontSize: 16,
-        },
-      };
-    case 'medium':
-      return {
-        image: {
-          width: 32,
-          border: '1px solid white',
-        },
-        text: {
-          fontWeight: 700,
-          fontSize: 20,
-        },
-      };
-    case 'large':
-      return {
-        image: {
-          width: 72,
-          border: '2px solid white',
-        },
-        text: {
-          fontWeight: 800,
-          fontSize: 30,
-          lineHeight: '35px',
-        },
-      };
-    default:
-      return {
-        width: 24,
-        border: '1px solid white',
-      };
-  }
-};
-
-export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({
+export const CryptoPairEntity: FC<Props> = ({
   symbol,
   size = 'small',
 }) => {
@@ -73,7 +30,7 @@ export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({
             src={baseIcon}
             alt={baseLabel}
             borderRadius="100%"
-            {...getStyles(size).image}
+            {...getSymbolStyles(size).image}
           />
           <Box
             component="img"
@@ -81,11 +38,11 @@ export const CryptoPairEntity: FC<CryptoPairEntityProps> = ({
             alt={quoteLabel}
             marginLeft={isLarge ? -4 : -2}
             borderRadius="100%"
-            {...getStyles(size).image}
+            {...getSymbolStyles(size).image}
           />
         </>
       )}
-      <Typography color="primary" {...getStyles(size).text}>
+      <Typography color="primary" {...getSymbolStyles(size).text}>
         {isLarge ? (
           <>
             {baseLabel ?? base}

@@ -1,12 +1,11 @@
-import { Autocomplete, Box, TextField } from '@mui/material';
+import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 
 import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { CryptoEntity } from '../CryptoEntity';
 
 type FormExchangeSelectProps<
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>,
+  TName extends Path<TFieldValues>
 > = {
   field: ControllerRenderProps<TFieldValues, TName>;
   disabled?: boolean;
@@ -23,7 +22,7 @@ const slotProps = {
 
 const FormExchangeSelect = <
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>,
+  TName extends Path<TFieldValues>
 >({
   field,
   disabled = false,
@@ -49,11 +48,22 @@ const FormExchangeSelect = <
             component="li"
             sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
           >
-            <CryptoEntity
-              name={option}
-              displayName={exchange?.display_name}
-              logo={exchange?.logo}
-            />
+            <Box display="flex" alignItems="center" gap={1}>
+              {exchange?.logo && (
+                <img
+                  src={exchange.logo}
+                  alt={exchange.display_name}
+                  width={24}
+                />
+              )}
+              <Typography
+                color="primary"
+                variant="body2"
+                sx={{ textTransform: 'capitalize' }}
+              >
+                {exchange?.display_name}
+              </Typography>
+            </Box>
           </Box>
         );
       }}

@@ -2,7 +2,6 @@ import { FC } from 'react';
 
 import { Button, Typography, Box, Stack } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { numericFormatter } from 'react-number-format';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
@@ -14,11 +13,11 @@ import {
   formatTokenAmount,
   getChainIcon,
   getNetworkName,
-  getTokenInfo,
   mapStatusToColor,
+  mapTypeToLabel,
 } from '../../utils';
 import CampaignAddress from '../CampaignAddress';
-import { CryptoPairEntity } from '../CryptoPairEntity';
+import CampaignSymbol from '../CampaignSymbol';
 import CustomTooltip from '../CustomTooltip';
 import InfoTooltipInner from '../InfoTooltipInner';
 import LaunchCampaign from '../LaunchCampaign';
@@ -190,12 +189,16 @@ const CampaignsTable: FC<Props> = ({
       renderHeader: () => null,
     },
     {
-      field: 'pair',
-      headerName: 'Pair',
+      field: 'symbol',
+      headerName: 'Symbol',
       flex: 2,
       minWidth: 250,
       renderCell: (params) => (
-        <CryptoPairEntity symbol={params.row.trading_pair} size="medium" />
+        <CampaignSymbol
+          symbol={params.row.symbol}
+          campaignType={params.row.type}
+          size="medium"
+        />
       ),
     },
     {
@@ -211,47 +214,13 @@ const CampaignsTable: FC<Props> = ({
       },
     },
     {
-      field: 'address',
-      headerName: 'Address',
+      field: 'type',
+      headerName: 'Type',
       flex: 1.5,
-      minWidth: 175,
+      minWidth: 160,
       renderCell: (params) => (
-        <CampaignAddress address={params.row.address} chainId={params.row.chain_id} />
-      ),
-    },
-    {
-      field: 'daily_volume_target',
-      headerName: 'DVT',
-      flex: 1.5,
-      minWidth: 140,
-      renderHeader: () => (
-        <>
-          <Typography variant="subtitle2" mr={1}>
-            DVT
-          </Typography>
-          <CustomTooltip arrow placement="right" title="Daily Volume Target">
-            <InfoTooltipInner width={24} height={24} />
-          </CustomTooltip>
-        </>
-      ),
-      renderCell: (params) => {
-        const { daily_volume_target, trading_pair } = params.row;
-        const volumeToken = trading_pair.split('/')[1];
-        const { label: tokenLabel } = getTokenInfo(volumeToken);
-        const formattedDailyVolumeTarget = numericFormatter(
-          daily_volume_target.toString(),
-          {
-            decimalScale: 1,
-            fixedDecimalScale: false,
-            thousandSeparator: ',',
-          }
-        );
-        return (
-          <Typography variant="subtitle2">
-            {formattedDailyVolumeTarget} {tokenLabel}
-          </Typography>
-        );
-      },
+        <Typography>{mapTypeToLabel(params.row.type)}</Typography>
+      )
     },
     {
       field: 'network',
@@ -261,13 +230,28 @@ const CampaignsTable: FC<Props> = ({
       renderCell: (params) => {
         const networkName = getNetworkName(params.row.chain_id);
         return (
-          <CustomTooltip title={networkName || 'Unknown Network'} placement="top">
+          <CustomTooltip
+            title={networkName || 'Unknown Network'}
+            placement="top"
+          >
             <Box display="flex" alignItems="center">
               {getChainIcon(params.row.chain_id)}
             </Box>
           </CustomTooltip>
         );
       },
+    },
+    {
+      field: 'address',
+      headerName: 'Address',
+      flex: 1.5,
+      minWidth: 175,
+      renderCell: (params) => (
+        <CampaignAddress
+          address={params.row.address}
+          chainId={params.row.chain_id}
+        />
+      ),
     },
     {
       field: 'startDate',
@@ -309,8 +293,8 @@ const CampaignsTable: FC<Props> = ({
             </Typography>
           );
         }
-        const { fund_amount, fund_token_decimals, fund_token_symbol } =
-          params.row;
+        
+        const { fund_amount, fund_token_decimals, fund_token_symbol } = params.row;
 
         return (
           <Typography variant="subtitle2">
@@ -429,10 +413,9 @@ const CampaignsTable: FC<Props> = ({
           px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
-          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer':
-            {
-              justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
-            },
+          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
+            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
+          },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: 'center',
           },
@@ -483,10 +466,9 @@ const CampaignsTable: FC<Props> = ({
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {
           outline: 'none',
         },
-        '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within':
-          {
-            outline: 'none',
-          },
+        '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within': {
+          outline: 'none',
+        },
       }}
     />
   );

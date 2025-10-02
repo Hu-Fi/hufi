@@ -17,10 +17,12 @@ const JoinCampaign: FC<Props> = ({ campaign, isAlreadyJoined, isJoinedLoading })
   const [modalOpen, setModalOpen] = useState(false);
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } = useGetEnrolledExchanges();
-  const { mutate: joinCampaign, isPending: isJoinPending } = useJoinCampaign();
+  const { mutate: joinCampaign, isPending: isJoining } = useJoinCampaign();
+
+  const isCampaignFinished = campaign.end_date < new Date().toISOString();
   
-  const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoinPending;
-  const isButtonDisabled = !isAuthenticated || isLoading || isAlreadyJoined;
+  const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoining;
+  const isButtonDisabled = !isAuthenticated || isLoading || isAlreadyJoined || isCampaignFinished;
 
   const handleButtonClick = () => {
     if (isButtonDisabled) {
@@ -52,10 +54,10 @@ const JoinCampaign: FC<Props> = ({ campaign, isAlreadyJoined, isJoinedLoading })
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
       >
-        {isJoinPending && (
+        {isJoining && (
           <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />
         )}
-        {!isJoinPending &&
+        {!isJoining &&
           (isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign')}
       </Button>
       <AddKeysPromptModal

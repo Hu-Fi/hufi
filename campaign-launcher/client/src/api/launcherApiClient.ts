@@ -12,6 +12,10 @@ export class LauncherApiClient extends HttpClient {
     return this.get<string[]>(`/exchanges/${exchangeName}/trading-pairs`);
   }
 
+  async getExchangeCurrencies(exchangeName: string): Promise<string[]> {
+    return this.get<string[]>(`/exchanges/${exchangeName}/currencies`);
+  }
+
   async getExchanges(): Promise<Exchange[]> {
     const response = await this.get<Exchange[]>('/exchanges');
     return response;
