@@ -513,6 +513,7 @@ export class CampaignsService {
               `Unknown campaign type for reward pool calculation: ${campaign.type}`,
             );
           }
+
           const rewardPool = this.calculateRewardPool({
             maxRewardPool: this.calculateDailyReward(campaign),
             progressValueTarget,

@@ -692,7 +692,7 @@ describe('CampaignsService', () => {
     let chainId: number;
 
     beforeEach(() => {
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+      campaign = generateCampaignEntity();
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
     });
@@ -759,7 +759,7 @@ describe('CampaignsService', () => {
         campaignsService,
         'createCampaign',
       );
-      const campaignManifest = generateMarketMakingCampaignManifest();
+      const campaignManifest = generateCampaignManifest();
       const escrowInfo = {
         fundAmount: faker.number.float(),
         fundTokenSymbol: faker.finance.currencyCode(),
@@ -844,7 +844,7 @@ describe('CampaignsService', () => {
     it('should return data of campaigns where user is participant', async () => {
       const userId = faker.string.uuid();
       const userCampaigns = Array.from({ length: 3 }, () =>
-        generateCampaignEntity(CampaignType.MARKET_MAKING),
+        generateCampaignEntity(),
       );
       mockUserCampaignsRepository.findByUserId.mockResolvedValueOnce(
         userCampaigns,
@@ -937,7 +937,7 @@ describe('CampaignsService', () => {
       spyOnDownloadFile = jest.spyOn(httpUtils, 'downloadFile');
       spyOnDownloadFile.mockImplementation();
 
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+      campaign = generateCampaignEntity();
     });
 
     afterAll(() => {
@@ -1062,7 +1062,7 @@ describe('CampaignsService', () => {
     beforeAll(() => {
       periodEnd = new Date();
       periodStart = dayjs(periodEnd).subtract(1, 'day').toDate();
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+      campaign = generateCampaignEntity();
 
       mockParticipantResult = {
         abuseDetected: false,
@@ -1337,7 +1337,7 @@ describe('CampaignsService', () => {
     });
 
     beforeEach(() => {
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+      campaign = generateCampaignEntity();
 
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
@@ -1994,7 +1994,7 @@ describe('CampaignsService', () => {
 
       const nCampaigns = faker.number.int({ min: 2, max: 5 });
       const campaigns = Array.from({ length: nCampaigns }, () =>
-        generateCampaignEntity(CampaignType.MARKET_MAKING),
+        generateCampaignEntity(),
       );
       mockCampaignsRepository.findForProgressRecording.mockResolvedValueOnce(
         campaigns,
@@ -2195,7 +2195,7 @@ describe('CampaignsService', () => {
     beforeAll(() => {
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+      campaign = generateCampaignEntity();
     });
 
     it('should return false if campaign does not exist', async () => {
@@ -2511,11 +2511,6 @@ describe('CampaignsService', () => {
         expectedTimeframeStart,
         now,
       );
-      const {
-        score: expectedMyScore,
-        address: _address,
-        ...expectedMyMeta
-      } = participantOutcome;
       expect(progress).toEqual({
         from: expectedTimeframeIsoString,
         to: nowIsoString,
