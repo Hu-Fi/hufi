@@ -230,7 +230,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             <CampaignSymbol
               symbol={campaign.symbol}
               campaignType={campaign.type}
-              size="medium"
+              size={isXl ? 'large' : 'medium'}
             />
           </StatsCard>
         </Grid>

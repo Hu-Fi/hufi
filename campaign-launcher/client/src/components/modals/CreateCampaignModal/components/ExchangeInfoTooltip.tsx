@@ -34,4 +34,3 @@ const ExchangeInfoTooltip = () => {
 };
 
 export default ExchangeInfoTooltip
-  

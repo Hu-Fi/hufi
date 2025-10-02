@@ -113,7 +113,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
       </Stack>
       <Stack gap={1}>
         <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="subtitle2" width={90}>
+          <Typography variant="subtitle2" width={100}>
             {getLabels(campaign.type).total}
           </Typography>
           {isLoading ? (
@@ -125,7 +125,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
           )}
         </Box>
         <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="subtitle2" width={90}>
+          <Typography variant="subtitle2" width={100}>
             My Score
           </Typography>
           {isLoading ? (
@@ -137,7 +137,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
           )}
         </Box>
         <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="subtitle2" width={90}>
+          <Typography variant="subtitle2" width={100}>
             {getLabels(campaign.type).my}
           </Typography>
           {isLoading ? (

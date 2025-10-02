@@ -83,13 +83,13 @@ export const mapStatusToColor = (
   endDate: string
 ) => {
   const theme = useTheme();
-  const today = new Date().toISOString();
+  const now = new Date().toISOString();
 
   switch (status) {
     case 'active':
-      if (today < startDate) {
+      if (now < startDate) {
         return theme.palette.warning.main;
-      } else if (today > endDate) {
+      } else if (now > endDate) {
         return theme.palette.error.main;
       } else {
         return theme.palette.success.main;
