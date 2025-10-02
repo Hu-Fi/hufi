@@ -38,10 +38,7 @@ const getLabels = (campaignType: CampaignType) => {
         my: 'My Balance',
       };
     default:
-      return {
-        total: 'Total Volume',
-        my: 'My Volume',
-      };
+      return campaignType as never;
   }
 }
 

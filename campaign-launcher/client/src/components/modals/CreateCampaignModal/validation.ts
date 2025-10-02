@@ -55,7 +55,7 @@ const baseValidationSchema = {
 
 export const marketMakingValidationSchema = yup.object({
   ...baseValidationSchema,
-  pair: yup.string().required('Required'),
+  pair: yup.string().matches(/^[A-Z]{3,10}\/[A-Z]{3,10}$/, 'Invalid pair').required('Required'),
   daily_volume_target: yup
     .number()
     .typeError('Daily volume target is required')
@@ -65,7 +65,7 @@ export const marketMakingValidationSchema = yup.object({
 
 export const holdingValidationSchema = yup.object({
   ...baseValidationSchema,
-  symbol: yup.string().required('Required'),
+  symbol: yup.string().matches(/^[A-Z]{3,10}$/, 'Invalid symbol').required('Required'),
   daily_balance_target: yup
     .number()
     .typeError('Daily balance target is required')

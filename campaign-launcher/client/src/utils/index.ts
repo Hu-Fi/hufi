@@ -109,6 +109,8 @@ export const mapTypeToLabel = (type: CampaignType) => {
       return 'Market Making';
     case 'HOLDING':
       return 'Holding';
+    default:
+      return type;
   }
 };
 

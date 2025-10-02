@@ -9,7 +9,6 @@ import {
   InputAdornment,
   inputBaseClasses,
   InputLabel,
-  Link,
   MenuItem,
   Select,
   Stack,
@@ -20,16 +19,14 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { Control, Controller, FieldErrors, UseFormWatch } from 'react-hook-form';
 
+import ExchangeInfoTooltip from "./ExchangeInfoTooltip";
 import { FUND_TOKENS } from "../../../../constants/tokens";
-import { useIsMobile } from "../../../../hooks/useBreakpoints";
 import { useTradingPairs } from "../../../../hooks/useTradingPairs";
 import { MarketMakingFormValues } from "../../../../types";
 import { getTokenInfo } from "../../../../utils";
 import { CryptoEntity } from "../../../CryptoEntity";
 import { CryptoPairEntity } from "../../../CryptoPairEntity";
-import CustomTooltip from "../../../CustomTooltip";
 import FormExchangeSelect from "../../../FormExchangeSelect";
-import InfoTooltipInner from "../../../InfoTooltipInner";
 
 type Props = {
   control: Control<MarketMakingFormValues>;
@@ -37,35 +34,6 @@ type Props = {
   watch: UseFormWatch<MarketMakingFormValues>;
   isCreatingEscrow: boolean;
 }
-
-const InfoTooltip = () => {
-  const isMobile = useIsMobile();
-  return (
-    <CustomTooltip
-      arrow
-      placement={isMobile ? 'top' : 'right'}
-      title={
-        <>
-          <Typography component="p" variant="tooltip" color="primary.contrast">
-            Can&apos;t find the exchange? <br />
-            Click the link below to submit a request. <br />
-            We&apos;d love to hear from you! <br />
-            <Link
-              href=""
-              target="_blank"
-              rel="noopener noreferrer"
-              color="primary.contrast"
-            >
-              Submit request
-            </Link>
-          </Typography>
-        </>
-      }
-    >
-      <InfoTooltipInner />
-    </CustomTooltip>
-  );
-};
 
 const MarketMakingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) => {
   const exchange = watch('exchange');
@@ -96,7 +64,7 @@ const MarketMakingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow 
               <FormHelperText>{errors.exchange.message}</FormHelperText>
             )}
           </FormControl>
-          <InfoTooltip />
+          <ExchangeInfoTooltip />
         </Box>
         <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
           <Controller

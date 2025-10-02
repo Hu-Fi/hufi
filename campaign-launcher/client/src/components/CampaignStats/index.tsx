@@ -106,7 +106,7 @@ const getDailyTargetCardLabel = (campaignType: CampaignType) => {
     case CampaignType.HOLDING:
       return 'Daily balance target';
     default:
-      return 'Daily volume target';
+      return campaignType as never;
   }
 }
 
