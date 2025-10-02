@@ -12,7 +12,7 @@ import { Exchange } from '../types';
 type ExchangesContextType = {
   exchanges: Exchange[] | undefined;
   exchangesMap: Map<string, Omit<Exchange, 'name'>>;
-  isPending: boolean;
+  isLoading: boolean;
   error: Error | null;
 };
 
@@ -31,7 +31,7 @@ export const useExchangesContext = () => {
 };
 
 const ExchangesProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { data: exchanges, isPending, error } = useExchanges();
+  const { data: exchanges, isLoading, error } = useExchanges();
 
   const exchangesMap = useMemo(() => {
     const map = new Map<string, Omit<Exchange, 'name'>>();
@@ -45,7 +45,7 @@ const ExchangesProvider: FC<PropsWithChildren> = ({ children }) => {
 
   return (
     <ExchangesContext.Provider
-      value={{ exchanges, exchangesMap, isPending, error }}
+      value={{ exchanges, exchangesMap, isLoading, error }}
     >
       {children}
     </ExchangesContext.Provider>
