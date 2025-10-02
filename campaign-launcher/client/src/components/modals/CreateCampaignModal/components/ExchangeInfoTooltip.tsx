@@ -4,6 +4,8 @@ import { useIsMobile } from "../../../../hooks/useBreakpoints";
 import CustomTooltip from "../../../CustomTooltip";
 import InfoTooltipInner from "../../../InfoTooltipInner";
 
+const link = import.meta.env.VITE_REQUEST_EXCHANGE_FORM_URL;
+
 const ExchangeInfoTooltip = () => {
   const isMobile = useIsMobile();
   return (
@@ -17,7 +19,7 @@ const ExchangeInfoTooltip = () => {
             Click the link below to submit a request. <br />
             We&apos;d love to hear from you! <br />
             <Link
-              href=""
+              href={link}
               target="_blank"
               rel="noopener noreferrer"
               color="primary.contrast"
