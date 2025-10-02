@@ -10,11 +10,12 @@ import {
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
   type CampaignManifestBase,
+  CampaignManifest,
 } from '../types';
 
 export function generateBaseCampaignManifest(): CampaignManifestBase {
   const manifestBase: CampaignManifestBase = {
-    type: faker.lorem.word(),
+    type: faker.string.sample(),
     exchange: generateExchangeName(),
     start_date: faker.date.recent(),
     end_date: faker.date.future(),
@@ -55,4 +56,13 @@ export function generateManifestResponse() {
     start_date: manifest.start_date.toISOString(),
     end_date: manifest.end_date.toISOString(),
   };
+}
+
+export function generateCampaignManifest(): CampaignManifest {
+  const generatorFn = faker.helpers.arrayElement([
+    generateMarketMakingCampaignManifest,
+    generateHoldingCampaignManifest,
+  ]);
+
+  return generatorFn();
 }
