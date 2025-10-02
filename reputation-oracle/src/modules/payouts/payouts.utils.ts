@@ -31,7 +31,7 @@ const intermedateResultsSchema = Joi.object({
   address: Joi.string().required(),
   exchange: Joi.string().required(),
   results: Joi.array().items(intermediateResultSchema).required(),
-}).options({ allowUnknown: true, stripUnknown: true });
+}).options({ allowUnknown: true, stripUnknown: false });
 
 export async function downloadIntermediateResults(
   url: string,
