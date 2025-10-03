@@ -5,6 +5,7 @@ import {
   EscrowClient,
   EscrowStatus,
   EscrowUtils,
+  OrderDirection,
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -74,6 +75,10 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
 const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_HOUR;
+
+const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
+  ? CronExpression.EVERY_MINUTE
+  : CronExpression.EVERY_10_MINUTES;
 
 const campaignsProgressCache = new LRUCache<
   string,
@@ -937,5 +942,103 @@ export class CampaignsService {
       myMeta,
       totalMeta: progress.meta,
     };
+  }
+
+  @Cron(NEW_CAMPAIGNS_DISCOVERY_SCHEDULE)
+  async discoverNewCampaigns(): Promise<void> {
+    this.logger.debug('New campaigns discovery job started');
+
+    for (const chainId of this.web3Service.supportedChainIds) {
+      try {
+        const latestKnownCampaign =
+          await this.campaignsRepository.findLatestCampaignForChain(chainId);
+        let lookbackDate: Date;
+        if (latestKnownCampaign) {
+          const campaignEscrow = await EscrowUtils.getEscrow(
+            latestKnownCampaign.chainId,
+            latestKnownCampaign.address,
+          );
+          /**
+           * 'createdAt' is a tx block timestamp, so technically
+           * there might be multiple escrows created within the same block
+           * and we have to discover from the same timstamp value to not miss some.
+           */
+          const lookbackTimestamp = Number(campaignEscrow.createdAt) * 1000;
+          lookbackDate = new Date(lookbackTimestamp);
+        } else {
+          lookbackDate = dayjs().subtract(1, 'day').toDate();
+        }
+
+        const newEscrows = await EscrowUtils.getEscrows({
+          chainId: chainId as number,
+          recordingOracle: this.web3ConfigService.operatorAddress.toLowerCase(),
+          from: lookbackDate,
+          orderDirection: OrderDirection.ASC,
+          first: 10,
+        });
+        this.logger.debug('Discovered new launched campaigns', {
+          chainId,
+          campaigns: newEscrows.map((e) => e.address),
+        });
+
+        for (const newEscrow of newEscrows) {
+          const campaignAddress = ethers.getAddress(newEscrow.address);
+          const campaignExists =
+            await this.campaignsRepository.checkCampaignExists(
+              chainId as number,
+              campaignAddress,
+            );
+          if (campaignExists) {
+            this.logger.debug('Discovered campaign already exists; skip it', {
+              chainId,
+              campaignAddress,
+            });
+            continue;
+          }
+
+          try {
+            const { manifest, escrowInfo } = await this.retrieveCampaignData(
+              chainId,
+              campaignAddress,
+            );
+
+            const createdCampaign = await this.createCampaign(
+              chainId,
+              campaignAddress,
+              manifest,
+              escrowInfo,
+            );
+            this.logger.info('Discovered and created new campaign', {
+              chainId,
+              campaignAddress,
+              campaignId: createdCampaign.id,
+            });
+          } catch (error) {
+            if (error instanceof InvalidCampaign) {
+              this.logger.warn('Discovered campaign is not valid; skip it', {
+                chainId,
+                campaignAddress,
+                error,
+              });
+              continue;
+            } else {
+              this.logger.warn('Failed to save discovered campaign', {
+                chainId,
+                campaignAddress,
+                error,
+              });
+              throw new Error('Failed to save campaign');
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.error('Error while discovering new campaigns for chain', {
+          chainId,
+          error,
+        });
+      }
+    }
+
+    this.logger.debug('New campaigns discovery job finished');
   }
 }
