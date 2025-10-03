@@ -4,6 +4,7 @@ import { Wallet, ethers } from 'ethers';
 import { LRUCache } from 'lru-cache';
 
 import {
+  ChainId,
   ChainIds,
   ERC20_ABI_DECIMALS,
   ERC20_ABI_SYMBOL,
@@ -75,6 +76,10 @@ export class Web3Service {
     }
 
     return supportedChains;
+  }
+
+  get supportedChainIds(): ChainId[] {
+    return this.supportedChains.map((v) => v.id);
   }
 
   getSigner(chainId: number): WalletWithProvider {
