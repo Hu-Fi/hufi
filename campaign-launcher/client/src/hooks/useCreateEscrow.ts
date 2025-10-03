@@ -148,7 +148,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           make sure the backend won't interrupt the process and users won't lose their funds
         */
         const oracleFees = await launcherApi.getOracleFees(appChainId);
-        const _escrowAddress = await escrowClient.createEscrow(tokenAddress, uuidV4());
+        const _escrowAddress = await escrowClient.createEscrow(tokenAddress, [signer.address], uuidV4());
 
         escrowState.current.escrowAddress = _escrowAddress;
         escrowState.current.exchangeOracleFee = oracleFees.exchange_oracle_fee;
