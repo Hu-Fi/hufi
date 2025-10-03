@@ -8,10 +8,14 @@ import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import { MiniChartIcon } from '../../icons';
 import { useExchangesContext } from '../../providers/ExchangesProvider';
 import { useWeb3Auth } from '../../providers/Web3AuthProvider';
-import { CampaignDetails, CampaignStatus } from '../../types';
-import { formatTokenAmount, getTokenInfo } from '../../utils';
+import { CampaignDetails, CampaignStatus, CampaignType } from '../../types';
+import {
+  formatTokenAmount,
+  getDailyTargetTokenSymbol,
+  getTokenInfo,
+} from '../../utils';
 import CampaignResultsWidget, { StatusTooltip } from '../CampaignResultsWidget';
-import { CryptoPairEntity } from '../CryptoPairEntity';
+import CampaignSymbol from '../CampaignSymbol';
 import CustomTooltip from '../CustomTooltip';
 import FormattedNumber from '../FormattedNumber';
 import InfoTooltipInner from '../InfoTooltipInner';
@@ -81,9 +85,7 @@ const FirstRowWrapper: FC<PropsWithChildren<{ showProgressWidget: boolean }>> = 
   if (showProgressWidget) {
     return (
       <Grid size={{ xs: 12, md: 6 }}>
-        <FlexGrid>
-          {children}
-        </FlexGrid>
+        <FlexGrid>{children}</FlexGrid>
       </Grid>
     );
   }
@@ -91,12 +93,32 @@ const FirstRowWrapper: FC<PropsWithChildren<{ showProgressWidget: boolean }>> = 
   return (
     <>
       {Children.map(children, (child) => (
-        <Grid size={{ xs: 12, md: 3 }}>
-          {child}
-        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>{child}</Grid>
       ))}
     </>
   );
+};
+
+const getDailyTargetCardLabel = (campaignType: CampaignType) => {
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      return 'Daily volume target';
+    case CampaignType.HOLDING:
+      return 'Daily balance target';
+    default:
+      return campaignType as never;
+  }
+}
+
+const getDailyTargetValue = (campaign: CampaignDetails) => {
+  switch (campaign.type) {
+    case CampaignType.MARKET_MAKING:
+      return campaign.details.daily_volume_target;
+    case CampaignType.HOLDING:
+      return campaign.details.daily_balance_target;
+    default:
+      return 0;
+  }
 }
 
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
@@ -105,8 +127,12 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   const isXl = useIsXlDesktop();
   const { isAuthenticated } = useWeb3Auth();
 
-  const showProgressWidget = isAuthenticated && isJoined && 
-    campaign?.status === CampaignStatus.ACTIVE && now >= campaign?.start_date && now <= campaign?.end_date;
+  const showProgressWidget =
+    isAuthenticated &&
+    isJoined &&
+    campaign?.status === CampaignStatus.ACTIVE &&
+    now >= campaign?.start_date &&
+    now <= campaign?.end_date;
 
   if (!campaign) return null;
 
@@ -126,8 +152,8 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
     campaign.fund_token_decimals
   );
 
-  const volumeToken = campaign.trading_pair.split('/')[1];
-  const { label: volumeTokenSymbol } = getTokenInfo(volumeToken);
+  const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
+  const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
     <>
@@ -161,15 +187,17 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             </Typography>
           </StatsCard>
           <StatsCard>
-            <Title variant="subtitle2">Daily volume target</Title>
+            <Title variant="subtitle2">
+              {getDailyTargetCardLabel(campaign.type)}
+            </Title>
             <Typography variant="h5" color="primary.violet" fontWeight={700}>
               <FormattedNumber
-                value={campaign.daily_volume_target}
+                value={getDailyTargetValue(campaign)}
                 decimals={3}
               />{' '}
-              <span>{volumeTokenSymbol}</span>
+              <span>{targetTokenSymbol}</span>
             </Typography>
-          </StatsCard>  
+          </StatsCard>
         </FirstRowWrapper>
         {showProgressWidget && (
           <Grid size={{ xs: 12, md: 6 }}>
@@ -198,9 +226,10 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
-            <Title variant="subtitle2">Pair</Title>
-            <CryptoPairEntity
-              symbol={campaign.trading_pair}
+            <Title variant="subtitle2">Symbol</Title>
+            <CampaignSymbol
+              symbol={campaign.symbol}
+              campaignType={campaign.type}
               size={isXl ? 'large' : 'medium'}
             />
           </StatsCard>
@@ -213,10 +242,10 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
                 <InfoTooltipInner />
               </CustomTooltip>
             </Title>
-            <CampaignResultsWidget 
+            <CampaignResultsWidget
               campaignStatus={campaign.status}
-              finalResultsUrl={campaign.final_results_url} 
-              intermediateResultsUrl={campaign.intermediate_results_url} 
+              finalResultsUrl={campaign.final_results_url}
+              intermediateResultsUrl={campaign.intermediate_results_url}
             />
           </StatsCard>
         </Grid>
@@ -229,7 +258,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
                 sx={{
                   p: 0,
                   ml: 'auto',
-                  '&:hover': { background: 'none' }, 
+                  '&:hover': { background: 'none' },
                 }}
                 onClick={() => setIsChartModalOpen(true)}
               >
@@ -240,8 +269,8 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
           </StatsCard>
         </Grid>
       </Grid>
-      <ChartModal 
-        open={isChartModalOpen} 
+      <ChartModal
+        open={isChartModalOpen}
         onClose={() => setIsChartModalOpen(false)}
         campaign={campaign}
       />

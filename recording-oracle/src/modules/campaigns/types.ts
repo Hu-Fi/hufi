@@ -18,26 +18,54 @@ export enum ReturnedCampaignStatus {
 
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
+  HOLDING = 'HOLDING',
 }
 
-export type CampaignManifest = {
+export type MarketMakingCampaignDetails = {
+  dailyVolumeTarget: number;
+};
+
+export type HoldingCampaignDetails = {
+  dailyBalanceTarget: number;
+};
+
+export type CampaignDetails =
+  | MarketMakingCampaignDetails
+  | HoldingCampaignDetails;
+
+export type CampaignManifestBase = {
   type: string;
-  daily_volume_target: number;
   exchange: string;
-  pair: string;
   start_date: Date;
   end_date: Date;
 };
 
+export type MarketMakingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.MARKET_MAKING;
+  pair: string;
+  daily_volume_target: number;
+};
+
+export type HoldingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.HOLDING;
+  symbol: string;
+  daily_balance_target: number;
+};
+
+export type CampaignManifest =
+  | MarketMakingCampaignManifest
+  | HoldingCampaignManifest;
+
 export type CampaignEscrowInfo = {
   fundAmount: number;
   fundTokenSymbol: string;
+  fundTokenDecimals: number;
 };
 
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume: number;
+  [meta: string]: unknown;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -48,21 +76,22 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: string;
   to: string;
-  total_volume: number;
+  reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
+  [meta: string]: unknown;
 };
 
 export type IntermediateResultsData = {
   chain_id: number;
   address: string;
   exchange: string;
-  pair: string;
+  symbol: string;
   results: IntermediateResult[];
 };
 
-export type CampaignProgress = {
+export type CampaignProgress<M> = {
   from: string;
   to: string;
-  total_volume: number;
   participants_outcomes: ParticipantOutcome[];
+  meta: M;
 };

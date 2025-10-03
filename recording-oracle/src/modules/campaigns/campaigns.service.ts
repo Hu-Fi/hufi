@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -22,7 +23,10 @@ import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
-import { ExchangeApiClientFactory } from '@/modules/exchange';
+import {
+  ExchangeApiAccessError,
+  ExchangeApiClientFactory,
+} from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -36,23 +40,28 @@ import {
   UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
-import { SUPPORTED_CAMPAIGN_TYPES } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  MarketMakingResultsChecker,
+  CampaignProgressMeta,
+  HoldingProgressChecker,
+  MarketMakingProgressChecker,
+  ProgressCheckResult,
 } from './progress-checking';
+import { HoldingMeta } from './progress-checking/holding';
+import { MarketMakingMeta } from './progress-checking/market-making';
+import { isHoldingCampaign, isMarketMakingCampaign } from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
+  CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
-  ParticipantsOutcomesBatch,
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -62,11 +71,14 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_30_MINUTES;
 
-const COMPLETION_TRACKING_SCHEDULE = Environment.isDevelopment()
+const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_HOUR;
 
-const campaignsProgressCache = new LRUCache<string, CampaignProgress>({
+const campaignsProgressCache = new LRUCache<
+  string,
+  CampaignProgress<CampaignProgressMeta>
+>({
   ttl: 1000 * 60 * 10,
   max: 4200,
   ttlAutopurge: false,
@@ -176,20 +188,23 @@ export class CampaignsService {
     manifest: CampaignManifest,
     escrowInfo: CampaignEscrowInfo,
   ): Promise<CampaignEntity> {
+    const { symbol, details } = manifestUtils.extractCampaignDetails(manifest);
+
     const newCampaign = new CampaignEntity();
     newCampaign.id = crypto.randomUUID();
     newCampaign.chainId = chainId;
     newCampaign.address = ethers.getAddress(address);
-    newCampaign.type = manifest.type;
+    newCampaign.type = manifest.type as CampaignType;
     newCampaign.exchangeName = manifest.exchange;
-    newCampaign.dailyVolumeTarget = manifest.daily_volume_target.toString();
-    newCampaign.pair = manifest.pair;
-    newCampaign.lastResultsAt = null;
+    newCampaign.symbol = symbol;
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
-    newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
+    newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
+    newCampaign.details = details;
+    newCampaign.status = CampaignStatus.ACTIVE;
+    newCampaign.lastResultsAt = null;
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -297,7 +312,16 @@ export class CampaignsService {
       manifestString = escrow.manifest as string;
     }
 
-    const manifest = manifestUtils.validateSchema(manifestString);
+    let manifest: CampaignManifestBase;
+    try {
+      manifest = manifestUtils.validateBaseSchema(manifestString);
+    } catch (error) {
+      throw new InvalidCampaign(
+        chainId,
+        campaignAddress,
+        error.message as string,
+      );
+    }
 
     /*
      * Not including this into Joi schema to send meaningful errors
@@ -310,11 +334,22 @@ export class CampaignsService {
       );
     }
 
-    if (!SUPPORTED_CAMPAIGN_TYPES.includes(manifest.type as CampaignType)) {
+    try {
+      switch (manifest.type) {
+        case CampaignType.MARKET_MAKING:
+          manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
+          break;
+        case CampaignType.HOLDING:
+          manifestUtils.assertValidHoldingCampaignManifest(manifest);
+          break;
+        default:
+          throw new Error(`Campaign type not supported: ${manifest.type}`);
+      }
+    } catch (error) {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
-        `Campaign type not supported: ${manifest.type}`,
+        error.message as string,
       );
     }
 
@@ -330,6 +365,7 @@ export class CampaignsService {
           ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
         ),
         fundTokenSymbol: campaignTokenSymbol,
+        fundTokenDecimals: campaignTokenDecimals,
       },
     };
   }
@@ -348,6 +384,22 @@ export class CampaignsService {
         await this.campaignsRepository.findForProgressRecording();
 
       for (const campaign of campaignsToCheck) {
+        const signer = this.web3Service.getSigner(campaign.chainId);
+        const escrowClient = await EscrowClient.build(signer);
+        const escrowStatus = await escrowClient.getStatus(campaign.address);
+        /**
+         * Safety-belt for case when tracking job
+         * has not cancelled this campaign yet, but
+         * it's already cancelled on blockchain
+         */
+        if (escrowStatus === EscrowStatus.Cancelled) {
+          this.logger.warn('Campaign cancelled, skipping progress recording', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          continue;
+        }
         /**
          * Right now for simplicity process sequentially.
          * Later we can add "fastq" usage for parallel processing
@@ -375,9 +427,9 @@ export class CampaignsService {
           action: 'record-campaign-progress',
           campaignId: campaign.id,
           chainId: campaign.chainId,
-          campaignAdddress: campaign.address,
+          campaignAddress: campaign.address,
           exchangeName: campaign.exchangeName,
-          pair: campaign.pair,
+          symbol: campaign.symbol,
         });
         logger.debug('Campaign progress recording started');
 
@@ -414,7 +466,7 @@ export class CampaignsService {
               chain_id: campaign.chainId,
               address: campaign.address,
               exchange: campaign.exchangeName,
-              pair: campaign.pair,
+              symbol: campaign.symbol,
               results: [],
             };
           }
@@ -448,18 +500,60 @@ export class CampaignsService {
             endDate,
           );
 
-          await this.recordGeneratedVolume(campaign, progress);
+          let progressValueTarget: number;
+          let progressValue: number;
+          if (isMarketMakingCampaign(campaign)) {
+            progressValueTarget = campaign.details.dailyVolumeTarget;
+            progressValue = (progress.meta as MarketMakingMeta).total_volume;
+          } else if (isHoldingCampaign(campaign)) {
+            progressValueTarget = campaign.details.dailyBalanceTarget;
+            progressValue = (progress.meta as HoldingMeta).total_balance;
+          } else {
+            throw new Error(
+              `Unknown campaign type for reward pool calculation: ${campaign.type}`,
+            );
+          }
 
-          intermediateResults.results.push(progress);
+          const rewardPool = this.calculateRewardPool({
+            maxRewardPool: this.calculateDailyReward(campaign),
+            progressValueTarget,
+            progressValue,
+            fundTokenDecimals: campaign.fundTokenDecimals,
+          });
+
+          const intermediateResult: IntermediateResult = {
+            from: progress.from,
+            to: progress.to,
+            reserved_funds: rewardPool,
+            participants_outcomes_batches: [],
+            ...progress.meta,
+          };
+          for (const chunk of _.chunk(
+            progress.participants_outcomes,
+            ESCROW_BULK_PAYOUT_MAX_ITEMS,
+          )) {
+            intermediateResult.participants_outcomes_batches.push({
+              id: crypto.randomUUID(),
+              results: chunk,
+            });
+          }
+
+          intermediateResults.results.push(intermediateResult);
+
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(intermediateResults);
 
           logger.info('Campaign progress recorded', {
             from: progress.from,
             to: progress.to,
-            total_volume: progress.total_volume,
+            reserved_funds: rewardPool,
+            ...progress.meta,
             resultsUrl: storedResultsMeta.url,
           });
+
+          if (isMarketMakingCampaign(campaign)) {
+            void this.recordGeneratedVolume(campaign, intermediateResult);
+          }
 
           /**
            * There might be situations when due to delays/failures in processing
@@ -486,14 +580,14 @@ export class CampaignsService {
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-  ): Promise<IntermediateResult> {
+  ): Promise<CampaignProgress<CampaignProgressMeta>> {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
       {
         exchangeName: campaign.exchangeName,
-        tradingPair: campaign.pair,
-        tradingPeriodStart: startDate,
-        tradingPeriodEnd: endDate,
+        symbol: campaign.symbol,
+        periodStart: startDate,
+        periodEnd: endDate,
       },
     );
 
@@ -501,7 +595,6 @@ export class CampaignsService {
       campaign.id,
     );
 
-    let totalVolume = 0;
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
       const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
@@ -509,69 +602,77 @@ export class CampaignsService {
         campaign.exchangeName,
       );
 
-      const participantOutcomes =
-        await campaignProgressChecker.checkForParticipant({
-          apiKey: exchangeApiKey.apiKey,
-          secret: exchangeApiKey.secretKey,
-        });
+      try {
+        const { abuseDetected, ...participantOutcomes } =
+          await campaignProgressChecker.checkForParticipant({
+            apiKey: exchangeApiKey.apiKey,
+            secret: exchangeApiKey.secretKey,
+          });
 
-      if (participantOutcomes.abuseDetected) {
-        this.logger.warn('Abuse detected. Skipping participant outcome', {
-          campaignId: campaign.id,
-          participantId: participant.id,
-          startDate,
-          endDate,
+        if (abuseDetected) {
+          this.logger.warn('Abuse detected. Skipping participant outcome', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            startDate,
+            endDate,
+          });
+          continue;
+        }
+
+        outcomes.push({
+          address: participant.evmAddress,
+          ...participantOutcomes,
         });
-        continue;
+      } catch (error) {
+        if (error instanceof ExchangeApiAccessError) {
+          this.logger.warn('Participant lacks necessary exchange API access', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            startDate,
+            endDate,
+            error,
+          });
+          continue;
+        }
+
+        throw error;
       }
-
-      /**
-       * !!! NOTE !!!
-       * There can be a situation where two campaign participants
-       * have a trade between each other, so total volume
-       * is not 100% accurate in this case, but probability of it is
-       * negligible so omit it here. Later RepO can verify it if needed.
-       */
-      totalVolume += participantOutcomes.totalVolume;
-
-      outcomes.push({
-        address: participant.evmAddress,
-        score: participantOutcomes.score,
-        total_volume: participantOutcomes.totalVolume,
-      });
-    }
-
-    const outcomesBatches: ParticipantsOutcomesBatch[] = [];
-    for (const chunk of _.chunk(outcomes, ESCROW_BULK_PAYOUT_MAX_ITEMS)) {
-      outcomesBatches.push({
-        id: crypto.randomUUID(),
-        results: chunk,
-      });
     }
 
     return {
       from: startDate.toISOString(),
       to: endDate.toISOString(),
-      total_volume: totalVolume,
-      participants_outcomes_batches: outcomesBatches,
+      participants_outcomes: outcomes,
+      meta: campaignProgressChecker.getCollectedMeta(),
     };
   }
 
   private getCampaignProgressChecker(
     campaignType: string,
     campaignCheckerSetup: CampaignProgressCheckerSetup,
-  ): CampaignProgressChecker {
+  ): CampaignProgressChecker<ProgressCheckResult, CampaignProgressMeta> {
     const exchangeApiClientFactory = this.moduleRef.get(
       ExchangeApiClientFactory,
       { strict: false },
     );
 
     switch (campaignType) {
-      default:
-        return new MarketMakingResultsChecker(
+      case CampaignType.MARKET_MAKING:
+        return new MarketMakingProgressChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );
+      case CampaignType.HOLDING:
+        return new HoldingProgressChecker(
+          exchangeApiClientFactory,
+          campaignCheckerSetup,
+        );
+      default:
+        throw new Error(`No progress checker for ${campaignType} campaign`);
     }
   }
 
@@ -592,6 +693,44 @@ export class CampaignsService {
     );
 
     return JSON.parse(intermediateResults.toString());
+  }
+
+  calculateDailyReward(campaign: CampaignEntity): number {
+    const campaignDurationDays = Math.ceil(
+      dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
+    );
+
+    const fundAmount = Number(campaign.fundAmount);
+
+    const dailyReward = decimalUtils.div(fundAmount, campaignDurationDays);
+
+    const truncatedDailyReward = decimalUtils.truncate(
+      dailyReward,
+      campaign.fundTokenDecimals,
+    );
+
+    return truncatedDailyReward;
+  }
+
+  calculateRewardPool(input: {
+    maxRewardPool: number;
+    progressValueTarget: number;
+    progressValue: number;
+    fundTokenDecimals: number;
+  }): number {
+    const rewardRatio = Math.min(
+      input.progressValue / input.progressValueTarget,
+      1,
+    );
+
+    const rewardPool = rewardRatio * input.maxRewardPool;
+
+    const truncatedRewardPool = decimalUtils.truncate(
+      rewardPool,
+      input.fundTokenDecimals,
+    );
+
+    return truncatedRewardPool;
   }
 
   private async recordCampaignIntermediateResults(
@@ -631,7 +770,7 @@ export class CampaignsService {
     intermediateResult: IntermediateResult,
   ): Promise<void> {
     try {
-      const [_baseTokenSymbol, quoteTokenSymbol] = campaign.pair.split('/');
+      const [_baseTokenSymbol, quoteTokenSymbol] = campaign.symbol.split('/');
 
       const quoteTokenPriceUsd =
         await this.web3Service.getTokenPriceUsd(quoteTokenSymbol);
@@ -640,7 +779,8 @@ export class CampaignsService {
         return;
       }
 
-      const volumeUsd = intermediateResult.total_volume * quoteTokenPriceUsd;
+      const volumeUsd =
+        (intermediateResult.total_volume as number) * quoteTokenPriceUsd;
 
       await this.volumeStatsRepository.upsert(
         {
@@ -648,7 +788,7 @@ export class CampaignsService {
           campaignAddress: campaign.address,
           periodStart: new Date(intermediateResult.from),
           periodEnd: new Date(intermediateResult.to),
-          volume: intermediateResult.total_volume.toString(),
+          volume: (intermediateResult.total_volume as number).toString(),
           volumeUsd: volumeUsd.toString(),
         },
         ['exchangeName', 'campaignAddress', 'periodStart'],
@@ -658,13 +798,13 @@ export class CampaignsService {
     }
   }
 
-  @Cron(COMPLETION_TRACKING_SCHEDULE)
-  async trackCampaignsCompletion(): Promise<void> {
-    this.logger.debug('Campaigns completion tracking job started');
+  @Cron(CAMPAIGNS_FINISH_TRACKING_SCHEDULE)
+  async trackCampaignsFinish(): Promise<void> {
+    this.logger.debug('Campaigns finish tracking job started');
 
     try {
       const campaignsToTrack =
-        await this.campaignsRepository.findForCompletionTracking();
+        await this.campaignsRepository.findForFinishTracking();
 
       for (const campaign of campaignsToTrack) {
         const escrow = await EscrowUtils.getEscrow(
@@ -672,20 +812,29 @@ export class CampaignsService {
           campaign.address,
         );
 
-        const completeStatusString = EscrowStatus[EscrowStatus.Complete];
-        if (escrow.status === completeStatusString) {
-          this.logger.info('Completing campaign', {
+        if (escrow.status === EscrowStatus[EscrowStatus.Complete]) {
+          this.logger.info('Marking campaign as completed', {
             campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
           });
           campaign.status = CampaignStatus.COMPLETED;
+          await this.campaignsRepository.save(campaign);
+        } else if (escrow.status === EscrowStatus[EscrowStatus.Cancelled]) {
+          this.logger.info('Marking campaign as cancelled', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          campaign.status = CampaignStatus.CANCELLED;
           await this.campaignsRepository.save(campaign);
         }
       }
     } catch (error) {
-      this.logger.error('Error while tracking campaigns completion', error);
+      this.logger.error('Error while tracking campaigns finish', error);
     }
 
-    this.logger.debug('Campaigns completion tracking job finished');
+    this.logger.debug('Campaigns finish tracking job finished');
   }
 
   async checkUserJoined(
@@ -723,6 +872,14 @@ export class CampaignsService {
       throw new CampaignNotFoundError(chainId, campaignAddress);
     }
 
+    const now = new Date();
+    if (now < campaign.startDate) {
+      throw new CampaignNotStartedError(chainId, campaignAddress);
+    }
+    if (now > campaign.endDate) {
+      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
+    }
+
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
@@ -730,14 +887,6 @@ export class CampaignsService {
       );
     if (!isUserJoined) {
       throw new UserIsNotParticipatingError();
-    }
-
-    const now = new Date();
-    if (now < campaign.startDate) {
-      throw new CampaignNotStartedError(chainId, campaignAddress);
-    }
-    if (now > campaign.endDate) {
-      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
     // Calculate start of the active timeframe (end is now)
@@ -763,24 +912,30 @@ export class CampaignsService {
       campaignsProgressCache.set(cacheKey, {
         from: progress.from,
         to: progress.to,
-        total_volume: progress.total_volume,
-        participants_outcomes: progress.participants_outcomes_batches.flatMap(
-          (batch) => batch.results,
-        ),
+        meta: progress.meta,
+        participants_outcomes: progress.participants_outcomes,
       });
     }
 
-    const progress = campaignsProgressCache.get(cacheKey) as CampaignProgress;
-    const participant = progress.participants_outcomes.find(
+    const progress = campaignsProgressCache.get(
+      cacheKey,
+    ) as CampaignProgress<CampaignProgressMeta>;
+    const {
+      score: myScore,
+      address: _address,
+      ...myMeta
+    } = progress.participants_outcomes.find(
       (p) => p.address === evmAddress,
-    );
+    ) || {
+      score: 0,
+    };
 
     return {
       from: progress.from,
       to: progress.to,
-      totalVolume: progress.total_volume,
-      myScore: participant?.score ?? 0,
-      myVolume: participant?.total_volume ?? 0,
+      myScore,
+      myMeta,
+      totalMeta: progress.meta,
     };
   }
 }

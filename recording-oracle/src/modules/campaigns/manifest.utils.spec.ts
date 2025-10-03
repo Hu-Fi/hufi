@@ -1,29 +1,24 @@
+import * as crypto from 'crypto';
+
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
 
 import { generateTradingPair } from '@/modules/exchange/fixtures';
 
-import { generateCampaignManifest } from './fixtures';
+import {
+  generateManifestResponse,
+  generateMarketMakingCampaignManifest,
+  generateHoldingCampaignManifest,
+} from './fixtures';
 import * as manifestUtils from './manifest.utils';
-
-function generateManifestResponse() {
-  const manifest = generateCampaignManifest();
-
-  return {
-    ...manifest,
-    start_date: manifest.start_date.toISOString(),
-    end_date: manifest.end_date.toISOString(),
-  };
-}
-
-const MANIFEST_RESPONSE_KEYS = Object.keys(generateManifestResponse());
+import { CampaignType } from './types';
 
 describe('manifest utils', () => {
   describe('downloadCampaignManifest', () => {
-    let manifest: string;
+    let manifestUrl: string;
 
     beforeEach(() => {
-      manifest = faker.internet.url();
+      manifestUrl = faker.internet.url();
     });
 
     afterEach(() => {
@@ -35,12 +30,12 @@ describe('manifest utils', () => {
     });
 
     it('should throw when manifest not found', async () => {
-      const scope = nock(manifest).get('/').reply(404);
+      const scope = nock(manifestUrl).get('/').reply(404);
 
       let thrownError;
       try {
         await manifestUtils.downloadCampaignManifest(
-          manifest,
+          manifestUrl,
           faker.string.hexadecimal(),
         );
       } catch (error) {
@@ -56,11 +51,11 @@ describe('manifest utils', () => {
     it('should throw when invalid manifest hash', async () => {
       const mockedManifest = generateManifestResponse();
       const invalidHash = faker.string.hexadecimal();
-      const scope = nock(manifest).get('/').reply(200, mockedManifest);
+      const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
 
       let thrownError;
       try {
-        await manifestUtils.downloadCampaignManifest(manifest, invalidHash);
+        await manifestUtils.downloadCampaignManifest(manifestUrl, invalidHash);
       } catch (error) {
         thrownError = error;
       }
@@ -71,12 +66,33 @@ describe('manifest utils', () => {
       expect(thrownError.message).toBe('Invalid file hash');
     });
 
+    it('should download manifest and return when hash is valid', async () => {
+      const mockedManifest = JSON.stringify(generateManifestResponse());
+      const mockedManifestHash = crypto
+        .createHash('sha1')
+        .update(mockedManifest)
+        .digest('hex');
+      const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
+
+      const manifest = await manifestUtils.downloadCampaignManifest(
+        manifestUrl,
+        mockedManifestHash,
+      );
+
+      scope.done();
+
+      expect(manifest).toBe(mockedManifest);
+    });
+  });
+
+  describe('validateBaseSchema', () => {
+    const MANIFEST_RESPONSE_KEYS = Object.keys(generateManifestResponse());
+
     it.each([
+      // all properties are invalid format
       {
-        type: faker.number.int(),
-        exchange: faker.lorem.word(),
-        daily_volume_target: faker.number.float({ min: -42, max: 0 }),
-        pair: generateTradingPair().replace('/', '-'),
+        type: faker.string.symbol(),
+        exchange: faker.string.symbol(),
         // dates are not in ISO format
         start_date: faker.date.recent().toDateString(),
         end_date: faker.date.future().toDateString(),
@@ -111,12 +127,12 @@ describe('manifest utils', () => {
         return invalidResponses;
       })(),
     ])(
-      'should throw when invalid manifest schema [%#]',
+      'should throw when invalid base manifest schema [%#]',
       async (manifestResponse) => {
         const manifest = JSON.stringify(manifestResponse);
         let thrownError;
         try {
-          manifestUtils.validateSchema(manifest);
+          manifestUtils.validateBaseSchema(manifest);
         } catch (error) {
           thrownError = error;
         }
@@ -126,10 +142,10 @@ describe('manifest utils', () => {
       },
     );
 
-    it('should validate manifest', async () => {
+    it('should validate base manifest schema', async () => {
       const mockedManifest = generateManifestResponse();
 
-      const manifest = manifestUtils.validateSchema(
+      const manifest = manifestUtils.validateBaseSchema(
         JSON.stringify(mockedManifest),
       );
 
@@ -140,22 +156,108 @@ describe('manifest utils', () => {
       });
     });
 
-    it('should validate manifest and strip unknown fields', async () => {
+    it('should validate base manifest and keep unknown fields', async () => {
       const strippedManifest = generateManifestResponse();
       const manifestWithExtra = {
         ...strippedManifest,
         unknown_field: faker.string.sample(),
       };
 
-      const manifest = manifestUtils.validateSchema(
+      const manifest = manifestUtils.validateBaseSchema(
         JSON.stringify(manifestWithExtra),
       );
 
       expect(manifest).toEqual({
-        ...strippedManifest,
+        ...manifestWithExtra,
         start_date: new Date(strippedManifest.start_date),
         end_date: new Date(strippedManifest.end_date),
       });
+    });
+  });
+
+  describe('assertValidMarketMakingCampaignManifest', () => {
+    const validManifest = generateMarketMakingCampaignManifest();
+
+    it('should not throw for valid manifest', () => {
+      expect(
+        manifestUtils.assertValidMarketMakingCampaignManifest(validManifest),
+      ).toBeUndefined();
+    });
+
+    it.each([
+      // invalid (lowercased) type
+      Object.assign({}, validManifest, {
+        type: CampaignType.MARKET_MAKING.toLowerCase(),
+      }),
+      // invalid trading pair symbol
+      Object.assign({}, validManifest, {
+        pair: generateTradingPair().replace('/', '-'),
+      }),
+      // token symbol instead of trading pair
+      Object.assign({}, validManifest, {
+        pair: faker.finance.currencyCode(),
+      }),
+      // invalid volume target
+      Object.assign({}, validManifest, {
+        daily_volume_target: faker.number.int({ min: -42, max: 0 }),
+      }),
+      // missing volume target
+      Object.assign({}, validManifest, {
+        daily_volume_target: undefined,
+      }),
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError;
+      try {
+        manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid market making campaign manifest schema',
+      );
+    });
+  });
+
+  describe('assertValidHoldingCampaignManifest', () => {
+    const validManifest = generateHoldingCampaignManifest();
+
+    it('should not throw for valid manifest', () => {
+      expect(
+        manifestUtils.assertValidHoldingCampaignManifest(validManifest),
+      ).toBeUndefined();
+    });
+
+    it.each([
+      // invalid (lowercased) type
+      Object.assign({}, validManifest, {
+        type: CampaignType.HOLDING.toLowerCase(),
+      }),
+      // trading pair instead of token symbol
+      Object.assign({}, validManifest, {
+        symbol: generateTradingPair(),
+      }),
+      // invalid balance target
+      Object.assign({}, validManifest, {
+        daily_balance_target: faker.number.int({ min: -42, max: 0 }),
+      }),
+      // missing balance target
+      Object.assign({}, validManifest, {
+        daily_balance_target: undefined,
+      }),
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError;
+      try {
+        manifestUtils.assertValidHoldingCampaignManifest(manifest);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid holding campaign manifest schema',
+      );
     });
   });
 });

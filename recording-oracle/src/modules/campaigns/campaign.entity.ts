@@ -9,7 +9,7 @@ import {
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 
-import { CampaignStatus } from './types';
+import { type CampaignDetails, CampaignStatus, CampaignType } from './types';
 
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'campaigns' })
 @Index(['chainId', 'address'], { unique: true })
@@ -23,17 +23,17 @@ export class CampaignEntity {
   @Column('varchar', { length: 42 })
   address: string;
 
-  @Column('varchar', { length: 40 })
-  type: string;
-
-  @Column({ type: 'decimal', precision: 20, scale: 8 })
-  dailyVolumeTarget: string;
+  @Column({
+    type: 'enum',
+    enum: CampaignType,
+  })
+  type: CampaignType;
 
   @Column('varchar', { length: 20 })
   exchangeName: string;
 
   @Column('varchar', { length: 20 })
-  pair: string;
+  symbol: string;
 
   @Column({ type: 'timestamptz' })
   startDate: Date;
@@ -46,6 +46,12 @@ export class CampaignEntity {
 
   @Column('varchar', { length: 20 })
   fundToken: string;
+
+  @Column('int')
+  fundTokenDecimals: number;
+
+  @Column('jsonb')
+  details: CampaignDetails;
 
   @Column({ type: 'timestamptz', nullable: true })
   lastResultsAt: Date | null;

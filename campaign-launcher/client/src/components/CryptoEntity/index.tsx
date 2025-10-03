@@ -3,30 +3,30 @@ import { FC } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { getTokenInfo } from '../../utils';
+import { getSymbolStyles } from '../CampaignSymbol';
 
-export type CryptoEntityProps = {
-  name: string;
-  displayName?: string;
-  logo?: string;
+type Props = {
+  symbol: string;
+  size?: 'small' | 'medium' | 'large';
 };
 
-export const CryptoEntity: FC<CryptoEntityProps> = ({
-  name,
-  displayName,
-  logo,
-}) => {
-  const { icon, label } = getTokenInfo(name);
-  const entityIcon = icon || logo;
-  
+export const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
+  const { icon, label } = getTokenInfo(symbol);
+
   return (
     <Box display="flex" alignItems="center" gap={1}>
-      {entityIcon && <img src={entityIcon} alt={name} width={24} />}
-      <Typography
-        color="primary"
-        variant="body2"
-        sx={{ textTransform: 'capitalize' }}
-      >
-        {label ?? displayName ?? name}
+      {icon && (
+        <Box
+          component="img"
+          src={icon}
+          alt={label}
+          width={getSymbolStyles(size).image.width}
+          border={getSymbolStyles(size).image.border}
+          borderRadius="100%"
+        />
+      )}
+      <Typography color="primary" {...getSymbolStyles(size).text}>
+        {label}
       </Typography>
     </Box>
   );

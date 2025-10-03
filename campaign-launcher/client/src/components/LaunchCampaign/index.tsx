@@ -5,8 +5,7 @@ import { Box, Button, SxProps, Tooltip, Typography } from '@mui/material';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useStakeContext } from '../../providers/StakeProvider';
-import CreateCampaignModal from '../modals/CreateCampaignModal';
-import StakeHmtPromptModal from '../modals/StakeHmtPromptModal';
+import CampaignSetupModal from '../modals/CampaignSetupModal';
 
 type Props = {
   variant: 'outlined' | 'contained';
@@ -50,28 +49,18 @@ const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({ isDisabled, 
 }
 
 const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
-  const [openCreateCampaignModal, setOpenCreateCampaignModal] = useState(false);
-  const [openStakeHmtPromptModal, setOpenStakeHmtPromptModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
-  const { stakedAmount, isFetchingInfo, isClientInitializing } =
-    useStakeContext();
+  const { isClientInitializing } = useStakeContext();
 
-  const isDisabled = !signer || isClientInitializing || isFetchingInfo;
-
-  const handleOpenCreateCampaignModal = () => {
-    setOpenCreateCampaignModal(true);
-  };
+  const isDisabled = !signer || isClientInitializing;
 
   const onClick = async () => {
     if (isDisabled) return null;
 
-    if (+(stakedAmount ?? '0') > 0) {
-      setOpenCreateCampaignModal(true);
-    } else {
-      setOpenStakeHmtPromptModal(true);
-    }
+    setIsModalOpen(true);
   };
 
   return (
@@ -91,14 +80,9 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
           Launch Campaign
         </Button>
       </ButtonWrapper>
-      <StakeHmtPromptModal
-        open={openStakeHmtPromptModal}
-        onClose={() => setOpenStakeHmtPromptModal(false)}
-        handleOpenCreateCampaignModal={handleOpenCreateCampaignModal}
-      />
-      <CreateCampaignModal
-        open={openCreateCampaignModal}
-        onClose={() => setOpenCreateCampaignModal(false)}
+      <CampaignSetupModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </>
   );

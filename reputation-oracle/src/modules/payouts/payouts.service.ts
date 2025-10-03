@@ -7,11 +7,11 @@ import {
   TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 
 import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
-import * as decimalUtils from '@/common/utils/decimal';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { WalletWithProvider, Web3Service } from '@/modules/web3';
@@ -43,13 +43,16 @@ export class PayoutsService {
     });
 
     for (const chainId of this.web3Service.supportedChainIds) {
+      const chainLogger = this.logger.child({ chainId });
+      chainLogger.info('Looking for campaigns to pay out');
       const campaigns = await this.getCampaignsForPayouts(chainId);
 
       if (campaigns.length > 0) {
-        logger.info('Found campaigns waiting for payouts', {
-          chainId,
+        chainLogger.info('Found campaigns waiting for payouts', {
           campaigns: campaigns.map((c) => c.address),
         });
+      } else {
+        chainLogger.info('No campaigns found for payouts');
       }
 
       for (const campaign of campaigns) {
@@ -90,18 +93,6 @@ export class PayoutsService {
           throw new Error('Intermediate results are not recorded');
         }
 
-        const dailyReward = payoutsUtils.calculateDailyReward(
-          campaign,
-          manifest,
-        );
-        logger.info('Calculated daily reward for campaign', {
-          startDate: manifest.start_date,
-          endDate: manifest.end_date,
-          fundAmount: campaign.fundAmount,
-          fundTokenAddress: campaign.fundTokenAddress,
-          dailyReward,
-        });
-
         const finalResultsMeta = await this.uploadFinalResults(
           campaign,
           intermediateResultsData,
@@ -113,15 +104,16 @@ export class PayoutsService {
           campaign.chainId,
         );
 
+        const rewardsBatchesToPay: CalculatedRewardsBatch[] = [];
+        let totalReservedFunds = new Decimal(0);
         for (const intermediateResult of intermediateResultsData.results) {
-          if (intermediateResult.total_volume === 0) {
-            continue;
-          }
+          totalReservedFunds = totalReservedFunds.plus(
+            intermediateResult.reserved_funds,
+          );
 
-          const rewardsBatches = this.calculateRewardsForDailyResult(
+          const rewardsBatches = this.calculateRewardsForIntermediateResult(
             intermediateResult,
-            dailyReward,
-            manifest.daily_volume_target,
+            campaign.fundTokenDecimals,
           );
 
           logger.info('Rewards calculated', {
@@ -132,6 +124,12 @@ export class PayoutsService {
 
           for (const rewardsBatch of rewardsBatches) {
             /**
+             * All participants in batch got zero reward -> nothing to pay
+             */
+            if (rewardsBatch.rewards.length === 0) {
+              continue;
+            }
+            /**
              * Temp hack to avoid double-payouts until payoutId is added to escrow.
              *
              * Rationale: payout batches are run sequentially and in case
@@ -141,54 +139,57 @@ export class PayoutsService {
              */
             if (bulkPayoutsCount > 0) {
               bulkPayoutsCount -= 1;
+
+              /**
+               * Also subtract amount of this paid batch
+               * from total reserved value for check
+               */
+              let batchTotalReward = new Decimal(0);
+              for (const reward of rewardsBatch.rewards) {
+                batchTotalReward = batchTotalReward.plus(reward.amount);
+              }
+
+              totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
               continue;
             }
 
-            const recipientToAmountMap = new Map<string, bigint>();
-            for (const { address, amount } of rewardsBatch.rewards) {
-              const truncatedAmount = decimalUtils.truncate(
-                amount,
-                campaign.fundTokenDecimals,
-              );
-              /**
-               * Escrow contract doesn't allow payout of 0 amount,
-               * so just skip it for final payouts. It covers cases when:
-               * - 0 reward in general
-               * - reward became 0 after truncating, i.e. it was too small
-               */
-              if (truncatedAmount === 0) {
-                continue;
-              }
+            rewardsBatchesToPay.push(rewardsBatch);
+          }
+        }
 
-              recipientToAmountMap.set(
-                address,
-                ethers.parseUnits(
-                  truncatedAmount.toString(),
-                  campaign.fundTokenDecimals,
-                ),
-              );
-            }
+        const escrowBalance = await escrowClient.getBalance(campaign.address);
+        if (totalReservedFunds.greaterThan(escrowBalance)) {
+          throw new Error('Expected payouts amount higher than reserved funds');
+        }
 
-            const gasPrice = await this.web3Service.calculateGasPrice(
-              campaign.chainId,
-            );
-
-            await escrowClient.bulkPayOut(
-              campaign.address,
-              Array.from(recipientToAmountMap.keys()),
-              Array.from(recipientToAmountMap.values()),
-              finalResultsMeta.url,
-              finalResultsMeta.hash,
-              /**
-               * TODO: replace it with batch id when SDK is updated
-               */
-              1,
-              false,
-              {
-                gasPrice,
-              },
+        for (const rewardsBatchToPay of rewardsBatchesToPay) {
+          const recipientToAmountMap = new Map<string, bigint>();
+          for (const { address, amount } of rewardsBatchToPay.rewards) {
+            recipientToAmountMap.set(
+              address,
+              ethers.parseUnits(amount.toString(), campaign.fundTokenDecimals),
             );
           }
+
+          const gasPrice = await this.web3Service.calculateGasPrice(
+            campaign.chainId,
+          );
+
+          await escrowClient.bulkPayOut(
+            campaign.address,
+            Array.from(recipientToAmountMap.keys()),
+            Array.from(recipientToAmountMap.values()),
+            finalResultsMeta.url,
+            finalResultsMeta.hash,
+            /**
+             * TODO: replace it with batch id when SDK is updated
+             */
+            1,
+            false,
+            {
+              gasPrice,
+            },
+          );
         }
 
         const lastResultsAt = intermediateResultsData.results
@@ -221,22 +222,16 @@ export class PayoutsService {
     }
   }
 
-  private calculateRewardsForDailyResult(
+  private calculateRewardsForIntermediateResult(
     intermediateResult: IntermediateResult,
-    dailyReward: number,
-    dailyVolumeTarget: number,
+    tokenDecimals: number,
   ): CalculatedRewardsBatch[] {
-    const rewardRatio = Math.min(
-      intermediateResult.total_volume / dailyVolumeTarget,
-      1,
-    );
+    const rewardPool = intermediateResult.reserved_funds;
 
-    const totalSharedReward = rewardRatio * dailyReward;
-
-    let totalScore = 0;
+    let totalScore = new Decimal(0);
     for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
       for (const outcome of outcomesBatch.results) {
-        totalScore += outcome.score;
+        totalScore = totalScore.plus(outcome.score);
       }
     }
 
@@ -248,18 +243,28 @@ export class PayoutsService {
       };
 
       for (const outcome of outcomesBatch.results) {
-        let rewardAmount = 0;
+        let rewardAmount = new Decimal(0);
 
         if (outcome.score > 0) {
-          const participantShare = decimalUtils.div(totalScore, outcome.score);
+          const participantShare = Decimal.div(outcome.score, totalScore);
 
-          rewardAmount = decimalUtils.div(totalSharedReward, participantShare);
+          rewardAmount = Decimal.mul(rewardPool, participantShare);
         }
 
-        rewardsBatch.rewards.push({
-          address: outcome.address,
-          amount: rewardAmount,
-        });
+        /**
+         * Escrow contract doesn't allow payout of 0 amount.
+         * In case if the participant's share is so small
+         * that it's lower than minumum payable amount - omit it.
+         */
+        const truncatedRewardAmount = Number(
+          rewardAmount.toFixed(tokenDecimals, Decimal.ROUND_DOWN),
+        );
+        if (truncatedRewardAmount > 0) {
+          rewardsBatch.rewards.push({
+            address: outcome.address,
+            amount: truncatedRewardAmount,
+          });
+        }
       }
 
       rewardsBatches.push(rewardsBatch);
@@ -281,7 +286,7 @@ export class PayoutsService {
       .update(stringifiedResults)
       .digest('hex');
 
-    const fileName = `${campaign.address}.json`;
+    const fileName = `${campaign.address}/${resultsHash}.json`;
 
     const resultsUrl = await this.storageService.uploadData(
       stringifiedResults,

@@ -7,6 +7,7 @@ import { CampaignDetails } from '../../types';
 import { getChainIcon, getNetworkName, mapStatusToColor } from '../../utils';
 import dayjs from '../../utils/dayjs';
 import CampaignAddress from '../CampaignAddress';
+import CampaignTypeLabel from '../CampaignTypeLabel';
 import CustomTooltip from '../CustomTooltip';
 
 const formatDate = (dateString: string): string => {
@@ -25,23 +26,38 @@ type Props = {
 const CampaignInfo: FC<Props> = ({ campaign }) => {
   const isCompleted = campaign.status === 'completed';
   return (
-    <Box display="flex" alignItems="center" height={{ xs: 'auto', md: '40px' }} gap={4} flexWrap={{ xs: "wrap", md: "nowrap" }}>
+    <Box
+      display="flex"
+      alignItems="center"
+      height={{ xs: 'auto', md: '40px' }}
+      gap={4}
+      flexWrap={{ xs: 'wrap', md: 'nowrap' }}
+    >
+      <CampaignTypeLabel campaignType={campaign.type} />
       <Box
         display="flex"
         alignItems="center"
         justifyContent="center"
-        py={0.5}
-        px="10px"
-        color={isCompleted ? "text.primary" : "primary.contrast"}
-        bgcolor={mapStatusToColor(campaign.status, campaign.start_date, campaign.end_date)}
-        fontSize="13px"
-        fontWeight={600}
+        ml={-2}
+        px={2}
+        py="6px"
+        bgcolor={mapStatusToColor(
+          campaign.status,
+          campaign.start_date,
+          campaign.end_date
+        )}
         borderRadius="4px"
         textTransform="capitalize"
       >
-        {campaign.status}
+        <Typography variant="subtitle2" color={isCompleted ? 'secondary.contrast' : 'primary.contrast'}>
+          {campaign.status}
+        </Typography>
       </Box>
-      <CampaignAddress address={campaign.address} chainId={campaign.chain_id} withCopy />
+      <CampaignAddress
+        address={campaign.address}
+        chainId={campaign.chain_id}
+        withCopy
+      />
       <Box display="flex" alignItems="center" gap={1}>
         {campaign?.start_date && campaign?.end_date && (
           <>
@@ -51,7 +67,9 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
                 {formatDate(campaign.start_date)}
               </Typography>
             </CustomTooltip>
-            <Typography component="span" variant="subtitle2">-</Typography>
+            <Typography component="span" variant="subtitle2">
+              -
+            </Typography>
             <CustomTooltip arrow placement="top" title={formatTime(campaign.end_date)}>
               <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
                 {formatDate(campaign.end_date)}

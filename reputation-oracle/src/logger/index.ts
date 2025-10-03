@@ -19,13 +19,11 @@ if (isLogLevel(LOG_LEVEL_OVERRIDE)) {
   logLevel = LogLevel.DEBUG;
 }
 
-const forcePretty = process.env.LOGGER_PRETTY === 'true';
-
 const defaultLogger = createLogger(
   {
     name: 'DefaultLogger',
     level: logLevel,
-    pretty: forcePretty || isDevelopment,
+    pretty: isDevelopment || process.env.LOG_PRETTY === 'true',
     disabled: Environment.isTest(),
   },
   {

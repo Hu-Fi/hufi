@@ -1,21 +1,24 @@
-import * as crypto from 'crypto';
-
 import Joi from 'joi';
 
 import * as httpUtils from '@/common/utils/http';
 
-import type { CampaignManifest } from './types';
+import {
+  CampaignDetails,
+  CampaignManifestBase,
+  CampaignType,
+  HoldingCampaignDetails,
+  MarketMakingCampaignDetails,
+  type CampaignManifest,
+  type HoldingCampaignManifest,
+  type MarketMakingCampaignManifest,
+} from './types';
 
-const manifestSchema = Joi.object({
-  type: Joi.string().required(),
-  exchange: Joi.string().required(),
-  daily_volume_target: Joi.number().greater(0).required(),
-  pair: Joi.string()
-    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
-    .required(),
+const baseManifestSchema = Joi.object({
+  type: Joi.string().min(2).required(),
+  exchange: Joi.string().min(2).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
-}).options({ allowUnknown: true, stripUnknown: true });
+}).options({ allowUnknown: true, stripUnknown: false });
 
 export async function downloadCampaignManifest(
   url: string,
@@ -30,17 +33,80 @@ export async function downloadCampaignManifest(
   return manifestData.toString();
 }
 
-export function calculateManifestHash(manifest: string): string {
-  return crypto.createHash('sha1').update(manifest).digest('hex');
-}
-
-export function validateSchema(manifest: string): CampaignManifest {
+export function validateBaseSchema(manifest: string): CampaignManifestBase {
   try {
     const manifestJson = JSON.parse(manifest);
-    const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
+    const validatedManifest = Joi.attempt(manifestJson, baseManifestSchema);
 
     return validatedManifest;
   } catch {
     throw new Error('Invalid manifest schema');
+  }
+}
+
+const marketMakingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.MARKET_MAKING),
+  pair: Joi.string()
+    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
+    .required(),
+  daily_volume_target: Joi.number().greater(0).required(),
+});
+export function assertValidMarketMakingCampaignManifest(
+  manifest: CampaignManifestBase,
+): asserts manifest is MarketMakingCampaignManifest {
+  try {
+    Joi.assert(manifest, marketMakingManifestSchema);
+  } catch {
+    throw new Error('Invalid market making campaign manifest schema');
+  }
+}
+
+const holdingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.HOLDING),
+  symbol: Joi.string()
+    .pattern(/^[A-Z]{3,10}$/)
+    .required(),
+  daily_balance_target: Joi.number().greater(0).required(),
+});
+export function assertValidHoldingCampaignManifest(
+  manifest: CampaignManifestBase,
+): asserts manifest is HoldingCampaignManifest {
+  try {
+    Joi.assert(manifest, holdingManifestSchema);
+  } catch {
+    throw new Error('Invalid holding campaign manifest schema');
+  }
+}
+
+export function extractCampaignDetails(manifest: CampaignManifest): {
+  symbol: string;
+  details: CampaignDetails;
+} {
+  switch (manifest.type) {
+    case CampaignType.MARKET_MAKING: {
+      const _manifest = manifest as MarketMakingCampaignManifest;
+      const details: MarketMakingCampaignDetails = {
+        dailyVolumeTarget: _manifest.daily_volume_target,
+      };
+      return {
+        symbol: _manifest.pair,
+        details,
+      };
+    }
+    case CampaignType.HOLDING: {
+      const _manifest = manifest as HoldingCampaignManifest;
+      const details: HoldingCampaignDetails = {
+        dailyBalanceTarget: _manifest.daily_balance_target,
+      };
+      return {
+        symbol: _manifest.symbol,
+        details,
+      };
+    }
+    default:
+      throw new Error(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        `Can't extract ${(manifest as any).type} campaign details`,
+      );
   }
 }

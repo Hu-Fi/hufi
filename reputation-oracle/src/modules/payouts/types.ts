@@ -1,10 +1,8 @@
 import { IEscrow } from '@human-protocol/sdk';
 
-export type CampaignManifest = {
+export type BaseCampaignManifest = {
   type: string;
-  daily_volume_target: number;
   exchange: string;
-  pair: string;
   start_date: string;
   end_date: string;
 };
@@ -27,7 +25,6 @@ export type CampaignWithResults = Required<
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume: number;
 };
 
 export type ParticipantsOutcomesBatch = {
@@ -38,7 +35,7 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: Date;
   to: Date;
-  total_volume: number;
+  reserved_funds: number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
 };
 
@@ -46,7 +43,6 @@ export type IntermediateResultsData = {
   chain_id: number;
   address: string;
   exchange: string;
-  pair: string;
   results: IntermediateResult[];
 };
 

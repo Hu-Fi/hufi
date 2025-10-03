@@ -188,6 +188,38 @@ const Support: FC = () => {
         </Typography>
         <Accordion disableGutters slotProps={{ ...firstAccordionSlotProps }}>
           <AccordionSummary
+            aria-controls="market-making-campaign-content"
+            id="market-making-campaign-header"
+            expandIcon={<ExpandMoreIcon />}
+          >
+            <Typography variant="body1">What is a Market Making campaign?</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2">
+              A Market Making campaign sets up a task for market makers to generate a specified amount 
+              of trading activity on a chosen trading pair (e.g., ETH/USDT) at a given exchange (e.g. MEXC). 
+              This helps boost visibility, attract organic traders, and strengthen the market presence of the pair.
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
+          <AccordionSummary
+            aria-controls="holding-campaign-content"
+            id="holding-campaign-header"
+            expandIcon={<ExpandMoreIcon />}
+          >
+            <Typography variant="body1">What is a Holding campaign?</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2">
+              A Holding campaign requires market makers to keep a specified amount of a token (e.g., ETH) available 
+              in their exchange (e.g. MEXC) account balance. This guarantees that sufficient inventory is always on 
+              hand for quoting buy and sell orders, which supports deeper order books, tighter spreads, and smoother trading conditions.
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
+          <AccordionSummary
             aria-controls="calculate-rewards-content"
             id="calculate-rewards-header"
             expandIcon={<ExpandMoreIcon />}

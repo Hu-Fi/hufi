@@ -40,4 +40,22 @@ export class ExchangesController {
       await this.exchangesService.getExchangeTradingPairs(exchangeName);
     return exchangeTradingPairs;
   }
+
+  @ApiOperation({
+    summary: 'Returns list of currencies supported by exchange',
+  })
+  @ApiResponse({
+    status: 200,
+    type: Array<string>,
+  })
+  @Header('Cache-Control', 'public, max-age=300')
+  @Get('/:exchange_name/currencies')
+  async getExchangeCurrencies(
+    @Param() params: ExchangeNameParamDto,
+  ): Promise<string[]> {
+    const exchangeName = params.exchangeName;
+    const exchangeCurrencies =
+      await this.exchangesService.getExchangeCurrencies(exchangeName);
+    return exchangeCurrencies;
+  }
 }

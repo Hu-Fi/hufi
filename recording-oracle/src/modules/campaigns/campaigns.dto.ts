@@ -1,4 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsEnum,
@@ -15,7 +20,7 @@ import {
   type ChainId,
 } from '@/common/constants';
 
-import { ReturnedCampaignStatus } from './types';
+import { CampaignDetails, CampaignType, ReturnedCampaignStatus } from './types';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
@@ -32,27 +37,18 @@ export class JoinCampaignSuccessDto {
   id: string;
 }
 
-export class JoinedCampaignDto {
+class JoinedCampaignDto {
   @ApiProperty({ name: 'chain_id' })
   chainId: number;
 
   @ApiProperty()
   address: string;
 
-  @ApiProperty()
-  status: string;
-
-  @ApiProperty({ name: 'processing_status' })
-  processingStatus: string;
-
   @ApiProperty({ name: 'exchange_name' })
   exchangeName: string;
 
-  @ApiProperty({ name: 'trading_pair' })
-  tradingPair: string;
-
-  @ApiProperty({ name: 'daily_volume_target' })
-  dailyVolumeTarget: number;
+  @ApiProperty()
+  symbol: string;
 
   @ApiProperty({ name: 'start_date' })
   startDate: string;
@@ -65,6 +61,42 @@ export class JoinedCampaignDto {
 
   @ApiProperty({ name: 'fund_token' })
   fundToken: string;
+
+  @ApiProperty()
+  status: string;
+
+  @ApiProperty({ name: 'processing_status' })
+  processingStatus: string;
+
+  type: CampaignType;
+
+  details: CampaignDetails;
+}
+
+class MarketMakingCampaignDetailsDto {
+  @ApiProperty({ name: 'daily_volume_target' })
+  dailyVolumeTarget: number;
+}
+
+class MarketMakingCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.MARKET_MAKING] })
+  declare type: CampaignType.MARKET_MAKING;
+
+  @ApiProperty()
+  declare details: MarketMakingCampaignDetailsDto;
+}
+
+class HoldingCampaignDetailsDto {
+  @ApiProperty({ name: 'daily_balance_target' })
+  dailyBalanceTarget: number;
+}
+
+class HoldingCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.HOLDING] })
+  declare type: CampaignType.HOLDING;
+
+  @ApiProperty()
+  declare details: HoldingCampaignDetailsDto;
 }
 
 export class ListJoinedCampaignsQueryDto {
@@ -92,6 +124,7 @@ export class ListJoinedCampaignsQueryDto {
   skip?: number;
 }
 
+@ApiExtraModels(MarketMakingCampaignDto, HoldingCampaignDto)
 export class ListJoinedCampaignsSuccessDto {
   @ApiProperty({
     name: 'has_more',
@@ -99,7 +132,17 @@ export class ListJoinedCampaignsSuccessDto {
   hasMore: boolean;
 
   @ApiProperty({
-    type: JoinedCampaignDto,
+    oneOf: [
+      { $ref: getSchemaPath(MarketMakingCampaignDto) },
+      { $ref: getSchemaPath(HoldingCampaignDto) },
+    ],
+    discriminator: {
+      propertyName: 'type',
+      mapping: {
+        [CampaignType.MARKET_MAKING]: getSchemaPath(MarketMakingCampaignDto),
+        [CampaignType.HOLDING]: getSchemaPath(HoldingCampaignDto),
+      },
+    },
     isArray: true,
   })
   results: JoinedCampaignDto[];
@@ -146,17 +189,17 @@ export class GetUserProgressResponseDto {
   to: string;
 
   @ApiProperty({
-    name: 'total_volume',
-  })
-  totalVolume: number;
-
-  @ApiProperty({
     name: 'my_score',
   })
   myScore: number;
 
   @ApiProperty({
-    name: 'my_volume',
+    name: 'my_meta',
   })
-  myVolume: number;
+  myMeta: object;
+
+  @ApiProperty({
+    name: 'total_meta',
+  })
+  totalMeta: object;
 }

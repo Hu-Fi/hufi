@@ -10,7 +10,7 @@ import ERC20ABI from '../abi/ERC20.json';
 import { launcherApi } from '../api';
 import { oracles } from '../constants';
 import { useNetwork } from '../providers/NetworkProvider';
-import { EscrowCreateDto, ManifestUploadDto } from '../types';
+import { ManifestUploadDto, CampaignFormValues, CampaignType } from '../types';
 import { calculateHash, getTokenAddress } from '../utils';
 
 type CreateEscrowMutationResult = {
@@ -29,7 +29,7 @@ type CreateEscrowMutationState = {
   isSuccess: boolean;
   isIdle: boolean;
   stepsCompleted: number;
-  mutate: (variables: EscrowCreateDto) => Promise<void>;
+  mutate: (variables: CampaignFormValues) => Promise<void>;
   reset: () => void;
 };
 
@@ -44,6 +44,35 @@ const transformManifestTime = (
       : pickedDate.startOf('day')
     : pickedDate.endOf('day');
   return localDate.toISOString();
+};
+
+const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
+  const baseManifest = {
+    exchange: data.exchange,
+    start_date: transformManifestTime(data.start_date, true),
+    end_date: transformManifestTime(data.end_date, false),
+  };
+
+  switch (data.type) {
+    case CampaignType.MARKET_MAKING:
+      return {
+        ...baseManifest,
+        type: data.type,
+        pair: data.pair,
+        daily_volume_target: data.daily_volume_target,
+      };
+    case CampaignType.HOLDING:
+      return {
+        ...baseManifest,
+        type: data.type,
+        symbol: data.symbol,
+        daily_balance_target: data.daily_balance_target,
+      };
+    default: {
+      const _never: never = data;
+      return _never;
+    }
+  }
 };
 
 const useCreateEscrow = (): CreateEscrowMutationState => {
@@ -62,7 +91,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   const isIdle = !isLoading && !error && !data;
 
   const createEscrowMutation = useCallback(
-    async (variables: EscrowCreateDto) => {
+    async (variables: CampaignFormValues) => {
       if (!signer) {
         return;
       }
@@ -102,14 +131,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           tokenDecimals
         );
 
-        const manifest: ManifestUploadDto = {
-          type: 'MARKET_MAKING',
-          exchange: variables.exchange,
-          daily_volume_target: variables.daily_volume_target,
-          pair: variables.pair,
-          start_date: transformManifestTime(variables.start_date, true),
-          end_date: transformManifestTime(variables.end_date, false),
-        };
+        const manifest = createManifest(variables);
 
         const escrowAddress = await escrowClient.createEscrow(
           tokenAddress,
@@ -157,7 +179,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   );
 
   const mutate = useCallback(
-    async (variables: EscrowCreateDto) => {
+    async (variables: CampaignFormValues) => {
       setIsLoading(true);
       setError(undefined);
       try {

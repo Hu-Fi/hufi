@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { CampaignEntity } from './campaign.entity';
 import { CampaignStatus } from './types';
@@ -32,16 +32,15 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
 
     const results = await this.createQueryBuilder('campaign')
       .where('campaign.status = :status', { status: CampaignStatus.ACTIVE })
-      .andWhere('campaign.startDate <= :timeAgo', { timeAgo })
       .andWhere(
         `
-          campaign.lastResultsAt IS NULL
-          OR campaign.lastResultsAt <= :timeAgo
-          OR campaign.endDate <= :now
-        `,
+        campaign.endDate <= :now
+        OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
+        OR campaign.lastResultsAt <= :timeAgo
+      `,
         {
-          timeAgo,
           now,
+          timeAgo,
         },
       )
       .getMany();
@@ -49,10 +48,10 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     return results;
   }
 
-  async findForCompletionTracking(): Promise<CampaignEntity[]> {
+  async findForFinishTracking(): Promise<CampaignEntity[]> {
     return this.find({
       where: {
-        status: CampaignStatus.PENDING_COMPLETION,
+        status: In([CampaignStatus.PENDING_COMPLETION, CampaignStatus.ACTIVE]),
       },
     });
   }
