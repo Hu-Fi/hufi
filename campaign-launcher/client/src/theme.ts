@@ -22,11 +22,13 @@ declare module '@mui/material/styles' {
     'h4-mobile': React.CSSProperties;
     'h6-mobile': React.CSSProperties;
     tooltip: React.CSSProperties;
+    alert: React.CSSProperties;
   }
   interface TypographyVariantsOptions {
     'h4-mobile'?: React.CSSProperties;
     'h6-mobile'?: React.CSSProperties;
     tooltip?: React.CSSProperties;
+    alert?: React.CSSProperties;
   }
 }
 
@@ -35,6 +37,7 @@ declare module '@mui/material/Typography' {
     'h4-mobile': true;
     'h6-mobile': true;
     tooltip: true;
+    alert: true;
   }
 }
 
@@ -161,6 +164,13 @@ const createAppTheme = (mode: PaletteMode) => {
         lineHeight: '14px',
         letterSpacing: 0,
       },
+      alert: {
+        fontFamily: 'Roboto, sans-serif',
+        fontSize: 16,
+        fontWeight: 500,
+        lineHeight: '150%',
+        letterSpacing: '0.15px',
+      }
     },
     components: {
       MuiButton: {

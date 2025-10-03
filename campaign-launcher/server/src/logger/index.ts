@@ -23,7 +23,7 @@ const defaultLogger = createLogger(
   {
     name: 'DefaultLogger',
     level: logLevel,
-    pretty: isDevelopment,
+    pretty: isDevelopment || process.env.LOG_PRETTY === 'true',
     disabled: Environment.isTest(),
   },
   {

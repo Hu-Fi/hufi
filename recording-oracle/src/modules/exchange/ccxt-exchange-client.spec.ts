@@ -29,8 +29,10 @@ import type { Exchange } from 'ccxt';
 import logger from '@/logger';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
-import { ExchangeApiClientError } from './errors';
+import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import {
+  generateAccountBalance,
+  generateDepositAddressStructure,
   generateCcxtOpenOrder,
   generateCcxtTrade,
   generateExchangeName,
@@ -39,6 +41,14 @@ import {
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
+
+const testCcxtApiAccessErrors = [
+  ccxt.AccountNotEnabled,
+  ccxt.AccountSuspended,
+  ccxt.AuthenticationError,
+  ccxt.BadSymbol,
+  ccxt.PermissionDenied,
+] as const;
 
 describe('CcxtExchangeClient', () => {
   describe('constructor', () => {
@@ -155,7 +165,27 @@ describe('CcxtExchangeClient', () => {
         expect(logger.error).toHaveBeenCalledWith(expectedMessage, testError);
       });
 
+      it("should return false if can't fetch trades", async () => {
+        const now = Date.now();
+        const syntheticAuthError = new Error(faker.lorem.sentence());
+        mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
+
+        jest.useFakeTimers({ now });
+
+        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+
+        jest.useRealTimers();
+
+        expect(result).toBe(false);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
+          'ETH/USDT',
+          now,
+        );
+      });
+
       it("should return false if can't fetch the balance", async () => {
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         const syntheticAuthError = new Error(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
 
@@ -165,8 +195,34 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
       });
 
-      it('should return true if can fetch the balance', async () => {
-        mockedExchange.fetchBalance.mockResolvedValueOnce({});
+      it("should return false if can't fetch deposit address", async () => {
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
+        mockedExchange.fetchBalance.mockResolvedValueOnce(
+          generateAccountBalance([faker.finance.currencyCode()]),
+        );
+
+        const syntheticAuthError = new Error(faker.lorem.sentence());
+        mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
+          syntheticAuthError,
+        );
+
+        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+
+        expect(result).toBe(false);
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith('ETH');
+      });
+
+      it('should return true if has all necessary permissions', async () => {
+        mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
+        mockedExchange.fetchBalance.mockResolvedValueOnce(
+          generateAccountBalance([faker.finance.currencyCode()]),
+        );
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          generateDepositAddressStructure(),
+        );
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess();
 
@@ -217,6 +273,28 @@ describe('CcxtExchangeClient', () => {
           tradesSince.valueOf(),
         );
       });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchMyTrades.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchMyTrades(
+            tradingPair,
+            tradesSince.valueOf(),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe('Api access failed for fetchMyTrades');
+        expect(thrownError.cause).toBe(testError.message);
+      });
     });
 
     describe('fetchOpenOrders', () => {
@@ -260,6 +338,108 @@ describe('CcxtExchangeClient', () => {
           tradingPair,
           ordersSince.valueOf(),
         );
+      });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchOpenOrders.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchOpenOrders(
+            tradingPair,
+            ordersSince.valueOf(),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe(
+          'Api access failed for fetchOpenOrders',
+        );
+        expect(thrownError.cause).toBe(testError.message);
+      });
+    });
+
+    describe('fetchBalance', () => {
+      it('should fetch account balance and return it as is', async () => {
+        const tokenSymbol = faker.finance.currencyCode();
+        const mockedBalance = generateAccountBalance([tokenSymbol]);
+
+        mockedExchange.fetchBalance.mockResolvedValueOnce(mockedBalance);
+
+        const balance = await ccxtExchangeApiClient.fetchBalance();
+
+        expect(balance).toEqual(mockedBalance);
+
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchBalance.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchBalance();
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe('Api access failed for fetchBalance');
+        expect(thrownError.cause).toBe(testError.message);
+      });
+    });
+
+    describe('fetchDepositAddress', () => {
+      it('should fetch deposit address info and return just address', async () => {
+        const mockedAddressStructure = generateDepositAddressStructure();
+
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          mockedAddressStructure,
+        );
+
+        const address = await ccxtExchangeApiClient.fetchDepositAddress(
+          mockedAddressStructure.currency,
+        );
+
+        expect(address).toEqual(mockedAddressStructure.address);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          mockedAddressStructure.currency,
+        );
+      });
+
+      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+        const ErrorConstructore = faker.helpers.arrayElement(
+          testCcxtApiAccessErrors,
+        );
+        const testError = new ErrorConstructore(faker.lorem.sentence());
+        mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.fetchDepositAddress(
+            faker.finance.currencyCode(),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+        expect(thrownError.message).toBe(
+          'Api access failed for fetchDepositAddress',
+        );
+        expect(thrownError.cause).toBe(testError.message);
       });
     });
   });

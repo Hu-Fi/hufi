@@ -11,76 +11,122 @@ import { generateRandomHashString } from '~/test/fixtures/crypto';
 
 import { CampaignEntity } from '../campaign.entity';
 import type {
-  CampaignProgressCheckerSetup,
-  ParticipantAuthKeys,
+  BaseProgressCheckResult,
+  CampaignProgressChecker,
+  CampaignProgressMeta,
 } from '../progress-checking';
 import {
+  CampaignDetails,
+  CampaignProgress,
   CampaignStatus,
+  CampaignType,
   IntermediateResult,
   IntermediateResultsData,
+  ParticipantOutcome,
 } from '../types';
 
-export function generateCampaignEntity(
-  overrides: Partial<CampaignEntity> = {},
-): CampaignEntity {
+export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
+  const _type = type || faker.helpers.arrayElement(Object.values(CampaignType));
+
   const startDate = dayjs().subtract(1, 'days').toDate();
   const durationInDays = faker.number.int({ min: 3, max: 7 });
 
-  const campaign = {
+  let details: CampaignDetails;
+  switch (_type) {
+    case CampaignType.MARKET_MAKING:
+      details = {
+        dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
+      };
+      break;
+    case CampaignType.HOLDING:
+      details = {
+        dailyBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
+      };
+      break;
+  }
+
+  const campaign: Omit<CampaignEntity, 'beforeInsert' | 'beforeUpdate'> = {
     id: faker.string.uuid(),
     chainId: generateTestnetChainId(),
     address: ethers.getAddress(faker.finance.ethereumAddress()),
-    pair: generateTradingPair(),
+    type: _type,
     exchangeName: generateExchangeName(),
+    symbol: generateTradingPair(),
     startDate,
     endDate: dayjs(startDate).add(durationInDays, 'days').toDate(),
-    status: CampaignStatus.ACTIVE,
+    fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),
+    fundToken: faker.finance.currencyCode(),
+    fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
+    details,
     lastResultsAt: null,
+    status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };
 
-  Object.assign(campaign, overrides);
-
   return campaign as CampaignEntity;
 }
 
-export function generateProgressCheckerSetup(
-  overrides?: Partial<CampaignProgressCheckerSetup>,
-): CampaignProgressCheckerSetup {
-  const input: CampaignProgressCheckerSetup = {
-    exchangeName: generateExchangeName(),
-    tradingPair: generateTradingPair(),
-    tradingPeriodStart: faker.date.recent(),
-    tradingPeriodEnd: faker.date.future(),
+export function generateParticipantOutcome(
+  overrides: Partial<ParticipantOutcome> = {},
+): ParticipantOutcome {
+  const outcome: ParticipantOutcome = {
+    address: ethers.getAddress(faker.finance.ethereumAddress()),
+    score: faker.number.float(),
   };
 
-  Object.assign(input, overrides);
+  Object.assign(outcome, overrides);
 
-  return input;
+  return outcome;
 }
 
-export function generateParticipantAuthKeys(): ParticipantAuthKeys {
-  return {
-    apiKey: faker.string.sample(),
-    secret: faker.string.sample(),
-  };
-}
-
-export function generateIntermediateResult(endDate?: Date): IntermediateResult {
+export function generateCampaignProgress(
+  type: CampaignType,
+  endDate?: Date,
+): CampaignProgress<CampaignProgressMeta> {
   const to = endDate || faker.date.past();
+
+  let meta: CampaignProgressMeta;
+  switch (type) {
+    case CampaignType.MARKET_MAKING:
+      meta = {
+        total_volume: 0,
+      };
+      break;
+    case CampaignType.HOLDING:
+      meta = {
+        total_balance: 0,
+      };
+      break;
+  }
 
   return {
     from: dayjs(to).subtract(1, 'day').toISOString(),
     to: to.toISOString(),
-    total_volume: faker.number.float(),
-    participants_outcomes_batches: [
-      {
-        id: faker.string.uuid(),
-        results: [],
-      },
-    ],
+    meta,
+    participants_outcomes: [],
   };
+}
+
+export function generateIntermediateResult({
+  endDate,
+  meta,
+}: {
+  endDate?: Date;
+  meta?: Record<string, unknown>;
+} = {}): IntermediateResult {
+  const to = endDate || faker.date.past();
+
+  const intermediateResult = {
+    from: dayjs(to).subtract(1, 'day').toISOString(),
+    to: to.toISOString(),
+    reserved_funds: faker.number.float(),
+    participants_outcomes_batches: [],
+  };
+
+  Object.assign(intermediateResult, meta);
+
+  return intermediateResult;
 }
 
 export function generateIntermediateResultsData(
@@ -89,7 +135,7 @@ export function generateIntermediateResultsData(
   const data: IntermediateResultsData = {
     chain_id: generateTestnetChainId(),
     address: faker.finance.ethereumAddress(),
-    pair: generateTradingPair(),
+    symbol: generateTradingPair(),
     exchange: generateExchangeName(),
     results: [generateIntermediateResult()],
   };
@@ -104,4 +150,20 @@ export function generateStoredResultsMeta(): { url: string; hash: string } {
     url: faker.internet.url(),
     hash: generateRandomHashString('sha256'),
   };
+}
+
+export type MockProgressCheckResult = BaseProgressCheckResult & {
+  [meta: string]: unknown;
+};
+export class MockCampaignProgressChecker
+  implements
+    CampaignProgressChecker<
+      MockProgressCheckResult,
+      {
+        [meta: string]: unknown;
+      }
+    >
+{
+  checkForParticipant = jest.fn();
+  getCollectedMeta = jest.fn();
 }

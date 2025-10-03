@@ -11,7 +11,7 @@ import {
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
 import { TOKENS } from '../constants/tokens';
-import { Campaign, CampaignDetails, EscrowCreateDto } from '../types';
+import { Campaign, CampaignDetails, CampaignFormValues, CampaignType } from '../types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -83,13 +83,13 @@ export const mapStatusToColor = (
   endDate: string
 ) => {
   const theme = useTheme();
-  const today = new Date().toISOString();
+  const now = new Date().toISOString();
 
   switch (status) {
     case 'active':
-      if (today < startDate) {
+      if (now < startDate) {
         return theme.palette.warning.main;
-      } else if (today > endDate) {
+      } else if (now > endDate) {
         return theme.palette.error.main;
       } else {
         return theme.palette.success.main;
@@ -100,6 +100,28 @@ export const mapStatusToColor = (
       return theme.palette.secondary.main;
     default:
       return theme.palette.primary.main;
+  }
+};
+
+export const mapTypeToLabel = (type: CampaignType) => {
+  switch (type) {
+    case 'MARKET_MAKING':
+      return 'Market Making';
+    case 'HOLDING':
+      return 'Holding';
+    default:
+      return type;
+  }
+};
+
+export const getDailyTargetTokenSymbol = (campaignType: CampaignType, symbol: string) => {
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      return symbol.split('/')[1];
+    case CampaignType.HOLDING:
+      return symbol;
+    default:
+      return symbol.split('/')[1];
   }
 };
 
@@ -148,7 +170,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
 type ConstructCampaignDetailsProps = {
   chainId: ChainId;
   address: string;
-  data: EscrowCreateDto;
+  data: CampaignFormValues;
   tokenDecimals: number;
   fees: {
     exchangeOracleFee: bigint;
@@ -173,9 +195,14 @@ export const constructCampaignDetails = ({
     id: address,
     chain_id: chainId,
     address: address,
+    type: data.type,
     exchange_name: data.exchange,
-    trading_pair: data.pair,
-    daily_volume_target: data.daily_volume_target,
+    ...(data.type === CampaignType.MARKET_MAKING && { trading_pair: data.pair }),
+    ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
+    details: {
+      ...(data.type === CampaignType.MARKET_MAKING && { daily_volume_target: data.daily_volume_target }),
+      ...(data.type === CampaignType.HOLDING && { daily_balance_target: data.daily_balance_target }),
+    },
     start_date: data.start_date,
     end_date: data.end_date,
     final_results_url: null,
@@ -229,4 +256,8 @@ export const getTokenInfo = (token: string) => {
     label: token,
     icon: null,
   };
+};
+
+export const convertFromSnakeCaseToTitleCase = (str: string) => {
+  return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };

@@ -15,10 +15,19 @@ import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
-import { CampaignData, CampaignDataWithDetails } from './campaigns.dto';
+import {
+  CampaignData,
+  CampaignDataWithDetails,
+  CampaignDetails,
+} from './campaigns.dto';
 import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
-import { CampaignManifest, CampaignOracleFees, CampaignStatus } from './types';
+import {
+  CampaignManifest,
+  CampaignOracleFees,
+  CampaignStatus,
+  CampaignType,
+} from './types';
 
 const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
@@ -92,7 +101,7 @@ export class CampaignsService {
           campaignEscrow.manifestHash,
         );
       } catch (error) {
-        this.logger.error('Failed to retrieve campaign manifest', {
+        this.logger.warn('Failed to retrieve campaign manifest', {
           chainId,
           campaignAddress: campaignEscrow.address,
           manifest: campaignEscrow.manifest,
@@ -107,12 +116,32 @@ export class CampaignsService {
         this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
       ]);
 
+      let details: CampaignDetails;
+      let symbol: string;
+
+      if (manifestUtils.isMarketMakingManifest(manifest)) {
+        symbol = manifest.pair;
+        details = {
+          dailyVolumeTarget: manifest.daily_volume_target,
+        };
+      } else if (manifestUtils.isHoldingManifest(manifest)) {
+        symbol = manifest.symbol;
+        details = {
+          dailyBalanceTarget: manifest.daily_balance_target,
+        };
+      } else {
+        // Should not happen at this point, just for typescript types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        throw new Error(`Unknown campaign type: ${(manifest as any).type}`);
+      }
+
       campaigns.push({
         chainId,
         address: ethers.getAddress(campaignEscrow.address),
+        type: manifest.type as CampaignType,
         exchangeName: manifest.exchange,
-        tradingPair: manifest.pair,
-        dailyVolumeTarget: manifest.daily_volume_target,
+        symbol,
+        details,
         startDate: manifest.start_date.toISOString(),
         endDate: manifest.end_date.toISOString(),
         fundAmount: campaignEscrow.totalFundedAmount,
@@ -205,12 +234,32 @@ export class CampaignsService {
      */
     const oracleFees = await this.getCampaignOracleFees(chainId, escrowAddress);
 
+    let details: CampaignDetails;
+    let symbol: string;
+
+    if (manifestUtils.isMarketMakingManifest(manifest)) {
+      symbol = manifest.pair;
+      details = {
+        dailyVolumeTarget: manifest.daily_volume_target,
+      };
+    } else if (manifestUtils.isHoldingManifest(manifest)) {
+      symbol = manifest.symbol;
+      details = {
+        dailyBalanceTarget: manifest.daily_balance_target,
+      };
+    } else {
+      // Should not happen at this point, just for typescript types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      throw new Error(`Unknown campaign type: ${(manifest as any).type}`);
+    }
+
     return {
       chainId,
       address: ethers.getAddress(escrowAddress),
+      type: manifest.type as CampaignType,
       exchangeName: manifest.exchange,
-      tradingPair: manifest.pair,
-      dailyVolumeTarget: manifest.daily_volume_target,
+      symbol,
+      details,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
       fundAmount: campaignEscrow.totalFundedAmount,

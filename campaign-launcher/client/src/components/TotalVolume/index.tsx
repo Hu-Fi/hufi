@@ -9,7 +9,7 @@ import FormattedNumber from '../FormattedNumber';
 
 const TotalVolume = () => {
   const [exchange, setExchange] = useState('');
-  const { exchanges } = useExchangesContext();
+  const { exchanges, isLoading: isExchangesLoading } = useExchangesContext();
   const { data: totalVolume, isLoading } = useGetTotalVolume(exchange || '');
 
   return (
@@ -21,6 +21,7 @@ const TotalVolume = () => {
             id="exchange-volume-select"
             value={exchange}
             displayEmpty
+            disabled={isExchangesLoading}
             onChange={(e) => setExchange(e.target.value)}
             label="Exchange"
             slotProps={{
@@ -30,6 +31,14 @@ const TotalVolume = () => {
                   py: 0,
                   fontSize: '14px',
                   fontWeight: 600,
+                },
+              },
+            }}
+            MenuProps={{
+              PaperProps: {
+                elevation: 4,
+                sx: {
+                  bgcolor: 'background.default',
                 },
               },
             }}

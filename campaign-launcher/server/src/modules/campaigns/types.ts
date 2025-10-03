@@ -1,12 +1,23 @@
-export type CampaignManifest = {
+type BaseCampaignManifest = {
   type: string;
-  daily_volume_target: number;
   exchange: string;
-  pair: string;
-  fund_token: string;
   start_date: Date;
   end_date: Date;
 };
+
+export type HoldingCampaignManifest = BaseCampaignManifest & {
+  symbol: string;
+  daily_balance_target: number;
+};
+
+export type MarketMakingCampaignManifest = BaseCampaignManifest & {
+  pair: string;
+  daily_volume_target: number;
+};
+
+export type CampaignManifest =
+  | HoldingCampaignManifest
+  | MarketMakingCampaignManifest;
 
 export enum CampaignStatus {
   ACTIVE = 'active',
@@ -19,3 +30,8 @@ export type CampaignOracleFees = {
   recordingOracleFee: number;
   reputationOracleFee: number;
 };
+
+export enum CampaignType {
+  MARKET_MAKING = 'MARKET_MAKING',
+  HOLDING = 'HOLDING',
+}
