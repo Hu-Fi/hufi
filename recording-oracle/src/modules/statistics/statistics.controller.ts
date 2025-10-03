@@ -45,8 +45,10 @@ export class StatisticsController {
     const cacheKey = `get-total-volume-for-${exchangeName || 'all'}`;
 
     if (!statsCache.has(cacheKey)) {
-      const totalVolume =
+      let totalVolume =
         await this.statisticsService.getTotalVolume(exchangeName);
+      // Harcoded total volume from legacy hufi version
+      totalVolume += 1024970.3547550276;
 
       statsCache.set(cacheKey, totalVolume);
     }
