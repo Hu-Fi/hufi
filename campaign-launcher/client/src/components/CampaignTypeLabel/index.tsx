@@ -17,7 +17,7 @@ const CampaignTypeLabel: FC<Props> = ({ campaignType }) => {
       justifyContent="center"
       px={2}
       py="6px"
-      bgcolor="primary.violet"
+      bgcolor="secondary.main"
       borderRadius="4px"
     >
       <Typography variant="subtitle2" color="secondary.contrast">
