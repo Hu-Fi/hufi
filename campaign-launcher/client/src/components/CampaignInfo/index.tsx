@@ -49,7 +49,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
         borderRadius="4px"
         textTransform="capitalize"
       >
-        <Typography variant="subtitle2" color={isCompleted ? 'text.primary' : 'primary.contrast'}>
+        <Typography variant="subtitle2" color={isCompleted ? 'secondary.contrast' : 'primary.contrast'}>
           {campaign.status}
         </Typography>
       </Box>
