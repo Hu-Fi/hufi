@@ -1,7 +1,7 @@
 import { FC, useState } from "react";
 
 import WarningIcon from '@mui/icons-material/Warning';
-import { Autocomplete, Button, Divider, Link, Stack, TextField, Typography } from "@mui/material";
+import { Autocomplete, Button, CircularProgress, Divider, Link, Stack, TextField, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
 import { ROUTES } from "../../../constants";
@@ -170,11 +170,11 @@ const CampaignSetupModal: FC<Props> = ({ open, onClose }) => {
                   <Button 
                     variant="contained" 
                     size="large" 
-                    sx={{ color: 'primary.contrast' }}
+                    sx={{ color: 'primary.contrast', width: 110 }}
                     disabled={isContinueDisabled}
                     onClick={handleClickOnContinue}
                   >
-                    Continue
+                    {isFetching ? <CircularProgress size={20} /> : 'Continue'}
                   </Button>
                 </Stack>
               </Stack>

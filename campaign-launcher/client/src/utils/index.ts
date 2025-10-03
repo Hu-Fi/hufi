@@ -141,7 +141,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
     'chain_id',
     'address',
     'exchange_name',
-    'trading_pair',
+    'symbol',
     'start_date',
     'end_date',
     'final_results_url',
@@ -197,7 +197,7 @@ export const constructCampaignDetails = ({
     address: address,
     type: data.type,
     exchange_name: data.exchange,
-    ...(data.type === CampaignType.MARKET_MAKING && { trading_pair: data.pair }),
+    ...(data.type === CampaignType.MARKET_MAKING && { symbol: data.pair }),
     ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
     details: {
       ...(data.type === CampaignType.MARKET_MAKING && { daily_volume_target: data.daily_volume_target }),

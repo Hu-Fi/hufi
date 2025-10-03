@@ -64,6 +64,10 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     await createEscrow(data);
   };
 
+  const handleTryAgainClick = () => {
+    stepsCompleted > 0 ? createEscrow(getValues()) : resetCreateEscrow();
+  }
+
   const handleClose = () => {
     resetForm();
     resetCreateEscrow();
@@ -110,7 +114,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
       }}
     >
       {showFinalView && <FinalView onViewDetails={onViewCampaignDetailsClick} />}
-      {isError && <ErrorView onRetry={resetCreateEscrow} />}
+      {isError && <ErrorView onRetry={handleTryAgainClick} />}
       {!showFinalView && !isError && (
         <form onSubmit={handleSubmit(submitForm)}>
           <Box
