@@ -15,6 +15,7 @@ export type CampaignWithResults = Required<
     | 'manifest'
     | 'manifestHash'
     | 'intermediateResultsUrl'
+    | 'launcher'
   > & {
     fundTokenAddress: string;
     fundTokenDecimals: number;
@@ -54,4 +55,9 @@ export type CalculatedReward = {
 export type CalculatedRewardsBatch = {
   id: string;
   rewards: CalculatedReward[];
+};
+
+export type FinalResultsMeta = {
+  url: string;
+  hash: string;
 };
