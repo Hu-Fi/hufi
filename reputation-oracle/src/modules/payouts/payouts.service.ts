@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 
-import type { ChainId } from '@/common/constants';
+import { EMPTY_RESULTS_TX_ID, type ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -180,13 +180,16 @@ export class PayoutsService {
            */
         }
 
-        const rawEscrowBalance = await escrowClient.getBalance(
+        const rawEscrowReservedFunds = await escrowClient.getReservedFunds(
           campaign.address,
         );
-        const escrowBalance = new Decimal(
-          ethers.formatUnits(rawEscrowBalance, campaign.fundTokenDecimals),
+        const escrowReservedFunds = new Decimal(
+          ethers.formatUnits(
+            rawEscrowReservedFunds,
+            campaign.fundTokenDecimals,
+          ),
         );
-        if (totalReservedFunds.greaterThan(escrowBalance)) {
+        if (totalReservedFunds.greaterThan(escrowReservedFunds)) {
           throw new Error('Expected payouts amount higher than reserved funds');
         }
 
@@ -214,10 +217,7 @@ export class PayoutsService {
             Array.from(recipientToAmountMap.values()),
             finalResultsMeta.url,
             finalResultsMeta.hash,
-            /**
-             * TODO: replace it with batch id when SDK is updated
-             */
-            1,
+            rewardsBatchToPay.id,
             false,
             {
               gasPrice,
@@ -256,6 +256,7 @@ export class PayoutsService {
       ) {
         // no auto-complete during payouts
         logger.info('Campaign is fully paid, completing it');
+
         const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
@@ -273,15 +274,9 @@ export class PayoutsService {
           [escrowBalance],
           finalResultsMeta.url,
           finalResultsMeta.hash,
-          /**
-           * TODO: replace it with some meaningful id
-           * when sdk is updated
-           */
-          1,
+          EMPTY_RESULTS_TX_ID,
           true,
-          {
-            gasPrice,
-          },
+          { gasPrice },
         );
       } else {
         logger.warn('Unexpected campaign escrow status', {
