@@ -151,7 +151,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           const oracleFees = await launcherApi.getOracleFees(appChainId);
           const _escrowAddress = await escrowClient.createEscrow(
             tokenAddress,
-            [signer.address],
             uuidV4()
           );
 
