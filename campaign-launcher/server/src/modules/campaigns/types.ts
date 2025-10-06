@@ -25,12 +25,6 @@ export enum CampaignStatus {
   COMPLETED = 'completed',
 }
 
-export type CampaignOracleFees = {
-  exchangeOracleFee: number;
-  recordingOracleFee: number;
-  reputationOracleFee: number;
-};
-
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
   HOLDING = 'HOLDING',
