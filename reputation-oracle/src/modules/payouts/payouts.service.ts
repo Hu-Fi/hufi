@@ -159,7 +159,12 @@ export class PayoutsService {
           }
         }
 
-        const escrowBalance = await escrowClient.getBalance(campaign.address);
+        const rawEscrowBalance = await escrowClient.getBalance(
+          campaign.address,
+        );
+        const escrowBalance = new Decimal(
+          ethers.formatUnits(rawEscrowBalance, campaign.fundTokenDecimals),
+        );
         if (totalReservedFunds.greaterThan(escrowBalance)) {
           throw new Error('Expected payouts amount higher than reserved funds');
         }
