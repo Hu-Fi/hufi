@@ -206,11 +206,30 @@ export class PayoutsService {
       }
 
       if (allResultsPaid) {
-        logger.info('Campaign is fully paid, completing it');
-        try {
-          await escrowClient.complete(campaign.address);
-        } catch (error) {
-          logger.error('Failed to complete campaign', error);
+        const escrowStatus = await escrowClient.getStatus(campaign.address);
+        if (escrowStatus === EscrowStatus.Complete) {
+          logger.info('Campaign auto-completed during payouts');
+        } else if (
+          [EscrowStatus.Partial, EscrowStatus.Paid].includes(escrowStatus)
+        ) {
+          // no auto-complete during payouts
+          logger.info('Campaign is fully paid, completing it');
+          try {
+            await escrowClient.complete(campaign.address);
+          } catch (error) {
+            logger.error('Failed to complete campaign', error);
+          }
+        } else if (escrowStatus === EscrowStatus.Pending) {
+          logger.info('Campaign ended with empty results, cancelling it');
+          try {
+            await escrowClient.cancel(campaign.address);
+          } catch (error) {
+            logger.error('Failed to cancel campaign', error);
+          }
+        } else {
+          logger.warn('Unexpected campaign escrow status', {
+            escrowStatus,
+          });
         }
       } else {
         logger.info('Campaign not finished yet, skip completion');
