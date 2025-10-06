@@ -1,7 +1,9 @@
 import { Escrow__factory } from '@human-protocol/core/typechain-types';
 import {
+  EscrowClient,
   EscrowStatus,
   EscrowUtils,
+  IEscrow,
   TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
@@ -176,6 +178,11 @@ export class CampaignsService {
       return null;
     }
 
+    /**
+     * TODO: remove when fixed in sdk, atm it's missing
+     */
+    campaignEscrow.chainId = chainId;
+
     if (!campaignEscrow.manifest) {
       throw new InvalidCampaignManifestError(
         chainId,
@@ -234,6 +241,8 @@ export class CampaignsService {
      */
     const oracleFees = await this.getCampaignOracleFees(chainId, escrowAddress);
 
+    const reservedFunds = await this.getReservedFunds(campaignEscrow);
+
     let details: CampaignDetails;
     let symbol: string;
 
@@ -284,6 +293,7 @@ export class CampaignsService {
       reputationOracleFeePercent: oracleFees.reputationOracleFee,
       intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
       finalResultsUrl: campaignEscrow.finalResultsUrl,
+      reservedFunds,
     };
   }
 
@@ -352,5 +362,41 @@ export class CampaignsService {
     }
 
     return campaignOraclesFeesCache.get(cacheKey) as CampaignOracleFees;
+  }
+
+  private async getReservedFunds(escrow: IEscrow): Promise<string> {
+    try {
+      /**
+       * This is to eliminate escrows that have been
+       * completed before `reservedFunds()` were introduced.
+       * We know for sure that there will be no escrows
+       * in these statuses when contracts are upgraded.
+       */
+      const escrowStatus =
+        EscrowStatus[escrow.status as keyof typeof EscrowStatus];
+      if (
+        ![
+          EscrowStatus.Pending,
+          EscrowStatus.Partial,
+          EscrowStatus.ToCancel,
+        ].includes(escrowStatus)
+      ) {
+        return '0';
+      }
+
+      const provider = this.web3Service.getProvider(escrow.chainId);
+      const escrowClient = await EscrowClient.build(provider);
+      const reservedFunds = await escrowClient.getReservedFunds(escrow.address);
+
+      return reservedFunds.toString();
+    } catch (error) {
+      const message = 'Failed to get reserved funds';
+      this.logger.error(message, {
+        chainId: escrow.chainId,
+        campaignAddress: escrow.address,
+        error,
+      });
+      throw new Error(message);
+    }
   }
 }

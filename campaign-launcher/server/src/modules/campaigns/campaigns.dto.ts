@@ -219,4 +219,9 @@ export class CampaignDataWithDetails extends CampaignData {
 
   @ApiProperty({ name: 'reputation_oracle_fee_percent' })
   reputationOracleFeePercent: number;
+
+  @ApiProperty({
+    name: 'reserved_funds',
+  })
+  reservedFunds: string;
 }
