@@ -545,9 +545,15 @@ export class CampaignsService {
           }
 
           intermediateResults.results.push(intermediateResult);
-
+          const fundsToReserve = ethers.parseUnits(
+            rewardPool.toString(),
+            campaign.fundTokenDecimals,
+          );
           const storedResultsMeta =
-            await this.recordCampaignIntermediateResults(intermediateResults);
+            await this.recordCampaignIntermediateResults(
+              intermediateResults,
+              fundsToReserve,
+            );
 
           logger.info('Campaign progress recorded', {
             from: progress.from,
@@ -741,6 +747,7 @@ export class CampaignsService {
 
   private async recordCampaignIntermediateResults(
     intermediateResults: IntermediateResultsData,
+    fundsToReserve: bigint,
   ): Promise<{ url: string; hash: string }> {
     const chainId = intermediateResults.chain_id;
     const campaignAddress = intermediateResults.address;
@@ -764,9 +771,15 @@ export class CampaignsService {
 
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
-    await escrowClient.storeResults(campaignAddress, resultsUrl, resultsHash, {
-      gasPrice,
-    });
+    await escrowClient.storeResults(
+      campaignAddress,
+      resultsUrl,
+      resultsHash,
+      fundsToReserve,
+      {
+        gasPrice,
+      },
+    );
 
     return { url: resultsUrl, hash: resultsHash };
   }
@@ -817,6 +830,14 @@ export class CampaignsService {
           campaign.chainId,
           campaign.address,
         );
+        if (!escrow) {
+          this.logger.error('Escrow data is missing for campaign', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          continue;
+        }
 
         if (escrow.status === EscrowStatus[EscrowStatus.Complete]) {
           this.logger.info('Marking campaign as completed', {
@@ -959,6 +980,9 @@ export class CampaignsService {
             latestKnownCampaign.chainId,
             latestKnownCampaign.address,
           );
+          if (!campaignEscrow) {
+            throw new Error('No escrow data for latest known campaign');
+          }
           /**
            * 'createdAt' is a tx block timestamp, so technically
            * there might be multiple escrows created within the same block
