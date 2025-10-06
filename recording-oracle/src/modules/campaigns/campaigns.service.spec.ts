@@ -15,7 +15,13 @@ import crypto from 'crypto';
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
-import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
+import {
+  EscrowClient,
+  EscrowStatus,
+  EscrowUtils,
+  IEscrow,
+  OrderDirection,
+} from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
@@ -88,8 +94,10 @@ const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 const mockStorageService = createMock<StorageService>();
-const mockWeb3Service = createMock<Web3Service>();
 const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
+
+const mockWeb3Service = createMock<Web3Service>();
+(mockWeb3Service.supportedChainIds as any) = [];
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
@@ -752,10 +760,9 @@ describe('CampaignsService', () => {
         null,
       );
 
-      const spyOnretrieveCampaignData = jest.spyOn(
-        campaignsService as any,
-        'retrieveCampaignData',
-      );
+      const spyOnretrieveCampaignData = jest
+        .spyOn(campaignsService as any, 'retrieveCampaignData')
+        .mockImplementation();
       const spyOnCreateCampaign = jest.spyOn(
         campaignsService,
         'createCampaign',
@@ -2622,6 +2629,300 @@ describe('CampaignsService', () => {
       });
 
       expect(rewardPool).toBe(maxRewardPool);
+    });
+  });
+
+  describe('discoverNewCampaigns', () => {
+    const originalSupportedChainIds = mockWeb3Service.supportedChainIds;
+    const supportedChainId = faker.number.int();
+
+    let spyOnRetrieveCampaignData: jest.SpyInstance;
+    let spyOnCreateCampaign: jest.SpyInstance;
+
+    beforeAll(() => {
+      spyOnRetrieveCampaignData = jest.spyOn(
+        campaignsService,
+        'retrieveCampaignData' as any,
+      );
+      spyOnRetrieveCampaignData.mockImplementation();
+
+      spyOnCreateCampaign = jest.spyOn(campaignsService, 'createCampaign');
+      spyOnCreateCampaign.mockImplementation();
+    });
+
+    beforeEach(() => {
+      (mockWeb3Service.supportedChainIds as any) = [supportedChainId];
+    });
+
+    afterAll(() => {
+      (mockWeb3Service.supportedChainIds as any) = originalSupportedChainIds;
+
+      spyOnRetrieveCampaignData.mockRestore();
+      spyOnCreateCampaign.mockRestore();
+    });
+
+    it('should run discovery for each supported chain', async () => {
+      (mockWeb3Service.supportedChainIds as any) = [
+        faker.number.int(),
+        faker.number.int(),
+      ];
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(
+        mockCampaignsRepository.findLatestCampaignForChain,
+      ).toHaveBeenCalledTimes(mockWeb3Service.supportedChainIds.length);
+      for (const chainId of mockWeb3Service.supportedChainIds) {
+        expect(
+          mockCampaignsRepository.findLatestCampaignForChain,
+        ).toHaveBeenCalledWith(chainId);
+      }
+    });
+
+    it('should use latest saved campaign for lookback', async () => {
+      const campaign = generateCampaignEntity();
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        campaign,
+      );
+      const escrowTimestamp = Math.round(faker.date.past().valueOf() / 1000);
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        createdAt: escrowTimestamp.toString(),
+      } as IEscrow);
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledTimes(1);
+      expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
+        chainId: supportedChainId,
+        recordingOracle: mockWeb3ConfigService.operatorAddress.toLowerCase(),
+        from: new Date(escrowTimestamp * 1000),
+        orderDirection: OrderDirection.ASC,
+        first: 10,
+      });
+    });
+
+    it('should use 1d ago for lookback if no latest campaign', async () => {
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        null,
+      );
+      const now = new Date();
+
+      const dayAgo = dayjs(now).subtract(1, 'day').toDate();
+
+      jest.useFakeTimers({ now });
+
+      await campaignsService.discoverNewCampaigns();
+
+      jest.useRealTimers();
+
+      expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledTimes(1);
+      expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
+        chainId: supportedChainId,
+        recordingOracle: mockWeb3ConfigService.operatorAddress.toLowerCase(),
+        from: dayAgo,
+        orderDirection: OrderDirection.ASC,
+        first: 10,
+      });
+    });
+
+    it('should not save discovered campaign if it already exists', async () => {
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        null,
+      );
+      mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(true);
+
+      const campaignAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
+      const escrow = {
+        address: campaignAddress.toLowerCase(),
+      } as IEscrow;
+      mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(mockCampaignsRepository.checkCampaignExists).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(mockCampaignsRepository.checkCampaignExists).toHaveBeenCalledWith(
+        supportedChainId,
+        campaignAddress,
+      );
+
+      expect(logger.debug).toHaveBeenCalledTimes(4);
+      expect(logger.debug).toHaveBeenNthCalledWith(
+        3,
+        'Discovered campaign already exists; skip it',
+        {
+          chainId: supportedChainId,
+          campaignAddress,
+        },
+      );
+    });
+
+    it('should save discovered campaign if not already exist', async () => {
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        null,
+      );
+      mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
+
+      const campaignAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
+      const escrow = {
+        address: campaignAddress.toLowerCase(),
+      } as IEscrow;
+      mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
+
+      const campaignManifest = generateCampaignManifest();
+      const escrowInfo = {
+        fundAmount: faker.number.float(),
+        fundTokenSymbol: faker.finance.currencyCode(),
+      };
+      spyOnRetrieveCampaignData.mockResolvedValueOnce({
+        manifest: campaignManifest,
+        escrowInfo,
+      });
+      const mockCampaign = { id: faker.string.uuid() };
+      spyOnCreateCampaign.mockResolvedValueOnce(mockCampaign);
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(spyOnRetrieveCampaignData).toHaveBeenCalledTimes(1);
+      expect(spyOnRetrieveCampaignData).toHaveBeenCalledWith(
+        supportedChainId,
+        campaignAddress,
+      );
+
+      expect(spyOnCreateCampaign).toHaveBeenCalledTimes(1);
+      expect(spyOnCreateCampaign).toHaveBeenCalledWith(
+        supportedChainId,
+        campaignAddress,
+        campaignManifest,
+        escrowInfo,
+      );
+
+      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith(
+        'Discovered and created new campaign',
+        {
+          chainId: supportedChainId,
+          campaignAddress,
+          campaignId: mockCampaign.id,
+        },
+      );
+    });
+
+    it('should not save and skip discovered campaign if invalid', async () => {
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        null,
+      );
+      mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
+
+      const campaignAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
+      const escrow = {
+        address: campaignAddress.toLowerCase(),
+      } as IEscrow;
+      mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
+
+      const syntheticError = new InvalidCampaign(
+        supportedChainId,
+        campaignAddress,
+        faker.lorem.sentence(),
+      );
+      spyOnRetrieveCampaignData.mockRejectedValueOnce(syntheticError);
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(spyOnRetrieveCampaignData).toHaveBeenCalledTimes(1);
+      expect(spyOnRetrieveCampaignData).toHaveBeenCalledWith(
+        supportedChainId,
+        campaignAddress,
+      );
+
+      expect(spyOnCreateCampaign).toHaveBeenCalledTimes(0);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Discovered campaign is not valid; skip it',
+        {
+          chainId: supportedChainId,
+          campaignAddress,
+          error: syntheticError,
+        },
+      );
+
+      expect(logger.error).toHaveBeenCalledTimes(0);
+    });
+
+    it('should rethrow and stop discovery if fails to retrieve some campaign', async () => {
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        null,
+      );
+      mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
+
+      const campaignAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
+      const escrow = {
+        address: campaignAddress.toLowerCase(),
+      } as IEscrow;
+      mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
+
+      const syntheticError = new Error(faker.lorem.sentence());
+      spyOnRetrieveCampaignData.mockRejectedValueOnce(syntheticError);
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(spyOnRetrieveCampaignData).toHaveBeenCalledTimes(1);
+      expect(spyOnRetrieveCampaignData).toHaveBeenCalledWith(
+        supportedChainId,
+        campaignAddress,
+      );
+
+      expect(spyOnCreateCampaign).toHaveBeenCalledTimes(0);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Failed to save discovered campaign',
+        {
+          chainId: supportedChainId,
+          campaignAddress,
+          error: syntheticError,
+        },
+      );
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error while discovering new campaigns for chain',
+        {
+          chainId: supportedChainId,
+          error: new Error('Failed to save campaign'),
+        },
+      );
+    });
+
+    it('should process each discovered campaign', async () => {
+      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
+        null,
+      );
+      mockCampaignsRepository.checkCampaignExists.mockResolvedValue(true);
+
+      const escrows = Array.from(
+        { length: faker.number.int({ min: 2, max: 4 }) },
+        () => ({
+          address: faker.finance.ethereumAddress(),
+        }),
+      );
+      mockedEscrowUtils.getEscrows.mockResolvedValueOnce(escrows as IEscrow[]);
+
+      await campaignsService.discoverNewCampaigns();
+
+      expect(mockCampaignsRepository.checkCampaignExists).toHaveBeenCalledTimes(
+        escrows.length,
+      );
     });
   });
 });

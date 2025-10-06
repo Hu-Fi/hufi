@@ -20,6 +20,7 @@ import * as payoutsUtils from './payouts.utils';
 import {
   CalculatedRewardsBatch,
   CampaignWithResults,
+  FinalResultsMeta,
   IntermediateResult,
   IntermediateResultsData,
 } from './types';
@@ -77,7 +78,8 @@ export class PayoutsService {
       const signer = this.web3Service.getSigner(campaign.chainId);
       const escrowClient = await EscrowClient.build(signer);
 
-      let allResultsPaid = false;
+      let hasPendingResults = true;
+      let finalResultsMeta: FinalResultsMeta;
       try {
         const [manifest, intermediateResultsData] = await Promise.all([
           payoutsUtils.retrieveCampaignManifest(
@@ -93,7 +95,7 @@ export class PayoutsService {
           throw new Error('Intermediate results are not recorded');
         }
 
-        const finalResultsMeta = await this.uploadFinalResults(
+        finalResultsMeta = await this.uploadFinalResults(
           campaign,
           intermediateResultsData,
         );
@@ -157,7 +159,12 @@ export class PayoutsService {
           }
         }
 
-        const escrowBalance = await escrowClient.getBalance(campaign.address);
+        const rawEscrowBalance = await escrowClient.getBalance(
+          campaign.address,
+        );
+        const escrowBalance = new Decimal(
+          ethers.formatUnits(rawEscrowBalance, campaign.fundTokenDecimals),
+        );
         if (totalReservedFunds.greaterThan(escrowBalance)) {
           throw new Error('Expected payouts amount higher than reserved funds');
         }
@@ -197,28 +204,56 @@ export class PayoutsService {
           ?.to.toISOString();
 
         if (lastResultsAt === manifest.end_date) {
-          allResultsPaid = true;
+          hasPendingResults = false;
         }
 
         logger.info('Finished payouts for campaign');
       } catch (error) {
         logger.error('Payouts failed for campaign', error);
+        return;
       }
 
-      if (allResultsPaid) {
-        logger.info('Campaign is fully paid, completing it');
-        try {
-          await escrowClient.complete(campaign.address);
-        } catch (error) {
-          logger.error('Failed to complete campaign', error);
-        }
-      } else {
+      if (hasPendingResults) {
         logger.info('Campaign not finished yet, skip completion');
+        return;
       }
 
-      logger.info('Finished payouts cycle for campaign');
+      const escrowStatus = await escrowClient.getStatus(campaign.address);
+      if (escrowStatus === EscrowStatus.Complete) {
+        logger.info('Campaign auto-completed during payouts');
+      } else if (
+        [EscrowStatus.Partial, EscrowStatus.Paid].includes(escrowStatus)
+      ) {
+        // no auto-complete during payouts
+        logger.info('Campaign is fully paid, completing it');
+
+        await escrowClient.complete(campaign.address);
+      } else if (escrowStatus === EscrowStatus.Pending) {
+        logger.info('Campaign ended with empty results, completing it');
+
+        const escrowBalance = await escrowClient.getBalance(campaign.address);
+        await escrowClient.bulkPayOut(
+          campaign.address,
+          [campaign.launcher],
+          [escrowBalance],
+          finalResultsMeta.url,
+          finalResultsMeta.hash,
+          /**
+           * TODO: replace it with some meaningful id
+           * when sdk is updated
+           */
+          1,
+          true,
+        );
+      } else {
+        logger.warn('Unexpected campaign escrow status', {
+          escrowStatus,
+        });
+      }
     } catch (error) {
       logger.error('Error while running payouts cycle for campaign', error);
+    } finally {
+      logger.info('Finished payouts cycle for campaign');
     }
   }
 
@@ -276,10 +311,7 @@ export class PayoutsService {
   private async uploadFinalResults(
     campaign: CampaignWithResults,
     finalResults: IntermediateResultsData,
-  ): Promise<{
-    url: string;
-    hash: string;
-  }> {
+  ): Promise<FinalResultsMeta> {
     const stringifiedResults = JSON.stringify(finalResults);
     const resultsHash = crypto
       .createHash('sha256')
@@ -334,6 +366,7 @@ export class PayoutsService {
         fundAmount: Number(
           ethers.formatUnits(escrow.totalFundedAmount, fundTokenDecimals),
         ),
+        launcher: escrow.launcher,
       });
     }
 
