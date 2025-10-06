@@ -2695,6 +2695,7 @@ describe('CampaignsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress.toLowerCase(),
+        status: EscrowStatus.Pending,
         from: new Date(escrowTimestamp * 1000),
         orderDirection: OrderDirection.ASC,
         first: 10,
@@ -2719,6 +2720,7 @@ describe('CampaignsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress.toLowerCase(),
+        status: EscrowStatus.Pending,
         from: dayAgo,
         orderDirection: OrderDirection.ASC,
         first: 10,
