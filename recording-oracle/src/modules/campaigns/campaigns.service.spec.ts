@@ -1027,10 +1027,10 @@ describe('CampaignsService', () => {
         .createHash('sha256')
         .update(stringifiedResultsData)
         .digest('hex');
-
+      const fundsToReserve = faker.number.bigInt({ min: 1 });
       const recordingResult = await campaignsService[
         'recordCampaignIntermediateResults'
-      ](intermediateResultsData);
+      ](intermediateResultsData, fundsToReserve);
 
       expect(recordingResult.url).toBe(mockedResultsFileUrl);
       expect(recordingResult.hash).toBe(resultsHash);
@@ -1047,6 +1047,7 @@ describe('CampaignsService', () => {
         intermediateResultsData.address,
         mockedResultsFileUrl,
         resultsHash,
+        fundsToReserve,
         {
           gasPrice: mockGasPrice,
         },
@@ -1605,21 +1606,24 @@ describe('CampaignsService', () => {
       await campaignsService.recordCampaignProgress(campaign);
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith({
-        chain_id: campaign.chainId,
-        address: campaign.address,
-        exchange: campaign.exchangeName,
-        symbol: campaign.symbol,
-        results: [
-          {
-            from: campaignProgress.from,
-            to: campaignProgress.to,
-            reserved_funds: 0,
-            participants_outcomes_batches: [],
-            ...campaignProgress.meta,
-          },
-        ],
-      });
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        {
+          chain_id: campaign.chainId,
+          address: campaign.address,
+          exchange: campaign.exchangeName,
+          symbol: campaign.symbol,
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              reserved_funds: 0,
+              participants_outcomes_batches: [],
+              ...campaignProgress.meta,
+            },
+          ],
+        },
+        0n,
+      );
     });
 
     it('should record campaign progress to existing results', async () => {
@@ -1655,6 +1659,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
         expectedNewIntermediateResultsData,
+        0n,
       );
     });
 
@@ -1699,6 +1704,10 @@ describe('CampaignsService', () => {
             },
           ],
         }),
+        ethers.parseUnits(
+          expectedRewardPool.toString(),
+          campaign.fundTokenDecimals,
+        ),
       );
     });
 
@@ -1742,6 +1751,10 @@ describe('CampaignsService', () => {
             },
           ],
         }),
+        ethers.parseUnits(
+          expectedRewardPool.toString(),
+          campaign.fundTokenDecimals,
+        ),
       );
     });
 
