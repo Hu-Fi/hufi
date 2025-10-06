@@ -1,4 +1,3 @@
-import { Escrow__factory } from '@human-protocol/core/typechain-types';
 import {
   EscrowClient,
   EscrowStatus,
@@ -9,7 +8,6 @@ import {
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
-import { LRUCache } from 'lru-cache';
 
 import { ChainId, ReadableEscrowStatus } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
@@ -24,12 +22,7 @@ import {
 } from './campaigns.dto';
 import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
-import {
-  CampaignManifest,
-  CampaignOracleFees,
-  CampaignStatus,
-  CampaignType,
-} from './types';
+import { CampaignManifest, CampaignStatus, CampaignType } from './types';
 
 const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
@@ -49,10 +42,6 @@ for (const [campaignStatus, escrowStatuses] of Object.entries(
       campaignStatus as CampaignStatus;
   }
 }
-
-const campaignOraclesFeesCache = new LRUCache<string, CampaignOracleFees>({
-  max: 1000,
-});
 
 @Injectable()
 export class CampaignsService {
@@ -236,11 +225,6 @@ export class CampaignsService {
       totalTransfersAmount += totalTransfersAmountInTx;
     }
 
-    /**
-     * Temporary workaround until we have this data in subgraph
-     */
-    const oracleFees = await this.getCampaignOracleFees(chainId, escrowAddress);
-
     const reservedFunds = await this.getReservedFunds(campaignEscrow);
 
     let details: CampaignDetails;
@@ -288,9 +272,15 @@ export class CampaignsService {
       recordingOracle: campaignEscrow.recordingOracle as string,
       reputationOracle: campaignEscrow.reputationOracle as string,
       balance: campaignEscrow.balance,
-      exchangeOracleFeePercent: oracleFees.exchangeOracleFee,
-      recordingOracleFeePercent: oracleFees.recordingOracleFee,
-      reputationOracleFeePercent: oracleFees.reputationOracleFee,
+      exchangeOracleFeePercent: Number(
+        campaignEscrow.exchangeOracleFee as string,
+      ),
+      recordingOracleFeePercent: Number(
+        campaignEscrow.recordingOracleFee as string,
+      ),
+      reputationOracleFeePercent: Number(
+        campaignEscrow.reputationOracleFee as string,
+      ),
       intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
       finalResultsUrl: campaignEscrow.finalResultsUrl,
       reservedFunds,
@@ -319,49 +309,6 @@ export class CampaignsService {
     }
 
     return manifestUtils.validateSchema(manifestJson);
-  }
-
-  private async getCampaignOracleFees(
-    chainId: ChainId,
-    campaignAddress: string,
-  ): Promise<CampaignOracleFees> {
-    const cacheKey = `${chainId}-${campaignAddress}`.toLowerCase();
-
-    if (!campaignOraclesFeesCache.has(cacheKey)) {
-      try {
-        const provider = this.web3Service.getProvider(chainId);
-        const escrowContract = Escrow__factory.connect(
-          campaignAddress,
-          provider,
-        );
-
-        const [
-          exchangeOracleFeePercentage,
-          recordingOracleFeePercentage,
-          reputationOracleFeePercentage,
-        ] = await Promise.all([
-          escrowContract.exchangeOracleFeePercentage(),
-          escrowContract.recordingOracleFeePercentage(),
-          escrowContract.reputationOracleFeePercentage(),
-        ]);
-
-        campaignOraclesFeesCache.set(cacheKey, {
-          exchangeOracleFee: Number(exchangeOracleFeePercentage),
-          recordingOracleFee: Number(recordingOracleFeePercentage),
-          reputationOracleFee: Number(reputationOracleFeePercentage),
-        });
-      } catch (error) {
-        const message = 'Failed to get oracles fees';
-        this.logger.error(message, {
-          chainId,
-          campaignAddress,
-          error,
-        });
-        throw new Error(message);
-      }
-    }
-
-    return campaignOraclesFeesCache.get(cacheKey) as CampaignOracleFees;
   }
 
   private async getReservedFunds(escrow: IEscrow): Promise<string> {
