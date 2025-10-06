@@ -31,14 +31,17 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     const timeAgo = dayjs().subtract(1, 'day').toDate();
 
     const results = await this.createQueryBuilder('campaign')
-      .where('campaign.status = :status', { status: CampaignStatus.ACTIVE })
-      .andWhere(
+      .where(
         `
-        campaign.endDate <= :now
-        OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
-        OR campaign.lastResultsAt <= :timeAgo
-      `,
+          campaign.status = :status
+          AND (
+            campaign.endDate <= :now
+            OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
+            OR campaign.lastResultsAt <= :timeAgo
+          )
+        `,
         {
+          status: CampaignStatus.ACTIVE,
           now,
           timeAgo,
         },
