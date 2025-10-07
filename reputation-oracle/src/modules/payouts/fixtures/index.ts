@@ -11,7 +11,7 @@ import {
   ParticipantOutcome,
 } from '../types';
 
-function generateManifest() {
+export function generateManifest() {
   const manifest = {
     exchange: faker.lorem.slug(),
     start_date: faker.date.past().toISOString(),
@@ -63,7 +63,7 @@ export function generateIntermediateResult(): IntermediateResult {
   const intermediateResult = {
     from: faker.date.recent(),
     to: faker.date.soon(),
-    reserved_funds: faker.number.int(),
+    reserved_funds: faker.number.int({ min: 1 }),
     participants_outcomes_batches: [],
   };
 

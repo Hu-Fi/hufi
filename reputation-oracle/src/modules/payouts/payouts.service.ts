@@ -95,11 +95,6 @@ export class PayoutsService {
           throw new Error('Intermediate results are not recorded');
         }
 
-        finalResultsMeta = await this.uploadFinalResults(
-          campaign,
-          intermediateResultsData,
-        );
-
         let bulkPayoutsCount = await this.getBulkPayoutsCount(
           signer,
           campaign.address,
@@ -169,6 +164,11 @@ export class PayoutsService {
           throw new Error('Expected payouts amount higher than reserved funds');
         }
 
+        finalResultsMeta = await this.uploadFinalResults(
+          campaign,
+          intermediateResultsData,
+        );
+
         for (const rewardsBatchToPay of rewardsBatchesToPay) {
           const recipientToAmountMap = new Map<string, bigint>();
           for (const { address, amount } of rewardsBatchToPay.rewards) {
@@ -226,12 +226,17 @@ export class PayoutsService {
       ) {
         // no auto-complete during payouts
         logger.info('Campaign is fully paid, completing it');
-
-        await escrowClient.complete(campaign.address);
+        const gasPrice = await this.web3Service.calculateGasPrice(
+          campaign.chainId,
+        );
+        await escrowClient.complete(campaign.address, { gasPrice });
       } else if (escrowStatus === EscrowStatus.Pending) {
         logger.info('Campaign ended with empty results, completing it');
 
         const escrowBalance = await escrowClient.getBalance(campaign.address);
+        const gasPrice = await this.web3Service.calculateGasPrice(
+          campaign.chainId,
+        );
         await escrowClient.bulkPayOut(
           campaign.address,
           [campaign.launcher],
@@ -244,6 +249,9 @@ export class PayoutsService {
            */
           1,
           true,
+          {
+            gasPrice,
+          },
         );
       } else {
         logger.warn('Unexpected campaign escrow status', {
