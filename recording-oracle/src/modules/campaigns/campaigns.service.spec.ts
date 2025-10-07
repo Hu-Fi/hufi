@@ -33,6 +33,11 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
+import {
+  ExchangeApiAccessError,
+  ExchangeApiClientError,
+  ExchangeApiClientFactory,
+} from '@/modules/exchange';
 import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { generateUserEntity } from '@/modules/users/fixtures';
@@ -72,6 +77,7 @@ import {
   MarketMakingProgressChecker,
 } from './progress-checking';
 import { HoldingMeta } from './progress-checking/holding';
+import { MarketMakingMeta } from './progress-checking/market-making';
 import {
   CampaignProgress,
   CampaignStatus,
@@ -82,12 +88,6 @@ import {
 } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
-import {
-  ExchangeApiAccessError,
-  ExchangeApiClientError,
-  ExchangeApiClientFactory,
-} from '../exchange';
-import { MarketMakingMeta } from './progress-checking/market-making';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
