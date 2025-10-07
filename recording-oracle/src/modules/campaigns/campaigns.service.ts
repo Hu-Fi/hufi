@@ -435,6 +435,7 @@ export class CampaignsService {
           campaignAddress: campaign.address,
           exchangeName: campaign.exchangeName,
           symbol: campaign.symbol,
+          type: campaign.type,
         });
         logger.debug('Campaign progress recording started');
 

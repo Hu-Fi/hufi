@@ -1352,14 +1352,41 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should run with pessimistic lock', async () => {
-      await campaignsService.recordCampaignProgress(campaign);
+    it('should run with pessimistic lock and correct child logger', async () => {
+      const spyOnLoggerChild = jest.spyOn(logger, 'child');
 
-      expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledTimes(1);
-      expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledWith(
-        `record-campaign-progress:${campaign.id}`,
-        expect.any(Function),
-      );
+      try {
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledTimes(1);
+        expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledWith(
+          `record-campaign-progress:${campaign.id}`,
+          expect.any(Function),
+        );
+
+        expect(logger.child).toHaveBeenCalledTimes(1);
+        expect(logger.child).toHaveBeenCalledWith({
+          action: 'record-campaign-progress',
+          campaignId: campaign.id,
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
+          exchangeName: campaign.exchangeName,
+          symbol: campaign.symbol,
+          type: campaign.type,
+        });
+
+        expect(logger.debug).toHaveBeenCalledTimes(2);
+        expect(logger.debug).toHaveBeenNthCalledWith(
+          1,
+          'Campaign progress recording started',
+        );
+        expect(logger.debug).toHaveBeenNthCalledWith(
+          2,
+          'Campaign progress recording finished',
+        );
+      } finally {
+        spyOnLoggerChild.mockRestore();
+      }
     });
 
     describe('error handling and logging', () => {
