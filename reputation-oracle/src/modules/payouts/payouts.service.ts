@@ -342,6 +342,10 @@ export class PayoutsService {
        * TODO: add "toCancelEscrows" when escrow cancelletion is done
        */
       status: [EscrowStatus.Pending, EscrowStatus.Partial],
+      /**
+       * We do not expect more than this active campaigns atm
+       */
+      first: 100,
     });
 
     const campaignsWithResults: CampaignWithResults[] = [];
