@@ -435,6 +435,7 @@ export class CampaignsService {
           campaignAddress: campaign.address,
           exchangeName: campaign.exchangeName,
           symbol: campaign.symbol,
+          type: campaign.type,
         });
         logger.debug('Campaign progress recording started');
 
@@ -972,6 +973,7 @@ export class CampaignsService {
         const newEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress.toLowerCase(),
+          status: EscrowStatus.Pending,
           from: lookbackDate,
           orderDirection: OrderDirection.ASC,
           first: 10,
