@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 
 import { ContentType } from '@/common/enums';
@@ -22,8 +23,11 @@ import {
 import {
   generateCampaign,
   generateEscrow,
+  generateIntermediateResult,
   generateIntermediateResultsData,
+  generateParticipantOutcome,
 } from './fixtures';
+import precisionSensitiveResult from './fixtures/precision_sensitive_result.json';
 import { PayoutsService } from './payouts.service';
 import { CampaignWithResults } from './types';
 
@@ -229,6 +233,90 @@ describe('PayoutsService', () => {
       for (const campaign of campaigns) {
         expect(spyOnRunPayoutsCycleForCampaign).toHaveBeenCalledWith(campaign);
       }
+    });
+  });
+
+  describe('calculateRewardsForIntermediateResult', () => {
+    const TEST_TOKEN_DECIMALS = faker.number.int({ min: 5, max: 18 });
+
+    it('should return rewards in batches', () => {
+      const rewardsBatches = payoutsService[
+        'calculateRewardsForIntermediateResult'
+      ](generateIntermediateResult(), TEST_TOKEN_DECIMALS);
+
+      expect(rewardsBatches.length).toBe(0);
+    });
+
+    it('should calculate rewards for all participants in batches', () => {
+      const intermediateResult = generateIntermediateResult();
+
+      const nBatches = faker.number.int({ min: 2, max: 4 });
+      let totalParticipants = 0;
+      const participantAddressesSet = new Set<string>();
+      for (let i = 0; i < nBatches; i += 1) {
+        const batch = {
+          id: faker.string.uuid(),
+          results: Array.from(
+            { length: faker.number.int({ min: 1, max: 3 }) },
+            () => {
+              const outcome = generateParticipantOutcome({ score: 1 });
+
+              participantAddressesSet.add(outcome.address);
+
+              return outcome;
+            },
+          ),
+        };
+
+        intermediateResult.participants_outcomes_batches.push(batch);
+
+        totalParticipants += batch.results.length;
+      }
+
+      const equalReward = faker.number.int({ min: 15, max: 42 });
+      intermediateResult.reserved_funds = totalParticipants * equalReward;
+
+      const rewardsBatches = payoutsService[
+        'calculateRewardsForIntermediateResult'
+      ](intermediateResult, TEST_TOKEN_DECIMALS);
+
+      const rewardsMap = new Map<string, number>();
+      for (
+        let i = 0;
+        i < intermediateResult.participants_outcomes_batches.length;
+        i += 1
+      ) {
+        const { id: rewardsBatchId, rewards: rewardsBatch } = rewardsBatches[i];
+
+        expect(rewardsBatchId).toBe(
+          intermediateResult.participants_outcomes_batches[i].id,
+        );
+
+        for (const reward of rewardsBatch) {
+          rewardsMap.set(reward.address, reward.amount);
+        }
+      }
+
+      for (const participant of participantAddressesSet) {
+        expect(rewardsMap.get(participant)).toBe(equalReward);
+      }
+    });
+
+    it('should correctly calculate rewards for precision-sensitive results', () => {
+      const rewards = payoutsService['calculateRewardsForIntermediateResult'](
+        Object.assign({}, precisionSensitiveResult, {
+          from: new Date(precisionSensitiveResult.from),
+          to: new Date(precisionSensitiveResult.to),
+        }),
+        18,
+      );
+
+      let total = new Decimal(0);
+      for (const reward of rewards[0].rewards) {
+        total = total.plus(reward.amount);
+      }
+      expect(total.toNumber()).toBe(41.99999999999999);
+      expect(rewards).toMatchSnapshot();
     });
   });
 });

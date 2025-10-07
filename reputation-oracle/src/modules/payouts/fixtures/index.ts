@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { EscrowStatus, IEscrow } from '@human-protocol/sdk';
+import { ethers } from 'ethers';
 
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
@@ -7,6 +8,7 @@ import {
   CampaignWithResults,
   IntermediateResult,
   IntermediateResultsData,
+  ParticipantOutcome,
 } from '../types';
 
 function generateManifest() {
@@ -44,11 +46,24 @@ export function generateEscrow(): IEscrow {
   return escrow;
 }
 
+export function generateParticipantOutcome(
+  overrides: Partial<ParticipantOutcome> = {},
+): ParticipantOutcome {
+  const outcome: ParticipantOutcome = {
+    address: ethers.getAddress(faker.finance.ethereumAddress()),
+    score: faker.number.float(),
+  };
+
+  Object.assign(outcome, overrides);
+
+  return outcome;
+}
+
 export function generateIntermediateResult(): IntermediateResult {
   const intermediateResult = {
     from: faker.date.recent(),
     to: faker.date.soon(),
-    reserved_funds: faker.number.float(),
+    reserved_funds: faker.number.int(),
     participants_outcomes_batches: [],
   };
 
