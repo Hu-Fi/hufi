@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PayoutsService calculateRewardsForIntermediateResult should correctly calculate rewards for precision-sensitive results 1`] = `
+[
+  {
+    "id": "db634797-f8c2-44ce-b8ac-4c09038a7bdd",
+    "rewards": [
+      {
+        "address": "0x0000000000000000000000000000000000000001",
+        "amount": 0.9756486072118352,
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000002",
+        "amount": 41.02435139278816,
+      },
+    ],
+  },
+]
+`;
