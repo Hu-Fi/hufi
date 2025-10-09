@@ -253,6 +253,11 @@ describe('PayoutsService', () => {
     });
 
     it('should calculate rewards for all participants in batches', () => {
+      /**
+       * In this test we have to use good numbers in order to avoid
+       * flaky results because of floating point precision
+       * in this particular test; we have a seprate test for precision
+       */
       const intermediateResult = generateIntermediateResult();
 
       const nBatches = faker.number.int({ min: 2, max: 4 });
@@ -261,16 +266,13 @@ describe('PayoutsService', () => {
       for (let i = 0; i < nBatches; i += 1) {
         const batch = {
           id: faker.string.uuid(),
-          results: Array.from(
-            { length: faker.number.int({ min: 1, max: 3 }) },
-            () => {
-              const outcome = generateParticipantOutcome({ score: 1 });
+          results: Array.from({ length: 2 }, () => {
+            const outcome = generateParticipantOutcome({ score: 1 });
 
-              participantAddressesSet.add(outcome.address);
+            participantAddressesSet.add(outcome.address);
 
-              return outcome;
-            },
-          ),
+            return outcome;
+          }),
         };
 
         intermediateResult.participants_outcomes_batches.push(batch);
@@ -278,7 +280,7 @@ describe('PayoutsService', () => {
         totalParticipants += batch.results.length;
       }
 
-      const equalReward = faker.number.int({ min: 15, max: 42 });
+      const equalReward = 10;
       intermediateResult.reserved_funds = totalParticipants * equalReward;
 
       const rewardsBatches = payoutsService[
