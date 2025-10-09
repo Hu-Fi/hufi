@@ -787,20 +787,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:4.2.1":
-  version: 4.2.1
-  resolution: "@human-protocol/core@npm:4.2.1"
+"@human-protocol/core@npm:5.0.0-beta.2":
+  version: 5.0.0-beta.2
+  resolution: "@human-protocol/core@npm:5.0.0-beta.2"
   peerDependencies:
     ethers: ~6.15.0
-  checksum: 10c0/f2e3f97040063a7b1264c35d969f8b241f919fcd012c05d9c687c9d7b407b9250c0cfc63cd1a0e7ccdd993e40a8633832ae5389b8e2128e4deec3ddb749367fc
+  checksum: 10c0/22fef96bcc9ba0c840b5f336d7f0cc251da1b19ad548c3ade64fd183f9b02c10fdebff02e128972881486cce27e707f6c078065c2ee1ba087b271489c1f799ee
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "@human-protocol/sdk@npm:4.3.0"
+"@human-protocol/sdk@npm:5.0.0-beta.2":
+  version: 5.0.0-beta.2
+  resolution: "@human-protocol/sdk@npm:5.0.0-beta.2"
   dependencies:
-    "@human-protocol/core": "npm:4.2.1"
+    "@human-protocol/core": "npm:5.0.0-beta.2"
     axios: "npm:^1.4.0"
     ethers: "npm:~6.15.0"
     graphql: "npm:^16.8.1"
@@ -809,8 +809,9 @@ __metadata:
     minio: "npm:7.1.3"
     openpgp: "npm:^5.11.2"
     secp256k1: "npm:^5.0.1"
+    validator: "npm:^13.12.0"
     vitest: "npm:^3.0.9"
-  checksum: 10c0/9591d4ea2bdc88f6a1567c7a731cd8b34821f296facd44a42cda45e5df40eaa99c2a5143d6407398f556530b6ea098d9f98beb82b7ea438dfe696434fefef08a
+  checksum: 10c0/3c074afb47c6ee63ad0444a5df8135751e2999308d349c8a126bc7e60c3a07b2bf630086ce6b07cb194544637fa7b79436a2ecbdfd3239e70b63f4e8476f4d70
   languageName: node
   linkType: hard
 
@@ -3852,7 +3853,7 @@ __metadata:
     "@emotion/styled": "npm:^11.11.5"
     "@eslint/js": "npm:^9.37.0"
     "@hookform/resolvers": "npm:^3.3.4"
-    "@human-protocol/sdk": "npm:^4.3.0"
+    "@human-protocol/sdk": "npm:5.0.0-beta.2"
     "@mui/icons-material": "npm:^6.4.10"
     "@mui/material": "npm:^6.4.10"
     "@mui/x-data-grid": "npm:^7.28.3"
@@ -9441,6 +9442,13 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 10c0/1607dd32ac7fc22f2d8f77051e6a64845c9bce5cd3dd8aa0070c074ec73e666a1f63c7b4e0f4bf2bc8b9d59dc85a15e17807446d9d2b17c8485fbc2147b27f9b
+  languageName: node
+  linkType: hard
+
+"validator@npm:^13.12.0":
+  version: 13.15.15
+  resolution: "validator@npm:13.15.15"
+  checksum: 10c0/f5349d1fbb9cc36f9f6c5dab1880764ddad1d0d2b084e2a71e5964f7de1635d20e406611559df9a3db24828ce775cbee5e3b6dd52f0d555a61939ed7ea5990bd
   languageName: node
   linkType: hard
 
