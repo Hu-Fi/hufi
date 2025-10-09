@@ -1,6 +1,6 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { CalendarIcon } from '../../icons';
 import { CampaignDetails } from '../../types';
@@ -9,6 +9,7 @@ import dayjs from '../../utils/dayjs';
 import CampaignAddress from '../CampaignAddress';
 import CampaignTypeLabel from '../CampaignTypeLabel';
 import CustomTooltip from '../CustomTooltip';
+import ChartModal from '../modals/ChartModal';
 
 const formatDate = (dateString: string): string => {
   return dayjs(dateString).format('D MMM YYYY');
@@ -24,6 +25,8 @@ type Props = {
 };
 
 const CampaignInfo: FC<Props> = ({ campaign }) => {
+  const [openChartModal, setOpenChartModal] = useState(false);
+
   const isCompleted = campaign.status === 'completed';
   return (
     <Box
@@ -49,7 +52,10 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
         borderRadius="4px"
         textTransform="capitalize"
       >
-        <Typography variant="subtitle2" color={isCompleted ? 'secondary.contrast' : 'primary.contrast'}>
+        <Typography
+          variant="subtitle2"
+          color={isCompleted ? 'secondary.contrast' : 'primary.contrast'}
+        >
           {campaign.status}
         </Typography>
       </Box>
@@ -62,27 +68,59 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
         {campaign?.start_date && campaign?.end_date && (
           <>
             <CalendarIcon />
-            <CustomTooltip arrow placement="top" title={formatTime(campaign.start_date)}>
-              <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
+            <CustomTooltip
+              arrow
+              placement="top"
+              title={formatTime(campaign.start_date)}
+            >
+              <Typography
+                variant="subtitle2"
+                borderBottom="1px dashed"
+                sx={{ cursor: 'pointer' }}
+              >
                 {formatDate(campaign.start_date)}
               </Typography>
             </CustomTooltip>
             <Typography component="span" variant="subtitle2">
               -
             </Typography>
-            <CustomTooltip arrow placement="top" title={formatTime(campaign.end_date)}>
-              <Typography variant="subtitle2" borderBottom="1px dashed" sx={{ cursor: 'pointer' }}>
+            <CustomTooltip
+              arrow
+              placement="top"
+              title={formatTime(campaign.end_date)}
+            >
+              <Typography
+                variant="subtitle2"
+                borderBottom="1px dashed"
+                sx={{ cursor: 'pointer' }}
+              >
                 {formatDate(campaign.end_date)}
               </Typography>
             </CustomTooltip>
           </>
         )}
       </Box>
-      <CustomTooltip arrow title={getNetworkName(campaign.chain_id) || "Unknown Network"} placement="top">
+      <CustomTooltip
+        arrow
+        title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
+        placement="top"
+      >
         <Box display="flex" sx={{ cursor: 'pointer' }}>
           {getChainIcon(campaign.chain_id)}
         </Box>
       </CustomTooltip>
+      <Button
+        variant="outlined"
+        size="medium"
+        onClick={() => setOpenChartModal(true)}
+      >
+        Paid Amount Chart
+      </Button>
+      <ChartModal
+        open={openChartModal}
+        onClose={() => setOpenChartModal(false)}
+        campaign={campaign}
+      />
     </Box>
   );
 };

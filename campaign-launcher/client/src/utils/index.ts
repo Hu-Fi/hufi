@@ -11,7 +11,12 @@ import {
 } from '../constants';
 import { CHAIN_ICONS } from '../constants/chainIcons';
 import { TOKENS } from '../constants/tokens';
-import { Campaign, CampaignDetails, CampaignFormValues, CampaignType } from '../types';
+import {
+  Campaign,
+  CampaignDetails,
+  CampaignFormValues,
+  CampaignType,
+} from '../types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -114,7 +119,10 @@ export const mapTypeToLabel = (type: CampaignType) => {
   }
 };
 
-export const getDailyTargetTokenSymbol = (campaignType: CampaignType, symbol: string) => {
+export const getDailyTargetTokenSymbol = (
+  campaignType: CampaignType,
+  symbol: string
+) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
       return symbol.split('/')[1];
@@ -158,6 +166,7 @@ export const isCampaignDetails = (obj: unknown): obj is CampaignDetails => {
     'reputation_oracle',
     'amount_paid',
     'daily_paid_amounts',
+    'reserved_funds',
   ];
 
   for (const field of requiredCampaignFields) {
@@ -200,8 +209,12 @@ export const constructCampaignDetails = ({
     ...(data.type === CampaignType.MARKET_MAKING && { symbol: data.pair }),
     ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
     details: {
-      ...(data.type === CampaignType.MARKET_MAKING && { daily_volume_target: data.daily_volume_target }),
-      ...(data.type === CampaignType.HOLDING && { daily_balance_target: data.daily_balance_target }),
+      ...(data.type === CampaignType.MARKET_MAKING && {
+        daily_volume_target: data.daily_volume_target,
+      }),
+      ...(data.type === CampaignType.HOLDING && {
+        daily_balance_target: data.daily_balance_target,
+      }),
     },
     start_date: data.start_date,
     end_date: data.end_date,
@@ -214,6 +227,7 @@ export const constructCampaignDetails = ({
     status: 'active',
     escrow_status: 'pending',
     launcher: address,
+    reserved_funds: '0',
     exchange_oracle: '',
     exchange_oracle_fee_percent: Number(fees.exchangeOracleFee),
     recording_oracle: '',
@@ -251,13 +265,18 @@ export const filterFalsyQueryParams = (
 };
 
 export const getTokenInfo = (token: string) => {
-  return TOKENS.find((t) => t.name.toLowerCase() === token.toLowerCase()) || {
-    name: token,
-    label: token,
-    icon: null,
-  };
+  return (
+    TOKENS.find((t) => t.name.toLowerCase() === token.toLowerCase()) || {
+      name: token,
+      label: token,
+      icon: null,
+    }
+  );
 };
 
 export const convertFromSnakeCaseToTitleCase = (str: string) => {
-  return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+  return str
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };

@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 
-import type { ChainId } from '@/common/constants';
+import { EMPTY_RESULTS_TX_ID, type ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -154,13 +154,16 @@ export class PayoutsService {
           }
         }
 
-        const rawEscrowBalance = await escrowClient.getBalance(
+        const rawEscrowReservedFunds = await escrowClient.getReservedFunds(
           campaign.address,
         );
-        const escrowBalance = new Decimal(
-          ethers.formatUnits(rawEscrowBalance, campaign.fundTokenDecimals),
+        const escrowReservedFunds = new Decimal(
+          ethers.formatUnits(
+            rawEscrowReservedFunds,
+            campaign.fundTokenDecimals,
+          ),
         );
-        if (totalReservedFunds.greaterThan(escrowBalance)) {
+        if (totalReservedFunds.greaterThan(escrowReservedFunds)) {
           throw new Error('Expected payouts amount higher than reserved funds');
         }
 
@@ -188,10 +191,7 @@ export class PayoutsService {
             Array.from(recipientToAmountMap.values()),
             finalResultsMeta.url,
             finalResultsMeta.hash,
-            /**
-             * TODO: replace it with batch id when SDK is updated
-             */
-            1,
+            rewardsBatchToPay.id,
             false,
             {
               gasPrice,
@@ -226,6 +226,7 @@ export class PayoutsService {
       ) {
         // no auto-complete during payouts
         logger.info('Campaign is fully paid, completing it');
+
         const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
@@ -243,15 +244,9 @@ export class PayoutsService {
           [escrowBalance],
           finalResultsMeta.url,
           finalResultsMeta.hash,
-          /**
-           * TODO: replace it with some meaningful id
-           * when sdk is updated
-           */
-          1,
+          EMPTY_RESULTS_TX_ID,
           true,
-          {
-            gasPrice,
-          },
+          { gasPrice },
         );
       } else {
         logger.warn('Unexpected campaign escrow status', {
@@ -398,18 +393,31 @@ export class PayoutsService {
       })
     )[0];
 
-    const bulkInterface = new ethers.Interface([
-      'event BulkTransferV2(uint256 indexed _txId, address[] _recipients, uint256[] _amounts, bool _isPartial, string finalResultsUrl)',
+    const bulkInterfaceV3 = new ethers.Interface([
+      'event BulkTransferV3(bytes32 indexed payoutId, address[] recipients, uint256[] amounts, bool isPartial, string finalResultsUrl)',
     ]);
+    const topicV3 = bulkInterfaceV3.getEvent('BulkTransferV3')!.topicHash;
 
-    const topic = bulkInterface.getEvent('BulkTransferV2')!.topicHash;
-
-    const logs = await signer.provider.getLogs({
+    let logs = await signer.provider.getLogs({
       address: escrowAddress,
-      topics: [topic],
+      topics: [topicV3],
       fromBlock: Number(block),
       toBlock: 'latest',
     });
+
+    if (logs.length === 0) {
+      const bulkInterfaceV2 = new ethers.Interface([
+        'event BulkTransferV2(uint256 indexed _txId, address[] _recipients, uint256[] _amounts, bool _isPartial, string finalResultsUrl)',
+      ]);
+      const topicV2 = bulkInterfaceV2.getEvent('BulkTransferV2')!.topicHash;
+
+      logs = await signer.provider.getLogs({
+        address: escrowAddress,
+        topics: [topicV2],
+        fromBlock: Number(block),
+        toBlock: 'latest',
+      });
+    }
 
     return logs.length;
   }
