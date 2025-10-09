@@ -321,6 +321,11 @@ describe('PayoutsService', () => {
         total = total.plus(reward.amount);
       }
       expect(total.toNumber()).toBe(41.99999999999999);
+      /**
+       * Input and shanpshot for this test are based on real-data
+       * and correct at the time of adding. They shouldn't be changed
+       * unless some bug in input/output itself is found.
+       */
       expect(rewards).toMatchSnapshot();
     });
   });
