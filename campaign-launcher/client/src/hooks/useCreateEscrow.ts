@@ -12,6 +12,7 @@ import { oracles } from '../constants';
 import { useNetwork } from '../providers/NetworkProvider';
 import { ManifestUploadDto, CampaignFormValues, CampaignType } from '../types';
 import { calculateHash, getTokenAddress } from '../utils';
+import handleTransactionReplacement from '../utils/handleTransactionReplacement';
 
 type CreateEscrowMutationResult = {
   escrowAddress: string;
@@ -148,7 +149,11 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           make sure the backend won't interrupt the process and users won't lose their funds
         */
         const oracleFees = await launcherApi.getOracleFees(appChainId);
-        const _escrowAddress = await escrowClient.createEscrow(tokenAddress, [signer.address], uuidV4());
+        
+        const _escrowAddress = await handleTransactionReplacement(
+          () => escrowClient.createEscrow(tokenAddress, uuidV4()),
+          { provider: signer.provider!, signer, type: 'createEscrow' }
+        );
 
         escrowState.current.escrowAddress = _escrowAddress;
         escrowState.current.exchangeOracleFee = oracleFees.exchange_oracle_fee;
@@ -160,7 +165,15 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       }
 
       if (_stepsCompleted < 2) {
-        await escrowClient.fund(escrowState.current.escrowAddress, fundAmount);
+        await handleTransactionReplacement(
+          () => escrowClient.fund(escrowState.current.escrowAddress, fundAmount),
+          { 
+            provider: signer.provider!, 
+            signer, 
+            type: 'fund', 
+            meta: { escrowAddress: escrowState.current.escrowAddress } 
+          }
+        );
         _stepsCompleted = 2;
         setStepsCompleted(_stepsCompleted);
       }
@@ -180,7 +193,10 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           manifestHash: manifestHash,
         };
 
-        await escrowClient.setup(escrowState.current.escrowAddress, escrowConfig);
+        await handleTransactionReplacement(
+          () => escrowClient.setup(escrowState.current.escrowAddress, escrowConfig),
+          { provider: signer.provider!, signer, type: 'setup', meta: { escrowAddress: escrowState.current.escrowAddress } }
+        );
         _stepsCompleted = 3;
         setStepsCompleted(_stepsCompleted);
       }
