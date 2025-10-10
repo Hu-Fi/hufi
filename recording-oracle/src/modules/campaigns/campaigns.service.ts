@@ -1006,7 +1006,7 @@ export class CampaignsService {
         const newEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress,
-          status: EscrowStatus.Pending,
+          status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
           from: lookbackDate,
           orderDirection: OrderDirection.ASC,
           first: 10,
