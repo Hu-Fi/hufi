@@ -344,7 +344,11 @@ export class PayoutsService {
       /**
        * TODO: add "toCancelEscrows" when escrow cancelletion is done
        */
-      status: [EscrowStatus.Pending, EscrowStatus.Partial],
+      status: [
+        EscrowStatus.Pending,
+        EscrowStatus.Partial,
+        EscrowStatus.ToCancel,
+      ],
       /**
        * We do not expect more than this active campaigns atm
        */

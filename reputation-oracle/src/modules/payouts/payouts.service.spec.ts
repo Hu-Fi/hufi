@@ -93,7 +93,11 @@ describe('PayoutsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId,
         reputationOracle: mockWeb3ConfigService.operatorAddress,
-        status: [EscrowStatus.Pending, EscrowStatus.Partial],
+        status: [
+          EscrowStatus.Pending,
+          EscrowStatus.Partial,
+          EscrowStatus.ToCancel,
+        ],
         first: 100,
       });
     });
