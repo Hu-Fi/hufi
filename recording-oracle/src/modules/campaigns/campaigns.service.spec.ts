@@ -830,9 +830,6 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
-      );
 
       let thrownError;
       try {
@@ -854,9 +851,6 @@ describe('CampaignsService', () => {
         campaign.status = status;
         mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
           campaign,
-        );
-        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-          false,
         );
 
         let thrownError;

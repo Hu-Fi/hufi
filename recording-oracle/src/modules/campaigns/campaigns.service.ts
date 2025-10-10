@@ -151,15 +151,6 @@ export class CampaignsService {
       );
     }
 
-    const isUserJoined =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
-        userId,
-        campaign.id,
-      );
-    if (isUserJoined) {
-      return campaign.id;
-    }
-
     if (
       [CampaignStatus.PENDING_CANCELLATION, CampaignStatus.CANCELLED].includes(
         campaign.status,
@@ -177,6 +168,15 @@ export class CampaignsService {
         campaign.chainId,
         campaign.address,
       );
+    }
+
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
+        userId,
+        campaign.id,
+      );
+    if (isUserJoined) {
+      return campaign.id;
     }
 
     const exchangeApiKeyId =
