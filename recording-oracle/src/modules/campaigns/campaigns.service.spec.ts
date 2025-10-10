@@ -1333,6 +1333,8 @@ describe('CampaignsService', () => {
     let spyOnRecordGeneratedVolume: jest.SpyInstance;
     let campaign: CampaignEntity;
 
+    const mockedGetEscrowStatus = jest.fn();
+
     beforeAll(() => {
       spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
         campaignsService as any,
@@ -1372,6 +1374,10 @@ describe('CampaignsService', () => {
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
       });
+
+      mockedEscrowClient.build.mockResolvedValue({
+        getStatus: mockedGetEscrowStatus,
+      } as unknown as EscrowClient);
     });
 
     it('should run with pessimistic lock and correct child logger', async () => {
@@ -1491,16 +1497,37 @@ describe('CampaignsService', () => {
 
     it.each(
       Object.values(CampaignStatus).filter((s) => s !== CampaignStatus.ACTIVE),
-    )('should not process campaign when status is "%s"', async (status) => {
-      campaign.status = status;
+    )(
+      'should not process campaign when status is "%s"',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
 
-      await campaignsService.recordCampaignProgress(campaign);
+        await campaignsService.recordCampaignProgress(campaign);
 
-      expect(spyOnRetrieveCampaignIntermediateResults).toHaveBeenCalledTimes(0);
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
-      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
-    });
+        expect(spyOnRetrieveCampaignIntermediateResults).toHaveBeenCalledTimes(
+          0,
+        );
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+        expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+      },
+    );
+
+    it.each([EscrowStatus.Cancelled, EscrowStatus.Complete])(
+      'should not process campaign when escrow status is "%s"',
+      async (escrowStatus) => {
+        mockedGetEscrowStatus.mockReset().mockResolvedValueOnce(escrowStatus);
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnRetrieveCampaignIntermediateResults).toHaveBeenCalledTimes(
+          0,
+        );
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+        expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+      },
+    );
 
     it('should use start date from campaign when no intermediate results yet', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -1924,18 +1951,11 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should move campaign to "pending_completion" campaign if recording period dates overlap', async () => {
-      campaign.endDate = dayjs().subtract(1, 'day').toDate();
-
-      campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
-
+    it('should move campaign to "pending_completion" if recording period dates overlap', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
         generateIntermediateResultsData({
           results: [generateIntermediateResult({ endDate: campaign.endDate })],
         }),
-      );
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
       );
 
       const now = new Date();
@@ -1959,8 +1979,66 @@ describe('CampaignsService', () => {
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+    });
+
+    it('should move campaign to "pending_cancellation" if it failed and detected by period dates overlap', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      /**
+       * TODO: mock cancellation requested time when ready
+       */
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const now = new Date();
+      jest.useFakeTimers({ now });
+
+      await campaignsService.recordCampaignProgress(
+        Object.assign({}, campaign),
+      );
+
+      jest.useRealTimers();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...campaign,
+        status: 'pending_cancellation',
+        lastResultsAt: now,
+      });
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+    });
+
+    it('should move campaign to "pending_cancellation" when results recorded after cancellation request', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const campaignProgress = generateCampaignProgress(campaign.type);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const now = new Date();
+      jest.useFakeTimers({ now });
+
+      await campaignsService.recordCampaignProgress(
+        Object.assign({}, campaign),
+      );
+
+      jest.useRealTimers();
+
+      expect(logger.error).toHaveBeenCalledTimes(0);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...campaign,
+        status: 'pending_cancellation',
+        lastResultsAt: now,
+      });
     });
 
     it('should record generated volume stat for MARKET_MAKING campaign', async () => {
@@ -2038,8 +2116,6 @@ describe('CampaignsService', () => {
   describe('recordCampaignsProgress', () => {
     let spyOnRecordCampaignProgress: jest.SpyInstance;
 
-    const mockedGetEscrowStatus = jest.fn();
-
     beforeAll(() => {
       spyOnRecordCampaignProgress = jest.spyOn(
         campaignsService,
@@ -2048,19 +2124,11 @@ describe('CampaignsService', () => {
       spyOnRecordCampaignProgress.mockImplementation();
     });
 
-    beforeEach(() => {
-      mockedEscrowClient.build.mockResolvedValue({
-        getStatus: mockedGetEscrowStatus,
-      } as unknown as EscrowClient);
-    });
-
     afterAll(() => {
       spyOnRecordCampaignProgress.mockRestore();
     });
 
     it('should trigger campaign progress recording for each campaign', async () => {
-      mockedGetEscrowStatus.mockResolvedValue(EscrowStatus.Pending);
-
       const nCampaigns = faker.number.int({ min: 2, max: 5 });
       const campaigns = Array.from({ length: nCampaigns }, () =>
         generateCampaignEntity(),
@@ -2075,34 +2143,6 @@ describe('CampaignsService', () => {
 
       for (const campaign of campaigns) {
         expect(spyOnRecordCampaignProgress).toHaveBeenCalledWith(campaign);
-      }
-    });
-
-    it('should skip campaigns that cancelled on blockchain', async () => {
-      mockedGetEscrowStatus.mockResolvedValue(EscrowStatus.Cancelled);
-
-      const nCampaigns = 2;
-      const campaigns = Array.from({ length: nCampaigns }, () =>
-        generateCampaignEntity(),
-      );
-      mockCampaignsRepository.findForProgressRecording.mockResolvedValueOnce(
-        campaigns,
-      );
-
-      await campaignsService.recordCampaignsProgress();
-
-      expect(spyOnRecordCampaignProgress).toHaveBeenCalledTimes(0);
-      expect(logger.warn).toHaveBeenCalledTimes(nCampaigns);
-
-      for (const campaign of campaigns) {
-        expect(logger.warn).toHaveBeenCalledWith(
-          'Campaign cancelled, skipping progress recording',
-          {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
-          },
-        );
       }
     });
   });

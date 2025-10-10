@@ -398,22 +398,6 @@ export class CampaignsService {
         await this.campaignsRepository.findForProgressRecording();
 
       for (const campaign of campaignsToCheck) {
-        const signer = this.web3Service.getSigner(campaign.chainId);
-        const escrowClient = await EscrowClient.build(signer);
-        const escrowStatus = await escrowClient.getStatus(campaign.address);
-        /**
-         * Safety-belt for case when tracking job
-         * has not cancelled this campaign yet, but
-         * it's already cancelled on blockchain
-         */
-        if (escrowStatus === EscrowStatus.Cancelled) {
-          this.logger.warn('Campaign cancelled, skipping progress recording', {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
-          });
-          continue;
-        }
         /**
          * Right now for simplicity process sequentially.
          * Later we can add "fastq" usage for parallel processing
@@ -449,6 +433,23 @@ export class CampaignsService {
         logger.debug('Campaign progress recording started');
 
         try {
+          const signer = this.web3Service.getSigner(campaign.chainId);
+          const escrowClient = await EscrowClient.build(signer);
+          const escrowStatus = await escrowClient.getStatus(campaign.address);
+          /**
+           * Safety-belt for case when tracking job
+           * has not finished this campaign yet, but
+           * it's already finished on blockchain
+           */
+          if (
+            [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(
+              escrowStatus,
+            )
+          ) {
+            logger.warn('Campaign finished, skipping progress recording');
+            return;
+          }
+
           let startDate = campaign.startDate;
 
           let intermediateResults =
@@ -487,12 +488,34 @@ export class CampaignsService {
           }
 
           let endDate = dayjs(startDate).add(1, 'day').toDate();
-          if (endDate > campaign.endDate) {
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            const cancellationRequestedAt = (() => {
+              /**
+               * TODO:
+               * - get necessary timestamp from contact
+               * - unit test for this case
+               */
+              return endDate;
+            })();
+            endDate = cancellationRequestedAt;
+          } else if (endDate > campaign.endDate) {
             endDate = campaign.endDate;
           }
 
           // safety-belt
           if (startDate >= endDate) {
+            if (escrowStatus === EscrowStatus.ToCancel) {
+              /**
+               * This can happen if we processed results and stored them
+               * for 'ToCancel' campaign, but after it failed to update
+               * internal status to exclude it from further processing.
+               */
+              campaign.status = CampaignStatus.PENDING_CANCELLATION;
+              campaign.lastResultsAt = new Date();
+              await this.campaignsRepository.save(campaign);
+              return;
+            }
+
             /**
              * This can happen only in situations when:
              * - by some reason we lost data about campaign from DB, then re-added it
@@ -576,13 +599,15 @@ export class CampaignsService {
             void this.recordGeneratedVolume(campaign, intermediateResult);
           }
 
-          /**
-           * There might be situations when due to delays/failures in processing
-           * we reach campaign end date but still have periods to process,
-           * so mark campaign as pending completion only if results recorded for all periods,
-           * otherwise keep it as is to wait for all periods to be recorded.
-           */
-          if (endDate.valueOf() === campaign.endDate.valueOf()) {
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            campaign.status = CampaignStatus.PENDING_CANCELLATION;
+          } else if (endDate.valueOf() === campaign.endDate.valueOf()) {
+            /**
+             * There might be situations when due to delays/failures in processing
+             * we reach campaign end date but still have periods to process,
+             * so mark campaign as pending completion only if results recorded for all periods,
+             * otherwise keep it as is to wait for all periods to be recorded.
+             */
             campaign.status = CampaignStatus.PENDING_COMPLETION;
           }
 
