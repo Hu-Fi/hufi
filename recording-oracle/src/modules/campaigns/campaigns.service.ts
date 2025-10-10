@@ -35,6 +35,7 @@ import { Web3Service } from '@/modules/web3';
 import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
+  CampaignCancelledError,
   CampaignNotFoundError,
   CampaignNotStartedError,
   InvalidCampaign,
@@ -157,6 +158,14 @@ export class CampaignsService {
       );
     if (isUserJoined) {
       return campaign.id;
+    }
+
+    if (
+      [CampaignStatus.PENDING_CANCELLATION, CampaignStatus.CANCELLED].includes(
+        campaign.status,
+      )
+    ) {
+      throw new CampaignCancelledError(campaign.chainId, campaign.address);
     }
 
     if (campaign.endDate.valueOf() <= Date.now()) {

@@ -50,6 +50,7 @@ import {
 import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
+  CampaignCancelledError,
   CampaignNotFoundError,
   CampaignNotStartedError,
   InvalidCampaign,
@@ -846,6 +847,32 @@ describe('CampaignsService', () => {
 
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
     });
+
+    it.each([CampaignStatus.PENDING_CANCELLATION, CampaignStatus.CANCELLED])(
+      'should throw when joining "%s" campaign',
+      async (status) => {
+        campaign.status = status;
+        mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+          campaign,
+        );
+        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+          false,
+        );
+
+        let thrownError;
+        try {
+          await campaignsService.join(userId, chainId, campaign.address);
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(CampaignCancelledError);
+        expect(thrownError.chainId).toBe(campaign.chainId);
+        expect(thrownError.address).toBe(campaign.address);
+
+        expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
+      },
+    );
   });
 
   describe('getJoined', () => {
