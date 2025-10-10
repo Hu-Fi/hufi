@@ -460,7 +460,7 @@ describe('CampaignsService', () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
       const mockedManifest = generateBaseCampaignManifest();
-      mockedManifest.exchange = faker.lorem.word();
+      mockedManifest.exchange = faker.string.sample();
       spyOnDownloadCampaignManifest.mockResolvedValueOnce(
         JSON.stringify(mockedManifest),
       );
@@ -847,8 +847,8 @@ describe('CampaignsService', () => {
 
     it.each([CampaignStatus.PENDING_CANCELLATION, CampaignStatus.CANCELLED])(
       'should throw when joining "%s" campaign',
-      async (status) => {
-        campaign.status = status;
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
         mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
           campaign,
         );
@@ -1416,7 +1416,7 @@ describe('CampaignsService', () => {
         'Failure while recording campaign progress';
 
       it('should log errors when fails to get intermediate results', async () => {
-        const syntheticError = new Error(faker.lorem.word());
+        const syntheticError = new Error(faker.lorem.words());
         spyOnRetrieveCampaignIntermediateResults.mockRejectedValueOnce(
           syntheticError,
         );
@@ -1433,7 +1433,7 @@ describe('CampaignsService', () => {
       it('should log errors when fails to check campaign progress', async () => {
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-        const syntheticError = new Error(faker.lorem.word());
+        const syntheticError = new Error(faker.lorem.words());
         spyOnCheckCampaignProgressForPeriod.mockRejectedValueOnce(
           syntheticError,
         );
@@ -1453,7 +1453,7 @@ describe('CampaignsService', () => {
           generateCampaignProgress(campaign.type),
         );
 
-        const syntheticError = new Error(faker.lorem.word());
+        const syntheticError = new Error(faker.lorem.words());
         spyOnRecordCampaignIntermediateResults.mockRejectedValueOnce(
           syntheticError,
         );
@@ -2145,9 +2145,12 @@ describe('CampaignsService', () => {
     });
 
     it('should finish campaigns when detects cancelled escrow', async () => {
-      const campaigns = Array.from({ length: nCampaigns }, () =>
+      const campaigns = Array.from({ length: nCampaigns }, (_e, index) =>
         Object.assign(generateCampaignEntity(), {
-          status: CampaignStatus.ACTIVE,
+          status:
+            index % 2
+              ? CampaignStatus.ACTIVE
+              : CampaignStatus.PENDING_CANCELLATION,
         }),
       );
       mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
@@ -2178,24 +2181,30 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should not finish campaigns when detects not finished escrow', async () => {
-      const campaigns = Array.from({ length: nCampaigns }, () =>
-        Object.assign(generateCampaignEntity(), {
-          status: CampaignStatus.ACTIVE,
-        }),
-      );
-      mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
-        campaigns,
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      mockedEscrowUtils.getEscrow.mockResolvedValue({
-        status: EscrowStatus[EscrowStatus.Partial],
-      } as any);
+    it.each([
+      EscrowStatus[EscrowStatus.Pending],
+      EscrowStatus[EscrowStatus.Partial],
+    ])(
+      'should not finish campaigns when detects "%s" escrow',
+      async (escrowStatus) => {
+        const campaigns = Array.from({ length: nCampaigns }, () =>
+          Object.assign(generateCampaignEntity(), {
+            status: CampaignStatus.ACTIVE,
+          }),
+        );
+        mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+          campaigns,
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        mockedEscrowUtils.getEscrow.mockResolvedValue({
+          status: escrowStatus,
+        } as any);
 
-      await campaignsService.trackCampaignsFinish();
+        await campaignsService.trackCampaignsFinish();
 
-      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
-    });
+        expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
+      },
+    );
   });
 
   describe('recordGeneratedVolume', () => {
