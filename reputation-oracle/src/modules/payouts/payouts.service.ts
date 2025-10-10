@@ -78,153 +78,155 @@ export class PayoutsService {
       const signer = this.web3Service.getSigner(campaign.chainId);
       const escrowClient = await EscrowClient.build(signer);
 
-      let hasPendingResults = true;
-      let finalResultsMeta: FinalResultsMeta;
-      try {
-        const [manifest, intermediateResultsData] = await Promise.all([
-          payoutsUtils.retrieveCampaignManifest(
-            campaign.manifest,
-            campaign.manifestHash,
-          ),
-          payoutsUtils.downloadIntermediateResults(
-            campaign.intermediateResultsUrl,
-          ),
-        ]);
+      const [manifest, intermediateResultsData] = await Promise.all([
+        payoutsUtils.retrieveCampaignManifest(
+          campaign.manifest,
+          campaign.manifestHash,
+        ),
+        payoutsUtils.downloadIntermediateResults(
+          campaign.intermediateResultsUrl,
+        ),
+      ]);
 
-        if (intermediateResultsData.results.length === 0) {
-          throw new Error('Intermediate results are not recorded');
+      if (intermediateResultsData.results.length === 0) {
+        throw new Error('Intermediate results are not recorded');
+      }
+
+      let bulkPayoutsCount = await this.getBulkPayoutsCount(
+        signer,
+        campaign.address,
+        campaign.chainId,
+      );
+
+      const rewardsBatchesToPay: CalculatedRewardsBatch[] = [];
+      let totalReservedFunds = new Decimal(0);
+      for (const intermediateResult of intermediateResultsData.results) {
+        totalReservedFunds = totalReservedFunds.plus(
+          intermediateResult.reserved_funds,
+        );
+
+        const rewardsBatches = this.calculateRewardsForIntermediateResult(
+          intermediateResult,
+          campaign.fundTokenDecimals,
+        );
+
+        logger.info('Rewards calculated', {
+          periodFrom: intermediateResult.from,
+          periodTo: intermediateResult.to,
+          rewardsBatches,
+        });
+
+        for (const rewardsBatch of rewardsBatches) {
+          /**
+           * All participants in batch got zero reward -> nothing to pay
+           */
+          if (rewardsBatch.rewards.length === 0) {
+            continue;
+          }
+          /**
+           * Temp hack to avoid double-payouts until payoutId is added to escrow.
+           *
+           * Rationale: payout batches are run sequentially and in case
+           * some payouts batch fails - the next one won't be processed,
+           * so as a temp fix we are counting the number of bulkPayout events
+           * happened for the escrow and skipping first X items.
+           */
+          if (bulkPayoutsCount > 0) {
+            bulkPayoutsCount -= 1;
+
+            /**
+             * Also subtract amount of this paid batch
+             * from total reserved value for check
+             */
+            let batchTotalReward = new Decimal(0);
+            for (const reward of rewardsBatch.rewards) {
+              batchTotalReward = batchTotalReward.plus(reward.amount);
+            }
+
+            totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
+            continue;
+          }
+
+          rewardsBatchesToPay.push(rewardsBatch);
+        }
+      }
+
+      const rawEscrowReservedFunds = await escrowClient.getReservedFunds(
+        campaign.address,
+      );
+      const escrowReservedFunds = new Decimal(
+        ethers.formatUnits(rawEscrowReservedFunds, campaign.fundTokenDecimals),
+      );
+      if (totalReservedFunds.greaterThan(escrowReservedFunds)) {
+        throw new Error('Expected payouts amount higher than reserved funds');
+      }
+
+      const finalResultsMeta = await this.uploadFinalResults(
+        campaign,
+        intermediateResultsData,
+      );
+
+      for (const rewardsBatchToPay of rewardsBatchesToPay) {
+        const recipientToAmountMap = new Map<string, bigint>();
+        for (const { address, amount } of rewardsBatchToPay.rewards) {
+          recipientToAmountMap.set(
+            address,
+            ethers.parseUnits(amount.toString(), campaign.fundTokenDecimals),
+          );
         }
 
-        let bulkPayoutsCount = await this.getBulkPayoutsCount(
-          signer,
-          campaign.address,
+        const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
 
-        const rewardsBatchesToPay: CalculatedRewardsBatch[] = [];
-        let totalReservedFunds = new Decimal(0);
-        for (const intermediateResult of intermediateResultsData.results) {
-          totalReservedFunds = totalReservedFunds.plus(
-            intermediateResult.reserved_funds,
-          );
-
-          const rewardsBatches = this.calculateRewardsForIntermediateResult(
-            intermediateResult,
-            campaign.fundTokenDecimals,
-          );
-
-          logger.info('Rewards calculated', {
-            periodFrom: intermediateResult.from,
-            periodTo: intermediateResult.to,
-            rewardsBatches,
-          });
-
-          for (const rewardsBatch of rewardsBatches) {
-            /**
-             * All participants in batch got zero reward -> nothing to pay
-             */
-            if (rewardsBatch.rewards.length === 0) {
-              continue;
-            }
-            /**
-             * Temp hack to avoid double-payouts until payoutId is added to escrow.
-             *
-             * Rationale: payout batches are run sequentially and in case
-             * some payouts batch fails - the next one won't be processed,
-             * so as a temp fix we are counting the number of bulkPayout events
-             * happened for the escrow and skipping first X items.
-             */
-            if (bulkPayoutsCount > 0) {
-              bulkPayoutsCount -= 1;
-
-              /**
-               * Also subtract amount of this paid batch
-               * from total reserved value for check
-               */
-              let batchTotalReward = new Decimal(0);
-              for (const reward of rewardsBatch.rewards) {
-                batchTotalReward = batchTotalReward.plus(reward.amount);
-              }
-
-              totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
-              continue;
-            }
-
-            rewardsBatchesToPay.push(rewardsBatch);
-          }
-        }
-
-        const rawEscrowReservedFunds = await escrowClient.getReservedFunds(
+        await escrowClient.bulkPayOut(
           campaign.address,
+          Array.from(recipientToAmountMap.keys()),
+          Array.from(recipientToAmountMap.values()),
+          finalResultsMeta.url,
+          finalResultsMeta.hash,
+          rewardsBatchToPay.id,
+          false,
+          {
+            gasPrice,
+          },
         );
-        const escrowReservedFunds = new Decimal(
-          ethers.formatUnits(
-            rawEscrowReservedFunds,
-            campaign.fundTokenDecimals,
-          ),
-        );
-        if (totalReservedFunds.greaterThan(escrowReservedFunds)) {
-          throw new Error('Expected payouts amount higher than reserved funds');
-        }
-
-        finalResultsMeta = await this.uploadFinalResults(
-          campaign,
-          intermediateResultsData,
-        );
-
-        for (const rewardsBatchToPay of rewardsBatchesToPay) {
-          const recipientToAmountMap = new Map<string, bigint>();
-          for (const { address, amount } of rewardsBatchToPay.rewards) {
-            recipientToAmountMap.set(
-              address,
-              ethers.parseUnits(amount.toString(), campaign.fundTokenDecimals),
-            );
-          }
-
-          const gasPrice = await this.web3Service.calculateGasPrice(
-            campaign.chainId,
-          );
-
-          await escrowClient.bulkPayOut(
-            campaign.address,
-            Array.from(recipientToAmountMap.keys()),
-            Array.from(recipientToAmountMap.values()),
-            finalResultsMeta.url,
-            finalResultsMeta.hash,
-            rewardsBatchToPay.id,
-            false,
-            {
-              gasPrice,
-            },
-          );
-        }
-
-        const lastResultsAt = intermediateResultsData.results
-          .at(-1)
-          ?.to.toISOString();
-
-        if (lastResultsAt === manifest.end_date) {
-          hasPendingResults = false;
-        }
-
-        logger.info('Finished payouts for campaign');
-      } catch (error) {
-        logger.error('Payouts failed for campaign', error);
-        return;
       }
 
-      if (hasPendingResults) {
+      logger.info('Finished payouts for campaign');
+
+      // =================== finalization steps below ===================
+
+      const escrowStatus = await escrowClient.getStatus(campaign.address);
+
+      let expectedFinalLastResultsAt: string;
+      if (escrowStatus === EscrowStatus.ToCancel) {
+        expectedFinalLastResultsAt = (() => {
+          /**
+           * TODO: get cancellation request date
+           */
+          return new Date().toISOString();
+        })();
+      } else {
+        expectedFinalLastResultsAt = manifest.end_date;
+      }
+
+      const lastResultsAt = intermediateResultsData.results
+        .at(-1)!
+        .to.toISOString();
+      if (lastResultsAt !== expectedFinalLastResultsAt) {
         logger.info('Campaign not finished yet, skip completion');
         return;
       }
 
-      const escrowStatus = await escrowClient.getStatus(campaign.address);
-      if (escrowStatus === EscrowStatus.Complete) {
-        logger.info('Campaign auto-completed during payouts');
+      if (
+        [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(escrowStatus)
+      ) {
+        logger.info('Campaign auto-finalized during payouts');
       } else if (
         [EscrowStatus.Partial, EscrowStatus.Paid].includes(escrowStatus)
       ) {
-        // no auto-complete during payouts
+        // no auto-finalize during payouts
         logger.info('Campaign is fully paid, completing it');
 
         const gasPrice = await this.web3Service.calculateGasPrice(
@@ -248,6 +250,12 @@ export class PayoutsService {
           true,
           { gasPrice },
         );
+      } else if (escrowStatus === EscrowStatus.ToCancel) {
+        logger.info('Campaign ended with cancellation request, cancelling it');
+        const gasPrice = await this.web3Service.calculateGasPrice(
+          campaign.chainId,
+        );
+        await escrowClient.cancel(campaign.address, { gasPrice });
       } else {
         logger.warn('Unexpected campaign escrow status', {
           escrowStatus,
