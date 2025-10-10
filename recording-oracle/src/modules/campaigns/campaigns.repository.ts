@@ -54,7 +54,11 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
   async findForFinishTracking(): Promise<CampaignEntity[]> {
     return this.find({
       where: {
-        status: In([CampaignStatus.PENDING_COMPLETION, CampaignStatus.ACTIVE]),
+        status: In([
+          CampaignStatus.ACTIVE,
+          CampaignStatus.PENDING_COMPLETION,
+          CampaignStatus.PENDING_CANCELLATION,
+        ]),
       },
     });
   }
