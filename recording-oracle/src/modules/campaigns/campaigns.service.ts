@@ -75,7 +75,7 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
 
 const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_HOUR;
+  : CronExpression.EVERY_5_MINUTES;
 
 const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
