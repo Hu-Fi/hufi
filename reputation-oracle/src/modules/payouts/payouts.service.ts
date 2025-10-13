@@ -12,6 +12,7 @@ import { ethers } from 'ethers';
 
 import { EMPTY_RESULTS_TX_ID, type ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
+import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { WalletWithProvider, Web3Service } from '@/modules/web3';
@@ -235,12 +236,12 @@ export class PayoutsService {
 
       let expectedFinalLastResultsAt: string;
       if (escrowStatus === EscrowStatus.ToCancel) {
-        expectedFinalLastResultsAt = (() => {
-          /**
-           * TODO: get cancellation request date
-           */
-          return new Date().toISOString();
-        })();
+        const cancellationRequestedAt =
+          await escrowUtils.getCancellationRequestDate(
+            campaign.chainId,
+            campaign.address,
+          );
+        expectedFinalLastResultsAt = cancellationRequestedAt.toISOString();
       } else {
         expectedFinalLastResultsAt = manifest.end_date;
       }

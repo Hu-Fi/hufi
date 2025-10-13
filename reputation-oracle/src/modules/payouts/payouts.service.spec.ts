@@ -18,6 +18,7 @@ import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ContentType } from '@/common/enums';
+import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { StorageService } from '@/modules/storage';
@@ -360,7 +361,7 @@ describe('PayoutsService', () => {
     });
   });
 
-  describe.only('runPayoutsCycleForCampaign', () => {
+  describe('runPayoutsCycleForCampaign', () => {
     const mockedCampaign = generateCampaign();
     const mockedGasPrice = faker.number.bigInt();
     const mockedParticipantAddress = faker.finance.ethereumAddress();
@@ -382,6 +383,7 @@ describe('PayoutsService', () => {
     let spyOnDownloadIntermediateResults: jest.SpyInstance;
     let spyOnUploadFinalResults: jest.SpyInstance;
     let spyOnGetBulkPayoutsCount: jest.SpyInstance;
+    let spyOnGetCancellationRequestDate: jest.SpyInstance;
 
     const mockedGetEscrowBalance = jest.fn();
     const mockedGetEscrowReservedFunds = jest.fn();
@@ -467,6 +469,12 @@ describe('PayoutsService', () => {
         url: mockedFinalResultsUrl,
         hash: mockedFinalResultsHash,
       });
+
+      spyOnGetCancellationRequestDate = jest.spyOn(
+        escrowUtils,
+        'getCancellationRequestDate',
+      );
+      spyOnGetCancellationRequestDate.mockImplementation();
     });
 
     it('should skip when campaign status mismatch', async () => {
@@ -773,8 +781,11 @@ describe('PayoutsService', () => {
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 
-      it('should run payouts and cancel campaign if cancellation requested', async () => {
+      it('should run payouts and cancel campaign if cancellation requested and all results paid', async () => {
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+        spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+          mockedIntermediateResult.to,
+        );
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
@@ -785,6 +796,24 @@ describe('PayoutsService', () => {
 
         expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
         expect(mockedCancelEscrow).toHaveBeenCalledTimes(1);
+        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
+      });
+
+      it('should run payouts and not cancel campaign if cancellation requested and not all results paid', async () => {
+        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+        spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+          faker.date.recent({ refDate: mockedIntermediateResult.to }),
+        );
+
+        await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+        expect(logger.info).toHaveBeenCalledTimes(5);
+        expect(logger.info).toHaveBeenCalledWith(
+          'Campaign not finished yet, skip completion',
+        );
+
+        expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
+        expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
     });
