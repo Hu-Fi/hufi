@@ -492,7 +492,7 @@ export class CampaignsService {
             const cancellationRequestedAt = (() => {
               /**
                * TODO:
-               * - get necessary timestamp from contact
+               * - get necessary timestamp from contract
                * - unit test for this case
                */
               return endDate;

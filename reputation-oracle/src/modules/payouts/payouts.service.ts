@@ -349,9 +349,6 @@ export class PayoutsService {
     const escrows = await EscrowUtils.getEscrows({
       chainId: chainId as number,
       reputationOracle: this.web3ConfigService.operatorAddress,
-      /**
-       * TODO: add "toCancelEscrows" when escrow cancelletion is done
-       */
       status: [
         EscrowStatus.Pending,
         EscrowStatus.Partial,

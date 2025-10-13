@@ -28,7 +28,11 @@ const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
   EscrowStatus[]
 > = {
-  [CampaignStatus.ACTIVE]: [EscrowStatus.Pending, EscrowStatus.Partial],
+  [CampaignStatus.ACTIVE]: [
+    EscrowStatus.Pending,
+    EscrowStatus.Partial,
+    EscrowStatus.ToCancel,
+  ],
   [CampaignStatus.CANCELLED]: [EscrowStatus.Cancelled],
   [CampaignStatus.COMPLETED]: [EscrowStatus.Complete],
 };
