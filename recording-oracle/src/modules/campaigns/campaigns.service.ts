@@ -159,7 +159,10 @@ export class CampaignsService {
       throw new CampaignCancelledError(campaign.chainId, campaign.address);
     }
 
-    if (campaign.endDate.valueOf() <= Date.now()) {
+    if (
+      campaign.status === CampaignStatus.COMPLETED ||
+      campaign.endDate.valueOf() <= Date.now()
+    ) {
       /**
        * Safety belt to disallow joining campaigns that already finished
        * but might be waiting for results recording or payouts

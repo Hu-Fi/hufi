@@ -826,8 +826,28 @@ describe('CampaignsService', () => {
       spyOnCreateCampaign.mockRestore();
     });
 
-    it('should throw when joining campaign that already finished', async () => {
+    it('should throw when joining campaign that reacheds its end date', async () => {
       campaign.endDate = faker.date.past();
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+
+      let thrownError;
+      try {
+        await campaignsService.join(userId, chainId, campaign.address);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+      expect(thrownError.chainId).toBe(campaign.chainId);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
+    });
+
+    it('should throw when joining campaign that already completed', async () => {
+      campaign.status = CampaignStatus.COMPLETED;
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
