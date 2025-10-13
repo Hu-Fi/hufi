@@ -487,7 +487,7 @@ export class CampaignsService {
             };
           }
 
-          let endDate = dayjs(startDate).add(1, 'day').toDate();
+          let endDate;
           if (escrowStatus === EscrowStatus.ToCancel) {
             const cancellationRequestedAt = (() => {
               /**
@@ -495,10 +495,14 @@ export class CampaignsService {
                * - get necessary timestamp from contract
                * - unit test for this case
                */
-              return endDate;
+              return new Date();
             })();
             endDate = cancellationRequestedAt;
-          } else if (endDate > campaign.endDate) {
+          } else {
+            endDate = dayjs(startDate).add(1, 'day').toDate();
+          }
+
+          if (endDate > campaign.endDate) {
             endDate = campaign.endDate;
           }
 

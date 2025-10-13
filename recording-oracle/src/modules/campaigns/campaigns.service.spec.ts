@@ -1643,6 +1643,26 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should use campaign end date if cancellation requested after campaign end date', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      /**
+       * TODO: mock cancellation requested time when ready
+       */
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedStartDate = new Date(campaign.startDate.valueOf());
+      const expectedEndDate = campaign.endDate;
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+        campaign,
+        expectedStartDate,
+        expectedEndDate,
+      );
+    });
+
     it('should record campaign progress when no results yet', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -1984,10 +2004,10 @@ describe('CampaignsService', () => {
 
     it('should move campaign to "pending_cancellation" when results recorded after cancellation request', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       /**
        * TODO: mock cancellation requested time when ready
        */
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const campaignProgress = generateCampaignProgress(campaign.type);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
@@ -2017,11 +2037,11 @@ describe('CampaignsService', () => {
 
     it('should move campaign to "pending_cancellation" when cancellation requested before campaign start', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       /**
        * TODO: mock cancellation requested time when ready
        */
       campaign.startDate = faker.date.soon();
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const now = new Date();
       jest.useFakeTimers({ now });
@@ -2045,10 +2065,10 @@ describe('CampaignsService', () => {
 
     it('should move campaign to "pending_cancellation" after internal status update failed and detected', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       /**
        * TODO: mock cancellation requested time when ready
        */
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const now = new Date();
       jest.useFakeTimers({ now });
