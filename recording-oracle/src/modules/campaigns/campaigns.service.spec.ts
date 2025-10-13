@@ -1982,7 +1982,68 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
-    it('should move campaign to "pending_cancellation" if it failed and detected by period dates overlap', async () => {
+    it('should move campaign to "pending_cancellation" when results recorded after cancellation request', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      /**
+       * TODO: mock cancellation requested time when ready
+       */
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const campaignProgress = generateCampaignProgress(campaign.type);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
+      );
+
+      const now = new Date();
+      jest.useFakeTimers({ now });
+
+      await campaignsService.recordCampaignProgress(
+        Object.assign({}, campaign),
+      );
+
+      jest.useRealTimers();
+
+      expect(logger.error).toHaveBeenCalledTimes(0);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...campaign,
+        status: 'pending_cancellation',
+        lastResultsAt: now,
+      });
+    });
+
+    it('should move campaign to "pending_cancellation" when cancellation requested before campaign start', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      /**
+       * TODO: mock cancellation requested time when ready
+       */
+      campaign.startDate = faker.date.soon();
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const now = new Date();
+      jest.useFakeTimers({ now });
+
+      await campaignsService.recordCampaignProgress(
+        Object.assign({}, campaign),
+      );
+
+      jest.useRealTimers();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...campaign,
+        status: 'pending_cancellation',
+        lastResultsAt: now,
+      });
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
+    });
+
+    it('should move campaign to "pending_cancellation" after internal status update failed and detected', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       /**
        * TODO: mock cancellation requested time when ready
@@ -2007,38 +2068,6 @@ describe('CampaignsService', () => {
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
-    });
-
-    it('should move campaign to "pending_cancellation" when results recorded after cancellation request', async () => {
-      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-      const campaignProgress = generateCampaignProgress(campaign.type);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      const now = new Date();
-      jest.useFakeTimers({ now });
-
-      await campaignsService.recordCampaignProgress(
-        Object.assign({}, campaign),
-      );
-
-      jest.useRealTimers();
-
-      expect(logger.error).toHaveBeenCalledTimes(0);
-      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
-      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
-        ...campaign,
-        status: 'pending_cancellation',
-        lastResultsAt: now,
-      });
     });
 
     it('should record generated volume stat for MARKET_MAKING campaign', async () => {
