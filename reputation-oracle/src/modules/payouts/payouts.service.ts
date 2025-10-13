@@ -78,15 +78,24 @@ export class PayoutsService {
       const signer = this.web3Service.getSigner(campaign.chainId);
       const escrowClient = await EscrowClient.build(signer);
 
-      const [manifest, intermediateResultsData] = await Promise.all([
-        payoutsUtils.retrieveCampaignManifest(
-          campaign.manifest,
-          campaign.manifestHash,
-        ),
-        payoutsUtils.downloadIntermediateResults(
+      const manifest = await payoutsUtils.retrieveCampaignManifest(
+        campaign.manifest,
+        campaign.manifestHash,
+      );
+
+      const campaignStartDate = new Date(manifest.start_date);
+      if (campaignStartDate.valueOf() > Date.now()) {
+        logger.info(
+          'Campaign cancellation requested before campaign started, cancelling',
+        );
+        await escrowClient.cancel(campaign.address);
+        return;
+      }
+
+      const intermediateResultsData =
+        await payoutsUtils.downloadIntermediateResults(
           campaign.intermediateResultsUrl,
-        ),
-      ]);
+        );
 
       if (intermediateResultsData.results.length === 0) {
         throw new Error('Intermediate results are not recorded');

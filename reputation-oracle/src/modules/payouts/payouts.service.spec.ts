@@ -524,13 +524,39 @@ describe('PayoutsService', () => {
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
-    describe('campaign completion', () => {
+    describe('campaign finalization', () => {
       beforeEach(() => {
         const manifest = generateManifest();
         manifest.end_date = mockedIntermediateResult.to.toISOString();
         spyOnRetrieveCampaignManifest
           .mockReset()
           .mockResolvedValueOnce(manifest);
+      });
+
+      it('should cancel if cancellation requested before than start date from manifest', async () => {
+        const now = Date.now();
+
+        spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
+          Object.assign(generateManifest(), {
+            start_date: new Date(now + 1).toISOString(),
+          }),
+        );
+
+        jest.useFakeTimers({ now });
+
+        await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+        jest.useRealTimers();
+
+        expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(0);
+        expect(logger.info).toHaveBeenCalledTimes(3);
+        expect(logger.info).toHaveBeenCalledWith(
+          'Campaign cancellation requested before campaign started, cancelling',
+        );
+
+        expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
+        expect(mockedCancelEscrow).toHaveBeenCalledTimes(1);
       });
 
       it.each([
