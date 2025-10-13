@@ -702,10 +702,16 @@ describe('CampaignsService', () => {
     let userId: string;
     let chainId: number;
 
+    const mockedGetEscrowStatus = jest.fn();
+
     beforeEach(() => {
       campaign = generateCampaignEntity();
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
+
+      mockedEscrowClient.build.mockResolvedValue({
+        getStatus: mockedGetEscrowStatus,
+      } as unknown as EscrowClient);
     });
 
     it('should return campaign id if exists and user already joined', async () => {
@@ -757,6 +763,8 @@ describe('CampaignsService', () => {
     });
 
     it('should create campaign when not exist and join user', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
+
       const campaignAddress = faker.finance.ethereumAddress();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         null,
@@ -826,7 +834,7 @@ describe('CampaignsService', () => {
       spyOnCreateCampaign.mockRestore();
     });
 
-    it('should throw when joining campaign that reacheds its end date', async () => {
+    it('should throw when joining campaign that reached its end date', async () => {
       campaign.endDate = faker.date.past();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
@@ -882,6 +890,33 @@ describe('CampaignsService', () => {
         }
 
         expect(thrownError).toBeInstanceOf(CampaignCancelledError);
+        expect(thrownError.chainId).toBe(campaign.chainId);
+        expect(thrownError.address).toBe(campaign.address);
+
+        expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
+      },
+    );
+
+    it.each([
+      [EscrowStatus.ToCancel, CampaignCancelledError],
+      [EscrowStatus.Cancelled, CampaignCancelledError],
+      [EscrowStatus.Complete, CampaignAlreadyFinishedError],
+    ])(
+      'should throw when campaign status mismatches escrow: [%#]',
+      async (escrowStatus, errorClass) => {
+        mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+          campaign,
+        );
+        mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
+
+        let thrownError;
+        try {
+          await campaignsService.join(userId, chainId, campaign.address);
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(errorClass);
         expect(thrownError.chainId).toBe(campaign.chainId);
         expect(thrownError.address).toBe(campaign.address);
 
