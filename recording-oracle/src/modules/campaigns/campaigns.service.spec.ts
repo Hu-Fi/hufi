@@ -334,43 +334,44 @@ describe('CampaignsService', () => {
       );
     });
 
-    it.each([EscrowStatus.Cancelled, EscrowStatus.Complete])(
-      'should throw when escrow has invalid status [%#]',
-      async (escrowStatus) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
-          token: faker.finance.ethereumAddress(),
-          totalFundedAmount: faker.number.bigInt().toString(),
-          manifest: faker.internet.url(),
-          recordingOracle: mockWeb3ConfigService.operatorAddress,
-        } as any);
-        mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
+    it.each([
+      EscrowStatus[EscrowStatus.ToCancel],
+      EscrowStatus[EscrowStatus.Cancelled],
+      EscrowStatus[EscrowStatus.Complete],
+    ])('should throw when escrow has "%s" status', async (escrowStatus) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
+        token: faker.finance.ethereumAddress(),
+        totalFundedAmount: faker.number.bigInt().toString(),
+        manifest: faker.internet.url(),
+        recordingOracle: mockWeb3ConfigService.operatorAddress,
+      } as any);
+      mockedGetEscrowStatus.mockResolvedValueOnce(
+        EscrowStatus[escrowStatus as unknown as EscrowStatus],
+      );
 
-        let thrownError;
-        try {
-          await campaignsService['retrieveCampaignData'](
-            chainId,
-            campaignAddress,
-          );
-        } catch (error) {
-          thrownError = error;
-        }
-
-        expect(thrownError).toBeInstanceOf(InvalidCampaign);
-        expect(thrownError.chainId).toBe(chainId);
-        expect(thrownError.address).toBe(campaignAddress);
-        expect(thrownError.details).toBe(
-          `Invalid status: ${EscrowStatus[escrowStatus]}`,
-        );
-
-        expect(mockedEscrowUtils.getEscrow).toHaveBeenCalledWith(
+      let thrownError;
+      try {
+        await campaignsService['retrieveCampaignData'](
           chainId,
           campaignAddress,
         );
+      } catch (error) {
+        thrownError = error;
+      }
 
-        expect(mockedGetEscrowStatus).toHaveBeenCalledWith(campaignAddress);
-      },
-    );
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(chainId);
+      expect(thrownError.address).toBe(campaignAddress);
+      expect(thrownError.details).toBe(`Invalid status: ${escrowStatus}`);
+
+      expect(mockedEscrowUtils.getEscrow).toHaveBeenCalledWith(
+        chainId,
+        campaignAddress,
+      );
+
+      expect(mockedGetEscrowStatus).toHaveBeenCalledWith(campaignAddress);
+    });
 
     it('should log and throw when fails to download manifest', async () => {
       const manifestUrl = faker.internet.url();
@@ -1513,10 +1514,17 @@ describe('CampaignsService', () => {
       },
     );
 
-    it.each([EscrowStatus.Cancelled, EscrowStatus.Complete])(
+    it.each([
+      EscrowStatus[EscrowStatus.Cancelled],
+      EscrowStatus[EscrowStatus.Complete],
+    ])(
       'should not process campaign when escrow status is "%s"',
       async (escrowStatus) => {
-        mockedGetEscrowStatus.mockReset().mockResolvedValueOnce(escrowStatus);
+        mockedGetEscrowStatus
+          .mockReset()
+          .mockResolvedValueOnce(
+            EscrowStatus[escrowStatus as unknown as EscrowStatus],
+          );
 
         await campaignsService.recordCampaignProgress(campaign);
 
@@ -2854,7 +2862,7 @@ describe('CampaignsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
-        status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+        status: EscrowStatus.Pending,
         from: new Date(escrowTimestamp * 1000),
         orderDirection: OrderDirection.ASC,
         first: 10,
@@ -2879,7 +2887,7 @@ describe('CampaignsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
-        status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+        status: EscrowStatus.Pending,
         from: dayAgo,
         orderDirection: OrderDirection.ASC,
         first: 10,

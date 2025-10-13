@@ -298,7 +298,11 @@ export class CampaignsService {
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
 
     if (
-      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
+      [
+        EscrowStatus.ToCancel,
+        EscrowStatus.Cancelled,
+        EscrowStatus.Complete,
+      ].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
         chainId,
@@ -1036,7 +1040,11 @@ export class CampaignsService {
         const newEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress,
-          status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+          /**
+           * We are interested only in pending escrows, because if it's in `ToCancel`
+           * status and not in RecO DB yet - it means nobody joined and no need to process it
+           */
+          status: EscrowStatus.Pending,
           from: lookbackDate,
           orderDirection: OrderDirection.ASC,
           first: 10,
