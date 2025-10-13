@@ -100,7 +100,7 @@ const CampaignSetupModal: FC<Props> = ({
   handleOpenFormModal 
 }) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [updatedStakedAmount, setUpdatedStakedAmount] = useState<number>(0);
+  const [updatedStakedAmount, setUpdatedStakedAmount] = useState(stakedAmount);
 
   const { fetchStakingData, isFetching } = useStakeContext();
 
@@ -120,12 +120,11 @@ const CampaignSetupModal: FC<Props> = ({
     setShowWarning(_updatedStakedAmount === 0);
   };
   
-  const showFirstStep = !isFetching && !showWarning && stakedAmount === 0 && updatedStakedAmount === 0;
-  const showSecondStep = !isFetching && !showWarning && (stakedAmount > 0 || updatedStakedAmount > 0);
-  const isContinueDisabled = !campaignType;
+  const showFirstStep = !isFetching && !showWarning && updatedStakedAmount === 0;
+  const showSecondStep = !isFetching && !showWarning && updatedStakedAmount > 0;
 
   const handleClickOnContinue = async () => {
-    if (isContinueDisabled) return;
+    if (!campaignType) return;
     
     handleClose();
     handleOpenFormModal();
@@ -181,7 +180,7 @@ const CampaignSetupModal: FC<Props> = ({
                 }}
                 onClick={handleUpdateStakedAmount}
               >
-                Update
+                Continue
               </Button>
             </Box>
           </>
@@ -249,7 +248,7 @@ const CampaignSetupModal: FC<Props> = ({
                 variant="contained" 
                 size="large" 
                 sx={{ color: 'primary.contrast', width: 93 }}
-                disabled={isContinueDisabled}
+                disabled={!campaignType}
                 onClick={handleClickOnContinue}
               >
                 Continue

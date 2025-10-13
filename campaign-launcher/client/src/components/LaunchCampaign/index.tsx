@@ -62,7 +62,7 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
 
   const isDisabled = !signer || isClientInitializing;
 
-  const onClick = async () => {
+  const handleLaunchCampaignClick = async () => {
     if (isDisabled) return null;
 
     const _stakedAmount = await fetchStakingData();
@@ -95,20 +95,22 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
             ...sx,
           }}
           disabled={isDisabled}
-          onClick={onClick}
+          onClick={handleLaunchCampaignClick}
         >
           Launch Campaign
         </Button>
       </ButtonWrapper>
-      <CampaignSetupModal
-        open={isSetupModalOpen}
-        onClose={() => setIsSetupModalOpen(false)}
-        stakedAmount={stakedAmount}
-        campaignType={campaignType}
-        handleChangeCampaignType={handleChangeCampaignType}
-        handleOpenFormModal={handleOpenFormModal}
-      />
-      {campaignType && (
+      {isSetupModalOpen && (
+        <CampaignSetupModal
+          open={isSetupModalOpen}
+          onClose={() => setIsSetupModalOpen(false)}
+          stakedAmount={stakedAmount}
+          campaignType={campaignType}
+          handleChangeCampaignType={handleChangeCampaignType}
+          handleOpenFormModal={handleOpenFormModal}
+        />
+      )}
+      {campaignType && isFormModalOpen && (
         <CreateCampaignModal
           open={isFormModalOpen}
           onClose={handleCloseFormModal}
