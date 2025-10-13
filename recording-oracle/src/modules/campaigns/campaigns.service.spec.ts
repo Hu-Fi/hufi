@@ -28,6 +28,7 @@ import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import * as decimalUtils from '@/common/utils/decimal';
+import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
@@ -1387,6 +1388,7 @@ describe('CampaignsService', () => {
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;
     let spyOnRecordGeneratedVolume: jest.SpyInstance;
+    let spyOnGetCancellationRequestDate: jest.SpyInstance;
     let campaign: CampaignEntity;
 
     const mockedGetEscrowStatus = jest.fn();
@@ -1415,6 +1417,12 @@ describe('CampaignsService', () => {
         'recordGeneratedVolume',
       );
       spyOnRecordGeneratedVolume.mockImplementation();
+
+      spyOnGetCancellationRequestDate = jest.spyOn(
+        escrowUtils,
+        'getCancellationRequestDate',
+      );
+      spyOnGetCancellationRequestDate.mockImplementation();
     });
 
     afterAll(() => {
@@ -1709,9 +1717,9 @@ describe('CampaignsService', () => {
     it('should use campaign end date if cancellation requested after campaign end date', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-      /**
-       * TODO: mock cancellation requested time when ready
-       */
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        new Date(campaign.endDate.valueOf() + 1),
+      );
 
       await campaignsService.recordCampaignProgress(campaign);
 
@@ -2068,9 +2076,9 @@ describe('CampaignsService', () => {
     it('should move campaign to "pending_cancellation" when results recorded after cancellation request', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-      /**
-       * TODO: mock cancellation requested time when ready
-       */
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        faker.date.soon({ refDate: campaign.startDate }),
+      );
 
       const campaignProgress = generateCampaignProgress(campaign.type);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
@@ -2101,10 +2109,9 @@ describe('CampaignsService', () => {
     it('should move campaign to "pending_cancellation" when cancellation requested before campaign start', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-      /**
-       * TODO: mock cancellation requested time when ready
-       */
-      campaign.startDate = faker.date.soon();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        new Date(campaign.startDate.valueOf() - 1),
+      );
 
       const now = new Date();
       jest.useFakeTimers({ now });
@@ -2128,10 +2135,18 @@ describe('CampaignsService', () => {
 
     it('should move campaign to "pending_cancellation" after internal status update failed and detected', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-      /**
-       * TODO: mock cancellation requested time when ready
-       */
+
+      const intermediateRestult = generateIntermediateResult();
+      const intermediateResultsData = generateIntermediateResultsData({
+        results: [intermediateRestult],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        new Date(intermediateRestult.to),
+      );
 
       const now = new Date();
       jest.useFakeTimers({ now });

@@ -18,6 +18,7 @@ import { LRUCache } from 'lru-cache';
 import { ContentType } from '@/common/enums';
 import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
+import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
@@ -514,16 +515,13 @@ export class CampaignsService {
             };
           }
 
-          let endDate;
+          let endDate: Date;
           if (escrowStatus === EscrowStatus.ToCancel) {
-            const cancellationRequestedAt = (() => {
-              /**
-               * TODO:
-               * - get necessary timestamp from contract
-               * - unit test for this case
-               */
-              return new Date();
-            })();
+            const cancellationRequestedAt =
+              await escrowUtils.getCancellationRequestDate(
+                campaign.chainId,
+                campaign.address,
+              );
             endDate = cancellationRequestedAt;
           } else {
             endDate = dayjs(startDate).add(1, 'day').toDate();
