@@ -15,7 +15,7 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
   
       A web-based interface that lets users create, join, and manage market-making campaigns directly from their wallet (e.g., MetaMask). It interacts with HuFi smart contracts to deploy new escrows, display live campaign data, and allow participants to track information about the campaigns they’ve joined.
       [More info](./campaign-launcher/client/README.md)
-  - [Server](./campaign-launcher/server/) 
+  - [Server](./campaign-launcher/server/)
   
       A backend service that connects the client with both blockchain and off-chain (such as subgraph) data sources. It aggregates information from the HuFi subgraph and blockchain (via RPC) to provide a unified, real-time view of campaign states and participant activity.
       [More info](./campaign-launcher/server/README.md)
@@ -38,7 +38,3 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
 - [React v18](https://react.dev/)
 - [PostgreSQL](https://www.postgresql.org/)
 - [Human Protocol SDK](https://www.npmjs.com/package/@human-protocol/sdk?activeTab=readme)
-
-## License
-
-HuFi is open-source software 

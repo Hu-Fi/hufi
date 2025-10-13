@@ -23,7 +23,7 @@ Recording Oracle is a backend service responsible for:
   - `/exchange-api-keys` – API key enrollment and management.
   - `/stats` – Volume statistics.
 
-**Full API documentation:**  
+**Full API documentation:**
 [Swagger UI](http://ro.hu.finance/swagger) - Latest API documentation deployed on production.
 
 ## 3. Prerequisites
@@ -36,24 +36,24 @@ Recording Oracle is a backend service responsible for:
 
 ## Environment variables
 
-All required environment variables are listed in [.env.example](./.env.example).  
+All required environment variables are listed in [.env.example](./.env.example).
 You should copy this file to `.env` and fill in the values as needed.
 
 Some variables may need extra explanation:
 
-- `WEB3_PRIVATE_KEY`  
-  Private key for signing transactions on supported blockchains.  
-  **How to get:** Generate a new wallet using MetaMask, [ethers.js](https://docs.ethers.org), or another wallet tool.  
+- `WEB3_PRIVATE_KEY`
+  Private key for signing transactions on supported blockchains.
+  **How to get:** Generate a new wallet using MetaMask, [ethers.js](https://docs.ethers.org), or another wallet tool.
   **Important:** Never use your main wallet/private key for testing.
 
-- `RPC_URL_*`  
-  URLs for connecting to blockchain nodes (Ethereum, Polygon, etc.).  
-  **How to get:**  
+- `RPC_URL_*`
+  URLs for connecting to blockchain nodes (Ethereum, Polygon, etc.).
+  **How to get:**
   - Use public endpoints (e.g., [Infura](https://infura.io/), [Alchemy](https://www.alchemy.com/), [QuickNode](https://www.quicknode.com/)), or run your own node.
   - Example: `RPC_URL_ETHEREUM=https://eth-mainnet.g.alchemy.com/v2/<your-key>`
 
-- `ALCHEMY_API_KEY`  
-  API key for [Alchemy](https://www.alchemy.com/) node provider.  
+- `ALCHEMY_API_KEY`
+  API key for [Alchemy](https://www.alchemy.com/) node provider.
   **How to get:** Sign up at Alchemy, create an app, and copy your API key.
 
 Other variables (database, S3, JWT, encryption, etc.) are pre-filled for local development, but should be changed for production deployments.
@@ -71,7 +71,7 @@ cd ../scripts
 docker-compose up -d
 ```
 
-This will start both services in the background.  
+This will start both services in the background.
 - PostgreSQL will be available at `localhost:5432`
 - MinIO will be available at `localhost:9000` (default credentials: `minioadmin:minioadmin`)
 
