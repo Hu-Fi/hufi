@@ -15,6 +15,7 @@ export type CampaignWithResults = Required<
     | 'manifest'
     | 'manifestHash'
     | 'intermediateResultsUrl'
+    | 'intermediateResultsHash'
     | 'launcher'
   > & {
     fundTokenAddress: string;

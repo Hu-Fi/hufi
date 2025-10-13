@@ -95,6 +95,7 @@ export class PayoutsService {
       const intermediateResultsData =
         await payoutsUtils.downloadIntermediateResults(
           campaign.intermediateResultsUrl,
+          campaign.intermediateResultsHash,
         );
 
       if (intermediateResultsData.results.length === 0) {
@@ -386,6 +387,7 @@ export class PayoutsService {
         manifest: escrow.manifest as string,
         manifestHash: escrow.manifestHash as string,
         intermediateResultsUrl: escrow.intermediateResultsUrl as string,
+        intermediateResultsHash: escrow.intermediateResultsHash as string,
         fundTokenAddress: escrow.token,
         fundTokenDecimals,
         fundAmount: Number(
