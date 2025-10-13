@@ -78,17 +78,41 @@ export class PayoutsService {
       const signer = this.web3Service.getSigner(campaign.chainId);
       const escrowClient = await EscrowClient.build(signer);
 
+      let escrowStatus = await escrowClient.getStatus(campaign.address);
+      const escrowStatusString = EscrowStatus[escrowStatus];
+      if (campaign.status !== escrowStatusString) {
+        logger.warn('Campaign status mismatch, avoiding payouts', {
+          campaignStatus: campaign.status,
+          escrowStatus: escrowStatus,
+          escrowStatusString,
+        });
+        return;
+      }
+
       const manifest = await payoutsUtils.retrieveCampaignManifest(
         campaign.manifest,
         campaign.manifestHash,
       );
 
       const campaignStartDate = new Date(manifest.start_date);
-      if (campaignStartDate.valueOf() > Date.now()) {
+      if (
+        escrowStatus === EscrowStatus.ToCancel &&
+        campaignStartDate.valueOf() > Date.now()
+      ) {
         logger.info(
           'Campaign cancellation requested before campaign started, cancelling',
         );
         await escrowClient.cancel(campaign.address);
+        return;
+      }
+
+      if (
+        !campaign.intermediateResultsUrl ||
+        !campaign.intermediateResultsHash
+      ) {
+        /**
+         * No intermediate results yet, so just skip
+         */
         return;
       }
 
@@ -207,7 +231,7 @@ export class PayoutsService {
 
       // =================== finalization steps below ===================
 
-      const escrowStatus = await escrowClient.getStatus(campaign.address);
+      escrowStatus = await escrowClient.getStatus(campaign.address);
 
       let expectedFinalLastResultsAt: string;
       if (escrowStatus === EscrowStatus.ToCancel) {
@@ -372,10 +396,6 @@ export class PayoutsService {
 
     const campaignsWithResults: CampaignWithResults[] = [];
     for (const escrow of escrows) {
-      if (!escrow.intermediateResultsUrl) {
-        continue;
-      }
-
       const fundTokenDecimals = await this.web3Service.getTokenDecimals(
         escrow.chainId,
         escrow.token,
@@ -384,16 +404,22 @@ export class PayoutsService {
       campaignsWithResults.push({
         chainId: escrow.chainId,
         address: escrow.address,
+        launcher: escrow.launcher,
+        status: escrow.status,
+        /**
+         * It's expected that escrow can be in "ToCancel" status
+         * only if it properly set up, so it should always have
+         * manifest and its hash
+         */
         manifest: escrow.manifest as string,
         manifestHash: escrow.manifestHash as string,
-        intermediateResultsUrl: escrow.intermediateResultsUrl as string,
-        intermediateResultsHash: escrow.intermediateResultsHash as string,
+        intermediateResultsUrl: escrow.intermediateResultsUrl || '',
+        intermediateResultsHash: escrow.intermediateResultsHash || '',
         fundTokenAddress: escrow.token,
         fundTokenDecimals,
         fundAmount: Number(
           ethers.formatUnits(escrow.totalFundedAmount, fundTokenDecimals),
         ),
-        launcher: escrow.launcher,
       });
     }
 
