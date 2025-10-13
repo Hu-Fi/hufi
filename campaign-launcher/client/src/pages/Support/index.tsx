@@ -4,7 +4,14 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography } from '@mui/material';
 
-import { CampaignsDiscovery, Prerequisites, RewardsCalculation, SignIn, StepByStepProcess } from '../../components/FaqAccordionDetailsHub';
+import { 
+  CampaignsDiscovery, 
+  Prerequisites, 
+  ReachTargetAccordion,
+  RewardsCalculation, 
+  SignIn, 
+  StepByStepProcess 
+} from '../../components/FaqAccordionDetailsHub';
 import PageTitle from '../../components/PageTitle';
 import PageWrapper from '../../components/PageWrapper';
 
@@ -257,11 +264,7 @@ const Support: FC = () => {
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography variant="body2">
-              If participants fail to reach the daily volume target, the reward pool will be reduced. 
-              Any unused funds remaining at the end of the campaign will be automatically transferred back to the wallet 
-              from which the campaign was created.
-            </Typography>
+            <ReachTargetAccordion />
           </AccordionDetails>
         </Accordion>
       </Box>
