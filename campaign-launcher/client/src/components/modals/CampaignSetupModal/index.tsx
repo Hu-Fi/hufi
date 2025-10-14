@@ -82,6 +82,7 @@ const LoadingView: FC = () => {
         position="absolute" 
         bottom={0}
         left="50%" 
+        width="100%"
         sx={{ transform: 'translate(-50%, 0)' }}
       >
         Updating your staking status…
@@ -144,7 +145,7 @@ const CampaignSetupModal: FC<Props> = ({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        height: { xs: 'auto', md: '360px' },
+        height: { xs: '440px', md: '360px' },
         py: 5,
         px: { xs: 3, md: 8 },
       }}
