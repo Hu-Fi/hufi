@@ -96,6 +96,8 @@ const campaignsProgressCache = new LRUCache<
   updateAgeOnHas: false,
 });
 
+const PROGRESS_PERIOD_DAYS = 1;
+
 @Injectable()
 export class CampaignsService {
   private readonly logger = logger.child({
@@ -138,7 +140,6 @@ export class CampaignsService {
       campaignAddress,
     );
 
-    // Create a new campaign if it does not exist
     if (!campaign) {
       const { manifest, escrowInfo } = await this.retrieveCampaignData(
         chainId,
@@ -524,9 +525,11 @@ export class CampaignsService {
               );
             endDate = cancellationRequestedAt;
           } else {
-            endDate = dayjs(startDate).add(1, 'day').toDate();
+            endDate = dayjs(startDate)
+              .add(PROGRESS_PERIOD_DAYS, 'day')
+              .toDate();
           }
-          // TODO: check period prio to cancellation
+
           if (endDate > campaign.endDate) {
             endDate = campaign.endDate;
           }
@@ -582,8 +585,15 @@ export class CampaignsService {
             );
           }
 
+          let periodDurationDays = PROGRESS_PERIOD_DAYS;
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            periodDurationDays = Math.ceil(
+              dayjs(endDate).diff(startDate, 'days', true),
+            );
+          }
           const rewardPool = this.calculateRewardPool({
-            maxRewardPool: this.calculateDailyReward(campaign),
+            baseRewardPool: this.calculateDailyReward(campaign),
+            maxRewardPoolRatio: periodDurationDays,
             progressValueTarget,
             progressValue,
             fundTokenDecimals: campaign.fundTokenDecimals,
@@ -789,17 +799,18 @@ export class CampaignsService {
   }
 
   calculateRewardPool(input: {
-    maxRewardPool: number;
+    baseRewardPool: number;
+    maxRewardPoolRatio: number;
     progressValueTarget: number;
     progressValue: number;
     fundTokenDecimals: number;
   }): number {
     const rewardRatio = Math.min(
       input.progressValue / input.progressValueTarget,
-      1,
+      input.maxRewardPoolRatio,
     );
 
-    const rewardPool = rewardRatio * input.maxRewardPool;
+    const rewardPool = rewardRatio * input.baseRewardPool;
 
     const truncatedRewardPool = decimalUtils.truncate(
       rewardPool,

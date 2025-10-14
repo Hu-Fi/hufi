@@ -1824,7 +1824,8 @@ describe('CampaignsService', () => {
       await campaignsService.recordCampaignProgress(campaign);
 
       const expectedRewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool: campaignsService.calculateDailyReward(campaign),
+        baseRewardPool: campaignsService.calculateDailyReward(campaign),
+        maxRewardPoolRatio: 1,
         progressValue: totalVolume,
         progressValueTarget: dailyVolumeTarget,
         fundTokenDecimals: campaign.fundTokenDecimals,
@@ -1871,7 +1872,8 @@ describe('CampaignsService', () => {
       await campaignsService.recordCampaignProgress(campaign);
 
       const expectedRewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool: campaignsService.calculateDailyReward(campaign),
+        baseRewardPool: campaignsService.calculateDailyReward(campaign),
+        maxRewardPoolRatio: 1,
         progressValue: totalBalance,
         progressValueTarget: dailyBalanceTarget,
         fundTokenDecimals: campaign.fundTokenDecimals,
@@ -2811,17 +2813,18 @@ describe('CampaignsService', () => {
   describe('calculateRewardPool', () => {
     const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
 
-    let maxRewardPool: number;
+    let baseRewardPool: number;
     let progressValueTarget: number;
 
     beforeEach(() => {
-      maxRewardPool = faker.number.int({ min: 10, max: 100 });
+      baseRewardPool = faker.number.int({ min: 10, max: 100 });
       progressValueTarget = faker.number.int({ min: 1, max: 1000 });
     });
 
     it('should return 0 reward pool when generated volume is 0', () => {
       const rewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool,
+        baseRewardPool,
+        maxRewardPoolRatio: 1,
         progressValueTarget,
         progressValue: 0,
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -2838,7 +2841,8 @@ describe('CampaignsService', () => {
       });
 
       const rewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool,
+        baseRewardPool,
+        maxRewardPoolRatio: 1,
         progressValueTarget,
         progressValue,
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -2846,7 +2850,7 @@ describe('CampaignsService', () => {
 
       const expectedRewardRatio = progressValue / progressValueTarget;
       const expectedRewardPool = decimalUtils.truncate(
-        expectedRewardRatio * maxRewardPool,
+        expectedRewardRatio * baseRewardPool,
         TEST_TOKEN_DECIMALS,
       );
       expect(rewardPool).toBe(expectedRewardPool);
@@ -2859,13 +2863,37 @@ describe('CampaignsService', () => {
       });
 
       const rewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool,
+        baseRewardPool,
+        maxRewardPoolRatio: 1,
         progressValueTarget,
         progressValue,
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      expect(rewardPool).toBe(maxRewardPool);
+      expect(rewardPool).toBe(baseRewardPool);
+    });
+
+    it('should respect maxRewardPoolRatio', () => {
+      const maxRewardPoolRatio = faker.number.int({ min: 2, max: 5 });
+
+      const progressValue = faker.number.float({
+        min: progressValueTarget * (maxRewardPoolRatio + 1),
+        max: progressValueTarget * (maxRewardPoolRatio + 2),
+      });
+
+      const rewardPool = campaignsService.calculateRewardPool({
+        baseRewardPool,
+        maxRewardPoolRatio,
+        progressValueTarget,
+        progressValue,
+        fundTokenDecimals: TEST_TOKEN_DECIMALS,
+      });
+
+      const expectedRewardPool = decimalUtils.truncate(
+        baseRewardPool * maxRewardPoolRatio,
+        TEST_TOKEN_DECIMALS,
+      );
+      expect(rewardPool).toBe(expectedRewardPool);
     });
   });
 
