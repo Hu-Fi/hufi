@@ -15,10 +15,10 @@ const CampaignsDiscovery = () => {
       </Typography>
       <img src="/tableImage.png" alt="Campaigns discovery" width="100%" height="auto" />
       <Typography variant="body2" mt={2}>
-        <strong>Symbol:{' '}</strong>A token or a pair of tokens you will need to trade
+        <strong>Symbol:{' '}</strong>A token or a pair of tokens you will need to operate with.
       </Typography>
       <Typography variant="body2">
-        <strong>Exchange:{' '}</strong>An exchange where you will need to trade.
+        <strong>Exchange:{' '}</strong>An exchange where you will need to operate.
       </Typography>
       <Typography variant="body2">
         <strong>Type:{' '}</strong>The campaign type, can be Holding or Market Making.
