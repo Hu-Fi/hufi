@@ -35,11 +35,11 @@ const intermedateResultsSchema = Joi.object({
 
 export async function downloadIntermediateResults(
   url: string,
+  hash: string,
 ): Promise<IntermediateResultsData> {
-  /**
-   * TODO: add hash verification when we have it in subgraph
-   */
-  const resultsData = await httpUtils.downloadFile(url);
+  const resultsData = await httpUtils.downloadFileAndVerifyHash(url, hash, {
+    algorithm: 'sha256',
+  });
 
   try {
     const resultsJson = JSON.parse(resultsData.toString());

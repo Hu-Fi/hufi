@@ -18,6 +18,7 @@ import { LRUCache } from 'lru-cache';
 import { ContentType } from '@/common/enums';
 import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
+import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
@@ -35,6 +36,7 @@ import { Web3Service } from '@/modules/web3';
 import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
+  CampaignCancelledError,
   CampaignNotFoundError,
   CampaignNotStartedError,
   InvalidCampaign,
@@ -74,7 +76,7 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
 
 const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_HOUR;
+  : CronExpression.EVERY_5_MINUTES;
 
 const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
@@ -93,6 +95,8 @@ const campaignsProgressCache = new LRUCache<
   updateAgeOnGet: false,
   updateAgeOnHas: false,
 });
+
+const PROGRESS_PERIOD_DAYS = 1;
 
 @Injectable()
 export class CampaignsService {
@@ -136,7 +140,6 @@ export class CampaignsService {
       campaignAddress,
     );
 
-    // Create a new campaign if it does not exist
     if (!campaign) {
       const { manifest, escrowInfo } = await this.retrieveCampaignData(
         chainId,
@@ -150,6 +153,30 @@ export class CampaignsService {
       );
     }
 
+    /**
+     * After campaign is created, escrows can be manipulated
+     * directly on blockchain (e.g. by admin), plus we have replication lag,
+     * so we have to do a live-check here and in other similar places
+     * where we are sensitive to escrow status
+     */
+    const signer = this.web3Service.getSigner(campaign.chainId);
+    const escrowClient = await EscrowClient.build(signer);
+    const escrowStatus = await escrowClient.getStatus(campaign.address);
+    if (
+      [EscrowStatus.ToCancel, EscrowStatus.Cancelled].includes(escrowStatus)
+    ) {
+      throw new CampaignCancelledError(campaign.chainId, campaign.address);
+    }
+    if (
+      escrowStatus === EscrowStatus.Complete ||
+      campaign.endDate.valueOf() <= Date.now()
+    ) {
+      throw new CampaignAlreadyFinishedError(
+        campaign.chainId,
+        campaign.address,
+      );
+    }
+
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
@@ -157,17 +184,6 @@ export class CampaignsService {
       );
     if (isUserJoined) {
       return campaign.id;
-    }
-
-    if (campaign.endDate.valueOf() <= Date.now()) {
-      /**
-       * Safety belt to disallow joining campaigns that already finished
-       * but might be waiting for results recording or payouts
-       */
-      throw new CampaignAlreadyFinishedError(
-        campaign.chainId,
-        campaign.address,
-      );
     }
 
     const exchangeApiKeyId =
@@ -289,7 +305,11 @@ export class CampaignsService {
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
 
     if (
-      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
+      [
+        EscrowStatus.ToCancel,
+        EscrowStatus.Cancelled,
+        EscrowStatus.Complete,
+      ].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
         chainId,
@@ -389,22 +409,6 @@ export class CampaignsService {
         await this.campaignsRepository.findForProgressRecording();
 
       for (const campaign of campaignsToCheck) {
-        const signer = this.web3Service.getSigner(campaign.chainId);
-        const escrowClient = await EscrowClient.build(signer);
-        const escrowStatus = await escrowClient.getStatus(campaign.address);
-        /**
-         * Safety-belt for case when tracking job
-         * has not cancelled this campaign yet, but
-         * it's already cancelled on blockchain
-         */
-        if (escrowStatus === EscrowStatus.Cancelled) {
-          this.logger.warn('Campaign cancelled, skipping progress recording', {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
-          });
-          continue;
-        }
         /**
          * Right now for simplicity process sequentially.
          * Later we can add "fastq" usage for parallel processing
@@ -440,6 +444,23 @@ export class CampaignsService {
         logger.debug('Campaign progress recording started');
 
         try {
+          const signer = this.web3Service.getSigner(campaign.chainId);
+          const escrowClient = await EscrowClient.build(signer);
+          const escrowStatus = await escrowClient.getStatus(campaign.address);
+          /**
+           * Safety-belt for case when tracking job
+           * has not finished this campaign yet, but
+           * it's already finished on blockchain
+           */
+          if (
+            [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(
+              escrowStatus,
+            )
+          ) {
+            logger.warn('Campaign finished, skipping progress recording');
+            return;
+          }
+
           let startDate = campaign.startDate;
 
           let intermediateResults =
@@ -477,27 +498,53 @@ export class CampaignsService {
             };
           }
 
-          let endDate = dayjs(startDate).add(1, 'day').toDate();
+          let endDate: Date;
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            const cancellationRequestedAt =
+              await escrowUtils.getCancellationRequestDate(
+                campaign.chainId,
+                campaign.address,
+              );
+            endDate = cancellationRequestedAt;
+          } else {
+            endDate = dayjs(startDate)
+              .add(PROGRESS_PERIOD_DAYS, 'day')
+              .toDate();
+          }
+
           if (endDate > campaign.endDate) {
             endDate = campaign.endDate;
           }
 
           // safety-belt
           if (startDate >= endDate) {
-            /**
-             * This can happen only in situations when:
-             * - by some reason we lost data about campaign from DB, then re-added it
-             * - by some reason campaign was 'pending_completion'/'completed', but status changed to 'active'
-             *
-             * and then attempted to record it's progress but it must be
-             * already finished and start-end dates overlap indicates that,
-             * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
-             */
-            logger.warn('Campaign progress period dates overlap');
-            campaign.status = CampaignStatus.PENDING_COMPLETION;
-            campaign.lastResultsAt = new Date();
-            await this.campaignsRepository.save(campaign);
-            return;
+            if (escrowStatus === EscrowStatus.ToCancel) {
+              /**
+               * This can happen when:
+               * - campaign cancelled before it reached start_date from manifest
+               * - if we processed results and stored them for 'ToCancel' campaign,
+               * but failed to update internal status to exclude it from further processing
+               */
+              campaign.status = CampaignStatus.PENDING_CANCELLATION;
+              campaign.lastResultsAt = new Date();
+              await this.campaignsRepository.save(campaign);
+              return;
+            } else {
+              /**
+               * This can happen only in situations when:
+               * - by some reason we lost data about campaign from DB, then re-added it
+               * - by some reason campaign was 'pending_completion'/'completed', but status changed to 'active'
+               *
+               * and then attempted to record it's progress but it must be
+               * already finished and start-end dates overlap indicates that,
+               * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
+               */
+              logger.warn('Campaign progress period dates overlap');
+              campaign.status = CampaignStatus.PENDING_COMPLETION;
+              campaign.lastResultsAt = new Date();
+              await this.campaignsRepository.save(campaign);
+              return;
+            }
           }
 
           const progress = await this.checkCampaignProgressForPeriod(
@@ -520,8 +567,15 @@ export class CampaignsService {
             );
           }
 
+          let periodDurationDays = PROGRESS_PERIOD_DAYS;
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            periodDurationDays = Math.ceil(
+              dayjs(endDate).diff(startDate, 'days', true),
+            );
+          }
           const rewardPool = this.calculateRewardPool({
-            maxRewardPool: this.calculateDailyReward(campaign),
+            baseRewardPool: this.calculateDailyReward(campaign),
+            maxRewardPoolRatio: periodDurationDays,
             progressValueTarget,
             progressValue,
             fundTokenDecimals: campaign.fundTokenDecimals,
@@ -567,13 +621,15 @@ export class CampaignsService {
             void this.recordGeneratedVolume(campaign, intermediateResult);
           }
 
-          /**
-           * There might be situations when due to delays/failures in processing
-           * we reach campaign end date but still have periods to process,
-           * so mark campaign as pending completion only if results recorded for all periods,
-           * otherwise keep it as is to wait for all periods to be recorded.
-           */
-          if (endDate.valueOf() === campaign.endDate.valueOf()) {
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            campaign.status = CampaignStatus.PENDING_CANCELLATION;
+          } else if (endDate.valueOf() === campaign.endDate.valueOf()) {
+            /**
+             * There might be situations when due to delays/failures in processing
+             * we reach campaign end date but still have periods to process,
+             * so mark campaign as pending completion only if results recorded for all periods,
+             * otherwise keep it as is to wait for all periods to be recorded.
+             */
             campaign.status = CampaignStatus.PENDING_COMPLETION;
           }
 
@@ -725,17 +781,18 @@ export class CampaignsService {
   }
 
   calculateRewardPool(input: {
-    maxRewardPool: number;
+    baseRewardPool: number;
+    maxRewardPoolRatio: number;
     progressValueTarget: number;
     progressValue: number;
     fundTokenDecimals: number;
   }): number {
     const rewardRatio = Math.min(
       input.progressValue / input.progressValueTarget,
-      1,
+      input.maxRewardPoolRatio,
     );
 
-    const rewardPool = rewardRatio * input.maxRewardPool;
+    const rewardPool = rewardRatio * input.baseRewardPool;
 
     const truncatedRewardPool = decimalUtils.truncate(
       rewardPool,
@@ -997,6 +1054,10 @@ export class CampaignsService {
         const newEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress,
+          /**
+           * We are interested only in pending escrows, because if it's in `ToCancel`
+           * status and not in RecO DB yet - it means nobody joined and no need to process it
+           */
           status: EscrowStatus.Pending,
           from: lookbackDate,
           orderDirection: OrderDirection.ASC,
