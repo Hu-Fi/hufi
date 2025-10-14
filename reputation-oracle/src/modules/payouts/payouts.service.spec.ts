@@ -135,16 +135,22 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should return escrows w/o intermediate results', async () => {
+    it('should return only "ToCancel" escrows w/o intermediate results', async () => {
       const fullEscrow = generateEscrow();
-      const noResultsEscrow: IEscrow = Object.assign(generateEscrow(), {
+      const noResultsPendingEscrow: IEscrow = Object.assign(generateEscrow(), {
+        intermediateResultsUrl: null,
+        intermediateResultsHash: null,
+      });
+      const noResultsToCancelEscrow: IEscrow = Object.assign(generateEscrow(), {
+        status: EscrowStatus[EscrowStatus.ToCancel],
         intermediateResultsUrl: null,
         intermediateResultsHash: null,
       });
 
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([
         fullEscrow,
-        noResultsEscrow,
+        noResultsPendingEscrow,
+        noResultsToCancelEscrow,
       ]);
 
       const campaigns = await payoutsService['getCampaignsForPayouts'](chainId);
@@ -158,7 +164,7 @@ describe('PayoutsService', () => {
             intermediateResultsHash: fullEscrow.intermediateResultsHash,
           }),
           expect.objectContaining({
-            address: noResultsEscrow.address,
+            address: noResultsToCancelEscrow.address,
             intermediateResultsUrl: '',
             intermediateResultsHash: '',
           }),
@@ -554,38 +560,6 @@ describe('PayoutsService', () => {
 
       expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(1);
-    });
-
-    it('should skip pending campaign without intermediate results url', async () => {
-      await payoutsService.runPayoutsCycleForCampaign(
-        Object.assign({}, mockedCampaign, {
-          intermediateResultsUrl: '',
-        }),
-      );
-
-      expect(logger.info).toHaveBeenCalledTimes(2);
-      expect(logger.error).toHaveBeenCalledTimes(0);
-
-      expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(0);
-      expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
-      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
-      expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
-    });
-
-    it('should skip pending campaign without intermediate results hash', async () => {
-      await payoutsService.runPayoutsCycleForCampaign(
-        Object.assign({}, mockedCampaign, {
-          intermediateResultsHash: '',
-        }),
-      );
-
-      expect(logger.info).toHaveBeenCalledTimes(2);
-      expect(logger.error).toHaveBeenCalledTimes(0);
-
-      expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(0);
-      expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
-      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
-      expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
     it('should gracefully handle incomplete intermediate results', async () => {

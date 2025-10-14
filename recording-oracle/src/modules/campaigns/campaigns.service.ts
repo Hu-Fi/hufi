@@ -526,7 +526,7 @@ export class CampaignsService {
           } else {
             endDate = dayjs(startDate).add(1, 'day').toDate();
           }
-
+          // TODO: check period prio to cancellation
           if (endDate > campaign.endDate) {
             endDate = campaign.endDate;
           }

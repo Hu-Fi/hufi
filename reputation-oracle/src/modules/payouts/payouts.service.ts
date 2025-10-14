@@ -107,16 +107,6 @@ export class PayoutsService {
         return;
       }
 
-      if (
-        !campaign.intermediateResultsUrl ||
-        !campaign.intermediateResultsHash
-      ) {
-        /**
-         * No intermediate results yet, so just skip
-         */
-        return;
-      }
-
       const intermediateResultsData =
         await payoutsUtils.downloadIntermediateResults(
           campaign.intermediateResultsUrl,
@@ -233,6 +223,12 @@ export class PayoutsService {
       // =================== finalization steps below ===================
 
       escrowStatus = await escrowClient.getStatus(campaign.address);
+      if (
+        [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(escrowStatus)
+      ) {
+        logger.info('Campaign auto-finalized during payouts');
+        return;
+      }
 
       let expectedFinalLastResultsAt: string;
       if (escrowStatus === EscrowStatus.ToCancel) {
@@ -254,13 +250,7 @@ export class PayoutsService {
         return;
       }
 
-      if (
-        [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(escrowStatus)
-      ) {
-        logger.info('Campaign auto-finalized during payouts');
-      } else if (
-        [EscrowStatus.Partial, EscrowStatus.Paid].includes(escrowStatus)
-      ) {
+      if ([EscrowStatus.Partial, EscrowStatus.Paid].includes(escrowStatus)) {
         // no auto-finalize during payouts
         logger.info('Campaign is fully paid, completing it');
 
@@ -397,6 +387,13 @@ export class PayoutsService {
 
     const campaignsWithResults: CampaignWithResults[] = [];
     for (const escrow of escrows) {
+      if (escrow.status !== EscrowStatus[EscrowStatus.ToCancel]) {
+        const hasIntermediateResults =
+          escrow.intermediateResultsUrl && escrow.intermediateResultsHash;
+        if (!hasIntermediateResults) {
+          continue;
+        }
+      }
       const fundTokenDecimals = await this.web3Service.getTokenDecimals(
         escrow.chainId,
         escrow.token,
