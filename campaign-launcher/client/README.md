@@ -25,7 +25,7 @@ It interacts with Human Protocol smart contracts and HuFi backend services to di
 
 ## 3. Prerequisites
 
-- Node.js v18+
+- Node.js v22+
 - Yarn
 
 ## 4. Environment variables

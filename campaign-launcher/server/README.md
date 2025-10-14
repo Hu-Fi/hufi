@@ -29,7 +29,7 @@ Campaign Launcher Server is a backend service responsible for:
 
 ## 3. Prerequisites
 
-- Node.js v18+
+- Node.js v22+
 - Yarn
 - RPC URLs for supported chains (Ethereum, Polygon, etc.)
 
@@ -92,4 +92,4 @@ yarn start:dev
 
 ---
 
-For more details, see
+For more details, see the [main project README](../../README.md)

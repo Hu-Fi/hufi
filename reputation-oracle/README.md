@@ -16,7 +16,7 @@ Reputation Oracle is a backend service responsible for:
 
 ## 2. Prerequisites
 
-- Node.js v18+
+- Node.js v22+
 - Yarn
 - S3-compatible storage (MinIO, AWS S3, etc.)
 - RPC URLs for supported chains (Ethereum, Polygon, etc.)
@@ -82,4 +82,4 @@ See [../.github/workflows/run-reputation-oracle.yaml](../.github/workflows/run-r
 
 ---
 
-For more
+For more details, see the [main project README](../README.md)

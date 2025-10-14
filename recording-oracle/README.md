@@ -28,7 +28,7 @@ Recording Oracle is a backend service responsible for:
 
 ## 3. Prerequisites
 
-- Node.js v18+
+- Node.js v22+
 - Yarn
 - PostgreSQL database
 - S3-compatible storage (MinIO, AWS S3, etc.)
@@ -75,10 +75,6 @@ This will start both services in the background.
 - PostgreSQL will be available at `localhost:5432`
 - MinIO will be available at `localhost:9000` (default credentials: `minioadmin:minioadmin`)
 
-To initialize the databases, run:
-```sh
-docker exec -it scripts-db-1 psql -U postgres -f /initdb/create-dbs.sql
-```
 
 ### 4.2. Install Dependencies
 
