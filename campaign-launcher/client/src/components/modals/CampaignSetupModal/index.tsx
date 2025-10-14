@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckIcon from '@mui/icons-material/CheckCircle';
@@ -14,7 +14,6 @@ import BaseModal from "../BaseModal";
 type Props = {
   open: boolean;
   onClose: () => void;
-  stakedAmount: number;
   campaignType: CampaignType | null;
   handleChangeCampaignType: (type: CampaignType) => void;
   handleOpenFormModal: () => void;
@@ -94,19 +93,27 @@ const LoadingView: FC = () => {
 const CampaignSetupModal: FC<Props> = ({ 
   open, 
   onClose, 
-  stakedAmount,
   campaignType, 
   handleChangeCampaignType, 
   handleOpenFormModal 
 }) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [updatedStakedAmount, setUpdatedStakedAmount] = useState(stakedAmount);
+  const [stakedAmount, setStakedAmount] = useState(0);
 
   const { fetchStakingData, isFetching } = useStakeContext();
 
+  const getStakedAmount = async () => {
+    const _stakedAmount = Number(await fetchStakingData());
+    setStakedAmount(_stakedAmount);
+    return _stakedAmount;
+  };
+
+  useEffect(() => {
+    getStakedAmount();
+  }, [])
+
   const handleClose = () => {
     setShowWarning(false);
-    setUpdatedStakedAmount(0);
     onClose();
   };
   
@@ -115,13 +122,12 @@ const CampaignSetupModal: FC<Props> = ({
   };
 
   const handleUpdateStakedAmount = async () => {
-    const _updatedStakedAmount = Number(await fetchStakingData());
-    setUpdatedStakedAmount(_updatedStakedAmount);
+    const _updatedStakedAmount = await getStakedAmount();
     setShowWarning(_updatedStakedAmount === 0);
   };
   
-  const showFirstStep = !isFetching && !showWarning && updatedStakedAmount === 0;
-  const showSecondStep = !isFetching && !showWarning && updatedStakedAmount > 0;
+  const showFirstStep = !isFetching && !showWarning && stakedAmount === 0;
+  const showSecondStep = !isFetching && !showWarning && stakedAmount > 0;
 
   const handleClickOnContinue = async () => {
     if (!campaignType) return;

@@ -54,19 +54,16 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [campaignType, setCampaignType] = useState<CampaignType | null>(null)
-  const [stakedAmount, setStakedAmount] = useState<number>(0);
 
   const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
-  const { isClientInitializing, fetchStakingData } = useStakeContext();
+  const { isClientInitializing } = useStakeContext();
 
   const isDisabled = !signer || isClientInitializing;
 
   const handleLaunchCampaignClick = async () => {
     if (isDisabled) return null;
 
-    const _stakedAmount = await fetchStakingData();
-    setStakedAmount(+(_stakedAmount ?? '0'));
     setIsSetupModalOpen(true);
   };
 
@@ -104,7 +101,6 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
         <CampaignSetupModal
           open={isSetupModalOpen}
           onClose={() => setIsSetupModalOpen(false)}
-          stakedAmount={stakedAmount}
           campaignType={campaignType}
           handleChangeCampaignType={handleChangeCampaignType}
           handleOpenFormModal={handleOpenFormModal}
