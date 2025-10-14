@@ -836,6 +836,8 @@ describe('CampaignsService', () => {
     });
 
     it('should throw when joining campaign that reached its end date', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Partial);
+
       campaign.endDate = faker.date.past();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
@@ -854,49 +856,6 @@ describe('CampaignsService', () => {
 
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
     });
-
-    it('should throw when joining campaign that already completed', async () => {
-      campaign.status = CampaignStatus.COMPLETED;
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
-      );
-
-      let thrownError;
-      try {
-        await campaignsService.join(userId, chainId, campaign.address);
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
-      expect(thrownError.chainId).toBe(campaign.chainId);
-      expect(thrownError.address).toBe(campaign.address);
-
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
-    });
-
-    it.each([CampaignStatus.PENDING_CANCELLATION, CampaignStatus.CANCELLED])(
-      'should throw when joining "%s" campaign',
-      async (campaignStatus) => {
-        campaign.status = campaignStatus;
-        mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-          campaign,
-        );
-
-        let thrownError;
-        try {
-          await campaignsService.join(userId, chainId, campaign.address);
-        } catch (error) {
-          thrownError = error;
-        }
-
-        expect(thrownError).toBeInstanceOf(CampaignCancelledError);
-        expect(thrownError.chainId).toBe(campaign.chainId);
-        expect(thrownError.address).toBe(campaign.address);
-
-        expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
-      },
-    );
 
     it.each([
       [EscrowStatus.ToCancel, CampaignCancelledError],

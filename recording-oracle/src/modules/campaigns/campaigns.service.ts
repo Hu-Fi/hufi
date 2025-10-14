@@ -153,32 +153,11 @@ export class CampaignsService {
       );
     }
 
-    if (
-      [CampaignStatus.PENDING_CANCELLATION, CampaignStatus.CANCELLED].includes(
-        campaign.status,
-      )
-    ) {
-      throw new CampaignCancelledError(campaign.chainId, campaign.address);
-    }
-
-    if (
-      campaign.status === CampaignStatus.COMPLETED ||
-      campaign.endDate.valueOf() <= Date.now()
-    ) {
-      /**
-       * Safety belt to disallow joining campaigns that already finished
-       * but might be waiting for results recording or payouts
-       */
-      throw new CampaignAlreadyFinishedError(
-        campaign.chainId,
-        campaign.address,
-      );
-    }
-
     /**
-     * Escrows can be manipulated directly on blockchain (e.g. by admin)
-     * plus we have replication lag, so we have to do a live-check here
-     * and in other similar places where we are sensitive to escrow status
+     * After campaign is created, escrows can be manipulated
+     * directly on blockchain (e.g. by admin), plus we have replication lag,
+     * so we have to do a live-check here and in other similar places
+     * where we are sensitive to escrow status
      */
     const signer = this.web3Service.getSigner(campaign.chainId);
     const escrowClient = await EscrowClient.build(signer);
@@ -188,7 +167,10 @@ export class CampaignsService {
     ) {
       throw new CampaignCancelledError(campaign.chainId, campaign.address);
     }
-    if (escrowStatus === EscrowStatus.Complete) {
+    if (
+      escrowStatus === EscrowStatus.Complete ||
+      campaign.endDate.valueOf() <= Date.now()
+    ) {
       throw new CampaignAlreadyFinishedError(
         campaign.chainId,
         campaign.address,
