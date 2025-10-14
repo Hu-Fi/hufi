@@ -16,6 +16,7 @@ import {
   firstSmallAccordionProps,
   smallAccordionProps,
   smallAccordionSummaryProps,
+  smallAccordionDetailsProps,
  } from './styles';
 
 const RewardsCalculation = () => {
@@ -32,7 +33,7 @@ const RewardsCalculation = () => {
             Market Making Campaigns
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: '22px' }}>
+        <AccordionDetails sx={{ ...smallAccordionDetailsProps }}>
           <Typography variant="body2">
             Every campaign has 3 parameters: fund amount, duration and daily volume target. 
             The first step is calculating the daily reward pool:
@@ -74,7 +75,7 @@ const RewardsCalculation = () => {
             Holding Campaigns
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: '22px' }}>
+        <AccordionDetails sx={{ ...smallAccordionDetailsProps }}>
           <Typography variant="body2">
             Every campaign has 3 parameters: fund amount, duration and daily balance target. 
             The first step is calculating the daily reward pool:

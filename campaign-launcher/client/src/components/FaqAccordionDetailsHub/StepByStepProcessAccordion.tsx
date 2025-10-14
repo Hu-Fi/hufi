@@ -1,7 +1,12 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Accordion, AccordionDetails, AccordionSummary, Typography } from "@mui/material";
 
-import { firstSmallAccordionProps, smallAccordionProps, smallAccordionSummaryProps } from './styles';
+import { 
+  firstSmallAccordionProps, 
+  smallAccordionProps, 
+  smallAccordionSummaryProps,
+  smallAccordionDetailsProps 
+} from './styles';
 
 const StepByStepProcessAccordion = () => {
   return (
@@ -15,7 +20,7 @@ const StepByStepProcessAccordion = () => {
         >
           <Typography variant="body2">Market Making Campaigns</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: '22px' }}>
+        <AccordionDetails sx={{ ...smallAccordionDetailsProps }}>
           <Typography variant="body2" fontWeight={700}>Exchange:</Typography>
           <Typography variant="body2">
             Exchange where you want to participants to generate volume
@@ -61,7 +66,7 @@ const StepByStepProcessAccordion = () => {
         >
           <Typography variant="body2">Holding Campaigns</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: '22px' }}>
+        <AccordionDetails sx={{ ...smallAccordionDetailsProps }}>
           <Typography variant="body2" fontWeight={700}>Exchange:</Typography>
           <Typography variant="body2">
             Exchange where you want to participants to generate volume

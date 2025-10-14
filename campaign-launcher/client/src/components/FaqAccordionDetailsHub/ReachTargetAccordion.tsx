@@ -1,7 +1,12 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Accordion, AccordionDetails, AccordionSummary, Typography } from "@mui/material";
 
-import { firstSmallAccordionProps, smallAccordionProps, smallAccordionSummaryProps } from './styles';
+import { 
+  firstSmallAccordionProps, 
+  smallAccordionProps, 
+  smallAccordionSummaryProps, 
+  smallAccordionDetailsProps 
+} from './styles';
 
 const ReachTargetAccordion = () => {
   return (
@@ -15,7 +20,7 @@ const ReachTargetAccordion = () => {
         >
           <Typography variant="body2">Market Making Campaigns</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: '22px' }}>
+        <AccordionDetails sx={{ ...smallAccordionDetailsProps }}>
           <Typography variant="body2">
             If participants fail to reach the daily volume target, the reward pool will be reduced. 
             Any unused funds remaining at the end of the campaign will be automatically transferred back to the wallet 
@@ -32,7 +37,7 @@ const ReachTargetAccordion = () => {
         >
           <Typography variant="body2">Holding Campaigns</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: '22px' }}>
+        <AccordionDetails sx={{ ...smallAccordionDetailsProps }}>
           <Typography variant="body2">
             If participants fail to reach the daily balance target, the reward pool will be reduced. 
             Any unused funds remaining at the end of the campaign will be automatically transferred back to the wallet 

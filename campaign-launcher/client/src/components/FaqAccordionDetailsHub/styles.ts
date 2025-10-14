@@ -38,12 +38,16 @@ export const smallAccordionSummaryProps = {
   root: {
     sx: {
       minHeight: '32px',
-      px: '22px',
+      px: {xs: '16px', md: '22px'},
       '& .MuiAccordionSummary-content': {
         my: '4px',
       },
     },
   }
+}
+
+export const smallAccordionDetailsProps = {
+  px: { xs: '16px', md: '22px' },
 }
 
 export const listItemTextProps = {

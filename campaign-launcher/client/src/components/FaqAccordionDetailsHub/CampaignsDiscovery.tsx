@@ -69,7 +69,7 @@ const CampaignsDiscovery = () => {
       <Typography variant="body2">
         To join the campaign you need to click on &apos;Join Campaign&apos;. There are 2 possible outcomes:
       </Typography>
-      <List component="ul" sx={{ listStyleType: 'disc', p: 0, pl: 4 }}>
+      <List component="ul" sx={{ listStyleType: 'disc', p: 0, pl: 2 }}>
         <ListItem sx={listItemWithMarkerProps}>
           <ListItemText 
             primary="
