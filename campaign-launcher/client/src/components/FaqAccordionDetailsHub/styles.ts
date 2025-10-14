@@ -38,7 +38,7 @@ export const smallAccordionSummaryProps = {
   root: {
     sx: {
       minHeight: '32px',
-      px: {xs: '16px', md: '22px'},
+      px: { xs: '16px', md: '22px' },
       '& .MuiAccordionSummary-content': {
         my: '4px',
       },
