@@ -28,7 +28,15 @@ const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
   EscrowStatus[]
 > = {
-  [CampaignStatus.ACTIVE]: [EscrowStatus.Pending, EscrowStatus.Partial],
+  [CampaignStatus.ACTIVE]: [
+    EscrowStatus.Pending,
+    EscrowStatus.Partial,
+    /**
+     * TODO: properly display `ToCancel` campaigns on UI.
+     * This should be aligned w/ RecO somehow
+     */
+    EscrowStatus.ToCancel,
+  ],
   [CampaignStatus.CANCELLED]: [EscrowStatus.Cancelled],
   [CampaignStatus.COMPLETED]: [EscrowStatus.Complete],
 };
