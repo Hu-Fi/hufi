@@ -26,7 +26,7 @@ const mockS3ConfigService: Omit<S3ConfigService, 'configService'> = {
   port: faker.internet.port(),
   accessKey: faker.internet.password(),
   secretKey: faker.internet.password(),
-  bucket: faker.lorem.word(),
+  bucket: faker.string.alphanumeric(),
   useSSL: true,
 };
 
@@ -85,7 +85,7 @@ describe('StorageService', () => {
     it('should not upload if file already exists', async () => {
       mockedMinioClientInstance.bucketExists.mockResolvedValueOnce(true);
 
-      const fileName = `${faker.lorem.word()}.json`;
+      const fileName = `${faker.lorem.slug()}.json`;
       mockedMinioClientInstance.statObject.mockImplementation(
         (bucketName, key) => {
           if (bucketName === mockS3ConfigService.bucket && key === fileName) {
