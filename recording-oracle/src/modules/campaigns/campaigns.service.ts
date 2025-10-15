@@ -491,24 +491,6 @@ export class CampaignsService {
             startDate = new Date(lastResultDate.valueOf() + 1);
           }
 
-          const isOngoingCampaign = campaign.endDate > new Date();
-          if (
-            isOngoingCampaign &&
-            dayjs().diff(startDate, 'day', false) === 0
-          ) {
-            /**
-             * If campaign is ongoing - check results only once in 24.
-             * If campaing ended - let it record results immediately to reduce the wait.
-             */
-            logger.debug(
-              "Can't check progress for startDate less than a day ago for ongoing camapign",
-              {
-                startDate,
-              },
-            );
-            return;
-          }
-
           let endDate: Date;
           if (escrowStatus === EscrowStatus.ToCancel) {
             const cancellationRequestedAt =
@@ -521,6 +503,22 @@ export class CampaignsService {
             endDate = dayjs(startDate)
               .add(PROGRESS_PERIOD_DAYS, 'day')
               .toDate();
+
+            const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
+            if (isOngoingCampaign && endDate.valueOf() > Date.now()) {
+              /**
+               * If campaign is ongoing - check results only once per period.
+               * Otherwise - let it record results immediately to reduce the wait.
+               */
+              logger.warn(
+                "Can't check progress for period that is not finished yet",
+                {
+                  startDate,
+                  endDate,
+                },
+              );
+              return;
+            }
           }
 
           if (endDate > campaign.endDate) {
@@ -529,6 +527,12 @@ export class CampaignsService {
 
           // safety-belt
           if (startDate >= endDate) {
+            logger.warn('Campaign progress period dates overlap', {
+              startDate,
+              endDate,
+              escrowStatus,
+              escrowStatusString: EscrowStatus[escrowStatus],
+            });
             if (escrowStatus === EscrowStatus.ToCancel) {
               /**
                * This can happen when:
@@ -550,7 +554,6 @@ export class CampaignsService {
                * already finished and start-end dates overlap indicates that,
                * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
                */
-              logger.warn('Campaign progress period dates overlap');
               campaign.status = CampaignStatus.PENDING_COMPLETION;
               campaign.lastResultsAt = new Date();
               await this.campaignsRepository.save(campaign);

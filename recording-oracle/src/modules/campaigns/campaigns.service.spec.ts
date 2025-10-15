@@ -1960,8 +1960,8 @@ describe('CampaignsService', () => {
     });
 
     it('should not move campaign to "pending_completion" if reached its end date but not all results calculated', async () => {
-      const now = new Date();
-      campaign.endDate = new Date(now.valueOf() - 1);
+      const currentDate = new Date();
+      campaign.endDate = new Date(currentDate.valueOf() - 1);
       campaign.startDate = dayjs(campaign.endDate).subtract(3, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -1972,7 +1972,7 @@ describe('CampaignsService', () => {
         generateStoredResultsMeta(),
       );
 
-      jest.useFakeTimers({ now });
+      jest.useFakeTimers({ now: currentDate });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
@@ -1984,13 +1984,13 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
-        lastResultsAt: now,
+        lastResultsAt: currentDate,
       });
     });
 
     it('should move campaign to "pending_completion" when reached its end date and all results calculated', async () => {
-      const now = new Date();
-      campaign.endDate = new Date(now.valueOf() - 1);
+      const currentDate = new Date();
+      campaign.endDate = new Date(currentDate.valueOf() - 1);
       campaign.startDate = dayjs(campaign.endDate).subtract(1, 'hour').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -2001,7 +2001,7 @@ describe('CampaignsService', () => {
         generateStoredResultsMeta(),
       );
 
-      jest.useFakeTimers({ now });
+      jest.useFakeTimers({ now: currentDate });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
@@ -2014,19 +2014,26 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
         status: 'pending_completion',
-        lastResultsAt: now,
+        lastResultsAt: currentDate,
       });
     });
 
     it('should move campaign to "pending_completion" if recording period dates overlap', async () => {
+      const escrowStatus = faker.helpers.arrayElement([
+        EscrowStatus.Pending,
+        EscrowStatus.Partial,
+      ]);
+      mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
+
+      const currentDate = new Date();
+      campaign.endDate = new Date(currentDate.valueOf() - 1);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
         generateIntermediateResultsData({
           results: [generateIntermediateResult({ endDate: campaign.endDate })],
         }),
       );
 
-      const now = new Date();
-      jest.useFakeTimers({ now });
+      jest.useFakeTimers({ now: currentDate });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
@@ -2037,12 +2044,18 @@ describe('CampaignsService', () => {
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
         'Campaign progress period dates overlap',
+        {
+          startDate: currentDate,
+          endDate: campaign.endDate,
+          escrowStatus,
+          escrowStatusString: EscrowStatus[escrowStatus],
+        },
       );
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
         status: 'pending_completion',
-        lastResultsAt: now,
+        lastResultsAt: currentDate,
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
