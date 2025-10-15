@@ -1,8 +1,16 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography } from '@mui/material';
+import { 
+  Accordion, 
+  AccordionSummary, 
+  AccordionDetails, 
+  Box, 
+  Stack, 
+  Typography, 
+  Skeleton 
+} from '@mui/material';
 
 import { 
   CampaignsDiscovery, 
@@ -56,13 +64,62 @@ const SectionHeader = ({ title }: { title: string }) => (
   </Box>
 )
 
-const VideoPlaceholder = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" bgcolor="background.default" borderRadius="24px" width="480px" height="270px">
-    <Typography variant="body2">
-      The video will be coming soon
-    </Typography>
-  </Box>
-)
+interface VideoWrapperProps {
+  src: string;
+  title: string;
+}
+
+const VideoWrapper: FC<VideoWrapperProps> = ({ src, title }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <Box 
+      display="flex" 
+      justifyContent="center" 
+      alignItems="center" 
+      bgcolor="background.default" 
+      borderRadius="24px" 
+      width={{ xs: "100%", md: "480px", xxl: "640px" }} 
+      height="auto"
+      overflow="hidden"
+      position="relative"
+      sx={{
+        aspectRatio: { xs: '4/3', sm: '16/9' },
+        '& iframe': {
+          border: 'none',
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out',
+        }
+      }}
+    >
+      {isLoading && (
+        <Skeleton 
+          variant="rectangular" 
+          width="100%" 
+          height="100%" 
+          animation="wave"
+          sx={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            bgcolor: 'rgba(255, 255, 255, 0.05)',
+          }}
+        />
+      )}
+      <iframe 
+        width="100%" 
+        height="100%" 
+        src={src}
+        title={title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        referrerPolicy="strict-origin-when-cross-origin" 
+        allowFullScreen 
+        loading="lazy"
+        onLoad={() => setIsLoading(false)}
+      />
+    </Box>
+  );
+}
 
 const Support: FC = () => {
   return (
@@ -111,13 +168,16 @@ const Support: FC = () => {
           display="flex" 
           maxWidth={{ xs: '100%', md: '50%' }} 
           flex={1} 
-          justifyContent={{ xs: "flex-start", md: "flex-end"}}
-          position={{ xs: "relative", md: "sticky"}}
-          top={{ xs: 0, md: 32}}
-          bottom={{ xs: 0, md: 32}}
+          justifyContent={{ xs: "flex-start", md: "flex-end" }}
+          position={{ xs: "relative", md: "sticky" }}
+          top={{ xs: 0, md: 32 }}
+          bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
-          <VideoPlaceholder />
+          <VideoWrapper
+            src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
+            title="How to Launch a HuFi Campaign"
+          />
         </Box>
       </Box>
       <Box 
@@ -178,13 +238,16 @@ const Support: FC = () => {
           display="flex" 
           maxWidth={{ xs: '100%', md: '50%' }} 
           flex={1} 
-          justifyContent={{ xs: "flex-start", md: "flex-end"}}
-          position={{ xs: "relative", md: "sticky"}}
-          top={{ xs: 0, md: 32}}
-          bottom={{ xs: 0, md: 32}}
+          justifyContent={{ xs: "flex-start", md: "flex-end" }}
+          position={{ xs: "relative", md: "sticky" }}
+          top={{ xs: 0, md: 32 }}
+          bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
-          <VideoPlaceholder />
+          <VideoWrapper
+            src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
+            title="How to Participate in a HuFi Campaign"
+          />
         </Box>
       </Box>
       <Box component="section">
