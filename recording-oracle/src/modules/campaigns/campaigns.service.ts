@@ -461,34 +461,14 @@ export class CampaignsService {
             return;
           }
 
-          let startDate = campaign.startDate;
+          if (campaign.startDate >= new Date()) {
+            logger.warn('Campaign not started, skipping progress recording');
+            return;
+          }
 
           let intermediateResults =
             await this.retrieveCampaignIntermediateResults(campaign);
-
-          if (intermediateResults) {
-            const { to: lastResultAt } = intermediateResults.results.at(
-              -1,
-            ) as IntermediateResult;
-
-            const isOngoingCampaign = campaign.endDate > new Date();
-            const lastResultDate = new Date(lastResultAt);
-            if (isOngoingCampaign && dayjs().diff(lastResultAt, 'day') === 0) {
-              /**
-               * If campaign is ongoing - check results only once in 24.
-               * If campaing ended - let it record results immediately to reduce the wait.
-               */
-              logger.debug('Less than a day passed from previous check', {
-                lastResultAt,
-              });
-              return;
-            }
-
-            /**
-             * Add 1 ms to end date because interval boundaries are inclusive
-             */
-            startDate = new Date(lastResultDate.valueOf() + 1);
-          } else {
+          if (!intermediateResults) {
             intermediateResults = {
               chain_id: campaign.chainId,
               address: campaign.address,
@@ -496,6 +476,19 @@ export class CampaignsService {
               symbol: campaign.symbol,
               results: [],
             };
+          }
+
+          let startDate = campaign.startDate;
+          if (intermediateResults.results.length > 0) {
+            const { to: lastResultAt } = intermediateResults.results.at(
+              -1,
+            ) as IntermediateResult;
+
+            const lastResultDate = new Date(lastResultAt);
+            /**
+             * Add 1 ms to end date because interval boundaries are inclusive
+             */
+            startDate = new Date(lastResultDate.valueOf() + 1);
           }
 
           let endDate: Date;
@@ -510,6 +503,22 @@ export class CampaignsService {
             endDate = dayjs(startDate)
               .add(PROGRESS_PERIOD_DAYS, 'day')
               .toDate();
+
+            const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
+            if (isOngoingCampaign && endDate.valueOf() > Date.now()) {
+              /**
+               * If campaign is ongoing - check results only once per period.
+               * Otherwise - let it record results immediately to reduce the wait.
+               */
+              logger.warn(
+                "Can't check progress for period that is not finished yet",
+                {
+                  startDate,
+                  endDate,
+                },
+              );
+              return;
+            }
           }
 
           if (endDate > campaign.endDate) {
@@ -518,6 +527,12 @@ export class CampaignsService {
 
           // safety-belt
           if (startDate >= endDate) {
+            logger.warn('Campaign progress period dates overlap', {
+              startDate,
+              endDate,
+              escrowStatus,
+              escrowStatusString: EscrowStatus[escrowStatus],
+            });
             if (escrowStatus === EscrowStatus.ToCancel) {
               /**
                * This can happen when:
@@ -539,7 +554,6 @@ export class CampaignsService {
                * already finished and start-end dates overlap indicates that,
                * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
                */
-              logger.warn('Campaign progress period dates overlap');
               campaign.status = CampaignStatus.PENDING_COMPLETION;
               campaign.lastResultsAt = new Date();
               await this.campaignsRepository.save(campaign);
