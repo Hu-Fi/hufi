@@ -62,12 +62,12 @@ const SectionHeader = ({ title }: { title: string }) => (
   </Box>
 );
 
-interface VideoPlaceholderProps {
+interface VideoWrapperProps {
   src: string;
   title: string;
 }
 
-const VideoPlaceholder: FC<VideoPlaceholderProps> = ({ src, title }) => {
+const VideoWrapper: FC<VideoWrapperProps> = ({ src, title }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
@@ -172,7 +172,7 @@ const Support: FC = () => {
           bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
-          <VideoPlaceholder
+          <VideoWrapper
             src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
             title="How to Launch a HuFi Campaign"
           />
@@ -244,7 +244,7 @@ const Support: FC = () => {
           bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
-          <VideoPlaceholder
+          <VideoWrapper
             src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
             title="How to Participate in a HuFi Campaign"
           />
