@@ -461,28 +461,21 @@ export class CampaignsService {
             return;
           }
 
+          if (campaign.startDate >= new Date()) {
+            logger.warn('Campaign not started, skipping progress recording');
+            return;
+          }
+
           let startDate = campaign.startDate;
 
           let intermediateResults =
             await this.retrieveCampaignIntermediateResults(campaign);
-
           if (intermediateResults) {
             const { to: lastResultAt } = intermediateResults.results.at(
               -1,
             ) as IntermediateResult;
 
-            const isOngoingCampaign = campaign.endDate > new Date();
             const lastResultDate = new Date(lastResultAt);
-            if (isOngoingCampaign && dayjs().diff(lastResultAt, 'day') === 0) {
-              /**
-               * If campaign is ongoing - check results only once in 24.
-               * If campaing ended - let it record results immediately to reduce the wait.
-               */
-              logger.debug('Less than a day passed from previous check', {
-                lastResultAt,
-              });
-              return;
-            }
 
             /**
              * Add 1 ms to end date because interval boundaries are inclusive
@@ -496,6 +489,24 @@ export class CampaignsService {
               symbol: campaign.symbol,
               results: [],
             };
+          }
+
+          const isOngoingCampaign = campaign.endDate > new Date();
+          if (
+            isOngoingCampaign &&
+            dayjs().diff(startDate, 'day', false) === 0
+          ) {
+            /**
+             * If campaign is ongoing - check results only once in 24.
+             * If campaing ended - let it record results immediately to reduce the wait.
+             */
+            logger.debug(
+              "Can't check progress for startDate less than a day ago for ongoing camapign",
+              {
+                startDate,
+              },
+            );
+            return;
           }
 
           let endDate: Date;
