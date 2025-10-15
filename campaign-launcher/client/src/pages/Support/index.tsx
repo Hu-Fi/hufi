@@ -1,4 +1,4 @@
-import type { FC, ReactNode } from 'react';
+import { type FC, useState } from 'react';
 
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -9,6 +9,7 @@ import {
   Box,
   Stack,
   Typography,
+  Skeleton,
 } from '@mui/material';
 
 import {
@@ -61,26 +62,51 @@ const SectionHeader = ({ title }: { title: string }) => (
   </Box>
 );
 
-const VideoPlaceholder = ({ children }: { children: ReactNode }) => (
-  <Box
-    display="flex"
-    justifyContent="center"
-    alignItems="center"
-    bgcolor="background.default"
-    borderRadius="24px"
-    width={{ xs: '100%', md: '480px', xxl: '640px' }}
-    height="auto"
-    overflow="hidden"
-    sx={{
-      aspectRatio: { xs: '4/3', sm: '16/9' },
-      '& iframe': {
-        border: 'none',
-      },
-    }}
-  >
-    {children}
-  </Box>
-);
+interface VideoPlaceholderProps {
+  render: (props: { onLoad: () => void }) => JSX.Element;
+}
+
+const VideoPlaceholder: FC<VideoPlaceholderProps> = ({ render }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      bgcolor="background.default"
+      borderRadius="24px"
+      width={{ xs: '100%', md: '480px', xxl: '640px' }}
+      height="auto"
+      overflow="hidden"
+      position="relative"
+      sx={{
+        aspectRatio: { xs: '4/3', sm: '16/9' },
+        '& iframe': {
+          border: 'none',
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out',
+        },
+      }}
+    >
+      {isLoading && (
+        <Skeleton
+          variant="rectangular"
+          width="100%"
+          height="100%"
+          animation="wave"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            bgcolor: 'rgba(255, 255, 255, 0.05)',
+          }}
+        />
+      )}
+      {render({ onLoad: () => setIsLoading(false) })}
+    </Box>
+  );
+};
 
 const Support: FC = () => {
   return (
@@ -135,17 +161,21 @@ const Support: FC = () => {
           bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
-          <VideoPlaceholder>
-            <iframe
-              width="100%"
-              height="100%"
-              src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
-              title="How to Launch a HuFi Campaign"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
-          </VideoPlaceholder>
+          <VideoPlaceholder
+            render={({ onLoad }) => (
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
+                title="How to Launch a HuFi Campaign"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+                onLoad={onLoad}
+              />
+            )}
+          />
         </Box>
       </Box>
       <Box
@@ -214,17 +244,21 @@ const Support: FC = () => {
           bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
-          <VideoPlaceholder>
-            <iframe
-              width="100%"
-              height="100%"
-              src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
-              title="How to Participate in a HuFi Campaign"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
-          </VideoPlaceholder>
+          <VideoPlaceholder
+            render={({ onLoad }) => (
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
+                title="How to Participate in a HuFi Campaign"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+                onLoad={onLoad}
+              />
+            )}
+          />
         </Box>
       </Box>
       <Box component="section">
