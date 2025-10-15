@@ -466,22 +466,9 @@ export class CampaignsService {
             return;
           }
 
-          let startDate = campaign.startDate;
-
           let intermediateResults =
             await this.retrieveCampaignIntermediateResults(campaign);
-          if (intermediateResults) {
-            const { to: lastResultAt } = intermediateResults.results.at(
-              -1,
-            ) as IntermediateResult;
-
-            const lastResultDate = new Date(lastResultAt);
-
-            /**
-             * Add 1 ms to end date because interval boundaries are inclusive
-             */
-            startDate = new Date(lastResultDate.valueOf() + 1);
-          } else {
+          if (!intermediateResults) {
             intermediateResults = {
               chain_id: campaign.chainId,
               address: campaign.address,
@@ -489,6 +476,19 @@ export class CampaignsService {
               symbol: campaign.symbol,
               results: [],
             };
+          }
+
+          let startDate = campaign.startDate;
+          if (intermediateResults.results.length > 0) {
+            const { to: lastResultAt } = intermediateResults.results.at(
+              -1,
+            ) as IntermediateResult;
+
+            const lastResultDate = new Date(lastResultAt);
+            /**
+             * Add 1 ms to end date because interval boundaries are inclusive
+             */
+            startDate = new Date(lastResultDate.valueOf() + 1);
           }
 
           const isOngoingCampaign = campaign.endDate > new Date();
