@@ -26,7 +26,6 @@ Reputation Oracle is a backend service responsible for:
 
 All required environment variables are listed in [.env.example](./.env.example).
 Copy this file to `.env` and fill in the values as needed.
-q
 Some variables may need extra explanation:
 
 - `WEB3_PRIVATE_KEY`
