@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -56,11 +56,24 @@ const SectionHeader = ({ title }: { title: string }) => (
   </Box>
 )
 
-const VideoPlaceholder = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" bgcolor="background.default" borderRadius="24px" width="480px" height="270px">
-    <Typography variant="body2">
-      The video will be coming soon
-    </Typography>
+const VideoPlaceholder = ({ children }: { children: ReactNode }) => (
+  <Box 
+    display="flex" 
+    justifyContent="center" 
+    alignItems="center" 
+    bgcolor="background.default" 
+    borderRadius="24px" 
+    width={{ xs: "100%", md: "480px", xxl: "640px"}} 
+    height="auto"
+    overflow="hidden"
+    sx={{
+      aspectRatio: { xs: '4/3', sm: '16/9'},
+      '& iframe': {
+        border: 'none',
+      }
+    }}
+  >
+    {children}
   </Box>
 )
 
@@ -117,7 +130,17 @@ const Support: FC = () => {
           bottom={{ xs: 0, md: 32}}
           height="fit-content"
         >
-          <VideoPlaceholder />
+          <VideoPlaceholder>
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7" 
+              title="How to Launch a HuFi Campaign" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerPolicy="strict-origin-when-cross-origin" 
+              allowFullScreen 
+            />
+          </VideoPlaceholder>
         </Box>
       </Box>
       <Box 
@@ -184,7 +207,17 @@ const Support: FC = () => {
           bottom={{ xs: 0, md: 32}}
           height="fit-content"
         >
-          <VideoPlaceholder />
+          <VideoPlaceholder>
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7" 
+              title="How to Participate in a HuFi Campaign" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerPolicy="strict-origin-when-cross-origin" 
+              allowFullScreen 
+            />
+          </VideoPlaceholder>
         </Box>
       </Box>
       <Box component="section">
