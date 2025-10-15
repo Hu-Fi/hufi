@@ -427,7 +427,11 @@ export class CampaignsService {
     await this.pgAdvisoryLock.withLock(
       `record-campaign-progress:${campaign.id}`,
       async () => {
-        if (campaign.status !== CampaignStatus.ACTIVE) {
+        const hasProcessableStatus = [
+          CampaignStatus.ACTIVE,
+          CampaignStatus.TO_CANCEL,
+        ].includes(campaign.status);
+        if (!hasProcessableStatus) {
           // safety-belt
           return;
         }

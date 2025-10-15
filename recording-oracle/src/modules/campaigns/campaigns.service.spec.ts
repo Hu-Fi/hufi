@@ -1527,7 +1527,11 @@ describe('CampaignsService', () => {
     });
 
     it.each(
-      Object.values(CampaignStatus).filter((s) => s !== CampaignStatus.ACTIVE),
+      Object.values(CampaignStatus).filter(
+        (s) =>
+          [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL].includes(s) ===
+          false,
+      ),
     )(
       'should not process campaign when status is "%s"',
       async (campaignStatus) => {

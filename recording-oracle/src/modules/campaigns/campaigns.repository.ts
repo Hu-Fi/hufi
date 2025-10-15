@@ -34,15 +34,16 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     const results = await this.createQueryBuilder('campaign')
       .where(
         `
-          campaign.status = :status
-          AND (
-            campaign.endDate <= :now
-            OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
-            OR campaign.lastResultsAt <= :timeAgo
+          campaign.status = '${CampaignStatus.TO_CANCEL}'
+          OR (campaign.status = '${CampaignStatus.ACTIVE}'
+            AND (
+              campaign.endDate <= :now
+              OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
+              OR campaign.lastResultsAt <= :timeAgo
+            )
           )
         `,
         {
-          status: CampaignStatus.ACTIVE,
           now,
           timeAgo,
         },
