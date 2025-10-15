@@ -5,7 +5,9 @@ import { Box, Button, SxProps, Tooltip, Typography } from '@mui/material';
 import { useIsXlDesktop } from '../../hooks/useBreakpoints';
 import useRetrieveSigner from '../../hooks/useRetrieveSigner';
 import { useStakeContext } from '../../providers/StakeProvider';
+import { CampaignType } from '../../types';
 import CampaignSetupModal from '../modals/CampaignSetupModal';
+import CreateCampaignModal from '../modals/CreateCampaignModal';
 
 type Props = {
   variant: 'outlined' | 'contained';
@@ -49,7 +51,9 @@ const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({ isDisabled, 
 }
 
 const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [campaignType, setCampaignType] = useState<CampaignType | null>(null)
 
   const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
@@ -57,10 +61,23 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
 
   const isDisabled = !signer || isClientInitializing;
 
-  const onClick = async () => {
+  const handleLaunchCampaignClick = async () => {
     if (isDisabled) return null;
 
-    setIsModalOpen(true);
+    setIsSetupModalOpen(true);
+  };
+
+  const handleChangeCampaignType = (type: CampaignType) => {
+    setCampaignType(type);
+  };
+
+  const handleOpenFormModal = () => {
+    setIsFormModalOpen(true);
+  };
+
+  const handleCloseFormModal = () => {
+    setIsFormModalOpen(false);
+    setCampaignType(null);
   };
 
   return (
@@ -75,15 +92,28 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
             ...sx,
           }}
           disabled={isDisabled}
-          onClick={onClick}
+          onClick={handleLaunchCampaignClick}
         >
           Launch Campaign
         </Button>
       </ButtonWrapper>
-      <CampaignSetupModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {isSetupModalOpen && (
+        <CampaignSetupModal
+          open={isSetupModalOpen}
+          onClose={() => setIsSetupModalOpen(false)}
+          campaignType={campaignType}
+          handleChangeCampaignType={handleChangeCampaignType}
+          handleOpenFormModal={handleOpenFormModal}
+        />
+      )}
+      {campaignType && isFormModalOpen && (
+        <CreateCampaignModal
+          open={isFormModalOpen}
+          onClose={handleCloseFormModal}
+          campaignType={campaignType}
+          
+        />
+      )}
     </>
   );
 };
