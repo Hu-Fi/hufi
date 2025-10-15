@@ -15,16 +15,19 @@ const CampaignsDiscovery = () => {
       </Typography>
       <img src="/tableImage.png" alt="Campaigns discovery" width="100%" height="auto" />
       <Typography variant="body2" mt={2}>
-        <strong>Pair:{' '}</strong>A pair of tokens you will need to trade
+        <strong>Symbol:{' '}</strong>A token or a pair of tokens you will need to operate with.
       </Typography>
       <Typography variant="body2">
-        <strong>Exchange:{' '}</strong>An exchange where you will need to trade.
+        <strong>Exchange:{' '}</strong>An exchange where you will need to operate.
       </Typography>
       <Typography variant="body2">
-        <strong>Address:{' '}</strong>Since every campaign is a smart contract, you can check the information about this contract in a blockchain explorer.
+        <strong>Type:{' '}</strong>The campaign type, can be Holding or Market Making.
       </Typography>
       <Typography variant="body2">
         <strong>Network:{' '}</strong>Network on which campaign is created and where you will get your rewards.
+      </Typography>
+      <Typography variant="body2">
+        <strong>Address:{' '}</strong>Since every campaign is a smart contract, you can check the information about this contract in a blockchain explorer.
       </Typography>
       <Typography variant="body2">
         <strong>Start date:{' '}</strong>A date when the campaign starts (might be in the future).
@@ -66,7 +69,7 @@ const CampaignsDiscovery = () => {
       <Typography variant="body2">
         To join the campaign you need to click on &apos;Join Campaign&apos;. There are 2 possible outcomes:
       </Typography>
-      <List component="ul" sx={{ listStyleType: 'disc', p: 0, pl: 4 }}>
+      <List component="ul" sx={{ listStyleType: 'disc', p: 0, pl: 2 }}>
         <ListItem sx={listItemWithMarkerProps}>
           <ListItemText 
             primary="

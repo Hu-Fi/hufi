@@ -1,5 +1,6 @@
 import { List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
 
+import StepByStepProcessAccordion from "./StepByStepProcessAccordion";
 import { listItemTextProps, listItemWithMarkerProps, listItemWithNumberProps } from './styles';
 
 const StepByStepProcess = () => {
@@ -39,55 +40,19 @@ const StepByStepProcess = () => {
         </ListItem>
         <ListItem disablePadding sx={listItemWithNumberProps}>
           <ListItemText 
-            primary="Click on 'Launch Campaign'"
-            slotProps={listItemTextProps}
-          />
-        </ListItem>
-        <ListItem disablePadding sx={listItemWithNumberProps}>
-          <ListItemText 
-            slotProps={listItemTextProps}
             primary={
-              <>
+              <Stack mb={2}>
+                <Typography variant="body2">
+                  Click on &apos;Launch Campaign&apos;, in an opened modal you&apos;ll 
+                  be asked to fill in the details about the campaign you want to create.
+                </Typography>
                 <Typography variant="body2" mb={2}>
-                  In an opened modal you&apos;ll be asked to fill in the details about the campaign you want to create
+                  Let&apos;s break down what all the fields mean:
                 </Typography>
-                <Typography variant="body2" mb={2}>Let&apos;s break down what all the fields mean:</Typography>
-                <Typography variant="body2" fontWeight={700}>Exchange:</Typography>
-                <Typography variant="body2">
-                  Exchange where you want to participants to generate volume
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>Trading pair:</Typography>
-                <Typography variant="body2">
-                  A pair of tokens you want users to trade (e.g. ETH/USDT)
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>Start date:</Typography>
-                <Typography variant="body2">
-                  Date when the campaign will start. If you choose today&apos;s date, the campaign will start immediately,
-                  otherwise it will start at 00:00 your timezone of the date you chose.
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>End date:</Typography>
-                <Typography variant="body2">
-                  Date when the campaign will end.
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>Fund token:</Typography>
-                <Typography variant="body2">
-                  A token you want to fund a campaign with, either HMT, USDT or USDC.
-                  Basically it&apos;s a reward token for participants.
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>Fund amount:</Typography>
-                <Typography variant="body2">
-                  Amount of the reward you want to fund an escrow with.
-                  This amount will be divided into the campaign duration to form a daily reward pool.
-                  Just remember, the higher the reward, more enthusiastic participants will be about your campaign.
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>Daily volume target:</Typography>
-                <Typography variant="body2" mb={2}>
-                  A target you want to set for a quote token that should be reached daily.
-                  If participants reach this target (and above), the daily reward pool will be distributed fully,
-                  otherwise proportionally to the target you set.
-                </Typography>
-              </>
+                <StepByStepProcessAccordion />
+              </Stack>
             }
+            slotProps={listItemTextProps}
           />
         </ListItem>
         <ListItem disablePadding sx={listItemWithNumberProps}>
