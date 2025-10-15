@@ -11,61 +11,30 @@ HuFi utilizes the Human Protocol to ensure fair compensation for market makers. 
 
 ## Services
 - [Campaign Launcher](./campaign-launcher)
+  - [Client](./campaign-launcher/client/)
   
-  Campaign launcher launches market making campaigns.
+      A web-based interface that lets users create, join, and manage market-making campaigns directly from their wallet (e.g., MetaMask). It interacts with HuFi smart contracts to deploy new escrows, display live campaign data, and allow participants to track information about the campaigns they’ve joined.
+      [More info](./campaign-launcher/client/README.md)
+  - [Server](./campaign-launcher/server/)
+  
+      A backend service that connects the client with both blockchain and off-chain (such as subgraph) data sources. It aggregates information from the HuFi subgraph and blockchain (via RPC) to provide a unified, real-time view of campaign states and participant activity.
+      [More info](./campaign-launcher/server/README.md)
+  
 - [Mr.Market](https://github.com/Hu-Fi/Mr.Market)
   
   Mr.Market is a trading bot, that is contributing to the market making campaigns. Users can contribute to Mr.Market itself by providing liquidity, so that they can be rewarded the portion of rewards that Mr.Market makes.
 - [Recording oracle](./recording-oracle)
   
-  Recording oracle keeps track of the activities for the campaigns(trading, making orders, etc.).
+  A service that handles participant registration and campaign performance tracking. It securely stores read-only exchange API keys, retrieves information relevant to each campaign to evaluate participant performance, and writes validated results to the corresponding escrow contracts.
+  [More info](./recording-oracle/README.md)
 - [Reputation oracle](./reputation-oracle)
   
-  Reputation oracle calculates the score of each user involved in the campaign, and distributes the campaign fund.
+  A service that finalizes campaign outcomes. It verifies recorded results, calculates participant rewards, and executes on-chain payouts. Reputation Oracle runs as a GitHub Action, enabling automated, reproducible, and transparent reward distribution workflows.
+  [More info](./reputation-oracle/README.md)
 
-## Development
+## Tech Stack
 
-### Prerequisites
-- [Docker](https://docs.docker.com/engine/install/)
-- [Node.js (*v18 is recommended*)](https://nodejs.org/en/download/package-manager) 
-- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
-
-And setup project dependencies:
-```bash
-$ yarn install & yarn husky
-```
-From the project root
-
-### All in one go
-
-1. Install all dependencies
-    ```bash
-    $ yarn setup
-    ```
-
-2. Prepare Human Protocl Eco-System
-   
-   **Run this from [Human Protocol](https://github.com/humanprotocol/human-protocol) repo.**
-   ```bash
-   $ cd scripts
-   $ make web3
-   ```
-
-3. Deploy HumanUSD contracts
-   
-   **Run this from [HumanUSD](https://github.com/Hu-Fi/human-usd) repo.
-   ```bash
-   $ yarn deploy:local
-   ```
-
-4. Start development servers
-    ```bash
-    $ yarn start
-    ```
-
-### Individual services
-Please refer to README of individual services.
-- [Campaign Launcher UI](./campaign-launcher/interface/README.md)
-- [Campaign Launcher API](./campaign-launcher/server/README.md)
-- [Recording Oracle](./recording-oracle/README.md)
-- [Reputation Oracle](./reputation-oracle/README.md)
+- [Nest.js v11](https://nestjs.com/)
+- [React v18](https://react.dev/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Human Protocol SDK](https://www.npmjs.com/package/@human-protocol/sdk?activeTab=readme)
