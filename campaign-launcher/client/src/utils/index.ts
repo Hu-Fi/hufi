@@ -15,6 +15,7 @@ import {
   Campaign,
   CampaignDetails,
   CampaignFormValues,
+  CampaignStatus,
   CampaignType,
 } from '../types';
 
@@ -91,7 +92,7 @@ export const mapStatusToColor = (
   const now = new Date().toISOString();
 
   switch (status) {
-    case 'active':
+    case CampaignStatus.ACTIVE:
       if (now < startDate) {
         return theme.palette.warning.main;
       } else if (now > endDate) {
@@ -99,10 +100,12 @@ export const mapStatusToColor = (
       } else {
         return theme.palette.success.main;
       }
-    case 'cancelled':
+    case CampaignStatus.CANCELLED:
       return theme.palette.primary.main;
-    case 'completed':
+    case CampaignStatus.COMPLETED:
       return theme.palette.secondary.main;
+    case CampaignStatus.TO_CANCEL:
+      return 'cyan';
     default:
       return theme.palette.primary.main;
   }

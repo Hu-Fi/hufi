@@ -129,6 +129,10 @@ const statusTooltipData = [
     color: 'secondary.main',
   },
   {
+    status: 'Pending campaign cancellation',
+    color: 'cyan',
+  },
+  {
     status: 'Cancelled',
     color: 'primary.main',
     border: '1px solid',
@@ -220,7 +224,7 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 160,
       renderCell: (params) => (
         <Typography>{mapTypeToLabel(params.row.type)}</Typography>
-      )
+      ),
     },
     {
       field: 'network',
@@ -293,8 +297,9 @@ const CampaignsTable: FC<Props> = ({
             </Typography>
           );
         }
-        
-        const { fund_amount, fund_token_decimals, fund_token_symbol } = params.row;
+
+        const { fund_amount, fund_token_decimals, fund_token_symbol } =
+          params.row;
 
         return (
           <Typography variant="subtitle2">
@@ -413,9 +418,10 @@ const CampaignsTable: FC<Props> = ({
           px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
-          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
-            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
-          },
+          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer':
+            {
+              justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
+            },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: 'center',
           },
@@ -466,9 +472,10 @@ const CampaignsTable: FC<Props> = ({
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {
           outline: 'none',
         },
-        '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within': {
-          outline: 'none',
-        },
+        '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within':
+          {
+            outline: 'none',
+          },
       }}
     />
   );

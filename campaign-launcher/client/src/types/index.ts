@@ -20,6 +20,7 @@ export enum CampaignsView {
 
 export enum CampaignStatus {
   ACTIVE = 'active',
+  TO_CANCEL = 'to_cancel',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }

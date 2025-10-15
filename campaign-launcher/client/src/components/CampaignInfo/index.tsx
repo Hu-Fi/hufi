@@ -56,7 +56,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
           variant="subtitle2"
           color={isCompleted ? 'secondary.contrast' : 'primary.contrast'}
         >
-          {campaign.status}
+          {campaign.status.split('_').join(' ')}
         </Typography>
       </Box>
       <CampaignAddress
