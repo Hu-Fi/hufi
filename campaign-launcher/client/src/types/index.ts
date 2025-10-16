@@ -75,6 +75,7 @@ export type Campaign = {
   symbol: string;
   type: CampaignType;
   reserved_funds: string;
+  balance: string;
 };
 
 export type CampaignDetails = Campaign & {

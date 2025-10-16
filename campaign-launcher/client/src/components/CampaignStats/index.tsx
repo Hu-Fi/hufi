@@ -131,14 +131,19 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
 
   if (!campaign) return null;
 
+  const isOngoingCampaign =
+    campaign.status === CampaignStatus.ACTIVE &&
+    now >= campaign.start_date &&
+    now <= campaign.end_date;
+
+  const hasProgressBeforeCancel =
+    campaign.status === CampaignStatus.TO_CANCEL &&
+    campaign.reserved_funds !== campaign.balance;
+
   const showProgressWidget =
     isAuthenticated &&
     isJoined &&
-    [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL].includes(
-      campaign.status as CampaignStatus
-    ) &&
-    now >= campaign.start_date &&
-    now <= campaign.end_date;
+    (isOngoingCampaign || hasProgressBeforeCancel);
 
   const exchangeName =
     exchangesMap.get(campaign.exchange_name)?.display_name ||
