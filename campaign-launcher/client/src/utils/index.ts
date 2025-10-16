@@ -105,6 +105,8 @@ export const mapStatusToColor = (
       return theme.palette.primary.main;
     case CampaignStatus.COMPLETED:
       return theme.palette.secondary.main;
+    case CampaignStatus.TO_CANCEL:
+      return 'cyan';
     default:
       return theme.palette.primary.main;
   }

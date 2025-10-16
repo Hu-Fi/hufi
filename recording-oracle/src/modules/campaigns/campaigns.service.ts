@@ -74,7 +74,7 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_30_MINUTES;
 
-const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
+const CAMPAIGN_STATUSES_SYNC_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_5_MINUTES;
 
@@ -427,7 +427,11 @@ export class CampaignsService {
     await this.pgAdvisoryLock.withLock(
       `record-campaign-progress:${campaign.id}`,
       async () => {
-        if (campaign.status !== CampaignStatus.ACTIVE) {
+        const hasProcessableStatus = [
+          CampaignStatus.ACTIVE,
+          CampaignStatus.TO_CANCEL,
+        ].includes(campaign.status);
+        if (!hasProcessableStatus) {
           // safety-belt
           return;
         }
@@ -888,15 +892,15 @@ export class CampaignsService {
     }
   }
 
-  @Cron(CAMPAIGNS_FINISH_TRACKING_SCHEDULE)
-  async trackCampaignsFinish(): Promise<void> {
-    this.logger.debug('Campaigns finish tracking job started');
+  @Cron(CAMPAIGN_STATUSES_SYNC_SCHEDULE)
+  async syncCampaignStatuses(): Promise<void> {
+    this.logger.debug('Campaign statuses sync job started');
 
     try {
-      const campaignsToTrack =
-        await this.campaignsRepository.findForFinishTracking();
+      const campaignsToSync =
+        await this.campaignsRepository.findForStatusSync();
 
-      for (const campaign of campaignsToTrack) {
+      for (const campaign of campaignsToSync) {
         const escrow = await EscrowUtils.getEscrow(
           campaign.chainId,
           campaign.address,
@@ -926,13 +930,24 @@ export class CampaignsService {
           });
           campaign.status = CampaignStatus.CANCELLED;
           await this.campaignsRepository.save(campaign);
+        } else if (
+          escrow.status === EscrowStatus[EscrowStatus.ToCancel] &&
+          campaign.status === CampaignStatus.ACTIVE
+        ) {
+          this.logger.info('Marking campaign as to_cancel', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          campaign.status = CampaignStatus.TO_CANCEL;
+          await this.campaignsRepository.save(campaign);
         }
       }
     } catch (error) {
-      this.logger.error('Error while tracking campaigns finish', error);
+      this.logger.error('Error while syncing campaign statuses', error);
     }
 
-    this.logger.debug('Campaigns finish tracking job finished');
+    this.logger.debug('Campaign statuses sync job finished');
   }
 
   async checkUserJoined(
