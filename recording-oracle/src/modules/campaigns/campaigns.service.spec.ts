@@ -2561,6 +2561,7 @@ describe('CampaignsService', () => {
 
     let spyOnGetCampaignProgressChecker: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
+    let spyOnGetCancellationRequestDate: jest.SpyInstance;
 
     let userId: string;
     let evmAddress: string;
@@ -2587,20 +2588,30 @@ describe('CampaignsService', () => {
     beforeEach(() => {
       campaign = generateCampaignEntity();
 
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
         mockCampaignProgressChecker,
       );
+      spyOnGetCancellationRequestDate = jest.spyOn(
+        escrowUtils,
+        'getCancellationRequestDate',
+      );
+      spyOnGetCancellationRequestDate.mockImplementation();
     });
 
     afterAll(() => {
       spyOnGetCampaignProgressChecker.mockRestore();
       spyOnCheckCampaignProgressForPeriod.mockRestore();
+      spyOnGetCancellationRequestDate.mockRestore();
     });
 
     it('should throw if campaign not found', async () => {
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        null,
-      );
+      mockCampaignsRepository.findOneByChainIdAndAddress
+        .mockReset()
+        .mockResolvedValueOnce(null);
 
       let thrownError;
       try {
@@ -2635,10 +2646,6 @@ describe('CampaignsService', () => {
         now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
       });
 
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
-      );
-
       let thrownError;
       try {
         await campaignsService.getUserProgress(
@@ -2671,12 +2678,8 @@ describe('CampaignsService', () => {
 
     it('should throw if campaign already finished', async () => {
       jest.useFakeTimers({
-        now: dayjs(campaign.endDate).add(1, 'millisecond').toDate(),
+        now: new Date(campaign.endDate.valueOf() + 1),
       });
-
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
-      );
 
       let thrownError;
       try {
@@ -2708,10 +2711,78 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw if user not joined', async () => {
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
+    it('should throw if campaign is about to cancel and current period is after cancellation request', async () => {
+      campaign.status = CampaignStatus.TO_CANCEL;
+      const cancellationRequestedAt = dayjs().subtract(1, 'hour').toDate();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
       );
+
+      let thrownError;
+      try {
+        await campaignsService.getUserProgress(
+          userId,
+          evmAddress,
+          chainId,
+          campaign.address,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+      expect(thrownError.chainId).toBe(chainId);
+      expect(thrownError.address).toBe(campaign.address);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+    });
+
+    it.each([
+      CampaignStatus.CANCELLED,
+      CampaignStatus.PENDING_CANCELLATION,
+      CampaignStatus.COMPLETED,
+    ])(
+      'should throw if campaign status is not eligible for progress check: "%s"',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        let thrownError;
+        try {
+          await campaignsService.getUserProgress(
+            userId,
+            evmAddress,
+            chainId,
+            campaign.address,
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+        expect(thrownError.chainId).toBe(chainId);
+        expect(thrownError.address).toBe(campaign.address);
+
+        expect(
+          mockCampaignsRepository.findOneByChainIdAndAddress,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          mockCampaignsRepository.findOneByChainIdAndAddress,
+        ).toHaveBeenCalledWith(chainId, campaign.address);
+
+        expect(
+          mockUserCampaignsRepository.checkUserJoinedCampaign,
+        ).toHaveBeenCalledTimes(0);
+      },
+    );
+
+    it('should throw if user not joined', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
@@ -2733,10 +2804,7 @@ describe('CampaignsService', () => {
       expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(0);
     });
 
-    it('should return campaign progress for participant', async () => {
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
-      );
+    it('should return campaign progress for participant for active campaign', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
@@ -2748,6 +2816,7 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
+        .add(1, 'millisecond')
         .toDate();
       const expectedTimeframeIsoString = expectedTimeframeStart.toISOString();
 
@@ -2795,8 +2864,82 @@ describe('CampaignsService', () => {
         now,
       );
       expect(progress).toEqual({
-        from: expectedTimeframeIsoString,
-        to: nowIsoString,
+        from: campaignProgress.from,
+        to: campaignProgress.to,
+        myScore: participantOutcome.score,
+        myMeta: {
+          [participantMetaProp]: participantMetaValue,
+        },
+        totalMeta: campaignProgress.meta,
+      });
+    });
+
+    it('should return campaign progress for participant for to_cancel campaign', async () => {
+      campaign.status = CampaignStatus.TO_CANCEL;
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        true,
+      );
+
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
+
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(campaignDaysPassed, 'days')
+        .add(1, 'millisecond')
+        .toDate();
+      const expectedTimeframeStartIsoString =
+        expectedTimeframeStart.toISOString();
+
+      const cancellationRequestedAt = dayjs(expectedTimeframeStart)
+        .add(1, 'minute')
+        .toDate();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
+      );
+      const cancellationRequestedAtIsoString =
+        cancellationRequestedAt.toISOString();
+
+      const participantMetaProp = faker.lorem.word();
+      const participantMetaValue = faker.number.float();
+      const participantOutcome = generateParticipantOutcome({
+        address: evmAddress,
+        [participantMetaProp]: participantMetaValue,
+      });
+
+      const campaignProgress: CampaignProgress<Record<string, unknown>> = {
+        from: expectedTimeframeStartIsoString,
+        to: cancellationRequestedAtIsoString,
+        participants_outcomes: [
+          generateParticipantOutcome(),
+          participantOutcome,
+          generateParticipantOutcome(),
+        ],
+        meta: {
+          anything: faker.number.float(),
+        },
+      };
+
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      const progress = await campaignsService.getUserProgress(
+        userId,
+        evmAddress,
+        chainId,
+        campaign.address,
+      );
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+        campaign,
+        expectedTimeframeStart,
+        cancellationRequestedAt,
+      );
+      expect(progress).toEqual({
+        from: campaignProgress.from,
+        to: campaignProgress.to,
         myScore: participantOutcome.score,
         myMeta: {
           [participantMetaProp]: participantMetaValue,
