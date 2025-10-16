@@ -1,6 +1,11 @@
-import { createContext, FC, PropsWithChildren, useContext } from 'react';
+import {
+  type FC,
+  type PropsWithChildren,
+  createContext,
+  useContext,
+} from 'react';
 
-import { useStake } from '../hooks/useStake';
+import { useStake } from '@/hooks/useStake';
 
 const StakeContext = createContext<ReturnType<typeof useStake> | undefined>(
   undefined

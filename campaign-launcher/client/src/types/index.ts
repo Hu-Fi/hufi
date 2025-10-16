@@ -1,4 +1,4 @@
-import { ChainId } from '@human-protocol/sdk';
+import type { ChainId } from '@human-protocol/sdk';
 
 export type EvmAddress = `0x${string}`;
 
@@ -127,19 +127,19 @@ export type OracleFees = {
 
 export type HoldingResult = {
   token_balance: number;
-}
+};
 
 export type HoldingMeta = {
   total_balance: number;
-}
+};
 
 export type MarketMakingResult = {
   total_volume: number;
-}
+};
 
 export type MarketMakingMeta = {
   total_volume: number;
-}
+};
 
 export type MyMeta = HoldingResult | MarketMakingResult;
 export type TotalMeta = HoldingMeta | MarketMakingMeta;

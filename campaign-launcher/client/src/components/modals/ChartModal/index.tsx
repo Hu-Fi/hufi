@@ -1,10 +1,10 @@
-import { FC } from "react";
+import type { FC } from 'react';
 
-import { Typography } from "@mui/material";
+import { Typography } from '@mui/material';
 
-import { CampaignDetails } from "../../../types";
-import DailyAmountPaidChart from "../../DailyAmountPaidChart";
-import BaseModal from "../BaseModal"
+import type { CampaignDetails } from '../../../types';
+import DailyAmountPaidChart from '../../DailyAmountPaidChart';
+import BaseModal from '../BaseModal';
 
 type Props = {
   open: boolean;
@@ -28,14 +28,14 @@ const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
       <Typography variant="h4" color="text.primary" mb={{ xs: 3, md: 7 }}>
         Paid Amount Chart
       </Typography>
-      <DailyAmountPaidChart 
-        data={campaign.daily_paid_amounts} 
-        endDate={campaign.end_date} 
-        tokenSymbol={campaign.fund_token_symbol} 
-        tokenDecimals={campaign.fund_token_decimals} 
+      <DailyAmountPaidChart
+        data={campaign.daily_paid_amounts}
+        endDate={campaign.end_date}
+        tokenSymbol={campaign.fund_token_symbol}
+        tokenDecimals={campaign.fund_token_decimals}
       />
     </BaseModal>
-  )
-}
+  );
+};
 
 export default ChartModal;

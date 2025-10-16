@@ -10,12 +10,13 @@ export const breakpoints = {
   xl: '(min-width: 1537px)',
 } as const;
 
-export type BreakpointResult = {
-  [K in Breakpoint]: {
+export type BreakpointResult = Record<
+  Breakpoint,
+  {
     isActive: boolean;
     mediaQuery: string;
-  };
-};
+  }
+>;
 
 const useBreakpoints = (): BreakpointResult => {
   const matchesXs = useMediaQuery(breakpoints.xs);

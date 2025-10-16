@@ -1,12 +1,12 @@
-import { FC, useState, MouseEvent } from 'react';
+import { type FC, type MouseEvent, useState } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
+import type { ChainId } from '@human-protocol/sdk';
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
 import { useConfig } from 'wagmi';
 
-import { ChevronIcon } from '../../icons';
-import { useNetwork } from '../../providers/NetworkProvider';
-import { getChainIcon, getSupportedChainIds } from '../../utils';
+import { ChevronIcon } from '@/icons';
+import { useNetwork } from '@/providers/NetworkProvider';
+import { getChainIcon, getSupportedChainIds } from '@/utils';
 
 const NetworkSwitcher: FC = () => {
   const config = useConfig();

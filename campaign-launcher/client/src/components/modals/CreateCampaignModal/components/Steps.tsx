@@ -1,12 +1,12 @@
-import { FC } from "react";
+import type { FC } from 'react';
 
-import { CircularProgress, Step, StepLabel, Stepper } from "@mui/material";
+import { CircularProgress, Step, StepLabel, Stepper } from '@mui/material';
 
 type Props = {
   stepsCompleted: number;
   steps: string[];
   isCreatingEscrow: boolean;
-}
+};
 
 const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
   return (
@@ -40,8 +40,8 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
           </Step>
         );
       })}
-    </Stepper>  
-  )
+    </Stepper>
+  );
 };
 
 export default Steps;

@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 import type { ObjectSchema } from 'yup';
 
-import { FundToken } from '../../../constants/tokens';
+import type { FundToken } from '../../../constants/tokens';
 import type { HoldingFormValues, MarketMakingFormValues } from '../../../types';
 import { CampaignType } from '../../../types';
 

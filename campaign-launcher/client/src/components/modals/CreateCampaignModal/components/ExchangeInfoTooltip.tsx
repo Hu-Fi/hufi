@@ -1,8 +1,8 @@
-import { Link, Typography } from "@mui/material";
+import { Link, Typography } from '@mui/material';
 
-import { useIsMobile } from "../../../../hooks/useBreakpoints";
-import CustomTooltip from "../../../CustomTooltip";
-import InfoTooltipInner from "../../../InfoTooltipInner";
+import { useIsMobile } from '../../../../hooks/useBreakpoints';
+import CustomTooltip from '../../../CustomTooltip';
+import InfoTooltipInner from '../../../InfoTooltipInner';
 
 const link = import.meta.env.VITE_REQUEST_EXCHANGE_FORM_URL;
 
@@ -35,4 +35,4 @@ const ExchangeInfoTooltip = () => {
   );
 };
 
-export default ExchangeInfoTooltip
+export default ExchangeInfoTooltip;

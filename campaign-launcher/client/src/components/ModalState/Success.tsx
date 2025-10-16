@@ -1,8 +1,8 @@
-import { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 
 import { Box } from '@mui/material';
 
-import { SuccessIcon } from '../../icons';
+import { SuccessIcon } from '@/icons';
 
 const ModalSuccess: FC<PropsWithChildren> = ({ children }) => {
   return (

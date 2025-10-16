@@ -1,21 +1,33 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Box, Button, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { Control, useForm, UseFormWatch } from 'react-hook-form';
+import { useForm, type Control, type UseFormWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
-import { ErrorView, FinalView, HoldingForm, MarketMakingForm, Steps } from './components';
-import { getFormDefaultValues } from './utils';
-import { campaignValidationSchema } from './validation';
 import { QUERY_KEYS } from '../../../constants/queryKeys';
 import useCreateEscrow from '../../../hooks/useCreateEscrow';
 import { useNetwork } from '../../../providers/NetworkProvider';
-import { CampaignFormValues, HoldingFormValues, MarketMakingFormValues , CampaignType } from '../../../types';
+import {
+  CampaignType,
+  type CampaignFormValues,
+  type HoldingFormValues,
+  type MarketMakingFormValues,
+} from '../../../types';
 import { constructCampaignDetails } from '../../../utils';
 import CampaignTypeLabel from '../../CampaignTypeLabel';
 import BaseModal from '../BaseModal';
+
+import {
+  ErrorView,
+  FinalView,
+  HoldingForm,
+  MarketMakingForm,
+  Steps,
+} from './components';
+import { getFormDefaultValues } from './utils';
+import { campaignValidationSchema } from './validation';
 
 type Props = {
   open: boolean;
@@ -46,7 +58,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MY_CAMPAIGNS] });
     }
-  }, [isCampaignCreated]);
+  }, [queryClient, isCampaignCreated]);
 
   const {
     control,
@@ -64,15 +76,19 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     await createEscrow(data);
   };
 
-  const handleTryAgainClick = () => {
-    stepsCompleted > 0 ? createEscrow(getValues()) : resetCreateEscrow();
-  }
+  const handleTryAgainClick = useCallback(() => {
+    if (stepsCompleted > 0) {
+      createEscrow(getValues());
+    } else {
+      resetCreateEscrow();
+    }
+  }, [stepsCompleted, createEscrow, getValues, resetCreateEscrow]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     resetForm();
     resetCreateEscrow();
     onClose();
-  };
+  }, [resetForm, resetCreateEscrow, onClose]);
 
   const onViewCampaignDetailsClick = useCallback(() => {
     if (!escrowData) return;
@@ -101,7 +117,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);
     handleClose();
-  }, [escrowData]);
+  }, [appChainId, getValues, handleClose, navigate, escrowData]);
 
   return (
     <BaseModal
@@ -113,7 +129,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
         alignItems: 'center',
       }}
     >
-      {showFinalView && <FinalView onViewDetails={onViewCampaignDetailsClick} />}
+      {showFinalView && (
+        <FinalView onViewDetails={onViewCampaignDetailsClick} />
+      )}
       {isError && <ErrorView onRetry={handleTryAgainClick} />}
       {!showFinalView && !isError && (
         <form onSubmit={handleSubmit(submitForm)}>
@@ -127,10 +145,16 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
               Create Campaign
             </Typography>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Typography variant="subtitle2" color="text.secondary">Campaign Type:</Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                Campaign Type:
+              </Typography>
               <CampaignTypeLabel campaignType={campaignType} />
             </Box>
-            <Steps stepsCompleted={stepsCompleted} steps={steps} isCreatingEscrow={isCreatingEscrow} />
+            <Steps
+              stepsCompleted={stepsCompleted}
+              steps={steps}
+              isCreatingEscrow={isCreatingEscrow}
+            />
             <Box
               display="flex"
               flexDirection="column"
@@ -138,19 +162,19 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
               width={{ xs: '100%', sm: 625 }}
             >
               {campaignType === CampaignType.MARKET_MAKING && (
-                <MarketMakingForm 
-                  control={control as Control<MarketMakingFormValues>} 
-                  errors={errors} 
-                  watch={watch as UseFormWatch<MarketMakingFormValues>} 
-                  isCreatingEscrow={isCreatingEscrow} 
+                <MarketMakingForm
+                  control={control as Control<MarketMakingFormValues>}
+                  errors={errors}
+                  watch={watch as UseFormWatch<MarketMakingFormValues>}
+                  isCreatingEscrow={isCreatingEscrow}
                 />
               )}
               {campaignType === CampaignType.HOLDING && (
-                <HoldingForm 
-                  control={control as Control<HoldingFormValues>} 
-                  errors={errors} 
-                  watch={watch as UseFormWatch<HoldingFormValues>} 
-                  isCreatingEscrow={isCreatingEscrow} 
+                <HoldingForm
+                  control={control as Control<HoldingFormValues>}
+                  errors={errors}
+                  watch={watch as UseFormWatch<HoldingFormValues>}
+                  isCreatingEscrow={isCreatingEscrow}
                 />
               )}
               {stepsCompleted < steps.length ? (

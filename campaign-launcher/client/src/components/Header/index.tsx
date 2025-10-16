@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { type FC, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -8,27 +8,27 @@ import {
   Drawer,
   IconButton,
   Link as MuiLink,
-  SxProps,
+  type SxProps,
   Toolbar,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
-import logo from '../../assets/logo.svg';
-import { ROUTES } from '../../constants';
-import { useActiveAccount } from '../../providers/ActiveAccountProvider';
-import Account from '../Account';
-import ConnectWallet from '../ConnectWallet';
-import Container from '../Container';
-import LaunchCampaign from '../LaunchCampaign';
-import NetworkSwitcher from '../NetworkSwitcher';
+import logo from '@/assets/logo.svg';
+import Account from '@/components/Account';
+import ConnectWallet from '@/components/ConnectWallet';
+import Container from '@/components/Container';
+import LaunchCampaign from '@/components/LaunchCampaign';
+import NetworkSwitcher from '@/components/NetworkSwitcher';
+import { ROUTES } from '@/constants';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 
 type StyledLinkProps = {
   to: string;
   text: string;
   sx?: SxProps;
   target?: string;
-}
+};
 
 const StyledLink = ({ to, text, sx, target }: StyledLinkProps) => {
   return (
@@ -46,8 +46,8 @@ const StyledLink = ({ to, text, sx, target }: StyledLinkProps) => {
     >
       {text}
     </MuiLink>
-  )
-}
+  );
+};
 
 const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 
@@ -95,7 +95,11 @@ const Header: FC = () => {
           >
             <StyledLink to={ROUTES.SUPPORT} text="Support" />
             <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
-            <StyledLink to={STAKING_DASHBOARD_URL} text="Stake HMT" target="_blank" />
+            <StyledLink
+              to={STAKING_DASHBOARD_URL}
+              text="Stake HMT"
+              target="_blank"
+            />
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" withTooltip />
             {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
@@ -146,7 +150,11 @@ const Header: FC = () => {
               </IconButton>
               <StyledLink to={ROUTES.SUPPORT} text="Support" />
               <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
-              <StyledLink to={STAKING_DASHBOARD_URL} text="Stake HMT" target="_blank"/>
+              <StyledLink
+                to={STAKING_DASHBOARD_URL}
+                text="Stake HMT"
+                target="_blank"
+              />
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
               {activeAddress && isConnected ? <Account /> : <ConnectWallet />}

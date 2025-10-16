@@ -1,7 +1,7 @@
 import { Box, Paper, Typography, styled } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { useIsXlDesktop } from '../../hooks/useBreakpoints';
+import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 
 const Card = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,

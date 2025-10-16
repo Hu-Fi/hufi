@@ -1,11 +1,18 @@
 import { useState } from 'react';
 
-import { Box, Typography, Select, MenuItem, FormControl, Skeleton } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  Skeleton,
+} from '@mui/material';
 
-import { useGetTotalVolume } from '../../hooks/recording-oracle/stats';
-import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { StatsCard, Value } from '../DashboardStats';
-import FormattedNumber from '../FormattedNumber';
+import { StatsCard, Value } from '@/components/DashboardStats';
+import FormattedNumber from '@/components/FormattedNumber';
+import { useGetTotalVolume } from '@/hooks/recording-oracle/stats';
+import { useExchangesContext } from '@/providers/ExchangesProvider';
 
 const TotalVolume = () => {
   const [exchange, setExchange] = useState('');

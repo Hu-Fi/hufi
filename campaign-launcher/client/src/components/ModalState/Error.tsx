@@ -1,9 +1,9 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { DEFAULT_ERROR_MESSAGE, INTERNAL_SERVER_ERROR } from '../../constants';
-import { CloseIcon } from '../../icons';
+import { DEFAULT_ERROR_MESSAGE, INTERNAL_SERVER_ERROR } from '@/constants';
+import { CloseIcon } from '@/icons';
 
 type Props = {
   message?: string;

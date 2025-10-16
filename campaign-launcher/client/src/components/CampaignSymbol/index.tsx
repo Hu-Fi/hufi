@@ -1,8 +1,8 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
-import { CampaignType } from '../../types';
-import { CryptoEntity } from '../CryptoEntity';
-import { CryptoPairEntity } from '../CryptoPairEntity';
+import { CryptoEntity } from '@/components/CryptoEntity';
+import { CryptoPairEntity } from '@/components/CryptoPairEntity';
+import { CampaignType } from '@/types';
 
 type Props = {
   symbol: string;

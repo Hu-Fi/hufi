@@ -1,18 +1,13 @@
-import {
-  createContext,
-  FC,
-  PropsWithChildren,
-  useContext,
-  useState,
-  useEffect,
-} from 'react';
+import type { FC, PropsWithChildren } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 import { useAccount, useSignMessage } from 'wagmi';
 
-import { recordingApi } from '../api';
+import { recordingApi } from '@/api';
+import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
+import { tokenManager } from '@/utils/TokenManager';
+
 import { useActiveAccount } from './ActiveAccountProvider';
-import { REFRESH_FAILURE_EVENT } from '../api/recordingApiClient';
-import { tokenManager } from '../utils/TokenManager';
 
 type Web3AuthContextType = {
   isAuthenticated: boolean;
@@ -118,7 +113,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         handleRefreshFailureEvent
       );
     };
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <Web3AuthContext.Provider

@@ -1,7 +1,13 @@
-import { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Modal, Box, IconButton, SxProps, Theme } from '@mui/material';
+import {
+  Modal,
+  Box,
+  IconButton,
+  type SxProps,
+  type Theme,
+} from '@mui/material';
 
 type Props = {
   open: boolean;

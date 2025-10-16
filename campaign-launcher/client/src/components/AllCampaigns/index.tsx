@@ -1,14 +1,14 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { CircularProgress } from '@mui/material';
 
-import { useCampaigns } from '../../hooks/useCampaigns';
-import usePagination from '../../hooks/usePagination';
-import { useNetwork } from '../../providers/NetworkProvider';
-import { CampaignStatus, CampaignsQueryParams } from '../../types';
-import { filterFalsyQueryParams } from '../../utils';
-import CampaignsTable from '../CampaignsTable';
-import CampaignsTablePagination from '../CampaignsTablePagination';
+import CampaignsTable from '@/components/CampaignsTable';
+import CampaignsTablePagination from '@/components/CampaignsTablePagination';
+import { useCampaigns } from '@/hooks/useCampaigns';
+import usePagination from '@/hooks/usePagination';
+import { useNetwork } from '@/providers/NetworkProvider';
+import { CampaignStatus, type CampaignsQueryParams } from '@/types';
+import { filterFalsyQueryParams } from '@/utils';
 
 type Props = {
   showOnlyActiveCampaigns: boolean;

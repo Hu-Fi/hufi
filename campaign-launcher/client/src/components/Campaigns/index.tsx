@@ -1,14 +1,14 @@
-import { FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 
-import { CampaignsView } from '../../types';
-import ActiveCampaignsFilter from '../ActiveCampaignsFilter';
-import AllCampaigns from '../AllCampaigns';
-import CampaignsViewDropdown from '../CampaignsViewDropdown';
-import JoinedCampaigns from '../JoinedCampaigns';
-import MyCampaigns from '../MyCampaigns';
+import ActiveCampaignsFilter from '@/components/ActiveCampaignsFilter';
+import AllCampaigns from '@/components/AllCampaigns';
+import CampaignsViewDropdown from '@/components/CampaignsViewDropdown';
+import JoinedCampaigns from '@/components/JoinedCampaigns';
+import MyCampaigns from '@/components/MyCampaigns';
+import { CampaignsView } from '@/types';
 
 const Campaigns: FC = () => {
   const [showActiveCampaigns, setShowActiveCampaigns] = useState(true);
@@ -25,7 +25,7 @@ const Campaigns: FC = () => {
 
     return CampaignsView.ALL;
   });
-  
+
   useEffect(() => {
     const viewFromUrl = searchParams.get('view');
     if (viewFromUrl) {

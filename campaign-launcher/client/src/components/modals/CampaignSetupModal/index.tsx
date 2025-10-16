@@ -1,15 +1,24 @@
-import { FC, useEffect, useState } from "react";
+import { type FC, useCallback, useEffect, useState } from 'react';
 
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckIcon from '@mui/icons-material/CheckCircle';
-import { Autocomplete, Box, Button, CircularProgress, Link, Stack, TextField, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import {
+  Autocomplete,
+  Box,
+  Button,
+  CircularProgress,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 
-import { ROUTES } from "../../../constants";
-import { useStakeContext } from "../../../providers/StakeProvider";
-import { CampaignType } from "../../../types";
-import { convertFromSnakeCaseToTitleCase } from "../../../utils";
-import BaseModal from "../BaseModal";
+import { ROUTES } from '../../../constants';
+import { useStakeContext } from '../../../providers/StakeProvider';
+import { CampaignType } from '../../../types';
+import { convertFromSnakeCaseToTitleCase } from '../../../utils';
+import BaseModal from '../BaseModal';
 
 type Props = {
   open: boolean;
@@ -24,27 +33,42 @@ type WarningViewProps = {
   handleClickOnUpdate: () => void;
 };
 
-const WarningView: FC<WarningViewProps> = ({ handleClickOnStakeHMT, handleClickOnUpdate }) => {
+const WarningView: FC<WarningViewProps> = ({
+  handleClickOnStakeHMT,
+  handleClickOnUpdate,
+}) => {
   return (
     <>
-      <Typography 
-        variant="alert" 
-        color="text.secondary" 
-        mb={4} 
-        mx="auto" 
-        display="flex" 
-        alignItems="center" 
+      <Typography
+        variant="alert"
+        color="text.secondary"
+        mb={4}
+        mx="auto"
+        display="flex"
+        alignItems="center"
         gap={1}
       >
         Staked HMT
         <CancelIcon sx={{ color: 'error.main' }} />
       </Typography>
-      <Typography variant="alert" color="text.primary" mb={2} textAlign="center">
-        You don&apos;t have any HMT staked on this network.<br />
+      <Typography
+        variant="alert"
+        color="text.primary"
+        mb={2}
+        textAlign="center"
+      >
+        You don&apos;t have any HMT staked on this network.
+        <br />
         Please stake HMT on the Staking Dashboard to continue.
       </Typography>
-      <Typography variant="body2" color="text.primary" mb={4} textAlign="center">
-        If you&apos;ve already staked HMT, click <strong>Update</strong> to refresh your status and continue.
+      <Typography
+        variant="body2"
+        color="text.primary"
+        mb={4}
+        textAlign="center"
+      >
+        If you&apos;ve already staked HMT, click <strong>Update</strong> to
+        refresh your status and continue.
       </Typography>
       <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
         <Button
@@ -54,12 +78,12 @@ const WarningView: FC<WarningViewProps> = ({ handleClickOnStakeHMT, handleClickO
         >
           Stake HMT
         </Button>
-        <Button 
-          variant="contained" 
-          size="large" 
-          sx={{ 
-            bgcolor: 'secondary.main', 
-            color: 'secondary.contrast' 
+        <Button
+          variant="contained"
+          size="large"
+          sx={{
+            bgcolor: 'secondary.main',
+            color: 'secondary.contrast',
           }}
           onClick={handleClickOnUpdate}
         >
@@ -67,57 +91,63 @@ const WarningView: FC<WarningViewProps> = ({ handleClickOnStakeHMT, handleClickO
         </Button>
       </Box>
     </>
-  )
-}
+  );
+};
 
 const LoadingView: FC = () => {
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" flex={1} position="relative">
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      flex={1}
+      position="relative"
+    >
       <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
         <CircularProgress size={32} />
       </Box>
-      <Typography 
-        variant="alert" 
-        textAlign="center" 
-        position="absolute" 
+      <Typography
+        variant="alert"
+        textAlign="center"
+        position="absolute"
         bottom={0}
-        left="50%" 
+        left="50%"
         width="100%"
         sx={{ transform: 'translate(-50%, 0)' }}
       >
         Updating your staking status…
       </Typography>
     </Box>
-  )
-}
+  );
+};
 
-const CampaignSetupModal: FC<Props> = ({ 
-  open, 
-  onClose, 
-  campaignType, 
-  handleChangeCampaignType, 
-  handleOpenFormModal 
+const CampaignSetupModal: FC<Props> = ({
+  open,
+  onClose,
+  campaignType,
+  handleChangeCampaignType,
+  handleOpenFormModal,
 }) => {
   const [showWarning, setShowWarning] = useState(false);
   const [stakedAmount, setStakedAmount] = useState(0);
 
   const { fetchStakingData, isFetching } = useStakeContext();
 
-  const getStakedAmount = async () => {
+  const getStakedAmount = useCallback(async () => {
     const _stakedAmount = Number(await fetchStakingData());
     setStakedAmount(_stakedAmount);
     return _stakedAmount;
-  };
+  }, [fetchStakingData]);
 
   useEffect(() => {
     getStakedAmount();
-  }, [])
+  }, [getStakedAmount]);
 
   const handleClose = () => {
     setShowWarning(false);
     onClose();
   };
-  
+
   const handleClickOnStakeHMT = () => {
     window.open(import.meta.env.VITE_APP_STAKING_DASHBOARD_URL, '_blank');
   };
@@ -126,13 +156,13 @@ const CampaignSetupModal: FC<Props> = ({
     const _updatedStakedAmount = await getStakedAmount();
     setShowWarning(_updatedStakedAmount === 0);
   };
-  
+
   const showFirstStep = !isFetching && !showWarning && stakedAmount === 0;
   const showSecondStep = !isFetching && !showWarning && stakedAmount > 0;
 
   const handleClickOnContinue = async () => {
     if (!campaignType) return;
-    
+
     handleClose();
     handleOpenFormModal();
   };
@@ -156,21 +186,32 @@ const CampaignSetupModal: FC<Props> = ({
       <Stack width="100%" flex={1} mt={isFetching ? -3 : 0}>
         {isFetching && <LoadingView />}
         {!isFetching && showWarning && (
-          <WarningView 
-            handleClickOnStakeHMT={handleClickOnStakeHMT} 
-            handleClickOnUpdate={handleUpdateStakedAmount} 
+          <WarningView
+            handleClickOnStakeHMT={handleClickOnStakeHMT}
+            handleClickOnUpdate={handleUpdateStakedAmount}
           />
         )}
         {showFirstStep && (
           <>
-            <Typography variant="alert" mt={5} mb={2} px={{ xs: 0, md: 7 }} textAlign="center">
-              To be able to create campaigns on the HuFi Campaign Launcher 
-              you need to stake HMT on the Staking Dashboard.
+            <Typography
+              variant="alert"
+              mt={5}
+              mb={2}
+              px={{ xs: 0, md: 7 }}
+              textAlign="center"
+            >
+              To be able to create campaigns on the HuFi Campaign Launcher you
+              need to stake HMT on the Staking Dashboard.
             </Typography>
             <Typography variant="body2" textAlign="center" mb={6}>
               Once staked, return here to continue.
             </Typography>
-            <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              gap={1}
+            >
               <Button
                 variant="contained"
                 size="large"
@@ -178,12 +219,12 @@ const CampaignSetupModal: FC<Props> = ({
               >
                 Stake HMT
               </Button>
-              <Button 
-                variant="contained" 
-                size="large" 
-                sx={{ 
-                  bgcolor: 'secondary.main', 
-                  color: 'secondary.contrast' 
+              <Button
+                variant="contained"
+                size="large"
+                sx={{
+                  bgcolor: 'secondary.main',
+                  color: 'secondary.contrast',
                 }}
                 onClick={handleUpdateStakedAmount}
               >
@@ -194,23 +235,24 @@ const CampaignSetupModal: FC<Props> = ({
         )}
         {showSecondStep && (
           <>
-            <Typography 
-              variant="alert" 
-              color="text.secondary" 
-              mb={5} 
-              mx="auto" 
-              display="flex" 
-              alignItems="center" 
+            <Typography
+              variant="alert"
+              color="text.secondary"
+              mb={5}
+              mx="auto"
+              display="flex"
+              alignItems="center"
               gap={1}
             >
               Staked HMT
               <CheckIcon sx={{ color: 'success.main' }} />
             </Typography>
             <Typography variant="alert" mb={2} textAlign="center">
-              Please select your campaign type to begin creating your campaign on HuFi.
+              Please select your campaign type to begin creating your campaign
+              on HuFi.
             </Typography>
-            <Link 
-              to={ROUTES.SUPPORT} 
+            <Link
+              to={ROUTES.SUPPORT}
               component={RouterLink}
               target="_blank"
               sx={{ width: 'fit-content', mb: 5, mx: 'auto' }}
@@ -223,7 +265,9 @@ const CampaignSetupModal: FC<Props> = ({
               <Autocomplete
                 size="small"
                 value={campaignType}
-                onChange={(_, value) => handleChangeCampaignType(value as CampaignType)}
+                onChange={(_, value) =>
+                  handleChangeCampaignType(value as CampaignType)
+                }
                 options={[...Object.values(CampaignType), null]}
                 getOptionLabel={(option) => {
                   if (option === null) return 'Coming soon...';
@@ -231,13 +275,13 @@ const CampaignSetupModal: FC<Props> = ({
                 }}
                 getOptionDisabled={(option) => option === null}
                 renderInput={(params) => (
-                  <TextField 
-                    {...params} 
+                  <TextField
+                    {...params}
                     label="Campaign Type"
                     sx={{
                       '& .MuiInputBase-root': {
-                        height: 42
-                      }
+                        height: 42,
+                      },
                     }}
                   />
                 )}
@@ -251,9 +295,9 @@ const CampaignSetupModal: FC<Props> = ({
                   },
                 }}
               />
-              <Button 
-                variant="contained" 
-                size="large" 
+              <Button
+                variant="contained"
+                size="large"
                 sx={{ color: 'primary.contrast', width: 93 }}
                 disabled={!campaignType}
                 onClick={handleClickOnContinue}
@@ -264,8 +308,8 @@ const CampaignSetupModal: FC<Props> = ({
           </>
         )}
       </Stack>
-    </BaseModal>  
-  )
+    </BaseModal>
+  );
 };
 
 export default CampaignSetupModal;

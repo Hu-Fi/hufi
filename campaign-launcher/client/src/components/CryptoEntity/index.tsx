@@ -1,9 +1,9 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { getTokenInfo } from '../../utils';
-import { getSymbolStyles } from '../CampaignSymbol';
+import { getSymbolStyles } from '@/components/CampaignSymbol';
+import { getTokenInfo } from '@/utils';
 
 type Props = {
   symbol: string;

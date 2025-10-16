@@ -1,12 +1,12 @@
-import { FC } from "react";
+import type { FC } from 'react';
 
-import { Button, Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from '@mui/material';
 
-import { ModalSuccess } from "../../../ModalState";
+import { ModalSuccess } from '../../../ModalState';
 
 type Props = {
   onViewDetails: () => void;
-}
+};
 
 const FinalView: FC<Props> = ({ onViewDetails }) => {
   return (
@@ -32,7 +32,7 @@ const FinalView: FC<Props> = ({ onViewDetails }) => {
         View campaign details page
       </Button>
     </Stack>
-  )
-}
+  );
+};
 
 export default FinalView;

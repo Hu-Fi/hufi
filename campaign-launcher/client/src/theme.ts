@@ -1,4 +1,4 @@
-import { createTheme, PaletteMode } from '@mui/material/styles';
+import { createTheme, type PaletteMode } from '@mui/material/styles';
 
 declare module '@mui/material/styles' {
   interface Theme {
@@ -170,7 +170,7 @@ const createAppTheme = (mode: PaletteMode) => {
         fontWeight: 500,
         lineHeight: '150%',
         letterSpacing: '0.15px',
-      }
+      },
     },
     components: {
       MuiButton: {

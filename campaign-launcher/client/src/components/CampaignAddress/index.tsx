@@ -1,23 +1,23 @@
-import { FC, MouseEvent, useEffect, useRef, useState } from "react"
+import { type FC, type MouseEvent, useEffect, useRef, useState } from 'react';
 
-import { ChainId } from "@human-protocol/sdk"
+import type { ChainId } from '@human-protocol/sdk';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { IconButton, Tooltip, Typography } from "@mui/material"
+import { IconButton, Tooltip, Typography } from '@mui/material';
 
-import { OpenInNewIcon } from "../../icons"
-import { formatAddress, getExplorerUrl } from "../../utils"
+import { OpenInNewIcon } from '@/icons';
+import { formatAddress, getExplorerUrl } from '@/utils';
 
 type Props = {
   address: string;
   chainId: ChainId;
   withCopy?: boolean;
-}
+};
 
 const iconButtonSx = {
   color: 'text.secondary',
   p: 0,
   '&:hover': { background: 'none' },
-}
+};
 
 const handleOpenInExplorerClick = (
   e: MouseEvent<HTMLButtonElement>,
@@ -43,27 +43,22 @@ const CampaignAddress: FC<Props> = ({ address, chainId, withCopy = false }) => {
 
   const handleCopyClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (isCopied) return;
-    
+
     e.stopPropagation();
     navigator.clipboard.writeText(address);
     setIsCopied(true);
-    
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       setIsCopied(false);
     }, 1500);
-  }
+  };
 
   return (
-    <Typography 
-      variant="subtitle2"
-      display="flex" 
-      alignItems="center" 
-      gap={1} 
-    >
+    <Typography variant="subtitle2" display="flex" alignItems="center" gap={1}>
       {formatAddress(address)}
       {withCopy && (
         <IconButton
@@ -83,7 +78,7 @@ const CampaignAddress: FC<Props> = ({ address, chainId, withCopy = false }) => {
         <OpenInNewIcon />
       </IconButton>
     </Typography>
-  )
-}
+  );
+};
 
 export default CampaignAddress;
