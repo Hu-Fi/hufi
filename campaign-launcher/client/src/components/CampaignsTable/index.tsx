@@ -129,6 +129,10 @@ const statusTooltipData = [
     color: 'secondary.main',
   },
   {
+    status: 'Pending campaign cancellation',
+    color: 'cyan',
+  },
+  {
     status: 'Cancelled',
     color: 'primary.main',
     border: '1px solid',

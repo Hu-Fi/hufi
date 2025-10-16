@@ -1527,7 +1527,11 @@ describe('CampaignsService', () => {
     });
 
     it.each(
-      Object.values(CampaignStatus).filter((s) => s !== CampaignStatus.ACTIVE),
+      Object.values(CampaignStatus).filter(
+        (s) =>
+          [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL].includes(s) ===
+          false,
+      ),
     )(
       'should not process campaign when status is "%s"',
       async (campaignStatus) => {
@@ -2272,16 +2276,16 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe('trackCampaignsFinish', () => {
+  describe('syncCampaignStatuses', () => {
     const nCampaigns = faker.number.int({ min: 2, max: 5 });
 
-    it('should finish campaigns when detects completed escrow', async () => {
+    it('should complete campaigns when detects completed escrow', async () => {
       const campaigns = Array.from({ length: nCampaigns }, () =>
         Object.assign(generateCampaignEntity(), {
           status: CampaignStatus.PENDING_COMPLETION,
         }),
       );
-      mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+      mockCampaignsRepository.findForStatusSync.mockResolvedValueOnce(
         campaigns,
       );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -2289,7 +2293,7 @@ describe('CampaignsService', () => {
         status: EscrowStatus[EscrowStatus.Complete],
       } as any);
 
-      await campaignsService.trackCampaignsFinish();
+      await campaignsService.syncCampaignStatuses();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(nCampaigns);
 
@@ -2309,7 +2313,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should finish campaigns when detects cancelled escrow', async () => {
+    it('should cancel campaigns when detects cancelled escrow', async () => {
       const campaigns = Array.from({ length: nCampaigns }, (_e, index) =>
         Object.assign(generateCampaignEntity(), {
           status:
@@ -2318,7 +2322,7 @@ describe('CampaignsService', () => {
               : CampaignStatus.PENDING_CANCELLATION,
         }),
       );
-      mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+      mockCampaignsRepository.findForStatusSync.mockResolvedValueOnce(
         campaigns,
       );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -2326,7 +2330,7 @@ describe('CampaignsService', () => {
         status: EscrowStatus[EscrowStatus.Cancelled],
       } as any);
 
-      await campaignsService.trackCampaignsFinish();
+      await campaignsService.syncCampaignStatuses();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(nCampaigns);
 
@@ -2346,18 +2350,54 @@ describe('CampaignsService', () => {
       }
     });
 
+    it('should mark only "active" campaigns as to_cancel when detects to_cancel escrow', async () => {
+      const campaigns = Object.values(CampaignStatus).map((campaignStatus) => {
+        const campaign = generateCampaignEntity();
+        campaign.status = campaignStatus;
+        return campaign;
+      });
+      mockCampaignsRepository.findForStatusSync.mockResolvedValueOnce(
+        campaigns,
+      );
+      const activeCampaignIndex = campaigns.findIndex(
+        (c) => c.status === CampaignStatus.ACTIVE,
+      );
+      const activeCampaign = Object.assign({}, campaigns[activeCampaignIndex]);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      mockedEscrowUtils.getEscrow.mockResolvedValue({
+        status: EscrowStatus[EscrowStatus.ToCancel],
+      } as any);
+
+      await campaignsService.syncCampaignStatuses();
+
+      expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
+        ...activeCampaign,
+        status: 'to_cancel',
+      });
+      expect(logger.info).toHaveBeenCalledWith(
+        'Marking campaign as to_cancel',
+        {
+          campaignId: activeCampaign.id,
+          chainId: activeCampaign.chainId,
+          campaignAddress: activeCampaign.address,
+        },
+      );
+    });
+
     it.each([
       EscrowStatus[EscrowStatus.Pending],
       EscrowStatus[EscrowStatus.Partial],
     ])(
-      'should not finish campaigns when detects "%s" escrow',
+      'should not change campaign status when detects "%s" escrow',
       async (escrowStatus) => {
         const campaigns = Array.from({ length: nCampaigns }, () =>
           Object.assign(generateCampaignEntity(), {
             status: CampaignStatus.ACTIVE,
           }),
         );
-        mockCampaignsRepository.findForFinishTracking.mockResolvedValueOnce(
+        mockCampaignsRepository.findForStatusSync.mockResolvedValueOnce(
           campaigns,
         );
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -2365,7 +2405,7 @@ describe('CampaignsService', () => {
           status: escrowStatus,
         } as any);
 
-        await campaignsService.trackCampaignsFinish();
+        await campaignsService.syncCampaignStatuses();
 
         expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
       },
