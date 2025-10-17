@@ -28,7 +28,7 @@ export default defineConfig(
       },
       globals: {
         ...globals.browser,
-        ...globals.es2022,
+        ...globals.es2021,
       },
     },
     plugins: {
@@ -56,27 +56,39 @@ export default defineConfig(
       'import/order': [
         'error',
         {
-          'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          'pathGroups': [
-            {
-              'pattern': 'react',
-              'group': 'external',
-              'position': 'before'
-            }
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
           ],
-          'pathGroupsExcludedImportTypes': ['react'],
+          pathGroups: [
+            {
+              pattern: 'react',
+              group: 'external',
+              position: 'before',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['react'],
           'newlines-between': 'always',
-          'alphabetize': {
-            'order': 'asc',
-            'caseInsensitive': true
-          }
-        }
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
       ],
       'import/no-duplicates': 'error',
       'import/no-unresolved': 'error',
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }],
-      '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
-      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/consistent-type-definitions': ['off'],
       '@typescript-eslint/no-empty-function': ['off'],
       'no-console': ['error', { allow: ['warn', 'error'] }],
@@ -88,6 +100,13 @@ export default defineConfig(
           avoidEscape: true,
         },
       ],
+      'prettier/prettier': [
+        "error",
+        {},
+        {
+          "usePrettierrc": true,
+        }
+      ]
     },
   }
 );
