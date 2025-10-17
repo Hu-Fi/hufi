@@ -37,6 +37,15 @@ export class CampaignNotStartedError extends BaseError {
   }
 }
 
+export class CampaignCancelledError extends BaseError {
+  constructor(
+    readonly chainId: number,
+    readonly address: string,
+  ) {
+    super('Campaign cancelled');
+  }
+}
+
 export class UserIsNotParticipatingError extends BaseError {
   constructor() {
     super('User is not participating in campaign');

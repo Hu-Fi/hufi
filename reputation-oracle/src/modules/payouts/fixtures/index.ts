@@ -30,17 +30,18 @@ export function generateEscrow(): IEscrow {
     chainId: generateTestnetChainId(),
     address: escrowAddress,
     status: EscrowStatus[EscrowStatus.Pending],
+    launcher: faker.finance.ethereumAddress(),
     manifest: JSON.stringify(generateManifest()),
     manifestHash: faker.string.hexadecimal(),
     totalFundedAmount: totalFundedAmount.toString(),
     balance: totalFundedAmount.toString(),
     amountPaid: '0',
     factoryAddress: faker.finance.ethereumAddress(),
-    launcher: faker.finance.ethereumAddress(),
     token: faker.finance.ethereumAddress(),
     createdAt: Math.round(faker.date.recent().valueOf() / 1000).toString(),
     count: faker.number.int({ min: 1, max: 42 }).toString(),
     intermediateResultsUrl: faker.internet.url(),
+    intermediateResultsHash: faker.string.hexadecimal(),
   };
 
   return escrow;
@@ -85,9 +86,11 @@ export function generateCampaign(): CampaignWithResults {
   const data = {
     chainId: generateTestnetChainId(),
     address: faker.finance.ethereumAddress(),
+    status: EscrowStatus[EscrowStatus.Pending],
     manifest: JSON.stringify(generateManifest()),
     manifestHash: faker.string.hexadecimal(),
     intermediateResultsUrl: faker.internet.url(),
+    intermediateResultsHash: faker.string.hexadecimal(),
     launcher: faker.finance.ethereumAddress(),
     fundTokenAddress: faker.finance.ethereumAddress(),
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),

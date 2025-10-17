@@ -64,7 +64,7 @@ describe('CcxtExchangeClient', () => {
     });
 
     it('should not create instance if exchange not supported', () => {
-      const exchangeName = faker.lorem.word();
+      const exchangeName = faker.lorem.slug();
       let thrownError;
       try {
         new CcxtExchangeClient(exchangeName, {
@@ -212,7 +212,10 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
 
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
-        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith('ETH');
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          'ETH',
+          {},
+        );
       });
 
       it('should return true if has all necessary permissions', async () => {
@@ -416,6 +419,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
           mockedAddressStructure.currency,
+          {},
         );
       });
 

@@ -12,16 +12,18 @@ export type CampaignWithResults = Required<
     IEscrow,
     | 'chainId'
     | 'address'
+    | 'status'
+    | 'launcher'
     | 'manifest'
     | 'manifestHash'
     | 'intermediateResultsUrl'
-    | 'launcher'
-  > & {
-    fundTokenAddress: string;
-    fundTokenDecimals: number;
-    fundAmount: number;
-  }
->;
+    | 'intermediateResultsHash'
+  >
+> & {
+  fundTokenAddress: string;
+  fundTokenDecimals: number;
+  fundAmount: number;
+};
 
 export type ParticipantOutcome = {
   address: string;

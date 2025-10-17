@@ -15,6 +15,8 @@ import {
 
 import {
   CampaignAlreadyFinishedError,
+  CampaignNotStartedError,
+  CampaignCancelledError,
   CampaignNotFoundError,
   InvalidCampaign,
   UserIsNotParticipatingError,
@@ -24,6 +26,8 @@ import {
   CampaignNotFoundError,
   InvalidCampaign,
   CampaignAlreadyFinishedError,
+  CampaignNotStartedError,
+  CampaignCancelledError,
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
   InvalidEvmAddressError,

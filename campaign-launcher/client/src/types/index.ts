@@ -20,6 +20,7 @@ export enum CampaignsView {
 
 export enum CampaignStatus {
   ACTIVE = 'active',
+  TO_CANCEL = 'to_cancel',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }
@@ -73,6 +74,7 @@ export type Campaign = {
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
+  reserved_funds: string;
 };
 
 export type CampaignDetails = Campaign & {
