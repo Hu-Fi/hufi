@@ -51,7 +51,8 @@ const useRetrieveSigner = () => {
     };
 
     getSigner();
-  }, [client, activeAddress, isSwitching, isTransportReady, appChainId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, activeAddress, isSwitching, isTransportReady]);
 
   return { signer, isCreatingSigner: isLoading };
 };
