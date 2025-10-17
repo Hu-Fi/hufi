@@ -6,17 +6,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useForm, type Control, type UseFormWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
-import { QUERY_KEYS } from '../../../constants/queryKeys';
-import useCreateEscrow from '../../../hooks/useCreateEscrow';
-import { useNetwork } from '../../../providers/NetworkProvider';
+import CampaignTypeLabel from '@/components/CampaignTypeLabel';
+import { QUERY_KEYS } from '@/constants/queryKeys';
+import useCreateEscrow from '@/hooks/useCreateEscrow';
+import { useNetwork } from '@/providers/NetworkProvider';
 import {
   CampaignType,
   type CampaignFormValues,
   type HoldingFormValues,
   type MarketMakingFormValues,
-} from '../../../types';
-import { constructCampaignDetails } from '../../../utils';
-import CampaignTypeLabel from '../../CampaignTypeLabel';
+} from '@/types';
+import { constructCampaignDetails } from '@/utils';
+
 import BaseModal from '../BaseModal';
 
 import {

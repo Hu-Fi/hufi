@@ -14,10 +14,11 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { ROUTES } from '../../../constants';
-import { useStakeContext } from '../../../providers/StakeProvider';
-import { CampaignType } from '../../../types';
-import { convertFromSnakeCaseToTitleCase } from '../../../utils';
+import { ROUTES } from '@/constants';
+import { useStakeContext } from '@/providers/StakeProvider';
+import { CampaignType } from '@/types';
+import { convertFromSnakeCaseToTitleCase } from '@/utils';
+
 import BaseModal from '../BaseModal';
 
 type Props = {

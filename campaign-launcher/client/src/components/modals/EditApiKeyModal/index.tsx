@@ -12,9 +12,14 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
-import { usePostExchangeApiKey } from '../../../hooks/recording-oracle';
-import FormExchangeSelect from '../../FormExchangeSelect';
-import { ModalError, ModalLoading, ModalSuccess } from '../../ModalState';
+import FormExchangeSelect from '@/components/FormExchangeSelect';
+import {
+  ModalError,
+  ModalLoading,
+  ModalSuccess,
+} from '@/components/ModalState';
+import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
+
 import BaseModal from '../BaseModal';
 
 type Props = {

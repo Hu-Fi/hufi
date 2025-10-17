@@ -10,7 +10,7 @@ type Props = {
   size?: 'small' | 'medium' | 'large';
 };
 
-export const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
+const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
   const { icon, label } = getTokenInfo(symbol);
 
   return (
@@ -31,3 +31,5 @@ export const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
     </Box>
   );
 };
+
+export default CryptoEntity;

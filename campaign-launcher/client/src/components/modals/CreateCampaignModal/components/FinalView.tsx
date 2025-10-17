@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Button, Stack, Typography } from '@mui/material';
 
-import { ModalSuccess } from '../../../ModalState';
+import { ModalSuccess } from '@/components/ModalState';
 
 type Props = {
   onViewDetails: () => void;

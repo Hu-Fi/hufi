@@ -10,7 +10,7 @@ type Props = {
   size?: 'small' | 'medium' | 'large';
 };
 
-export const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
+const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
   const [base, quote] = symbol.split('/');
 
   const { icon: baseIcon, label: baseLabel } = getTokenInfo(base);
@@ -55,3 +55,5 @@ export const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
     </Box>
   );
 };
+
+export default CryptoPairEntity;

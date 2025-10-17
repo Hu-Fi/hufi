@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Button, Stack, Typography } from '@mui/material';
 
-import { ModalError } from '../../../ModalState';
+import { ModalError } from '@/components/ModalState';
 
 type Props = {
   onRetry: () => void;

@@ -1,4 +1,4 @@
-import { CampaignType } from '../../../types';
+import { CampaignType } from '@/types';
 
 import {
   holdingValidationSchema,

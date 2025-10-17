@@ -3,7 +3,8 @@ import type { FC } from 'react';
 import { Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import { ROUTES } from '../../../constants';
+import { ROUTES } from '@/constants';
+
 import BaseModal from '../BaseModal';
 
 type Props = {

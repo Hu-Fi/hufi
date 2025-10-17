@@ -24,12 +24,12 @@ import {
   type UseFormWatch,
 } from 'react-hook-form';
 
-import { FUND_TOKENS } from '../../../../constants/tokens';
-import { useExchangeCurrencies } from '../../../../hooks/useExchangeCurrencies';
-import type { HoldingFormValues } from '../../../../types';
-import { getTokenInfo } from '../../../../utils';
-import { CryptoEntity } from '../../../CryptoEntity';
-import FormExchangeSelect from '../../../FormExchangeSelect';
+import CryptoEntity from '@/components/CryptoEntity';
+import FormExchangeSelect from '@/components/FormExchangeSelect';
+import { FUND_TOKENS } from '@/constants/tokens';
+import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
+import type { HoldingFormValues } from '@/types';
+import { getTokenInfo } from '@/utils';
 
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 

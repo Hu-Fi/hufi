@@ -2,8 +2,9 @@ import type { FC } from 'react';
 
 import { Typography } from '@mui/material';
 
-import type { CampaignDetails } from '../../../types';
-import DailyAmountPaidChart from '../../DailyAmountPaidChart';
+import DailyAmountPaidChart from '@/components/DailyAmountPaidChart';
+import type { CampaignDetails } from '@/types';
+
 import BaseModal from '../BaseModal';
 
 type Props = {

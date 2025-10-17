@@ -1,8 +1,8 @@
 import { Link, Typography } from '@mui/material';
 
-import { useIsMobile } from '../../../../hooks/useBreakpoints';
-import CustomTooltip from '../../../CustomTooltip';
-import InfoTooltipInner from '../../../InfoTooltipInner';
+import CustomTooltip from '@/components/CustomTooltip';
+import InfoTooltipInner from '@/components/InfoTooltipInner';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 const link = import.meta.env.VITE_REQUEST_EXCHANGE_FORM_URL;
 

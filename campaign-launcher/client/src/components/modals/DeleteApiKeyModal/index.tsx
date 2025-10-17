@@ -2,8 +2,13 @@ import type { FC } from 'react';
 
 import { Button, Stack, Typography } from '@mui/material';
 
-import { useDeleteApiKeyByExchange } from '../../../hooks/recording-oracle/exchangeApiKeys';
-import { ModalLoading, ModalSuccess, ModalError } from '../../ModalState';
+import {
+  ModalError,
+  ModalLoading,
+  ModalSuccess,
+} from '@/components/ModalState';
+import { useDeleteApiKeyByExchange } from '@/hooks/recording-oracle/exchangeApiKeys';
+
 import BaseModal from '../BaseModal';
 
 type Props = {
