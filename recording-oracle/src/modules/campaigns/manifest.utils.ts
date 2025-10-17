@@ -47,7 +47,7 @@ export function validateBaseSchema(manifest: string): CampaignManifestBase {
 const marketMakingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.MARKET_MAKING),
   pair: Joi.string()
-    .pattern(/^[A-Z]{3,10}\/[A-Z]{3,10}$/)
+    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
   daily_volume_target: Joi.number().greater(0).required(),
 });
@@ -64,7 +64,7 @@ export function assertValidMarketMakingCampaignManifest(
 const holdingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.HOLDING),
   symbol: Joi.string()
-    .pattern(/^[A-Z]{3,10}$/)
+    .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
   daily_balance_target: Joi.number().greater(0).required(),
 });
