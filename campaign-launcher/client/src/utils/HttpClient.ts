@@ -1,8 +1,8 @@
 import axios, {
   AxiosError,
-  AxiosInstance,
-  AxiosRequestConfig,
-  Method,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type Method,
 } from 'axios';
 
 import { BaseError } from './BaseError';

@@ -1,11 +1,11 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Box, Skeleton, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { useGetCampaignsStats } from '../../hooks/useCampaigns';
-import FormattedNumber from '../FormattedNumber';
-import TotalVolume from '../TotalVolume';
+import FormattedNumber from '@/components/FormattedNumber';
+import TotalVolume from '@/components/TotalVolume';
+import { useGetCampaignsStats } from '@/hooks/useCampaigns';
 
 export const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -40,16 +40,14 @@ const DashboardStats: FC = () => {
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
             <Value>
-              {
-                isLoading ? (
-                  <Skeleton variant="text" sx={{ fontSize: '40px' }} />
-                ) : (
-                  <FormattedNumber
-                    value={campaignsStats?.rewards_pool_usd}
-                    prefix="$"
-                  />
-                )
-              }
+              {isLoading ? (
+                <Skeleton variant="text" sx={{ fontSize: '40px' }} />
+              ) : (
+                <FormattedNumber
+                  value={campaignsStats?.rewards_pool_usd}
+                  prefix="$"
+                />
+              )}
             </Value>
           </StatsCard>
         </Grid>

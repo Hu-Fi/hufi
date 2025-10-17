@@ -1,9 +1,9 @@
-import { FC, useState } from 'react';
+import { type FC, useState } from 'react';
 
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
 
-import { ArrowDownIcon } from '../../icons';
-import { CampaignsView } from '../../types';
+import { ArrowDownIcon } from '@/icons';
+import { CampaignsView } from '@/types';
 
 type Props = {
   campaignsView: CampaignsView;

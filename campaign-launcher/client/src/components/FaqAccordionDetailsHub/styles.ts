@@ -12,9 +12,9 @@ export const smallAccordionProps = {
         opacity: 1,
         display: 'block !important',
       },
-    }
-  }
-}
+    },
+  },
+};
 
 export const firstSmallAccordionProps = {
   ...smallAccordionProps,
@@ -29,10 +29,10 @@ export const firstSmallAccordionProps = {
       },
       '&.Mui-expanded:before': {
         display: 'none',
-      }
-    }
-  } 
-}
+      },
+    },
+  },
+};
 
 export const smallAccordionSummaryProps = {
   root: {
@@ -43,12 +43,12 @@ export const smallAccordionSummaryProps = {
         my: '4px',
       },
     },
-  }
-}
+  },
+};
 
 export const smallAccordionDetailsProps = {
   px: { xs: '16px', md: '22px' },
-}
+};
 
 export const listItemTextProps = {
   primary: {
@@ -56,23 +56,23 @@ export const listItemTextProps = {
   },
   root: {
     sx: { m: 0 },
-  }
-} as const
+  },
+} as const;
 
 export const listItemWithMarkerProps = {
-  display: 'list-item', 
+  display: 'list-item',
   p: 0,
   '&::marker': {
     fontSize: '16px',
     lineHeight: '20px',
-  }
-} as const
+  },
+} as const;
 
 export const listItemWithNumberProps = {
-  display: 'list-item', 
-  '&::marker': { 
-    fontSize: '14px', 
+  display: 'list-item',
+  '&::marker': {
+    fontSize: '14px',
     lineHeight: '20px',
-    fontVariantNumeric: 'diagonal-fractions' 
-  } 
-} as const
+    fontVariantNumeric: 'diagonal-fractions',
+  },
+} as const;

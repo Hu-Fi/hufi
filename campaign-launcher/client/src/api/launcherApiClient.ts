@@ -1,7 +1,13 @@
-import { ChainId } from "@human-protocol/sdk";
+import type { ChainId } from '@human-protocol/sdk';
 
-import { CampaignDetails, CampaignsResponse, CampaignsStats, Exchange, OracleFees } from "../types";
-import { HttpClient, HttpError } from "../utils/HttpClient";
+import type {
+  CampaignDetails,
+  CampaignsResponse,
+  CampaignsStats,
+  Exchange,
+  OracleFees,
+} from '@/types';
+import { HttpClient, HttpError } from '@/utils/HttpClient';
 
 export class LauncherApiClient extends HttpClient {
   constructor({ baseUrl }: { baseUrl: string }) {
@@ -21,14 +27,23 @@ export class LauncherApiClient extends HttpClient {
     return response;
   }
 
-  async getCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns', { params });
+  async getCampaigns(
+    params: Record<string, string | number>
+  ): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns', {
+      params,
+    });
     return response;
   }
 
-  async getCampaignDetails(chainId: ChainId, address: string): Promise<CampaignDetails | null> {
+  async getCampaignDetails(
+    chainId: ChainId,
+    address: string
+  ): Promise<CampaignDetails | null> {
     try {
-      const response = await this.get<CampaignDetails>(`/campaigns/${chainId}-${address}`);
+      const response = await this.get<CampaignDetails>(
+        `/campaigns/${chainId}-${address}`
+      );
       return response;
     } catch (error) {
       if (error instanceof HttpError && error.status === 404) {
@@ -39,13 +54,16 @@ export class LauncherApiClient extends HttpClient {
   }
 
   async getCampaignsStats(chain_id: ChainId): Promise<CampaignsStats> {
-    const response = await this.get<CampaignsStats>(`/stats/campaigns`, { params: { chain_id } });
+    const response = await this.get<CampaignsStats>('/stats/campaigns', {
+      params: { chain_id },
+    });
     return response;
   }
 
   async getOracleFees(chain_id: ChainId): Promise<OracleFees> {
-    const response = await this.get<OracleFees>(`/web3/oracle-fees`, { params: { chain_id } });
+    const response = await this.get<OracleFees>('/web3/oracle-fees', {
+      params: { chain_id },
+    });
     return response;
   }
 }
-

@@ -1,6 +1,6 @@
-import { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 
-import { Container as MuiContainer, ContainerProps } from '@mui/material';
+import { Container as MuiContainer, type ContainerProps } from '@mui/material';
 
 const Container: FC<PropsWithChildren<ContainerProps>> = ({ sx, children }) => {
   return (

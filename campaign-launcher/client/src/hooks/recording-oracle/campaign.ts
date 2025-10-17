@@ -1,12 +1,12 @@
-import { ChainId } from '@human-protocol/sdk';
+import type { ChainId } from '@human-protocol/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { recordingApi } from '../../api';
-import { QUERY_KEYS } from '../../constants/queryKeys';
-import { useNetwork } from '../../providers/NetworkProvider';
-import { useWeb3Auth } from '../../providers/Web3AuthProvider';
-import { EvmAddress, CampaignsQueryParams } from '../../types';
-import useRetrieveSigner from '../useRetrieveSigner';
+import { recordingApi } from '@/api';
+import { QUERY_KEYS } from '@/constants/queryKeys';
+import useRetrieveSigner from '@/hooks/useRetrieveSigner';
+import { useNetwork } from '@/providers/NetworkProvider';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
+import type { EvmAddress, CampaignsQueryParams } from '@/types';
 
 type JoinedCampaignsParams = Pick<
   CampaignsQueryParams,
@@ -66,7 +66,12 @@ export const useCheckIsJoinedCampaign = (address: EvmAddress) => {
   const { isAuthenticated } = useWeb3Auth();
 
   return useQuery({
-    queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN, appChainId, address, isAuthenticated],
+    queryKey: [
+      QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN,
+      appChainId,
+      address,
+      isAuthenticated,
+    ],
     queryFn: () => recordingApi.checkIsJoinedCampaign(appChainId, address),
     select: (data) => data.is_joined,
     enabled: isAuthenticated && !!appChainId && !!address,

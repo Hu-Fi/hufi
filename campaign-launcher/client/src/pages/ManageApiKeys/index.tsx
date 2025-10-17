@@ -1,12 +1,12 @@
-import { FC, useState } from 'react';
+import { type FC, useState } from 'react';
 
 import Button from '@mui/material/Button';
 
-import ApiKeysTable from '../../components/ApiKeysTable';
-import AddApiKeyModal from '../../components/modals/AddApiKeyModal';
-import PageTitle from '../../components/PageTitle';
-import PageWrapper from '../../components/PageWrapper';
-import { useGetExchangesWithApiKeys } from '../../hooks/recording-oracle';
+import ApiKeysTable from '@/components/ApiKeysTable';
+import AddApiKeyModal from '@/components/modals/AddApiKeyModal';
+import PageTitle from '@/components/PageTitle';
+import PageWrapper from '@/components/PageWrapper';
+import { useGetExchangesWithApiKeys } from '@/hooks/recording-oracle';
 
 const ManageApiKeysPage: FC = () => {
   const [addApiKeyModalOpen, setAddApiKeyModalOpen] = useState(false);

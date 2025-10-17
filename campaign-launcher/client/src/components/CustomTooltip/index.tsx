@@ -1,8 +1,13 @@
 import { useState } from 'react';
 
-import { Box, ClickAwayListener, Tooltip, TooltipProps } from '@mui/material';
+import {
+  Box,
+  ClickAwayListener,
+  Tooltip,
+  type TooltipProps,
+} from '@mui/material';
 
-import { useIsMobile } from '../../hooks/useBreakpoints';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 const CustomTooltip = ({ children, ...props }: TooltipProps) => {
   const [open, setOpen] = useState(false);
@@ -10,12 +15,12 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
 
   const handleTooltipClose = () => {
     setOpen(false);
-  }
+  };
 
   if (isMobile) {
     return (
       <ClickAwayListener onClickAway={handleTooltipClose}>
-        <Tooltip 
+        <Tooltip
           open={open}
           disableFocusListener
           disableHoverListener
@@ -41,11 +46,13 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
           }}
           {...props}
         >
-          <Box onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(true);
-          }}>
+          <Box
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(true);
+            }}
+          >
             {children}
           </Box>
         </Tooltip>

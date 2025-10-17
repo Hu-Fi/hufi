@@ -1,8 +1,8 @@
-import { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { JobsIcon } from '../../icons';
+import { JobsIcon } from '@/icons';
 
 type Props = {
   title: string;

@@ -1,8 +1,8 @@
-import { FC } from "react";
+import type { FC } from 'react';
 
-import { Button, Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from '@mui/material';
 
-import { ModalError } from "../../../ModalState";
+import { ModalError } from '@/components/ModalState';
 
 type Props = {
   onRetry: () => void;
@@ -24,7 +24,7 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
         Try again
       </Button>
     </Stack>
-  )
-}
+  );
+};
 
 export default ErrorView;

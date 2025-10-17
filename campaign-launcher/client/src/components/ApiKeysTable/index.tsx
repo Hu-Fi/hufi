@@ -1,12 +1,12 @@
-import { FC, useMemo, useState } from 'react';
+import { type FC, useMemo, useState } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
-import { DeleteIcon, EditIcon } from '../../icons';
-import { ExchangeApiKeyData } from '../../types';
-import DeleteApiKeyModal from '../modals/DeleteApiKeyModal';
-import EditApiKeyModal from '../modals/EditApiKeyModal';
+import DeleteApiKeyModal from '@/components/modals/DeleteApiKeyModal';
+import EditApiKeyModal from '@/components/modals/EditApiKeyModal';
+import { DeleteIcon, EditIcon } from '@/icons';
+import type { ExchangeApiKeyData } from '@/types';
 
 type ApiKeysTableProps = {
   data: ExchangeApiKeyData[] | undefined;

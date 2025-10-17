@@ -1,13 +1,13 @@
 import {
-  FC,
-  PropsWithChildren,
+  type FC,
+  type PropsWithChildren,
   createContext,
   useContext,
   useMemo,
 } from 'react';
 
-import { useExchanges } from '../hooks/useExchanges';
-import { Exchange } from '../types';
+import { useExchanges } from '@/hooks/useExchanges';
+import type { Exchange } from '@/types';
 
 type ExchangesContextType = {
   exchanges: Exchange[] | undefined;

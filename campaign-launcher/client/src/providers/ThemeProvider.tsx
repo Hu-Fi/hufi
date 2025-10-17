@@ -1,15 +1,23 @@
-import { FC, PropsWithChildren, useMemo, useState } from 'react';
+import {
+  type FC,
+  type PropsWithChildren,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 
-import { CssBaseline, PaletteMode } from '@mui/material';
+import { CssBaseline, type PaletteMode } from '@mui/material';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 
-import createAppTheme from '../theme';
+import createAppTheme from '@/theme';
 
 const ThemeProvider: FC<PropsWithChildren> = ({ children }) => {
   const [mode, setMode] = useState<PaletteMode>('dark');
 
-  const toggleColorMode = () =>
-    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+  const toggleColorMode = useCallback(
+    () => setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light')),
+    []
+  );
 
   const theme = useMemo(() => createAppTheme(mode), [mode]);
 

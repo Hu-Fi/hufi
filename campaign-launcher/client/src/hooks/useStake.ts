@@ -1,20 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { StakingClient } from '@human-protocol/sdk';
 
-import { useActiveAccount } from '../providers/ActiveAccountProvider';
-import { useNetwork } from '../providers/NetworkProvider';
-import { formatTokenAmount, getSupportedChainIds } from '../utils';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useNetwork } from '@/providers/NetworkProvider';
+import { formatTokenAmount, getSupportedChainIds } from '@/utils';
+
 import useRetrieveSigner from './useRetrieveSigner';
 
 export const useStake = () => {
-  const [stakingClient, setStakingClient] = useState<StakingClient | null>(null);
+  const [stakingClient, setStakingClient] = useState<StakingClient | null>(
+    null
+  );
   const [isClientInitializing, setIsClientInitializing] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
 
   const { activeAddress } = useActiveAccount();
   const { isSwitching, appChainId } = useNetwork();
   const { signer, isCreatingSigner } = useRetrieveSigner();
+
+  const checkSupportedChain = useCallback(() => {
+    const isSupportedChain = getSupportedChainIds().includes(appChainId);
+    if (!isSupportedChain) {
+      setStakingClient(null);
+      throw new Error(
+        'Unsupported chain. Please switch to a supported network.'
+      );
+    }
+  }, [appChainId]);
 
   useEffect(() => {
     const initStakingClient = async () => {
@@ -26,7 +39,7 @@ export const useStake = () => {
           setStakingClient(client);
         } catch (error) {
           console.error('Failed to init staking client', error);
-          resetData();
+          setStakingClient(null);
         } finally {
           setIsClientInitializing(false);
         }
@@ -34,29 +47,21 @@ export const useStake = () => {
     };
 
     initStakingClient();
-  }, [signer, activeAddress, isSwitching, isCreatingSigner]);
+  }, [
+    signer,
+    activeAddress,
+    isSwitching,
+    isCreatingSigner,
+    checkSupportedChain,
+  ]);
 
-  const checkSupportedChain = () => {
-    const isSupportedChain = getSupportedChainIds().includes(appChainId);
-    if (!isSupportedChain) {
-      resetData();
-      throw new Error(
-        'Unsupported chain. Please switch to a supported network.'
-      );
-    }
-  };
-
-  const resetData = () => {
-    setStakingClient(null);
-  };
-
-  const fetchStakingData = async () => {
+  const fetchStakingData = useCallback(async () => {
     checkSupportedChain();
     if (stakingClient && activeAddress) {
       setIsFetching(true);
       try {
         const stakingInfo = await stakingClient.getStakerInfo(activeAddress);
-        return formatTokenAmount(Number(stakingInfo?.stakedAmount) || 0)
+        return formatTokenAmount(Number(stakingInfo?.stakedAmount) || 0);
       } catch (error) {
         console.error('Error fetching staking data', error);
         return null;
@@ -65,7 +70,7 @@ export const useStake = () => {
       }
     }
     return 0;
-  };
+  }, [stakingClient, activeAddress, checkSupportedChain]);
 
   return {
     fetchStakingData,

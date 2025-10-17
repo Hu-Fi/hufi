@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
-import { recordingApi } from "../../api";
-import { QUERY_KEYS } from "../../constants/queryKeys";
-import { useNetwork } from "../../providers/NetworkProvider";
-import { EvmAddress } from "../../types";
+import { recordingApi } from '@/api';
+import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useNetwork } from '@/providers/NetworkProvider';
+import type { EvmAddress } from '@/types';
 
 export const useGetUserProgress = (address: EvmAddress) => {
   const { appChainId } = useNetwork();

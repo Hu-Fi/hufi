@@ -1,7 +1,10 @@
-import { FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 import {
+  type ChartOptions,
+  type ChartData,
+  type ScriptableContext,
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -9,15 +12,12 @@ import {
   LineElement,
   Tooltip,
   Filler,
-  ChartOptions,
-  ChartData,
-  ScriptableContext,
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Line } from 'react-chartjs-2';
 import { numericFormatter } from 'react-number-format';
 
-import { formatTokenAmount } from '../../utils';
+import { formatTokenAmount } from '@/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -44,7 +44,12 @@ type Props = {
   tokenDecimals: number;
 };
 
-const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol, tokenDecimals }) => {
+const DailyAmountPaidChart: FC<Props> = ({
+  data,
+  endDate,
+  tokenSymbol,
+  tokenDecimals,
+}) => {
   const theme = useTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
@@ -66,12 +71,14 @@ const DailyAmountPaidChart: FC<Props> = ({ data, endDate, tokenSymbol, tokenDeci
       const [, month, day] = date.split('-');
       return {
         date: `${day}/${month}`,
-        value: foundData ? +formatTokenAmount(foundData.amount, tokenDecimals) : 0,
+        value: foundData
+          ? +formatTokenAmount(foundData.amount, tokenDecimals)
+          : 0,
       };
     });
 
     setProcessedData(processed);
-  }, []);
+  }, [data, endDate, tokenDecimals]);
 
   const dates = processedData.map((item) => item.date);
   const values = processedData.map((item) => item.value);
