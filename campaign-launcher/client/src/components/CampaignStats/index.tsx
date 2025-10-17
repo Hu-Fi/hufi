@@ -129,14 +129,21 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   const isXl = useIsXlDesktop();
   const { isAuthenticated } = useWeb3Auth();
 
+  if (!campaign) return null;
+
+  const isOngoingCampaign =
+    campaign.status === CampaignStatus.ACTIVE &&
+    now >= campaign.start_date &&
+    now <= campaign.end_date;
+
+  const hasProgressBeforeCancel =
+    campaign.status === CampaignStatus.TO_CANCEL &&
+    campaign.reserved_funds !== campaign.balance;
+
   const showProgressWidget =
     isAuthenticated &&
     isJoined &&
-    campaign?.status === CampaignStatus.ACTIVE &&
-    now >= campaign?.start_date &&
-    now <= campaign?.end_date;
-
-  if (!campaign) return null;
+    (isOngoingCampaign || hasProgressBeforeCancel);
 
   const exchangeName =
     exchangesMap.get(campaign.exchange_name)?.display_name ||

@@ -8,7 +8,7 @@ import {
   useJoinCampaign,
 } from '@/hooks/recording-oracle';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import type { CampaignDetails } from '@/types';
+import { CampaignStatus, type CampaignDetails } from '@/types';
 
 type Props = {
   campaign: CampaignDetails;
@@ -27,7 +27,9 @@ const JoinCampaign: FC<Props> = ({
     useGetEnrolledExchanges();
   const { mutate: joinCampaign, isPending: isJoining } = useJoinCampaign();
 
-  const isCampaignFinished = campaign.end_date < new Date().toISOString();
+  const isCampaignFinished =
+    campaign.status === CampaignStatus.TO_CANCEL ||
+    campaign.end_date < new Date().toISOString();
 
   const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoining;
   const isButtonDisabled =
