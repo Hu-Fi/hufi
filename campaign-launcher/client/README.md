@@ -1,54 +1,66 @@
-# React + TypeScript + Vite
+# Campaign Launcher Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Overview
 
-Currently, two official plugins are available:
+Campaign Launcher Client is a web-based interface for HuFi, enabling users to create, join, and manage market-making campaigns directly from their wallet (e.g., MetaMask).
+It interacts with Human Protocol smart contracts and HuFi backend services to display live campaign data, manage participant enrollment, and provide a seamless campaign management experience.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Flow:**
+1. Users connect their wallet and sign in using supported providers (e.g., MetaMask, WalletConnect).
+2. The dashboard displays available campaigns, which users can filter and explore.
+3. To launch a new campaign, users specify campaign parameters and deploy the campaign contract via the interface.
+4. To join an existing campaign, users submit their read-only exchange API keys securely through the client.
+5. The client communicates with recording oracle to enroll participants and validate API keys.
+6. Participants can monitor campaign progress, view statistics, and track their own performance in real time.
+7. Users can manage their exchange API keys, switch networks, and view campaign results directly from the dashboard.
 
-## Expanding the ESLint configuration
+## 2. Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Campaign discovery and filtering (active, joined, my campaigns)
+- Launch new market-making campaigns
+- Join campaigns with read-only exchange API keys
+- Track campaign statistics and progress
+- Manage API keys for supported exchanges
+- Responsive UI with support for multiple networks
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 3. Prerequisites
+
+- Node.js v22+
+- Yarn
+
+## 4. Environment variables
+
+All required environment variables are listed in [.env.example](./.env.example).
+Copy this file to `.env` and fill in the values as needed.
+
+## 5. Running Locally
+
+### 5.1. Install Dependencies
+
+```sh
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 5.2. Prepare Environment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Copy `.env.example` to `.env` and fill in required values.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### 5.3. Start the Development Server
+
+```sh
+yarn dev
 ```
+
+The app will be available at [http://localhost:5173](http://localhost:5173) by default.
+
+## 6. API Reference
+
+The client interacts with:
+- [Campaign Launcher Server](../server/README.md)
+- [Recording Oracle](../../recording-oracle/README.md)
+
+See those READMEs for backend API details.
+
+---
+
+For more details, see the [main project README](../../README.md)

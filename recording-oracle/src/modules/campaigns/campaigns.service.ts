@@ -972,7 +972,7 @@ export class CampaignsService {
 
         const newEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
-          recordingOracle: this.web3ConfigService.operatorAddress.toLowerCase(),
+          recordingOracle: this.web3ConfigService.operatorAddress,
           status: EscrowStatus.Pending,
           from: lookbackDate,
           orderDirection: OrderDirection.ASC,

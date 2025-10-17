@@ -1,9 +1,9 @@
-import * as yup from "yup";
-import type { ObjectSchema } from "yup";
+import * as yup from 'yup';
+import type { ObjectSchema } from 'yup';
 
-import { FundToken } from "../../../constants/tokens";
-import type { HoldingFormValues, MarketMakingFormValues } from "../../../types";
-import { CampaignType } from "../../../types";
+import { FundToken } from '../../../constants/tokens';
+import type { HoldingFormValues, MarketMakingFormValues } from '../../../types';
+import { CampaignType } from '../../../types';
 
 const mapTokenToMinValue: Record<FundToken, number> = {
   usdt: 0.001,
@@ -12,7 +12,10 @@ const mapTokenToMinValue: Record<FundToken, number> = {
 };
 
 const baseValidationSchema = {
-  type: yup.mixed<CampaignType>().oneOf(Object.values(CampaignType)).required('Required'),
+  type: yup
+    .mixed<CampaignType>()
+    .oneOf(Object.values(CampaignType))
+    .required('Required'),
   exchange: yup.string().required('Required'),
   fund_token: yup.string().required('Required'),
   fund_amount: yup
@@ -32,7 +35,7 @@ const baseValidationSchema = {
 
       return true;
     }),
-  start_date: yup.date().required('Required'),  
+  start_date: yup.date().required('Required'),
   end_date: yup
     .date()
     .required('Required')
@@ -50,12 +53,15 @@ const baseValidationSchema = {
         minEndDate.setDate(minEndDate.getDate() + 1);
         return endDate >= minEndDate;
       }
-    ),  
+    ),
 };
 
 export const marketMakingValidationSchema = yup.object({
   ...baseValidationSchema,
-  pair: yup.string().matches(/^[A-Z]{3,10}\/[A-Z]{3,10}$/, 'Invalid pair').required('Required'),
+  pair: yup
+    .string()
+    .matches(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/, 'Invalid pair')
+    .required('Required'),
   daily_volume_target: yup
     .number()
     .typeError('Daily volume target is required')
@@ -65,7 +71,10 @@ export const marketMakingValidationSchema = yup.object({
 
 export const holdingValidationSchema = yup.object({
   ...baseValidationSchema,
-  symbol: yup.string().matches(/^[A-Z]{3,10}$/, 'Invalid symbol').required('Required'),
+  symbol: yup
+    .string()
+    .matches(/^[\dA-Z]{3,10}$/, 'Invalid symbol')
+    .required('Required'),
   daily_balance_target: yup
     .number()
     .typeError('Daily balance target is required')

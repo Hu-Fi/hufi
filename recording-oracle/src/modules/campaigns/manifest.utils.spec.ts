@@ -178,9 +178,22 @@ describe('manifest utils', () => {
   describe('assertValidMarketMakingCampaignManifest', () => {
     const validManifest = generateMarketMakingCampaignManifest();
 
-    it('should not throw for valid manifest', () => {
+    it.each([
+      {
+        ...validManifest,
+      },
+      Object.assign({}, validManifest, {
+        pair: `1${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}2/3${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}4`,
+      }),
+    ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
-        manifestUtils.assertValidMarketMakingCampaignManifest(validManifest),
+        manifestUtils.assertValidMarketMakingCampaignManifest(testManifest),
       ).toBeUndefined();
     });
 
@@ -196,6 +209,10 @@ describe('manifest utils', () => {
       // token symbol instead of trading pair
       Object.assign({}, validManifest, {
         pair: faker.finance.currencyCode(),
+      }),
+      // lowercase pair
+      Object.assign({}, validManifest, {
+        pair: generateTradingPair().toLowerCase(),
       }),
       // invalid volume target
       Object.assign({}, validManifest, {
@@ -223,9 +240,17 @@ describe('manifest utils', () => {
   describe('assertValidHoldingCampaignManifest', () => {
     const validManifest = generateHoldingCampaignManifest();
 
-    it('should not throw for valid manifest', () => {
+    it.each([
+      { ...validManifest },
+      Object.assign({}, validManifest, {
+        symbol: `5${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}6`,
+      }),
+    ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
-        manifestUtils.assertValidHoldingCampaignManifest(validManifest),
+        manifestUtils.assertValidHoldingCampaignManifest(testManifest),
       ).toBeUndefined();
     });
 
@@ -237,6 +262,10 @@ describe('manifest utils', () => {
       // trading pair instead of token symbol
       Object.assign({}, validManifest, {
         symbol: generateTradingPair(),
+      }),
+      // lowercased symbol
+      Object.assign({}, validManifest, {
+        symbol: faker.finance.currencyCode().toLowerCase(),
       }),
       // invalid balance target
       Object.assign({}, validManifest, {
