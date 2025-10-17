@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import CampaignsTable from '@/components/CampaignsTable';
 import CampaignsTablePagination from '@/components/CampaignsTablePagination';
-import { useGetJoinedCampaigns } from '@/hooks/recording-oracle/campaign';
+import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
 import usePagination from '@/hooks/usePagination';
 import { CampaignStatus } from '@/types';
 import { filterFalsyQueryParams } from '@/utils';

@@ -7,7 +7,7 @@ import {
   ModalLoading,
   ModalSuccess,
 } from '@/components/ModalState';
-import { useDeleteApiKeyByExchange } from '@/hooks/recording-oracle/exchangeApiKeys';
+import { useDeleteApiKeyByExchange } from '@/hooks/recording-oracle';
 
 import BaseModal from '../BaseModal';
 

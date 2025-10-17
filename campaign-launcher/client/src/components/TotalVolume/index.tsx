@@ -11,7 +11,7 @@ import {
 
 import { StatsCard, Value } from '@/components/DashboardStats';
 import FormattedNumber from '@/components/FormattedNumber';
-import { useGetTotalVolume } from '@/hooks/recording-oracle/stats';
+import { useGetTotalVolume } from '@/hooks/recording-oracle';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 
 const TotalVolume = () => {

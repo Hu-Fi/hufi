@@ -19,7 +19,7 @@ import {
   ModalLoading,
   ModalSuccess,
 } from '@/components/ModalState';
-import { usePostExchangeApiKey } from '@/hooks/recording-oracle/exchangeApiKeys';
+import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 
 import BaseModal from '../BaseModal';
 
