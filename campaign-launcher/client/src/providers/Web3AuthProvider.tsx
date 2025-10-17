@@ -1,5 +1,11 @@
-import type { FC, PropsWithChildren } from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  type FC,
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from 'react';
 
 import { useAccount, useSignMessage } from 'wagmi';
 
