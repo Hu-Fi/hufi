@@ -13,7 +13,7 @@ export const useStake = () => {
     null
   );
   const [isClientInitializing, setIsClientInitializing] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
 
   const { activeAddress } = useActiveAccount();
   const { isSwitching, appChainId } = useNetwork();
