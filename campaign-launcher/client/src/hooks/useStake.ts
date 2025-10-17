@@ -22,7 +22,7 @@ export const useStake = () => {
   const checkSupportedChain = useCallback(() => {
     const isSupportedChain = getSupportedChainIds().includes(appChainId);
     if (!isSupportedChain) {
-      resetData();
+      setStakingClient(null);
       throw new Error(
         'Unsupported chain. Please switch to a supported network.'
       );
@@ -39,7 +39,7 @@ export const useStake = () => {
           setStakingClient(client);
         } catch (error) {
           console.error('Failed to init staking client', error);
-          resetData();
+          setStakingClient(null);
         } finally {
           setIsClientInitializing(false);
         }
@@ -55,11 +55,7 @@ export const useStake = () => {
     checkSupportedChain,
   ]);
 
-  const resetData = () => {
-    setStakingClient(null);
-  };
-
-  const fetchStakingData = async () => {
+  const fetchStakingData = useCallback(async () => {
     checkSupportedChain();
     if (stakingClient && activeAddress) {
       setIsFetching(true);
@@ -74,7 +70,7 @@ export const useStake = () => {
       }
     }
     return 0;
-  };
+  }, [stakingClient, activeAddress, checkSupportedChain]);
 
   return {
     fetchStakingData,

@@ -2,6 +2,7 @@ import {
   type FC,
   type PropsWithChildren,
   createContext,
+  useCallback,
   useContext,
   useState,
   useEffect,
@@ -33,7 +34,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const { isConnected } = useAccount();
   const { activeAddress } = useActiveAccount();
 
-  const signIn = async () => {
+  const signIn = useCallback(async () => {
     setIsLoading(true);
     try {
       const nonce = await recordingApi.getNonce(activeAddress);
@@ -54,7 +55,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeAddress, signMessageAsync]);
 
   const bootstrapAuthState = async () => {
     const access_token = tokenManager.getAccessToken();
@@ -82,7 +83,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     try {
       await recordingApi.logout();
@@ -93,7 +94,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       setIsAuthenticated(false);
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
@@ -119,7 +120,8 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         handleRefreshFailureEvent
       );
     };
-  }, [isAuthenticated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Web3AuthContext.Provider
