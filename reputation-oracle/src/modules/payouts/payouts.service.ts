@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import fs from 'fs/promises';
 
 import {
   EscrowClient,
@@ -157,8 +158,13 @@ export class PayoutsService {
               continue;
             }
 
+            const rewardsFileName =
+              await this.writeRewardsBatchToFile(rewardsBatch);
             logger.info('Got new rewards batch to pay', {
               batchId: rewardsBatch.id,
+              rewardsFileName,
+              githubRunId: process.env.GITHUB_RUN_ID,
+              githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT,
             });
 
             rewardsBatchesToPay.push(rewardsBatch);
@@ -436,5 +442,15 @@ export class PayoutsService {
     });
 
     return logs.length;
+  }
+
+  private async writeRewardsBatchToFile(
+    rewardsBatch: CalculatedRewardsBatch,
+  ): Promise<string> {
+    const fileName = `rewards_batch_${rewardsBatch.id}.json`;
+
+    await fs.writeFile(fileName, JSON.stringify(rewardsBatch.rewards, null, 2));
+
+    return fileName;
   }
 }

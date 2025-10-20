@@ -352,6 +352,7 @@ describe('PayoutsService', () => {
     let spyOnDownloadIntermediateResults: jest.SpyInstance;
     let spyOnUploadFinalResults: jest.SpyInstance;
     let spyOnGetBulkPayoutsCount: jest.SpyInstance;
+    let spyOnWriteRewardsBatchToFile: jest.SpyInstance;
 
     const mockedGetEscrowBalance = jest.fn();
     const mockedGetEscrowStatus = jest.fn();
@@ -385,6 +386,12 @@ describe('PayoutsService', () => {
         'getBulkPayoutsCount',
       );
       spyOnGetBulkPayoutsCount.mockImplementation();
+
+      spyOnWriteRewardsBatchToFile = jest.spyOn(
+        payoutsService as any,
+        'writeRewardsBatchToFile',
+      );
+      spyOnWriteRewardsBatchToFile.mockImplementation();
     });
 
     afterAll(() => {
@@ -392,6 +399,7 @@ describe('PayoutsService', () => {
       spyOnDownloadIntermediateResults.mockRestore();
       spyOnUploadFinalResults.mockRestore();
       spyOnGetBulkPayoutsCount.mockRestore();
+      spyOnWriteRewardsBatchToFile.mockRestore();
     });
 
     beforeEach(() => {
