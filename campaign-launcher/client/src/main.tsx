@@ -7,7 +7,7 @@ const initDebugger = () => {
   script.src = '//cdn.jsdelivr.net/npm/eruda';
   document.body.appendChild(script);
   script.onload = () => {
-    // @ts-expect-error this is for dev
+    // @ts-expect-error this is for dev purpose only
     window.eruda.init();
   };
 };
