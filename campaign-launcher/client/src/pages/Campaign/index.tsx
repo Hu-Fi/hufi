@@ -44,6 +44,7 @@ const Campaign: FC = () => {
   }, [searchParams]);
 
   const campaignData = campaign || parsedData;
+  const showCampaignBlocks = !isCampaignLoading && !!campaignData;
 
   return (
     <PageWrapper>
@@ -53,7 +54,7 @@ const Campaign: FC = () => {
           sx={{ width: '40px', height: '40px', margin: '0 auto' }}
         />
       )}
-      {!!campaignData && (
+      {showCampaignBlocks && (
         <Box display="flex" flexWrap="wrap" gap={2}>
           <CampaignInfo campaign={campaignData} />
           <JoinCampaign
@@ -63,7 +64,9 @@ const Campaign: FC = () => {
           />
         </Box>
       )}
-      <CampaignStats campaign={campaignData} isJoined={!!isAlreadyJoined} />
+      {showCampaignBlocks && (
+        <CampaignStats campaign={campaignData} isJoined={!!isAlreadyJoined} />
+      )}
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns
         showOnlyActiveCampaigns={false}

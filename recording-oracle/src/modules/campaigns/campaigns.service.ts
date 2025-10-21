@@ -989,7 +989,15 @@ export class CampaignsService {
     if (now < campaign.startDate) {
       throw new CampaignNotStartedError(chainId, campaignAddress);
     }
-    if (now > campaign.endDate) {
+
+    if (
+      [
+        CampaignStatus.PENDING_CANCELLATION,
+        CampaignStatus.CANCELLED,
+        CampaignStatus.COMPLETED,
+      ].includes(campaign.status) ||
+      now > campaign.endDate
+    ) {
       throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
@@ -1003,11 +1011,29 @@ export class CampaignsService {
     }
 
     // Calculate start of the active timeframe (end is now)
-    const timeframesPassed = dayjs(now).diff(campaign.startDate, 'day');
+    const timeframesPassed = Math.floor(
+      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
+    );
 
     const timeframeStart = dayjs(campaign.startDate)
-      .add(timeframesPassed, 'day')
+      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
+      .add(1, 'millisecond')
       .toDate();
+
+    let timeframeEnd: Date;
+    if (campaign.status === CampaignStatus.TO_CANCEL) {
+      const cancellationRequestedAt =
+        await escrowUtils.getCancellationRequestDate(
+          campaign.chainId,
+          campaign.address,
+        );
+      if (cancellationRequestedAt <= timeframeStart) {
+        throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
+      }
+      timeframeEnd = cancellationRequestedAt;
+    } else {
+      timeframeEnd = now;
+    }
 
     /**
      * Using timeframeStart in a key to prevent situations
@@ -1019,7 +1045,7 @@ export class CampaignsService {
       const progress = await this.checkCampaignProgressForPeriod(
         campaign,
         timeframeStart,
-        now,
+        timeframeEnd,
       );
 
       campaignsProgressCache.set(cacheKey, {
