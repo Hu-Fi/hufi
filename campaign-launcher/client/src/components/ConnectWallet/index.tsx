@@ -71,6 +71,9 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
 
   const onClose = () => setAnchorEl(null);
 
+  // eslint-disable-next-line no-console
+  console.log('isConnectingWallet', isConnectingWallet.current);
+
   return (
     <>
       <Button
