@@ -54,11 +54,16 @@ const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { activeAddress } = useActiveAccount();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
   };
+
+  // eslint-disable-next-line no-console
+  console.log('address', address);
+  // eslint-disable-next-line no-console
+  console.log('isConnected', isConnected);
 
   return (
     <AppBar
@@ -157,7 +162,11 @@ const Header: FC = () => {
               />
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
+              {activeAddress || isConnected ? (
+                <Account />
+              ) : (
+                <ConnectWallet closeDrawer={() => toggleDrawer(false)} />
+              )}
             </Box>
           </Drawer>
         </Toolbar>

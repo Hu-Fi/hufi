@@ -8,6 +8,7 @@ export default defineConfig(() => {
   return {
     server: {
       port: 3001,
+      host: true,
     },
     plugins: [
       nodePolyfills({

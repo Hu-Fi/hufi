@@ -7,6 +7,7 @@ import { useAccount, useConnect, useDisconnect, type Connector } from 'wagmi';
 import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 
 const WALLET_ICONS: Record<string, string> = {
@@ -15,7 +16,7 @@ const WALLET_ICONS: Record<string, string> = {
   walletConnect: walletConnectSvg,
 };
 
-const ConnectWallet: FC = () => {
+const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const isConnectingWallet = useRef(false);
 
@@ -23,12 +24,14 @@ const ConnectWallet: FC = () => {
   const { address } = useAccount();
   const { setActiveAddress } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
+  const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
     isConnectingWallet.current = true;
     try {
       await connectAsync({ connector });
     } catch (e) {
+      console.error(e);
       const err = e as { message?: string; code?: number | string };
       if (err.message?.includes('Connector already connected')) {
         await disconnectAsync();
@@ -59,6 +62,8 @@ const ConnectWallet: FC = () => {
 
   useEffect(() => {
     if (address && isConnectingWallet.current) {
+      // eslint-disable-next-line no-console
+      console.log('HERE');
       setActiveAddress(address);
       isConnectingWallet.current = false;
     }
@@ -123,7 +128,13 @@ const ConnectWallet: FC = () => {
                 color: 'text.primary',
                 borderRadius: '4px',
               }}
-              onClick={() => handleConnect(connector)}
+              onClick={() => {
+                handleConnect(connector);
+                if (isMobile) {
+                  onClose();
+                  closeDrawer?.();
+                }
+              }}
             >
               <img
                 src={connector.icon ?? WALLET_ICONS[connector.id]}

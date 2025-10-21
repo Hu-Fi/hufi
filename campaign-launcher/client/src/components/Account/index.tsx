@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
@@ -49,6 +49,7 @@ const Account: FC = () => {
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
+  const { address } = useAccount();
 
   const formattedAddress = formatAddress(activeAddress);
 
@@ -173,7 +174,7 @@ const Account: FC = () => {
               </CustomTooltip>
             </ListItemButton>
           )}
-          {!isAuthenticated && signer && (
+          {!isAuthenticated && (signer || address) && (
             <ListItemButton sx={buttonSx} onClick={handleDisconnect}>
               <PowerIcon />
               Disconnect wallet
