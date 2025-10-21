@@ -1,23 +1,36 @@
 import EscrowFactoryABI from '@human-protocol/core/abis/EscrowFactory.json';
 import { Escrow__factory } from '@human-protocol/core/typechain-types';
-import { ContractTransactionReceipt, ethers, EventLog, TransactionReceipt } from 'ethers';
+import {
+  ContractTransactionReceipt,
+  ethers,
+  type EventLog,
+  type TransactionReceipt,
+} from 'ethers';
 
-type ReplacementResult = | 
-{
-  success: false;
-  error: string;
-} | {
-  success: true;
-  result: unknown;
-}
+type ReplacementResult =
+  | {
+      success: false;
+      error: string;
+    }
+  | {
+      success: true;
+      result: unknown;
+    };
 
 type HandlerType = 'createEscrow' | 'fund' | 'setup';
 
-export const handleCreateEscrowReplacement = async (provider: ethers.Provider, receipt: TransactionReceipt): Promise<ReplacementResult> => {
+export const handleCreateEscrowReplacement = async (
+  provider: ethers.Provider,
+  receipt: TransactionReceipt
+): Promise<ReplacementResult> => {
   const iface = new ethers.Interface(EscrowFactoryABI);
-  const contractTransactionReceipt = new ContractTransactionReceipt(iface, provider, receipt);
+  const contractTransactionReceipt = new ContractTransactionReceipt(
+    iface,
+    provider,
+    receipt
+  );
 
-  const event = contractTransactionReceipt.logs.find(({ topics }) => 
+  const event = contractTransactionReceipt.logs.find(({ topics }) =>
     topics.includes(ethers.id('LaunchedV2(address,address,string)'))
   ) as EventLog;
 
@@ -26,58 +39,83 @@ export const handleCreateEscrowReplacement = async (provider: ethers.Provider, r
   if (!escrowAddress) {
     return {
       success: false,
-      error: 'Transaction has been replaced by a different transaction'
-    }
+      error: 'Transaction has been replaced by a different transaction',
+    };
   } else {
     return {
       success: true,
-      result: escrowAddress
-    }
+      result: escrowAddress,
+    };
   }
-}
+};
 
-export const handleFundReplacement = async (provider: ethers.Provider, receipt: TransactionReceipt, options?: Record<string, unknown>): Promise<ReplacementResult> => {
-  const abi = ['event Transfer(address indexed _from, address indexed _to, uint256 _value)'];
+export const handleFundReplacement = async (
+  provider: ethers.Provider,
+  receipt: TransactionReceipt,
+  options?: Record<string, unknown>
+): Promise<ReplacementResult> => {
+  const abi = [
+    'event Transfer(address indexed _from, address indexed _to, uint256 _value)',
+  ];
   const iface = new ethers.Interface(abi);
-  const contractTransactionReceipt = new ContractTransactionReceipt(iface, provider, receipt);
+  const contractTransactionReceipt = new ContractTransactionReceipt(
+    iface,
+    provider,
+    receipt
+  );
 
-  const event = contractTransactionReceipt.logs.find(({ topics }) => 
+  const event = contractTransactionReceipt.logs.find(({ topics }) =>
     topics.includes(ethers.id('Transfer(address,address,uint256)'))
   ) as EventLog;
 
-  if (event?.args?._to.toLowerCase() === (options?.escrowAddress as string)?.toLowerCase()) {
+  if (
+    event?.args?._to.toLowerCase() ===
+    (options?.escrowAddress as string)?.toLowerCase()
+  ) {
     return {
       success: true,
-      result: undefined
-    }
+      result: undefined,
+    };
   } else {
     return {
       success: false,
-      error: 'Transaction has been replaced by a different transaction'
-    }
+      error: 'Transaction has been replaced by a different transaction',
+    };
   }
-}
+};
 
-export const handleSetupReplacement = async (provider: ethers.Provider, receipt: TransactionReceipt, options?: Record<string, unknown>): Promise<ReplacementResult> => {
+export const handleSetupReplacement = async (
+  provider: ethers.Provider,
+  receipt: TransactionReceipt,
+  options?: Record<string, unknown>
+): Promise<ReplacementResult> => {
   const iface = new ethers.Interface(Escrow__factory.abi);
-  const contractTransactionReceipt = new ContractTransactionReceipt(iface, provider, receipt);
+  const contractTransactionReceipt = new ContractTransactionReceipt(
+    iface,
+    provider,
+    receipt
+  );
 
-  const event = contractTransactionReceipt.logs.find(({ topics }) => 
+  const event = contractTransactionReceipt.logs.find(({ topics }) =>
     topics.includes(ethers.id('Fund(uint256)'))
   ) as EventLog;
 
-  if (event && receipt?.to?.toLowerCase() === (options?.escrowAddress as string)?.toLowerCase()) {
+  if (
+    event &&
+    receipt?.to?.toLowerCase() ===
+      (options?.escrowAddress as string)?.toLowerCase()
+  ) {
     return {
       success: true,
-      result: undefined
-    }
+      result: undefined,
+    };
   } else {
     return {
       success: false,
-      error: 'Transaction has been replaced by a different transaction'
-    }
+      error: 'Transaction has been replaced by a different transaction',
+    };
   }
-}
+};
 
 const getReplacementHandler = (type: HandlerType) => {
   switch (type) {
@@ -88,33 +126,41 @@ const getReplacementHandler = (type: HandlerType) => {
     case 'setup':
       return handleSetupReplacement;
   }
-}
+};
 
 const handleTransactionReplacement = async <T>(
   callback: () => Promise<T>,
-  opts: { provider: ethers.Provider; signer: ethers.Signer; type: HandlerType; meta?: Record<string, unknown> }
+  opts: {
+    provider: ethers.Provider;
+    signer: ethers.Signer;
+    type: HandlerType;
+    meta?: Record<string, unknown>;
+  }
 ): Promise<T> => {
   // artificially slowing down the transactions
   const originalSendTransaction = opts.signer.sendTransaction.bind(opts.signer);
   opts.signer.sendTransaction = async (tx) => {
     return originalSendTransaction({
       ...tx,
-      gasPrice: 25000000000n // 25 gwei
+      gasPrice: 25000000000n, // 25 gwei
     });
   };
-  
+
   const { provider, signer } = opts;
   const from = (await signer.getAddress()).toLowerCase();
   const pendingNonce = await provider.getTransactionCount(from, 'pending');
 
   let active = true;
-  
+
   const replacementPromise = new Promise<T>((resolve, reject) => {
     const onBlock = async (newBlockNumber: ethers.BlockTag) => {
       if (!active) return;
 
       try {
-        const currentPendingNonce = await provider.getTransactionCount(from, newBlockNumber);
+        const currentPendingNonce = await provider.getTransactionCount(
+          from,
+          newBlockNumber
+        );
         if (currentPendingNonce > pendingNonce) {
           const newBlock = await provider.getBlock(newBlockNumber);
 
@@ -124,16 +170,19 @@ const handleTransactionReplacement = async <T>(
             provider.off('block', onBlock);
             return;
           }
-          
+
           for (const txHash of newBlock.transactions) {
             const tx = await provider.getTransaction(txHash);
             if (!tx) continue;
-            
+
             const txFrom = (tx.from || '').toLowerCase();
             const txTo = (tx.to || '').toLowerCase();
-              
+
             if (txFrom === from && tx.nonce === pendingNonce) {
-              if (txTo === from && (tx.value === 0n || tx.value?.toString() === '0')) {
+              if (
+                txTo === from &&
+                (tx.value === 0n || tx.value?.toString() === '0')
+              ) {
                 // Self-send with 0 value -> cancellation
                 active = false;
                 provider.off('block', onBlock);
@@ -145,7 +194,9 @@ const handleTransactionReplacement = async <T>(
                 if (!receipt) continue;
 
                 const handler = getReplacementHandler(opts.type);
-                const replacementResult = await handler(provider, receipt, { escrowAddress: opts.meta?.escrowAddress });
+                const replacementResult = await handler(provider, receipt, {
+                  escrowAddress: opts.meta?.escrowAddress,
+                });
 
                 if (!replacementResult.success) {
                   active = false;
@@ -176,6 +227,6 @@ const handleTransactionReplacement = async <T>(
   });
 
   return Promise.race([callbackPromise, replacementPromise]);
-}
+};
 
 export default handleTransactionReplacement;
