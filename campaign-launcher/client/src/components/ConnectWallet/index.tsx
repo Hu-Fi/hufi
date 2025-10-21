@@ -21,7 +21,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const isConnectingWallet = useRef(false);
 
   const { connectAsync, connectors } = useConnect();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { setActiveAddress } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
@@ -72,13 +72,16 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
       isConnecting: isConnectingWallet.current,
     });
 
-    if (address && isConnectingWallet.current) {
+    if (
+      address &&
+      ((!isMobile && isConnectingWallet.current) || (isMobile && isConnected))
+    ) {
       console.log('Setting active address:', address);
       setActiveAddress(address);
       isConnectingWallet.current = false;
       console.log('Reset connecting state');
     }
-  }, [address, setActiveAddress]);
+  }, [address, setActiveAddress, isMobile, isConnected]);
 
   const onClose = () => setAnchorEl(null);
 
