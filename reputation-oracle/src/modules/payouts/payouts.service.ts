@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import fs from 'fs/promises';
 
 import {
   EscrowClient,
@@ -113,10 +114,9 @@ export class PayoutsService {
             campaign.fundTokenDecimals,
           );
 
-          logger.info('Rewards calculated', {
+          logger.debug('Rewards calculated for intermediate result', {
             periodFrom: intermediateResult.from,
             periodTo: intermediateResult.to,
-            rewardsBatches,
           });
 
           for (const rewardsBatch of rewardsBatches) {
@@ -124,6 +124,9 @@ export class PayoutsService {
              * All participants in batch got zero reward -> nothing to pay
              */
             if (rewardsBatch.rewards.length === 0) {
+              logger.debug('Skipped zero rewards batch', {
+                batchId: rewardsBatch.id,
+              });
               continue;
             }
             /**
@@ -147,11 +150,34 @@ export class PayoutsService {
               }
 
               totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
+
+              logger.debug('Skipped rewards batch as per bulkPayoutsCount', {
+                batchId: rewardsBatch.id,
+                batchTotalReward: batchTotalReward.toString(),
+              });
               continue;
             }
 
+            const rewardsFileName =
+              await this.writeRewardsBatchToFile(rewardsBatch);
+            logger.info('Got new rewards batch to pay', {
+              batchId: rewardsBatch.id,
+              rewardsFileName,
+              githubRunId: process.env.GITHUB_RUN_ID,
+              githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            });
+
             rewardsBatchesToPay.push(rewardsBatch);
           }
+        }
+
+        if (rewardsBatchesToPay.length === 0) {
+          logger.info('No new payouts for campaign');
+          /**
+           * No need to early return here: event if no rewards to pay
+           * there still might be pending "competion" step. Have this log
+           * just for better observability.
+           */
         }
 
         const rawEscrowBalance = await escrowClient.getBalance(
@@ -197,6 +223,10 @@ export class PayoutsService {
               gasPrice,
             },
           );
+
+          logger.info('Rewards batch successfully paid', {
+            batchId: rewardsBatchToPay.id,
+          });
         }
 
         const lastResultsAt = intermediateResultsData.results
@@ -412,5 +442,15 @@ export class PayoutsService {
     });
 
     return logs.length;
+  }
+
+  private async writeRewardsBatchToFile(
+    rewardsBatch: CalculatedRewardsBatch,
+  ): Promise<string> {
+    const fileName = `rewards_batch_${rewardsBatch.id}.json`;
+
+    await fs.writeFile(fileName, JSON.stringify(rewardsBatch.rewards, null, 2));
+
+    return fileName;
   }
 }
