@@ -51,6 +51,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
         message.includes('request reset') ||
         message.includes('action rejected');
       if (isUserAborted) {
+        console.log('User aborted connection');
         isConnectingWallet.current = false;
       }
     } finally {
