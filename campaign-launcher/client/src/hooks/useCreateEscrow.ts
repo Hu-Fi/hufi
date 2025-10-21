@@ -15,6 +15,7 @@ import {
   type CampaignFormValues,
 } from '@/types';
 import { calculateHash, getTokenAddress } from '@/utils';
+import handleTransactionReplacement from '@/utils/handleTransactionReplacement';
 
 import useRetrieveSigner from './useRetrieveSigner';
 
@@ -149,10 +150,10 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           make sure the backend won't interrupt the process and users won't lose their funds
         */
           const oracleFees = await launcherApi.getOracleFees(appChainId);
-          const _escrowAddress = await escrowClient.createEscrow(
-            tokenAddress,
-            [signer.address],
-            uuidV4()
+
+          const _escrowAddress = await handleTransactionReplacement(
+            () => escrowClient.createEscrow(tokenAddress, uuidV4()),
+            { provider: signer.provider, signer, type: 'createEscrow' }
           );
 
           escrowState.current.escrowAddress = _escrowAddress;
@@ -168,9 +169,15 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         }
 
         if (_stepsCompleted < 2) {
-          await escrowClient.fund(
-            escrowState.current.escrowAddress,
-            fundAmount
+          await handleTransactionReplacement(
+            () =>
+              escrowClient.fund(escrowState.current.escrowAddress, fundAmount),
+            {
+              provider: signer.provider,
+              signer,
+              type: 'fund',
+              meta: { escrowAddress: escrowState.current.escrowAddress },
+            }
           );
           _stepsCompleted = 2;
           setStepsCompleted(_stepsCompleted);
