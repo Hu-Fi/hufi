@@ -3,7 +3,7 @@ import { DataSource, Repository } from 'typeorm';
 
 import type { UserEntity } from '@/modules/users';
 
-import type { CampaignEntity } from './campaign.entity';
+import { CampaignEntity } from './campaign.entity';
 import { CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 
@@ -54,5 +54,35 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
     });
 
     return userCampaigns.map((e) => e.user as UserEntity);
+  }
+
+  async removeUserFromActiveCampaigns(
+    userId: string,
+    exchangeNames: string[],
+  ): Promise<void> {
+    /**
+     * TODO: update this query with `to_cancel` campaign when ready
+     */
+    const activeCampaignIdsQuery = this.manager
+      .createQueryBuilder()
+      .select('campaign.id')
+      .from(CampaignEntity, 'campaign')
+      .where('campaign.status = :status', { status: CampaignStatus.ACTIVE });
+
+    if (exchangeNames.length) {
+      activeCampaignIdsQuery.andWhere(
+        'campaign.exchangeName IN (:...exchangeNames)',
+        { exchangeNames },
+      );
+    }
+
+    const removalOp = this.createQueryBuilder('userCampaign')
+      .delete()
+      .where('userCampaign.userId = :userId', { userId })
+      .andWhere(
+        `"userCampaign.campaignId IN (${activeCampaignIdsQuery.getQuery()})`,
+      );
+
+    await removalOp.execute();
   }
 }

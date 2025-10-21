@@ -13,6 +13,7 @@ import {
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
+import { ExchangeApiKeyData } from './types';
 
 @Injectable()
 export class ExchangeApiKeysService {
@@ -78,7 +79,7 @@ export class ExchangeApiKeysService {
   async retrieve(
     userId: string,
     exchangeName: string,
-  ): Promise<{ id: string; apiKey: string; secretKey: string }> {
+  ): Promise<ExchangeApiKeyData> {
     const entity =
       await this.exchangeApiKeysRepository.findOneByUserAndExchange(
         userId,

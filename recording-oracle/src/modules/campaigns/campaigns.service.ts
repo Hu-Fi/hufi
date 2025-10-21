@@ -28,7 +28,11 @@ import {
   ExchangeApiAccessError,
   ExchangeApiClientFactory,
 } from '@/modules/exchange';
-import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
+import {
+  ExchangeApiKeyData,
+  ExchangeApiKeyNotFoundError,
+  ExchangeApiKeysService,
+} from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 
@@ -170,16 +174,14 @@ export class CampaignsService {
       );
     }
 
-    const exchangeApiKeyId =
-      await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
-        userId,
-        campaign.exchangeName,
-      );
+    await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
+      userId,
+      campaign.exchangeName,
+    );
 
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
     newUserCampaign.campaignId = campaign.id;
-    newUserCampaign.exchangeApiKeyId = exchangeApiKeyId;
     newUserCampaign.createdAt = new Date();
 
     await this.userCampaignsRepository.insert(newUserCampaign);
@@ -603,10 +605,30 @@ export class CampaignsService {
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
-      const exchangeApiKey = await this.exchangeApiKeysService.retrieve(
-        participant.id,
-        campaign.exchangeName,
-      );
+      let exchangeApiKey: ExchangeApiKeyData;
+      try {
+        exchangeApiKey = await this.exchangeApiKeysService.retrieve(
+          participant.id,
+          campaign.exchangeName,
+        );
+      } catch (error) {
+        if (error instanceof ExchangeApiKeyNotFoundError) {
+          /**
+           * We should remove all active participations before
+           * allowing to remove api key, but let's warn ourselves
+           * just in case if something unusual happens.
+           */
+          this.logger.warn('Got campaign participant without api key', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+            participantId: participant.id,
+            exchangeName: campaign.exchangeName,
+          });
+          continue;
+        }
+        throw error;
+      }
 
       try {
         const { abuseDetected, ...participantOutcomes } =
