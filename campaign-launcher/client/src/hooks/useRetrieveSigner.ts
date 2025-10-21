@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { BrowserProvider, JsonRpcSigner } from 'ethers';
-import { Config, useAccount, useWalletClient } from 'wagmi';
+import { BrowserProvider, type JsonRpcSigner } from 'ethers';
+import { useAccount, useWalletClient, type Config } from 'wagmi';
 
-import { useActiveAccount } from '../providers/ActiveAccountProvider';
-import { useNetwork } from '../providers/NetworkProvider';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useNetwork } from '@/providers/NetworkProvider';
 
 const useRetrieveSigner = () => {
   const [signer, setSigner] = useState<JsonRpcSigner | undefined>(undefined);
@@ -51,6 +51,7 @@ const useRetrieveSigner = () => {
     };
 
     getSigner();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, activeAddress, isSwitching, isTransportReady]);
 
   return { signer, isCreatingSigner: isLoading };

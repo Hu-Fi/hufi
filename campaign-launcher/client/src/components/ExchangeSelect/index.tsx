@@ -1,8 +1,8 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
-import { Exchange } from '../../types';
+import type { Exchange } from '@/types';
 
 type Props = {
   data: Exchange[] | undefined;

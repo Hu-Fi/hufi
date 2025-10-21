@@ -352,6 +352,7 @@ describe('PayoutsService', () => {
     let spyOnDownloadIntermediateResults: jest.SpyInstance;
     let spyOnUploadFinalResults: jest.SpyInstance;
     let spyOnGetBulkPayoutsCount: jest.SpyInstance;
+    let spyOnWriteRewardsBatchToFile: jest.SpyInstance;
 
     const mockedGetEscrowBalance = jest.fn();
     const mockedGetEscrowStatus = jest.fn();
@@ -385,6 +386,12 @@ describe('PayoutsService', () => {
         'getBulkPayoutsCount',
       );
       spyOnGetBulkPayoutsCount.mockImplementation();
+
+      spyOnWriteRewardsBatchToFile = jest.spyOn(
+        payoutsService as any,
+        'writeRewardsBatchToFile',
+      );
+      spyOnWriteRewardsBatchToFile.mockImplementation();
     });
 
     afterAll(() => {
@@ -392,6 +399,7 @@ describe('PayoutsService', () => {
       spyOnDownloadIntermediateResults.mockRestore();
       spyOnUploadFinalResults.mockRestore();
       spyOnGetBulkPayoutsCount.mockRestore();
+      spyOnWriteRewardsBatchToFile.mockRestore();
     });
 
     beforeEach(() => {
@@ -495,7 +503,13 @@ describe('PayoutsService', () => {
         },
       );
 
-      expect(logger.info).toHaveBeenCalledTimes(5);
+      expect(logger.info).toHaveBeenCalledTimes(6);
+      expect(logger.info).toHaveBeenCalledWith(
+        'Rewards batch successfully paid',
+        {
+          batchId: mockedIntermediateResult.participants_outcomes_batches[0].id,
+        },
+      );
       expect(logger.info).toHaveBeenCalledWith(
         'Campaign not finished yet, skip completion',
       );
@@ -508,6 +522,15 @@ describe('PayoutsService', () => {
       spyOnGetBulkPayoutsCount.mockReset().mockResolvedValueOnce(1);
 
       await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+      expect(logger.debug).toHaveBeenCalledTimes(2);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Skipped rewards batch as per bulkPayoutsCount',
+        {
+          batchId: mockedIntermediateResult.participants_outcomes_batches[0].id,
+          batchTotalReward: expect.stringMatching(/^\d+(\.\d+)?$/),
+        },
+      );
 
       expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
@@ -527,7 +550,7 @@ describe('PayoutsService', () => {
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(5);
+        expect(logger.info).toHaveBeenCalledTimes(6);
         expect(logger.info).toHaveBeenCalledWith(
           'Campaign auto-completed during payouts',
         );
@@ -541,7 +564,7 @@ describe('PayoutsService', () => {
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(5);
+        expect(logger.info).toHaveBeenCalledTimes(6);
         expect(logger.info).toHaveBeenCalledWith(
           'Campaign is fully paid, completing it',
         );

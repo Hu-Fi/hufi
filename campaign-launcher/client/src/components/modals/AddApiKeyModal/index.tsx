@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -13,9 +13,14 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
-import { usePostExchangeApiKey } from '../../../hooks/recording-oracle/exchangeApiKeys';
-import FormExchangeSelect from '../../FormExchangeSelect';
-import { ModalError, ModalLoading, ModalSuccess } from '../../ModalState';
+import FormExchangeSelect from '@/components/FormExchangeSelect';
+import {
+  ModalError,
+  ModalLoading,
+  ModalSuccess,
+} from '@/components/ModalState';
+import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
+
 import BaseModal from '../BaseModal';
 
 type Props = {

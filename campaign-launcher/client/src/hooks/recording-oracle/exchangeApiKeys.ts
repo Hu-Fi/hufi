@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 
-import { recordingApi } from '../../api';
-import { QUERY_KEYS } from '../../constants/queryKeys';
-import { useWeb3Auth } from '../../providers/Web3AuthProvider';
+import { recordingApi } from '@/api';
+import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 export const useGetEnrolledExchanges = () => {
   const { isAuthenticated } = useWeb3Auth();

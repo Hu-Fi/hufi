@@ -1,5 +1,4 @@
-import { ChainId, NETWORKS } from '@human-protocol/sdk';
-import { useTheme } from '@mui/material';
+import { NETWORKS, type ChainId } from '@human-protocol/sdk';
 import { ethers, formatUnits } from 'ethers';
 
 import {
@@ -8,10 +7,17 @@ import {
   MAINNET_CHAIN_IDS,
   TESTNET_CHAIN_IDS,
   LOCALHOST_CHAIN_IDS,
-} from '../constants';
-import { CHAIN_ICONS } from '../constants/chainIcons';
-import { TOKENS } from '../constants/tokens';
-import { Campaign, CampaignDetails, CampaignFormValues, CampaignType } from '../types';
+} from '@/constants';
+import { CHAIN_ICONS } from '@/constants/chainIcons';
+import { TOKENS } from '@/constants/tokens';
+import createAppTheme from '@/theme';
+import {
+  CampaignStatus,
+  CampaignType,
+  type Campaign,
+  type CampaignDetails,
+  type CampaignFormValues,
+} from '@/types';
 
 export const formatAddress = (address?: string) => {
   if (!address) return '';
@@ -77,16 +83,17 @@ export const formatTokenAmount = (
   }
 };
 
+const theme = createAppTheme('dark');
+
 export const mapStatusToColor = (
   status: Campaign['status'],
   startDate: string,
   endDate: string
 ) => {
-  const theme = useTheme();
   const now = new Date().toISOString();
 
   switch (status) {
-    case 'active':
+    case CampaignStatus.ACTIVE:
       if (now < startDate) {
         return theme.palette.warning.main;
       } else if (now > endDate) {
@@ -94,9 +101,9 @@ export const mapStatusToColor = (
       } else {
         return theme.palette.success.main;
       }
-    case 'cancelled':
+    case CampaignStatus.CANCELLED:
       return theme.palette.primary.main;
-    case 'completed':
+    case CampaignStatus.COMPLETED:
       return theme.palette.secondary.main;
     default:
       return theme.palette.primary.main;
@@ -114,7 +121,10 @@ export const mapTypeToLabel = (type: CampaignType) => {
   }
 };
 
-export const getDailyTargetTokenSymbol = (campaignType: CampaignType, symbol: string) => {
+export const getDailyTargetTokenSymbol = (
+  campaignType: CampaignType,
+  symbol: string
+) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
       return symbol.split('/')[1];
@@ -200,8 +210,12 @@ export const constructCampaignDetails = ({
     ...(data.type === CampaignType.MARKET_MAKING && { symbol: data.pair }),
     ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
     details: {
-      ...(data.type === CampaignType.MARKET_MAKING && { daily_volume_target: data.daily_volume_target }),
-      ...(data.type === CampaignType.HOLDING && { daily_balance_target: data.daily_balance_target }),
+      ...(data.type === CampaignType.MARKET_MAKING && {
+        daily_volume_target: data.daily_volume_target,
+      }),
+      ...(data.type === CampaignType.HOLDING && {
+        daily_balance_target: data.daily_balance_target,
+      }),
     },
     start_date: data.start_date,
     end_date: data.end_date,
@@ -251,13 +265,18 @@ export const filterFalsyQueryParams = (
 };
 
 export const getTokenInfo = (token: string) => {
-  return TOKENS.find((t) => t.name.toLowerCase() === token.toLowerCase()) || {
-    name: token,
-    label: token,
-    icon: null,
-  };
+  return (
+    TOKENS.find((t) => t.name.toLowerCase() === token.toLowerCase()) || {
+      name: token,
+      label: token,
+      icon: null,
+    }
+  );
 };
 
 export const convertFromSnakeCaseToTitleCase = (str: string) => {
-  return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+  return str
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };

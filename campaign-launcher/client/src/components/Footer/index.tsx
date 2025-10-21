@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
@@ -6,8 +6,8 @@ import TelegramIcon from '@mui/icons-material/Telegram';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import { Box, IconButton, Link, styled, Typography } from '@mui/material';
 
-import { DiscordIcon } from '../../icons';
-import Container from '../Container';
+import Container from '@/components/Container';
+import { DiscordIcon } from '@/icons';
 
 const SocialMediaIconButton = styled(IconButton)(({ theme }) => ({
   padding: 0,
@@ -37,7 +37,7 @@ const StyledLink = styled(Link)(({ theme }) => ({
 
 const handleClickOnSocialButton = (url: string) => {
   window.open(url, '_blank');
-}
+};
 
 const Footer: FC = () => {
   return (
@@ -86,33 +86,51 @@ const Footer: FC = () => {
             width={{ xs: '100%', md: 'auto' }}
             justifyContent={{ xs: 'space-between', md: 'center' }}
           >
-            <SocialMediaIconButton 
-              aria-label="GitHub" 
-              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_GITHUB)}
+            <SocialMediaIconButton
+              aria-label="GitHub"
+              onClick={() =>
+                handleClickOnSocialButton(
+                  import.meta.env.VITE_FOOTER_LINK_GITHUB
+                )
+              }
             >
               <GitHubIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton 
-              aria-label="Discord" 
-              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_DISCORD)}
+            <SocialMediaIconButton
+              aria-label="Discord"
+              onClick={() =>
+                handleClickOnSocialButton(
+                  import.meta.env.VITE_FOOTER_LINK_DISCORD
+                )
+              }
             >
               <DiscordIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton 
-              aria-label="X" 
-              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_X)}
+            <SocialMediaIconButton
+              aria-label="X"
+              onClick={() =>
+                handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_X)
+              }
             >
               <TwitterIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton 
-              aria-label="Telegram" 
-              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_TELEGRAM)}
+            <SocialMediaIconButton
+              aria-label="Telegram"
+              onClick={() =>
+                handleClickOnSocialButton(
+                  import.meta.env.VITE_FOOTER_LINK_TELEGRAM
+                )
+              }
             >
               <TelegramIcon />
             </SocialMediaIconButton>
-            <SocialMediaIconButton 
-              aria-label="LinkedIn" 
-              onClick={() => handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_LINKEDIN)}
+            <SocialMediaIconButton
+              aria-label="LinkedIn"
+              onClick={() =>
+                handleClickOnSocialButton(
+                  import.meta.env.VITE_FOOTER_LINK_LINKEDIN
+                )
+              }
             >
               <LinkedInIcon />
             </SocialMediaIconButton>

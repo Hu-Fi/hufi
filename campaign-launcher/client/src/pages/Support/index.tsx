@@ -1,19 +1,26 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Accordion, AccordionSummary, AccordionDetails, Box, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  Stack,
+  Typography,
+} from '@mui/material';
 
-import { 
-  CampaignsDiscovery, 
-  Prerequisites, 
+import {
+  CampaignsDiscovery,
+  Prerequisites,
   ReachTargetAccordion,
-  RewardsCalculation, 
-  SignIn, 
-  StepByStepProcess 
-} from '../../components/FaqAccordionDetailsHub';
-import PageTitle from '../../components/PageTitle';
-import PageWrapper from '../../components/PageWrapper';
+  RewardsCalculation,
+  SignIn,
+  StepByStepProcess,
+} from '@/components/FaqAccordionDetailsHub';
+import PageTitle from '@/components/PageTitle';
+import PageWrapper from '@/components/PageWrapper';
 
 const commonSlotProps = {
   transition: { unmountOnExit: true },
@@ -25,9 +32,9 @@ const commonSlotProps = {
         opacity: 1,
         display: 'block !important',
       },
-    }
-  }
-}
+    },
+  },
+};
 
 const firstAccordionSlotProps = {
   ...commonSlotProps,
@@ -42,38 +49,42 @@ const firstAccordionSlotProps = {
       },
       '&.Mui-expanded:before': {
         display: 'none',
-      }
-    }
-  } 
-}
+      },
+    },
+  },
+};
 
 const SectionHeader = ({ title }: { title: string }) => (
   <Box display="flex" alignItems="center" gap={0.5} mb={2}>
     <ArrowForwardIcon />
-    <Typography variant="h6">
-      {title}
-    </Typography>
+    <Typography variant="h6">{title}</Typography>
   </Box>
-)
+);
 
 const VideoPlaceholder = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" bgcolor="background.default" borderRadius="24px" width="480px" height="270px">
-    <Typography variant="body2">
-      The video will be coming soon
-    </Typography>
+  <Box
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
+    bgcolor="background.default"
+    borderRadius="24px"
+    width="480px"
+    height="270px"
+  >
+    <Typography variant="body2">The video will be coming soon</Typography>
   </Box>
-)
+);
 
 const Support: FC = () => {
   return (
     <PageWrapper>
       <PageTitle title="How to / F.A.Q" />
-      <Box 
-        component="section" 
-        display="flex" 
+      <Box
+        component="section"
+        display="flex"
         flexDirection={{ xs: 'column', md: 'row' }}
-        gap={4} 
-        pb={4} 
+        gap={4}
+        pb={4}
         borderBottom="1px solid rgba(255, 255, 255, 0.04)"
       >
         <Stack maxWidth={{ xs: '100%', md: '50%' }} flex={1}>
@@ -83,7 +94,7 @@ const Support: FC = () => {
             walkthrough or watch the detailed video tutorial.
           </Typography>
           <Accordion disableGutters slotProps={{ ...firstAccordionSlotProps }}>
-            <AccordionSummary 
+            <AccordionSummary
               aria-controls="prerequisites-content"
               id="prerequisites-header"
               expandIcon={<ExpandMoreIcon />}
@@ -95,7 +106,7 @@ const Support: FC = () => {
             </AccordionDetails>
           </Accordion>
           <Accordion disableGutters slotProps={{ ...commonSlotProps }}>
-            <AccordionSummary 
+            <AccordionSummary
               aria-controls="step-by-step-process-content"
               id="step-by-step-process-header"
               expandIcon={<ExpandMoreIcon />}
@@ -107,31 +118,31 @@ const Support: FC = () => {
             </AccordionDetails>
           </Accordion>
         </Stack>
-        <Box 
-          display="flex" 
-          maxWidth={{ xs: '100%', md: '50%' }} 
-          flex={1} 
-          justifyContent={{ xs: "flex-start", md: "flex-end"}}
-          position={{ xs: "relative", md: "sticky"}}
-          top={{ xs: 0, md: 32}}
-          bottom={{ xs: 0, md: 32}}
+        <Box
+          display="flex"
+          maxWidth={{ xs: '100%', md: '50%' }}
+          flex={1}
+          justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+          position={{ xs: 'relative', md: 'sticky' }}
+          top={{ xs: 0, md: 32 }}
+          bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
           <VideoPlaceholder />
         </Box>
       </Box>
-      <Box 
-        component="section" 
-        display="flex" 
+      <Box
+        component="section"
+        display="flex"
         flexDirection={{ xs: 'column', md: 'row' }}
-        gap={4} 
-        pb={4} 
+        gap={4}
+        pb={4}
         borderBottom="1px solid rgba(255, 255, 255, 0.04)"
       >
         <Stack maxWidth={{ xs: '100%', md: '50%' }} flex={1}>
           <SectionHeader title="How to participate in a campaign" />
           <Typography variant="body2" mb={4}>
-            Discover how to participate in a campaign with ease. Choose between 
+            Discover how to participate in a campaign with ease. Choose between
             a detailed written walkthrough or a step-by-step video tutorial.
           </Typography>
           <Accordion disableGutters slotProps={{ ...firstAccordionSlotProps }}>
@@ -168,20 +179,22 @@ const Support: FC = () => {
             </AccordionSummary>
             <AccordionDetails>
               <Typography variant="body2">
-                Once you join a campaign (or a few) you need to start trading on the exchange campaign is running on. 
-                Results will be calculated daily (you can see details on FAQ page) and payouts will be run daily.
+                Once you join a campaign (or a few) you need to start trading on
+                the exchange campaign is running on. Results will be calculated
+                daily (you can see details on FAQ page) and payouts will be run
+                daily.
               </Typography>
             </AccordionDetails>
           </Accordion>
         </Stack>
-        <Box 
-          display="flex" 
-          maxWidth={{ xs: '100%', md: '50%' }} 
-          flex={1} 
-          justifyContent={{ xs: "flex-start", md: "flex-end"}}
-          position={{ xs: "relative", md: "sticky"}}
-          top={{ xs: 0, md: 32}}
-          bottom={{ xs: 0, md: 32}}
+        <Box
+          display="flex"
+          maxWidth={{ xs: '100%', md: '50%' }}
+          flex={1}
+          justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+          position={{ xs: 'relative', md: 'sticky' }}
+          top={{ xs: 0, md: 32 }}
+          bottom={{ xs: 0, md: 32 }}
           height="fit-content"
         >
           <VideoPlaceholder />
@@ -190,8 +203,8 @@ const Support: FC = () => {
       <Box component="section">
         <SectionHeader title="F.A.Q." />
         <Typography variant="body2" mb={4}>
-          For assistance, explore our FAQ section for common questions. If you need
-          further support, contact us by email—we&apos;ll be glad to help.
+          For assistance, explore our FAQ section for common questions. If you
+          need further support, contact us by email—we&apos;ll be glad to help.
         </Typography>
         <Accordion disableGutters slotProps={{ ...firstAccordionSlotProps }}>
           <AccordionSummary
@@ -199,13 +212,17 @@ const Support: FC = () => {
             id="market-making-campaign-header"
             expandIcon={<ExpandMoreIcon />}
           >
-            <Typography variant="body1">What is a Market Making campaign?</Typography>
+            <Typography variant="body1">
+              What is a Market Making campaign?
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2">
-              A Market Making campaign sets up a task for market makers to generate a specified amount 
-              of trading activity on a chosen trading pair (e.g., ETH/USDT) at a given exchange (e.g. MEXC). 
-              This helps boost visibility, attract organic traders, and strengthen the market presence of the pair.
+              A Market Making campaign sets up a task for market makers to
+              generate a specified amount of trading activity on a chosen
+              trading pair (e.g., ETH/USDT) at a given exchange (e.g. MEXC).
+              This helps boost visibility, attract organic traders, and
+              strengthen the market presence of the pair.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -219,9 +236,12 @@ const Support: FC = () => {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2">
-              A Holding campaign requires market makers to keep a specified amount of a token (e.g., ETH) available 
-              in their exchange (e.g. MEXC) account balance. This guarantees that sufficient inventory is always on 
-              hand for quoting buy and sell orders, which supports deeper order books, tighter spreads, and smoother trading conditions.
+              A Holding campaign requires market makers to keep a specified
+              amount of a token (e.g., ETH) available in their exchange (e.g.
+              MEXC) account balance. This guarantees that sufficient inventory
+              is always on hand for quoting buy and sell orders, which supports
+              deeper order books, tighter spreads, and smoother trading
+              conditions.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -231,7 +251,9 @@ const Support: FC = () => {
             id="calculate-rewards-header"
             expandIcon={<ExpandMoreIcon />}
           >
-            <Typography variant="body1">How do we calculate the rewards?</Typography>
+            <Typography variant="body1">
+              How do we calculate the rewards?
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <RewardsCalculation />
@@ -243,13 +265,17 @@ const Support: FC = () => {
             id="exchange-api-keys-header"
             expandIcon={<ExpandMoreIcon />}
           >
-            <Typography variant="body1">Why do you need my exchange API keys?</Typography>
+            <Typography variant="body1">
+              Why do you need my exchange API keys?
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2">
-              We need API keys to fetch the trades an account has made recently in order to calculate a participant’s share. 
-              We only require <strong>read-only access</strong> to your trade history, so your funds will remain safe. 
-              You can also control the API key permissions directly on your exchange.
+              We need API keys to fetch the trades an account has made recently
+              in order to calculate a participant’s share. We only require{' '}
+              <strong>read-only access</strong> to your trade history, so your
+              funds will remain safe. You can also control the API key
+              permissions directly on your exchange.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -260,7 +286,8 @@ const Support: FC = () => {
             expandIcon={<ExpandMoreIcon />}
           >
             <Typography variant="body1">
-              What happens if participants are struggling to reach the daily volume target?
+              What happens if participants are struggling to reach the daily
+              volume target?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -269,7 +296,7 @@ const Support: FC = () => {
         </Accordion>
       </Box>
     </PageWrapper>
-  )
+  );
 };
 
 export default Support;

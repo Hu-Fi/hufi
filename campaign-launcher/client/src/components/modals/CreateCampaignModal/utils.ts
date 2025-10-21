@@ -1,10 +1,14 @@
-import { holdingValidationSchema, marketMakingValidationSchema } from "./validation";
-import { CampaignType } from "../../../types";
+import { CampaignType } from '@/types';
+
+import {
+  holdingValidationSchema,
+  marketMakingValidationSchema,
+} from './validation';
 
 const validationSchemasMap = {
   [CampaignType.MARKET_MAKING]: marketMakingValidationSchema,
   [CampaignType.HOLDING]: holdingValidationSchema,
-}
+};
 
 const baseFormValues = {
   exchange: '',
@@ -12,7 +16,7 @@ const baseFormValues = {
   end_date: new Date(),
   fund_token: 'hmt',
   fund_amount: 0.1,
-}
+};
 
 const defaultFormValuesMap = {
   [CampaignType.MARKET_MAKING]: {
@@ -27,8 +31,10 @@ const defaultFormValuesMap = {
     symbol: '',
     daily_balance_target: 1,
   },
-}
+};
 
-export const getValidationSchema = <T extends CampaignType>(campaignType: T) => validationSchemasMap[campaignType];
+export const getValidationSchema = <T extends CampaignType>(campaignType: T) =>
+  validationSchemasMap[campaignType];
 
-export const getFormDefaultValues = <T extends CampaignType>(campaignType: T) => defaultFormValuesMap[campaignType];
+export const getFormDefaultValues = <T extends CampaignType>(campaignType: T) =>
+  defaultFormValuesMap[campaignType];

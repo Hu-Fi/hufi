@@ -1,9 +1,12 @@
 import * as yup from 'yup';
 import type { ObjectSchema } from 'yup';
 
-import { FundToken } from '../../../constants/tokens';
-import type { HoldingFormValues, MarketMakingFormValues } from '../../../types';
-import { CampaignType } from '../../../types';
+import type { FundToken } from '@/constants/tokens';
+import {
+  CampaignType,
+  type HoldingFormValues,
+  type MarketMakingFormValues,
+} from '@/types';
 
 const mapTokenToMinValue: Record<FundToken, number> = {
   usdt: 0.001,

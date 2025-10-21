@@ -1,11 +1,11 @@
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
-import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
+import type { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 
-import { useExchangesContext } from '../../providers/ExchangesProvider';
+import { useExchangesContext } from '@/providers/ExchangesProvider';
 
 type FormExchangeSelectProps<
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>
+  TName extends Path<TFieldValues>,
 > = {
   field: ControllerRenderProps<TFieldValues, TName>;
   disabled?: boolean;
@@ -22,7 +22,7 @@ const slotProps = {
 
 const FormExchangeSelect = <
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>
+  TName extends Path<TFieldValues>,
 >({
   field,
   disabled = false,

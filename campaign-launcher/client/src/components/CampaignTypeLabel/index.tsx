@@ -1,9 +1,9 @@
-import { FC } from "react";
+import type { FC } from 'react';
 
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from '@mui/material';
 
-import { CampaignType } from "../../types";
-import { mapTypeToLabel } from "../../utils";
+import type { CampaignType } from '@/types';
+import { mapTypeToLabel } from '@/utils';
 
 type Props = {
   campaignType: CampaignType;

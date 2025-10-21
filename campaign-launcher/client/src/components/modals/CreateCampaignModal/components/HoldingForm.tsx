@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from 'react';
 
 import {
   Autocomplete,
@@ -15,33 +15,42 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs from "dayjs";
-import { Control, Controller, FieldErrors, UseFormWatch } from 'react-hook-form';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
+import {
+  Controller,
+  type Control,
+  type FieldErrors,
+  type UseFormWatch,
+} from 'react-hook-form';
 
-import ExchangeInfoTooltip from "./ExchangeInfoTooltip";
-import { FUND_TOKENS } from "../../../../constants/tokens";
-import { useExchangeCurrencies } from "../../../../hooks/useExchangeCurrencies";
-import { HoldingFormValues } from "../../../../types";
-import { getTokenInfo } from "../../../../utils";
-import { CryptoEntity } from "../../../CryptoEntity";
-import FormExchangeSelect from "../../../FormExchangeSelect";
+import CryptoEntity from '@/components/CryptoEntity';
+import FormExchangeSelect from '@/components/FormExchangeSelect';
+import { FUND_TOKENS } from '@/constants/tokens';
+import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
+import type { HoldingFormValues } from '@/types';
+import { getTokenInfo } from '@/utils';
+
+import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
   control: Control<HoldingFormValues>;
   errors: FieldErrors<HoldingFormValues>;
   watch: UseFormWatch<HoldingFormValues>;
   isCreatingEscrow: boolean;
-}
+};
 
-const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) => {
+const HoldingForm: FC<Props> = ({
+  control,
+  errors,
+  watch,
+  isCreatingEscrow,
+}) => {
   const exchange = watch('exchange');
   const symbol = watch('symbol');
-  
-  const {
-    data: currencies,
-    isLoading: isLoadingCurrencies,
-  } = useExchangeCurrencies(exchange);
+
+  const { data: currencies, isLoading: isLoadingCurrencies } =
+    useExchangeCurrencies(exchange);
 
   return (
     <>
@@ -77,7 +86,7 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
                   getOptionLabel={(option) => {
                     if (!option) return '';
                     const { label } = getTokenInfo(option);
-                    return label || '';        
+                    return label || '';
                   }}
                   slotProps={{
                     paper: {
@@ -174,9 +183,7 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <InputLabel id="fund-token-select-label">
-            Fund Token
-          </InputLabel>
+          <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
           <Controller
             name="fund_token"
             control={control}
@@ -208,10 +215,7 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
             <FormHelperText>{errors.fund_token.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl
-          error={!!errors.fund_amount}
-          sx={{ width: '100%' }}
-        >
+        <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
           <Controller
             name="fund_amount"
             control={control}
@@ -227,9 +231,7 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
             )}
           />
           {errors.fund_amount && (
-            <FormHelperText>
-              {errors.fund_amount.message}
-            </FormHelperText>
+            <FormHelperText>{errors.fund_amount.message}</FormHelperText>
           )}
         </FormControl>
         <FormControl
@@ -254,10 +256,11 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
                       maxWidth: '12ch',
                       minWidth: '1ch',
                       width: 'unset',
-                      '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-                        WebkitAppearance: 'none',
-                        margin: 0,
-                      },
+                      '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button':
+                        {
+                          WebkitAppearance: 'none',
+                          margin: 0,
+                        },
                     },
                   },
                   input: {
@@ -272,16 +275,14 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
                           height: '23px',
                           opacity: 0,
                           pointerEvents: 'none',
-                          [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]: {
-                            opacity: isCreatingEscrow ? 0.5 : 1,
-                          },
+                          [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
+                            {
+                              opacity: isCreatingEscrow ? 0.5 : 1,
+                            },
                         }}
                       >
-                        <Typography
-                          variant="body1"
-                          color="text.primary"
-                        >
-                          {symbol ? (getTokenInfo(symbol).label || '') : ''}
+                        <Typography variant="body1" color="text.primary">
+                          {symbol ? getTokenInfo(symbol).label || '' : ''}
                         </Typography>
                       </InputAdornment>
                     ),
@@ -296,9 +297,9 @@ const HoldingForm: FC<Props> = ({ control, errors, watch, isCreatingEscrow }) =>
             </FormHelperText>
           )}
         </FormControl>
-      </Stack>        
+      </Stack>
     </>
-  )
-}
+  );
+};
 
 export default HoldingForm;

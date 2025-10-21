@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { recordingApi } from '../../api';
-import { QUERY_KEYS } from '../../constants/queryKeys';
+import { recordingApi } from '@/api';
+import { QUERY_KEYS } from '@/constants/queryKeys';
 
 export const useGetTotalVolume = (exchange_name: string) => {
   return useQuery({

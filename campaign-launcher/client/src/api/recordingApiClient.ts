@@ -1,9 +1,19 @@
-import { ChainId } from '@human-protocol/sdk';
-import axios, { AxiosError, AxiosRequestHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type { ChainId } from '@human-protocol/sdk';
+import type {
+  AxiosRequestHeaders,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
+import axios, { AxiosError } from 'axios';
 
-import { EvmAddress, ExchangeApiKeyData, CampaignsResponse, UserProgress } from '../types';
-import { HttpClient, HttpError } from '../utils/HttpClient';
-import { TokenData, TokenManager } from "../utils/TokenManager";
+import type {
+  EvmAddress,
+  ExchangeApiKeyData,
+  CampaignsResponse,
+  UserProgress,
+} from '@/types';
+import { HttpClient, HttpError } from '@/utils/HttpClient';
+import type { TokenData, TokenManager } from '@/utils/TokenManager';
 
 type RefreshPromise = Promise<AxiosResponse<TokenData>>;
 
@@ -18,7 +28,7 @@ export const REFRESH_FAILURE_EVENT = 'refresh-failure';
 export class RecordingApiClient extends HttpClient {
   private readonly tokenManager: TokenManager;
   private refreshPromise: RefreshPromise | null = null;
-  
+
   constructor(config: RecordingApiClientConfig) {
     super({ baseUrl: config.baseUrl });
     this.tokenManager = config.tokenManager;
@@ -42,7 +52,7 @@ export class RecordingApiClient extends HttpClient {
       (response: AxiosResponse) => response,
       async (error) => {
         const originalRequest = error.config;
-        
+
         if (error.response?.status === 401) {
           await this.performRefresh();
           return this.axiosInstance(originalRequest);
@@ -64,10 +74,13 @@ export class RecordingApiClient extends HttpClient {
       throw new Error('No refresh token');
     }
 
-    if (!this.refreshPromise){
-      this.refreshPromise = axios.post<TokenData>(`${this.axiosInstance.defaults.baseURL}/auth/refresh`, {
-        refresh_token: refreshToken,
-      });
+    if (!this.refreshPromise) {
+      this.refreshPromise = axios.post<TokenData>(
+        `${this.axiosInstance.defaults.baseURL}/auth/refresh`,
+        {
+          refresh_token: refreshToken,
+        }
+      );
     }
 
     try {
@@ -76,9 +89,9 @@ export class RecordingApiClient extends HttpClient {
         access_token: response.data.access_token,
         refresh_token: response.data.refresh_token,
       };
-  
+
       this.tokenManager.setTokens(tokens);
-    } catch(e) {
+    } catch (e) {
       if (e instanceof AxiosError && e.response?.status === 401) {
         this.tokenManager.clearTokens();
         this.dispatchRefreshFailureEvent();
@@ -98,7 +111,10 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async auth(address: EvmAddress | undefined, signature: EvmAddress): Promise<TokenData> {
+  async auth(
+    address: EvmAddress | undefined,
+    signature: EvmAddress
+  ): Promise<TokenData> {
     const response = await this.post<TokenData>('/auth', {
       address,
       signature,
@@ -122,8 +138,12 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async upsertExchangeApiKey(exchangeName: string, apiKey: string, secret: string): Promise<void> {
-    await this.post<void>(`/exchange-api-keys/${exchangeName}`, {
+  async upsertExchangeApiKey(
+    exchangeName: string,
+    apiKey: string,
+    secret: string
+  ): Promise<void> {
+    await this.post(`/exchange-api-keys/${exchangeName}`, {
       api_key: apiKey,
       secret_key: secret,
     });
@@ -133,19 +153,25 @@ export class RecordingApiClient extends HttpClient {
     await this.delete(`/exchange-api-keys/${exchangeName}`);
   }
 
-  async getJoinedCampaigns(params: Record<string, string | number>): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns', { params });
+  async getJoinedCampaigns(
+    params: Record<string, string | number>
+  ): Promise<CampaignsResponse> {
+    const response = await this.get<CampaignsResponse>('/campaigns', {
+      params,
+    });
     return response;
   }
 
   async joinCampaign(chain_id: ChainId, address: EvmAddress): Promise<void> {
-    await this.post<void>('/campaigns/join', {
+    await this.post('/campaigns/join', {
       chain_id,
       address,
     });
   }
 
-  async getTotalVolume(exchange_name: string): Promise<{ total_volume: number }> {
+  async getTotalVolume(
+    exchange_name: string
+  ): Promise<{ total_volume: number }> {
     const response = await this.get<{ total_volume: number }>(
       '/stats/total-volume',
       exchange_name ? { params: { exchange_name } } : {}
@@ -153,21 +179,33 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async checkIsJoinedCampaign(chain_id: ChainId, address: EvmAddress): Promise<{is_joined: boolean}> {
-    const response = await this.post<{is_joined: boolean}>('/campaigns/check-is-joined', {
-      chain_id,
-      address,
-    });
+  async checkIsJoinedCampaign(
+    chain_id: ChainId,
+    address: EvmAddress
+  ): Promise<{ is_joined: boolean }> {
+    const response = await this.post<{ is_joined: boolean }>(
+      '/campaigns/check-is-joined',
+      {
+        chain_id,
+        address,
+      }
+    );
     return response;
   }
 
-  async getUserProgress(chain_id: ChainId, campaign_address: EvmAddress): Promise<UserProgress>{
-    const response = await this.get<UserProgress>(`/campaigns/${chain_id}-${campaign_address}/my-progress`, {
-      params: {
-        chain_id,
-        campaign_address,
-      },
-    });
+  async getUserProgress(
+    chain_id: ChainId,
+    campaign_address: EvmAddress
+  ): Promise<UserProgress> {
+    const response = await this.get<UserProgress>(
+      `/campaigns/${chain_id}-${campaign_address}/my-progress`,
+      {
+        params: {
+          chain_id,
+          campaign_address,
+        },
+      }
+    );
 
     return response;
   }

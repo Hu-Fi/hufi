@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { launcherApi } from '../api';
-import { QUERY_KEYS } from '../constants/queryKeys';
-import { useNetwork } from '../providers/NetworkProvider';
-import { CampaignsQueryParams } from '../types';
+import { launcherApi } from '@/api';
+import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useNetwork } from '@/providers/NetworkProvider';
+import type { CampaignsQueryParams } from '@/types';
 
 export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;

@@ -1,26 +1,26 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Button, Typography, Box, Stack } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useIsXlDesktop, useIsLgDesktop } from '../../hooks/useBreakpoints';
-import useRetrieveSigner from '../../hooks/useRetrieveSigner';
-import { useExchangesContext } from '../../providers/ExchangesProvider';
-import { useWeb3Auth } from '../../providers/Web3AuthProvider';
-import { Campaign } from '../../types';
+import CampaignAddress from '@/components/CampaignAddress';
+import CampaignSymbol from '@/components/CampaignSymbol';
+import CustomTooltip from '@/components/CustomTooltip';
+import InfoTooltipInner from '@/components/InfoTooltipInner';
+import LaunchCampaign from '@/components/LaunchCampaign';
+import { useIsXlDesktop, useIsLgDesktop } from '@/hooks/useBreakpoints';
+import useRetrieveSigner from '@/hooks/useRetrieveSigner';
+import { useExchangesContext } from '@/providers/ExchangesProvider';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
+import type { Campaign } from '@/types';
 import {
   formatTokenAmount,
   getChainIcon,
   getNetworkName,
   mapStatusToColor,
   mapTypeToLabel,
-} from '../../utils';
-import CampaignAddress from '../CampaignAddress';
-import CampaignSymbol from '../CampaignSymbol';
-import CustomTooltip from '../CustomTooltip';
-import InfoTooltipInner from '../InfoTooltipInner';
-import LaunchCampaign from '../LaunchCampaign';
+} from '@/utils';
 
 type Props = {
   data: Campaign[] | undefined;
@@ -220,7 +220,7 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 160,
       renderCell: (params) => (
         <Typography>{mapTypeToLabel(params.row.type)}</Typography>
-      )
+      ),
     },
     {
       field: 'network',
@@ -293,8 +293,9 @@ const CampaignsTable: FC<Props> = ({
             </Typography>
           );
         }
-        
-        const { fund_amount, fund_token_decimals, fund_token_symbol } = params.row;
+
+        const { fund_amount, fund_token_decimals, fund_token_symbol } =
+          params.row;
 
         return (
           <Typography variant="subtitle2">
@@ -413,9 +414,10 @@ const CampaignsTable: FC<Props> = ({
           px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
-          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer': {
-            justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
-          },
+          '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer':
+            {
+              justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
+            },
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: 'center',
           },
@@ -466,9 +468,10 @@ const CampaignsTable: FC<Props> = ({
         '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': {
           outline: 'none',
         },
-        '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within': {
-          outline: 'none',
-        },
+        '& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus-within':
+          {
+            outline: 'none',
+          },
       }}
     />
   );

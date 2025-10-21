@@ -1,19 +1,16 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { getTokenInfo } from '../../utils';
-import { getSymbolStyles } from '../CampaignSymbol';
+import { getSymbolStyles } from '@/components/CampaignSymbol';
+import { getTokenInfo } from '@/utils';
 
 type Props = {
   symbol: string;
   size?: 'small' | 'medium' | 'large';
 };
 
-export const CryptoPairEntity: FC<Props> = ({
-  symbol,
-  size = 'small',
-}) => {
+const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
   const [base, quote] = symbol.split('/');
 
   const { icon: baseIcon, label: baseLabel } = getTokenInfo(base);
@@ -58,3 +55,5 @@ export const CryptoPairEntity: FC<Props> = ({
     </Box>
   );
 };
+
+export default CryptoPairEntity;

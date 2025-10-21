@@ -1,13 +1,13 @@
-import { FC, PropsWithChildren, useState } from 'react';
+import { type FC, type PropsWithChildren, useState } from 'react';
 
-import { Box, Button, SxProps, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Tooltip, Typography, type SxProps } from '@mui/material';
 
-import { useIsXlDesktop } from '../../hooks/useBreakpoints';
-import useRetrieveSigner from '../../hooks/useRetrieveSigner';
-import { useStakeContext } from '../../providers/StakeProvider';
-import { CampaignType } from '../../types';
-import CampaignSetupModal from '../modals/CampaignSetupModal';
-import CreateCampaignModal from '../modals/CreateCampaignModal';
+import CampaignSetupModal from '@/components/modals/CampaignSetupModal';
+import CreateCampaignModal from '@/components/modals/CreateCampaignModal';
+import { useIsXlDesktop } from '@/hooks/useBreakpoints';
+import useRetrieveSigner from '@/hooks/useRetrieveSigner';
+import { useStakeContext } from '@/providers/StakeProvider';
+import type { CampaignType } from '@/types';
 
 type Props = {
   variant: 'outlined' | 'contained';
@@ -20,10 +20,14 @@ type ButtonWrapperProps = {
   withTooltip: boolean;
 };
 
-const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({ isDisabled, withTooltip, children }) => {
+const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({
+  isDisabled,
+  withTooltip,
+  children,
+}) => {
   if (isDisabled && withTooltip) {
     return (
-      <Tooltip 
+      <Tooltip
         title={
           <Typography variant="tooltip">
             You&apos;ll need to connect your wallet before launching a campaign
@@ -34,26 +38,24 @@ const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({ isDisabled, 
             sx: {
               width: '150px',
               lineHeight: '14px',
-            }
-          }
+            },
+          },
         }}
-        arrow 
+        arrow
         placement="left"
       >
-        <Box sx={{ cursor: 'pointer' }}>
-          {children}
-        </Box>
+        <Box sx={{ cursor: 'pointer' }}>{children}</Box>
       </Tooltip>
-    )
+    );
   }
 
-  return children
-}
+  return children;
+};
 
 const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [campaignType, setCampaignType] = useState<CampaignType | null>(null)
+  const [campaignType, setCampaignType] = useState<CampaignType | null>(null);
 
   const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
@@ -111,7 +113,6 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
           open={isFormModalOpen}
           onClose={handleCloseFormModal}
           campaignType={campaignType}
-          
         />
       )}
     </>

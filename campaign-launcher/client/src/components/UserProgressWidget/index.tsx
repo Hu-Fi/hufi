@@ -1,11 +1,11 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
 
-import { useGetUserProgress } from '../../hooks/recording-oracle';
-import { CampaignDetails, CampaignType, UserProgress } from '../../types';
-import { getDailyTargetTokenSymbol } from '../../utils';
-import dayjs from '../../utils/dayjs';
+import { useGetUserProgress } from '@/hooks/recording-oracle';
+import { CampaignType, type CampaignDetails, type UserProgress } from '@/types';
+import { getDailyTargetTokenSymbol } from '@/utils';
+import dayjs from '@/utils/dayjs';
 
 type Props = {
   campaign: CampaignDetails;
@@ -40,9 +40,12 @@ const getLabels = (campaignType: CampaignType) => {
     default:
       return campaignType as never;
   }
-}
+};
 
-const getMyMeta = (campaignType: CampaignType, data: UserProgress | undefined) => {
+const getMyMeta = (
+  campaignType: CampaignType,
+  data: UserProgress | undefined
+) => {
   if (!data) return null;
 
   switch (campaignType) {
@@ -59,9 +62,12 @@ const getMyMeta = (campaignType: CampaignType, data: UserProgress | undefined) =
     default:
       return 0;
   }
-}
+};
 
-const getTotalMeta = (campaignType: CampaignType, data: UserProgress | undefined) => {
+const getTotalMeta = (
+  campaignType: CampaignType,
+  data: UserProgress | undefined
+) => {
   if (!data) return null;
 
   switch (campaignType) {
@@ -78,11 +84,14 @@ const getTotalMeta = (campaignType: CampaignType, data: UserProgress | undefined
     default:
       return 0;
   }
-}
+};
 
 const UserProgressWidget: FC<Props> = ({ campaign }) => {
   const { data, isLoading } = useGetUserProgress(campaign.address);
-  const targetTokenSymbol = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
+  const targetTokenSymbol = getDailyTargetTokenSymbol(
+    campaign.type,
+    campaign.symbol
+  );
 
   return (
     <Stack justifyContent="space-between" gap={{ xs: 2, md: 0 }}>

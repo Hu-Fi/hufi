@@ -1,7 +1,7 @@
 import {
+  type FC,
+  type PropsWithChildren,
   createContext,
-  FC,
-  PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
@@ -11,7 +11,7 @@ import {
 
 import { useAccount } from 'wagmi';
 
-import { EvmAddress } from '../types';
+import type { EvmAddress } from '@/types';
 
 type ActiveAccountContextType = {
   activeAddress?: EvmAddress;
@@ -26,13 +26,15 @@ const ActiveAccountContext = createContext<
 const PERSISTED_ADDRESS_KEY = 'active-address';
 
 const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [activeAddress, setActiveAddressState] = useState<EvmAddress | undefined>(undefined);
+  const [activeAddress, setActiveAddressState] = useState<
+    EvmAddress | undefined
+  >(undefined);
   const { isConnected } = useAccount();
 
   useEffect(() => {
-    const persistedAddress = localStorage.getItem(PERSISTED_ADDRESS_KEY) as
-      | EvmAddress
-      | null;
+    const persistedAddress = localStorage.getItem(
+      PERSISTED_ADDRESS_KEY
+    ) as EvmAddress | null;
     if (isConnected && !activeAddress && persistedAddress) {
       setActiveAddressState(persistedAddress);
     }

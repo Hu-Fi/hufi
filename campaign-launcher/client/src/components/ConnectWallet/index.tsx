@@ -1,13 +1,13 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { Connector, useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, type Connector } from 'wagmi';
 
-import coinbaseSvg from '../../assets/coinbase.svg';
-import metaMaskSvg from '../../assets/metamask.svg';
-import walletConnectSvg from '../../assets/walletconnect.svg';
-import { useActiveAccount } from '../../providers/ActiveAccountProvider';
+import coinbaseSvg from '@/assets/coinbase.svg';
+import metaMaskSvg from '@/assets/metamask.svg';
+import walletConnectSvg from '@/assets/walletconnect.svg';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
@@ -62,7 +62,7 @@ const ConnectWallet: FC = () => {
       setActiveAddress(address);
       isConnectingWallet.current = false;
     }
-  }, [address]);
+  }, [address, setActiveAddress]);
 
   const onClose = () => setAnchorEl(null);
 

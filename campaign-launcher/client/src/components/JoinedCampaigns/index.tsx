@@ -1,14 +1,14 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import { Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import { useGetJoinedCampaigns } from '../../hooks/recording-oracle/campaign';
-import usePagination from '../../hooks/usePagination';
-import { CampaignStatus } from '../../types';
-import { filterFalsyQueryParams } from '../../utils';
-import CampaignsTable from '../CampaignsTable';
-import CampaignsTablePagination from '../CampaignsTablePagination';
+import CampaignsTable from '@/components/CampaignsTable';
+import CampaignsTablePagination from '@/components/CampaignsTablePagination';
+import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
+import usePagination from '@/hooks/usePagination';
+import { CampaignStatus } from '@/types';
+import { filterFalsyQueryParams } from '@/utils';
 
 type Props = {
   showOnlyActiveCampaigns: boolean;

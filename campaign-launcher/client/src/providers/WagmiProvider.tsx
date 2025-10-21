@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
@@ -12,7 +12,7 @@ import {
 } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
-import { isMainnet } from '../constants';
+import { isMainnet } from '@/constants';
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
 

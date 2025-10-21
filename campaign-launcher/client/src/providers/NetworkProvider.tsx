@@ -1,7 +1,7 @@
 import {
+  type FC,
+  type PropsWithChildren,
   createContext,
-  FC,
-  PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
+import type { ChainId } from '@human-protocol/sdk';
 import { useConfig, useSwitchChain } from 'wagmi';
 
 type NetworkProviderContextType = {
@@ -30,13 +30,15 @@ export const NetworkProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const initChainId = async () => {
-      const savedChainId = await config?.storage?.getItem('chainId') as ChainId | null;
+      const savedChainId = (await config?.storage?.getItem(
+        'chainId'
+      )) as ChainId | null;
       if (savedChainId) {
         setAppChainId(savedChainId);
       }
       setIsSwitching(false);
     };
-    
+
     initChainId();
   }, [config]);
 
