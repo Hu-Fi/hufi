@@ -60,9 +60,7 @@ const Header: FC = () => {
     setIsDrawerOpen(open);
   };
 
-  // eslint-disable-next-line no-console
   console.log('address', address);
-  // eslint-disable-next-line no-console
   console.log('isConnected', isConnected);
 
   return (
