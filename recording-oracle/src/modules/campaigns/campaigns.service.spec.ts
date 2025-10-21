@@ -38,7 +38,10 @@ import {
   ExchangeApiClientError,
   ExchangeApiClientFactory,
 } from '@/modules/exchange';
-import { ExchangeApiKeysService } from '@/modules/exchange-api-keys';
+import {
+  ExchangeApiKeyNotFoundError,
+  ExchangeApiKeysService,
+} from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
 import { generateUserEntity } from '@/modules/users/fixtures';
 import { Web3Service } from '@/modules/web3';
@@ -780,9 +783,8 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      const exchangeApiKeyId = faker.string.uuid();
       mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
-        exchangeApiKeyId,
+        faker.string.uuid(),
       );
 
       const now = new Date();
@@ -816,7 +818,6 @@ describe('CampaignsService', () => {
       expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
         userId,
         campaignId,
-        exchangeApiKeyId,
         createdAt: now,
       });
 
@@ -1213,6 +1214,67 @@ describe('CampaignsService', () => {
           participantId: abuseParticipant.id,
           startDate: periodStart,
           endDate: periodEnd,
+        },
+      );
+    });
+
+    it('should skip participant if it does not have valid api key', async () => {
+      const normalParticipant = generateUserEntity();
+      const noApiKeyParticipant = generateUserEntity();
+      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
+        normalParticipant,
+        noApiKeyParticipant,
+      ]);
+      mockExchangeApiKeysService.retrieve.mockImplementation(
+        async (userId, exchangeName) => {
+          if (userId === normalParticipant.id) {
+            return {
+              id: faker.string.uuid(),
+              apiKey: `${userId}-apiKey`,
+              secretKey: `${userId}-secretKey`,
+            };
+          }
+
+          throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
+        },
+      );
+
+      const mockedParticipantsResult = {
+        abuseDetected: false,
+        score: faker.number.float(),
+        [mockCampaignProgressMetaProp]: faker.number.float(),
+      };
+      mockCampaignProgressChecker.checkForParticipant.mockResolvedValueOnce(
+        mockedParticipantsResult,
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(progress.meta).toEqual({
+        [mockCampaignProgressMetaProp]: mockCampaignProgressMetaValue,
+      });
+      expect(progress.participants_outcomes).toEqual([
+        {
+          address: normalParticipant.evmAddress,
+          score: mockedParticipantsResult.score,
+          [mockCampaignProgressMetaProp]:
+            mockedParticipantsResult[mockCampaignProgressMetaProp],
+        },
+      ]);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Participant lacks valid api key',
+        {
+          campaignId: campaign.id,
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
+          participantId: noApiKeyParticipant.id,
+          exchangeName: campaign.exchangeName,
         },
       );
     });

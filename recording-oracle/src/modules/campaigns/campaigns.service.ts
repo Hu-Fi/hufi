@@ -618,7 +618,7 @@ export class CampaignsService {
            * allowing to remove api key, but let's warn ourselves
            * just in case if something unusual happens.
            */
-          this.logger.warn('Got campaign participant without api key', {
+          this.logger.warn('Participant lacks valid api key', {
             campaignId: campaign.id,
             chainId: campaign.chainId,
             campaignAddress: campaign.address,
