@@ -27,11 +27,15 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
+    console.log('Starting connection...', { connector: connector.id });
     isConnectingWallet.current = true;
+    console.log('Set isConnectingWallet to:', isConnectingWallet.current);
     try {
+      console.log('Calling connectAsync...');
       await connectAsync({ connector });
+      console.log('connectAsync completed successfully');
     } catch (e) {
-      console.error(e);
+      console.error('Connection error:', e);
       const err = e as { message?: string; code?: number | string };
       if (err.message?.includes('Connector already connected')) {
         await disconnectAsync();
@@ -50,6 +54,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
         isConnectingWallet.current = false;
       }
     } finally {
+      console.log('Connection attempt finished, closing modal');
       onClose();
     }
   };
@@ -61,17 +66,21 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   };
 
   useEffect(() => {
+    console.log('Address or connecting state changed:', {
+      address,
+      isConnecting: isConnectingWallet.current,
+    });
+
     if (address && isConnectingWallet.current) {
-      // eslint-disable-next-line no-console
-      console.log('HERE');
+      console.log('Setting active address:', address);
       setActiveAddress(address);
       isConnectingWallet.current = false;
+      console.log('Reset connecting state');
     }
   }, [address, setActiveAddress]);
 
   const onClose = () => setAnchorEl(null);
 
-  // eslint-disable-next-line no-console
   console.log('isConnectingWallet', isConnectingWallet.current);
 
   return (
