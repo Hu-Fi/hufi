@@ -58,30 +58,36 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
 
   async removeUserFromActiveCampaigns(
     userId: string,
-    exchangeNames: string[],
+    exchangeNames: string[] = [],
   ): Promise<void> {
     /**
-     * TODO: update this query with `to_cancel` campaign when ready
+     * TODO: update this query to have also `to_cancel`
+     * status as param when ready
      */
     const activeCampaignIdsQuery = this.manager
       .createQueryBuilder()
       .select('campaign.id')
       .from(CampaignEntity, 'campaign')
-      .where('campaign.status = :status', { status: CampaignStatus.ACTIVE });
+      .where('campaign.status IN (:...statuses)');
 
     if (exchangeNames.length) {
       activeCampaignIdsQuery.andWhere(
         'campaign.exchangeName IN (:...exchangeNames)',
-        { exchangeNames },
       );
     }
 
     const removalOp = this.createQueryBuilder('userCampaign')
       .delete()
-      .where('userCampaign.userId = :userId', { userId })
-      .andWhere(
-        `"userCampaign.campaignId IN (${activeCampaignIdsQuery.getQuery()})`,
-      );
+      .where('userId = :userId', { userId })
+      .andWhere(`campaignId IN (${activeCampaignIdsQuery.getQuery()})`)
+      .setParameters({
+        /**
+         * This is necessary to call `setParameters` on main op
+         * in order to get params injected into subquery
+         */
+        statuses: [CampaignStatus.ACTIVE],
+        exchangeNames,
+      });
 
     await removalOp.execute();
   }
