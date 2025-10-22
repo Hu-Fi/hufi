@@ -176,9 +176,13 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   async fetchDepositAddress(symbol: string): Promise<string> {
     const fetchParams: Record<string, unknown> = {};
 
-    if (this.sandbox) {
-      switch (this.exchangeName) {
-        case 'bybit': {
+    switch (this.exchangeName) {
+      case 'gate': {
+        fetchParams.network = 'ERC20';
+        break;
+      }
+      case 'bybit': {
+        if (this.sandbox) {
           const currencies = await this.ccxtClient.fetchCurrencies();
           const networks = currencies[symbol]?.networks;
           if (!networks) {
@@ -207,6 +211,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
             },
           );
         }
+        break;
       }
     }
 

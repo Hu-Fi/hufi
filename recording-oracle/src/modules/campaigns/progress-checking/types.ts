@@ -21,6 +21,9 @@ export interface CampaignProgressChecker<
   R extends BaseProgressCheckResult,
   M extends CampaignProgressMeta,
 > {
-  checkForParticipant(authKeys: ParticipantAuthKeys): Promise<R>;
+  checkForParticipant(
+    authKeys: ParticipantAuthKeys,
+    participantJoinedAt: Date,
+  ): Promise<R>;
   getCollectedMeta(): M;
 }
