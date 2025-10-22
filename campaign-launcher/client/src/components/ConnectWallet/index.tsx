@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -10,27 +10,44 @@ import walletConnectSvg from '@/assets/walletconnect.svg';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 
+type Props = {
+  closeDrawer?: () => void;
+};
+
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
   coinbaseWalletSDK: coinbaseSvg,
   walletConnect: walletConnectSvg,
 };
 
-const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
+const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [test, setTest] = useState(false);
 
   const { connectAsync, connectors } = useConnect();
   const { address } = useAccount();
-  const { activeAddress, setActiveAddress } = useActiveAccount();
+  const { setActiveAddress } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
+  const updateIsConnecting = useCallback(
+    (value: boolean) => {
+      if (isMobile) {
+        if (value) {
+          history.replaceState({}, '', '?connecting=1');
+        } else {
+          history.replaceState({}, '', window.location.pathname);
+        }
+      } else {
+        setIsConnecting(value);
+      }
+    },
+    [isMobile, setIsConnecting]
+  );
+
   const handleConnect = async (connector: Connector) => {
-    setTest(true);
     console.log('Starting connection...', { connector: connector.id });
-    setIsConnecting(true);
+    updateIsConnecting(true);
     try {
       console.log('Calling connectAsync...');
       await connectAsync({ connector });
@@ -52,8 +69,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
         message.includes('request reset') ||
         message.includes('action rejected');
       if (isUserAborted) {
-        console.log('User aborted connection');
-        setIsConnecting(false);
+        updateIsConnecting(false);
       }
     } finally {
       console.log('Connection attempt finished, closing modal');
@@ -68,28 +84,19 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   };
 
   useEffect(() => {
-    console.log('Address or connecting state changed:', {
-      address,
-      isConnecting,
-    });
-
-    if (address && isConnecting) {
+    if (
+      address &&
+      (new URLSearchParams(window.location.search).get('connecting') === '1' ||
+        isConnecting)
+    ) {
       console.log('Setting active address:', address);
       setActiveAddress(address);
-      //setIsConnecting(false);
+      updateIsConnecting(false);
     }
-  }, [address, setActiveAddress, isConnecting]);
-
-  useEffect(() => {
-    if (activeAddress && isConnecting) {
-      console.log('Resetting connecting state');
-      setIsConnecting(false);
-    }
-  }, [activeAddress, isConnecting]);
+  }, [address, setActiveAddress, isConnecting, updateIsConnecting]);
 
   const onClose = () => setAnchorEl(null);
 
-  console.log('test', test);
   console.log('isConnecting', isConnecting);
   console.log('address', address);
 
