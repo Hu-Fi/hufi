@@ -599,9 +599,8 @@ export class CampaignsService {
       },
     );
 
-    const participants = await this.userCampaignsRepository.findCampaignUsers(
-      campaign.id,
-    );
+    const participants =
+      await this.userCampaignsRepository.findCampaignParticipants(campaign.id);
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
@@ -632,10 +631,13 @@ export class CampaignsService {
 
       try {
         const { abuseDetected, ...participantOutcomes } =
-          await campaignProgressChecker.checkForParticipant({
-            apiKey: exchangeApiKey.apiKey,
-            secret: exchangeApiKey.secretKey,
-          });
+          await campaignProgressChecker.checkForParticipant(
+            {
+              apiKey: exchangeApiKey.apiKey,
+              secret: exchangeApiKey.secretKey,
+            },
+            participant.joinedAt,
+          );
 
         if (abuseDetected) {
           this.logger.warn('Abuse detected. Skipping participant outcome', {

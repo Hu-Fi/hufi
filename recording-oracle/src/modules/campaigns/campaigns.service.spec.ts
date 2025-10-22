@@ -43,7 +43,6 @@ import {
   ExchangeApiKeysService,
 } from '@/modules/exchange-api-keys';
 import { StorageService } from '@/modules/storage';
-import { generateUserEntity } from '@/modules/users/fixtures';
 import { Web3Service } from '@/modules/web3';
 import {
   generateTestnetChainId,
@@ -73,6 +72,7 @@ import {
   generateCampaignManifest,
   MockCampaignProgressChecker,
   MockProgressCheckResult,
+  generateCampaignParticipant,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -1113,10 +1113,10 @@ describe('CampaignsService', () => {
     });
 
     it('should return results in correct format', async () => {
-      const participant = generateUserEntity();
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
-        participant,
-      ]);
+      const participant = generateCampaignParticipant(campaign);
+      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        [participant],
+      );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
         campaign,
@@ -1140,8 +1140,11 @@ describe('CampaignsService', () => {
     });
 
     it('should calculate results for each participant', async () => {
-      const participants = [generateUserEntity(), generateUserEntity()];
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce(
+      const participants = [
+        generateCampaignParticipant(campaign),
+        generateCampaignParticipant(campaign),
+      ];
+      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
         participants,
       );
 
@@ -1151,27 +1154,29 @@ describe('CampaignsService', () => {
         periodEnd,
       );
 
-      for (const { id: participantId } of participants) {
+      for (const { id: participantId, joinedAt } of participants) {
         expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledWith(
           participantId,
           campaign.exchangeName,
         );
         expect(
           mockCampaignProgressChecker.checkForParticipant,
-        ).toHaveBeenCalledWith({
-          apiKey: `${participantId}-apiKey`,
-          secret: `${participantId}-secretKey`,
-        });
+        ).toHaveBeenCalledWith(
+          {
+            apiKey: `${participantId}-apiKey`,
+            secret: `${participantId}-secretKey`,
+          },
+          joinedAt,
+        );
       }
     });
 
     it('should skip participant results if abuse detected', async () => {
-      const abuseParticipant = generateUserEntity();
-      const normalParticipant = generateUserEntity();
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
-        abuseParticipant,
-        normalParticipant,
-      ]);
+      const abuseParticipant = generateCampaignParticipant(campaign);
+      const normalParticipant = generateCampaignParticipant(campaign);
+      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        [abuseParticipant, normalParticipant],
+      );
 
       const normalParticipantResult = {
         abuseDetected: false,
@@ -1219,12 +1224,11 @@ describe('CampaignsService', () => {
     });
 
     it('should skip participant if it does not have valid api key', async () => {
-      const normalParticipant = generateUserEntity();
-      const noApiKeyParticipant = generateUserEntity();
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
-        normalParticipant,
-        noApiKeyParticipant,
-      ]);
+      const normalParticipant = generateCampaignParticipant(campaign);
+      const noApiKeyParticipant = generateCampaignParticipant(campaign);
+      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        [normalParticipant, noApiKeyParticipant],
+      );
       mockExchangeApiKeysService.retrieve.mockImplementation(
         async (userId, exchangeName) => {
           if (userId === normalParticipant.id) {
@@ -1280,12 +1284,11 @@ describe('CampaignsService', () => {
     });
 
     it('should skip participant if it lacks exchange api access', async () => {
-      const normalParticipant = generateUserEntity();
-      const noAccessParticipant = generateUserEntity();
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
-        normalParticipant,
-        noAccessParticipant,
-      ]);
+      const normalParticipant = generateCampaignParticipant(campaign);
+      const noAccessParticipant = generateCampaignParticipant(campaign);
+      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        [normalParticipant, noAccessParticipant],
+      );
 
       const normalParticipantResult = {
         abuseDetected: false,
@@ -1337,10 +1340,12 @@ describe('CampaignsService', () => {
     });
 
     it('should throw if should retry some participant', async () => {
-      mockUserCampaignsRepository.findCampaignUsers.mockResolvedValueOnce([
-        generateUserEntity(),
-        generateUserEntity(),
-      ]);
+      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        [
+          generateCampaignParticipant(campaign),
+          generateCampaignParticipant(campaign),
+        ],
+      );
 
       mockCampaignProgressChecker.checkForParticipant.mockResolvedValueOnce({
         abuseDetected: false,

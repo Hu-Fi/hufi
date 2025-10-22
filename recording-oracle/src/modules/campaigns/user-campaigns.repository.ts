@@ -45,7 +45,9 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
     return this.existsBy({ userId, campaignId });
   }
 
-  async findCampaignUsers(campaignId: string): Promise<UserEntity[]> {
+  async findCampaignParticipants(
+    campaignId: string,
+  ): Promise<Array<UserEntity & { joinedAt: Date }>> {
     const userCampaigns = await this.find({
       where: { campaignId },
       relations: {
@@ -53,7 +55,10 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
       },
     });
 
-    return userCampaigns.map((e) => e.user as UserEntity);
+    return userCampaigns.map((e) => ({
+      ...(e.user as UserEntity),
+      joinedAt: e.createdAt,
+    }));
   }
 
   async removeUserFromActiveCampaigns(
