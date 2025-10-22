@@ -19,6 +19,7 @@ const WALLET_ICONS: Record<string, string> = {
 const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [test, setTest] = useState(false);
 
   const { connectAsync, connectors } = useConnect();
   const { address } = useAccount();
@@ -27,6 +28,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
+    setTest(true);
     console.log('Starting connection...', { connector: connector.id });
     setIsConnecting(true);
     try {
@@ -87,6 +89,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
 
   const onClose = () => setAnchorEl(null);
 
+  console.log('test', test);
   console.log('isConnecting', isConnecting);
   console.log('address', address);
 
