@@ -82,6 +82,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const onClose = () => setAnchorEl(null);
 
   console.log('isConnecting', isConnecting);
+  console.log('address', address);
 
   return (
     <>
