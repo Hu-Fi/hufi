@@ -54,14 +54,11 @@ const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { activeAddress } = useActiveAccount();
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
   };
-
-  console.log('address', address);
-  console.log('isConnected', isConnected);
 
   return (
     <AppBar
