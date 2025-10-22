@@ -63,13 +63,17 @@ const CampaignResultsWidget: FC<Props> = ({
   finalResultsUrl,
   intermediateResultsUrl,
 }) => {
-  const isFinished = campaignStatus !== CampaignStatus.ACTIVE;
+  const isFinished = [
+    CampaignStatus.CANCELLED,
+    CampaignStatus.COMPLETED,
+  ].includes(campaignStatus);
   const result =
     isFinished && finalResultsUrl
       ? RESULT.final
       : intermediateResultsUrl
         ? RESULT.intermediate
         : RESULT.none;
+  const resultUrl = isFinished ? finalResultsUrl : intermediateResultsUrl;
 
   return (
     <Box display="flex" alignItems="center">
@@ -83,9 +87,7 @@ const CampaignResultsWidget: FC<Props> = ({
             ml: 'auto',
             '&:hover': { background: 'none' },
           }}
-          onClick={(e) =>
-            handleOpenUrl(e, finalResultsUrl || intermediateResultsUrl || '')
-          }
+          onClick={(e) => handleOpenUrl(e, resultUrl || '')}
         >
           <OpenInNewIcon />
         </IconButton>

@@ -116,7 +116,11 @@ describe('CcxtExchangeClient', () => {
     let ccxtExchangeApiClient: CcxtExchangeClient;
 
     beforeAll(() => {
-      const exchangeName = generateExchangeName();
+      /**
+       * In some methods we rely on exact exchange name to adjust params,
+       * so for general tests we don't mind, but will override where needed
+       */
+      const exchangeName = faker.lorem.slug();
       mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
 
       ccxtExchangeApiClient = new CcxtExchangeClient(exchangeName, {
@@ -212,7 +216,10 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
 
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
-        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith('ETH');
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          'ETH',
+          {},
+        );
       });
 
       it('should return true if has all necessary permissions', async () => {
@@ -416,6 +423,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
           mockedAddressStructure.currency,
+          {},
         );
       });
 
@@ -440,6 +448,35 @@ describe('CcxtExchangeClient', () => {
           'Api access failed for fetchDepositAddress',
         );
         expect(thrownError.cause).toBe(testError.message);
+      });
+
+      it('shold fetch deposit address info for ERC20 network on gate', async () => {
+        const CCXT_GATE_NAME = 'gate';
+        mockedCcxt[CCXT_GATE_NAME].mockReturnValueOnce(mockedExchange);
+
+        const mockedAddressStructure = generateDepositAddressStructure();
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          mockedAddressStructure,
+        );
+
+        ccxtExchangeApiClient = new CcxtExchangeClient(CCXT_GATE_NAME, {
+          apiKey: faker.string.sample(),
+          secret: faker.string.sample(),
+        });
+
+        const address = await ccxtExchangeApiClient.fetchDepositAddress(
+          mockedAddressStructure.currency,
+        );
+
+        expect(address).toEqual(mockedAddressStructure.address);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          mockedAddressStructure.currency,
+          {
+            network: 'ERC20',
+          },
+        );
       });
     });
   });

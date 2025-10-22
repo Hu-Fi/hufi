@@ -46,6 +46,7 @@ export class MarketMakingProgressChecker
 
   async checkForParticipant(
     authKeys: ParticipantAuthKeys,
+    participantJoinedAt: Date,
   ): Promise<MarketMakingResult> {
     let abuseDetected = false;
 
@@ -58,7 +59,10 @@ export class MarketMakingProgressChecker
     let totalVolume = 0;
     let nTradesSampled = 0;
 
-    let since = this.tradingPeriodStart.valueOf();
+    let since = Math.max(
+      this.tradingPeriodStart.valueOf(),
+      participantJoinedAt.valueOf(),
+    );
     while (since < this.tradingPeriodEnd.valueOf() && !abuseDetected) {
       const trades = await exchangeApiClient.fetchMyTrades(
         this.tradingPair,

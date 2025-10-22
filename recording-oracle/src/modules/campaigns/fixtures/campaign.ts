@@ -6,6 +6,8 @@ import {
   generateExchangeName,
   generateTradingPair,
 } from '@/modules/exchange/fixtures';
+import type { UserEntity } from '@/modules/users';
+import { generateUserEntity } from '@/modules/users/fixtures';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
@@ -166,4 +168,13 @@ export class MockCampaignProgressChecker
 {
   checkForParticipant = jest.fn();
   getCollectedMeta = jest.fn();
+}
+
+export function generateCampaignParticipant(
+  campaign: CampaignEntity,
+): UserEntity & { joinedAt: Date } {
+  return {
+    ...generateUserEntity(),
+    joinedAt: faker.date.soon({ refDate: campaign.createdAt }),
+  };
 }
