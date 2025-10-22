@@ -116,7 +116,11 @@ describe('CcxtExchangeClient', () => {
     let ccxtExchangeApiClient: CcxtExchangeClient;
 
     beforeAll(() => {
-      const exchangeName = generateExchangeName();
+      /**
+       * In some methods we rely on exact exchange name to adjust params,
+       * so for general tests we don't mind, but will override where needed
+       */
+      const exchangeName = faker.lorem.slug();
       mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
 
       ccxtExchangeApiClient = new CcxtExchangeClient(exchangeName, {
