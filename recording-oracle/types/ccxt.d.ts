@@ -56,7 +56,10 @@ declare module 'ccxt' {
     fetchBalance(): Promise<AccountBalance>;
     fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
     fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
-    fetchDepositAddress(symbol: string): Promise<AddressStructure>;
+    fetchDepositAddress(
+      symbol: string,
+      params?: Record<string, unknown>,
+    ): Promise<AddressStructure>;
   }
 
   const ccxt: {

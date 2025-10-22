@@ -173,7 +173,18 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
   @CatchApiAccessErrors()
   async fetchDepositAddress(symbol: string): Promise<string> {
-    const result = await this.ccxtClient.fetchDepositAddress(symbol);
+    const fetchParams: Record<string, unknown> = {};
+
+    switch (this.exchangeName) {
+      case 'gate': {
+        fetchParams.network = 'ERC20';
+      }
+    }
+
+    const result = await this.ccxtClient.fetchDepositAddress(
+      symbol,
+      fetchParams,
+    );
 
     return result.address;
   }
