@@ -6,3 +6,5 @@ export {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
+
+export type { ExchangeApiKeyData } from './types';

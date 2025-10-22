@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
-import type { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
 import type { UserEntity } from '@/modules/users';
 
 import type { CampaignEntity } from './campaign.entity';
@@ -34,23 +33,6 @@ export class UserCampaignEntity {
   @PrimaryColumn()
   @Index('idx_users_campaigns_campaign_id')
   campaignId: string;
-
-  /**
-   * Do not fetch exchange api key entity from DB,
-   * use corresponding service instead to get decoded data.
-   *
-   * This relation is just to remove user from campaign
-   * if they remove exchange API key.
-   */
-  @ManyToOne('ExchangeApiKeyEntity', {
-    onDelete: 'CASCADE',
-    persistence: false,
-  })
-  @JoinColumn({ name: 'exchange_api_key_id' })
-  exchangeApiKey?: ExchangeApiKeyEntity;
-
-  @Column()
-  exchangeApiKeyId: string;
 
   @Column({ type: 'timestamptz' })
   createdAt: Date;

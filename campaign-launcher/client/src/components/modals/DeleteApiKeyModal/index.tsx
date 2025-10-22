@@ -55,9 +55,22 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
         {isIdle && (
           <>
             <Typography variant="subtitle2" py={1} mb={4} textAlign="center">
-              You are about to delete an API KEY.
+              You are about to delete an API key for{' '}
+              <Typography
+                variant="alert"
+                color="warning"
+                textTransform="capitalize"
+              >
+                {exchangeName}
+              </Typography>
+              .
               <br />
-              This action can&apos;t be undone, do you want to continue?
+              This action can&apos;t be undone and will end your participation
+              in related campaigns.
+              <br />
+              You can update it instead.
+              <br />
+              Do you want to continue?
             </Typography>
             <Stack direction="row" justifyContent="center" gap={1}>
               <Button variant="outlined" onClick={handleClose}>
