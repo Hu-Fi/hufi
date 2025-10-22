@@ -138,14 +138,7 @@ const Account: FC = () => {
               <CustomTooltip
                 arrow
                 placement="left"
-                sx={{
-                  ml: 'auto',
-                  width: '20px',
-                  height: '20px',
-                  px: 1,
-                  bgcolor: 'text.secondary',
-                  '& > span': { color: 'white' },
-                }}
+                sx={{ ml: 'auto' }}
                 title={
                   <Stack>
                     <Typography variant="tooltip">
@@ -170,7 +163,16 @@ const Account: FC = () => {
                   </Stack>
                 }
               >
-                <InfoTooltipInner />
+                <InfoTooltipInner
+                  sx={{
+                    ml: 'auto',
+                    width: '20px',
+                    height: '20px',
+                    px: 1,
+                    bgcolor: 'text.secondary',
+                    '& > span': { color: 'white' },
+                  }}
+                />
               </CustomTooltip>
             </ListItemButton>
           )}
