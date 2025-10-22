@@ -1,4 +1,4 @@
-import { type FC, useEffect, useRef, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -18,18 +18,17 @@ const WALLET_ICONS: Record<string, string> = {
 
 const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const isConnectingWallet = useRef(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const { connectAsync, connectors } = useConnect();
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const { setActiveAddress } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
     console.log('Starting connection...', { connector: connector.id });
-    isConnectingWallet.current = true;
-    console.log('Set isConnectingWallet to:', isConnectingWallet.current);
+    setIsConnecting(true);
     try {
       console.log('Calling connectAsync...');
       await connectAsync({ connector });
@@ -52,7 +51,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
         message.includes('action rejected');
       if (isUserAborted) {
         console.log('User aborted connection');
-        isConnectingWallet.current = false;
+        setIsConnecting(false);
       }
     } finally {
       console.log('Connection attempt finished, closing modal');
@@ -69,23 +68,20 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   useEffect(() => {
     console.log('Address or connecting state changed:', {
       address,
-      isConnecting: isConnectingWallet.current,
+      isConnecting,
     });
 
-    if (
-      address &&
-      ((!isMobile && isConnectingWallet.current) || (isMobile && isConnected))
-    ) {
+    if (address && isConnecting) {
       console.log('Setting active address:', address);
       setActiveAddress(address);
-      isConnectingWallet.current = false;
+      setIsConnecting(false);
       console.log('Reset connecting state');
     }
-  }, [address, setActiveAddress, isMobile, isConnected]);
+  }, [address, setActiveAddress, isConnecting]);
 
   const onClose = () => setAnchorEl(null);
 
-  console.log('isConnectingWallet', isConnectingWallet.current);
+  console.log('isConnecting', isConnecting);
 
   return (
     <>
@@ -93,7 +89,7 @@ const ConnectWallet: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
         variant="contained"
         size="large"
         sx={{ color: 'primary.contrast' }}
-        disabled={!!isConnectingWallet.current}
+        disabled={!!isConnecting}
         onClick={handleConnectWalletButtonClick}
       >
         Connect Wallet
