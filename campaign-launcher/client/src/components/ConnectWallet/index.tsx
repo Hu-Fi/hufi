@@ -82,13 +82,10 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   useEffect(() => {
     if (address && isConnecting) {
       setActiveAddress(address);
-      updateIsConnecting(false);
     }
-  }, [address, setActiveAddress, updateIsConnecting, isConnecting]);
+  }, [address, setActiveAddress, isConnecting]);
 
   const onClose = () => setAnchorEl(null);
-
-  console.log('isConnecting', isConnecting);
 
   return (
     <>
