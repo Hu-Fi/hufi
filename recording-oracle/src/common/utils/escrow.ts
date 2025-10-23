@@ -13,10 +13,5 @@ export async function getCancellationRequestDate(
     throw new Error('No cancellation tx in subgraph');
   }
 
-  /**
-   * Value in seconds returned as string from subgraph
-   */
-  const cancellationRequestedAt = Number(cancellationRequestTx.timestamp);
-
-  return new Date(cancellationRequestedAt * 1000);
+  return new Date(cancellationRequestTx.timestamp);
 }
