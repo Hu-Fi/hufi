@@ -1,4 +1,4 @@
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -26,24 +26,25 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
 
   const { connectAsync, connectors } = useConnect();
   const { address } = useAccount();
-  const { setActiveAddress } = useActiveAccount();
+  const { setActiveAddress, updateIsConnecting, isConnecting } =
+    useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
-  const updateIsConnecting = useCallback(
-    (value: boolean) => {
-      if (isMobile) {
-        if (value) {
-          sessionStorage.setItem('wallet_connecting', '1');
-        } else {
-          sessionStorage.removeItem('wallet_connecting');
-        }
-      } else {
-        isConnectingWallet.current = value;
-      }
-    },
-    [isMobile]
-  );
+  // const updateIsConnecting = useCallback(
+  //   (value: boolean) => {
+  //     if (isMobile) {
+  //       if (value) {
+  //         sessionStorage.setItem('wallet_connecting', '1');
+  //       } else {
+  //         sessionStorage.removeItem('wallet_connecting');
+  //       }
+  //     } else {
+  //       isConnectingWallet.current = value;
+  //     }
+  //   },
+  //   [isMobile]
+  // );
 
   const handleConnect = async (connector: Connector) => {
     updateIsConnecting(true);
@@ -79,17 +80,15 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   };
 
   useEffect(() => {
-    if (
-      address &&
-      (sessionStorage.getItem('wallet_connecting') === '1' ||
-        isConnectingWallet.current)
-    ) {
+    if (address && isConnecting) {
       setActiveAddress(address);
       updateIsConnecting(false);
     }
-  }, [address, setActiveAddress, updateIsConnecting]);
+  }, [address, setActiveAddress, updateIsConnecting, isConnecting]);
 
   const onClose = () => setAnchorEl(null);
+
+  console.log('isConnecting', isConnecting);
 
   return (
     <>

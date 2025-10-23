@@ -17,6 +17,8 @@ type ActiveAccountContextType = {
   activeAddress?: EvmAddress;
   setActiveAddress: (address: EvmAddress) => void;
   clearActiveAddress: () => void;
+  isConnecting: boolean;
+  updateIsConnecting: (value: boolean) => void;
 };
 
 const ActiveAccountContext = createContext<
@@ -29,6 +31,7 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<
     EvmAddress | undefined
   >(undefined);
+  const [isConnecting, setIsConnecting] = useState(false);
   const { isConnected } = useAccount();
 
   useEffect(() => {
@@ -39,6 +42,10 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
       setActiveAddressState(persistedAddress);
     }
   }, [isConnected, activeAddress]);
+
+  const updateIsConnecting = useCallback((value: boolean) => {
+    setIsConnecting(value);
+  }, []);
 
   const setActiveAddress = useCallback((address: EvmAddress) => {
     setActiveAddressState(address);
@@ -51,8 +58,20 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ activeAddress, setActiveAddress, clearActiveAddress }),
-    [activeAddress, setActiveAddress, clearActiveAddress]
+    () => ({
+      activeAddress,
+      setActiveAddress,
+      clearActiveAddress,
+      isConnecting,
+      updateIsConnecting,
+    }),
+    [
+      activeAddress,
+      setActiveAddress,
+      clearActiveAddress,
+      isConnecting,
+      updateIsConnecting,
+    ]
   );
 
   return (
