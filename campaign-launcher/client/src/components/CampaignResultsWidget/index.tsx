@@ -19,7 +19,7 @@ const handleOpenUrl = (e: MouseEvent<HTMLButtonElement>, url: string) => {
 const RESULT = {
   none: {
     label: 'N/A',
-    description: 'Campaign is active but no results have been recorded yet.',
+    description: 'No results have been recorded for campaign.',
     bgcolor: 'error.main',
   },
   intermediate: {
@@ -34,6 +34,7 @@ const RESULT = {
     bgcolor: 'success.main',
   },
 };
+type ResultType = typeof RESULT;
 
 export const StatusTooltip = () => (
   <Stack width={150} gap={0.5}>
@@ -67,13 +68,20 @@ const CampaignResultsWidget: FC<Props> = ({
     CampaignStatus.CANCELLED,
     CampaignStatus.COMPLETED,
   ].includes(campaignStatus);
-  const result =
-    isFinished && finalResultsUrl
-      ? RESULT.final
-      : intermediateResultsUrl
-        ? RESULT.intermediate
-        : RESULT.none;
-  const resultUrl = isFinished ? finalResultsUrl : intermediateResultsUrl;
+
+  let result: ResultType[keyof ResultType];
+  let resultUrl: string;
+
+  if (isFinished && finalResultsUrl) {
+    result = RESULT.final;
+    resultUrl = finalResultsUrl;
+  } else if (!isFinished && intermediateResultsUrl) {
+    result = RESULT.intermediate;
+    resultUrl = intermediateResultsUrl;
+  } else {
+    result = RESULT.none;
+    resultUrl = '';
+  }
 
   return (
     <Box display="flex" alignItems="center">
