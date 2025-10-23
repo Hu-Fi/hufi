@@ -75,8 +75,6 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
     ]
   );
 
-  console.log('isConnecting', isConnecting);
-
   return (
     <ActiveAccountContext.Provider value={value}>
       {children}

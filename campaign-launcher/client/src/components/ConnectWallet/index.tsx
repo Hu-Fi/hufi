@@ -31,21 +31,6 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
-  // const updateIsConnecting = useCallback(
-  //   (value: boolean) => {
-  //     if (isMobile) {
-  //       if (value) {
-  //         sessionStorage.setItem('wallet_connecting', '1');
-  //       } else {
-  //         sessionStorage.removeItem('wallet_connecting');
-  //       }
-  //     } else {
-  //       isConnectingWallet.current = value;
-  //     }
-  //   },
-  //   [isMobile]
-  // );
-
   const handleConnect = async (connector: Connector) => {
     updateIsConnecting(true);
     try {

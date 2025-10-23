@@ -91,7 +91,7 @@ export default defineConfig(
       ],
       '@typescript-eslint/consistent-type-definitions': ['off'],
       '@typescript-eslint/no-empty-function': ['off'],
-      //'no-console': ['error', { allow: ['warn', 'error'] }],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       'object-curly-spacing': ['error', 'always'],
       quotes: [
         'error',
