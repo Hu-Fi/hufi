@@ -41,7 +41,6 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [isConnected, activeAddress]);
 
   const setActiveAddress = useCallback((address: EvmAddress) => {
-    console.log('Setting active address:', address);
     setActiveAddressState(address);
     localStorage.setItem(PERSISTED_ADDRESS_KEY, address);
   }, []);

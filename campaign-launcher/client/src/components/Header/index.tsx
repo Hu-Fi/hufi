@@ -157,7 +157,7 @@ const Header: FC = () => {
               />
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {activeAddress || isConnected ? (
+              {activeAddress && isConnected ? (
                 <Account />
               ) : (
                 <ConnectWallet closeDrawer={() => toggleDrawer(false)} />
