@@ -303,7 +303,7 @@ describe('CampaignsService', () => {
     it('should throw when subgraph is missing manifest url', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: faker.helpers.arrayElement(['', null]),
         manifestHash: faker.string.hexadecimal(),
       } as IEscrow);
@@ -332,7 +332,7 @@ describe('CampaignsService', () => {
     it('should throw when subgraph is missing manifest hash', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: faker.internet.url(),
         manifestHash: faker.helpers.arrayElement(['', null]),
       } as IEscrow);
@@ -362,7 +362,7 @@ describe('CampaignsService', () => {
       const escrowRecordingOracle = faker.finance.ethereumAddress();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: faker.internet.url(),
         manifestHash: faker.string.hexadecimal(),
         recordingOracle: escrowRecordingOracle,
@@ -398,7 +398,7 @@ describe('CampaignsService', () => {
     ])('should throw when escrow has "%s" status', async (escrowStatus) => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: faker.internet.url(),
         manifestHash: faker.string.hexadecimal(),
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -435,7 +435,7 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -478,7 +478,7 @@ describe('CampaignsService', () => {
 
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: JSON.stringify(manifest),
         manifestHash: faker.string.hexadecimal(),
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -507,7 +507,7 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -544,7 +544,7 @@ describe('CampaignsService', () => {
       const manifestHash = faker.string.hexadecimal();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1n }),
+        totalFundedAmount: faker.number.bigInt({ min: 1 }),
         manifest: manifestUrl,
         manifestHash,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
@@ -584,7 +584,7 @@ describe('CampaignsService', () => {
       async (mockedManifest) => {
         const manifestUrl = faker.internet.url();
         const manifestHash = faker.string.hexadecimal();
-        const totalFundedAmount = faker.number.bigInt({ min: 1n });
+        const totalFundedAmount = faker.number.bigInt({ min: 1 });
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
@@ -625,7 +625,7 @@ describe('CampaignsService', () => {
     ])(
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {
-        const totalFundedAmount = faker.number.bigInt({ min: 1n });
+        const totalFundedAmount = faker.number.bigInt({ min: 1 });
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
@@ -1103,7 +1103,7 @@ describe('CampaignsService', () => {
       const mockedResultsFileUrl = faker.internet.url();
       mockStorageService.uploadData.mockResolvedValueOnce(mockedResultsFileUrl);
 
-      const mockGasPrice = faker.number.bigInt();
+      const mockGasPrice = faker.number.bigInt({ min: 1 });
       mockWeb3Service.calculateGasPrice.mockResolvedValueOnce(mockGasPrice);
 
       const intermediateResultsData = generateIntermediateResultsData();

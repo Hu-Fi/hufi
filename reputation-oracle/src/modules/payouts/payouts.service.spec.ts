@@ -369,7 +369,7 @@ describe('PayoutsService', () => {
 
   describe('runPayoutsCycleForCampaign', () => {
     const mockedCampaign = generateCampaign();
-    const mockedGasPrice = faker.number.bigInt();
+    const mockedGasPrice = faker.number.bigInt({ min: 1 });
     const mockedParticipantAddress = faker.finance.ethereumAddress();
     const mockedParticipantsOutcomesBatch = {
       id: faker.string.uuid(),

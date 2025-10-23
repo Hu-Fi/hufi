@@ -23,7 +23,7 @@ export function generateManifest() {
 
 export function generateEscrow(): IEscrow {
   const escrowAddress = faker.finance.ethereumAddress();
-  const totalFundedAmount = faker.number.bigInt({ min: 1n });
+  const totalFundedAmount = faker.number.bigInt({ min: 1 });
 
   const escrow: IEscrow = {
     id: escrowAddress,
