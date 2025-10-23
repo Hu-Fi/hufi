@@ -34,9 +34,9 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
     (value: boolean) => {
       if (isMobile) {
         if (value) {
-          history.replaceState({}, '', '?connecting=1');
+          sessionStorage.setItem('wallet_connecting', '1');
         } else {
-          history.replaceState({}, '', window.location.pathname);
+          sessionStorage.removeItem('wallet_connecting');
         }
       } else {
         setIsConnecting(value);
@@ -86,8 +86,7 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   useEffect(() => {
     if (
       address &&
-      (new URLSearchParams(window.location.search).get('connecting') === '1' ||
-        isConnecting)
+      (sessionStorage.getItem('wallet_connecting') === '1' || isConnecting)
     ) {
       console.log('Setting active address:', address);
       setActiveAddress(address);
