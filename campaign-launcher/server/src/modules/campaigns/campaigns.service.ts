@@ -168,11 +168,6 @@ export class CampaignsService {
       return null;
     }
 
-    /**
-     * TODO: remove when fixed in sdk, atm it's missing
-     */
-    campaignEscrow.chainId = chainId;
-
     if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
       throw new InvalidCampaignManifestError(
         chainId,
