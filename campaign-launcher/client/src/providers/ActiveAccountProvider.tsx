@@ -15,10 +15,7 @@ import type { EvmAddress } from '@/types';
 
 type ActiveAccountContextType = {
   activeAddress?: EvmAddress;
-  setActiveAddress: (address: EvmAddress) => void;
-  clearActiveAddress: () => void;
   isConnecting: boolean;
-  updateIsConnecting: (value: boolean) => void;
 };
 
 const ActiveAccountContext = createContext<
@@ -31,24 +28,13 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<
     EvmAddress | undefined
   >(undefined);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { isConnected } = useAccount();
-
-  useEffect(() => {
-    const persistedAddress = localStorage.getItem(
-      PERSISTED_ADDRESS_KEY
-    ) as EvmAddress | null;
-    if (isConnected && !activeAddress && persistedAddress) {
-      setActiveAddressState(persistedAddress);
-    }
-  }, [isConnected, activeAddress]);
-
-  const updateIsConnecting = useCallback((value: boolean) => {
-    setIsConnecting(value);
-  }, []);
+  const {
+    isConnected: isWalletConnected,
+    isConnecting: isWalletConnecting,
+    address: addressInWallet,
+  } = useAccount();
 
   const setActiveAddress = useCallback((address: EvmAddress) => {
-    setIsConnecting(false);
     setActiveAddressState(address);
     localStorage.setItem(PERSISTED_ADDRESS_KEY, address);
   }, []);
@@ -58,21 +44,40 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
     localStorage.removeItem(PERSISTED_ADDRESS_KEY);
   }, []);
 
+  useEffect(() => {
+    const persistedAddress = localStorage.getItem(
+      PERSISTED_ADDRESS_KEY
+    ) as EvmAddress | null;
+
+    if (!isWalletConnected) {
+      clearActiveAddress();
+      return;
+    }
+    if (activeAddress) {
+      return;
+    }
+    if (persistedAddress) {
+      setActiveAddress(persistedAddress);
+      return;
+    }
+    if (addressInWallet) {
+      setActiveAddress(addressInWallet);
+      return;
+    }
+  }, [
+    isWalletConnected,
+    activeAddress,
+    addressInWallet,
+    setActiveAddress,
+    clearActiveAddress,
+  ]);
+
   const value = useMemo(
     () => ({
       activeAddress,
-      setActiveAddress,
-      clearActiveAddress,
-      isConnecting,
-      updateIsConnecting,
+      isConnecting: activeAddress ? false : isWalletConnecting,
     }),
-    [
-      activeAddress,
-      setActiveAddress,
-      clearActiveAddress,
-      isConnecting,
-      updateIsConnecting,
-    ]
+    [activeAddress, isWalletConnecting]
   );
 
   return (

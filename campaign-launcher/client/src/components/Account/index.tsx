@@ -44,7 +44,7 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const { activeAddress, clearActiveAddress } = useActiveAccount();
+  const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
@@ -64,7 +64,6 @@ const Account: FC = () => {
 
   const handleDisconnect = () => {
     disconnect();
-    clearActiveAddress();
   };
 
   const handleLogout = () => {

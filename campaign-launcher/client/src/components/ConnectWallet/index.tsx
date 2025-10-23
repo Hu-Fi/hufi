@@ -1,8 +1,8 @@
-import { type FC, useEffect, useRef, useState } from 'react';
+import { type FC, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { useAccount, useConnect, useDisconnect, type Connector } from 'wagmi';
+import { useConnect, useDisconnect, type Connector } from 'wagmi';
 
 import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
@@ -22,17 +22,13 @@ const WALLET_ICONS: Record<string, string> = {
 
 const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const isConnectingWallet = useRef(false);
 
   const { connectAsync, connectors } = useConnect();
-  const { address } = useAccount();
-  const { setActiveAddress, updateIsConnecting, isConnecting } =
-    useActiveAccount();
+  const { isConnecting } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
-    updateIsConnecting(true);
     try {
       await connectAsync({ connector });
     } catch (e) {
@@ -40,18 +36,6 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
       if (err.message?.includes('Connector already connected')) {
         await disconnectAsync();
         await handleConnect(connector);
-      }
-      const message = (err?.message ?? '').toLowerCase();
-      const code = err?.code;
-      const isUserAborted =
-        code === 4001 ||
-        message.includes('user rejected') ||
-        message.includes('user denied') ||
-        message.includes('modal closed') ||
-        message.includes('request reset') ||
-        message.includes('action rejected');
-      if (isUserAborted) {
-        updateIsConnecting(false);
       }
     } finally {
       onClose();
@@ -64,12 +48,6 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
     setAnchorEl(e.currentTarget);
   };
 
-  useEffect(() => {
-    if (address && isConnecting) {
-      setActiveAddress(address);
-    }
-  }, [address, setActiveAddress, isConnecting]);
-
   const onClose = () => setAnchorEl(null);
 
   return (
@@ -78,7 +56,7 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
         variant="contained"
         size="large"
         sx={{ color: 'primary.contrast' }}
-        disabled={isConnectingWallet.current}
+        disabled={isConnecting}
         onClick={handleConnectWalletButtonClick}
       >
         Connect Wallet
