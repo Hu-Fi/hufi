@@ -10,7 +10,7 @@ import {
   EscrowClient,
   EscrowStatus,
   EscrowUtils,
-  IEscrow,
+  type IEscrow,
 } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import Decimal from 'decimal.js';
@@ -165,8 +165,8 @@ describe('PayoutsService', () => {
           }),
           expect.objectContaining({
             address: noResultsToCancelEscrow.address,
-            intermediateResultsUrl: '',
-            intermediateResultsHash: '',
+            intermediateResultsUrl: null,
+            intermediateResultsHash: null,
           }),
         ]),
       );

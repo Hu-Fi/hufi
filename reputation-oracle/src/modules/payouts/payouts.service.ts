@@ -96,22 +96,28 @@ export class PayoutsService {
         campaign.manifestHash,
       );
 
-      const campaignStartDate = new Date(manifest.start_date);
-      if (
-        escrowStatus === EscrowStatus.ToCancel &&
-        campaignStartDate.valueOf() > Date.now()
-      ) {
-        logger.info(
-          'Campaign cancellation requested before campaign started, cancelling',
-        );
-        await escrowClient.cancel(campaign.address);
-        return;
+      if (escrowStatus === EscrowStatus.ToCancel) {
+        const campaignStartDate = new Date(manifest.start_date);
+        if (campaignStartDate.valueOf() > Date.now()) {
+          logger.info(
+            'Campaign cancellation requested before campaign started, cancelling',
+          );
+          await escrowClient.cancel(campaign.address);
+          return;
+        }
+
+        if (!campaign.intermediateResultsUrl) {
+          logger.info(
+            'Results not yet recorded for ToCancel campaign, skip it',
+          );
+          return;
+        }
       }
 
       const intermediateResultsData =
         await payoutsUtils.downloadIntermediateResults(
-          campaign.intermediateResultsUrl,
-          campaign.intermediateResultsHash,
+          campaign.intermediateResultsUrl as string,
+          campaign.intermediateResultsHash as string,
         );
 
       if (intermediateResultsData.results.length === 0) {
@@ -440,8 +446,8 @@ export class PayoutsService {
          */
         manifest: escrow.manifest as string,
         manifestHash: escrow.manifestHash as string,
-        intermediateResultsUrl: escrow.intermediateResultsUrl || '',
-        intermediateResultsHash: escrow.intermediateResultsHash || '',
+        intermediateResultsUrl: escrow.intermediateResultsUrl,
+        intermediateResultsHash: escrow.intermediateResultsHash,
         fundTokenAddress: escrow.token,
         fundTokenDecimals,
         fundAmount: Number(
@@ -474,7 +480,7 @@ export class PayoutsService {
     let logs = await signer.provider.getLogs({
       address: escrowAddress,
       topics: [topicV3],
-      fromBlock: Number(block),
+      fromBlock: block,
       toBlock: 'latest',
     });
 
@@ -487,7 +493,7 @@ export class PayoutsService {
       logs = await signer.provider.getLogs({
         address: escrowAddress,
         topics: [topicV2],
-        fromBlock: Number(block),
+        fromBlock: block,
         toBlock: 'latest',
       });
     }

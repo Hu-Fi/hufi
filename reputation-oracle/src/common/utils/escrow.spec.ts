@@ -34,12 +34,12 @@ describe('Escrow utilities', () => {
     });
 
     it('should return cancellation request date', async () => {
-      const mockedTimestamp = Math.round(faker.date.anytime().valueOf() / 1000);
+      const mockedTimestamp = faker.date.anytime().valueOf();
 
       mockedTransactionUtils.getTransactions.mockResolvedValueOnce([
         {
-          timestamp: mockedTimestamp.toString(),
-        } as unknown as ITransaction, // types mismatch in SDK
+          timestamp: mockedTimestamp,
+        } as ITransaction,
       ]);
 
       const crDate = await escrowUtils.getCancellationRequestDate(
@@ -47,7 +47,7 @@ describe('Escrow utilities', () => {
         campaignAddress,
       );
 
-      expect(crDate).toEqual(new Date(mockedTimestamp * 1000));
+      expect(crDate).toEqual(new Date(mockedTimestamp));
     });
   });
 });

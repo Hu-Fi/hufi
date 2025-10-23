@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { EscrowStatus, IEscrow } from '@human-protocol/sdk';
+import { EscrowStatus, type IEscrow } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
 
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
@@ -23,7 +23,7 @@ export function generateManifest() {
 
 export function generateEscrow(): IEscrow {
   const escrowAddress = faker.finance.ethereumAddress();
-  const totalFundedAmount = faker.number.int({ min: 1 });
+  const totalFundedAmount = faker.number.bigInt({ min: 1n });
 
   const escrow: IEscrow = {
     id: escrowAddress,
@@ -33,15 +33,24 @@ export function generateEscrow(): IEscrow {
     launcher: faker.finance.ethereumAddress(),
     manifest: JSON.stringify(generateManifest()),
     manifestHash: faker.string.hexadecimal(),
-    totalFundedAmount: totalFundedAmount.toString(),
-    balance: totalFundedAmount.toString(),
-    amountPaid: '0',
+    totalFundedAmount: totalFundedAmount,
+    balance: totalFundedAmount,
+    amountPaid: 0n,
     factoryAddress: faker.finance.ethereumAddress(),
     token: faker.finance.ethereumAddress(),
-    createdAt: Math.round(faker.date.recent().valueOf() / 1000).toString(),
-    count: faker.number.int({ min: 1, max: 42 }).toString(),
+    createdAt: faker.date.recent().valueOf(),
+    count: faker.number.int({ min: 1, max: 42 }),
     intermediateResultsUrl: faker.internet.url(),
     intermediateResultsHash: faker.string.hexadecimal(),
+    finalResultsUrl: null,
+    finalResultsHash: null,
+    jobRequesterId: faker.string.uuid(),
+    exchangeOracle: faker.finance.ethereumAddress(),
+    recordingOracle: faker.finance.ethereumAddress(),
+    reputationOracle: faker.finance.ethereumAddress(),
+    exchangeOracleFee: faker.number.int({ min: 1, max: 50 }),
+    recordingOracleFee: faker.number.int({ min: 1, max: 50 }),
+    reputationOracleFee: faker.number.int({ min: 1, max: 50 }),
   };
 
   return escrow;

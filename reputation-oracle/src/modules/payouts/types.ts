@@ -1,4 +1,4 @@
-import { IEscrow } from '@human-protocol/sdk';
+import type { IEscrow } from '@human-protocol/sdk';
 
 export type BaseCampaignManifest = {
   type: string;
@@ -7,19 +7,17 @@ export type BaseCampaignManifest = {
   end_date: string;
 };
 
-export type CampaignWithResults = Required<
-  Pick<
-    IEscrow,
-    | 'chainId'
-    | 'address'
-    | 'status'
-    | 'launcher'
-    | 'manifest'
-    | 'manifestHash'
-    | 'intermediateResultsUrl'
-    | 'intermediateResultsHash'
-  >
+export type CampaignWithResults = Pick<
+  IEscrow,
+  | 'chainId'
+  | 'address'
+  | 'status'
+  | 'launcher'
+  | 'intermediateResultsUrl'
+  | 'intermediateResultsHash'
 > & {
+  manifest: string;
+  manifestHash: string;
   fundTokenAddress: string;
   fundTokenDecimals: number;
   fundAmount: number;
