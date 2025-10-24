@@ -2,7 +2,7 @@ import {
   EscrowClient,
   EscrowStatus,
   EscrowUtils,
-  IEscrow,
+  type IEscrow,
   TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
@@ -82,7 +82,7 @@ export class CampaignsService {
     });
 
     for (const campaignEscrow of campaignEscrows) {
-      if (!campaignEscrow.manifest) {
+      if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
         continue;
       }
 
@@ -136,7 +136,7 @@ export class CampaignsService {
         details,
         startDate: manifest.start_date.toISOString(),
         endDate: manifest.end_date.toISOString(),
-        fundAmount: campaignEscrow.totalFundedAmount,
+        fundAmount: campaignEscrow.totalFundedAmount.toString(),
         fundToken: ethers.getAddress(campaignEscrow.token),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
@@ -146,7 +146,7 @@ export class CampaignsService {
         exchangeOracle: campaignEscrow.exchangeOracle as string,
         recordingOracle: campaignEscrow.recordingOracle as string,
         reputationOracle: campaignEscrow.reputationOracle as string,
-        balance: campaignEscrow.balance,
+        balance: campaignEscrow.balance.toString(),
         intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
         finalResultsUrl: campaignEscrow.finalResultsUrl,
       });
@@ -168,12 +168,7 @@ export class CampaignsService {
       return null;
     }
 
-    /**
-     * TODO: remove when fixed in sdk, atm it's missing
-     */
-    campaignEscrow.chainId = chainId;
-
-    if (!campaignEscrow.manifest) {
+    if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
       throw new InvalidCampaignManifestError(
         chainId,
         escrowAddress,
@@ -212,11 +207,10 @@ export class CampaignsService {
     for (const tx of transactions) {
       let totalTransfersAmountInTx = 0n;
       for (const internalTx of tx.internalTransactions) {
-        totalTransfersAmountInTx += BigInt(internalTx.value);
+        totalTransfersAmountInTx += internalTx.value;
       }
 
-      const txDate = dayjs(Number(tx.timestamp) * 1000);
-      const day = txDate.format('YYYY-MM-DD');
+      const day = dayjs(tx.timestamp).format('YYYY-MM-DD');
 
       if (amountsPerDay[day] === undefined) {
         amountsPerDay[day] = 0n;
@@ -256,7 +250,7 @@ export class CampaignsService {
       details,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
-      fundAmount: campaignEscrow.totalFundedAmount,
+      fundAmount: campaignEscrow.totalFundedAmount.toString(),
       fundToken: ethers.getAddress(campaignEscrow.token),
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
@@ -272,19 +266,13 @@ export class CampaignsService {
       exchangeOracle: campaignEscrow.exchangeOracle as string,
       recordingOracle: campaignEscrow.recordingOracle as string,
       reputationOracle: campaignEscrow.reputationOracle as string,
-      balance: campaignEscrow.balance,
-      exchangeOracleFeePercent: Number(
-        campaignEscrow.exchangeOracleFee as string,
-      ),
-      recordingOracleFeePercent: Number(
-        campaignEscrow.recordingOracleFee as string,
-      ),
-      reputationOracleFeePercent: Number(
-        campaignEscrow.reputationOracleFee as string,
-      ),
+      balance: campaignEscrow.balance.toString(),
+      exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
+      recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
+      reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
       intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
       finalResultsUrl: campaignEscrow.finalResultsUrl,
-      reservedFunds,
+      reservedFunds: reservedFunds.toString(),
     };
   }
 
@@ -312,7 +300,7 @@ export class CampaignsService {
     return manifestUtils.validateSchema(manifestJson);
   }
 
-  private async getReservedFunds(escrow: IEscrow): Promise<string> {
+  private async getReservedFunds(escrow: IEscrow): Promise<bigint> {
     try {
       /**
        * This is to eliminate escrows that have been
@@ -329,14 +317,14 @@ export class CampaignsService {
           EscrowStatus.ToCancel,
         ].includes(escrowStatus)
       ) {
-        return '0';
+        return 0n;
       }
 
       const provider = this.web3Service.getProvider(escrow.chainId);
       const escrowClient = await EscrowClient.build(provider);
       const reservedFunds = await escrowClient.getReservedFunds(escrow.address);
 
-      return reservedFunds.toString();
+      return reservedFunds;
     } catch (error) {
       const message = 'Failed to get reserved funds';
       this.logger.error(message, {

@@ -278,10 +278,10 @@ export class CampaignsService {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
-        'Missing fund amount data',
+        'Invalid fund amount',
       );
     }
-    if (!escrow.manifest) {
+    if (!escrow.manifest || !escrow.manifestHash) {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
@@ -324,8 +324,8 @@ export class CampaignsService {
     if (httpUtils.isValidHttpUrl(escrow.manifest as string)) {
       try {
         manifestString = await manifestUtils.downloadCampaignManifest(
-          escrow.manifest as string,
-          escrow.manifestHash as string,
+          escrow.manifest,
+          escrow.manifestHash,
         );
       } catch (error) {
         this.logger.error('Failed to download campaign manifest', error);
@@ -336,7 +336,7 @@ export class CampaignsService {
         );
       }
     } else {
-      manifestString = escrow.manifest as string;
+      manifestString = escrow.manifest;
     }
 
     let manifest: CampaignManifestBase;
@@ -1122,10 +1122,9 @@ export class CampaignsService {
           /**
            * 'createdAt' is a tx block timestamp, so technically
            * there might be multiple escrows created within the same block
-           * and we have to discover from the same timstamp value to not miss some.
+           * and we have to discover from the same timestamp value to not miss some.
            */
-          const lookbackTimestamp = Number(campaignEscrow.createdAt) * 1000;
-          lookbackDate = new Date(lookbackTimestamp);
+          lookbackDate = new Date(campaignEscrow.createdAt);
         } else {
           lookbackDate = dayjs().subtract(1, 'day').toDate();
         }

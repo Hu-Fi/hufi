@@ -156,11 +156,11 @@ export class CampaignData {
   @ApiProperty()
   balance: string;
 
-  @ApiPropertyOptional({ name: 'intermediate_results_url' })
-  intermediateResultsUrl?: string;
+  @ApiProperty({ name: 'intermediate_results_url' })
+  intermediateResultsUrl: string | null;
 
-  @ApiPropertyOptional({ name: 'final_results_url' })
-  finalResultsUrl?: string;
+  @ApiProperty({ name: 'final_results_url' })
+  finalResultsUrl: string | null;
 }
 
 export class GetCampaignsResponseDto {
