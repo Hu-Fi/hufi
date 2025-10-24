@@ -44,7 +44,7 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const { activeAddress, clearActiveAddress } = useActiveAccount();
+  const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
@@ -64,7 +64,6 @@ const Account: FC = () => {
 
   const handleDisconnect = () => {
     disconnect();
-    clearActiveAddress();
   };
 
   const handleLogout = () => {
@@ -137,14 +136,7 @@ const Account: FC = () => {
               <CustomTooltip
                 arrow
                 placement="left"
-                sx={{
-                  ml: 'auto',
-                  width: '20px',
-                  height: '20px',
-                  px: 1,
-                  bgcolor: 'text.secondary',
-                  '& > span': { color: 'white' },
-                }}
+                sx={{ ml: 'auto' }}
                 title={
                   <Stack>
                     <Typography variant="tooltip">
@@ -169,7 +161,16 @@ const Account: FC = () => {
                   </Stack>
                 }
               >
-                <InfoTooltipInner />
+                <InfoTooltipInner
+                  sx={{
+                    ml: 'auto',
+                    width: '20px',
+                    height: '20px',
+                    px: 1,
+                    bgcolor: 'text.secondary',
+                    '& > span': { color: 'white' },
+                  }}
+                />
               </CustomTooltip>
             </ListItemButton>
           )}

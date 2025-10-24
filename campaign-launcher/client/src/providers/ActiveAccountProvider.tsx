@@ -15,8 +15,7 @@ import type { EvmAddress } from '@/types';
 
 type ActiveAccountContextType = {
   activeAddress?: EvmAddress;
-  setActiveAddress: (address: EvmAddress) => void;
-  clearActiveAddress: () => void;
+  isConnecting: boolean;
 };
 
 const ActiveAccountContext = createContext<
@@ -29,16 +28,11 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<
     EvmAddress | undefined
   >(undefined);
-  const { isConnected } = useAccount();
-
-  useEffect(() => {
-    const persistedAddress = localStorage.getItem(
-      PERSISTED_ADDRESS_KEY
-    ) as EvmAddress | null;
-    if (isConnected && !activeAddress && persistedAddress) {
-      setActiveAddressState(persistedAddress);
-    }
-  }, [isConnected, activeAddress]);
+  const {
+    isConnected: isWalletConnected,
+    isConnecting: isWalletConnecting,
+    address: addressInWallet,
+  } = useAccount();
 
   const setActiveAddress = useCallback((address: EvmAddress) => {
     setActiveAddressState(address);
@@ -50,9 +44,40 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
     localStorage.removeItem(PERSISTED_ADDRESS_KEY);
   }, []);
 
+  useEffect(() => {
+    const persistedAddress = localStorage.getItem(
+      PERSISTED_ADDRESS_KEY
+    ) as EvmAddress | null;
+
+    if (!isWalletConnected) {
+      clearActiveAddress();
+      return;
+    }
+    if (activeAddress) {
+      return;
+    }
+    if (persistedAddress) {
+      setActiveAddress(persistedAddress);
+      return;
+    }
+    if (addressInWallet) {
+      setActiveAddress(addressInWallet);
+      return;
+    }
+  }, [
+    isWalletConnected,
+    activeAddress,
+    addressInWallet,
+    setActiveAddress,
+    clearActiveAddress,
+  ]);
+
   const value = useMemo(
-    () => ({ activeAddress, setActiveAddress, clearActiveAddress }),
-    [activeAddress, setActiveAddress, clearActiveAddress]
+    () => ({
+      activeAddress,
+      isConnecting: activeAddress ? false : isWalletConnecting,
+    }),
+    [activeAddress, isWalletConnecting]
   );
 
   return (
