@@ -18,6 +18,7 @@ import { LRUCache } from 'lru-cache';
 import { ContentType } from '@/common/enums';
 import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
+import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
@@ -39,6 +40,7 @@ import { Web3Service } from '@/modules/web3';
 import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
+  CampaignCancelledError,
   CampaignNotFoundError,
   CampaignNotStartedError,
   InvalidCampaign,
@@ -76,9 +78,9 @@ const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_30_MINUTES;
 
-const CAMPAIGNS_FINISH_TRACKING_SCHEDULE = Environment.isDevelopment()
+const CAMPAIGN_STATUSES_SYNC_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_HOUR;
+  : CronExpression.EVERY_5_MINUTES;
 
 const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
@@ -97,6 +99,8 @@ const campaignsProgressCache = new LRUCache<
   updateAgeOnGet: false,
   updateAgeOnHas: false,
 });
+
+const PROGRESS_PERIOD_DAYS = 1;
 
 @Injectable()
 export class CampaignsService {
@@ -140,7 +144,6 @@ export class CampaignsService {
       campaignAddress,
     );
 
-    // Create a new campaign if it does not exist
     if (!campaign) {
       const { manifest, escrowInfo } = await this.retrieveCampaignData(
         chainId,
@@ -154,6 +157,30 @@ export class CampaignsService {
       );
     }
 
+    /**
+     * After campaign is created, escrows can be manipulated
+     * directly on blockchain (e.g. by admin), plus we have replication lag,
+     * so we have to do a live-check here and in other similar places
+     * where we are sensitive to escrow status
+     */
+    const signer = this.web3Service.getSigner(campaign.chainId);
+    const escrowClient = await EscrowClient.build(signer);
+    const escrowStatus = await escrowClient.getStatus(campaign.address);
+    if (
+      [EscrowStatus.ToCancel, EscrowStatus.Cancelled].includes(escrowStatus)
+    ) {
+      throw new CampaignCancelledError(campaign.chainId, campaign.address);
+    }
+    if (
+      escrowStatus === EscrowStatus.Complete ||
+      campaign.endDate.valueOf() <= Date.now()
+    ) {
+      throw new CampaignAlreadyFinishedError(
+        campaign.chainId,
+        campaign.address,
+      );
+    }
+
     const isUserJoined =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
@@ -161,17 +188,6 @@ export class CampaignsService {
       );
     if (isUserJoined) {
       return campaign.id;
-    }
-
-    if (campaign.endDate.valueOf() <= Date.now()) {
-      /**
-       * Safety belt to disallow joining campaigns that already finished
-       * but might be waiting for results recording or payouts
-       */
-      throw new CampaignAlreadyFinishedError(
-        campaign.chainId,
-        campaign.address,
-      );
     }
 
     await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
@@ -262,10 +278,10 @@ export class CampaignsService {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
-        'Missing fund amount data',
+        'Invalid fund amount',
       );
     }
-    if (!escrow.manifest) {
+    if (!escrow.manifest || !escrow.manifestHash) {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
@@ -291,7 +307,11 @@ export class CampaignsService {
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
 
     if (
-      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
+      [
+        EscrowStatus.ToCancel,
+        EscrowStatus.Cancelled,
+        EscrowStatus.Complete,
+      ].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
         chainId,
@@ -304,8 +324,8 @@ export class CampaignsService {
     if (httpUtils.isValidHttpUrl(escrow.manifest as string)) {
       try {
         manifestString = await manifestUtils.downloadCampaignManifest(
-          escrow.manifest as string,
-          escrow.manifestHash as string,
+          escrow.manifest,
+          escrow.manifestHash,
         );
       } catch (error) {
         this.logger.error('Failed to download campaign manifest', error);
@@ -316,7 +336,7 @@ export class CampaignsService {
         );
       }
     } else {
-      manifestString = escrow.manifest as string;
+      manifestString = escrow.manifest;
     }
 
     let manifest: CampaignManifestBase;
@@ -391,22 +411,6 @@ export class CampaignsService {
         await this.campaignsRepository.findForProgressRecording();
 
       for (const campaign of campaignsToCheck) {
-        const signer = this.web3Service.getSigner(campaign.chainId);
-        const escrowClient = await EscrowClient.build(signer);
-        const escrowStatus = await escrowClient.getStatus(campaign.address);
-        /**
-         * Safety-belt for case when tracking job
-         * has not cancelled this campaign yet, but
-         * it's already cancelled on blockchain
-         */
-        if (escrowStatus === EscrowStatus.Cancelled) {
-          this.logger.warn('Campaign cancelled, skipping progress recording', {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
-          });
-          continue;
-        }
         /**
          * Right now for simplicity process sequentially.
          * Later we can add "fastq" usage for parallel processing
@@ -425,7 +429,11 @@ export class CampaignsService {
     await this.pgAdvisoryLock.withLock(
       `record-campaign-progress:${campaign.id}`,
       async () => {
-        if (campaign.status !== CampaignStatus.ACTIVE) {
+        const hasProcessableStatus = [
+          CampaignStatus.ACTIVE,
+          CampaignStatus.TO_CANCEL,
+        ].includes(campaign.status);
+        if (!hasProcessableStatus) {
           // safety-belt
           return;
         }
@@ -442,34 +450,31 @@ export class CampaignsService {
         logger.debug('Campaign progress recording started');
 
         try {
-          let startDate = campaign.startDate;
+          const signer = this.web3Service.getSigner(campaign.chainId);
+          const escrowClient = await EscrowClient.build(signer);
+          const escrowStatus = await escrowClient.getStatus(campaign.address);
+          /**
+           * Safety-belt for case when tracking job
+           * has not finished this campaign yet, but
+           * it's already finished on blockchain
+           */
+          if (
+            [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(
+              escrowStatus,
+            )
+          ) {
+            logger.warn('Campaign finished, skipping progress recording');
+            return;
+          }
+
+          if (campaign.startDate >= new Date()) {
+            logger.warn('Campaign not started, skipping progress recording');
+            return;
+          }
 
           let intermediateResults =
             await this.retrieveCampaignIntermediateResults(campaign);
-
-          if (intermediateResults) {
-            const { to: lastResultAt } = intermediateResults.results.at(
-              -1,
-            ) as IntermediateResult;
-
-            const isOngoingCampaign = campaign.endDate > new Date();
-            const lastResultDate = new Date(lastResultAt);
-            if (isOngoingCampaign && dayjs().diff(lastResultAt, 'day') === 0) {
-              /**
-               * If campaign is ongoing - check results only once in 24.
-               * If campaing ended - let it record results immediately to reduce the wait.
-               */
-              logger.debug('Less than a day passed from previous check', {
-                lastResultAt,
-              });
-              return;
-            }
-
-            /**
-             * Add 1 ms to end date because interval boundaries are inclusive
-             */
-            startDate = new Date(lastResultDate.valueOf() + 1);
-          } else {
+          if (!intermediateResults) {
             intermediateResults = {
               chain_id: campaign.chainId,
               address: campaign.address,
@@ -479,27 +484,87 @@ export class CampaignsService {
             };
           }
 
-          let endDate = dayjs(startDate).add(1, 'day').toDate();
+          let startDate = campaign.startDate;
+          if (intermediateResults.results.length > 0) {
+            const { to: lastResultAt } = intermediateResults.results.at(
+              -1,
+            ) as IntermediateResult;
+
+            const lastResultDate = new Date(lastResultAt);
+            /**
+             * Add 1 ms to end date because interval boundaries are inclusive
+             */
+            startDate = new Date(lastResultDate.valueOf() + 1);
+          }
+
+          let endDate: Date;
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            const cancellationRequestedAt =
+              await escrowUtils.getCancellationRequestDate(
+                campaign.chainId,
+                campaign.address,
+              );
+            endDate = cancellationRequestedAt;
+          } else {
+            endDate = dayjs(startDate)
+              .add(PROGRESS_PERIOD_DAYS, 'day')
+              .toDate();
+
+            const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
+            if (isOngoingCampaign && endDate.valueOf() > Date.now()) {
+              /**
+               * If campaign is ongoing - check results only once per period.
+               * Otherwise - let it record results immediately to reduce the wait.
+               */
+              logger.warn(
+                "Can't check progress for period that is not finished yet",
+                {
+                  startDate,
+                  endDate,
+                },
+              );
+              return;
+            }
+          }
+
           if (endDate > campaign.endDate) {
             endDate = campaign.endDate;
           }
 
           // safety-belt
           if (startDate >= endDate) {
-            /**
-             * This can happen only in situations when:
-             * - by some reason we lost data about campaign from DB, then re-added it
-             * - by some reason campaign was 'pending_completion'/'completed', but status changed to 'active'
-             *
-             * and then attempted to record it's progress but it must be
-             * already finished and start-end dates overlap indicates that,
-             * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
-             */
-            logger.warn('Campaign progress period dates overlap');
-            campaign.status = CampaignStatus.PENDING_COMPLETION;
-            campaign.lastResultsAt = new Date();
-            await this.campaignsRepository.save(campaign);
-            return;
+            logger.warn('Campaign progress period dates overlap', {
+              startDate,
+              endDate,
+              escrowStatus,
+              escrowStatusString: EscrowStatus[escrowStatus],
+            });
+            if (escrowStatus === EscrowStatus.ToCancel) {
+              /**
+               * This can happen when:
+               * - campaign cancelled before it reached start_date from manifest
+               * - if we processed results and stored them for 'ToCancel' campaign,
+               * but failed to update internal status to exclude it from further processing
+               */
+              campaign.status = CampaignStatus.PENDING_CANCELLATION;
+              campaign.lastResultsAt = new Date();
+              await this.campaignsRepository.save(campaign);
+              return;
+            } else {
+              /**
+               * This can happen only in situations when:
+               * - by some reason we lost data about campaign from DB, then re-added it
+               * - by some reason campaign was 'pending_completion'/'completed', but status changed to 'active'
+               *
+               * and then attempted to record it's progress but it must be
+               * already finished and start-end dates overlap indicates that,
+               * so just mark it as pending_completion, otherwise it leads to invalid intermediate results.
+               */
+              campaign.status = CampaignStatus.PENDING_COMPLETION;
+              campaign.lastResultsAt = new Date();
+              await this.campaignsRepository.save(campaign);
+              return;
+            }
           }
 
           const progress = await this.checkCampaignProgressForPeriod(
@@ -522,8 +587,15 @@ export class CampaignsService {
             );
           }
 
+          let periodDurationDays = PROGRESS_PERIOD_DAYS;
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            periodDurationDays = Math.ceil(
+              dayjs(endDate).diff(startDate, 'days', true),
+            );
+          }
           const rewardPool = this.calculateRewardPool({
-            maxRewardPool: this.calculateDailyReward(campaign),
+            baseRewardPool: this.calculateDailyReward(campaign),
+            maxRewardPoolRatio: periodDurationDays,
             progressValueTarget,
             progressValue,
             fundTokenDecimals: campaign.fundTokenDecimals,
@@ -547,9 +619,15 @@ export class CampaignsService {
           }
 
           intermediateResults.results.push(intermediateResult);
-
+          const fundsToReserve = ethers.parseUnits(
+            rewardPool.toString(),
+            campaign.fundTokenDecimals,
+          );
           const storedResultsMeta =
-            await this.recordCampaignIntermediateResults(intermediateResults);
+            await this.recordCampaignIntermediateResults(
+              intermediateResults,
+              fundsToReserve,
+            );
 
           logger.info('Campaign progress recorded', {
             from: progress.from,
@@ -563,13 +641,15 @@ export class CampaignsService {
             void this.recordGeneratedVolume(campaign, intermediateResult);
           }
 
-          /**
-           * There might be situations when due to delays/failures in processing
-           * we reach campaign end date but still have periods to process,
-           * so mark campaign as pending completion only if results recorded for all periods,
-           * otherwise keep it as is to wait for all periods to be recorded.
-           */
-          if (endDate.valueOf() === campaign.endDate.valueOf()) {
+          if (escrowStatus === EscrowStatus.ToCancel) {
+            campaign.status = CampaignStatus.PENDING_CANCELLATION;
+          } else if (endDate.valueOf() === campaign.endDate.valueOf()) {
+            /**
+             * There might be situations when due to delays/failures in processing
+             * we reach campaign end date but still have periods to process,
+             * so mark campaign as pending completion only if results recorded for all periods,
+             * otherwise keep it as is to wait for all periods to be recorded.
+             */
             campaign.status = CampaignStatus.PENDING_COMPLETION;
           }
 
@@ -743,17 +823,18 @@ export class CampaignsService {
   }
 
   calculateRewardPool(input: {
-    maxRewardPool: number;
+    baseRewardPool: number;
+    maxRewardPoolRatio: number;
     progressValueTarget: number;
     progressValue: number;
     fundTokenDecimals: number;
   }): number {
     const rewardRatio = Math.min(
       input.progressValue / input.progressValueTarget,
-      1,
+      input.maxRewardPoolRatio,
     );
 
-    const rewardPool = rewardRatio * input.maxRewardPool;
+    const rewardPool = rewardRatio * input.baseRewardPool;
 
     const truncatedRewardPool = decimalUtils.truncate(
       rewardPool,
@@ -765,6 +846,7 @@ export class CampaignsService {
 
   private async recordCampaignIntermediateResults(
     intermediateResults: IntermediateResultsData,
+    fundsToReserve: bigint,
   ): Promise<{ url: string; hash: string }> {
     const chainId = intermediateResults.chain_id;
     const campaignAddress = intermediateResults.address;
@@ -788,9 +870,15 @@ export class CampaignsService {
 
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
-    await escrowClient.storeResults(campaignAddress, resultsUrl, resultsHash, {
-      gasPrice,
-    });
+    await escrowClient.storeResults(
+      campaignAddress,
+      resultsUrl,
+      resultsHash,
+      fundsToReserve,
+      {
+        gasPrice,
+      },
+    );
 
     return { url: resultsUrl, hash: resultsHash };
   }
@@ -828,19 +916,27 @@ export class CampaignsService {
     }
   }
 
-  @Cron(CAMPAIGNS_FINISH_TRACKING_SCHEDULE)
-  async trackCampaignsFinish(): Promise<void> {
-    this.logger.debug('Campaigns finish tracking job started');
+  @Cron(CAMPAIGN_STATUSES_SYNC_SCHEDULE)
+  async syncCampaignStatuses(): Promise<void> {
+    this.logger.debug('Campaign statuses sync job started');
 
     try {
-      const campaignsToTrack =
-        await this.campaignsRepository.findForFinishTracking();
+      const campaignsToSync =
+        await this.campaignsRepository.findForStatusSync();
 
-      for (const campaign of campaignsToTrack) {
+      for (const campaign of campaignsToSync) {
         const escrow = await EscrowUtils.getEscrow(
           campaign.chainId,
           campaign.address,
         );
+        if (!escrow) {
+          this.logger.error('Escrow data is missing for campaign', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          continue;
+        }
 
         if (escrow.status === EscrowStatus[EscrowStatus.Complete]) {
           this.logger.info('Marking campaign as completed', {
@@ -858,13 +954,24 @@ export class CampaignsService {
           });
           campaign.status = CampaignStatus.CANCELLED;
           await this.campaignsRepository.save(campaign);
+        } else if (
+          escrow.status === EscrowStatus[EscrowStatus.ToCancel] &&
+          campaign.status === CampaignStatus.ACTIVE
+        ) {
+          this.logger.info('Marking campaign as to_cancel', {
+            campaignId: campaign.id,
+            chainId: campaign.chainId,
+            campaignAddress: campaign.address,
+          });
+          campaign.status = CampaignStatus.TO_CANCEL;
+          await this.campaignsRepository.save(campaign);
         }
       }
     } catch (error) {
-      this.logger.error('Error while tracking campaigns finish', error);
+      this.logger.error('Error while syncing campaign statuses', error);
     }
 
-    this.logger.debug('Campaigns finish tracking job finished');
+    this.logger.debug('Campaign statuses sync job finished');
   }
 
   async checkUserJoined(
@@ -906,7 +1013,15 @@ export class CampaignsService {
     if (now < campaign.startDate) {
       throw new CampaignNotStartedError(chainId, campaignAddress);
     }
-    if (now > campaign.endDate) {
+
+    if (
+      [
+        CampaignStatus.PENDING_CANCELLATION,
+        CampaignStatus.CANCELLED,
+        CampaignStatus.COMPLETED,
+      ].includes(campaign.status) ||
+      now > campaign.endDate
+    ) {
       throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
@@ -920,11 +1035,29 @@ export class CampaignsService {
     }
 
     // Calculate start of the active timeframe (end is now)
-    const timeframesPassed = dayjs(now).diff(campaign.startDate, 'day');
+    const timeframesPassed = Math.floor(
+      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
+    );
 
     const timeframeStart = dayjs(campaign.startDate)
-      .add(timeframesPassed, 'day')
+      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
+      .add(1, 'millisecond')
       .toDate();
+
+    let timeframeEnd: Date;
+    if (campaign.status === CampaignStatus.TO_CANCEL) {
+      const cancellationRequestedAt =
+        await escrowUtils.getCancellationRequestDate(
+          campaign.chainId,
+          campaign.address,
+        );
+      if (cancellationRequestedAt <= timeframeStart) {
+        throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
+      }
+      timeframeEnd = cancellationRequestedAt;
+    } else {
+      timeframeEnd = now;
+    }
 
     /**
      * Using timeframeStart in a key to prevent situations
@@ -936,7 +1069,7 @@ export class CampaignsService {
       const progress = await this.checkCampaignProgressForPeriod(
         campaign,
         timeframeStart,
-        now,
+        timeframeEnd,
       );
 
       campaignsProgressCache.set(cacheKey, {
@@ -983,13 +1116,15 @@ export class CampaignsService {
             latestKnownCampaign.chainId,
             latestKnownCampaign.address,
           );
+          if (!campaignEscrow) {
+            throw new Error('No escrow data for latest known campaign');
+          }
           /**
            * 'createdAt' is a tx block timestamp, so technically
            * there might be multiple escrows created within the same block
-           * and we have to discover from the same timstamp value to not miss some.
+           * and we have to discover from the same timestamp value to not miss some.
            */
-          const lookbackTimestamp = Number(campaignEscrow.createdAt) * 1000;
-          lookbackDate = new Date(lookbackTimestamp);
+          lookbackDate = new Date(campaignEscrow.createdAt);
         } else {
           lookbackDate = dayjs().subtract(1, 'day').toDate();
         }
@@ -997,6 +1132,10 @@ export class CampaignsService {
         const newEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress,
+          /**
+           * We are interested only in pending escrows, because if it's in `ToCancel`
+           * status and not in RecO DB yet - it means nobody joined and no need to process it
+           */
           status: EscrowStatus.Pending,
           from: lookbackDate,
           orderDirection: OrderDirection.ASC,
