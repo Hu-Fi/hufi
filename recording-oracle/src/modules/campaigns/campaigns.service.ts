@@ -16,6 +16,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import * as debugUtils from '@/common/utils/debug';
 import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
@@ -431,7 +432,7 @@ export class CampaignsService {
         }
 
         const logger = this.logger.child({
-          action: 'record-campaign-progress',
+          action: 'recordCampaignProgress',
           campaignId: campaign.id,
           chainId: campaign.chainId,
           campaignAddress: campaign.address,
@@ -589,6 +590,17 @@ export class CampaignsService {
     startDate: Date,
     endDate: Date,
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
+    const logger = this.logger.child({
+      action: 'checkCampaignProgressForPeriod',
+      caller: debugUtils.getCaller(),
+      campaignId: campaign.id,
+      chainId: campaign.chainId,
+      campaignAddress: campaign.address,
+      exchangeName: campaign.exchangeName,
+      startDate,
+      endDate,
+    });
+
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
       {
@@ -617,12 +629,8 @@ export class CampaignsService {
            * allowing to remove api key, but let's warn ourselves
            * just in case if something unusual happens.
            */
-          this.logger.warn('Participant lacks valid api key', {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
+          logger.warn('Participant lacks valid api key', {
             participantId: participant.id,
-            exchangeName: campaign.exchangeName,
           });
           continue;
         }
@@ -640,13 +648,8 @@ export class CampaignsService {
           );
 
         if (abuseDetected) {
-          this.logger.warn('Abuse detected. Skipping participant outcome', {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
+          logger.warn('Abuse detected. Skipping participant outcome', {
             participantId: participant.id,
-            startDate,
-            endDate,
           });
           continue;
         }
@@ -657,13 +660,8 @@ export class CampaignsService {
         });
       } catch (error) {
         if (error instanceof ExchangeApiAccessError) {
-          this.logger.warn('Participant lacks necessary exchange API access', {
-            campaignId: campaign.id,
-            chainId: campaign.chainId,
-            campaignAddress: campaign.address,
+          logger.warn('Participant lacks necessary exchange API access', {
             participantId: participant.id,
-            startDate,
-            endDate,
             error,
           });
           continue;
