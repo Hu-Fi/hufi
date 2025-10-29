@@ -51,7 +51,10 @@ declare module 'ccxt' {
   };
 
   export interface Exchange {
+    has: Record<string, boolean | undefined>;
     setSandboxMode(enabled: boolean): void;
+    loadMarkets(): Promise<void>;
+    setMarketsFromExchange(sourceExchange: unknown): void;
     checkRequiredCredentials(throwError?: boolean): boolean;
     fetchBalance(): Promise<AccountBalance>;
     fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
@@ -71,7 +74,10 @@ declare module 'ccxt' {
     BadSymbol: ErrorConstructor;
     PermissionDenied: ErrorConstructor;
     NetworkError: ErrorConstructor;
-    [x: string]: new (options: { apiKey: string; secret: string }) => Exchange;
+    [x: string]: new (options: {
+      apiKey?: string;
+      secret?: string;
+    }) => Exchange;
   };
   export = ccxt;
 }
