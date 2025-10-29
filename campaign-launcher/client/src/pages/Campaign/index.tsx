@@ -48,7 +48,13 @@ const Campaign: FC = () => {
 
   return (
     <PageWrapper>
-      <PageTitle title="Campaign Data" />
+      <PageTitle title="Campaign Data">
+        <JoinCampaign
+          campaign={campaignData}
+          isAlreadyJoined={!!isAlreadyJoined}
+          isJoinedLoading={isJoinedLoading}
+        />
+      </PageTitle>
       {isCampaignLoading && (
         <CircularProgress
           sx={{ width: '40px', height: '40px', margin: '0 auto' }}
@@ -57,11 +63,6 @@ const Campaign: FC = () => {
       {showCampaignBlocks && (
         <Box display="flex" flexWrap="wrap" gap={2}>
           <CampaignInfo campaign={campaignData} />
-          <JoinCampaign
-            campaign={campaignData}
-            isAlreadyJoined={!!isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
-          />
         </Box>
       )}
       {showCampaignBlocks && (

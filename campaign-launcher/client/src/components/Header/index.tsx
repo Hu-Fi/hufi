@@ -12,7 +12,6 @@ import {
   Toolbar,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
 import Account from '@/components/Account';
@@ -21,21 +20,23 @@ import Container from '@/components/Container';
 import LaunchCampaign from '@/components/LaunchCampaign';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { ROUTES } from '@/constants';
-import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 type StyledLinkProps = {
   to: string;
   text: string;
   sx?: SxProps;
   target?: string;
+  onClick?: () => void;
 };
 
-const StyledLink = ({ to, text, sx, target }: StyledLinkProps) => {
+const StyledLink = ({ to, text, sx, target, onClick }: StyledLinkProps) => {
   return (
     <MuiLink
       to={to}
       component={Link}
       target={target}
+      onClick={onClick}
       sx={{
         textDecoration: 'none',
         color: 'primary.main',
@@ -53,8 +54,7 @@ const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { activeAddress } = useActiveAccount();
-  const { isConnected } = useAccount();
+  const { isAuthenticated } = useWeb3Auth();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -102,7 +102,7 @@ const Header: FC = () => {
             />
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" withTooltip />
-            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
+            {isAuthenticated ? <Account /> : <ConnectWallet />}
           </Box>
 
           <IconButton
@@ -148,17 +148,29 @@ const Header: FC = () => {
               >
                 <CloseIcon />
               </IconButton>
-              <StyledLink to={ROUTES.SUPPORT} text="Support" />
-              <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
+              <StyledLink
+                to={ROUTES.SUPPORT}
+                text="Support"
+                onClick={() => toggleDrawer(false)}
+              />
+              <StyledLink
+                to={ROUTES.DASHBOARD}
+                text="Dashboard"
+                onClick={() => toggleDrawer(false)}
+              />
               <StyledLink
                 to={STAKING_DASHBOARD_URL}
                 text="Stake HMT"
                 target="_blank"
+                onClick={() => toggleDrawer(false)}
               />
               <NetworkSwitcher />
-              <LaunchCampaign variant="outlined" />
-              {activeAddress && isConnected ? (
-                <Account />
+              <LaunchCampaign
+                variant="outlined"
+                onClick={() => toggleDrawer(false)}
+              />
+              {isAuthenticated ? (
+                <Account closeDrawer={() => toggleDrawer(false)} />
               ) : (
                 <ConnectWallet closeDrawer={() => toggleDrawer(false)} />
               )}

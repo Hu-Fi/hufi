@@ -8,6 +8,7 @@ import {
   useEffect,
 } from 'react';
 
+import { useSessionStorage } from 'react-use';
 import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
@@ -30,9 +31,11 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
   const { activeAddress } = useActiveAccount();
+  const [, setIsAuthorizing] = useSessionStorage('isAuthorizing', false);
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
@@ -54,8 +57,9 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       console.error('Failed to sign in', e);
     } finally {
       setIsLoading(false);
+      setIsAuthorizing(false);
     }
-  }, [activeAddress, signMessageAsync]);
+  }, [activeAddress, signMessageAsync, setIsAuthorizing]);
 
   const bootstrapAuthState = async () => {
     const access_token = tokenManager.getAccessToken();
@@ -97,12 +101,19 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (isConnected && !isAuthenticated) {
+    if (!isConnected) {
+      setIsAuthenticated(false);
+      setIsLoading(false);
+      setIsAuthorizing(false);
+      return;
+    }
+
+    if (!isAuthenticated) {
       bootstrapAuthState();
     } else {
       setIsLoading(false);
     }
-  }, [isConnected, isAuthenticated]);
+  }, [isConnected, isAuthenticated, setIsAuthorizing]);
 
   useEffect(() => {
     const handleRefreshFailureEvent = () => {
@@ -121,6 +132,21 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       );
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'ro-access-token' || event.key === 'ro-refresh-token') {
+        if (event.newValue === null) {
+          setIsAuthenticated(false);
+        } else if (tokenManager.hasTokens()) {
+          setIsAuthenticated(true);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return (

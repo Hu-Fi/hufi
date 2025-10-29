@@ -1,14 +1,17 @@
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
+import { useSessionStorage } from 'react-use';
 import { useConnect, useDisconnect, type Connector } from 'wagmi';
 
 import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 type Props = {
   closeDrawer?: () => void;
@@ -22,14 +25,23 @@ const WALLET_ICONS: Record<string, string> = {
 
 const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [isAuthorizing, setIsAuthorizing] = useSessionStorage(
+    'isAuthorizing',
+    false
+  );
 
   const { connectAsync, connectors } = useConnect();
   const { isConnecting } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
+  const { signer } = useRetrieveSigner();
+  const { signIn, isLoading } = useWeb3Auth();
+
+  const isDisabled = isLoading || isConnecting || isAuthorizing;
 
   const handleConnect = async (connector: Connector) => {
     try {
+      setIsAuthorizing(true);
       await connectAsync({ connector });
     } catch (e) {
       const err = e as { message?: string; code?: number | string };
@@ -37,15 +49,28 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
         await disconnectAsync();
         await handleConnect(connector);
       }
+      setIsAuthorizing(false);
     } finally {
       onClose();
     }
   };
 
+  useEffect(() => {
+    if (signer && isAuthorizing) {
+      signIn();
+    }
+  }, [signer, signIn, isAuthorizing]);
+
   const handleConnectWalletButtonClick = (
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
-    setAnchorEl(e.currentTarget);
+    if (isDisabled) return null;
+
+    if (signer) {
+      signIn();
+    } else {
+      setAnchorEl(e.currentTarget);
+    }
   };
 
   const onClose = () => setAnchorEl(null);
@@ -56,7 +81,7 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
         variant="contained"
         size="large"
         sx={{ color: 'primary.contrast' }}
-        disabled={isConnecting}
+        disabled={isDisabled}
         onClick={handleConnectWalletButtonClick}
       >
         Connect Wallet
