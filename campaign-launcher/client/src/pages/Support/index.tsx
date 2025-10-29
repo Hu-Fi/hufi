@@ -173,7 +173,7 @@ const Support: FC = () => {
           height="fit-content"
         >
           <VideoWrapper
-            src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
+            src="https://www.youtube.com/embed/sYbcFpGnRq4?si=PmdrxdVlUiZNXXFm"
             title="How to Launch a HuFi Campaign"
           />
         </Box>
@@ -245,7 +245,7 @@ const Support: FC = () => {
           height="fit-content"
         >
           <VideoWrapper
-            src="https://www.youtube.com/embed/sYbcFpGnRq4?si=WGaLG0lo2nSEc-x7"
+            src="https://www.youtube.com/embed/8GtwoIhxlMc?si=YEckN6oAqvYFMlTz"
             title="How to Participate in a HuFi Campaign"
           />
         </Box>
