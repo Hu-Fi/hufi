@@ -13,7 +13,6 @@ import {
   Typography,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
 import Account from '@/components/Account';
@@ -42,6 +41,7 @@ const StyledLink = ({ to, text, sx, target, onClick }: StyledLinkProps) => {
       to={to}
       component={Link}
       target={target}
+      onClick={onClick}
       sx={{
         width: { xs: 'fit-content', md: 'auto' },
         textDecoration: 'none',
@@ -143,7 +143,7 @@ const Header: FC = () => {
             />
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" withTooltip />
-            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
+            {isAuthenticated ? <Account /> : <ConnectWallet />}
           </Box>
 
           <Box display={{ xs: 'flex', md: 'none' }}>

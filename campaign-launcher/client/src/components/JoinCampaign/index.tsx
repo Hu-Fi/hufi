@@ -3,6 +3,7 @@ import { type FC, useState } from 'react';
 import CheckIcon from '@mui/icons-material/CheckCircleOutline';
 import { Button, CircularProgress } from '@mui/material';
 
+import ConnectWallet from '@/components/ConnectWallet';
 import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
 import {
   useGetEnrolledExchanges,
@@ -24,6 +25,7 @@ const JoinCampaign: FC<Props> = ({
   isJoinedLoading,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
@@ -48,7 +50,7 @@ const JoinCampaign: FC<Props> = ({
   };
 
   const handleButtonClick = () => {
-    if (isButtonDisabled) {
+    if (isButtonDisabled || !campaign) {
       return;
     }
 
@@ -62,6 +64,30 @@ const JoinCampaign: FC<Props> = ({
 
     joinCampaign({ chainId: campaign.chain_id, address: campaign.address });
   };
+
+  if (!campaign || isCampaignFinished) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    if (isMobile) {
+      return (
+        <Box
+          display="flex"
+          alignItems="center"
+          width="100%"
+          sx={{ '& > button': { width: '100%' } }}
+        >
+          <ConnectWallet />
+        </Box>
+      );
+    }
+    return (
+      <Button variant="contained" size="large" disabled sx={{ ml: 'auto' }}>
+        Connect Wallet to Join Campaign
+      </Button>
+    );
+  }
 
   return (
     <>

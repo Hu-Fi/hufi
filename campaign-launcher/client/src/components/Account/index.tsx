@@ -1,14 +1,10 @@
 import { type FC, useState } from 'react';
 
-import LoginIcon from '@mui/icons-material/Login';
-import LogoutIcon from '@mui/icons-material/Logout';
 import {
   Button,
   List,
-  ListItem,
   ListItemButton,
   Popover,
-  Stack,
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -43,12 +39,11 @@ const buttonSx = {
   },
 };
 
-const Account: FC = () => {
+const Account: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
-  const { signIn, logout, isAuthenticated } = useWeb3Auth();
-  const { signer } = useRetrieveSigner();
+  const { logout, isAuthenticated } = useWeb3Auth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -57,19 +52,12 @@ const Account: FC = () => {
   const handleClosePopover = () => setAnchorEl(null);
 
   const handleGoToManageApiKeys = () => {
+    closeDrawer?.();
     navigate('/manage-api-keys');
-  };
-
-  const handleSignIn = () => {
-    signIn();
   };
 
   const handleDisconnect = () => {
     disconnect();
-  };
-
-  const handleLogout = () => {
-    handleDisconnect();
     logout();
   };
 
@@ -189,9 +177,9 @@ const Account: FC = () => {
             </ListItemButton>
           )}
           {isAuthenticated && (
-            <ListItemButton sx={buttonSx} onClick={handleLogout}>
-              <LogoutIcon />
-              Log Out
+            <ListItemButton sx={buttonSx} onClick={handleDisconnect}>
+              <PowerIcon />
+              Disconnect wallet
             </ListItemButton>
           )}
         </List>
