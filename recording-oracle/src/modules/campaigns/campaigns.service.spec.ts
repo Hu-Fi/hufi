@@ -1198,6 +1198,32 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should run with correct child logger', async () => {
+      const spyOnLoggerChild = jest.spyOn(logger, 'child');
+
+      try {
+        await campaignsService.checkCampaignProgressForPeriod(
+          campaign,
+          periodStart,
+          periodEnd,
+        );
+
+        expect(logger.child).toHaveBeenCalledTimes(1);
+        expect(logger.child).toHaveBeenCalledWith({
+          action: 'checkCampaignProgressForPeriod',
+          caller: 'Object.<anonymous>',
+          campaignId: campaign.id,
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
+          exchangeName: campaign.exchangeName,
+          startDate: periodStart,
+          endDate: periodEnd,
+        });
+      } finally {
+        spyOnLoggerChild.mockRestore();
+      }
+    });
+
     it('should return results in correct format', async () => {
       const participant = generateCampaignParticipant(campaign);
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1299,12 +1325,7 @@ describe('CampaignsService', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         'Abuse detected. Skipping participant outcome',
         {
-          campaignId: campaign.id,
-          chainId: campaign.chainId,
-          campaignAddress: campaign.address,
           participantId: abuseParticipant.id,
-          startDate: periodStart,
-          endDate: periodEnd,
         },
       );
     });
@@ -1360,11 +1381,7 @@ describe('CampaignsService', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         'Participant lacks valid api key',
         {
-          campaignId: campaign.id,
-          chainId: campaign.chainId,
-          campaignAddress: campaign.address,
           participantId: noApiKeyParticipant.id,
-          exchangeName: campaign.exchangeName,
         },
       );
     });
@@ -1414,12 +1431,7 @@ describe('CampaignsService', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         'Participant lacks necessary exchange API access',
         {
-          campaignId: campaign.id,
-          chainId: campaign.chainId,
-          campaignAddress: campaign.address,
           participantId: noAccessParticipant.id,
-          startDate: periodStart,
-          endDate: periodEnd,
           error: syntheticError,
         },
       );
@@ -1540,7 +1552,7 @@ describe('CampaignsService', () => {
 
         expect(logger.child).toHaveBeenCalledTimes(1);
         expect(logger.child).toHaveBeenCalledWith({
-          action: 'record-campaign-progress',
+          action: 'recordCampaignProgress',
           campaignId: campaign.id,
           chainId: campaign.chainId,
           campaignAddress: campaign.address,

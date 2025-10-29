@@ -13,6 +13,7 @@ type InitOptions = {
   apiKey: string;
   secret: string;
   sandbox?: boolean;
+  preloadedExchangeClient?: Exchange;
 };
 
 export function mapCcxtOrder(order: CcxtOrder): Order {
@@ -95,7 +96,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
   constructor(
     readonly exchangeName: string,
-    { apiKey, secret, sandbox }: InitOptions,
+    { apiKey, secret, sandbox, preloadedExchangeClient }: InitOptions,
   ) {
     if (!(exchangeName in ccxt)) {
       throw new Error(`Exchange not supported: ${exchangeName}`);
@@ -103,6 +104,9 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
     const exchangeClass = ccxt[exchangeName];
     this.ccxtClient = new exchangeClass({ apiKey, secret });
+    if (preloadedExchangeClient) {
+      this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
+    }
 
     this.sandbox = Boolean(sandbox);
     if (this.sandbox) {
