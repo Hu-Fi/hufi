@@ -77,6 +77,13 @@ const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
         symbol: data.symbol,
         daily_balance_target: data.daily_balance_target,
       };
+    case CampaignType.THRESHOLD:
+      return {
+        ...baseManifest,
+        type: data.type,
+        symbol: data.symbol,
+        minimum_balance_target: data.minimum_balance_target,
+      };
     default: {
       const _never: never = data;
       return _never;

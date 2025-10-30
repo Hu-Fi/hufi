@@ -5,6 +5,7 @@ import * as httpUtils from '@/common/utils/http';
 import type {
   CampaignManifest,
   HoldingCampaignManifest,
+  ThresholdCampaignManifest,
   MarketMakingCampaignManifest,
 } from './types';
 import { CampaignType } from './types';
@@ -19,6 +20,12 @@ export function isHoldingManifest(
   manifest: CampaignManifest,
 ): manifest is HoldingCampaignManifest {
   return manifest.type === CampaignType.HOLDING;
+}
+
+export function isThresholdManifest(
+  manifest: CampaignManifest,
+): manifest is ThresholdCampaignManifest {
+  return manifest.type === CampaignType.THRESHOLD;
 }
 
 const marketMakingManifestSchema = Joi.object({
@@ -36,6 +43,17 @@ const holdingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.HOLDING).required(),
   exchange: Joi.string().required(),
   daily_balance_target: Joi.number().greater(0).required(),
+  symbol: Joi.string()
+    .pattern(/^[\dA-Z]{3,10}$/)
+    .required(),
+  start_date: Joi.date().iso().required(),
+  end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
+}).options({ allowUnknown: true, stripUnknown: true });
+
+const thresholdManifestSchema = Joi.object({
+  type: Joi.string().valid(CampaignType.THRESHOLD).required(),
+  exchange: Joi.string().required(),
+  minimum_balance_target: Joi.number().greater(0).required(),
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
@@ -66,6 +84,9 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
         break;
       case CampaignType.HOLDING:
         manifestSchema = holdingManifestSchema;
+        break;
+      case CampaignType.THRESHOLD:
+        manifestSchema = thresholdManifestSchema;
         break;
       default:
         throw new Error('Unsupported campaign type');

@@ -253,10 +253,10 @@ describe('MarketMakingProgressChecker', () => {
   describe('abuse detection', () => {
     let spyOnCalculateTradeScore: jest.SpyInstance;
 
-    const checkerSetup = generateMarketMakingCheckerSetup();
+    const progressCheckerSetup = generateMarketMakingCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
-      checkerSetup,
+      progressCheckerSetup,
     );
 
     beforeAll(() => {
@@ -292,7 +292,7 @@ describe('MarketMakingProgressChecker', () => {
            * Last trade is out of configured period,
            * so no more pages fetched for the first participant
            */
-          timestamp: checkerSetup.periodEnd.valueOf(),
+          timestamp: progressCheckerSetup.periodEnd.valueOf(),
         }),
       ]);
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
@@ -302,7 +302,7 @@ describe('MarketMakingProgressChecker', () => {
 
       const normalResult = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
-        checkerSetup.periodStart,
+        progressCheckerSetup.periodStart,
       );
       expect(normalResult.abuseDetected).toBe(false);
       expect(normalResult.score).toBeGreaterThan(0);
@@ -310,7 +310,7 @@ describe('MarketMakingProgressChecker', () => {
 
       const abuseResult = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
-        checkerSetup.periodStart,
+        progressCheckerSetup.periodStart,
       );
       expect(abuseResult.abuseDetected).toBe(true);
       expect(abuseResult.score).toBe(0);
@@ -330,7 +330,7 @@ describe('MarketMakingProgressChecker', () => {
 
       const result = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
-        checkerSetup.periodStart,
+        progressCheckerSetup.periodStart,
       );
       expect(result.abuseDetected).toBe(true);
 
@@ -342,7 +342,7 @@ describe('MarketMakingProgressChecker', () => {
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(trades);
       await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
-        checkerSetup.periodStart,
+        progressCheckerSetup.periodStart,
       );
 
       expect(resultsChecker.tradeSamples.size).toBe(5);
@@ -363,7 +363,7 @@ describe('MarketMakingProgressChecker', () => {
 
       const result = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
-        checkerSetup.periodStart,
+        progressCheckerSetup.periodStart,
       );
 
       expect(result.abuseDetected).toBe(false);
