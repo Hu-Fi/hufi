@@ -41,8 +41,9 @@ const Prerequisites = () => {
             }}
           />
           <Typography variant="body2">
-            To launch a campaign, you must stake HMT using your wallet on the
-            same network.
+            In order to be able to launch a new campaign, you need to stake HMT
+            using your wallet in the same network you want to create a campaign
+            in.
           </Typography>
           <Typography variant="body2" mt={2} fontWeight={700}>
             You can do that by either:
@@ -87,7 +88,7 @@ const Prerequisites = () => {
           }}
         >
           <ListItemText
-            primary="Wallet balance"
+            primary="Sufficient balance in your wallet to"
             slotProps={{
               primary: {
                 variant: 'body2',
@@ -98,9 +99,6 @@ const Prerequisites = () => {
               },
             }}
           />
-          <Typography variant="body2" fontWeight={700}>
-            Ensure you have enough to cover
-          </Typography>
           <List
             component="ul"
             sx={{
@@ -112,13 +110,13 @@ const Prerequisites = () => {
           >
             <ListItem sx={listItemWithMarkerProps}>
               <ListItemText
-                primary="Gas fees (for campaign/escrow creation)"
+                primary="Pay gas fees for creating a new campaign (escrow)"
                 slotProps={listItemTextProps}
               />
             </ListItem>
             <ListItem sx={listItemWithMarkerProps}>
               <ListItemText
-                primary="Campaign funding in HMT or USDT (reward pool)"
+                primary="Funding a campaign with either HMT or USDT (reward pool for participants)"
                 slotProps={listItemTextProps}
               />
             </ListItem>
