@@ -7,16 +7,19 @@ import AddApiKeyModal from '@/components/modals/AddApiKeyModal';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
 import { useGetExchangesWithApiKeys } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 const ManageApiKeysPage: FC = () => {
   const [addApiKeyModalOpen, setAddApiKeyModalOpen] = useState(false);
+
   const { data: apiKeysData } = useGetExchangesWithApiKeys();
+  const isMobile = useIsMobile();
 
   return (
     <PageWrapper>
       <PageTitle title="Manage API Keys">
         <Button
-          size="large"
+          size={isMobile ? 'medium' : 'large'}
           variant="contained"
           sx={{ ml: 'auto' }}
           onClick={() => setAddApiKeyModalOpen(true)}
