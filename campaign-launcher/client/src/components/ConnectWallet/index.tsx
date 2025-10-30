@@ -54,8 +54,8 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
     <>
       <Button
         variant="contained"
-        size="large"
-        sx={{ color: 'primary.contrast' }}
+        size={isMobile ? 'small' : 'large'}
+        sx={{ color: 'primary.contrast', height: isMobile ? '30px' : '42px' }}
         disabled={isConnecting}
         onClick={handleConnectWalletButtonClick}
       >

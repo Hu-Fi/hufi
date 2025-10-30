@@ -34,8 +34,19 @@ const DashboardStats: FC = () => {
   const { data: campaignsStats, isLoading } = useGetCampaignsStats();
 
   return (
-    <Box component="section" display="flex" flexWrap="wrap">
-      <Grid container spacing={2} justifyContent="center" width="100%">
+    <Box
+      component="section"
+      display="flex"
+      flexWrap="wrap"
+      mt={{ xs: -1, md: 0 }}
+      mb={{ xs: 2, md: 0 }}
+    >
+      <Grid
+        container
+        spacing={{ xs: 1, md: 2 }}
+        justifyContent="center"
+        width="100%"
+      >
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>

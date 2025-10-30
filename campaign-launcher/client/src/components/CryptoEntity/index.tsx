@@ -7,7 +7,7 @@ import { getTokenInfo } from '@/utils';
 
 type Props = {
   symbol: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'small' | 'medium' | 'large';
 };
 
 const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
