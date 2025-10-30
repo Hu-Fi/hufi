@@ -165,6 +165,7 @@ const Header: FC = () => {
               target="_blank"
               onClick={() => setIsMenuOpen(false)}
             />
+            <NetworkSwitcher />
             <Box
               display="flex"
               alignItems="center"

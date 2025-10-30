@@ -11,7 +11,7 @@ import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import UserProgressWidget from '@/components/UserProgressWidget';
-import { useIsXlDesktop } from '@/hooks/useBreakpoints';
+import { useIsXlDesktop, useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, CampaignType, type CampaignDetails } from '@/types';
@@ -39,22 +39,26 @@ const StatsCard = styled(Box)(({ theme }) => ({
     height: 'unset',
     minHeight: '125px',
     justifyContent: 'space-between',
-    padding: '16px 24px 24px',
+    padding: '16px',
   },
 
-  [theme.breakpoints.only('md')]: {
+  [theme.breakpoints.down('md')]: {
     height: 'unset',
     minHeight: '125px',
-    padding: '12px',
   },
 }));
 
 const Title = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.primary,
   marginBottom: '56px',
+  textTransform: 'capitalize',
 
   [theme.breakpoints.down('xl')]: {
     marginBottom: '16px',
+  },
+
+  [theme.breakpoints.down('md')]: {
+    marginBottom: 'auto',
   },
 }));
 
@@ -67,14 +71,8 @@ const FlexGrid = styled(Box)(({ theme }) => ({
     flexBasis: 'calc(50% - 8px)',
   },
 
-  [theme.breakpoints.only('md')]: {
-    gap: '8px',
-  },
-
   [theme.breakpoints.down('md')]: {
-    '& > *': {
-      flexBasis: '100%',
-    },
+    gap: '8px',
   },
 }));
 
@@ -96,7 +94,7 @@ const FirstRowWrapper: FC<
   return (
     <>
       {Children.map(children, (child) => (
-        <Grid size={{ xs: 12, md: 3 }}>{child}</Grid>
+        <Grid size={{ xs: 6, md: 3 }}>{child}</Grid>
       ))}
     </>
   );
@@ -128,9 +126,26 @@ const getDailyTargetValue = (campaign: CampaignDetails) => {
   }
 };
 
+const renderProgressWidget = (campaign: CampaignDetails) => (
+  <Grid size={{ xs: 12, md: 6 }}>
+    <Box
+      display="flex"
+      py={2}
+      px={3}
+      bgcolor="background.default"
+      borderRadius="16px"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      height="100%"
+    >
+      <UserProgressWidget campaign={campaign} />
+    </Box>
+  </Grid>
+);
+
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
+  const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
 
   if (!campaign) return null;
@@ -175,28 +190,44 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   return (
     <>
       <Grid container spacing={2} width="100%">
+        {showProgressWidget && isMobile && renderProgressWidget(campaign)}
         <FirstRowWrapper showProgressWidget={showProgressWidget}>
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography
+              variant={isMobile ? 'h6-mobile' : 'h5'}
+              color="primary.violet"
+              fontWeight={700}
+              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
+            >
               {formattedTokenAmount} {campaign.fund_token_symbol}
             </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography
+              variant={isMobile ? 'h6-mobile' : 'h5'}
+              color="primary.violet"
+              fontWeight={700}
+              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
+            >
               {formattedAmountPaid} {campaign.fund_token_symbol}
             </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Oracle fees</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography
+              variant={isMobile ? 'h6-mobile' : 'h5'}
+              color="primary.violet"
+              fontWeight={700}
+              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
+            >
               <FormattedNumber
                 value={(formattedTokenAmount * totalFee) / 100}
               />{' '}
               {campaign.fund_token_symbol}{' '}
               <Typography
-                variant="h6"
+                variant={isMobile ? 'body1' : 'h6'}
                 fontWeight={700}
                 component="span"
                 color="rgba(255, 255, 255, 0.18)"
@@ -209,7 +240,12 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             <Title variant="subtitle2">
               {getDailyTargetCardLabel(campaign.type)}
             </Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography
+              variant={isMobile ? 'h6-mobile' : 'h5'}
+              color="primary.violet"
+              fontWeight={700}
+              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
+            >
               <FormattedNumber
                 value={getDailyTargetValue(campaign)}
                 decimals={3}
@@ -218,24 +254,10 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             </Typography>
           </StatsCard>
         </FirstRowWrapper>
-        {showProgressWidget && (
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Box
-              display="flex"
-              py={2}
-              px={3}
-              bgcolor="background.default"
-              borderRadius="16px"
-              border="1px solid rgba(255, 255, 255, 0.1)"
-              height="100%"
-            >
-              <UserProgressWidget campaign={campaign} />
-            </Box>
-          </Grid>
-        )}
+        {showProgressWidget && !isMobile && renderProgressWidget(campaign)}
       </Grid>
-      <Grid container spacing={2} width="100%" mt={-2}>
-        <Grid size={{ xs: 12, md: 3 }}>
+      <Grid container spacing={{ xs: 1, md: 2 }} width="100%" mt={-2}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Reserved funds</Title>
             <Typography variant="h5" color="primary.violet" fontWeight={700}>
@@ -250,6 +272,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
               display="flex"
               alignItems="center"
               justifyContent="space-between"
+              gap={1}
             >
               Campaign results
               <CustomTooltip title={<StatusTooltip />} arrow placement="top">
@@ -263,7 +286,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             />
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Exchange</Title>
             <Typography variant={isXl ? 'h4' : 'h6-mobile'}>

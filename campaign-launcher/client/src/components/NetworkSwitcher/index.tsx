@@ -4,6 +4,7 @@ import type { ChainId } from '@human-protocol/sdk';
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
 import { useConfig } from 'wagmi';
 
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { ChevronIcon } from '@/icons';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { getChainIcon, getSupportedChainIds } from '@/utils';
@@ -15,6 +16,8 @@ const NetworkSwitcher: FC = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const isMobile = useIsMobile();
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -44,14 +47,16 @@ const NetworkSwitcher: FC = () => {
           />
         }
         sx={{
-          bgcolor: 'background.default',
-          py: 1,
-          px: 1,
-          height: '42px',
+          bgcolor: { xs: 'transparent', md: 'background.default' },
+          p: { xs: 0, md: 1 },
+          height: { xs: '30px', md: '42px' },
           textTransform: 'none',
+          gap: { xs: 1, md: 0 },
+          width: { xs: 'fit-content', md: 'auto' },
         }}
       >
         {getChainIcon(appChainId)}
+        {isMobile ? chains.find((c) => c.id === appChainId)?.name : ''}
       </Button>
 
       <Menu
