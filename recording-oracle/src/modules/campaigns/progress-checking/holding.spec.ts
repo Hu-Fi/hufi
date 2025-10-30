@@ -128,7 +128,8 @@ describe('HoldingProgressChecker', () => {
       const mockedAccountBalance = generateAccountBalance([
         progressCheckerSetup.symbol,
       ]);
-      const expectedBalance = mockedAccountBalance.total[progressCheckerSetup.symbol];
+      const expectedBalance =
+        mockedAccountBalance.total[progressCheckerSetup.symbol];
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
         mockedAccountBalance,
       );
