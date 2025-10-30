@@ -127,11 +127,8 @@ describe('HoldingProgressChecker', () => {
       );
       resultsChecker.ethDepositAddresses.add(abuseAddrress);
 
-      const mockedAccountBalance = generateAccountBalance([
-        progressCheckerSetup.symbol,
-      ]);
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
-        mockedAccountBalance,
+        generateAccountBalance([progressCheckerSetup.symbol]),
       );
       const abuseResult = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
