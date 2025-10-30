@@ -13,7 +13,7 @@ const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
         flexDirection: 'column',
         borderRadius: { xs: '0px', md: '20px' },
         bgcolor: 'background.default',
-        minHeight: 'calc(100vh - 216px)',
+        minHeight: 'calc(100vh - 226px)',
         gap: { xs: 3, md: 4, xl: 7 },
       }}
     >

@@ -1,4 +1,4 @@
-import type { FC, PropsWithChildren } from 'react';
+import { type FC, type PropsWithChildren, type ReactNode } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { JobsIcon } from '@/icons';
 
 type Props = {
-  title: string;
+  title: ReactNode | string;
 };
 
 const PageTitle: FC<PropsWithChildren<Props>> = ({ title, children }) => {
