@@ -57,8 +57,8 @@ describe('ThresholdProgressChecker', () => {
 
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
         generateAccountBalance([
-          faker.finance.ethereumAddress(),
-          faker.finance.ethereumAddress(),
+          faker.finance.currencyCode(),
+          faker.finance.currencyCode(),
         ]),
       );
     });
@@ -126,32 +126,18 @@ describe('ThresholdProgressChecker', () => {
     });
 
     it('should return zeros if abuse detected', async () => {
-      mockedExchangeApiClient.fetchDepositAddress.mockResolvedValue(
-        faker.finance.ethereumAddress(),
+      const abuseAddrress = faker.finance.ethereumAddress();
+      mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
+        abuseAddrress,
       );
+      resultsChecker.ethDepositAddresses.add(abuseAddrress);
 
       const mockedAccountBalance = generateAccountBalance([
         progressCheckerSetup.symbol,
       ]);
-      const expectedBalance =
-        mockedAccountBalance.total[progressCheckerSetup.symbol];
-      const expectedScore =
-        mockedAccountBalance.total[progressCheckerSetup.symbol] >=
-        (progressCheckerSetup.minimumBalanceTarget as number)
-          ? 1
-          : 0;
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
         mockedAccountBalance,
       );
-
-      const normalResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-      );
-
-      expect(normalResult.abuseDetected).toBe(false);
-      expect(normalResult.score).toBe(expectedScore);
-      expect(normalResult.token_balance).toBe(expectedBalance);
-
       const abuseResult = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
       );
