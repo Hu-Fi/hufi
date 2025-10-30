@@ -2,7 +2,12 @@ import { type FC, type MouseEvent, useEffect, useRef, useState } from 'react';
 
 import type { ChainId } from '@human-protocol/sdk';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { IconButton, Tooltip, Typography } from '@mui/material';
+import {
+  IconButton,
+  Tooltip,
+  Typography,
+  type TypographyProps,
+} from '@mui/material';
 
 import { OpenInNewIcon } from '@/icons';
 import { formatAddress, getExplorerUrl } from '@/utils';
@@ -11,6 +16,7 @@ type Props = {
   address: string;
   chainId: ChainId;
   withCopy?: boolean;
+  variant?: TypographyProps['variant'];
 };
 
 const iconButtonSx = {
@@ -29,7 +35,12 @@ const handleOpenInExplorerClick = (
   window.open(explorerUrl, '_blank');
 };
 
-const CampaignAddress: FC<Props> = ({ address, chainId, withCopy = false }) => {
+const CampaignAddress: FC<Props> = ({
+  address,
+  chainId,
+  withCopy = false,
+  variant = 'subtitle2',
+}) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -58,7 +69,7 @@ const CampaignAddress: FC<Props> = ({ address, chainId, withCopy = false }) => {
   };
 
   return (
-    <Typography variant="subtitle2" display="flex" alignItems="center" gap={1}>
+    <Typography variant={variant} display="flex" alignItems="center" gap={1}>
       {formatAddress(address)}
       {withCopy && (
         <IconButton

@@ -8,7 +8,7 @@ const Container: FC<PropsWithChildren<ContainerProps>> = ({ sx, children }) => {
       maxWidth={false}
       sx={{
         width: '100%',
-        px: { xs: 2, sm: 3, md: 4, lg: 5, xl: 6, xxl: 7 },
+        px: { xs: 0, sm: 0, md: 4, lg: 5, xl: 6, xxl: 7 },
         ...sx,
       }}
     >
