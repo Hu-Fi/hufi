@@ -613,6 +613,7 @@ export class CampaignsService {
         symbol: campaign.symbol,
         periodStart: startDate,
         periodEnd: endDate,
+        ...campaign.details,
       },
     );
 

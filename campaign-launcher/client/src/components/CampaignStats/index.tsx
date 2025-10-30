@@ -111,6 +111,8 @@ const getDailyTargetCardLabel = (campaignType: CampaignType) => {
       return 'Daily volume target';
     case CampaignType.HOLDING:
       return 'Daily balance target';
+    case CampaignType.THRESHOLD:
+      return 'Minumum balance target';
     default:
       return campaignType as never;
   }
@@ -122,6 +124,8 @@ const getDailyTargetValue = (campaign: CampaignDetails) => {
       return campaign.details.daily_volume_target;
     case CampaignType.HOLDING:
       return campaign.details.daily_balance_target;
+    case CampaignType.THRESHOLD:
+      return campaign.details.minimum_balance_target;
     default:
       return 0;
   }
