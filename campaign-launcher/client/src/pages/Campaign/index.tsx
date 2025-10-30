@@ -54,7 +54,12 @@ const Campaign: FC = () => {
         />
       )}
       {!!campaignData && (
-        <Box display="flex" flexWrap="wrap" gap={2}>
+        <Box
+          display="flex"
+          alignItems="flex-start"
+          flexDirection={{ xs: 'column', md: 'row' }}
+          gap={2}
+        >
           <CampaignInfo campaign={campaignData} />
           <JoinCampaign
             campaign={campaignData}

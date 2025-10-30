@@ -61,7 +61,7 @@ const JoinedCampaigns: FC<Props> = ({
           {showViewAll && data?.has_more && (
             <Button
               variant="contained"
-              sx={{ width: 'fit-content' }}
+              sx={{ width: { xs: '100%', sm: 'fit-content' } }}
               onClick={onViewAllClick}
             >
               View All

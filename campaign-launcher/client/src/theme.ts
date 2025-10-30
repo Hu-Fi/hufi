@@ -152,6 +152,12 @@ const createAppTheme = (mode: PaletteMode) => {
         lineHeight: '150%',
         letterSpacing: '0.15px',
       },
+      body2: {
+        fontSize: '0.875rem',
+        fontWeight: 400,
+        lineHeight: '20px',
+        letterSpacing: '0.17px',
+      },
       subtitle2: {
         fontSize: '0.875rem',
         fontWeight: 600,
