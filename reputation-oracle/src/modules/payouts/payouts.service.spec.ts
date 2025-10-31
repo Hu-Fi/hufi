@@ -6,13 +6,19 @@ import crypto from 'crypto';
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
-import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
+import {
+  EscrowClient,
+  EscrowStatus,
+  EscrowUtils,
+  type IEscrow,
+} from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ContentType } from '@/common/enums';
+import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { StorageService } from '@/modules/storage';
@@ -33,7 +39,11 @@ import {
 import precisionSensitiveResult from './fixtures/precision_sensitive_result.json';
 import { PayoutsService } from './payouts.service';
 import * as payoutsUtils from './payouts.utils';
-import { CampaignWithResults, IntermediateResult } from './types';
+import {
+  BaseCampaignManifest,
+  CampaignWithResults,
+  IntermediateResult,
+} from './types';
 
 const mockStorageService = createMock<StorageService>();
 const mockWeb3Service = createMock<Web3Service>();
@@ -93,7 +103,11 @@ describe('PayoutsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId,
         reputationOracle: mockWeb3ConfigService.operatorAddress,
-        status: [EscrowStatus.Pending, EscrowStatus.Partial],
+        status: [
+          EscrowStatus.Pending,
+          EscrowStatus.Partial,
+          EscrowStatus.ToCancel,
+        ],
         first: 100,
       });
     });
@@ -108,9 +122,11 @@ describe('PayoutsService', () => {
       expect(campaigns[0]).toEqual({
         chainId: expectedEscrow.chainId,
         address: expectedEscrow.address,
+        status: expectedEscrow.status,
         manifest: expectedEscrow.manifest,
         manifestHash: expectedEscrow.manifestHash,
         intermediateResultsUrl: expectedEscrow.intermediateResultsUrl,
+        intermediateResultsHash: expectedEscrow.intermediateResultsHash,
         fundTokenAddress: expectedEscrow.token,
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
         fundAmount: Number(
@@ -123,18 +139,41 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should skip escrows w/o intermediate results', async () => {
-      const expectedEscrow = generateEscrow();
+    it('should return only "ToCancel" escrows w/o intermediate results', async () => {
+      const fullEscrow = generateEscrow();
+      const noResultsPendingEscrow: IEscrow = Object.assign(generateEscrow(), {
+        intermediateResultsUrl: null,
+        intermediateResultsHash: null,
+      });
+      const noResultsToCancelEscrow: IEscrow = Object.assign(generateEscrow(), {
+        status: EscrowStatus[EscrowStatus.ToCancel],
+        intermediateResultsUrl: null,
+        intermediateResultsHash: null,
+      });
 
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([
-        expectedEscrow,
-        Object.assign(generateEscrow(), { intermediateResultsUrl: '' }),
+        fullEscrow,
+        noResultsPendingEscrow,
+        noResultsToCancelEscrow,
       ]);
 
       const campaigns = await payoutsService['getCampaignsForPayouts'](chainId);
 
-      expect(campaigns.length).toBe(1);
-      expect(campaigns[0].address).toEqual(expectedEscrow.address);
+      expect(campaigns.length).toBe(2);
+      expect(campaigns).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            address: fullEscrow.address,
+            intermediateResultsUrl: fullEscrow.intermediateResultsUrl,
+            intermediateResultsHash: fullEscrow.intermediateResultsHash,
+          }),
+          expect.objectContaining({
+            address: noResultsToCancelEscrow.address,
+            intermediateResultsUrl: null,
+            intermediateResultsHash: null,
+          }),
+        ]),
+      );
     });
   });
 
@@ -253,6 +292,11 @@ describe('PayoutsService', () => {
     });
 
     it('should calculate rewards for all participants in batches', () => {
+      /**
+       * In this test we have to use good numbers in order to avoid
+       * flaky results because of floating point precision
+       * in this particular test; we have a seprate test for precision
+       */
       const intermediateResult = generateIntermediateResult();
 
       const nBatches = faker.number.int({ min: 2, max: 4 });
@@ -261,16 +305,13 @@ describe('PayoutsService', () => {
       for (let i = 0; i < nBatches; i += 1) {
         const batch = {
           id: faker.string.uuid(),
-          results: Array.from(
-            { length: faker.number.int({ min: 1, max: 3 }) },
-            () => {
-              const outcome = generateParticipantOutcome({ score: 1 });
+          results: Array.from({ length: 2 }, () => {
+            const outcome = generateParticipantOutcome({ score: 1 });
 
-              participantAddressesSet.add(outcome.address);
+            participantAddressesSet.add(outcome.address);
 
-              return outcome;
-            },
-          ),
+            return outcome;
+          }),
         };
 
         intermediateResult.participants_outcomes_batches.push(batch);
@@ -278,7 +319,7 @@ describe('PayoutsService', () => {
         totalParticipants += batch.results.length;
       }
 
-      const equalReward = faker.number.int({ min: 15, max: 42 });
+      const equalReward = 10;
       intermediateResult.reserved_funds = totalParticipants * equalReward;
 
       const rewardsBatches = payoutsService[
@@ -332,7 +373,7 @@ describe('PayoutsService', () => {
 
   describe('runPayoutsCycleForCampaign', () => {
     const mockedCampaign = generateCampaign();
-    const mockedGasPrice = faker.number.bigInt();
+    const mockedGasPrice = faker.number.bigInt({ min: 1 });
     const mockedParticipantAddress = faker.finance.ethereumAddress();
     const mockedParticipantsOutcomesBatch = {
       id: faker.string.uuid(),
@@ -353,14 +394,17 @@ describe('PayoutsService', () => {
     let spyOnUploadFinalResults: jest.SpyInstance;
     let spyOnGetBulkPayoutsCount: jest.SpyInstance;
     let spyOnWriteRewardsBatchToFile: jest.SpyInstance;
+    let spyOnGetCancellationRequestDate: jest.SpyInstance;
 
     const mockedGetEscrowBalance = jest.fn();
+    const mockedGetEscrowReservedFunds = jest.fn();
     const mockedGetEscrowStatus = jest.fn();
     const mockedBulkPayOut = jest.fn();
     const mockedCompleteEscrow = jest.fn();
+    const mockedCancelEscrow = jest.fn();
 
     let mockedIntermediateResult: IntermediateResult;
-    let mockedEscrowBalance: bigint;
+    let mockedEscrowReservedFunds: bigint;
 
     beforeAll(() => {
       spyOnRetrieveCampaignManifest = jest.spyOn(
@@ -392,6 +436,12 @@ describe('PayoutsService', () => {
         'writeRewardsBatchToFile',
       );
       spyOnWriteRewardsBatchToFile.mockImplementation();
+
+      spyOnGetCancellationRequestDate = jest.spyOn(
+        escrowUtils,
+        'getCancellationRequestDate',
+      );
+      spyOnGetCancellationRequestDate.mockImplementation();
     });
 
     afterAll(() => {
@@ -400,17 +450,24 @@ describe('PayoutsService', () => {
       spyOnUploadFinalResults.mockRestore();
       spyOnGetBulkPayoutsCount.mockRestore();
       spyOnWriteRewardsBatchToFile.mockRestore();
+      spyOnGetCancellationRequestDate.mockRestore();
     });
 
     beforeEach(() => {
       mockedEscrowClient.build.mockResolvedValue({
         getBalance: mockedGetEscrowBalance,
         getStatus: mockedGetEscrowStatus,
+        getReservedFunds: mockedGetEscrowReservedFunds,
         bulkPayOut: mockedBulkPayOut,
         complete: mockedCompleteEscrow,
+        cancel: mockedCancelEscrow,
       } as unknown as EscrowClient);
 
       mockWeb3Service.calculateGasPrice.mockResolvedValue(mockedGasPrice);
+
+      mockedGetEscrowStatus.mockResolvedValueOnce(
+        EscrowStatus[mockedCampaign.status as unknown as EscrowStatus],
+      );
 
       spyOnRetrieveCampaignManifest.mockResolvedValueOnce(mockedManifest);
 
@@ -425,16 +482,11 @@ describe('PayoutsService', () => {
         intermediateResultsData,
       );
 
-      mockedEscrowBalance = ethers.parseUnits(
-        faker.number
-          .int({
-            min: mockedReservedFunds + 1,
-            max: mockedReservedFunds * 2,
-          })
-          .toString(),
+      mockedEscrowReservedFunds = ethers.parseUnits(
+        mockedReservedFunds.toString(),
         mockedCampaign.fundTokenDecimals,
       );
-      mockedGetEscrowBalance.mockResolvedValue(mockedEscrowBalance);
+      mockedGetEscrowReservedFunds.mockResolvedValue(mockedEscrowReservedFunds);
 
       spyOnGetBulkPayoutsCount.mockResolvedValueOnce(0);
 
@@ -442,6 +494,85 @@ describe('PayoutsService', () => {
         url: mockedFinalResultsUrl,
         hash: mockedFinalResultsHash,
       });
+    });
+
+    it('should skip when campaign status mismatch', async () => {
+      const testEscrowStatus = EscrowStatus.ToCancel;
+      mockedGetEscrowStatus.mockReset().mockResolvedValueOnce(testEscrowStatus);
+      const testCampaignStatus = EscrowStatus[EscrowStatus.Partial];
+
+      await payoutsService.runPayoutsCycleForCampaign(
+        Object.assign({}, mockedCampaign, {
+          status: testCampaignStatus,
+        }),
+      );
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Campaign status mismatch, avoiding payouts',
+        {
+          campaignStatus: testCampaignStatus,
+          escrowStatus: testEscrowStatus,
+          escrowStatusString: EscrowStatus[testEscrowStatus],
+        },
+      );
+
+      expect(spyOnGetBulkPayoutsCount).toHaveBeenCalledTimes(0);
+      expect(spyOnUploadFinalResults).toHaveBeenCalledTimes(0);
+      expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
+      expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
+    });
+
+    it('should cancel if cancellation requested before than start date from manifest', async () => {
+      mockedGetEscrowStatus
+        .mockReset()
+        .mockResolvedValueOnce(EscrowStatus.ToCancel);
+
+      const now = Date.now();
+      spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
+        Object.assign(generateManifest(), {
+          start_date: new Date(now + 1).toISOString(),
+        }),
+      );
+
+      jest.useFakeTimers({ now });
+
+      await payoutsService.runPayoutsCycleForCampaign(
+        Object.assign({}, mockedCampaign, {
+          status: EscrowStatus[EscrowStatus.ToCancel],
+        }),
+      );
+
+      jest.useRealTimers();
+
+      expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(0);
+      expect(logger.info).toHaveBeenCalledTimes(3);
+      expect(logger.info).toHaveBeenCalledWith(
+        'Campaign cancellation requested before campaign started, cancelling',
+      );
+
+      expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+      expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not cancel if cancellation not requested and campaign not started yet', async () => {
+      const now = Date.now();
+      spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
+        Object.assign(generateManifest(), {
+          start_date: new Date(now + 1).toISOString(),
+        }),
+      );
+
+      jest.useFakeTimers({ now });
+
+      await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+      jest.useRealTimers();
+
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
+      expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(1);
     });
 
     it('should gracefully handle incomplete intermediate results', async () => {
@@ -453,20 +584,23 @@ describe('PayoutsService', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        'Payouts failed for campaign',
+        'Error while running payouts cycle for campaign',
         new Error('Intermediate results are not recorded'),
       );
 
       expect(spyOnGetBulkPayoutsCount).toHaveBeenCalledTimes(0);
       expect(spyOnUploadFinalResults).toHaveBeenCalledTimes(0);
       expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
     it('should gracefully handle invalid reserved funds', async () => {
-      mockedGetEscrowBalance.mockReset().mockResolvedValueOnce(
+      mockedGetEscrowReservedFunds.mockReset().mockResolvedValueOnce(
         faker.number.int({
-          max: mockedIntermediateResult.reserved_funds - 1,
+          max:
+            mockedIntermediateResult.reserved_funds -
+            faker.number.float({ min: 0.0000001 }),
         }),
       );
 
@@ -474,10 +608,11 @@ describe('PayoutsService', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        'Payouts failed for campaign',
+        'Error while running payouts cycle for campaign',
         new Error('Expected payouts amount higher than reserved funds'),
       );
       expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
@@ -496,7 +631,7 @@ describe('PayoutsService', () => {
         ],
         mockedFinalResultsUrl,
         mockedFinalResultsHash,
-        1,
+        mockedParticipantsOutcomesBatch.id,
         false,
         {
           gasPrice: mockedGasPrice,
@@ -512,9 +647,18 @@ describe('PayoutsService', () => {
       );
       expect(logger.info).toHaveBeenCalledWith(
         'Campaign not finished yet, skip completion',
+        {
+          lastResultsAt: mockedIntermediateResult.to.toISOString(),
+          expectedFinalLastResultsAt: mockedManifest.end_date,
+        },
       );
 
-      expect(mockedGetEscrowStatus).toHaveBeenCalledTimes(0);
+      expect(mockedGetEscrowReservedFunds).toHaveBeenCalledTimes(1);
+      expect(mockedGetEscrowReservedFunds).toHaveBeenCalledWith(
+        mockedCampaign.address,
+      );
+
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
@@ -533,45 +677,81 @@ describe('PayoutsService', () => {
       );
 
       expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+      expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
-    describe('campaign completion', () => {
+    describe('campaign finalization', () => {
+      let manifest: BaseCampaignManifest;
+
       beforeEach(() => {
-        const manifest = generateManifest();
+        manifest = generateManifest();
         manifest.end_date = mockedIntermediateResult.to.toISOString();
         spyOnRetrieveCampaignManifest
           .mockReset()
           .mockResolvedValueOnce(manifest);
       });
 
-      it('should run payouts and skip completion if auto-completed', async () => {
-        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Complete);
+      it.each([
+        EscrowStatus[EscrowStatus.Complete],
+        EscrowStatus[EscrowStatus.Cancelled],
+      ])(
+        'should run payouts and skip finalization if auto-finalized with "%s" status',
+        async (escrowStatusString) => {
+          const escrowStatus =
+            EscrowStatus[escrowStatusString as unknown as EscrowStatus];
+          mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
-        await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+          await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(6);
-        expect(logger.info).toHaveBeenCalledWith(
-          'Campaign auto-completed during payouts',
-        );
+          expect(logger.info).toHaveBeenCalledTimes(6);
+          expect(logger.info).toHaveBeenCalledWith(
+            'Campaign auto-finalized during payouts',
+            {
+              escrowStatus,
+              escrowStatusString,
+            },
+          );
 
-        expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
-        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
-      });
+          expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
+          expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
+          expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
+        },
+      );
 
-      it('should run payouts and complete campaign if not auto-completed', async () => {
-        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Partial);
+      it.each([
+        EscrowStatus[EscrowStatus.Partial],
+        EscrowStatus[EscrowStatus.Paid],
+      ])(
+        'should run payouts and complete campaign for "%s" status if not auto-finalized',
+        async (escrowStatusString) => {
+          const escrowStatus =
+            EscrowStatus[escrowStatusString as unknown as EscrowStatus];
+          mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
-        await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+          await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(6);
-        expect(logger.info).toHaveBeenCalledWith(
-          'Campaign is fully paid, completing it',
-        );
+          expect(logger.info).toHaveBeenCalledTimes(7);
+          expect(logger.info).toHaveBeenCalledWith(
+            'Campaign finished, going to finalize',
+            {
+              lastResultsAt: mockedIntermediateResult.to.toISOString(),
+              expectedFinalLastResultsAt: manifest.end_date,
+            },
+          );
+          expect(logger.info).toHaveBeenCalledWith(
+            'No more payouts expected for campaign, completing it',
+            {
+              escrowStatus,
+              escrowStatusString,
+            },
+          );
 
-        expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
-        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(1);
-      });
+          expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
+          expect(mockedCompleteEscrow).toHaveBeenCalledTimes(1);
+          expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
+        },
+      );
 
       it('should warn if unknown status', async () => {
         const unknownStatus = -1;
@@ -591,32 +771,91 @@ describe('PayoutsService', () => {
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 
-      it('should complete with refund if campaign has "zero" results', async () => {
+      it('should complete if campaign has "zero" results', async () => {
+        const mockedEscrowBalance = faker.number.bigInt({ min: 1 });
+        mockedGetEscrowReservedFunds.mockReset().mockResolvedValueOnce(0);
         mockedIntermediateResult.reserved_funds = 0;
         mockedIntermediateResult.participants_outcomes_batches = [];
 
-        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
+        /**
+         * It's expected that for 0 results no payout made at all
+         * so escrow is still in pending status.
+         */
+        const escrowStatus = EscrowStatus.Pending;
+        mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
+        mockedGetEscrowBalance.mockResolvedValueOnce(mockedEscrowBalance);
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(5);
+        expect(logger.info).toHaveBeenCalledTimes(6);
         expect(logger.info).toHaveBeenCalledWith(
-          'Campaign ended with empty results, completing it',
+          'Campaign finished, going to finalize',
+          {
+            lastResultsAt: mockedIntermediateResult.to.toISOString(),
+            expectedFinalLastResultsAt: manifest.end_date,
+          },
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+          'No more payouts expected for campaign, completing it',
+          {
+            escrowStatus,
+            escrowStatusString: EscrowStatus[escrowStatus],
+          },
+        );
+
+        expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(1);
+        expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
+      });
+
+      it('should run payouts and cancel campaign if cancellation requested and all results paid', async () => {
+        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+        spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+          mockedIntermediateResult.to,
+        );
+
+        await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+        expect(logger.info).toHaveBeenCalledTimes(7);
+        expect(logger.info).toHaveBeenCalledWith(
+          'Campaign finished, going to finalize',
+          {
+            lastResultsAt: mockedIntermediateResult.to.toISOString(),
+            expectedFinalLastResultsAt: manifest.end_date,
+          },
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+          'Campaign ended with cancellation request, cancelling it',
         );
 
         expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
-        expect(mockedBulkPayOut).toHaveBeenLastCalledWith(
-          mockedCampaign.address,
-          [mockedCampaign.launcher],
-          [mockedEscrowBalance],
-          mockedFinalResultsUrl,
-          mockedFinalResultsHash,
-          1,
-          true,
+        expect(mockedCancelEscrow).toHaveBeenCalledTimes(1);
+        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
+      });
+
+      it('should run payouts and not cancel campaign if cancellation requested and not all results paid', async () => {
+        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+        const cancellationRequestedAt = faker.date.recent({
+          refDate: mockedIntermediateResult.to,
+        });
+        spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+          cancellationRequestedAt,
+        );
+
+        await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+        expect(logger.info).toHaveBeenCalledTimes(6);
+        expect(logger.info).toHaveBeenCalledWith(
+          'Campaign not finished yet, skip completion',
           {
-            gasPrice: mockedGasPrice,
+            lastResultsAt: mockedIntermediateResult.to.toISOString(),
+            expectedFinalLastResultsAt: cancellationRequestedAt.toISOString(),
           },
         );
+
+        expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
+        expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
+        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
     });
   });

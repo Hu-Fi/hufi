@@ -64,7 +64,7 @@ describe('CcxtExchangeClient', () => {
     });
 
     it('should not create instance if exchange not supported', () => {
-      const exchangeName = faker.lorem.word();
+      const exchangeName = faker.lorem.slug();
       let thrownError;
       try {
         new CcxtExchangeClient(exchangeName, {

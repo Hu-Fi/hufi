@@ -4,6 +4,7 @@
 */
 export enum CampaignStatus {
   ACTIVE = 'active',
+  TO_CANCEL = 'to_cancel',
   PENDING_CANCELLATION = 'pending_cancellation',
   CANCELLED = 'cancelled',
   PENDING_COMPLETION = 'pending_completion',
@@ -14,6 +15,7 @@ export enum ReturnedCampaignStatus {
   ACTIVE = 'active',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
+  TO_CANCEL = 'to_cancel',
 }
 
 export enum CampaignType {

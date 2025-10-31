@@ -48,6 +48,28 @@ declare module 'ccxt' {
     currency: string;
     address: string;
     network?: string | null;
+    [x: string]: unknown;
+  };
+
+  export type NetworkStructure = {
+    id: string;
+    network: string;
+    name: string;
+    active: string;
+    deposit: boolean;
+    [x: string]: unknown;
+  };
+
+  export type CurrencyStructure = {
+    id: string;
+    code: string;
+    name: string;
+    active: boolean;
+    deposit: true;
+    networks: {
+      [network: string]: NetworkStructure | undefined;
+    };
+    [x: string]: unknown;
   };
 
   export interface Exchange {
@@ -63,6 +85,9 @@ declare module 'ccxt' {
       symbol: string,
       params?: Record<string, unknown>,
     ): Promise<AddressStructure>;
+    fetchCurrencies(): Promise<{
+      [currencyCode: string]: CurrencyStructure | undefined;
+    }>;
   }
 
   const ccxt: {

@@ -78,7 +78,7 @@ describe('Web3Service', () => {
     it('should use multiplier for gas price', async () => {
       const testChainId = generateTestnetChainId();
 
-      const randomGasPrice = faker.number.bigInt({ min: 1n });
+      const randomGasPrice = faker.number.bigInt({ min: 1 });
 
       mockProvider.getFeeData.mockResolvedValueOnce({
         gasPrice: randomGasPrice,
