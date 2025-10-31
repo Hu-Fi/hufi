@@ -5,14 +5,16 @@ import { ethers } from 'ethers';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import {
+  BaseCampaignManifest,
   CampaignWithResults,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
 } from '../types';
 
-export function generateManifest() {
+export function generateManifest(): BaseCampaignManifest {
   const manifest = {
+    type: faker.helpers.arrayElement(['MARKET_MAKING', 'HOLDING', 'ANY']),
     exchange: faker.lorem.slug(),
     start_date: faker.date.past().toISOString(),
     end_date: faker.date.soon().toISOString(),

@@ -39,7 +39,11 @@ import {
 import precisionSensitiveResult from './fixtures/precision_sensitive_result.json';
 import { PayoutsService } from './payouts.service';
 import * as payoutsUtils from './payouts.utils';
-import { CampaignWithResults, IntermediateResult } from './types';
+import {
+  BaseCampaignManifest,
+  CampaignWithResults,
+  IntermediateResult,
+} from './types';
 
 const mockStorageService = createMock<StorageService>();
 const mockWeb3Service = createMock<Web3Service>();
@@ -643,6 +647,10 @@ describe('PayoutsService', () => {
       );
       expect(logger.info).toHaveBeenCalledWith(
         'Campaign not finished yet, skip completion',
+        {
+          lastResultsAt: mockedIntermediateResult.to.toISOString(),
+          expectedFinalLastResultsAt: mockedManifest.end_date,
+        },
       );
 
       expect(mockedGetEscrowReservedFunds).toHaveBeenCalledTimes(1);
@@ -674,8 +682,10 @@ describe('PayoutsService', () => {
     });
 
     describe('campaign finalization', () => {
+      let manifest: BaseCampaignManifest;
+
       beforeEach(() => {
-        const manifest = generateManifest();
+        manifest = generateManifest();
         manifest.end_date = mockedIntermediateResult.to.toISOString();
         spyOnRetrieveCampaignManifest
           .mockReset()
@@ -687,16 +697,20 @@ describe('PayoutsService', () => {
         EscrowStatus[EscrowStatus.Cancelled],
       ])(
         'should run payouts and skip finalization if auto-finalized with "%s" status',
-        async (escrowStatus) => {
-          mockedGetEscrowStatus.mockResolvedValueOnce(
-            EscrowStatus[escrowStatus as unknown as EscrowStatus],
-          );
+        async (escrowStatusString) => {
+          const escrowStatus =
+            EscrowStatus[escrowStatusString as unknown as EscrowStatus];
+          mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
           await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
           expect(logger.info).toHaveBeenCalledTimes(6);
           expect(logger.info).toHaveBeenCalledWith(
             'Campaign auto-finalized during payouts',
+            {
+              escrowStatus,
+              escrowStatusString,
+            },
           );
 
           expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
@@ -709,17 +723,28 @@ describe('PayoutsService', () => {
         EscrowStatus[EscrowStatus.Partial],
         EscrowStatus[EscrowStatus.Paid],
       ])(
-        'should run payouts and finalize campaign for "%s" status if not auto-finalized',
-        async (escrowStatus) => {
-          mockedGetEscrowStatus.mockResolvedValueOnce(
-            EscrowStatus[escrowStatus as unknown as EscrowStatus],
-          );
+        'should run payouts and complete campaign for "%s" status if not auto-finalized',
+        async (escrowStatusString) => {
+          const escrowStatus =
+            EscrowStatus[escrowStatusString as unknown as EscrowStatus];
+          mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
           await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-          expect(logger.info).toHaveBeenCalledTimes(6);
+          expect(logger.info).toHaveBeenCalledTimes(7);
           expect(logger.info).toHaveBeenCalledWith(
-            'Campaign is fully paid, completing it',
+            'Campaign finished, going to finalize',
+            {
+              lastResultsAt: mockedIntermediateResult.to.toISOString(),
+              expectedFinalLastResultsAt: manifest.end_date,
+            },
+          );
+          expect(logger.info).toHaveBeenCalledWith(
+            'No more payouts expected for campaign, completing it',
+            {
+              escrowStatus,
+              escrowStatusString,
+            },
           );
 
           expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
@@ -746,37 +771,41 @@ describe('PayoutsService', () => {
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 
-      it('should complete with refund if campaign has "zero" results', async () => {
+      it('should complete if campaign has "zero" results', async () => {
         const mockedEscrowBalance = faker.number.bigInt({ min: 1 });
         mockedGetEscrowReservedFunds.mockReset().mockResolvedValueOnce(0);
         mockedIntermediateResult.reserved_funds = 0;
         mockedIntermediateResult.participants_outcomes_batches = [];
 
-        mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
+        /**
+         * It's expected that for 0 results no payout made at all
+         * so escrow is still in pending status.
+         */
+        const escrowStatus = EscrowStatus.Pending;
+        mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
         mockedGetEscrowBalance.mockResolvedValueOnce(mockedEscrowBalance);
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(5);
+        expect(logger.info).toHaveBeenCalledTimes(6);
         expect(logger.info).toHaveBeenCalledWith(
-          'Campaign ended with empty results, completing it',
-        );
-
-        expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
-        expect(mockedBulkPayOut).toHaveBeenLastCalledWith(
-          mockedCampaign.address,
-          [mockedCampaign.launcher],
-          [mockedEscrowBalance],
-          mockedFinalResultsUrl,
-          mockedFinalResultsHash,
-          'empty_results_tx',
-          true,
+          'Campaign finished, going to finalize',
           {
-            gasPrice: mockedGasPrice,
+            lastResultsAt: mockedIntermediateResult.to.toISOString(),
+            expectedFinalLastResultsAt: manifest.end_date,
           },
         );
+        expect(logger.info).toHaveBeenCalledWith(
+          'No more payouts expected for campaign, completing it',
+          {
+            escrowStatus,
+            escrowStatusString: EscrowStatus[escrowStatus],
+          },
+        );
+
+        expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
+        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(1);
         expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
-        expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 
       it('should run payouts and cancel campaign if cancellation requested and all results paid', async () => {
@@ -787,7 +816,14 @@ describe('PayoutsService', () => {
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-        expect(logger.info).toHaveBeenCalledTimes(6);
+        expect(logger.info).toHaveBeenCalledTimes(7);
+        expect(logger.info).toHaveBeenCalledWith(
+          'Campaign finished, going to finalize',
+          {
+            lastResultsAt: mockedIntermediateResult.to.toISOString(),
+            expectedFinalLastResultsAt: manifest.end_date,
+          },
+        );
         expect(logger.info).toHaveBeenCalledWith(
           'Campaign ended with cancellation request, cancelling it',
         );
@@ -799,8 +835,11 @@ describe('PayoutsService', () => {
 
       it('should run payouts and not cancel campaign if cancellation requested and not all results paid', async () => {
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+        const cancellationRequestedAt = faker.date.recent({
+          refDate: mockedIntermediateResult.to,
+        });
         spyOnGetCancellationRequestDate.mockResolvedValueOnce(
-          faker.date.recent({ refDate: mockedIntermediateResult.to }),
+          cancellationRequestedAt,
         );
 
         await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
@@ -808,6 +847,10 @@ describe('PayoutsService', () => {
         expect(logger.info).toHaveBeenCalledTimes(6);
         expect(logger.info).toHaveBeenCalledWith(
           'Campaign not finished yet, skip completion',
+          {
+            lastResultsAt: mockedIntermediateResult.to.toISOString(),
+            expectedFinalLastResultsAt: cancellationRequestedAt.toISOString(),
+          },
         );
 
         expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
