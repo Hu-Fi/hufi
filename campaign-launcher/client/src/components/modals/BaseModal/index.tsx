@@ -2,9 +2,9 @@ import type { FC, PropsWithChildren } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import {
-  Modal,
-  Box,
   IconButton,
+  Modal,
+  Paper,
   type SxProps,
   type Theme,
 } from '@mui/material';
@@ -12,12 +12,14 @@ import {
 type Props = {
   open: boolean;
   onClose: () => void;
+  elevation?: number;
   sx?: SxProps<Theme>;
 };
 
 const BaseModal: FC<PropsWithChildren<Props>> = ({
   open,
   onClose,
+  elevation = 0,
   children,
   sx,
 }) => {
@@ -39,7 +41,8 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
         },
       }}
     >
-      <Box
+      <Paper
+        elevation={elevation}
         sx={{
           py: 5,
           px: 4,
@@ -50,6 +53,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: 4,
           position: 'relative',
+          boxShadow: 'none',
           ...sx,
         }}
       >
@@ -69,7 +73,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           <CloseIcon />
         </IconButton>
         {children}
-      </Box>
+      </Paper>
     </Modal>
   );
 };

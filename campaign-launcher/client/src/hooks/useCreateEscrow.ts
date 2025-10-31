@@ -255,7 +255,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   return {
     data,
     error,
-    isLoading: true,
+    isLoading,
     isError,
     isSuccess,
     isIdle,

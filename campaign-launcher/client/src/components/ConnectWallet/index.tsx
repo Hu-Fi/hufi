@@ -10,6 +10,8 @@ import walletConnectSvg from '@/assets/walletconnect.svg';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 
+import BaseModal from '../modals/BaseModal';
+
 type Props = {
   closeDrawer?: () => void;
 };
@@ -50,51 +52,16 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
 
   const onClose = () => setAnchorEl(null);
 
-  return (
-    <>
-      <Button
-        variant="contained"
-        size={isMobile ? 'small' : 'large'}
-        sx={{ color: 'primary.contrast', height: isMobile ? '30px' : '42px' }}
-        disabled={isConnecting}
-        onClick={handleConnectWalletButtonClick}
-      >
-        Connect Wallet
-      </Button>
-      <Popover
-        open={!!anchorEl}
-        onClose={onClose}
-        anchorEl={anchorEl}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{
-          paper: {
-            elevation: 4,
-            sx: {
-              mt: 1,
-              backgroundColor: 'background.default',
-              boxShadow: '0px 0px 10px 0px rgba(255, 255, 255, 0.15)',
-              borderRadius: '10px',
-              p: 2,
-              width: '320px',
-            },
-          },
-        }}
-      >
+  const renderContent = () => {
+    return (
+      <>
         <Box
+          width="100%"
           display="flex"
-          alignItems="center"
-          justifyContent="flex-end"
-          mb={2}
+          flexDirection="column"
+          gap={1}
+          mt={{ xs: 2, md: 0 }}
         >
-          <IconButton
-            sx={{ padding: 1, '&:hover': { bgcolor: 'unset' } }}
-            onClick={() => setAnchorEl(null)}
-          >
-            <CloseIcon sx={{ color: 'primary.main' }} />
-          </IconButton>
-        </Box>
-        <Box width="100%" display="flex" flexDirection="column" gap={1}>
           {connectors.map((connector) => (
             <Button
               key={connector.id}
@@ -129,7 +96,64 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
           By connecting a wallet, you agree to HUMAN Protocol Terms of Service
           and consent to its Privacy Policy.
         </Typography>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <Button
+        variant="contained"
+        size={isMobile ? 'small' : 'large'}
+        sx={{ color: 'primary.contrast', height: isMobile ? '30px' : '42px' }}
+        disabled={isConnecting}
+        onClick={handleConnectWalletButtonClick}
+      >
+        Connect Wallet
+      </Button>
+      <Popover
+        open={!isMobile && !!anchorEl}
+        onClose={onClose}
+        anchorEl={anchorEl}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{
+          paper: {
+            elevation: 4,
+            sx: {
+              mt: 1,
+              backgroundColor: 'background.default',
+              boxShadow: '0px 0px 10px 0px rgba(255, 255, 255, 0.15)',
+              borderRadius: '10px',
+              p: 2,
+              width: '320px',
+            },
+          },
+        }}
+      >
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="flex-end"
+          mb={2}
+        >
+          <IconButton
+            sx={{ padding: 1, '&:hover': { bgcolor: 'unset' } }}
+            onClick={() => setAnchorEl(null)}
+          >
+            <CloseIcon sx={{ color: 'primary.main' }} />
+          </IconButton>
+        </Box>
+        {renderContent()}
       </Popover>
+      <BaseModal
+        open={isMobile && !!anchorEl}
+        onClose={onClose}
+        elevation={4}
+        sx={{ px: 2 }}
+      >
+        {renderContent()}
+      </BaseModal>
     </>
   );
 };
