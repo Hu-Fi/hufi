@@ -15,6 +15,7 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 
 import { ROUTES } from '@/constants';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useStakeContext } from '@/providers/StakeProvider';
 import { CampaignType } from '@/types';
 import { convertFromSnakeCaseToTitleCase } from '@/utils';
@@ -38,12 +39,14 @@ const WarningView: FC<WarningViewProps> = ({
   handleClickOnStakeHMT,
   handleClickOnUpdate,
 }) => {
+  const isMobile = useIsMobile();
+
   return (
     <>
       <Typography
         variant="alert"
         color="text.secondary"
-        mb={4}
+        mb={{ xs: 3, md: 4 }}
         mx="auto"
         display="flex"
         alignItems="center"
@@ -65,16 +68,23 @@ const WarningView: FC<WarningViewProps> = ({
       <Typography
         variant="body2"
         color="text.primary"
-        mb={4}
+        mb={{ xs: 3, md: 4 }}
         textAlign="center"
       >
         If you&apos;ve already staked HMT, click <strong>Update</strong> to
         refresh your status and continue.
       </Typography>
-      <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        flexDirection={{ xs: 'column', md: 'row' }}
+        gap={{ xs: 2, md: 1 }}
+      >
         <Button
           variant="contained"
           size="large"
+          fullWidth={isMobile}
           onClick={handleClickOnStakeHMT}
         >
           Stake HMT
@@ -82,6 +92,7 @@ const WarningView: FC<WarningViewProps> = ({
         <Button
           variant="contained"
           size="large"
+          fullWidth={isMobile}
           sx={{
             bgcolor: 'secondary.main',
             color: 'secondary.contrast',
@@ -133,6 +144,7 @@ const CampaignSetupModal: FC<Props> = ({
   const [stakedAmount, setStakedAmount] = useState(0);
 
   const { fetchStakingData, isFetching } = useStakeContext();
+  const isMobile = useIsMobile();
 
   const getStakedAmount = useCallback(async () => {
     const _stakedAmount = Number(await fetchStakingData());
@@ -176,13 +188,20 @@ const CampaignSetupModal: FC<Props> = ({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        height: { xs: '440px', md: '360px' },
-        py: 5,
-        px: { xs: 3, md: 8 },
+        height: { xs: 'auto', md: '360px' },
+        minHeight: { xs: '440px', md: 'unset' },
+        maxHeight: { xs: '600px', md: 'unset' },
+        px: { xs: 2, md: 8 },
       }}
     >
-      <Typography variant="h4" color="text.primary" mb={3}>
-        Create a Campaign
+      <Typography
+        variant="h4"
+        color="text.primary"
+        mb={3}
+        textAlign="center"
+        sx={{ whiteSpace: 'pre-line' }}
+      >
+        {isMobile ? 'Launch\nCampaign' : 'Create a Campaign'}
       </Typography>
       <Stack width="100%" flex={1} mt={isFetching ? -3 : 0}>
         {isFetching && <LoadingView />}
@@ -196,7 +215,7 @@ const CampaignSetupModal: FC<Props> = ({
           <>
             <Typography
               variant="alert"
-              mt={5}
+              mt={{ xs: 0, md: 5 }}
               mb={2}
               px={{ xs: 0, md: 7 }}
               textAlign="center"
@@ -204,18 +223,24 @@ const CampaignSetupModal: FC<Props> = ({
               To be able to create campaigns on the HuFi Campaign Launcher you
               need to stake HMT on the Staking Dashboard.
             </Typography>
-            <Typography variant="body2" textAlign="center" mb={6}>
+            <Typography
+              variant="body2"
+              textAlign="center"
+              mb={{ xs: 3, md: 6 }}
+            >
               Once staked, return here to continue.
             </Typography>
             <Box
               display="flex"
               alignItems="center"
               justifyContent="center"
-              gap={1}
+              flexDirection={{ xs: 'column', md: 'row' }}
+              gap={{ xs: 2, md: 1 }}
             >
               <Button
                 variant="contained"
                 size="large"
+                fullWidth={isMobile}
                 onClick={handleClickOnStakeHMT}
               >
                 Stake HMT
@@ -223,6 +248,7 @@ const CampaignSetupModal: FC<Props> = ({
               <Button
                 variant="contained"
                 size="large"
+                fullWidth={isMobile}
                 sx={{
                   bgcolor: 'secondary.main',
                   color: 'secondary.contrast',
@@ -239,7 +265,7 @@ const CampaignSetupModal: FC<Props> = ({
             <Typography
               variant="alert"
               color="text.secondary"
-              mb={5}
+              mb={{ xs: 3, md: 5 }}
               mx="auto"
               display="flex"
               alignItems="center"
@@ -256,13 +282,21 @@ const CampaignSetupModal: FC<Props> = ({
               to={ROUTES.SUPPORT}
               component={RouterLink}
               target="_blank"
-              sx={{ width: 'fit-content', mb: 5, mx: 'auto' }}
+              sx={{
+                width: 'fit-content',
+                mb: { xs: 3, md: 5 },
+                mx: 'auto',
+              }}
             >
               <Typography variant="body2" fontWeight={700}>
                 What are the campaign types?
               </Typography>
             </Link>
-            <Stack gap={1} direction="row" mx="auto">
+            <Stack
+              gap={1}
+              direction={{ xs: 'column', md: 'row' }}
+              mx={{ xs: 0, md: 'auto' }}
+            >
               <Autocomplete
                 size="small"
                 value={campaignType}
@@ -286,7 +320,7 @@ const CampaignSetupModal: FC<Props> = ({
                     }}
                   />
                 )}
-                sx={{ width: '220px' }}
+                sx={{ width: { xs: '100%', sm: 220 } }}
                 slotProps={{
                   paper: {
                     elevation: 4,
@@ -299,7 +333,11 @@ const CampaignSetupModal: FC<Props> = ({
               <Button
                 variant="contained"
                 size="large"
-                sx={{ color: 'primary.contrast', width: 93 }}
+                fullWidth={isMobile}
+                sx={{
+                  color: 'primary.contrast',
+                  width: { xs: '100%', md: 93 },
+                }}
                 disabled={!campaignType}
                 onClick={handleClickOnContinue}
               >
