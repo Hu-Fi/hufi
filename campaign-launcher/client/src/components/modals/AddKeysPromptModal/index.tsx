@@ -4,6 +4,7 @@ import { Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 import { ROUTES } from '@/constants';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 import BaseModal from '../BaseModal';
 
@@ -14,6 +15,7 @@ type Props = {
 
 const AddKeysPromptModal: FC<Props> = ({ open, onClose }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleButtonClick = () => {
     navigate(ROUTES.MANAGE_API_KEYS);
@@ -26,7 +28,7 @@ const AddKeysPromptModal: FC<Props> = ({ open, onClose }) => {
       sx={{
         textAlign: 'center',
         color: 'text.primary',
-        px: { xs: 3, md: 4 },
+        px: { xs: 2, md: 4 },
       }}
     >
       <Typography variant="h4" py={1} mb={2}>
@@ -34,14 +36,19 @@ const AddKeysPromptModal: FC<Props> = ({ open, onClose }) => {
       </Typography>
       <Typography
         variant="body2"
-        mb={2}
-        px={{ xs: 2, md: 10 }}
+        mb={{ xs: 3, md: 2 }}
+        px={{ xs: 0, md: 10 }}
         textAlign="center"
       >
-        To join the campaign, please make sure to add your API keys under the
-        Manage Keys page. This step is required to participate.
+        To join the campaign, please make sure to add your API KEY under the
+        Manage KEYS page. This step is required to participate.
       </Typography>
-      <Button variant="contained" size="large" onClick={handleButtonClick}>
+      <Button
+        variant="contained"
+        size="large"
+        fullWidth={isMobile}
+        onClick={handleButtonClick}
+      >
         Add API Keys
       </Button>
     </BaseModal>

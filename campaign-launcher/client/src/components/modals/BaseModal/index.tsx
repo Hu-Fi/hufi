@@ -29,6 +29,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        mx: { xs: 4, md: 0 },
       }}
       slotProps={{
         backdrop: {
@@ -40,10 +41,10 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
     >
       <Box
         sx={{
-          py: 4,
+          py: 5,
           px: 4,
           width: 870,
-          maxHeight: '80vh',
+          maxHeight: '90vh',
           overflowY: 'auto',
           bgcolor: 'background.default',
           border: '1px solid rgba(255, 255, 255, 0.1)',
