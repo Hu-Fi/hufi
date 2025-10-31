@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 
-import { EMPTY_RESULTS_TX_ID, type ChainId } from '@/common/constants';
+import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
@@ -81,11 +81,11 @@ export class PayoutsService {
       const escrowClient = await EscrowClient.build(signer);
 
       let escrowStatus = await escrowClient.getStatus(campaign.address);
-      const escrowStatusString = EscrowStatus[escrowStatus];
+      let escrowStatusString = EscrowStatus[escrowStatus];
       if (campaign.status !== escrowStatusString) {
         logger.warn('Campaign status mismatch, avoiding payouts', {
           campaignStatus: campaign.status,
-          escrowStatus: escrowStatus,
+          escrowStatus,
           escrowStatusString,
         });
         return;
@@ -258,10 +258,14 @@ export class PayoutsService {
       // =================== finalization steps below ===================
 
       escrowStatus = await escrowClient.getStatus(campaign.address);
+      escrowStatusString = EscrowStatus[escrowStatus];
       if (
         [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(escrowStatus)
       ) {
-        logger.info('Campaign auto-finalized during payouts');
+        logger.info('Campaign auto-finalized during payouts', {
+          escrowStatus,
+          escrowStatusString,
+        });
         return;
       }
 
@@ -281,44 +285,48 @@ export class PayoutsService {
         .at(-1)!
         .to.toISOString();
       if (lastResultsAt !== expectedFinalLastResultsAt) {
-        logger.info('Campaign not finished yet, skip completion');
+        logger.info('Campaign not finished yet, skip completion', {
+          lastResultsAt,
+          expectedFinalLastResultsAt,
+        });
         return;
+      } else {
+        logger.info('Campaign finished, going to finalize', {
+          lastResultsAt,
+          expectedFinalLastResultsAt,
+        });
       }
 
-      if ([EscrowStatus.Partial, EscrowStatus.Paid].includes(escrowStatus)) {
-        // no auto-finalize during payouts
-        logger.info('Campaign is fully paid, completing it');
-
-        const gasPrice = await this.web3Service.calculateGasPrice(
-          campaign.chainId,
-        );
-        await escrowClient.complete(campaign.address, { gasPrice });
-      } else if (escrowStatus === EscrowStatus.Pending) {
-        logger.info('Campaign ended with empty results, completing it');
-
-        const escrowBalance = await escrowClient.getBalance(campaign.address);
-        const gasPrice = await this.web3Service.calculateGasPrice(
-          campaign.chainId,
-        );
-        await escrowClient.bulkPayOut(
-          campaign.address,
-          [campaign.launcher],
-          [escrowBalance],
-          finalResultsMeta.url,
-          finalResultsMeta.hash,
-          EMPTY_RESULTS_TX_ID,
-          true,
-          { gasPrice },
-        );
-      } else if (escrowStatus === EscrowStatus.ToCancel) {
+      if (escrowStatus === EscrowStatus.ToCancel) {
         logger.info('Campaign ended with cancellation request, cancelling it');
         const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
         await escrowClient.cancel(campaign.address, { gasPrice });
+      } else if (
+        [
+          // pending expected when no payouts needed (aka results w/ 0)
+          EscrowStatus.Pending,
+          // partial expected when all payouts made
+          EscrowStatus.Partial,
+          // paid is not expected/used, just for potential changes
+          EscrowStatus.Paid,
+        ].includes(escrowStatus)
+      ) {
+        // no auto-finalize during payouts
+        logger.info('No more payouts expected for campaign, completing it', {
+          escrowStatus,
+          escrowStatusString,
+        });
+
+        const gasPrice = await this.web3Service.calculateGasPrice(
+          campaign.chainId,
+        );
+        await escrowClient.complete(campaign.address, { gasPrice });
       } else {
         logger.warn('Unexpected campaign escrow status', {
           escrowStatus,
+          escrowStatusString,
         });
       }
     } catch (error) {
