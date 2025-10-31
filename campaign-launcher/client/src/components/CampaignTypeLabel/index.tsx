@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Chip } from '@mui/material';
 
 import type { CampaignType } from '@/types';
 import { mapTypeToLabel } from '@/utils';
@@ -11,19 +11,24 @@ type Props = {
 
 const CampaignTypeLabel: FC<Props> = ({ campaignType }) => {
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      px={2}
-      py="6px"
-      bgcolor="secondary.main"
-      borderRadius="4px"
-    >
-      <Typography variant="subtitle2" color="secondary.contrast">
-        {mapTypeToLabel(campaignType)}
-      </Typography>
-    </Box>
+    <Chip
+      label={mapTypeToLabel(campaignType)}
+      color="secondary"
+      size="medium"
+      sx={{
+        height: 36,
+        borderRadius: '200px',
+        '& > .MuiChip-label': {
+          py: 0,
+          px: 2,
+          color: 'secondary.contrast',
+          fontSize: 14,
+          fontWeight: 600,
+          lineHeight: '24px',
+          letterSpacing: '0.1px',
+        },
+      }}
+    />
   );
 };
 

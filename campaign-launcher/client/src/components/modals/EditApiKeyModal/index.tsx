@@ -19,6 +19,7 @@ import {
   ModalSuccess,
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 import BaseModal from '../BaseModal';
 
@@ -59,6 +60,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
     formState: { errors },
     handleSubmit,
     reset,
+    watch,
   } = useForm<APIKeyFormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
@@ -67,6 +69,10 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       secret: '',
     },
   });
+
+  const isMobile = useIsMobile();
+  const [apiKeyValue, secretValue] = watch(['apiKey', 'secret']);
+  const isSaveDisabled = !apiKeyValue?.trim() || !secretValue?.trim();
 
   useEffect(() => {
     if (open && exchangeName) {
@@ -101,7 +107,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       sx={{
         textAlign: 'center',
         color: 'text.primary',
-        px: { xs: 3, md: 4 },
+        px: { xs: 2, md: 4 },
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -112,14 +118,23 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
           textAlign="center"
           px={{ xs: 0, md: 4 }}
         >
-          <Typography variant="h4" py={1} mb={2}>
+          <Typography variant="h4" py={1} mb={{ xs: 3, md: 2 }}>
             Edit API key
           </Typography>
           {isPending && <ModalLoading />}
           {isIdle && (
             <>
-              <Box display="flex" gap={1} mb={3} width="100%">
-                <FormControl error={!!errors.exchange} sx={{ width: '30%' }}>
+              <Box
+                display="flex"
+                gap={{ xs: 3, md: 1 }}
+                mb={3}
+                width="100%"
+                flexDirection={{ xs: 'column', md: 'row' }}
+              >
+                <FormControl
+                  error={!!errors.exchange}
+                  sx={{ width: { xs: '100%', md: '30%' } }}
+                >
                   <Controller
                     name="exchange"
                     control={control}
@@ -144,6 +159,9 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
                         id="api-key-input"
                         label="API Key"
                         placeholder="API KEY"
+                        multiline={isMobile}
+                        minRows={1}
+                        maxRows={4}
                         {...field}
                       />
                     )}
@@ -155,7 +173,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
               </Box>
               <FormControl
                 error={!!errors.secret}
-                sx={{ mb: 4, width: '100%' }}
+                sx={{ mb: { xs: 3, md: 4 }, width: '100%' }}
               >
                 <Controller
                   name="secret"
@@ -180,18 +198,34 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
           {isSuccess && (
             <ModalSuccess>
               <Typography variant="subtitle2" py={1} mb={1} textAlign="center">
-                You have successfully edited your API key
+                You have successfully edited your API KEY
               </Typography>
             </ModalSuccess>
           )}
           {isError && <ModalError message={error.message} />}
-          <Box display="flex" gap={1} mx="auto">
+          <Box
+            display="flex"
+            gap={{ xs: 2, md: 1 }}
+            mx="auto"
+            width={{ xs: '100%', sm: 'auto' }}
+            flexDirection={{ xs: 'column', md: 'row' }}
+          >
             {isIdle && (
               <>
-                <Button size="large" variant="outlined" onClick={handleClose}>
+                <Button
+                  size="large"
+                  variant="outlined"
+                  fullWidth={isMobile}
+                  onClick={handleClose}
+                >
                   Cancel
                 </Button>
-                <Button size="large" type="submit" variant="contained">
+                <Button
+                  size="large"
+                  type="submit"
+                  variant="contained"
+                  disabled={isSaveDisabled}
+                >
                   Save
                 </Button>
               </>

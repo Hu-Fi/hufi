@@ -8,6 +8,7 @@ import {
   ModalSuccess,
 } from '@/components/ModalState';
 import { useDeleteApiKeyByExchange } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 import BaseModal from '../BaseModal';
 
@@ -27,6 +28,8 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
     isError,
   } = useDeleteApiKeyByExchange(exchangeName);
 
+  const isMobile = useIsMobile();
+
   const handleDelete = () => {
     deleteApiKey();
   };
@@ -44,7 +47,7 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       onClose={handleClose}
       sx={{
         color: 'text.primary',
-        px: { xs: 3, md: 4 },
+        px: { xs: 2, md: 4 },
       }}
     >
       <Stack textAlign="center" alignItems="center">
@@ -55,7 +58,7 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
         {isIdle && (
           <>
             <Typography variant="subtitle2" py={1} mb={4} textAlign="center">
-              You are about to delete an API key for{' '}
+              You are about to delete an API KEY for{' '}
               <Typography
                 variant="alert"
                 color="warning"
@@ -72,7 +75,12 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
               <br />
               Do you want to continue?
             </Typography>
-            <Stack direction="row" justifyContent="center" gap={1}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              justifyContent="center"
+              gap={1}
+              width={{ xs: '100%', sm: 'auto' }}
+            >
               <Button variant="outlined" onClick={handleClose}>
                 Cancel
               </Button>
@@ -95,6 +103,7 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
             size="large"
             variant="contained"
             disabled={isPending}
+            fullWidth={isMobile}
             onClick={handleClose}
           >
             Close

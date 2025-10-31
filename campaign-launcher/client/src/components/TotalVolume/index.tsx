@@ -21,9 +21,17 @@ const TotalVolume = () => {
 
   return (
     <StatsCard>
-      <Box display="flex" alignItems="center" gap={{ xs: 1, lg: 4, xl: 8 }}>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent={{ xs: 'space-between', md: 'flex-start' }}
+        gap={{ xs: 1, lg: 4, xl: 8 }}
+      >
         <Typography variant="subtitle2">Liquidity Provided</Typography>
-        <FormControl variant="standard" sx={{ flex: 1 }}>
+        <FormControl
+          variant="standard"
+          sx={{ flex: 1, maxWidth: { xs: '150px', md: 'unset' } }}
+        >
           <Select
             id="exchange-volume-select"
             value={exchange}

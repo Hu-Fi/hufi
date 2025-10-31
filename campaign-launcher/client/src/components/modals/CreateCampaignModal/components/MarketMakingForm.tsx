@@ -28,6 +28,7 @@ import CryptoEntity from '@/components/CryptoEntity';
 import CryptoPairEntity from '@/components/CryptoPairEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useTradingPairs } from '@/hooks/useTradingPairs';
 import type { MarketMakingFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
@@ -47,12 +48,16 @@ const MarketMakingForm: FC<Props> = ({
   watch,
   isCreatingEscrow,
 }) => {
+  const isMobile = useIsMobile();
+
   const exchange = watch('exchange');
   const pair = watch('pair');
   const volumeToken = pair?.split('/')[1] || '';
 
   const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
     useTradingPairs(exchange);
+
+  if (isMobile && isCreatingEscrow) return null;
 
   return (
     <>
