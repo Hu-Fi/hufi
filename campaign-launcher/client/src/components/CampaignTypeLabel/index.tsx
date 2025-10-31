@@ -16,11 +16,11 @@ const CampaignTypeLabel: FC<Props> = ({ campaignType }) => {
       color="secondary"
       size="medium"
       sx={{
-        px: 2,
         height: 36,
         borderRadius: '200px',
         '& > .MuiChip-label': {
-          p: 0,
+          py: 0,
+          px: 2,
           color: 'secondary.contrast',
           fontSize: 14,
           fontWeight: 600,
