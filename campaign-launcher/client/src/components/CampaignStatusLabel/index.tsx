@@ -24,14 +24,13 @@ const CampaignStatusLabel: FC<Props> = ({
       size="medium"
       sx={{
         height: 36,
-        ml: -2,
-        px: 2,
         py: '6px',
         bgcolor: mapStatusToColor(campaignStatus, startDate, endDate),
         textTransform: 'capitalize',
         borderRadius: '100px',
         '& > .MuiChip-label': {
-          p: 0,
+          py: 0,
+          px: 2,
           color: isCompleted ? 'secondary.contrast' : 'primary.contrast',
           fontSize: 14,
           fontWeight: 600,

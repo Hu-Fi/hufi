@@ -11,6 +11,7 @@ import JoinedCampaigns from '@/components/JoinedCampaigns';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
 import { useCheckIsJoinedCampaign } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import type { EvmAddress } from '@/types';
 import { isCampaignDetails } from '@/utils';
@@ -22,6 +23,8 @@ const Campaign: FC = () => {
     useCampaignDetails(address);
   const { data: isAlreadyJoined, isLoading: isJoinedLoading } =
     useCheckIsJoinedCampaign(address);
+
+  const isMobile = useIsMobile();
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
@@ -59,9 +62,16 @@ const Campaign: FC = () => {
           <CampaignInfo campaign={campaignData} />
           <JoinCampaign
             campaign={campaignData}
-            isAlreadyJoined={!!isAlreadyJoined}
+            isJoined={!!isAlreadyJoined}
             isJoinedLoading={isJoinedLoading}
           />
+          {!isMobile && (
+            <JoinCampaign
+              campaign={campaignData}
+              isAlreadyJoined={!!isAlreadyJoined}
+              isJoinedLoading={isJoinedLoading}
+            />
+          )}
         </Box>
       )}
       {showCampaignBlocks && (

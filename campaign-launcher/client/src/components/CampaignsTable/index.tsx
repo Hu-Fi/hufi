@@ -398,6 +398,8 @@ const CampaignsTable: FC<Props> = ({
       columns={columns}
       columnVisibilityModel={{
         status: !isJoinedCampaigns && !isMobile,
+        paddingLeft: !isMobile,
+        paddingRight: !isMobile,
       }}
       columnHeaderHeight={48}
       rowHeight={noRows ? (isLg ? 50 : 95) : isXl ? 114 : isMobile ? 50 : 95}
@@ -480,18 +482,15 @@ const CampaignsTable: FC<Props> = ({
             justifyContent: 'center',
           },
           ...(isMobile && {
-            '&[data-field="paddingLeft"]': {
+            '&[data-field="exchange"]': {
+              pl: 2,
+            },
+            '&[data-field="symbol"]': {
               position: 'sticky',
               left: '0',
               bgcolor: 'background.default',
               zIndex: '100',
-            },
-            '&[data-field="symbol"]': {
-              position: 'sticky',
-              left: '16px',
-              bgcolor: 'background.default',
-              zIndex: '100',
-              pl: 0,
+              pl: 1,
             },
           }),
         },
@@ -547,17 +546,15 @@ const CampaignsTable: FC<Props> = ({
               fontSize: '12px',
               fontWeight: 700,
             },
-            '&[data-field="paddingLeft"]': {
+            '&[data-field="symbol"]': {
               position: 'sticky',
               left: '0',
               bgcolor: 'background.default',
               zIndex: '100',
+              pl: 2,
             },
-            '&[data-field="symbol"]': {
-              position: 'sticky',
-              left: '16px',
-              bgcolor: 'background.default',
-              zIndex: '100',
+            '&[data-field="exchange"]': {
+              pl: 2,
             },
           }),
         },

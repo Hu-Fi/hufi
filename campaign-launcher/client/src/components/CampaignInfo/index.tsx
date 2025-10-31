@@ -3,15 +3,15 @@ import { useState, type FC } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 
 import CampaignAddress from '@/components/CampaignAddress';
+import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import CustomTooltip from '@/components/CustomTooltip';
 import ChartModal from '@/components/modals/ChartModal';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
 import type { CampaignDetails } from '@/types';
 import { getChainIcon, getNetworkName } from '@/utils';
 import dayjs from '@/utils/dayjs';
-
-import CampaignStatusLabel from '../CampaignStatusLabel';
 
 const formatDate = (dateString: string): string => {
   return dayjs(dateString).format('D MMM YYYY');
@@ -24,10 +24,14 @@ const formatTime = (dateString: string): string => {
 
 type Props = {
   campaign: CampaignDetails;
+  isJoined: boolean;
+  isJoinedLoading: boolean;
 };
 
 const CampaignInfo: FC<Props> = ({ campaign }) => {
   const [openChartModal, setOpenChartModal] = useState(false);
+
+  const isMobile = useIsMobile();
 
   const isCompleted = campaign.status === 'completed';
   return (
@@ -37,14 +41,27 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
       flexDirection={{ xs: 'column', md: 'row' }}
       height={{ xs: 'auto', md: '40px' }}
       gap={{ xs: 3, md: 4 }}
+      width={{ xs: '100%', md: 'auto' }}
     >
-      <Box display="flex" alignItems="center" gap={3}>
+      <Box
+        display="flex"
+        alignItems="center"
+        width={{ xs: '100%', md: 'auto' }}
+        gap={1}
+      >
         <CampaignTypeLabel campaignType={campaign.type} />
         <CampaignStatusLabel
           campaignStatus={campaign.status}
           startDate={campaign.start_date}
           endDate={campaign.end_date}
         />
+        {isMobile && (
+          <JoinCampaign
+            campaign={campaign}
+            isAlreadyJoined={isJoined}
+            isJoinedLoading={isJoinedLoading}
+          />
+        )}
       </Box>
       <Box order={{ xs: 3, md: 2 }}>
         <CampaignAddress

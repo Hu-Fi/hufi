@@ -189,7 +189,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
 
   return (
     <>
-      <Grid container spacing={2} width="100%">
+      <Grid container spacing={{ xs: 1, md: 2 }} width="100%">
         {showProgressWidget && isMobile && renderProgressWidget(campaign)}
         <FirstRowWrapper showProgressWidget={showProgressWidget}>
           <StatsCard>

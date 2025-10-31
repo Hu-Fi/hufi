@@ -1,5 +1,6 @@
 import { type FC, useState } from 'react';
 
+import CheckIcon from '@mui/icons-material/CheckCircleOutline';
 import { Button, CircularProgress } from '@mui/material';
 
 import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
@@ -7,6 +8,7 @@ import {
   useGetEnrolledExchanges,
   useJoinCampaign,
 } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
 
@@ -26,6 +28,8 @@ const JoinCampaign: FC<Props> = ({
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
   const { mutate: joinCampaign, isPending: isJoining } = useJoinCampaign();
+
+  const isMobile = useIsMobile();
 
   const isCampaignFinished =
     campaign.status === CampaignStatus.TO_CANCEL ||
@@ -57,19 +61,23 @@ const JoinCampaign: FC<Props> = ({
         variant="contained"
         size="medium"
         sx={{
-          ml: { xs: 0, md: 'auto' },
-          mt: { xs: 2, md: 0 },
+          ml: 'auto',
           color: 'primary.contrast',
-          minWidth: { xs: '100%', sm: '135px' },
+          minWidth: isMobile ? '105px' : '135px',
         }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
+        endIcon={isMobile && isAlreadyJoined && <CheckIcon />}
       >
         {isJoining && (
           <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />
         )}
         {!isJoining &&
-          (isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign')}
+          (isAlreadyJoined
+            ? isMobile
+              ? 'Joined'
+              : 'Registered to Campaign'
+            : 'Join Campaign')}
       </Button>
       <AddKeysPromptModal
         open={modalOpen}
