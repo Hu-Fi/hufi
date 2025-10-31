@@ -36,7 +36,8 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
       slotProps={{
         backdrop: {
           sx: {
-            opacity: 0.8,
+            background:
+              'linear-gradient(180deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.13) 100%), rgba(16, 7, 53, 0.80)',
           },
         },
       }}
