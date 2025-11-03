@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Button, Typography, Box, Stack } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import LaunchCampaign from '@/components/LaunchCampaign';
+import StretchedLink from '@/components/StretchedLink';
 import { useIsXlDesktop, useIsLgDesktop } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
@@ -174,7 +175,6 @@ const CampaignsTable: FC<Props> = ({
   isMyCampaigns = false,
 }) => {
   const { exchangesMap } = useExchangesContext();
-  const navigate = useNavigate();
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
 
@@ -198,11 +198,16 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 250,
       renderCell: (params) => (
-        <CampaignSymbol
-          symbol={params.row.symbol}
-          campaignType={params.row.type}
-          size="medium"
-        />
+        <StretchedLink
+          to={`/campaign-details/${params.row.address}`}
+          sx={{ textDecoration: 'none' }}
+        >
+          <CampaignSymbol
+            symbol={params.row.symbol}
+            campaignType={params.row.type}
+            size="medium"
+          />
+        </StretchedLink>
       ),
     },
     {
@@ -361,9 +366,6 @@ const CampaignsTable: FC<Props> = ({
       disableVirtualization={!data}
       hideFooter
       hideFooterPagination
-      onRowClick={(params) => {
-        navigate(`/campaign-details/${params.row.address}`);
-      }}
       slots={{
         noRowsOverlay: () => (
           <Box
@@ -435,6 +437,7 @@ const CampaignsTable: FC<Props> = ({
         '& .MuiDataGrid-row': {
           display: 'flex',
           alignItems: 'center',
+          position: 'relative',
           cursor: 'pointer',
           mb: 1,
           py: isXl ? 4 : 2,
