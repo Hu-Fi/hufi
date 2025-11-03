@@ -1,9 +1,10 @@
-import { type FC, useState } from 'react';
+import { type FC, useRef, useState } from 'react';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Box,
+  ClickAwayListener,
   Collapse,
   IconButton,
   Link as MuiLink,
@@ -58,9 +59,12 @@ const StyledLink = ({ to, text, sx, target, onClick }: StyledLinkProps) => {
 };
 
 const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
+const LAUNCH_CAMPAIGN_TOOLTIP =
+  "You'll need to connect your wallet before launching a campaign";
 
 const Header: FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useAccount();
   const isMobile = useIsMobile();
@@ -68,6 +72,18 @@ const Header: FC = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev);
+  };
+
+  const handleClickAway = (event: MouseEvent | TouchEvent) => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    if (toggleButtonRef.current?.contains(event.target as Node)) {
+      return;
+    }
+
+    setIsMenuOpen(false);
   };
 
   return (
@@ -129,76 +145,78 @@ const Header: FC = () => {
                 color: 'primary.main',
               }}
               onClick={toggleMenu}
+              ref={toggleButtonRef}
             >
               <MenuIcon />
             </IconButton>
           </Box>
         </Toolbar>
 
-        <Collapse in={isMenuOpen} timeout="auto">
-          <Paper
-            elevation={10}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'background.default',
-              borderRadius: '0',
-              boxShadow: 'none',
-              p: 2,
-              pb: 4,
-              gap: 3,
-            }}
-          >
-            <StyledLink
-              to={ROUTES.SUPPORT}
-              text="Support"
-              onClick={() => setIsMenuOpen(false)}
-            />
-            <StyledLink
-              to={ROUTES.DASHBOARD}
-              text="Dashboard"
-              onClick={() => setIsMenuOpen(false)}
-            />
-            <StyledLink
-              to={STAKING_DASHBOARD_URL}
-              text="Stake HMT"
-              target="_blank"
-              onClick={() => setIsMenuOpen(false)}
-            />
-            <NetworkSwitcher />
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={2}
-              width="100%"
-              sx={{ '& button': { flex: 1 } }}
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <Collapse in={isMenuOpen} timeout="auto">
+            <Paper
+              elevation={10}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: 'background.default',
+                borderRadius: '0',
+                boxShadow: 'none',
+                p: 2,
+                pb: 4,
+                gap: 3,
+              }}
             >
-              <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
-              {!signer && (
-                <CustomTooltip
-                  title={
-                    <Typography variant="tooltip">
-                      You&apos;ll need to connect your wallet before launching a
-                      campaign
-                    </Typography>
-                  }
-                  slotProps={{
-                    tooltip: {
-                      sx: {
-                        width: '150px',
-                        lineHeight: '14px',
+              <StyledLink
+                to={ROUTES.SUPPORT}
+                text="Support"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <StyledLink
+                to={ROUTES.DASHBOARD}
+                text="Dashboard"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <StyledLink
+                to={STAKING_DASHBOARD_URL}
+                text="Stake HMT"
+                target="_blank"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <NetworkSwitcher />
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={2}
+                width="100%"
+                sx={{ '& button': { flex: 1 } }}
+              >
+                <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
+                {!signer && (
+                  <CustomTooltip
+                    title={
+                      <Typography variant="tooltip">
+                        {LAUNCH_CAMPAIGN_TOOLTIP}
+                      </Typography>
+                    }
+                    slotProps={{
+                      tooltip: {
+                        sx: {
+                          width: '150px',
+                          lineHeight: '14px',
+                        },
                       },
-                    },
-                  }}
-                  arrow
-                  placement="left"
-                >
-                  <InfoTooltipInner />
-                </CustomTooltip>
-              )}
-            </Box>
-          </Paper>
-        </Collapse>
+                    }}
+                    arrow
+                    placement="left"
+                  >
+                    <InfoTooltipInner />
+                  </CustomTooltip>
+                )}
+              </Box>
+            </Paper>
+          </Collapse>
+        </ClickAwayListener>
       </Container>
     </AppBar>
   );
