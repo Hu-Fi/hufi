@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Button, Typography, Box, Stack } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -181,7 +181,6 @@ const CampaignsTable: FC<Props> = ({
   isMyCampaigns = false,
 }) => {
   const { exchangesMap } = useExchangesContext();
-  const navigate = useNavigate();
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
@@ -416,9 +415,6 @@ const CampaignsTable: FC<Props> = ({
       disableVirtualization
       hideFooter
       hideFooterPagination
-      onRowClick={(params) => {
-        navigate(`/campaign-details/${params.row.address}`);
-      }}
       slots={{
         noRowsOverlay: () => (
           <Box
@@ -503,6 +499,7 @@ const CampaignsTable: FC<Props> = ({
         '& .MuiDataGrid-row': {
           display: 'flex',
           alignItems: 'center',
+          position: 'relative',
           cursor: 'pointer',
           mb: isMobile ? 0 : 1,
           py: isXl ? 4 : 2,
