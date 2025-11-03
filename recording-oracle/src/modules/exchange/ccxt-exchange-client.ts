@@ -16,6 +16,10 @@ type InitOptions = {
   preloadedExchangeClient?: Exchange;
 };
 
+const ERROR_EXCHANGE_NAME_PROP = Symbol(
+  'extra "exchange name" property for ccxt error',
+);
+
 export function mapCcxtOrder(order: CcxtOrder): Order {
   return {
     id: order.id,
@@ -51,9 +55,8 @@ const ccxtApiAccessErrors = [
   ccxt.PermissionDenied,
 ] as const;
 
-type CcxtApiAccessError = InstanceType<(typeof ccxtApiAccessErrors)[number]>;
-
-function isCcxtApiAccessError(error: unknown): error is CcxtApiAccessError {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isExchangeApiAccessError(error: any) {
   if (
     ccxtApiAccessErrors.some(
       (ccxtApiAccessError) => error instanceof ccxtApiAccessError,
@@ -61,6 +64,19 @@ function isCcxtApiAccessError(error: unknown): error is CcxtApiAccessError {
   ) {
     return true;
   }
+
+  // ============== MEXC specific API errors start ==============
+  if (error?.[ERROR_EXCHANGE_NAME_PROP] === 'mexc') {
+    // https://www.mexc.com/api-docs/spot-v3/general-info#error-code
+    /**
+     * This can be returned e.g. in case when api key is removed.
+     * NOTE: after it's removed it's still valid for some time on their end
+     */
+    if (error.message.includes('10072')) {
+      return true;
+    }
+  }
+  // ============== MEXC specific API errors end ==============
 
   return false;
 }
@@ -76,7 +92,10 @@ function CatchApiAccessErrors() {
       try {
         return await original.apply(this, args);
       } catch (error) {
-        if (isCcxtApiAccessError(error)) {
+        error[ERROR_EXCHANGE_NAME_PROP] = (
+          this as CcxtExchangeClient
+        ).exchangeName;
+        if (isExchangeApiAccessError(error)) {
           throw new ExchangeApiAccessError(
             `Api access failed for ${propertyKey}`,
             error.message,

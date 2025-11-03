@@ -51,16 +51,16 @@ const testCcxtApiAccessErrors = [
 ] as const;
 
 describe('CcxtExchangeClient', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   describe('constructor', () => {
     let exchangeName: string;
 
     beforeEach(() => {
       exchangeName = generateExchangeName();
       mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
-    });
-
-    afterEach(() => {
-      jest.resetAllMocks();
     });
 
     it('should not create instance if exchange not supported', () => {
@@ -282,10 +282,10 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should throw ExchangeApiAccessError if no necessary access', async () => {
-        const ErrorConstructore = faker.helpers.arrayElement(
+        const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
-        const testError = new ErrorConstructore(faker.lorem.sentence());
+        const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(testError);
 
         let thrownError;
@@ -301,6 +301,78 @@ describe('CcxtExchangeClient', () => {
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
         expect(thrownError.message).toBe('Api access failed for fetchMyTrades');
         expect(thrownError.cause).toBe(testError.message);
+      });
+
+      describe('handles exchange specific access errors', () => {
+        describe('mexc', () => {
+          let mexcClient: CcxtExchangeClient;
+
+          beforeAll(() => {
+            const exchangeName = 'mexc';
+            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+
+            mexcClient = new CcxtExchangeClient(exchangeName, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+          });
+
+          it.each([
+            'mexc {"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Invalid access key"}',
+          ])(
+            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            async (errorMessage) => {
+              mockedExchange.fetchMyTrades.mockRejectedValueOnce(
+                new Error(errorMessage),
+              );
+
+              let thrownError;
+              try {
+                await mexcClient.fetchMyTrades(
+                  tradingPair,
+                  tradesSince.valueOf(),
+                );
+              } catch (error) {
+                thrownError = error;
+              }
+
+              expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+              expect(thrownError.message).toBe(
+                'Api access failed for fetchMyTrades',
+              );
+              expect(thrownError.cause).toBe(errorMessage);
+            },
+          );
+
+          it('should re-throw original error when 10072 code not for mexc', async () => {
+            const randomExchange = faker.lorem.slug();
+            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+
+            const exchangeClient = new CcxtExchangeClient(randomExchange, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+
+            const nonMexcError = new Error(
+              `${randomExchange} {"code":10072,"msg":"Another exchange error"}`,
+            );
+            mockedExchange.fetchMyTrades.mockRejectedValueOnce(nonMexcError);
+
+            let thrownError;
+            try {
+              await exchangeClient.fetchMyTrades(
+                tradingPair,
+                tradesSince.valueOf(),
+              );
+            } catch (error) {
+              thrownError = error;
+            }
+
+            expect(thrownError).toBe(nonMexcError);
+          });
+        });
       });
     });
 
@@ -348,10 +420,10 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should throw ExchangeApiAccessError if no necessary access', async () => {
-        const ErrorConstructore = faker.helpers.arrayElement(
+        const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
-        const testError = new ErrorConstructore(faker.lorem.sentence());
+        const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchOpenOrders.mockRejectedValueOnce(testError);
 
         let thrownError;
@@ -370,6 +442,78 @@ describe('CcxtExchangeClient', () => {
         );
         expect(thrownError.cause).toBe(testError.message);
       });
+
+      describe('handles exchange specific access errors', () => {
+        describe('mexc', () => {
+          let mexcClient: CcxtExchangeClient;
+
+          beforeAll(() => {
+            const exchangeName = 'mexc';
+            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+
+            mexcClient = new CcxtExchangeClient(exchangeName, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+          });
+
+          it.each([
+            'mexc {"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Invalid access key"}',
+          ])(
+            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            async (errorMessage) => {
+              mockedExchange.fetchOpenOrders.mockRejectedValueOnce(
+                new Error(errorMessage),
+              );
+
+              let thrownError;
+              try {
+                await mexcClient.fetchOpenOrders(
+                  tradingPair,
+                  ordersSince.valueOf(),
+                );
+              } catch (error) {
+                thrownError = error;
+              }
+
+              expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+              expect(thrownError.message).toBe(
+                'Api access failed for fetchOpenOrders',
+              );
+              expect(thrownError.cause).toBe(errorMessage);
+            },
+          );
+
+          it('should re-throw original error when 10072 code not for mexc', async () => {
+            const randomExchange = faker.lorem.slug();
+            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+
+            const exchangeClient = new CcxtExchangeClient(randomExchange, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+
+            const nonMexcError = new Error(
+              `${randomExchange} {"code":10072,"msg":"Another exchange error"}`,
+            );
+            mockedExchange.fetchOpenOrders.mockRejectedValueOnce(nonMexcError);
+
+            let thrownError;
+            try {
+              await exchangeClient.fetchOpenOrders(
+                tradingPair,
+                ordersSince.valueOf(),
+              );
+            } catch (error) {
+              thrownError = error;
+            }
+
+            expect(thrownError).toBe(nonMexcError);
+          });
+        });
+      });
     });
 
     describe('fetchBalance', () => {
@@ -387,10 +531,10 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should throw ExchangeApiAccessError if no necessary access', async () => {
-        const ErrorConstructore = faker.helpers.arrayElement(
+        const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
-        const testError = new ErrorConstructore(faker.lorem.sentence());
+        const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(testError);
 
         let thrownError;
@@ -403,6 +547,72 @@ describe('CcxtExchangeClient', () => {
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
         expect(thrownError.message).toBe('Api access failed for fetchBalance');
         expect(thrownError.cause).toBe(testError.message);
+      });
+
+      describe('handles exchange specific access errors', () => {
+        describe('mexc', () => {
+          let mexcClient: CcxtExchangeClient;
+
+          beforeAll(() => {
+            const exchangeName = 'mexc';
+            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+
+            mexcClient = new CcxtExchangeClient(exchangeName, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+          });
+
+          it.each([
+            'mexc {"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Invalid access key"}',
+          ])(
+            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            async (errorMessage) => {
+              mockedExchange.fetchBalance.mockRejectedValueOnce(
+                new Error(errorMessage),
+              );
+
+              let thrownError;
+              try {
+                await mexcClient.fetchBalance();
+              } catch (error) {
+                thrownError = error;
+              }
+
+              expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+              expect(thrownError.message).toBe(
+                'Api access failed for fetchBalance',
+              );
+              expect(thrownError.cause).toBe(errorMessage);
+            },
+          );
+
+          it('should re-throw original error when 10072 code not for mexc', async () => {
+            const randomExchange = faker.lorem.slug();
+            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+
+            const exchangeClient = new CcxtExchangeClient(randomExchange, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+
+            const nonMexcError = new Error(
+              `${randomExchange} {"code":10072,"msg":"Another exchange error"}`,
+            );
+            mockedExchange.fetchBalance.mockRejectedValueOnce(nonMexcError);
+
+            let thrownError;
+            try {
+              await exchangeClient.fetchBalance();
+            } catch (error) {
+              thrownError = error;
+            }
+
+            expect(thrownError).toBe(nonMexcError);
+          });
+        });
       });
     });
 
@@ -428,10 +638,10 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should throw ExchangeApiAccessError if no necessary access', async () => {
-        const ErrorConstructore = faker.helpers.arrayElement(
+        const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
-        const testError = new ErrorConstructore(faker.lorem.sentence());
+        const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
 
         let thrownError;
@@ -448,6 +658,78 @@ describe('CcxtExchangeClient', () => {
           'Api access failed for fetchDepositAddress',
         );
         expect(thrownError.cause).toBe(testError.message);
+      });
+
+      describe('handles exchange specific access errors', () => {
+        describe('mexc', () => {
+          let mexcClient: CcxtExchangeClient;
+
+          beforeAll(() => {
+            const exchangeName = 'mexc';
+            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+
+            mexcClient = new CcxtExchangeClient(exchangeName, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+          });
+
+          it.each([
+            'mexc {"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Api key info invalid"}',
+            '{"code":10072,"msg":"Invalid access key"}',
+          ])(
+            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            async (errorMessage) => {
+              mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
+                new Error(errorMessage),
+              );
+
+              let thrownError;
+              try {
+                await mexcClient.fetchDepositAddress(
+                  faker.finance.currencyCode(),
+                );
+              } catch (error) {
+                thrownError = error;
+              }
+
+              expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
+              expect(thrownError.message).toBe(
+                'Api access failed for fetchDepositAddress',
+              );
+              expect(thrownError.cause).toBe(errorMessage);
+            },
+          );
+
+          it('should re-throw original error when 10072 code not for mexc', async () => {
+            const randomExchange = faker.lorem.slug();
+            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+
+            const exchangeClient = new CcxtExchangeClient(randomExchange, {
+              apiKey: faker.string.sample(),
+              secret: faker.string.sample(),
+            });
+
+            const nonMexcError = new Error(
+              `${randomExchange} {"code":10072,"msg":"Another exchange error"}`,
+            );
+            mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
+              nonMexcError,
+            );
+
+            let thrownError;
+            try {
+              await exchangeClient.fetchDepositAddress(
+                faker.finance.currencyCode(),
+              );
+            } catch (error) {
+              thrownError = error;
+            }
+
+            expect(thrownError).toBe(nonMexcError);
+          });
+        });
       });
 
       it('shold fetch deposit address info for ERC20 network on gate', async () => {
