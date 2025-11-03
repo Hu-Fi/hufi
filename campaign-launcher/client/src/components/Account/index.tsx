@@ -38,7 +38,7 @@ const buttonSx = {
 const Account: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const { activeAddress } = useActiveAccount();
-  const { disconnect } = useDisconnect();
+  const { disconnectAsync } = useDisconnect();
   const { logout, isAuthenticated } = useWeb3Auth();
   const navigate = useNavigate();
 
@@ -51,9 +51,9 @@ const Account: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
     navigate('/manage-api-keys');
   };
 
-  const handleDisconnect = () => {
-    disconnect();
-    logout();
+  const handleDisconnect = async () => {
+    await disconnectAsync();
+    await logout();
   };
 
   return (

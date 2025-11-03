@@ -1,8 +1,7 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState, type MouseEvent } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { useSessionStorage } from 'react-use';
 import { useConnect, useDisconnect, type Connector } from 'wagmi';
 
 import coinbaseSvg from '@/assets/coinbase.svg';
@@ -25,19 +24,15 @@ const WALLET_ICONS: Record<string, string> = {
 
 const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const [isAuthorizing, setIsAuthorizing] = useSessionStorage(
-    'isAuthorizing',
-    false
-  );
 
   const { connectAsync, connectors } = useConnect();
   const { isConnecting } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
   const { signer } = useRetrieveSigner();
-  const { signIn, isLoading } = useWeb3Auth();
+  const { signIn, isLoading, isAuthorizing, setIsAuthorizing } = useWeb3Auth();
 
-  const isDisabled = isLoading || isConnecting || isAuthorizing;
+  const isDisabled = isLoading || isConnecting;
 
   const handleConnect = async (connector: Connector) => {
     try {
@@ -61,9 +56,7 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
     }
   }, [signer, signIn, isAuthorizing]);
 
-  const handleConnectWalletButtonClick = (
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleConnectWalletButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (isDisabled) return null;
 
     if (signer) {

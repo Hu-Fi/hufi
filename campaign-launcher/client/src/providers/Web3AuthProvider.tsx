@@ -8,7 +8,6 @@ import {
   useEffect,
 } from 'react';
 
-import { useSessionStorage } from 'react-use';
 import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
@@ -22,6 +21,8 @@ type Web3AuthContextType = {
   isLoading: boolean;
   signIn: () => Promise<void>;
   logout: () => Promise<void>;
+  isAuthorizing: boolean;
+  setIsAuthorizing: (isAuthorizing: boolean) => void;
 };
 
 const Web3AuthContext = createContext<Web3AuthContextType>(
@@ -31,11 +32,11 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
   const { activeAddress } = useActiveAccount();
-  const [, setIsAuthorizing] = useSessionStorage('isAuthorizing', false);
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
@@ -101,19 +102,12 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!isConnected) {
-      setIsAuthenticated(false);
-      setIsLoading(false);
-      setIsAuthorizing(false);
-      return;
-    }
-
-    if (!isAuthenticated) {
+    if (isConnected && !isAuthenticated && !isAuthorizing) {
       bootstrapAuthState();
     } else {
       setIsLoading(false);
     }
-  }, [isConnected, isAuthenticated, setIsAuthorizing]);
+  }, [isConnected, isAuthenticated, isAuthorizing, setIsAuthorizing]);
 
   useEffect(() => {
     const handleRefreshFailureEvent = () => {
@@ -156,6 +150,8 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         isLoading,
         signIn,
         logout,
+        isAuthorizing,
+        setIsAuthorizing,
       }}
     >
       {children}
