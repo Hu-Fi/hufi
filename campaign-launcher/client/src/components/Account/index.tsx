@@ -39,11 +39,11 @@ const buttonSx = {
   },
 };
 
-const Account: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
+const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const { activeAddress } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
-  const { logout, isAuthenticated } = useWeb3Auth();
+  const { logout } = useWeb3Auth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -52,7 +52,6 @@ const Account: FC<{ closeDrawer?: () => void }> = ({ closeDrawer }) => {
   const handleClosePopover = () => setAnchorEl(null);
 
   const handleGoToManageApiKeys = () => {
-    closeDrawer?.();
     navigate('/manage-api-keys');
   };
 

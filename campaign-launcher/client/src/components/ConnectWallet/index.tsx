@@ -24,7 +24,7 @@ const WALLET_ICONS: Record<string, string> = {
   walletConnect: walletConnectSvg,
 };
 
-const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
+const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { connectAsync, connectors } = useConnect();
@@ -96,7 +96,6 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
                 handleConnect(connector);
                 if (isMobile) {
                   onClose();
-                  closeDrawer?.();
                 }
               }}
             >
