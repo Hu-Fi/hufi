@@ -23,13 +23,8 @@ export enum CampaignStatus {
   ACTIVE = 'active',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
+  TO_CANCEL = 'to_cancel',
 }
-
-export type CampaignOracleFees = {
-  exchangeOracleFee: number;
-  recordingOracleFee: number;
-  reputationOracleFee: number;
-};
 
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
