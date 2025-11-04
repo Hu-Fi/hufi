@@ -214,3 +214,14 @@ export const SuccessIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const ChartIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M21 5.47L12 12L7.62 7.62L3 11V8.52L7.83 5L12.21 9.38L21 3V5.47ZM21 15H16.3L12.13 18.34L6 12.41L3 14.54V17L5.8 15L12 21L17 17H21V15Z"
+        fill="currentColor"
+      />
+    </SvgIcon>
+  );
+};

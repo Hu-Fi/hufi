@@ -6,6 +6,7 @@ import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import CustomTooltip from '@/components/CustomTooltip';
+import JoinCampaign from '@/components/JoinCampaign';
 import ChartModal from '@/components/modals/ChartModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
@@ -24,16 +25,19 @@ const formatTime = (dateString: string): string => {
 
 type Props = {
   campaign: CampaignDetails;
-  isJoined: boolean;
+  isAlreadyJoined: boolean;
   isJoinedLoading: boolean;
 };
 
-const CampaignInfo: FC<Props> = ({ campaign }) => {
+const CampaignInfo: FC<Props> = ({
+  campaign,
+  isAlreadyJoined,
+  isJoinedLoading,
+}) => {
   const [openChartModal, setOpenChartModal] = useState(false);
 
   const isMobile = useIsMobile();
 
-  const isCompleted = campaign.status === 'completed';
   return (
     <Box
       display="flex"
@@ -41,13 +45,14 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
       flexDirection={{ xs: 'column', md: 'row' }}
       height={{ xs: 'auto', md: '40px' }}
       gap={{ xs: 3, md: 4 }}
-      width={{ xs: '100%', md: 'auto' }}
+      width="100%"
     >
       <Box
         display="flex"
         alignItems="center"
         width={{ xs: '100%', md: 'auto' }}
         gap={1}
+        order={1}
       >
         <CampaignTypeLabel campaignType={campaign.type} />
         <CampaignStatusLabel
@@ -58,7 +63,7 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
         {isMobile && (
           <JoinCampaign
             campaign={campaign}
-            isAlreadyJoined={isJoined}
+            isAlreadyJoined={isAlreadyJoined}
             isJoinedLoading={isJoinedLoading}
           />
         )}
@@ -107,19 +112,32 @@ const CampaignInfo: FC<Props> = ({ campaign }) => {
             </>
           )}
         </Box>
+        <CustomTooltip
+          arrow
+          title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
+          placement="top"
+        >
+          <Box display="flex" sx={{ cursor: 'pointer' }}>
+            {getChainIcon(campaign.chain_id)}
+          </Box>
+        </CustomTooltip>
       </Box>
-      <Button
-        variant="outlined"
-        size="medium"
-        onClick={() => setOpenChartModal(true)}
-      >
-        Paid Amount Chart
-      </Button>
-      <ChartModal
-        open={openChartModal}
-        onClose={() => setOpenChartModal(false)}
-        campaign={campaign}
-      />
+      {!isMobile && (
+        <Box ml={{ xs: 0, md: 'auto' }} order={4}>
+          <Button
+            variant="outlined"
+            size="medium"
+            onClick={() => setOpenChartModal(true)}
+          >
+            Paid Amount Chart
+          </Button>
+          <ChartModal
+            open={openChartModal}
+            onClose={() => setOpenChartModal(false)}
+            campaign={campaign}
+          />
+        </Box>
+      )}
     </Box>
   );
 };

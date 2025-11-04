@@ -1,6 +1,6 @@
-import { type FC, type PropsWithChildren, Children } from 'react';
+import { type FC, type PropsWithChildren, Children, useState } from 'react';
 
-import { Box, styled, Typography } from '@mui/material';
+import { Box, Button, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 import CampaignResultsWidget, {
@@ -12,6 +12,7 @@ import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import UserProgressWidget from '@/components/UserProgressWidget';
 import { useIsXlDesktop, useIsMobile } from '@/hooks/useBreakpoints';
+import { ChartIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, CampaignType, type CampaignDetails } from '@/types';
@@ -20,6 +21,8 @@ import {
   getDailyTargetTokenSymbol,
   getTokenInfo,
 } from '@/utils';
+
+import ChartModal from '../modals/ChartModal';
 
 type Props = {
   campaign: CampaignDetails | null | undefined;
@@ -143,6 +146,8 @@ const renderProgressWidget = (campaign: CampaignDetails) => (
 );
 
 const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
+  const [openChartModal, setOpenChartModal] = useState(false);
+
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
@@ -167,25 +172,29 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
   const exchangeName =
     exchangesMap.get(campaign.exchange_name)?.display_name ||
     campaign.exchange_name;
+
   const totalFee =
     campaign.exchange_oracle_fee_percent +
     campaign.recording_oracle_fee_percent +
     campaign.reputation_oracle_fee_percent;
+
   const formattedTokenAmount = +formatTokenAmount(
     campaign.fund_amount,
     campaign.fund_token_decimals
   );
+
   const formattedAmountPaid = +formatTokenAmount(
     campaign.amount_paid,
     campaign.fund_token_decimals
   );
 
-  const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
-  const { label: targetTokenSymbol } = getTokenInfo(targetToken);
   const formattedReservedFunds = +formatTokenAmount(
     campaign.reserved_funds,
     campaign.fund_token_decimals
   );
+
+  const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
+  const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
     <>
@@ -260,12 +269,17 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Reserved funds</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography
+              variant={isMobile ? 'h6-mobile' : 'h5'}
+              color="primary.violet"
+              fontWeight={700}
+              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
+            >
               {formattedReservedFunds} {campaign.fund_token_symbol}
             </Typography>
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
             <Title
               variant="subtitle2"
@@ -289,22 +303,43 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Exchange</Title>
-            <Typography variant={isXl ? 'h4' : 'h6-mobile'}>
+            <Typography
+              variant={isXl ? 'h4' : isMobile ? 'body2' : 'h6-mobile'}
+              fontWeight={isXl ? 600 : isMobile ? 700 : 500}
+            >
               {exchangeName}
             </Typography>
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <StatsCard>
+        <Grid size={{ xs: 6, md: 3 }}>
+          <StatsCard sx={{ '&:last-child p': { fontWeight: 700 } }}>
             <Title variant="subtitle2">Symbol</Title>
             <CampaignSymbol
               symbol={campaign.symbol}
               campaignType={campaign.type}
-              size={isXl ? 'large' : 'medium'}
+              size={isXl ? 'large' : isMobile ? 'small' : 'medium'}
             />
           </StatsCard>
         </Grid>
       </Grid>
+      {isMobile && (
+        <>
+          <Button
+            variant="outlined"
+            size="medium"
+            sx={{ mt: -1 }}
+            onClick={() => setOpenChartModal(true)}
+            endIcon={<ChartIcon />}
+          >
+            Paid Amount Chart
+          </Button>
+          <ChartModal
+            open={openChartModal}
+            onClose={() => setOpenChartModal(false)}
+            campaign={campaign}
+          />
+        </>
+      )}
     </>
   );
 };

@@ -19,7 +19,7 @@ const CampaignStatusLabel: FC<Props> = ({
   const isCompleted = campaignStatus === CampaignStatus.COMPLETED;
   return (
     <Chip
-      label={campaignStatus}
+      label={campaignStatus.split('_').join(' ')}
       color="secondary"
       size="medium"
       sx={{
