@@ -43,8 +43,11 @@ const RETURNED_STATUS_TO_CAMPAIGN_STATUSES: Record<
 > = {
   [CampaignStatus.ACTIVE]: [
     CampaignStatus.ACTIVE,
-    CampaignStatus.PENDING_CANCELLATION,
     CampaignStatus.PENDING_COMPLETION,
+  ],
+  [CampaignStatus.TO_CANCEL]: [
+    CampaignStatus.TO_CANCEL,
+    CampaignStatus.PENDING_CANCELLATION,
   ],
   [CampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
   [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],

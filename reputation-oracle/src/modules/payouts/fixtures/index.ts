@@ -1,18 +1,20 @@
 import { faker } from '@faker-js/faker';
-import { EscrowStatus, IEscrow } from '@human-protocol/sdk';
+import { EscrowStatus, type IEscrow } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
 
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import {
+  BaseCampaignManifest,
   CampaignWithResults,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
 } from '../types';
 
-export function generateManifest() {
+export function generateManifest(): BaseCampaignManifest {
   const manifest = {
+    type: faker.helpers.arrayElement(['MARKET_MAKING', 'HOLDING', 'ANY']),
     exchange: faker.lorem.slug(),
     start_date: faker.date.past().toISOString(),
     end_date: faker.date.soon().toISOString(),
@@ -23,24 +25,34 @@ export function generateManifest() {
 
 export function generateEscrow(): IEscrow {
   const escrowAddress = faker.finance.ethereumAddress();
-  const totalFundedAmount = faker.number.int({ min: 1 });
+  const totalFundedAmount = faker.number.bigInt({ min: 1 });
 
   const escrow: IEscrow = {
     id: escrowAddress,
     chainId: generateTestnetChainId(),
     address: escrowAddress,
     status: EscrowStatus[EscrowStatus.Pending],
+    launcher: faker.finance.ethereumAddress(),
     manifest: JSON.stringify(generateManifest()),
     manifestHash: faker.string.hexadecimal(),
-    totalFundedAmount: totalFundedAmount.toString(),
-    balance: totalFundedAmount.toString(),
-    amountPaid: '0',
+    totalFundedAmount: totalFundedAmount,
+    balance: totalFundedAmount,
+    amountPaid: 0n,
     factoryAddress: faker.finance.ethereumAddress(),
-    launcher: faker.finance.ethereumAddress(),
     token: faker.finance.ethereumAddress(),
-    createdAt: Math.round(faker.date.recent().valueOf() / 1000).toString(),
-    count: faker.number.int({ min: 1, max: 42 }).toString(),
+    createdAt: faker.date.recent().valueOf(),
+    count: faker.number.int({ min: 1, max: 42 }),
     intermediateResultsUrl: faker.internet.url(),
+    intermediateResultsHash: faker.string.hexadecimal(),
+    finalResultsUrl: null,
+    finalResultsHash: null,
+    jobRequesterId: faker.string.uuid(),
+    exchangeOracle: faker.finance.ethereumAddress(),
+    recordingOracle: faker.finance.ethereumAddress(),
+    reputationOracle: faker.finance.ethereumAddress(),
+    exchangeOracleFee: faker.number.int({ min: 1, max: 50 }),
+    recordingOracleFee: faker.number.int({ min: 1, max: 50 }),
+    reputationOracleFee: faker.number.int({ min: 1, max: 50 }),
   };
 
   return escrow;
@@ -85,9 +97,11 @@ export function generateCampaign(): CampaignWithResults {
   const data = {
     chainId: generateTestnetChainId(),
     address: faker.finance.ethereumAddress(),
+    status: EscrowStatus[EscrowStatus.Pending],
     manifest: JSON.stringify(generateManifest()),
     manifestHash: faker.string.hexadecimal(),
     intermediateResultsUrl: faker.internet.url(),
+    intermediateResultsHash: faker.string.hexadecimal(),
     launcher: faker.finance.ethereumAddress(),
     fundTokenAddress: faker.finance.ethereumAddress(),
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),

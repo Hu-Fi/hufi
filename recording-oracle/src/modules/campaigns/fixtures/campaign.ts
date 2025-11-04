@@ -83,13 +83,17 @@ export function generateParticipantOutcome(
 }
 
 export function generateCampaignProgress(
-  type: CampaignType,
-  endDate?: Date,
+  campaign: CampaignEntity,
 ): CampaignProgress<CampaignProgressMeta> {
-  const to = endDate || faker.date.past();
+  const from = new Date(campaign.startDate);
+  const oneDayFromStart = dayjs(from).add(1, 'day').toDate();
+  const to =
+    oneDayFromStart > campaign.endDate
+      ? new Date(campaign.endDate)
+      : oneDayFromStart;
 
   let meta: CampaignProgressMeta;
-  switch (type) {
+  switch (campaign.type) {
     case CampaignType.MARKET_MAKING:
       meta = {
         total_volume: 0,
@@ -103,7 +107,7 @@ export function generateCampaignProgress(
   }
 
   return {
-    from: dayjs(to).subtract(1, 'day').toISOString(),
+    from: from.toISOString(),
     to: to.toISOString(),
     meta,
     participants_outcomes: [],

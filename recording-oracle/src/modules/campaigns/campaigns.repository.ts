@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { DataSource, In, Repository } from 'typeorm';
 
 import { CampaignEntity } from './campaign.entity';
+import { PROGRESS_PERIOD_DAYS } from './constants';
 import { CampaignStatus } from './types';
 
 @Injectable()
@@ -28,20 +29,21 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
 
   async findForProgressRecording(): Promise<CampaignEntity[]> {
     const now = new Date();
-    const timeAgo = dayjs().subtract(1, 'day').toDate();
+    const timeAgo = dayjs().subtract(PROGRESS_PERIOD_DAYS, 'day').toDate();
 
     const results = await this.createQueryBuilder('campaign')
       .where(
         `
-          campaign.status = :status
-          AND (
-            campaign.endDate <= :now
-            OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
-            OR campaign.lastResultsAt <= :timeAgo
+          campaign.status = '${CampaignStatus.TO_CANCEL}'
+          OR (campaign.status = '${CampaignStatus.ACTIVE}'
+            AND (
+              campaign.endDate <= :now
+              OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
+              OR campaign.lastResultsAt <= :timeAgo
+            )
           )
         `,
         {
-          status: CampaignStatus.ACTIVE,
           now,
           timeAgo,
         },
@@ -51,10 +53,15 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     return results;
   }
 
-  async findForFinishTracking(): Promise<CampaignEntity[]> {
+  async findForStatusSync(): Promise<CampaignEntity[]> {
     return this.find({
       where: {
-        status: In([CampaignStatus.PENDING_COMPLETION, CampaignStatus.ACTIVE]),
+        status: In([
+          CampaignStatus.ACTIVE,
+          CampaignStatus.TO_CANCEL,
+          CampaignStatus.PENDING_COMPLETION,
+          CampaignStatus.PENDING_CANCELLATION,
+        ]),
       },
     });
   }

@@ -65,10 +65,6 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
     userId: string,
     exchangeNames: string[] = [],
   ): Promise<void> {
-    /**
-     * TODO: update this query to have also `to_cancel`
-     * status as param when ready
-     */
     const activeCampaignIdsQuery = this.manager
       .createQueryBuilder()
       .select('campaign.id')
@@ -90,7 +86,7 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
          * This is necessary to call `setParameters` on main op
          * in order to get params injected into subquery
          */
-        statuses: [CampaignStatus.ACTIVE],
+        statuses: [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL],
         exchangeNames,
       });
 

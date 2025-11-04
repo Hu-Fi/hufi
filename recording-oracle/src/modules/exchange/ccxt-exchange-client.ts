@@ -111,6 +111,7 @@ function CatchApiAccessErrors() {
 export class CcxtExchangeClient implements ExchangeApiClient {
   private logger: Logger;
   private ccxtClient: Exchange;
+  readonly sandbox: boolean;
 
   constructor(
     readonly exchangeName: string,
@@ -126,15 +127,15 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
     }
 
-    const _sandbox = Boolean(sandbox);
-    if (_sandbox) {
+    this.sandbox = Boolean(sandbox);
+    if (this.sandbox) {
       this.ccxtClient.setSandboxMode(true);
     }
 
     this.logger = logger.child({
       context: CcxtExchangeClient.name,
       exchangeName,
-      sandbox: _sandbox,
+      sandbox: this.sandbox,
     });
   }
 
@@ -201,14 +202,47 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     switch (this.exchangeName) {
       case 'gate': {
         fetchParams.network = 'ERC20';
+        break;
+      }
+      case 'bybit': {
+        if (this.sandbox) {
+          const currencies = await this.ccxtClient.fetchCurrencies();
+          const networks = currencies[symbol]?.networks;
+          if (!networks) {
+            throw new Error(`No networks supported for ${symbol}`);
+          }
+
+          const networkNames = Object.keys(networks).sort();
+          let depositNetwork: string | undefined;
+          for (const networkName of networkNames) {
+            if (networks[networkName]!.deposit) {
+              depositNetwork = networkName;
+              break;
+            }
+          }
+
+          if (!depositNetwork) {
+            throw new Error(`No deposit network for ${symbol}`);
+          }
+
+          fetchParams.network = depositNetwork;
+
+          this.logger.debug(
+            'Will call fetchDepositAddress for bybit with extra params',
+            {
+              params: fetchParams,
+            },
+          );
+        }
+        break;
       }
     }
 
-    const result = await this.ccxtClient.fetchDepositAddress(
+    const response = await this.ccxtClient.fetchDepositAddress(
       symbol,
       fetchParams,
     );
 
-    return result.address;
+    return response.address;
   }
 }
