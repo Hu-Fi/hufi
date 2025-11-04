@@ -49,11 +49,13 @@ const Campaign: FC = () => {
   return (
     <PageWrapper>
       <PageTitle title="Campaign Data">
-        <JoinCampaign
-          campaign={campaignData}
-          isAlreadyJoined={!!isAlreadyJoined}
-          isJoinedLoading={isJoinedLoading}
-        />
+        {campaignData && (
+          <JoinCampaign
+            campaign={campaignData}
+            isAlreadyJoined={!!isAlreadyJoined}
+            isJoinedLoading={isJoinedLoading}
+          />
+        )}
       </PageTitle>
       {isCampaignLoading && (
         <CircularProgress
