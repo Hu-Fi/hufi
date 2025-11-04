@@ -12,7 +12,6 @@ import type { CampaignType } from '@/types';
 type Props = {
   variant: 'outlined' | 'contained';
   sx?: SxProps;
-  onClick?: () => void;
   withTooltip?: boolean;
 };
 
@@ -53,12 +52,7 @@ const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({
   return children;
 };
 
-const LaunchCampaign: FC<Props> = ({
-  variant,
-  sx,
-  onClick,
-  withTooltip = false,
-}) => {
+const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [campaignType, setCampaignType] = useState<CampaignType | null>(null);
@@ -72,7 +66,6 @@ const LaunchCampaign: FC<Props> = ({
   const handleLaunchCampaignClick = async () => {
     if (isDisabled) return null;
 
-    onClick?.();
     setIsSetupModalOpen(true);
   };
 

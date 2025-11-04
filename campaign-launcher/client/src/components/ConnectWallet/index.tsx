@@ -12,17 +12,13 @@ import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
-type Props = {
-  closeDrawer?: () => void;
-};
-
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
   coinbaseWalletSDK: coinbaseSvg,
   walletConnect: walletConnectSvg,
 };
 
-const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
+const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { connectAsync, connectors } = useConnect();
@@ -129,7 +125,6 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
                 handleConnect(connector);
                 if (isMobile) {
                   onClose();
-                  closeDrawer?.();
                 }
               }}
             >

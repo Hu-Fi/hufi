@@ -148,32 +148,16 @@ const Header: FC = () => {
               >
                 <CloseIcon />
               </IconButton>
-              <StyledLink
-                to={ROUTES.SUPPORT}
-                text="Support"
-                onClick={() => toggleDrawer(false)}
-              />
-              <StyledLink
-                to={ROUTES.DASHBOARD}
-                text="Dashboard"
-                onClick={() => toggleDrawer(false)}
-              />
+              <StyledLink to={ROUTES.SUPPORT} text="Support" />
+              <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
               <StyledLink
                 to={STAKING_DASHBOARD_URL}
                 text="Stake HMT"
                 target="_blank"
-                onClick={() => toggleDrawer(false)}
               />
               <NetworkSwitcher />
-              <LaunchCampaign
-                variant="outlined"
-                onClick={() => toggleDrawer(false)}
-              />
-              {isAuthenticated ? (
-                <Account closeDrawer={() => toggleDrawer(false)} />
-              ) : (
-                <ConnectWallet closeDrawer={() => toggleDrawer(false)} />
-              )}
+              <LaunchCampaign variant="outlined" />
+              {isAuthenticated ? <Account /> : <ConnectWallet />}
             </Box>
           </Drawer>
         </Toolbar>
