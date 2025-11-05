@@ -25,7 +25,7 @@ import { formatAddress } from '@/utils';
 
 const buttonSx = {
   color: 'text.secondary',
-  bgcolor: '#f5efff',
+  bgcolor: 'rgba(255, 255, 255, 0.30)',
   p: 1,
   width: '100%',
   fontWeight: 600,
@@ -33,9 +33,9 @@ const buttonSx = {
   justifyContent: 'flex-start',
   gap: 1,
   borderBottom: '1px solid',
-  borderBottomColor: 'rgba(205, 199, 255, 0.50)',
+  borderBottomColor: 'text.primary',
   '&:hover': {
-    bgcolor: '#f5efff',
+    bgcolor: 'rgba(255, 255, 255, 0.30)',
     color: 'primary.light',
   },
   '&:last-child': {

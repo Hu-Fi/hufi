@@ -35,19 +35,19 @@ export const JobsIcon: FC<SvgIconProps> = (props) => {
         fillRule="evenodd"
         clipRule="evenodd"
         d="M32.1663 16.3135L44.9438 23.1636V37.0155L31.7939 44.2718L18.644 37.0155V23.5492L32.1663 16.3135Z"
-        stroke="#CDC7FF"
+        stroke="#c9c3ca"
         strokeWidth="1.24294"
         fill="transparent"
       />
       <path
         d="M18.9111 23.7869L31.8075 30.5422L45.1425 23.3922"
-        stroke="#CDC7FF"
+        stroke="#c9c3ca"
         strokeWidth="1.24294"
         fill="transparent"
       />
       <path
         d="M31.8123 44.2718V30.4542"
-        stroke="#CDC7FF"
+        stroke="#c9c3ca"
         strokeWidth="1.24294"
         fill="transparent"
       />
@@ -83,8 +83,8 @@ export const JobsIcon: FC<SvgIconProps> = (props) => {
           y2="48.1393"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#CDC7FF" stopOpacity="0.2" />
-          <stop offset="1" stopColor="#CDC7FF" stopOpacity="0" />
+          <stop stopColor="#c9c3ca" stopOpacity="0.2" />
+          <stop offset="1" stopColor="#c9c3ca" stopOpacity="0" />
         </linearGradient>
       </defs>
     </SvgIcon>
@@ -93,16 +93,16 @@ export const JobsIcon: FC<SvgIconProps> = (props) => {
 
 export const AvatarIcon: FC<SvgIconProps> = (props) => {
   return (
-    <SvgIcon {...props} viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="10.5" fill="#0DD3FF" />
-      <circle cx="11" cy="11" r="10.5" fill="#858EC6" />
+    <SvgIcon {...props} viewBox="0 0 21 21" fill="none">
+      <circle cx="10.5" cy="10.5" r="10.5" fill="#0dd3ff" />
+      <circle cx="10.5" cy="10.5" r="10.5" fill="#f705a9" />
       <path
-        d="M21.5 11C21.5 16.799 16.799 21.5 11 21.5C5.20101 21.5 0.5 16.799 0.5 11C0.5 5.201 5.20101 11 11 11C16.799 11 21.5 5.201 21.5 11Z"
-        fill="#0DD3FF"
+        d="M21 10.4992C21 16.2982 16.299 20.9992 10.5 20.9992C4.70101 20.9992 0 16.2982 0 10.4992C0 4.70021 4.70101 10.4992 10.5 10.4992C16.299 10.4992 21 4.70021 21 10.4992Z"
+        fill="#0dd3ff"
       />
       <path
-        d="M21.5 11C21.5 16.799 16.799 21.5 11 21.5C5.20101 21.5 0.5 16.799 0.5 11C0.5 5.201 5.20101 11 11 11C16.799 11 21.5 5.201 21.5 11Z"
-        fill="#320A8D"
+        d="M21 10.4992C21 16.2982 16.299 20.9992 10.5 20.9992C4.70101 20.9992 0 16.2982 0 10.4992C0 4.70021 4.70101 10.4992 10.5 10.4992C16.299 10.4992 21 4.70021 21 10.4992Z"
+        fill="#231e30"
       />
     </SvgIcon>
   );
@@ -154,7 +154,7 @@ export const CalendarIcon: FC<SvgIconProps> = (props) => {
     <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
       <path
         d="M20 3H19V1H17V3H7V1H5V3H4C2.9 3 2 3.9 2 5V21C2 22.1 2.9 23 4 23H20C21.1 23 22 22.1 22 21V5C22 3.9 21.1 3 20 3ZM20 21H4V8H20V21Z"
-        fill="#D4CFFF"
+        fill="currentColor"
       />
     </SvgIcon>
   );

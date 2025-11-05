@@ -141,7 +141,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             height: '450px',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             background:
-              'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 100%), #100735',
+              'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 100%), #1b1726',
           },
           '& .MuiDataGrid-cell': {
             borderTop: 'none',

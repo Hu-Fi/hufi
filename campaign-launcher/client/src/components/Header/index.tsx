@@ -121,8 +121,8 @@ const Header: FC = () => {
             <Link to={ROUTES.DASHBOARD}>
               <img
                 src={logo}
-                alt="HuFi"
-                width={isMobile ? 60 : 87}
+                alt="ThirstyFi"
+                width={isMobile ? 60 : 150}
                 height={isMobile ? 22 : 32}
               />
             </Link>
