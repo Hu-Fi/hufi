@@ -45,6 +45,11 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
         dailyBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
+    case CampaignType.THRESHOLD:
+      details = {
+        minimumBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
+      };
+      break;
   }
 
   const campaign: Omit<CampaignEntity, 'beforeInsert' | 'beforeUpdate'> = {
@@ -102,6 +107,12 @@ export function generateCampaignProgress(
     case CampaignType.HOLDING:
       meta = {
         total_balance: 0,
+      };
+      break;
+    case CampaignType.THRESHOLD:
+      meta = {
+        total_balance: 0,
+        total_score: 0,
       };
       break;
   }

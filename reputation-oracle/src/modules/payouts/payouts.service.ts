@@ -368,7 +368,7 @@ export class PayoutsService {
         /**
          * Escrow contract doesn't allow payout of 0 amount.
          * In case if the participant's share is so small
-         * that it's lower than minumum payable amount - omit it.
+         * that it's lower than minimum payable amount - omit it.
          */
         const truncatedRewardAmount = Number(
           rewardAmount.toFixed(tokenDecimals, Decimal.ROUND_DOWN),

@@ -64,14 +64,15 @@ import { CampaignsService } from './campaigns.service';
 import {
   generateBaseCampaignManifest,
   generateCampaignEntity,
+  generateCampaignManifest,
+  generateCampaignProgress,
+  generateHoldingCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
-  generateHoldingCampaignManifest,
-  generateStoredResultsMeta,
   generateMarketMakingCampaignManifest,
-  generateCampaignProgress,
   generateParticipantOutcome,
-  generateCampaignManifest,
+  generateStoredResultsMeta,
+  generateThresholdampaignManifest,
   MockCampaignProgressChecker,
   MockProgressCheckResult,
   generateCampaignParticipant,
@@ -84,12 +85,17 @@ import {
 import { HoldingMeta } from './progress-checking/holding';
 import { MarketMakingMeta } from './progress-checking/market-making';
 import {
+  ThresholdMeta,
+  ThresholdProgressChecker,
+} from './progress-checking/threshold';
+import {
   CampaignProgress,
   CampaignStatus,
   CampaignType,
   HoldingCampaignDetails,
   IntermediateResultsData,
   MarketMakingCampaignDetails,
+  ThresholdCampaignDetails,
 } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
@@ -579,6 +585,7 @@ describe('CampaignsService', () => {
     it.each([
       generateMarketMakingCampaignManifest(),
       generateHoldingCampaignManifest(),
+      generateThresholdampaignManifest(),
     ])(
       'should retrieve and return data (manifest url) [%#]',
       async (mockedManifest) => {
@@ -622,6 +629,7 @@ describe('CampaignsService', () => {
     it.each([
       generateMarketMakingCampaignManifest(),
       generateHoldingCampaignManifest(),
+      generateThresholdampaignManifest(),
     ])(
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {
@@ -701,7 +709,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should create hodling campaign with proper data', async () => {
+    it('should create holding campaign with proper data', async () => {
       const chainId = generateTestnetChainId();
       const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateHoldingCampaignManifest();
@@ -736,6 +744,53 @@ describe('CampaignsService', () => {
         fundTokenDecimals,
         details: {
           dailyBalanceTarget: manifest.daily_balance_target,
+        },
+        status: 'active',
+        lastResultsAt: null,
+      };
+      expect(campaign).toEqual(expectedCampaignData);
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expectedCampaignData,
+      );
+    });
+
+    it('should create threshold campaign with proper data', async () => {
+      const chainId = generateTestnetChainId();
+      const campaignAddress = faker.finance.ethereumAddress();
+      const manifest = generateThresholdampaignManifest();
+      const fundAmount = faker.number.float();
+      const fundTokenSymbol = faker.finance.currencyCode();
+      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundTokenSymbol,
+          fundTokenDecimals,
+        },
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        id: expect.any(String),
+        chainId,
+        address: ethers.getAddress(campaignAddress),
+        type: manifest.type,
+        exchangeName: manifest.exchange,
+        symbol: manifest.symbol,
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        fundAmount: fundAmount.toString(),
+        fundToken: fundTokenSymbol,
+        fundTokenDecimals,
+        details: {
+          minimumBalanceTarget: manifest.minimum_balance_target,
         },
         status: 'active',
         lastResultsAt: null,
@@ -999,6 +1054,23 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(HoldingProgressChecker);
     });
 
+    it('should return threshold checker for its type', () => {
+      const campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+
+      const checker = campaignsService['getCampaignProgressChecker'](
+        campaign.type,
+        {
+          exchangeName: campaign.exchangeName,
+          symbol: campaign.symbol,
+          periodStart: faker.date.recent(),
+          periodEnd: faker.date.soon(),
+          minimumBalanceTarget: faker.number.float(),
+        },
+      );
+
+      expect(checker).toBeInstanceOf(ThresholdProgressChecker);
+    });
+
     it('should throw for unknown campaign type', () => {
       const campaign = generateCampaignEntity();
       campaign.type = faker.string.sample() as any;
@@ -1223,6 +1295,34 @@ describe('CampaignsService', () => {
         spyOnLoggerChild.mockRestore();
       }
     });
+
+    it.each([
+      CampaignType.MARKET_MAKING,
+      CampaignType.HOLDING,
+      CampaignType.THRESHOLD,
+    ])(
+      'should call getCampaignProgressChecker with correct parameters for "%s" campaign',
+      async (campaignType) => {
+        const campaign = generateCampaignEntity(campaignType);
+        await campaignsService.checkCampaignProgressForPeriod(
+          campaign,
+          periodStart,
+          periodEnd,
+        );
+
+        expect(spyOnGetCampaignProgressChecker).toHaveBeenCalledTimes(1);
+        expect(spyOnGetCampaignProgressChecker).toHaveBeenCalledWith(
+          campaign.type,
+          {
+            exchangeName: campaign.exchangeName,
+            periodStart,
+            periodEnd,
+            symbol: campaign.symbol,
+            ...campaign.details,
+          },
+        );
+      },
+    );
 
     it('should return results in correct format', async () => {
       const participant = generateCampaignParticipant(campaign);
@@ -2051,6 +2151,59 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should record correctly calculated reserved funds for THRESHOLD campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+      const minimumBalanceTarget = (
+        campaign.details as ThresholdCampaignDetails
+      ).minimumBalanceTarget;
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const totalBalance = faker.number.float({
+        min: 0.1,
+        max: minimumBalanceTarget * 2,
+      });
+
+      const totalScore = totalBalance >= minimumBalanceTarget ? 1 : 0;
+
+      const campaignProgress = generateCampaignProgress(campaign);
+      (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
+      (campaignProgress.meta as ThresholdMeta).total_score = totalScore;
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedRewardPool = campaignsService.calculateRewardPool({
+        baseRewardPool: campaignsService.calculateDailyReward(campaign),
+        maxRewardPoolRatio: 1,
+        progressValue: totalScore,
+        progressValueTarget: 1,
+        fundTokenDecimals: campaign.fundTokenDecimals,
+      });
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_balance: totalBalance,
+              total_score: totalScore,
+              reserved_funds: expectedRewardPool,
+              participants_outcomes_batches: [],
+            },
+          ],
+        }),
+        ethers.parseUnits(
+          expectedRewardPool.toString(),
+          campaign.fundTokenDecimals,
+        ),
+      );
+    });
+
     it('should record participant results in batches', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2323,24 +2476,27 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should not record generated volume stat for HOLDING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.HOLDING);
+    it.each([CampaignType.HOLDING, CampaignType.THRESHOLD])(
+      'should not record generated volume stat for [%#] campaign',
+      async (campaignType) => {
+        campaign = generateCampaignEntity(campaignType);
 
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const campaignProgress = generateCampaignProgress(campaign);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
 
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
-      );
+        spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+          generateStoredResultsMeta(),
+        );
 
-      await campaignsService.recordCampaignProgress(campaign);
+        await campaignsService.recordCampaignProgress(campaign);
 
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
-    });
+        expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
+      },
+    );
 
     it('should log recording details once results recorded', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);

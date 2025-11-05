@@ -6,11 +6,12 @@ import {
 } from '@/modules/exchange/fixtures';
 
 import {
+  CampaignManifest,
   CampaignType,
+  type CampaignManifestBase,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
-  type CampaignManifestBase,
-  CampaignManifest,
+  type ThresholdCampaignManifest,
 } from '../types';
 
 export function generateBaseCampaignManifest(): CampaignManifestBase {
@@ -48,6 +49,18 @@ export function generateHoldingCampaignManifest(): HoldingCampaignManifest {
   return manifest;
 }
 
+export function generateThresholdampaignManifest(): ThresholdCampaignManifest {
+  const manifestBase = generateBaseCampaignManifest();
+
+  const manifest: ThresholdCampaignManifest = {
+    ...manifestBase,
+    type: CampaignType.THRESHOLD,
+    symbol: faker.finance.currencyCode(),
+    minimum_balance_target: faker.number.float(),
+  };
+  return manifest;
+}
+
 export function generateManifestResponse() {
   const manifest = generateBaseCampaignManifest();
 
@@ -62,6 +75,7 @@ export function generateCampaignManifest(): CampaignManifest {
   const generatorFn = faker.helpers.arrayElement([
     generateMarketMakingCampaignManifest,
     generateHoldingCampaignManifest,
+    generateThresholdampaignManifest,
   ]);
 
   return generatorFn();

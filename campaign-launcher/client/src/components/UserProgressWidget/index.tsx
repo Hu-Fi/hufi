@@ -34,7 +34,12 @@ const getLabels = (campaignType: CampaignType) => {
       };
     case CampaignType.HOLDING:
       return {
-        total: 'Total Balance',
+        total: 'Total Score',
+        my: 'My Balance',
+      };
+    case CampaignType.THRESHOLD:
+      return {
+        total: 'Total Score',
         my: 'My Balance',
       };
     default:
@@ -59,6 +64,11 @@ const getMyMeta = (
         return data.my_meta.token_balance;
       }
       return 0;
+    case CampaignType.THRESHOLD:
+      if ('token_balance' in data.my_meta) {
+        return data.my_meta.token_balance;
+      }
+      return 0;
     default:
       return 0;
   }
@@ -79,6 +89,11 @@ const getTotalMeta = (
     case CampaignType.HOLDING:
       if ('total_balance' in data.total_meta) {
         return data.total_meta.total_balance;
+      }
+      return 0;
+    case CampaignType.THRESHOLD:
+      if ('total_score' in data.total_meta) {
+        return data.total_meta.total_score;
       }
       return 0;
     default:
@@ -129,7 +144,10 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
             <Skeleton variant="text" width={180} height={32} />
           ) : (
             <Typography variant="h6" color="primary.violet" fontWeight={700}>
-              {getTotalMeta(campaign.type, data)} {targetTokenSymbol}
+              {getTotalMeta(campaign.type, data)}{' '}
+              {campaign.type !== CampaignType.THRESHOLD
+                ? targetTokenSymbol
+                : null}
             </Typography>
           )}
         </Box>

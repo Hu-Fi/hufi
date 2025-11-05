@@ -67,7 +67,10 @@ const CampaignSymbol: FC<Props> = ({
 }) => {
   if (campaignType === CampaignType.MARKET_MAKING) {
     return <CryptoPairEntity symbol={symbol} size={size} />;
-  } else if (campaignType === CampaignType.HOLDING) {
+  } else if (
+    campaignType === CampaignType.HOLDING ||
+    campaignType === CampaignType.THRESHOLD
+  ) {
     return <CryptoEntity symbol={symbol} size={size} />;
   }
 };

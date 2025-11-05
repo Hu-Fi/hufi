@@ -9,6 +9,7 @@ import {
   generateManifestResponse,
   generateMarketMakingCampaignManifest,
   generateHoldingCampaignManifest,
+  generateThresholdampaignManifest,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import { CampaignType } from './types';
@@ -286,6 +287,59 @@ describe('manifest utils', () => {
       expect(thrownError).toBeInstanceOf(Error);
       expect(thrownError.message).toBe(
         'Invalid holding campaign manifest schema',
+      );
+    });
+  });
+
+  describe('assertValidThresholdCampaignManifest', () => {
+    const validManifest = generateThresholdampaignManifest();
+
+    it.each([
+      { ...validManifest },
+      Object.assign({}, validManifest, {
+        symbol: `5${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}6`,
+      }),
+    ])('should not throw for valid manifest [%#]', (testManifest) => {
+      expect(
+        manifestUtils.assertValidThresholdCampaignManifest(testManifest),
+      ).toBeUndefined();
+    });
+
+    it.each([
+      // invalid (lowercased) type
+      Object.assign({}, validManifest, {
+        type: CampaignType.THRESHOLD.toLowerCase(),
+      }),
+      // trading pair instead of token symbol
+      Object.assign({}, validManifest, {
+        symbol: generateTradingPair(),
+      }),
+      // lowercased symbol
+      Object.assign({}, validManifest, {
+        symbol: faker.finance.currencyCode().toLowerCase(),
+      }),
+      // invalid minimum balance target
+      Object.assign({}, validManifest, {
+        minimum_balance_target: faker.number.int({ min: -42, max: 0 }),
+      }),
+      // missing minimum balance target
+      Object.assign({}, validManifest, {
+        minimum_balance_target: undefined,
+      }),
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError;
+      try {
+        manifestUtils.assertValidThresholdCampaignManifest(manifest);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid threshold campaign manifest schema',
       );
     });
   });
