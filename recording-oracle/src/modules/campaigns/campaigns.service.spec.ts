@@ -2443,43 +2443,27 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should not record generated volume stat for HOLDING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.HOLDING);
+    it.each([CampaignType.HOLDING, CampaignType.THRESHOLD])(
+      'should not record generated volume stat for [%#] campaign',
+      async (campaignType) => {
+        campaign = generateCampaignEntity(campaignType);
 
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const campaignProgress = generateCampaignProgress(campaign);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
+        const campaignProgress = generateCampaignProgress(campaign.type);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
 
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
-      );
+        spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+          generateStoredResultsMeta(),
+        );
 
-      await campaignsService.recordCampaignProgress(campaign);
+        await campaignsService.recordCampaignProgress(campaign);
 
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
-    });
-
-    it('should not record generated volume stat for THRESHOLD campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.THRESHOLD);
-
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-      const campaignProgress = generateCampaignProgress(campaign.type);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
-
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
-    });
+        expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(0);
+      },
+    );
 
     it('should log recording details once results recorded', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
