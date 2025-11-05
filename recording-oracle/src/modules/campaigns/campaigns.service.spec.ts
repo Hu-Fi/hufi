@@ -1297,12 +1297,13 @@ describe('CampaignsService', () => {
     });
 
     it.each([
-      generateCampaignEntity(CampaignType.MARKET_MAKING),
-      generateCampaignEntity(CampaignType.HOLDING),
-      generateCampaignEntity(CampaignType.THRESHOLD),
+      CampaignType.MARKET_MAKING,
+      CampaignType.HOLDING,
+      CampaignType.THRESHOLD,
     ])(
-      'should call getCampaignProgressChecker with correct parameters for campaign "%s"',
-      async (campaign) => {
+      'should call getCampaignProgressChecker with correct parameters for "%s" campaign',
+      async (campaignType) => {
+        const campaign = generateCampaignEntity(campaignType);
         await campaignsService.checkCampaignProgressForPeriod(
           campaign,
           periodStart,
