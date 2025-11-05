@@ -16,10 +16,12 @@ const PageTitle: FC<PropsWithChildren<Props>> = ({ title, children }) => {
     <Box
       display="flex"
       alignItems="center"
-      gap={2}
+      gap={{ xs: 1, md: 2 }}
       flexWrap={{ xs: 'wrap', md: 'nowrap' }}
     >
-      <JobsIcon sx={{ width: 66, height: 66 }} />
+      <JobsIcon
+        sx={{ width: { xs: 56, md: 66 }, height: { xs: 56, md: 66 } }}
+      />
       <Typography
         component="h1"
         variant={isMobile ? 'h6-mobile' : 'h4-mobile'}

@@ -39,6 +39,14 @@ const JoinCampaign: FC<Props> = ({
   const isButtonDisabled =
     !isAuthenticated || isLoading || isAlreadyJoined || isCampaignFinished;
 
+  const getButtonText = () => {
+    if (isJoining) return null;
+    if (isAlreadyJoined) {
+      return isMobile ? 'Joined' : 'Registered to Campaign';
+    }
+    return isMobile ? 'Join' : 'Join Campaign';
+  };
+
   const handleButtonClick = () => {
     if (isButtonDisabled) {
       return;
@@ -72,12 +80,7 @@ const JoinCampaign: FC<Props> = ({
         {isJoining && (
           <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />
         )}
-        {!isJoining &&
-          (isAlreadyJoined
-            ? isMobile
-              ? 'Joined'
-              : 'Registered to Campaign'
-            : 'Join Campaign')}
+        {getButtonText()}
       </Button>
       <AddKeysPromptModal
         open={modalOpen}
