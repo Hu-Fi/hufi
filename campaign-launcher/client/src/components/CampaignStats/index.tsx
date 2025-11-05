@@ -33,7 +33,7 @@ const StatsCard = styled(Box)(({ theme }) => ({
   padding: '16px 32px',
   backgroundColor: theme.palette.background.default,
   borderRadius: '16px',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
+  border: '1px solid rgba(247, 5, 169, 0.30)',
 
   [theme.breakpoints.down('xl')]: {
     height: 'unset',
@@ -174,19 +174,19 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         <FirstRowWrapper showProgressWidget={showProgressWidget}>
           <StatsCard>
             <Title variant="subtitle2">Total Funded Amount</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography variant="h5" color="primary.bright" fontWeight={700}>
               {formattedTokenAmount} {campaign.fund_token_symbol}
             </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Amount Paid</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography variant="h5" color="primary.bright" fontWeight={700}>
               {formattedAmountPaid} {campaign.fund_token_symbol}
             </Typography>
           </StatsCard>
           <StatsCard>
             <Title variant="subtitle2">Oracle fees</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography variant="h5" color="primary.bright" fontWeight={700}>
               <FormattedNumber
                 value={(formattedTokenAmount * totalFee) / 100}
               />{' '}
@@ -205,7 +205,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
             <Title variant="subtitle2">
               {getDailyTargetCardLabel(campaign.type)}
             </Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography variant="h5" color="primary.bright" fontWeight={700}>
               <FormattedNumber
                 value={getDailyTargetValue(campaign)}
                 decimals={3}
@@ -234,7 +234,7 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
         <Grid size={{ xs: 12, md: 3 }}>
           <StatsCard>
             <Title variant="subtitle2">Reserved funds</Title>
-            <Typography variant="h5" color="primary.violet" fontWeight={700}>
+            <Typography variant="h5" color="primary.bright" fontWeight={700}>
               {formattedReservedFunds} {campaign.fund_token_symbol}
             </Typography>
           </StatsCard>

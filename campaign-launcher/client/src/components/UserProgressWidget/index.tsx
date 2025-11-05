@@ -128,7 +128,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
           {isLoading ? (
             <Skeleton variant="text" width={180} height={32} />
           ) : (
-            <Typography variant="h6" color="primary.violet" fontWeight={700}>
+            <Typography variant="h6" color="primary.bright" fontWeight={700}>
               {getTotalMeta(campaign.type, data)} {targetTokenSymbol}
             </Typography>
           )}
@@ -140,7 +140,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
           {isLoading ? (
             <Skeleton variant="text" width={180} height={32} />
           ) : (
-            <Typography variant="h6" color="primary.violet" fontWeight={700}>
+            <Typography variant="h6" color="primary.bright" fontWeight={700}>
               {data?.my_score}
             </Typography>
           )}
@@ -152,7 +152,7 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
           {isLoading ? (
             <Skeleton variant="text" width={180} height={32} />
           ) : (
-            <Typography variant="h6" color="primary.violet" fontWeight={700}>
+            <Typography variant="h6" color="primary.bright" fontWeight={700}>
               {getMyMeta(campaign.type, data)} {targetTokenSymbol}
             </Typography>
           )}

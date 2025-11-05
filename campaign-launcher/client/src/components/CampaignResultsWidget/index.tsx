@@ -90,7 +90,7 @@ const CampaignResultsWidget: FC<Props> = ({
       {result !== RESULT.none && (
         <IconButton
           sx={{
-            color: 'text.secondary',
+            color: 'text.primary',
             p: 0,
             ml: 'auto',
             '&:hover': { background: 'none' },

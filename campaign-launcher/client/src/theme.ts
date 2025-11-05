@@ -12,10 +12,10 @@ declare module '@mui/material/styles' {
   }
   interface SimplePaletteColorOptions {
     contrast?: string;
-    violet?: string;
+    bright?: string;
   }
   interface PaletteColor {
-    violet?: string;
+    bright?: string;
     contrast?: string;
   }
   interface TypographyVariants {
@@ -78,9 +78,9 @@ const createAppTheme = (mode: PaletteMode) => {
           }
         : {
             primary: {
-              main: '#cdc7ff',
-              light: '#320a8d',
-              violet: '#6309ff',
+              main: '#c9c3ca',
+              light: '#3a3646',
+              bright: '#f705a9',
               contrast: 'rgba(0, 0, 0, 0.87)',
             },
             secondary: {
@@ -88,12 +88,12 @@ const createAppTheme = (mode: PaletteMode) => {
               contrast: 'rgba(255, 255, 255, 0.87)',
             },
             background: {
-              default: '#100735',
+              default: '#231e30',
             },
             text: {
-              primary: '#d4cfff',
-              secondary: '#858ec6',
-              disabled: 'rgba(212, 207, 255, 0.50)',
+              primary: '#c9c3ca',
+              secondary: '#6d6977',
+              disabled: 'rgba(201, 195, 202, 0.50)',
             },
             success: {
               main: '#0ad397',

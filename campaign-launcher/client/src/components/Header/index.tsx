@@ -85,7 +85,7 @@ const Header: FC = () => {
           }}
         >
           <Link to={ROUTES.DASHBOARD}>
-            <img src={logo} alt="HuFi" width={87} height={32} />
+            <img src={logo} alt="ThirstyFi" width={150} height={32} />
           </Link>
           <Box
             display={{ xs: 'none', md: 'flex' }}
