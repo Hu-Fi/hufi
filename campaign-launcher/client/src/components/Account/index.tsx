@@ -1,10 +1,14 @@
 import { type FC, useState } from 'react';
 
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
 import {
   Button,
   List,
+  ListItem,
   ListItemButton,
   Popover,
+  Stack,
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -42,8 +46,9 @@ const buttonSx = {
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const { activeAddress } = useActiveAccount();
-  const { disconnectAsync } = useDisconnect();
-  const { logout } = useWeb3Auth();
+  const { disconnect } = useDisconnect();
+  const { signIn, logout, isAuthenticated } = useWeb3Auth();
+  const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -55,9 +60,17 @@ const Account: FC = () => {
     navigate('/manage-api-keys');
   };
 
-  const handleDisconnect = async () => {
-    await disconnectAsync();
-    await logout();
+  const handleSignIn = () => {
+    signIn();
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+  };
+
+  const handleLogout = () => {
+    handleDisconnect();
+    logout();
   };
 
   return (

@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
 import Account from '@/components/Account';
@@ -143,7 +144,7 @@ const Header: FC = () => {
             />
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" withTooltip />
-            {isAuthenticated ? <Account /> : <ConnectWallet />}
+            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
           <Box display={{ xs: 'flex', md: 'none' }}>
