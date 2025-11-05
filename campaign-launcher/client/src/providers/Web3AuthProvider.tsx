@@ -12,6 +12,7 @@ import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
+import SignInPromptModal from '@/components/modals/SignInPromptModal';
 import {
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
@@ -25,6 +26,7 @@ type Web3AuthContextType = {
   isLoading: boolean;
   signIn: () => Promise<void>;
   logout: () => Promise<void>;
+  setShowSignInPrompt: (show: boolean) => void;
 };
 
 const Web3AuthContext = createContext<Web3AuthContextType>(
@@ -34,6 +36,7 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
@@ -150,9 +153,14 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         isLoading,
         signIn,
         logout,
+        setShowSignInPrompt,
       }}
     >
       {children}
+      <SignInPromptModal
+        open={showSignInPrompt}
+        onClose={() => setShowSignInPrompt(false)}
+      />
     </Web3AuthContext.Provider>
   );
 };

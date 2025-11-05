@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useState } from 'react';
 
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -16,8 +16,6 @@ import { useDisconnect } from 'wagmi';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
-import SignInPromptModal from '@/components/modals/SignInPromptModal';
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -46,24 +44,14 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
-  const { activeAddress, isConnecting, updateIsConnecting } =
-    useActiveAccount();
+  const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   const formattedAddress = formatAddress(activeAddress);
-
-  useEffect(() => {
-    if (signer && isConnecting) {
-      updateIsConnecting(false);
-      setShowSignInPrompt(isMobile);
-    }
-  }, [signer, isConnecting, updateIsConnecting, isMobile]);
 
   const handleClosePopover = () => setAnchorEl(null);
 
@@ -207,10 +195,6 @@ const Account: FC = () => {
           )}
         </List>
       </Popover>
-      <SignInPromptModal
-        open={showSignInPrompt}
-        onClose={() => setShowSignInPrompt(false)}
-      />
     </>
   );
 };
