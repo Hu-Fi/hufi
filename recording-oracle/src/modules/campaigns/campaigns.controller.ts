@@ -193,6 +193,7 @@ export class CampaignsController {
         chainId,
         campaignAddress,
       );
+
       return userProgress;
     } catch (error) {
       if (error instanceof CampaignNotFoundError) {

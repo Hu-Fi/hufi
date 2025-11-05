@@ -108,6 +108,10 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
     campaign.symbol
   );
 
+  if (!isLoading && !data) {
+    return <Typography variant="subtitle2">No data from backend</Typography>;
+  }
+
   return (
     <Stack justifyContent="space-between" gap={{ xs: 2, md: 0 }}>
       <Typography variant="subtitle2">My Campaign Progress</Typography>

@@ -93,18 +93,16 @@ const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_10_MINUTES;
 
-const campaignsProgressCache = new LRUCache<
+const REFRESH_INTERIM_PROGRESS_CACHE_SCHEDULE = Environment.isDevelopment()
+  ? CronExpression.EVERY_MINUTE
+  : CronExpression.EVERY_10_MINUTES;
+
+const campaignsInterimProgressCache = new LRUCache<
   string,
   CampaignProgress<CampaignProgressMeta>
 >({
-  ttl: 1000 * 60 * 10,
-  max: 4200,
-  ttlAutopurge: false,
-  allowStale: false,
-  noDeleteOnStaleGet: false,
-  noUpdateTTL: false,
-  updateAgeOnGet: false,
-  updateAgeOnHas: false,
+  // expect not more than 100 active campaings atm
+  max: 100,
 });
 
 const PROGRESS_PERIOD_DAYS = 1;
@@ -1021,7 +1019,13 @@ export class CampaignsService {
     evmAddress: string,
     chainId: number,
     campaignAddress: string,
-  ) {
+  ): Promise<{
+    from: string;
+    to: string;
+    myScore: number;
+    myMeta: Record<string, unknown>;
+    totalMeta: Record<string, unknown>;
+  }> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
@@ -1055,55 +1059,25 @@ export class CampaignsService {
       throw new UserIsNotParticipatingError();
     }
 
-    // Calculate start of the active timeframe (end is now)
-    const timeframesPassed = Math.floor(
-      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
-    );
-
-    const timeframeStart = dayjs(campaign.startDate)
-      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
-      .add(1, 'millisecond')
-      .toDate();
-
-    let timeframeEnd: Date;
-    if (campaign.status === CampaignStatus.TO_CANCEL) {
-      const cancellationRequestedAt =
-        await escrowUtils.getCancellationRequestDate(
+    let progress = campaignsInterimProgressCache.get(campaign.id);
+    if (!progress) {
+      const activeTimeframe = await this.getActiveTimeframe(campaign);
+      if (!activeTimeframe) {
+        throw new InvalidCampaign(
           campaign.chainId,
           campaign.address,
+          "Couldn't get active timeframe",
         );
-      if (cancellationRequestedAt <= timeframeStart) {
-        throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
       }
-      timeframeEnd = cancellationRequestedAt;
-    } else {
-      timeframeEnd = now;
+
+      progress = {
+        from: activeTimeframe.start.toISOString(),
+        to: activeTimeframe.end.toISOString(),
+        participants_outcomes: [],
+        meta: {} as CampaignProgressMeta,
+      };
     }
 
-    /**
-     * Using timeframeStart in a key to prevent situations
-     * where new timeframe has started but cached value is not expired yet
-     */
-    const cacheKey = `${campaign.chainId}-${campaign.address}-${timeframeStart}`;
-
-    if (!campaignsProgressCache.has(cacheKey)) {
-      const progress = await this.checkCampaignProgressForPeriod(
-        campaign,
-        timeframeStart,
-        timeframeEnd,
-      );
-
-      campaignsProgressCache.set(cacheKey, {
-        from: progress.from,
-        to: progress.to,
-        meta: progress.meta,
-        participants_outcomes: progress.participants_outcomes,
-      });
-    }
-
-    const progress = campaignsProgressCache.get(
-      cacheKey,
-    ) as CampaignProgress<CampaignProgressMeta>;
     const {
       score: myScore,
       address: _address,
@@ -1226,5 +1200,131 @@ export class CampaignsService {
     }
 
     this.logger.debug('New campaigns discovery job finished');
+  }
+
+  @Cron(REFRESH_INTERIM_PROGRESS_CACHE_SCHEDULE)
+  async refreshInterimProgressCache(): Promise<void> {
+    await this.pgAdvisoryLock.withLock(
+      'refresh-interim-progress-cache',
+      async () => {
+        this.logger.debug('Refresh interim progress cache job started');
+
+        try {
+          /**
+           * Atm we don't expect many active campaigns
+           * so it's fine to get all at once, but later
+           * we might need to query them in batches or as stream.
+           */
+          const campaignsToRefresh =
+            await this.campaignsRepository.findOngoingCampaigns();
+
+          for (const campaign of campaignsToRefresh) {
+            /**
+             * Right now for simplicity process sequentially.
+             * Later we can add "fastq" usage for parallel processing
+             * and "backpressured" adding to the queue.
+             */
+            const campaignLogger = logger.child({
+              campaignId: campaign.id,
+              chainId: campaign.chainId,
+              campaignAddress: campaign.address,
+            });
+            const isCampaignEndingSoon = dayjs()
+              .add(5, 'minute')
+              .isAfter(campaign.endDate);
+            if (isCampaignEndingSoon) {
+              campaignLogger.debug(
+                'Campaign ends soon, skip interim progress cache refresh',
+              );
+              continue;
+            }
+
+            try {
+              const timeframe = await this.getActiveTimeframe(campaign);
+              if (!timeframe) {
+                campaignLogger.debug(
+                  'No active timeframe, skip interim progress cache refresh',
+                );
+                continue;
+              }
+              const progress = await this.checkCampaignProgressForPeriod(
+                campaign,
+                timeframe.start,
+                timeframe.end,
+              );
+              campaignsInterimProgressCache.set(campaign.id, progress);
+            } catch (error) {
+              campaignLogger.error(
+                'Failed to get interim progress for campaign',
+                {
+                  error,
+                },
+              );
+            }
+          }
+        } catch (error) {
+          this.logger.error(
+            'Error while refreshing interim progress cache',
+            error,
+          );
+        }
+
+        this.logger.debug('Refresh interim progress cache job finished');
+      },
+    );
+  }
+
+  async getActiveTimeframe(campaign: CampaignEntity): Promise<{
+    start: Date;
+    end: Date;
+  } | null> {
+    const now = new Date();
+    if (now < campaign.startDate) {
+      // campaign not started yet - no active timeframe
+      return null;
+    }
+
+    if (
+      [
+        CampaignStatus.PENDING_CANCELLATION,
+        CampaignStatus.CANCELLED,
+        CampaignStatus.COMPLETED,
+      ].includes(campaign.status) ||
+      now > campaign.endDate
+    ) {
+      // campaign already finished - no active timeframe
+      return null;
+    }
+
+    // Calculate start of the active timeframe (end is now)
+    const timeframesPassed = Math.floor(
+      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
+    );
+
+    const timeframeStart = dayjs(campaign.startDate)
+      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
+      .add(1, 'millisecond')
+      .toDate();
+
+    let timeframeEnd: Date;
+    if (campaign.status === CampaignStatus.TO_CANCEL) {
+      const cancellationRequestedAt =
+        await escrowUtils.getCancellationRequestDate(
+          campaign.chainId,
+          campaign.address,
+        );
+      if (cancellationRequestedAt <= timeframeStart) {
+        // cancellation requested earlier than current timeframe - no active timeframe
+        return null;
+      }
+      timeframeEnd = cancellationRequestedAt;
+    } else {
+      timeframeEnd = now;
+    }
+
+    return {
+      start: timeframeStart,
+      end: timeframeEnd,
+    };
   }
 }
