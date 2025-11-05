@@ -8,20 +8,20 @@ import {
 import { generateAccountBalance } from '@/modules/exchange/fixtures';
 
 import {
-  generateHoldingCheckerSetup,
+  generateThresholdCheckerSetup,
   generateParticipantAuthKeys,
 } from './fixtures';
-import { HoldingProgressChecker } from './holding';
+import { ThresholdProgressChecker } from './threshold';
 import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from './types';
 
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 
-class TestCampaignProgressChecker extends HoldingProgressChecker {
+class TestCampaignProgressChecker extends ThresholdProgressChecker {
   override ethDepositAddresses = new Set<string>();
 }
 
-describe('HoldingProgressChecker', () => {
+describe('ThresholdProgressChecker', () => {
   beforeEach(() => {
     mockedExchangeApiClientFactory.create.mockReturnValue(
       mockedExchangeApiClient,
@@ -35,7 +35,7 @@ describe('HoldingProgressChecker', () => {
   it('should be defined', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
-      generateHoldingCheckerSetup(),
+      generateThresholdCheckerSetup(),
     );
     expect(resultsChecker).toBeDefined();
   });
@@ -47,7 +47,7 @@ describe('HoldingProgressChecker', () => {
     let resultsChecker: TestCampaignProgressChecker;
 
     beforeEach(() => {
-      progressCheckerSetup = generateHoldingCheckerSetup();
+      progressCheckerSetup = generateThresholdCheckerSetup();
       participantAuthKeys = generateParticipantAuthKeys();
 
       resultsChecker = new TestCampaignProgressChecker(
@@ -101,16 +101,21 @@ describe('HoldingProgressChecker', () => {
       const result =
         await resultsChecker.checkForParticipant(participantAuthKeys);
 
-      const expectedValue =
+      const expectedBalance =
         mockedAccountBalance.total[progressCheckerSetup.symbol];
+      const expectedScore =
+        mockedAccountBalance.total[progressCheckerSetup.symbol] >=
+        (progressCheckerSetup.minimumBalanceTarget as number)
+          ? 1
+          : 0;
       expect(result.abuseDetected).toBe(false);
-      expect(result.score).toBe(expectedValue);
-      expect(result.token_balance).toBe(expectedValue);
+      expect(result.score).toBe(expectedScore);
+      expect(result.token_balance).toBe(expectedBalance);
     });
   });
 
   describe('abuse detection', () => {
-    const progressCheckerSetup = generateHoldingCheckerSetup();
+    const progressCheckerSetup = generateThresholdCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
       progressCheckerSetup,
@@ -128,7 +133,13 @@ describe('HoldingProgressChecker', () => {
       const mockedAccountBalance = generateAccountBalance([
         progressCheckerSetup.symbol,
       ]);
-      const expectedBalance = mockedAccountBalance.total[progressCheckerSetup.symbol];
+      const expectedBalance =
+        mockedAccountBalance.total[progressCheckerSetup.symbol];
+      const expectedScore =
+        mockedAccountBalance.total[progressCheckerSetup.symbol] >=
+        (progressCheckerSetup.minimumBalanceTarget as number)
+          ? 1
+          : 0;
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
         mockedAccountBalance,
       );
@@ -138,7 +149,7 @@ describe('HoldingProgressChecker', () => {
       );
 
       expect(normalResult.abuseDetected).toBe(false);
-      expect(normalResult.score).toBe(expectedBalance);
+      expect(normalResult.score).toBe(expectedScore);
       expect(normalResult.token_balance).toBe(expectedBalance);
 
       const abuseResult = await resultsChecker.checkForParticipant(
@@ -157,7 +168,7 @@ describe('HoldingProgressChecker', () => {
     let resultsChecker: TestCampaignProgressChecker;
 
     beforeEach(() => {
-      progressCheckerSetup = generateHoldingCheckerSetup();
+      progressCheckerSetup = generateThresholdCheckerSetup();
 
       resultsChecker = new TestCampaignProgressChecker(
         mockedExchangeApiClientFactory as ExchangeApiClientFactory,
@@ -169,6 +180,7 @@ describe('HoldingProgressChecker', () => {
       const nParticipants = faker.number.int({ min: 2, max: 5 });
 
       let expectedTotalBalance = 0;
+      let expectedTotalScore = 0;
       for (let i = 0; i < nParticipants; i += 1) {
         const accountBalance = generateAccountBalance([
           progressCheckerSetup.symbol,
@@ -182,11 +194,19 @@ describe('HoldingProgressChecker', () => {
         expectedTotalBalance +=
           accountBalance.total[progressCheckerSetup.symbol];
 
+        const expectedScore =
+          accountBalance.total[progressCheckerSetup.symbol] >=
+          (progressCheckerSetup.minimumBalanceTarget as number)
+            ? 1
+            : 0;
+        expectedTotalScore += expectedScore;
+
         await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
       }
 
       const meta = resultsChecker.getCollectedMeta();
       expect(meta.total_balance).toBe(expectedTotalBalance);
+      expect(meta.total_score).toBe(expectedTotalScore);
     });
 
     it('should not count balance of abuse participants', async () => {
@@ -207,6 +227,7 @@ describe('HoldingProgressChecker', () => {
 
       const meta = resultsChecker.getCollectedMeta();
       expect(meta.total_balance).toBe(normalResult.token_balance);
+      expect(meta.total_score).toBe(normalResult.score);
     });
   });
 });

@@ -22,7 +22,7 @@ export class ThresholdProgressChecker
 {
   readonly exchangeName: string;
   readonly thresholdTokenSymbol: string;
-  readonly minumumBalanceTarget: number;
+  readonly minimumBalanceTarget: number;
 
   private totalBalanceMeta: number = 0;
   private totalScoreMeta: number = 0;
@@ -35,8 +35,8 @@ export class ThresholdProgressChecker
   ) {
     this.exchangeName = setupData.exchangeName;
     this.thresholdTokenSymbol = setupData.symbol;
-    if (setupData.minumumBalanceTarget) {
-      this.minumumBalanceTarget = setupData.minumumBalanceTarget as number;
+    if (setupData.minimumBalanceTarget) {
+      this.minimumBalanceTarget = setupData.minimumBalanceTarget as number;
     } else {
       // Safety belt: should not happen
       throw new Error('No minimum balance target provided');
@@ -57,7 +57,7 @@ export class ThresholdProgressChecker
     ]);
 
     let tokenBalance = accountBalance.total[this.thresholdTokenSymbol] || 0;
-    let score = tokenBalance >= this.minumumBalanceTarget ? 1 : 0;
+    let score = tokenBalance >= this.minimumBalanceTarget ? 1 : 0;
 
     let abuseDetected = false;
     if (this.ethDepositAddresses.has(ethDepositAddress)) {
