@@ -24,16 +24,16 @@ const App: FC = () => {
   return (
     <WagmiProvider>
       <QueryClientProvider>
-        <NetworkProvider>
-          <ActiveAccountProvider>
-            <Web3AuthProvider>
-              <ExchangesProvider>
-                <StakeProvider>
-                  <LocalizationProvider
-                    dateAdapter={AdapterDayjs}
-                    adapterLocale="en"
-                  >
-                    <ThemeProvider>
+        <ThemeProvider>
+          <NetworkProvider>
+            <ActiveAccountProvider>
+              <Web3AuthProvider>
+                <ExchangesProvider>
+                  <StakeProvider>
+                    <LocalizationProvider
+                      dateAdapter={AdapterDayjs}
+                      adapterLocale="en"
+                    >
                       <BrowserRouter>
                         <Layout>
                           <Routes>
@@ -60,13 +60,13 @@ const App: FC = () => {
                           </Routes>
                         </Layout>
                       </BrowserRouter>
-                    </ThemeProvider>
-                  </LocalizationProvider>
-                </StakeProvider>
-              </ExchangesProvider>
-            </Web3AuthProvider>
-          </ActiveAccountProvider>
-        </NetworkProvider>
+                    </LocalizationProvider>
+                  </StakeProvider>
+                </ExchangesProvider>
+              </Web3AuthProvider>
+            </ActiveAccountProvider>
+          </NetworkProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

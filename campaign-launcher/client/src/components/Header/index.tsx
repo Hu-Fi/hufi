@@ -33,16 +33,14 @@ type StyledLinkProps = {
   text: string;
   sx?: SxProps;
   target?: string;
-  onClick?: () => void;
 };
 
-const StyledLink = ({ to, text, sx, target, onClick }: StyledLinkProps) => {
+const StyledLink = ({ to, text, sx, target }: StyledLinkProps) => {
   return (
     <MuiLink
       to={to}
       component={Link}
       target={target}
-      onClick={onClick}
       sx={{
         width: { xs: 'fit-content', md: 'auto' },
         textDecoration: 'none',

@@ -9,6 +9,7 @@ import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 import BaseModal from '../modals/BaseModal';
 
@@ -26,21 +27,23 @@ const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { connectAsync, connectors } = useConnect();
-  const { isConnecting, updateIsConnecting } = useActiveAccount();
+  const { isConnecting } = useActiveAccount();
+  const { setShowSignInPrompt } = useWeb3Auth();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
-    updateIsConnecting(true);
     try {
       await connectAsync({ connector });
+      if (isMobile) {
+        setShowSignInPrompt(true);
+      }
     } catch (e) {
       const err = e as { message?: string; code?: number | string };
       if (err.message?.includes('Connector already connected')) {
         await disconnectAsync();
         await handleConnect(connector);
       }
-      updateIsConnecting(false);
     } finally {
       onClose();
     }
