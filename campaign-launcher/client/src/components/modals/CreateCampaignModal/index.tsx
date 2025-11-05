@@ -12,6 +12,7 @@ import useCreateEscrow from '@/hooks/useCreateEscrow';
 import { useNetwork } from '@/providers/NetworkProvider';
 import {
   CampaignType,
+  type ThresholdFormValues,
   type CampaignFormValues,
   type HoldingFormValues,
   type MarketMakingFormValues,
@@ -26,6 +27,7 @@ import {
   HoldingForm,
   MarketMakingForm,
   Steps,
+  ThresholdForm,
 } from './components';
 import { getFormDefaultValues } from './utils';
 import { campaignValidationSchema } from './validation';
@@ -175,6 +177,14 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   control={control as Control<HoldingFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<HoldingFormValues>}
+                  isCreatingEscrow={isCreatingEscrow}
+                />
+              )}
+              {campaignType === CampaignType.THRESHOLD && (
+                <ThresholdForm
+                  control={control as Control<ThresholdFormValues>}
+                  errors={errors}
+                  watch={watch as UseFormWatch<ThresholdFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
                 />
               )}

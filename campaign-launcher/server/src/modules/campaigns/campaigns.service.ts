@@ -240,6 +240,11 @@ export class CampaignsService {
       details = {
         dailyBalanceTarget: manifest.daily_balance_target,
       };
+    } else if (manifestUtils.isThresholdManifest(manifest)) {
+      symbol = manifest.symbol;
+      details = {
+        minimumBalanceTarget: manifest.minimum_balance_target,
+      };
     } else {
       // Should not happen at this point, just for typescript types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

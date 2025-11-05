@@ -118,6 +118,8 @@ export const mapTypeToLabel = (type: CampaignType) => {
       return 'Market Making';
     case 'HOLDING':
       return 'Holding';
+    case 'THRESHOLD':
+      return 'Threshold';
     default:
       return type;
   }
@@ -131,6 +133,8 @@ export const getDailyTargetTokenSymbol = (
     case CampaignType.MARKET_MAKING:
       return symbol.split('/')[1];
     case CampaignType.HOLDING:
+      return symbol;
+    case CampaignType.THRESHOLD:
       return symbol;
     default:
       return symbol.split('/')[1];
@@ -212,12 +216,16 @@ export const constructCampaignDetails = ({
     exchange_name: data.exchange,
     ...(data.type === CampaignType.MARKET_MAKING && { symbol: data.pair }),
     ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
+    ...(data.type === CampaignType.THRESHOLD && { symbol: data.symbol }),
     details: {
       ...(data.type === CampaignType.MARKET_MAKING && {
         daily_volume_target: data.daily_volume_target,
       }),
       ...(data.type === CampaignType.HOLDING && {
         daily_balance_target: data.daily_balance_target,
+      }),
+      ...(data.type === CampaignType.THRESHOLD && {
+        minimum_balance_target: data.minimum_balance_target,
       }),
     },
     start_date: data.start_date,
