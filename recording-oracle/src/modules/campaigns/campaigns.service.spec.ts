@@ -99,6 +99,7 @@ import {
 } from './types';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
+import { symbol } from 'joi';
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
@@ -1295,6 +1296,33 @@ describe('CampaignsService', () => {
         spyOnLoggerChild.mockRestore();
       }
     });
+
+    it.each([
+      generateCampaignEntity(CampaignType.MARKET_MAKING),
+      generateCampaignEntity(CampaignType.HOLDING),
+      generateCampaignEntity(CampaignType.THRESHOLD),
+    ])(
+      'should call getCampaignProgressChecker with correct parameters for campaign "%s"',
+      async (campaign) => {
+        await campaignsService.checkCampaignProgressForPeriod(
+          campaign,
+          periodStart,
+          periodEnd,
+        );
+
+        expect(spyOnGetCampaignProgressChecker).toHaveBeenCalledTimes(1);
+        expect(spyOnGetCampaignProgressChecker).toHaveBeenCalledWith(
+          campaign.type,
+          {
+            exchangeName: campaign.exchangeName,
+            periodStart,
+            periodEnd,
+            symbol: campaign.symbol,
+            ...campaign.details,
+          },
+        );
+      },
+    );
 
     it('should return results in correct format', async () => {
       const participant = generateCampaignParticipant(campaign);

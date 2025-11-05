@@ -94,9 +94,9 @@ export const thresholdValidationSchema = yup.object({
     .required('Required'),
   minimum_balance_target: yup
     .number()
-    .typeError('Daily balance target is required')
-    .min(1, 'Daily balance target must be greater than or equal to 1')
-    .required('Daily balance target is required'),
+    .typeError('Minimum balance target is required')
+    .min(1, 'Minimum balance target must be greater than or equal to 1')
+    .required('Minimum balance target is required'),
 }) as ObjectSchema<ThresholdFormValues>;
 
 export const campaignValidationSchema = yup.lazy((value) => {
