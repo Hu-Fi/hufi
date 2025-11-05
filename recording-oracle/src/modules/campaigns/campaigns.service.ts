@@ -56,10 +56,16 @@ import {
   HoldingProgressChecker,
   MarketMakingProgressChecker,
   ProgressCheckResult,
+  ThresholdProgressChecker,
 } from './progress-checking';
 import { HoldingMeta } from './progress-checking/holding';
 import { MarketMakingMeta } from './progress-checking/market-making';
-import { isHoldingCampaign, isMarketMakingCampaign } from './type-guards';
+import { ThresholdMeta } from './progress-checking/threshold';
+import {
+  isHoldingCampaign,
+  isMarketMakingCampaign,
+  isThresholdCampaign,
+} from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
@@ -370,6 +376,9 @@ export class CampaignsService {
         case CampaignType.HOLDING:
           manifestUtils.assertValidHoldingCampaignManifest(manifest);
           break;
+        case CampaignType.THRESHOLD:
+          manifestUtils.assertValidThresholdCampaignManifest(manifest);
+          break;
         default:
           throw new Error(`Campaign type not supported: ${manifest.type}`);
       }
@@ -582,6 +591,14 @@ export class CampaignsService {
           } else if (isHoldingCampaign(campaign)) {
             progressValueTarget = campaign.details.dailyBalanceTarget;
             progressValue = (progress.meta as HoldingMeta).total_balance;
+          } else if (isThresholdCampaign(campaign)) {
+            /**
+             * We are going to distribute daily reward pool fully in case there is at least one participant eligible for the reward.
+             * This is why we're using hardcoded 1 as a progressValueTarget and total_score instead of a balance for the progressValue.
+             * */
+            progressValueTarget = 1;
+            // TODO: Check this logic before releasing new contracts
+            progressValue = (progress.meta as ThresholdMeta).total_score;
           } else {
             throw new Error(
               `Unknown campaign type for reward pool calculation: ${campaign.type}`,
@@ -776,6 +793,11 @@ export class CampaignsService {
         );
       case CampaignType.HOLDING:
         return new HoldingProgressChecker(
+          exchangeApiClientFactory,
+          campaignCheckerSetup,
+        );
+      case CampaignType.THRESHOLD:
+        return new ThresholdProgressChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );

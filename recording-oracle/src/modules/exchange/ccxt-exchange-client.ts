@@ -147,7 +147,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     try {
       // for MARKET_MAKING campaigns
       await this.fetchMyTrades(ETH_USDT_PAIR, Date.now());
-      // for HOLDING campaigns
+      // for HOLDING & THRESHOLD campaigns
       await this.fetchBalance();
       await this.fetchDepositAddress(ETH_TOKEN_SYMBOL);
       return true;

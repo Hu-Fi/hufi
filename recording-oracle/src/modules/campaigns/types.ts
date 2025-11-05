@@ -21,6 +21,7 @@ export enum ReturnedCampaignStatus {
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
   HOLDING = 'HOLDING',
+  THRESHOLD = 'THRESHOLD',
 }
 
 export type MarketMakingCampaignDetails = {
@@ -31,9 +32,14 @@ export type HoldingCampaignDetails = {
   dailyBalanceTarget: number;
 };
 
+export type ThresholdCampaignDetails = {
+  minimumBalanceTarget: number;
+};
+
 export type CampaignDetails =
   | MarketMakingCampaignDetails
-  | HoldingCampaignDetails;
+  | HoldingCampaignDetails
+  | ThresholdCampaignDetails;
 
 export type CampaignManifestBase = {
   type: string;
@@ -54,9 +60,16 @@ export type HoldingCampaignManifest = CampaignManifestBase & {
   daily_balance_target: number;
 };
 
+export type ThresholdCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.THRESHOLD;
+  symbol: string;
+  minimum_balance_target: number;
+};
+
 export type CampaignManifest =
   | MarketMakingCampaignManifest
-  | HoldingCampaignManifest;
+  | HoldingCampaignManifest
+  | ThresholdCampaignManifest;
 
 export type CampaignEscrowInfo = {
   fundAmount: number;
