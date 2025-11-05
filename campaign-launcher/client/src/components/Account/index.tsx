@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -45,7 +45,10 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const { activeAddress } = useActiveAccount();
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+
+  const { activeAddress, isConnecting, updateIsConnecting } =
+    useActiveAccount();
   const { disconnect } = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
@@ -53,6 +56,13 @@ const Account: FC = () => {
   const isMobile = useIsMobile();
 
   const formattedAddress = formatAddress(activeAddress);
+
+  useEffect(() => {
+    if (signer && isConnecting) {
+      updateIsConnecting(false);
+      setShowSignInPrompt(isMobile);
+    }
+  }, [signer, isConnecting, updateIsConnecting, isMobile]);
 
   const handleClosePopover = () => setAnchorEl(null);
 
@@ -196,6 +206,10 @@ const Account: FC = () => {
           )}
         </List>
       </Popover>
+      <SignInPromptModal
+        open={showSignInPrompt}
+        onClose={() => setShowSignInPrompt(false)}
+      />
     </>
   );
 };

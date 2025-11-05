@@ -16,6 +16,7 @@ import type { EvmAddress } from '@/types';
 type ActiveAccountContextType = {
   activeAddress?: EvmAddress;
   isConnecting: boolean;
+  updateIsConnecting: (isConnecting: boolean) => void;
 };
 
 const ActiveAccountContext = createContext<
@@ -28,11 +29,10 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<
     EvmAddress | undefined
   >(undefined);
-  const {
-    isConnected: isWalletConnected,
-    isConnecting: isWalletConnecting,
-    address: addressInWallet,
-  } = useAccount();
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const { isConnected: isWalletConnected, address: addressInWallet } =
+    useAccount();
 
   const setActiveAddress = useCallback((address: EvmAddress) => {
     setActiveAddressState(address);
@@ -75,9 +75,10 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const value = useMemo(
     () => ({
       activeAddress,
-      isConnecting: activeAddress ? false : isWalletConnecting,
+      isConnecting,
+      updateIsConnecting: setIsConnecting,
     }),
-    [activeAddress, isWalletConnecting]
+    [activeAddress, isConnecting]
   );
 
   return (
