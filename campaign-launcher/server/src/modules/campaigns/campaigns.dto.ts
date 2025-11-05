@@ -78,6 +78,11 @@ export class CampaignDetails {
     name: 'daily_balance_target',
   })
   dailyBalanceTarget?: number;
+
+  @ApiPropertyOptional({
+    name: 'minimum_balance_target',
+  })
+  minimumBalanceTarget?: number;
 }
 
 export class CampaignData {
