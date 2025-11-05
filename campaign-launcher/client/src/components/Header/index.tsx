@@ -12,6 +12,7 @@ import {
   Toolbar,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
 import Account from '@/components/Account';
@@ -20,7 +21,7 @@ import Container from '@/components/Container';
 import LaunchCampaign from '@/components/LaunchCampaign';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { ROUTES } from '@/constants';
-import { useWeb3Auth } from '@/providers/Web3AuthProvider';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 
 type StyledLinkProps = {
   to: string;
@@ -54,7 +55,9 @@ const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 
 const Header: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { isAuthenticated } = useWeb3Auth();
+
+  const { activeAddress } = useActiveAccount();
+  const { isConnected } = useAccount();
 
   const toggleDrawer = (open: boolean) => {
     setIsDrawerOpen(open);
@@ -102,7 +105,7 @@ const Header: FC = () => {
             />
             <NetworkSwitcher />
             <LaunchCampaign variant="outlined" withTooltip />
-            {isAuthenticated ? <Account /> : <ConnectWallet />}
+            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
           <IconButton
@@ -157,7 +160,7 @@ const Header: FC = () => {
               />
               <NetworkSwitcher />
               <LaunchCampaign variant="outlined" />
-              {isAuthenticated ? <Account /> : <ConnectWallet />}
+              {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
             </Box>
           </Drawer>
         </Toolbar>

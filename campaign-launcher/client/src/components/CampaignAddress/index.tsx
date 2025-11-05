@@ -16,7 +16,7 @@ type Props = {
 const iconButtonSx = {
   color: 'text.secondary',
   p: 0,
-  zIndex: 10,
+  zIndex: 1,
   '&:hover': { background: 'none' },
 };
 

@@ -12,7 +12,11 @@ import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
-import { tokenManager } from '@/utils/TokenManager';
+import {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  tokenManager,
+} from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
 
@@ -21,8 +25,6 @@ type Web3AuthContextType = {
   isLoading: boolean;
   signIn: () => Promise<void>;
   logout: () => Promise<void>;
-  isAuthorizing: boolean;
-  setIsAuthorizing: (isAuthorizing: boolean) => void;
 };
 
 const Web3AuthContext = createContext<Web3AuthContextType>(
@@ -32,7 +34,6 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
@@ -58,9 +59,8 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       console.error('Failed to sign in', e);
     } finally {
       setIsLoading(false);
-      setIsAuthorizing(false);
     }
-  }, [activeAddress, signMessageAsync, setIsAuthorizing]);
+  }, [activeAddress, signMessageAsync]);
 
   const bootstrapAuthState = async () => {
     const access_token = tokenManager.getAccessToken();
@@ -102,12 +102,12 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (isConnected && !isAuthenticated && !isAuthorizing) {
+    if (isConnected && !isAuthenticated) {
       bootstrapAuthState();
     } else {
       setIsLoading(false);
     }
-  }, [isConnected, isAuthenticated, isAuthorizing, setIsAuthorizing]);
+  }, [isConnected, isAuthenticated]);
 
   useEffect(() => {
     const handleRefreshFailureEvent = () => {
@@ -130,12 +130,12 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'ro-access-token' || event.key === 'ro-refresh-token') {
-        if (event.newValue === null) {
-          setIsAuthenticated(false);
-        } else if (tokenManager.hasTokens()) {
-          setIsAuthenticated(true);
-        }
+      if (
+        event.key &&
+        [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY].includes(event.key)
+      ) {
+        const _isAuthenticated = tokenManager.hasTokens();
+        setIsAuthenticated(_isAuthenticated);
       }
     };
 
@@ -150,8 +150,6 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         isLoading,
         signIn,
         logout,
-        isAuthorizing,
-        setIsAuthorizing,
       }}
     >
       {children}

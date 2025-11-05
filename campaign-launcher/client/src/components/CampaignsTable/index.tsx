@@ -198,16 +198,17 @@ const CampaignsTable: FC<Props> = ({
       flex: 2,
       minWidth: 250,
       renderCell: (params) => (
-        <StretchedLink
-          to={`/campaign-details/${params.row.address}`}
-          sx={{ textDecoration: 'none' }}
-        >
+        <>
+          <StretchedLink
+            to={`/campaign-details/${params.row.address}`}
+            sx={{ textDecoration: 'none' }}
+          />
           <CampaignSymbol
             symbol={params.row.symbol}
             campaignType={params.row.type}
             size="medium"
           />
-        </StretchedLink>
+        </>
       ),
     },
     {

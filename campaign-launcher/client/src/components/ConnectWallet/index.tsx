@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState, type MouseEvent } from 'react';
+import { type FC, useState, type MouseEvent } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -8,9 +8,7 @@ import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
@@ -25,14 +23,9 @@ const ConnectWallet: FC = () => {
   const { isConnecting } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
-  const { signer } = useRetrieveSigner();
-  const { signIn, isLoading, isAuthorizing, setIsAuthorizing } = useWeb3Auth();
-
-  const isDisabled = isLoading || isConnecting;
 
   const handleConnect = async (connector: Connector) => {
     try {
-      setIsAuthorizing(true);
       await connectAsync({ connector });
     } catch (e) {
       const err = e as { message?: string; code?: number | string };
@@ -40,26 +33,13 @@ const ConnectWallet: FC = () => {
         await disconnectAsync();
         await handleConnect(connector);
       }
-      setIsAuthorizing(false);
     } finally {
       onClose();
     }
   };
 
-  useEffect(() => {
-    if (signer && isAuthorizing) {
-      signIn();
-    }
-  }, [signer, signIn, isAuthorizing]);
-
   const handleConnectWalletButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
-    if (isDisabled) return null;
-
-    if (signer) {
-      signIn();
-    } else {
-      setAnchorEl(e.currentTarget);
-    }
+    setAnchorEl(e.currentTarget);
   };
 
   const onClose = () => setAnchorEl(null);
@@ -70,7 +50,7 @@ const ConnectWallet: FC = () => {
         variant="contained"
         size="large"
         sx={{ color: 'primary.contrast' }}
-        disabled={isDisabled}
+        disabled={isConnecting}
         onClick={handleConnectWalletButtonClick}
       >
         Connect Wallet
