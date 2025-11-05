@@ -20,11 +20,12 @@ const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { connectAsync, connectors } = useConnect();
-  const { isConnecting } = useActiveAccount();
+  const { isConnecting, updateIsConnecting } = useActiveAccount();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
+    updateIsConnecting(true);
     try {
       await connectAsync({ connector });
     } catch (e) {
@@ -33,6 +34,7 @@ const ConnectWallet: FC = () => {
         await disconnectAsync();
         await handleConnect(connector);
       }
+      updateIsConnecting(false);
     } finally {
       onClose();
     }
