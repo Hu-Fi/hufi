@@ -77,40 +77,36 @@ const CampaignInfo: FC<Props> = ({
       </Box>
       <Box display="flex" alignItems="center" gap={3} order={{ xs: 2, md: 3 }}>
         <Box display="flex" alignItems="center" gap={1}>
-          {campaign?.start_date && campaign?.end_date && (
-            <>
-              <CalendarIcon />
-              <CustomTooltip
-                arrow
-                placement="top"
-                title={formatTime(campaign.start_date)}
-              >
-                <Typography
-                  variant="subtitle2"
-                  borderBottom="1px dashed"
-                  sx={{ cursor: 'pointer' }}
-                >
-                  {formatDate(campaign.start_date)}
-                </Typography>
-              </CustomTooltip>
-              <Typography component="span" variant="subtitle2">
-                -
-              </Typography>
-              <CustomTooltip
-                arrow
-                placement="top"
-                title={formatTime(campaign.end_date)}
-              >
-                <Typography
-                  variant="subtitle2"
-                  borderBottom="1px dashed"
-                  sx={{ cursor: 'pointer' }}
-                >
-                  {formatDate(campaign.end_date)}
-                </Typography>
-              </CustomTooltip>
-            </>
-          )}
+          <CalendarIcon />
+          <CustomTooltip
+            arrow
+            placement="top"
+            title={formatTime(campaign.start_date)}
+          >
+            <Typography
+              variant="subtitle2"
+              borderBottom="1px dashed"
+              sx={{ cursor: 'pointer' }}
+            >
+              {formatDate(campaign.start_date)}
+            </Typography>
+          </CustomTooltip>
+          <Typography component="span" variant="subtitle2">
+            -
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="top"
+            title={formatTime(campaign.end_date)}
+          >
+            <Typography
+              variant="subtitle2"
+              borderBottom="1px dashed"
+              sx={{ cursor: 'pointer' }}
+            >
+              {formatDate(campaign.end_date)}
+            </Typography>
+          </CustomTooltip>
         </Box>
         <CustomTooltip
           arrow

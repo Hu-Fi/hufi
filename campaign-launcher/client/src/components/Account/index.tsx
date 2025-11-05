@@ -134,7 +134,7 @@ const Account: FC = () => {
           {!isAuthenticated && (
             <ListItemButton sx={buttonSx} onClick={handleSignIn}>
               <LoginIcon />
-              Log In
+              Sign In
               <CustomTooltip
                 arrow
                 placement="left"

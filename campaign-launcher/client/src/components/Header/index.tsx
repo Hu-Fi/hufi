@@ -1,14 +1,13 @@
-import { type FC, useRef, useState } from 'react';
+import { type FC, useCallback, useState } from 'react';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Box,
-  ClickAwayListener,
-  Collapse,
   IconButton,
   Link as MuiLink,
-  Paper,
+  Popover,
+  Stack,
   type SxProps,
   Toolbar,
   Typography,
@@ -63,34 +62,32 @@ const LAUNCH_CAMPAIGN_TOOLTIP =
   "You'll need to connect your wallet before launching a campaign";
 
 const Header: FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useAccount();
-  const isMobile = useIsMobile();
   const { signer } = useRetrieveSigner();
+  const isMobile = useIsMobile();
 
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
-  };
+  const handleMenuOpen = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      setAnchorEl(event.currentTarget);
+    },
+    []
+  );
 
-  const handleClickAway = (event: MouseEvent | TouchEvent) => {
-    if (!isMenuOpen) {
-      return;
-    }
-
-    if (toggleButtonRef.current?.contains(event.target as Node)) {
-      return;
-    }
-
-    setIsMenuOpen(false);
-  };
+  const handleMenuClose = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
 
   return (
     <AppBar
       position="static"
       elevation={0}
       sx={{
+        position: { xs: 'sticky', sm: 'static' },
+        top: 0,
+        zIndex: (theme) => theme.zIndex.appBar,
         bgcolor: 'background.default',
         boxShadow: 'none',
         width: '100%',
@@ -144,79 +141,95 @@ const Header: FC = () => {
                 display: { xs: 'flex', md: 'none' },
                 color: 'primary.main',
               }}
-              onClick={toggleMenu}
-              ref={toggleButtonRef}
+              onClick={handleMenuOpen}
             >
               <MenuIcon />
             </IconButton>
           </Box>
         </Toolbar>
 
-        <ClickAwayListener onClickAway={handleClickAway}>
-          <Collapse in={isMenuOpen} timeout="auto">
-            <Paper
-              elevation={10}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
+        <Popover
+          open={!!anchorEl}
+          anchorEl={anchorEl}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          slotProps={{
+            paper: {
+              elevation: 10,
+              square: true,
+              sx: {
+                top: '62px !important',
+                left: '0 !important',
                 bgcolor: 'background.default',
-                borderRadius: '0',
-                boxShadow: 'none',
-                p: 2,
-                pb: 4,
-                gap: 3,
-              }}
+                maxWidth: '100%',
+                width: '100%',
+              },
+            },
+          }}
+        >
+          <Stack
+            sx={{
+              p: 2,
+              pb: 4,
+              gap: 3,
+            }}
+          >
+            <StyledLink
+              to={ROUTES.SUPPORT}
+              text="Support"
+              onClick={handleMenuClose}
+            />
+            <StyledLink
+              to={ROUTES.DASHBOARD}
+              text="Dashboard"
+              onClick={handleMenuClose}
+            />
+            <StyledLink
+              to={STAKING_DASHBOARD_URL}
+              text="Stake HMT"
+              target="_blank"
+              onClick={handleMenuClose}
+            />
+            <NetworkSwitcher />
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={2}
+              width="100%"
+              sx={{ '& button': { flex: 1 } }}
             >
-              <StyledLink
-                to={ROUTES.SUPPORT}
-                text="Support"
-                onClick={() => setIsMenuOpen(false)}
-              />
-              <StyledLink
-                to={ROUTES.DASHBOARD}
-                text="Dashboard"
-                onClick={() => setIsMenuOpen(false)}
-              />
-              <StyledLink
-                to={STAKING_DASHBOARD_URL}
-                text="Stake HMT"
-                target="_blank"
-                onClick={() => setIsMenuOpen(false)}
-              />
-              <NetworkSwitcher />
-              <Box
-                display="flex"
-                alignItems="center"
-                gap={2}
-                width="100%"
-                sx={{ '& button': { flex: 1 } }}
-              >
-                <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
-                {!signer && (
-                  <CustomTooltip
-                    title={
-                      <Typography variant="tooltip">
-                        {LAUNCH_CAMPAIGN_TOOLTIP}
-                      </Typography>
-                    }
-                    slotProps={{
-                      tooltip: {
-                        sx: {
-                          width: '150px',
-                          lineHeight: '14px',
-                        },
+              <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
+              {!signer && (
+                <CustomTooltip
+                  title={
+                    <Typography variant="tooltip">
+                      {LAUNCH_CAMPAIGN_TOOLTIP}
+                    </Typography>
+                  }
+                  slotProps={{
+                    tooltip: {
+                      sx: {
+                        width: '150px',
+                        lineHeight: '14px',
                       },
-                    }}
-                    arrow
-                    placement="left"
-                  >
-                    <InfoTooltipInner />
-                  </CustomTooltip>
-                )}
-              </Box>
-            </Paper>
-          </Collapse>
-        </ClickAwayListener>
+                    },
+                  }}
+                  arrow
+                  placement="left"
+                >
+                  <InfoTooltipInner />
+                </CustomTooltip>
+              )}
+            </Box>
+          </Stack>
+        </Popover>
       </Container>
     </AppBar>
   );
