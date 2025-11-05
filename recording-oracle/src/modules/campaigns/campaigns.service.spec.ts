@@ -2166,7 +2166,7 @@ describe('CampaignsService', () => {
 
       const totalScore = totalBalance >= minimumBalanceTarget ? 1 : 0;
 
-      const campaignProgress = generateCampaignProgress(campaign.type);
+      const campaignProgress = generateCampaignProgress(campaign);
       (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
       (campaignProgress.meta as ThresholdMeta).total_score = totalScore;
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
@@ -2176,7 +2176,8 @@ describe('CampaignsService', () => {
       await campaignsService.recordCampaignProgress(campaign);
 
       const expectedRewardPool = campaignsService.calculateRewardPool({
-        maxRewardPool: campaignsService.calculateDailyReward(campaign),
+        baseRewardPool: campaignsService.calculateDailyReward(campaign),
+        maxRewardPoolRatio: 1,
         progressValue: totalScore,
         progressValueTarget: 1,
         fundTokenDecimals: campaign.fundTokenDecimals,
@@ -2196,6 +2197,10 @@ describe('CampaignsService', () => {
             },
           ],
         }),
+        ethers.parseUnits(
+          expectedRewardPool.toString(),
+          campaign.fundTokenDecimals,
+        ),
       );
     });
 
@@ -2478,7 +2483,7 @@ describe('CampaignsService', () => {
 
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-        const campaignProgress = generateCampaignProgress(campaign.type);
+        const campaignProgress = generateCampaignProgress(campaign);
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           campaignProgress,
         );
