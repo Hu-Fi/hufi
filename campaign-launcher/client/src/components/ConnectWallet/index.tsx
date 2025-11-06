@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useState, type MouseEvent } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
@@ -7,14 +7,10 @@ import { useConnect, useDisconnect, type Connector } from 'wagmi';
 import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
+import BaseModal from '@/components/modals/BaseModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-
-import BaseModal from '../modals/BaseModal';
-
-type Props = {
-  closeDrawer?: () => void;
-};
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,
@@ -22,17 +18,21 @@ const WALLET_ICONS: Record<string, string> = {
   walletConnect: walletConnectSvg,
 };
 
-const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
+const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { connectAsync, connectors } = useConnect();
   const { isConnecting } = useActiveAccount();
+  const { setShowSignInPrompt } = useWeb3Auth();
   const { disconnectAsync } = useDisconnect();
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
     try {
       await connectAsync({ connector });
+      if (isMobile) {
+        setShowSignInPrompt(true);
+      }
     } catch (e) {
       const err = e as { message?: string; code?: number | string };
       if (err.message?.includes('Connector already connected')) {
@@ -44,9 +44,7 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
     }
   };
 
-  const handleConnectWalletButtonClick = (
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleConnectWalletButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(e.currentTarget);
   };
 
@@ -78,7 +76,6 @@ const ConnectWallet: FC<Props> = ({ closeDrawer }) => {
                 handleConnect(connector);
                 if (isMobile) {
                   onClose();
-                  closeDrawer?.();
                 }
               }}
             >

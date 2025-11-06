@@ -5,8 +5,8 @@ export type TokenData = {
   refresh_token: string;
 };
 
-const ACCESS_TOKEN_KEY = 'ro-access-token';
-const REFRESH_TOKEN_KEY = 'ro-refresh-token';
+export const ACCESS_TOKEN_KEY = 'ro-access-token';
+export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
 
 export class TokenManager {
   private static instance: TokenManager;

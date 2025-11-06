@@ -45,6 +45,7 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();

@@ -28,6 +28,7 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
   const [activeAddress, setActiveAddressState] = useState<
     EvmAddress | undefined
   >(undefined);
+
   const {
     isConnected: isWalletConnected,
     isConnecting: isWalletConnecting,

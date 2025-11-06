@@ -24,6 +24,7 @@ const JoinCampaign: FC<Props> = ({
   isJoinedLoading,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
+
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
@@ -48,7 +49,7 @@ const JoinCampaign: FC<Props> = ({
   };
 
   const handleButtonClick = () => {
-    if (isButtonDisabled) {
+    if (isButtonDisabled || !campaign) {
       return;
     }
 
@@ -62,6 +63,18 @@ const JoinCampaign: FC<Props> = ({
 
     joinCampaign({ chainId: campaign.chain_id, address: campaign.address });
   };
+
+  if (!campaign || isCampaignFinished) {
+    return null;
+  }
+
+  if (!isAuthenticated && !isMobile) {
+    return (
+      <Button variant="contained" size="large" disabled sx={{ ml: 'auto' }}>
+        Connect Wallet to Join Campaign
+      </Button>
+    );
+  }
 
   return (
     <>

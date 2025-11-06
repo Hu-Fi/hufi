@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Button, Typography, Box, Stack } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import LaunchCampaign from '@/components/LaunchCampaign';
+import StretchedLink from '@/components/StretchedLink';
 import {
   useIsXlDesktop,
   useIsLgDesktop,
@@ -181,7 +182,6 @@ const CampaignsTable: FC<Props> = ({
   isMyCampaigns = false,
 }) => {
   const { exchangesMap } = useExchangesContext();
-  const navigate = useNavigate();
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
@@ -220,8 +220,10 @@ const CampaignsTable: FC<Props> = ({
         return <Typography>Symbol</Typography>;
       },
       renderCell: (params) => {
+        let Row;
+
         if (isMobile) {
-          return (
+          Row = (
             <Box display="flex" alignItems="center" gap={2}>
               <Box
                 display={isJoinedCampaigns ? 'none' : 'flex'}
@@ -241,13 +243,23 @@ const CampaignsTable: FC<Props> = ({
               />
             </Box>
           );
+        } else {
+          Row = (
+            <CampaignSymbol
+              symbol={params.row.symbol}
+              campaignType={params.row.type}
+              size="medium"
+            />
+          );
         }
         return (
-          <CampaignSymbol
-            symbol={params.row.symbol}
-            campaignType={params.row.type}
-            size="medium"
-          />
+          <>
+            <StretchedLink
+              to={`/campaign-details/${params.row.address}`}
+              sx={{ textDecoration: 'none' }}
+            />
+            {Row}
+          </>
         );
       },
     },
@@ -416,9 +428,6 @@ const CampaignsTable: FC<Props> = ({
       disableVirtualization
       hideFooter
       hideFooterPagination
-      onRowClick={(params) => {
-        navigate(`/campaign-details/${params.row.address}`);
-      }}
       slots={{
         noRowsOverlay: () => (
           <Box
@@ -503,6 +512,7 @@ const CampaignsTable: FC<Props> = ({
         '& .MuiDataGrid-row': {
           display: 'flex',
           alignItems: 'center',
+          position: 'relative',
           cursor: 'pointer',
           mb: isMobile ? 0 : 1,
           py: isXl ? 4 : 2,
