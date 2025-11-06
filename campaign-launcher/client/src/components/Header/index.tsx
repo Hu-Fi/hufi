@@ -118,14 +118,18 @@ const Header: FC = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Link to={ROUTES.DASHBOARD}>
+            <MuiLink
+              component={Link}
+              to={ROUTES.DASHBOARD}
+              sx={{ display: 'flex' }}
+            >
               <img
                 src={logo}
                 alt="ThirstyFi"
-                width={isMobile ? 60 : 150}
-                height={isMobile ? 22 : 32}
+                width={isMobile ? 87 : 150}
+                height={isMobile ? 19 : 32}
               />
-            </Link>
+            </MuiLink>
           </Box>
 
           <Box
