@@ -7,7 +7,7 @@ import {
   EscrowUtils,
   OrderDirection,
 } from '@human-protocol/sdk';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ethers } from 'ethers';
@@ -100,7 +100,7 @@ const REFRESH_INTERIM_PROGRESS_CACHE_SCHEDULE = Environment.isDevelopment()
 const PROGRESS_PERIOD_DAYS = 1;
 
 @Injectable()
-export class CampaignsService {
+export class CampaignsService implements OnApplicationBootstrap {
   private readonly logger = logger.child({
     context: CampaignsService.name,
   });
@@ -124,6 +124,10 @@ export class CampaignsService {
     private readonly pgAdvisoryLock: PgAdvisoryLock,
     private readonly moduleRef: ModuleRef,
   ) {}
+
+  onApplicationBootstrap() {
+    void this.refreshInterimProgressCache();
+  }
 
   async findOneByChainIdAndAddress(
     chainId: number,
