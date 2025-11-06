@@ -7,15 +7,10 @@ import { useConnect, useDisconnect, type Connector } from 'wagmi';
 import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
+import BaseModal from '@/components/modals/BaseModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-
-import BaseModal from '../modals/BaseModal';
-
-type Props = {
-  closeDrawer?: () => void;
-};
 
 const WALLET_ICONS: Record<string, string> = {
   metaMask: metaMaskSvg,

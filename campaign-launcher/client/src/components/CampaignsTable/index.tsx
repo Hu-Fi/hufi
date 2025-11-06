@@ -9,6 +9,7 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import LaunchCampaign from '@/components/LaunchCampaign';
+import StretchedLink from '@/components/StretchedLink';
 import {
   useIsXlDesktop,
   useIsLgDesktop,
@@ -221,32 +222,44 @@ const CampaignsTable: FC<Props> = ({
       renderCell: (params) => {
         if (isMobile) {
           return (
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box
-                display={isJoinedCampaigns ? 'none' : 'flex'}
-                width="8px"
-                height="8px"
-                borderRadius="100%"
-                bgcolor={mapStatusToColor(
-                  params.row.status,
-                  params.row.start_date,
-                  params.row.end_date
-                )}
+            <>
+              <StretchedLink
+                to={`/campaign-details/${params.row.address}`}
+                sx={{ textDecoration: 'none' }}
               />
-              <CampaignSymbol
-                symbol={params.row.symbol}
-                campaignType={params.row.type}
-                size="xs"
-              />
-            </Box>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Box
+                  display={isJoinedCampaigns ? 'none' : 'flex'}
+                  width="8px"
+                  height="8px"
+                  borderRadius="100%"
+                  bgcolor={mapStatusToColor(
+                    params.row.status,
+                    params.row.start_date,
+                    params.row.end_date
+                  )}
+                />
+                <CampaignSymbol
+                  symbol={params.row.symbol}
+                  campaignType={params.row.type}
+                  size="xs"
+                />
+              </Box>
+            </>
           );
         }
         return (
-          <CampaignSymbol
-            symbol={params.row.symbol}
-            campaignType={params.row.type}
-            size="medium"
-          />
+          <>
+            <StretchedLink
+              to={`/campaign-details/${params.row.address}`}
+              sx={{ textDecoration: 'none' }}
+            />
+            <CampaignSymbol
+              symbol={params.row.symbol}
+              campaignType={params.row.type}
+              size="medium"
+            />
+          </>
         );
       },
     },
