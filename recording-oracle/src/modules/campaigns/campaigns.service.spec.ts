@@ -3371,7 +3371,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
     });
 
-    it('should return campaign progress for participant from cache', async () => {
+    it('should return campaign progress for participant from cache if same timeframe', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
@@ -3383,9 +3383,15 @@ describe('CampaignsService', () => {
         [participantMetaProp]: participantMetaValue,
       });
 
+      const mockedActiveTimeframe = {
+        start: faker.date.recent(),
+        end: faker.date.recent(),
+      };
+      spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
+
       const campaignProgress: CampaignProgress<Record<string, unknown>> = {
-        from: faker.date.recent().toISOString(),
-        to: faker.date.soon().toISOString(),
+        from: mockedActiveTimeframe.start.toISOString(),
+        to: mockedActiveTimeframe.end.toISOString(),
         participants_outcomes: [
           generateParticipantOutcome(),
           participantOutcome,
@@ -3425,6 +3431,45 @@ describe('CampaignsService', () => {
         end: faker.date.soon(),
       };
       spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
+
+      const progress = await campaignsService.getUserProgress(
+        userId,
+        evmAddress,
+        chainId,
+        campaign.address,
+      );
+
+      expect(progress).toEqual({
+        from: mockedActiveTimeframe.start.toISOString(),
+        to: mockedActiveTimeframe.end.toISOString(),
+        myScore: 0,
+        myMeta: {},
+        totalMeta: {},
+      });
+    });
+
+    it('should return placeholder progress for participant if value in cache is for previous timeframe', async () => {
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        true,
+      );
+
+      const mockedActiveTimeframe = {
+        start: faker.date.recent(),
+        end: faker.date.soon(),
+      };
+      spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
+
+      const campaignProgress: CampaignProgress<Record<string, unknown>> =
+        generateCampaignProgress(campaign);
+      campaignProgress.to = new Date(
+        mockedActiveTimeframe.start.valueOf() - 1,
+      ).toISOString();
+      campaignProgress.from = faker.date
+        .recent({
+          refDate: campaignProgress.to,
+        })
+        .toISOString();
+      mockInterimProgressCache.set(campaign.id, campaignProgress);
 
       const progress = await campaignsService.getUserProgress(
         userId,

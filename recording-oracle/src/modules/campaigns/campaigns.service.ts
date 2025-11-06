@@ -1059,17 +1059,17 @@ export class CampaignsService {
       throw new UserIsNotParticipatingError();
     }
 
-    let progress = this.campaignsInterimProgressCache.get(campaign.id);
-    if (!progress) {
-      const activeTimeframe = await this.getActiveTimeframe(campaign);
-      if (!activeTimeframe) {
-        throw new InvalidCampaign(
-          campaign.chainId,
-          campaign.address,
-          "Couldn't get active timeframe",
-        );
-      }
+    const activeTimeframe = await this.getActiveTimeframe(campaign);
+    if (!activeTimeframe) {
+      throw new InvalidCampaign(
+        campaign.chainId,
+        campaign.address,
+        "Couldn't get active timeframe",
+      );
+    }
 
+    let progress = this.campaignsInterimProgressCache.get(campaign.id);
+    if (!progress || progress.from !== activeTimeframe.start.toISOString()) {
       progress = {
         from: activeTimeframe.start.toISOString(),
         to: activeTimeframe.end.toISOString(),
