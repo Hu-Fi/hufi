@@ -51,6 +51,7 @@ const Account: FC = () => {
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const formattedAddress = formatAddress(activeAddress);
 
@@ -189,9 +190,9 @@ const Account: FC = () => {
             </ListItemButton>
           )}
           {isAuthenticated && (
-            <ListItemButton sx={buttonSx} onClick={handleDisconnect}>
-              <PowerIcon />
-              Disconnect wallet
+            <ListItemButton sx={buttonSx} onClick={handleLogout}>
+              <LogoutIcon />
+              Log Out
             </ListItemButton>
           )}
         </List>
