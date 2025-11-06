@@ -95,10 +95,7 @@ export const thresholdValidationSchema = yup.object({
   minimum_balance_target: yup
     .number()
     .typeError('Minimum balance target is required')
-    .min(
-      0.000001,
-      'Minimum balance target must be greater than or equal to 0.000001'
-    )
+    .min(0.001, 'Minimum balance target must be greater than or equal to 0.001')
     .required('Minimum balance target is required'),
 }) as ObjectSchema<ThresholdFormValues>;
 
