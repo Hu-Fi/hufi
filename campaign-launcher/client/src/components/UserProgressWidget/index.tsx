@@ -109,7 +109,12 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
   );
 
   if (!isLoading && !data) {
-    return <Typography variant="subtitle2">No data from backend</Typography>;
+    return (
+      <Typography variant="subtitle2">
+        Interim progress data is not available at the moment. Please check
+        later.
+      </Typography>
+    );
   }
 
   return (

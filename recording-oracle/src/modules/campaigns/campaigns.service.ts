@@ -1025,7 +1025,7 @@ export class CampaignsService {
     myScore: number;
     myMeta: Record<string, unknown>;
     totalMeta: Record<string, unknown>;
-  }> {
+  } | null> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
@@ -1068,14 +1068,12 @@ export class CampaignsService {
       );
     }
 
-    let progress = this.campaignsInterimProgressCache.get(campaign.id);
-    if (!progress || progress.from !== activeTimeframe.start.toISOString()) {
-      progress = {
-        from: activeTimeframe.start.toISOString(),
-        to: activeTimeframe.end.toISOString(),
-        participants_outcomes: [],
-        meta: {} as CampaignProgressMeta,
-      };
+    const progress = this.campaignsInterimProgressCache.get(campaign.id);
+    if (progress?.from !== activeTimeframe.start.toISOString()) {
+      /**
+       * Either no progress cached yet or cached for previous timeframe
+       */
+      return null;
     }
 
     const {

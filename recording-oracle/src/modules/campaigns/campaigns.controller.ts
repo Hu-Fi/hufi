@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseFilters,
 } from '@nestjs/common';
 import {
@@ -19,6 +20,7 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 
 import type { RequestWithUser } from '@/common/types';
 
@@ -179,13 +181,17 @@ export class CampaignsController {
     description: 'Details about user progress',
     type: GetUserProgressResponseDto,
   })
+  @ApiResponse({
+    status: 204,
+    description: 'No progress available yet',
+  })
   @Header('Cache-Control', 'private, max-age=30')
-  @HttpCode(200)
   @Get('/:chain_id-:campaign_address/my-progress')
   async getUserProgress(
     @Req() request: RequestWithUser,
     @Param() { chainId, campaignAddress }: CampaignParamsDto,
-  ): Promise<GetUserProgressResponseDto> {
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<GetUserProgressResponseDto | void> {
     try {
       const userProgress = await this.campaignsService.getUserProgress(
         request.user.id,
@@ -193,6 +199,14 @@ export class CampaignsController {
         chainId,
         campaignAddress,
       );
+
+      if (!userProgress) {
+        /**
+         * Only set response status and let Nest.js handle the rest
+         * (`passthrough` is necessary to call response interceptors)
+         */
+        return void response.status(204);
+      }
 
       return userProgress;
     } catch (error) {

@@ -3421,7 +3421,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should return placeholder progress for participant if no value for campaign in cache', async () => {
+    it('should return null if no value for campaign in cache', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
@@ -3439,16 +3439,10 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(progress).toEqual({
-        from: mockedActiveTimeframe.start.toISOString(),
-        to: mockedActiveTimeframe.end.toISOString(),
-        myScore: 0,
-        myMeta: {},
-        totalMeta: {},
-      });
+      expect(progress).toBeNull();
     });
 
-    it('should return placeholder progress for participant if value in cache is for previous timeframe', async () => {
+    it('should return null if value in cache is for previous timeframe', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
@@ -3478,13 +3472,7 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(progress).toEqual({
-        from: mockedActiveTimeframe.start.toISOString(),
-        to: mockedActiveTimeframe.end.toISOString(),
-        myScore: 0,
-        myMeta: {},
-        totalMeta: {},
-      });
+      expect(progress).toBeNull();
     });
   });
 
