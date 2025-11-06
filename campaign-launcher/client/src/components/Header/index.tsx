@@ -107,14 +107,27 @@ const Header: FC = () => {
             py: { xs: 1, md: 3 },
           }}
         >
-          <Link to={ROUTES.DASHBOARD}>
-            <img
-              src={logo}
-              alt="HuFi"
-              width={isMobile ? 60 : 87}
-              height={isMobile ? 22 : 32}
-            />
-          </Link>
+          <Box display="flex" alignItems="center" gap={2}>
+            <IconButton
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                color: 'primary.main',
+                p: 0,
+              }}
+              onClick={handleMenuOpen}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Link to={ROUTES.DASHBOARD}>
+              <img
+                src={logo}
+                alt="HuFi"
+                width={isMobile ? 60 : 87}
+                height={isMobile ? 22 : 32}
+              />
+            </Link>
+          </Box>
+
           <Box
             display={{ xs: 'none', md: 'flex' }}
             gap={2}
@@ -133,18 +146,8 @@ const Header: FC = () => {
             {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
-          <Box display={{ xs: 'flex', md: 'none' }} gap={2} alignItems="center">
+          <Box display={{ xs: 'flex', md: 'none' }}>
             {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
-            <IconButton
-              edge="start"
-              sx={{
-                display: { xs: 'flex', md: 'none' },
-                color: 'primary.main',
-              }}
-              onClick={handleMenuOpen}
-            >
-              <MenuIcon />
-            </IconButton>
           </Box>
         </Toolbar>
 
@@ -154,11 +157,11 @@ const Header: FC = () => {
           onClose={handleMenuClose}
           anchorOrigin={{
             vertical: 'bottom',
-            horizontal: 'right',
+            horizontal: 'left',
           }}
           transformOrigin={{
             vertical: 'top',
-            horizontal: 'right',
+            horizontal: 'left',
           }}
           slotProps={{
             paper: {

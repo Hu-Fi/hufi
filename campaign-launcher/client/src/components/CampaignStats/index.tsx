@@ -289,7 +289,11 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
               gap={1}
             >
               Campaign results
-              <CustomTooltip title={<StatusTooltip />} arrow placement="top">
+              <CustomTooltip
+                title={<StatusTooltip />}
+                arrow
+                placement={isMobile ? 'left' : 'top'}
+              >
                 <InfoTooltipInner />
               </CustomTooltip>
             </Title>
