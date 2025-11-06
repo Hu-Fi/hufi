@@ -10,12 +10,12 @@ import {
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import dayjs from '@/common/utils/dayjs';
 import * as debugUtils from '@/common/utils/debug';
 import * as decimalUtils from '@/common/utils/decimal';
 import Environment from '@/common/utils/environment';
@@ -97,20 +97,20 @@ const REFRESH_INTERIM_PROGRESS_CACHE_SCHEDULE = Environment.isDevelopment()
   ? CronExpression.EVERY_MINUTE
   : CronExpression.EVERY_10_MINUTES;
 
-const campaignsInterimProgressCache = new LRUCache<
-  string,
-  CampaignProgress<CampaignProgressMeta>
->({
-  // expect not more than 100 active campaings atm
-  max: 100,
-});
-
 const PROGRESS_PERIOD_DAYS = 1;
 
 @Injectable()
 export class CampaignsService {
   private readonly logger = logger.child({
     context: CampaignsService.name,
+  });
+
+  private readonly campaignsInterimProgressCache = new LRUCache<
+    string,
+    CampaignProgress<CampaignProgressMeta>
+  >({
+    // expect not more than 100 active campaings atm
+    max: 100,
   });
 
   constructor(
@@ -1059,7 +1059,7 @@ export class CampaignsService {
       throw new UserIsNotParticipatingError();
     }
 
-    let progress = campaignsInterimProgressCache.get(campaign.id);
+    let progress = this.campaignsInterimProgressCache.get(campaign.id);
     if (!progress) {
       const activeTimeframe = await this.getActiveTimeframe(campaign);
       if (!activeTimeframe) {
@@ -1231,7 +1231,7 @@ export class CampaignsService {
             });
             const isCampaignEndingSoon = dayjs()
               .add(5, 'minute')
-              .isAfter(campaign.endDate);
+              .isSameOrAfter(campaign.endDate);
             if (isCampaignEndingSoon) {
               campaignLogger.debug(
                 'Campaign ends soon, skip interim progress cache refresh',
@@ -1252,7 +1252,7 @@ export class CampaignsService {
                 timeframe.start,
                 timeframe.end,
               );
-              campaignsInterimProgressCache.set(campaign.id, progress);
+              this.campaignsInterimProgressCache.set(campaign.id, progress);
             } catch (error) {
               campaignLogger.error(
                 'Failed to get interim progress for campaign',

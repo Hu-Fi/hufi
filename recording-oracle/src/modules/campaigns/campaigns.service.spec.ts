@@ -23,10 +23,10 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
-import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
+import dayjs from '@/common/utils/dayjs';
 import * as decimalUtils from '@/common/utils/decimal';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -79,6 +79,7 @@ import {
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
+  CampaignProgressMeta,
   HoldingProgressChecker,
   MarketMakingProgressChecker,
 } from './progress-checking';
@@ -2835,12 +2836,310 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe('getUserProgress', () => {
-    const mockCampaignProgressChecker = new MockCampaignProgressChecker();
+  describe('getActiveTimeframe', () => {
+    const mockedNow = new Date();
 
-    let spyOnGetCampaignProgressChecker: jest.SpyInstance;
-    let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
+    let campaign: CampaignEntity;
     let spyOnGetCancellationRequestDate: jest.SpyInstance;
+
+    beforeAll(() => {
+      jest.useFakeTimers({ now: mockedNow });
+
+      spyOnGetCancellationRequestDate = jest.spyOn(
+        escrowUtils,
+        'getCancellationRequestDate',
+      );
+      spyOnGetCancellationRequestDate.mockImplementation();
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+
+      spyOnGetCancellationRequestDate.mockRestore();
+    });
+
+    beforeEach(() => {
+      campaign = generateCampaignEntity();
+    });
+
+    it('should return null if campaign not started', async () => {
+      campaign.startDate = new Date(mockedNow.valueOf() + 1);
+
+      const result = await campaignsService.getActiveTimeframe(campaign);
+
+      expect(result).toBeNull();
+    });
+
+    it.each([
+      {
+        status: CampaignStatus.CANCELLED,
+      },
+      {
+        status: CampaignStatus.COMPLETED,
+      },
+      {
+        status: CampaignStatus.PENDING_CANCELLATION,
+      },
+      {
+        endDate: new Date(mockedNow.valueOf() - 1),
+      },
+    ])(
+      'should return null if campaign finisihed [%#]',
+      async (campaignOverrides) => {
+        Object.assign(campaign, campaignOverrides);
+
+        const result = await campaignsService.getActiveTimeframe(campaign);
+
+        expect(result).toBeNull();
+      },
+    );
+
+    it('should return correct timeframe for active campaign', async () => {
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
+
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(campaignDaysPassed, 'days')
+        .add(1, 'millisecond')
+        .toDate();
+
+      const result = await campaignsService.getActiveTimeframe(campaign);
+
+      expect(result).toEqual({
+        start: expectedTimeframeStart,
+        end: mockedNow,
+      });
+    });
+
+    it('should return correct timeframe when cancellation requested within that', async () => {
+      campaign.status = CampaignStatus.TO_CANCEL;
+
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
+
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(campaignDaysPassed, 'days')
+        .add(1, 'millisecond')
+        .toDate();
+
+      const cancellationRequestedAt = dayjs(expectedTimeframeStart)
+        .add(1, 'minute')
+        .toDate();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
+      );
+
+      const result = await campaignsService.getActiveTimeframe(campaign);
+
+      expect(result).toEqual({
+        start: expectedTimeframeStart,
+        end: cancellationRequestedAt,
+      });
+    });
+
+    it('should return null when cancellation requested outside active timeframe', async () => {
+      campaign.status = CampaignStatus.TO_CANCEL;
+
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
+
+      const cancellationRequestedAt = dayjs(campaign.startDate)
+        .subtract(1, 'millisecond')
+        .toDate();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
+      );
+
+      const result = await campaignsService.getActiveTimeframe(campaign);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('refreshInterimProgressCache', () => {
+    const mockInterimProgressCache = new Map();
+    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
+    let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
+    let spyOnGetActiveTimeframe: jest.SpyInstance;
+
+    beforeAll(() => {
+      replacedInterimProgressCacheRef = jest.replaceProperty(
+        campaignsService as any,
+        'campaignsInterimProgressCache',
+        mockInterimProgressCache,
+      );
+
+      spyOnCheckCampaignProgressForPeriod = jest.spyOn(
+        campaignsService,
+        'checkCampaignProgressForPeriod',
+      );
+      spyOnCheckCampaignProgressForPeriod.mockImplementation();
+
+      spyOnGetActiveTimeframe = jest.spyOn(
+        campaignsService,
+        'getActiveTimeframe',
+      );
+      spyOnGetActiveTimeframe.mockImplementation();
+    });
+
+    afterAll(() => {
+      replacedInterimProgressCacheRef.restore();
+
+      spyOnCheckCampaignProgressForPeriod.mockRestore();
+      spyOnGetActiveTimeframe.mockRestore();
+    });
+
+    beforeEach(() => {
+      mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
+        await fn();
+      });
+      mockInterimProgressCache.clear();
+    });
+
+    it('should run with pessimistic lock', async () => {
+      await campaignsService.refreshInterimProgressCache();
+
+      expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledTimes(1);
+      expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledWith(
+        'refresh-interim-progress-cache',
+        expect.any(Function),
+      );
+    });
+
+    it('should refresh interim progress for each campaign', async () => {
+      const nCampaigns = faker.number.int({ min: 2, max: 5 });
+      const campaigns = Array.from({ length: nCampaigns }, () =>
+        generateCampaignEntity(),
+      );
+      mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce(
+        campaigns,
+      );
+
+      const mockedActiveTimeframe = {
+        start: faker.date.recent(),
+        end: faker.date.soon(),
+      };
+      spyOnGetActiveTimeframe.mockResolvedValue(mockedActiveTimeframe);
+
+      const campaignsProgressMap: Map<
+        string,
+        CampaignProgress<CampaignProgressMeta>
+      > = new Map();
+      for (const campaign of campaigns) {
+        const mockedProgress = generateCampaignProgress(campaign);
+        mockedProgress.from = mockedActiveTimeframe.start.toISOString();
+        mockedProgress.to = mockedActiveTimeframe.end.toISOString();
+
+        campaignsProgressMap.set(campaign.id, mockedProgress);
+      }
+      spyOnCheckCampaignProgressForPeriod.mockImplementation(
+        (campaign: CampaignEntity) => {
+          return campaignsProgressMap.get(campaign.id);
+        },
+      );
+
+      await campaignsService.refreshInterimProgressCache();
+
+      expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(nCampaigns);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nCampaigns,
+      );
+
+      for (const campaign of campaigns) {
+        expect(spyOnGetActiveTimeframe).toHaveBeenCalledWith(campaign);
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          mockedActiveTimeframe.start,
+          mockedActiveTimeframe.end,
+        );
+        expect(mockInterimProgressCache.get(campaign.id)).toEqual(
+          campaignsProgressMap.get(campaign.id),
+        );
+      }
+    });
+
+    it('should skip campaign for refresh if ends soon', async () => {
+      const campaign = generateCampaignEntity();
+      campaign.endDate = dayjs().add(5, 'minute').toDate();
+      mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce([
+        campaign,
+      ]);
+
+      await campaignsService.refreshInterimProgressCache();
+
+      expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(0);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+      expect(mockInterimProgressCache.size).toBe(0);
+    });
+
+    it('should skip campaign for refresh if no active timeframe', async () => {
+      const campaign = generateCampaignEntity();
+      mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce([
+        campaign,
+      ]);
+
+      spyOnGetActiveTimeframe.mockResolvedValueOnce(null);
+
+      await campaignsService.refreshInterimProgressCache();
+
+      expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(1);
+      expect(spyOnGetActiveTimeframe).toHaveBeenCalledWith(campaign);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
+      expect(mockInterimProgressCache.size).toBe(0);
+    });
+
+    it('should handle error for campaign and process others', async () => {
+      const okCampaign = generateCampaignEntity();
+      const errorCampaign = generateCampaignEntity();
+      mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce([
+        okCampaign,
+        errorCampaign,
+      ]);
+      spyOnGetActiveTimeframe.mockResolvedValue({
+        start: faker.date.recent(),
+        end: faker.date.soon(),
+      });
+      const okCampaignProgress = generateCampaignProgress(okCampaign);
+      const syntheticError = new Error(faker.lorem.sentence());
+      spyOnCheckCampaignProgressForPeriod.mockImplementation(
+        (campaign: CampaignEntity) => {
+          if (campaign.id === okCampaign.id) {
+            return okCampaignProgress;
+          }
+
+          throw syntheticError;
+        },
+      );
+
+      await campaignsService.refreshInterimProgressCache();
+
+      expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(2);
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(2);
+
+      expect(mockInterimProgressCache.size).toBe(1);
+      expect(mockInterimProgressCache.get(okCampaign.id)).toBeDefined();
+      expect(mockInterimProgressCache.get(errorCampaign.id)).toBeUndefined();
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to get interim progress for campaign',
+        {
+          error: syntheticError,
+        },
+      );
+    });
+  });
+
+  describe('getUserProgress', () => {
+    const mockInterimProgressCache = new Map();
+    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
+    let spyOnGetActiveTimeframe: jest.SpyInstance;
 
     let userId: string;
     let evmAddress: string;
@@ -2852,16 +3151,23 @@ describe('CampaignsService', () => {
       evmAddress = faker.finance.ethereumAddress();
       chainId = generateTestnetChainId();
 
-      spyOnGetCampaignProgressChecker = jest.spyOn(
+      replacedInterimProgressCacheRef = jest.replaceProperty(
         campaignsService as any,
-        'getCampaignProgressChecker',
+        'campaignsInterimProgressCache',
+        mockInterimProgressCache,
       );
 
-      spyOnCheckCampaignProgressForPeriod = jest.spyOn(
+      spyOnGetActiveTimeframe = jest.spyOn(
         campaignsService,
-        'checkCampaignProgressForPeriod',
+        'getActiveTimeframe',
       );
-      spyOnCheckCampaignProgressForPeriod.mockImplementation();
+      spyOnGetActiveTimeframe.mockImplementation();
+    });
+
+    afterAll(() => {
+      replacedInterimProgressCacheRef.restore();
+
+      spyOnGetActiveTimeframe.mockRestore();
     });
 
     beforeEach(() => {
@@ -2871,20 +3177,7 @@ describe('CampaignsService', () => {
         campaign,
       );
 
-      spyOnGetCampaignProgressChecker.mockReturnValueOnce(
-        mockCampaignProgressChecker,
-      );
-      spyOnGetCancellationRequestDate = jest.spyOn(
-        escrowUtils,
-        'getCancellationRequestDate',
-      );
-      spyOnGetCancellationRequestDate.mockImplementation();
-    });
-
-    afterAll(() => {
-      spyOnGetCampaignProgressChecker.mockRestore();
-      spyOnCheckCampaignProgressForPeriod.mockRestore();
-      spyOnGetCancellationRequestDate.mockRestore();
+      mockInterimProgressCache.clear();
     });
 
     it('should throw if campaign not found', async () => {
@@ -2990,39 +3283,6 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw if campaign is about to cancel and current period is after cancellation request', async () => {
-      campaign.status = CampaignStatus.TO_CANCEL;
-      const cancellationRequestedAt = dayjs().subtract(1, 'hour').toDate();
-      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
-        cancellationRequestedAt,
-      );
-
-      let thrownError;
-      try {
-        await campaignsService.getUserProgress(
-          userId,
-          evmAddress,
-          chainId,
-          campaign.address,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
-      expect(thrownError.chainId).toBe(chainId);
-      expect(thrownError.address).toBe(campaign.address);
-
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaign.address);
-
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-    });
-
     it.each([
       CampaignStatus.CANCELLED,
       CampaignStatus.PENDING_CANCELLATION,
@@ -3083,24 +3343,38 @@ describe('CampaignsService', () => {
       expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(0);
     });
 
-    it('should return campaign progress for participant for active campaign', async () => {
+    it("should throw if can't get active timeframe", async () => {
+      spyOnGetActiveTimeframe.mockReturnValueOnce(null);
+
+      let thrownError;
+      try {
+        await campaignsService.getUserProgress(
+          userId,
+          evmAddress,
+          chainId,
+          campaign.address,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidCampaign);
+      expect(thrownError.chainId).toBe(campaign.chainId);
+      expect(thrownError.address).toBe(campaign.address);
+      expect(thrownError.details).toBe("Couldn't get active timeframe");
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+    });
+
+    it('should return campaign progress for participant from cache', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
-
-      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
-      campaign.startDate = dayjs()
-        .subtract(campaignDaysPassed, 'days')
-        .toDate();
-
-      const expectedTimeframeStart = dayjs(campaign.startDate)
-        .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
-        .toDate();
-      const expectedTimeframeIsoString = expectedTimeframeStart.toISOString();
-
-      const now = new Date();
-      const nowIsoString = now.toISOString();
 
       const participantMetaProp = faker.lorem.word();
       const participantMetaValue = faker.number.float();
@@ -3110,8 +3384,8 @@ describe('CampaignsService', () => {
       });
 
       const campaignProgress: CampaignProgress<Record<string, unknown>> = {
-        from: expectedTimeframeIsoString,
-        to: nowIsoString,
+        from: faker.date.recent().toISOString(),
+        to: faker.date.soon().toISOString(),
         participants_outcomes: [
           generateParticipantOutcome(),
           participantOutcome,
@@ -3121,12 +3395,7 @@ describe('CampaignsService', () => {
           anything: faker.number.float(),
         },
       };
-
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
-
-      jest.useFakeTimers({ now });
+      mockInterimProgressCache.set(campaign.id, campaignProgress);
 
       const progress = await campaignsService.getUserProgress(
         userId,
@@ -3135,13 +3404,6 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      jest.useRealTimers();
-
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
-        campaign,
-        expectedTimeframeStart,
-        now,
-      );
       expect(progress).toEqual({
         from: campaignProgress.from,
         to: campaignProgress.to,
@@ -3153,56 +3415,16 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should return campaign progress for participant for to_cancel campaign', async () => {
-      campaign.status = CampaignStatus.TO_CANCEL;
+    it('should return placeholder progress for participant if no value for campaign in cache', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         true,
       );
 
-      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
-      campaign.startDate = dayjs()
-        .subtract(campaignDaysPassed, 'days')
-        .toDate();
-
-      const expectedTimeframeStart = dayjs(campaign.startDate)
-        .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
-        .toDate();
-      const expectedTimeframeStartIsoString =
-        expectedTimeframeStart.toISOString();
-
-      const cancellationRequestedAt = dayjs(expectedTimeframeStart)
-        .add(1, 'minute')
-        .toDate();
-      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
-        cancellationRequestedAt,
-      );
-      const cancellationRequestedAtIsoString =
-        cancellationRequestedAt.toISOString();
-
-      const participantMetaProp = faker.lorem.word();
-      const participantMetaValue = faker.number.float();
-      const participantOutcome = generateParticipantOutcome({
-        address: evmAddress,
-        [participantMetaProp]: participantMetaValue,
-      });
-
-      const campaignProgress: CampaignProgress<Record<string, unknown>> = {
-        from: expectedTimeframeStartIsoString,
-        to: cancellationRequestedAtIsoString,
-        participants_outcomes: [
-          generateParticipantOutcome(),
-          participantOutcome,
-          generateParticipantOutcome(),
-        ],
-        meta: {
-          anything: faker.number.float(),
-        },
+      const mockedActiveTimeframe = {
+        start: faker.date.recent(),
+        end: faker.date.soon(),
       };
-
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
+      spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
 
       const progress = await campaignsService.getUserProgress(
         userId,
@@ -3211,19 +3433,12 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
-        campaign,
-        expectedTimeframeStart,
-        cancellationRequestedAt,
-      );
       expect(progress).toEqual({
-        from: campaignProgress.from,
-        to: campaignProgress.to,
-        myScore: participantOutcome.score,
-        myMeta: {
-          [participantMetaProp]: participantMetaValue,
-        },
-        totalMeta: campaignProgress.meta,
+        from: mockedActiveTimeframe.start.toISOString(),
+        to: mockedActiveTimeframe.end.toISOString(),
+        myScore: 0,
+        myMeta: {},
+        totalMeta: {},
       });
     });
   });
