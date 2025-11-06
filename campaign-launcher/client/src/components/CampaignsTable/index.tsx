@@ -220,32 +220,36 @@ const CampaignsTable: FC<Props> = ({
         return <Typography>Symbol</Typography>;
       },
       renderCell: (params) => {
+        let Row;
+
         if (isMobile) {
-          return (
-            <>
-              <StretchedLink
-                to={`/campaign-details/${params.row.address}`}
-                sx={{ textDecoration: 'none' }}
+          Row = (
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box
+                display={isJoinedCampaigns ? 'none' : 'flex'}
+                width="8px"
+                height="8px"
+                borderRadius="100%"
+                bgcolor={mapStatusToColor(
+                  params.row.status,
+                  params.row.start_date,
+                  params.row.end_date
+                )}
               />
-              <Box display="flex" alignItems="center" gap={2}>
-                <Box
-                  display={isJoinedCampaigns ? 'none' : 'flex'}
-                  width="8px"
-                  height="8px"
-                  borderRadius="100%"
-                  bgcolor={mapStatusToColor(
-                    params.row.status,
-                    params.row.start_date,
-                    params.row.end_date
-                  )}
-                />
-                <CampaignSymbol
-                  symbol={params.row.symbol}
-                  campaignType={params.row.type}
-                  size="xs"
-                />
-              </Box>
-            </>
+              <CampaignSymbol
+                symbol={params.row.symbol}
+                campaignType={params.row.type}
+                size="xs"
+              />
+            </Box>
+          );
+        } else {
+          Row = (
+            <CampaignSymbol
+              symbol={params.row.symbol}
+              campaignType={params.row.type}
+              size="medium"
+            />
           );
         }
         return (
@@ -254,11 +258,7 @@ const CampaignsTable: FC<Props> = ({
               to={`/campaign-details/${params.row.address}`}
               sx={{ textDecoration: 'none' }}
             />
-            <CampaignSymbol
-              symbol={params.row.symbol}
-              campaignType={params.row.type}
-              size="medium"
-            />
+            {Row}
           </>
         );
       },

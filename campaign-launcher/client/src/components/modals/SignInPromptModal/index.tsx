@@ -11,7 +11,7 @@ type Props = {
 };
 
 const SignInPromptModal: FC<Props> = ({ open, onClose }) => {
-  const { signIn } = useWeb3Auth();
+  const { signIn, isLoading } = useWeb3Auth();
 
   const handleSignIn = async () => {
     try {
@@ -44,10 +44,20 @@ const SignInPromptModal: FC<Props> = ({ open, onClose }) => {
           </ListItem>
         </List>
         <Stack mt={3} gap={1}>
-          <Button variant="contained" size="large" onClick={handleSignIn}>
+          <Button
+            variant="contained"
+            size="large"
+            disabled={isLoading}
+            onClick={handleSignIn}
+          >
             Sign in
           </Button>
-          <Button variant="outlined" size="large" onClick={onClose}>
+          <Button
+            variant="outlined"
+            size="large"
+            disabled={isLoading}
+            onClick={onClose}
+          >
             Cancel
           </Button>
         </Stack>
