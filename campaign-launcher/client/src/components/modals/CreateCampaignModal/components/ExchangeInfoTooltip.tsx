@@ -11,7 +11,7 @@ const ExchangeInfoTooltip = () => {
   return (
     <CustomTooltip
       arrow
-      placement={isMobile ? 'top' : 'right'}
+      placement={isMobile ? 'left' : 'right'}
       title={
         <>
           <Typography component="p" variant="tooltip" color="primary.contrast">

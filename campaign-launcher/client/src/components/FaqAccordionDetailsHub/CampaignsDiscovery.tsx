@@ -1,8 +1,12 @@
 import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
 
+import { useIsMobile } from '@/hooks/useBreakpoints';
+
 import { listItemTextProps, listItemWithMarkerProps } from './styles';
 
 const CampaignsDiscovery = () => {
+  const isMobile = useIsMobile();
+
   return (
     <Box>
       <Typography variant="body2">Navigate to the home page:</Typography>
@@ -14,12 +18,14 @@ const CampaignsDiscovery = () => {
       <Typography variant="body2" mb={2} fontWeight={700}>
         Lets break down the information about a campaign showed on a dashboard:
       </Typography>
-      <img
-        src="/tableImage.png"
-        alt="Campaigns discovery"
-        width="100%"
-        height="auto"
-      />
+      {!isMobile && (
+        <img
+          src="/tableImage.png"
+          alt="Campaigns discovery"
+          width="100%"
+          height="auto"
+        />
+      )}
       <Typography variant="body2" mt={2}>
         <strong>Symbol: </strong>A token or a pair of tokens you will need to
         operate with.
@@ -54,8 +60,9 @@ const CampaignsDiscovery = () => {
       </Typography>
       <Box
         display="flex"
+        flexDirection={{ xs: 'column', md: 'row' }}
         my={2}
-        alignItems="center"
+        alignItems={{ xs: 'flex-start', md: 'center' }}
         columnGap={4}
         rowGap={1}
         width="100%"

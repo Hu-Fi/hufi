@@ -3,12 +3,18 @@ import type { FC } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
 
 import { ModalSuccess } from '@/components/ModalState';
+import { useIsMobile } from '@/hooks/useBreakpoints';
+import { type CampaignType } from '@/types';
+import { mapTypeToLabel } from '@/utils';
 
 type Props = {
+  campaignType: CampaignType;
   onViewDetails: () => void;
 };
 
-const FinalView: FC<Props> = ({ onViewDetails }) => {
+const FinalView: FC<Props> = ({ campaignType, onViewDetails }) => {
+  const isMobile = useIsMobile();
+
   return (
     <Stack gap={2} alignItems="center" textAlign="center">
       <ModalSuccess />
@@ -16,7 +22,8 @@ const FinalView: FC<Props> = ({ onViewDetails }) => {
         Congratulations!
       </Typography>
       <Typography variant="body1" fontWeight={500}>
-        Your campaign has been successfully created.
+        Your {mapTypeToLabel(campaignType)} campaign has been successfully
+        launched.
         <br />
         Everything is set up and ready to go.
       </Typography>
@@ -26,6 +33,7 @@ const FinalView: FC<Props> = ({ onViewDetails }) => {
       <Button
         size="large"
         variant="contained"
+        fullWidth={isMobile}
         sx={{ mt: 2, mx: 'auto' }}
         onClick={onViewDetails}
       >

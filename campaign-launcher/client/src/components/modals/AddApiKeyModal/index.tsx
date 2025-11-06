@@ -20,6 +20,7 @@ import {
   ModalSuccess,
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 import BaseModal from '../BaseModal';
 
@@ -72,6 +73,8 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
     },
   });
 
+  const isMobile = useIsMobile();
+
   const onSubmit = (values: APIKeyFormValues) => {
     postExchangeApiKey({
       exchangeName: values.exchange,
@@ -95,26 +98,39 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
       sx={{
         textAlign: 'center',
         color: 'text.primary',
-        px: { xs: 3, md: 4 },
+        px: { xs: 2, md: 4 },
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack alignItems="center" textAlign="center" px={{ xs: 0, md: 4 }}>
           <Typography variant="h4" py={1} mb={2}>
-            Connect API key
+            Connect API KEY
           </Typography>
           {isPending && <ModalLoading />}
           {isIdle && (
             <>
-              <Typography component="p" mb={2} textAlign="center">
+              <Typography
+                component="p"
+                mb={{ xs: 3, md: 2 }}
+                textAlign="center"
+              >
                 For you to join a running campaign you must connect your API
-                key. <br />
+                KEY. <br />
                 By connecting your API key, you agree to HUMAN Protocol{' '}
                 <strong>Terms of Service</strong> and consent to its{' '}
                 <strong>Privacy Policy</strong>.
               </Typography>
-              <Box display="flex" gap={1} mb={3} width="100%">
-                <FormControl error={!!errors.exchange} sx={{ width: '30%' }}>
+              <Box
+                display="flex"
+                gap={{ xs: 3, md: 1 }}
+                mb={3}
+                width="100%"
+                flexDirection={{ xs: 'column', md: 'row' }}
+              >
+                <FormControl
+                  error={!!errors.exchange}
+                  sx={{ width: { xs: '100%', md: '30%' } }}
+                >
                   <Controller
                     name="exchange"
                     control={control}
@@ -138,6 +154,9 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                         id="api-key-input"
                         label="API Key"
                         placeholder="API KEY"
+                        multiline={isMobile}
+                        minRows={1}
+                        maxRows={4}
                         {...field}
                       />
                     )}
@@ -149,7 +168,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               </Box>
               <FormControl
                 error={!!errors.secret}
-                sx={{ mb: 4, width: '100%' }}
+                sx={{ mb: { xs: 3, md: 4 }, width: '100%' }}
               >
                 <Controller
                   name="secret"
@@ -184,6 +203,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               size="large"
               type="submit"
               variant="contained"
+              fullWidth={isMobile}
               sx={{ mx: 'auto' }}
             >
               Connect API key
@@ -194,13 +214,19 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               size="large"
               variant="contained"
               disabled={isPending}
+              fullWidth={isMobile}
               onClick={handleClose}
             >
               Close
             </Button>
           )}
           {isError && (
-            <Button size="large" variant="contained" onClick={resetMutation}>
+            <Button
+              size="large"
+              variant="contained"
+              fullWidth={isMobile}
+              onClick={resetMutation}
+            >
               Edit
             </Button>
           )}

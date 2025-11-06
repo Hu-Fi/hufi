@@ -82,7 +82,7 @@ const VideoWrapper: FC<VideoWrapperProps> = ({ src, title }) => {
       overflow="hidden"
       position="relative"
       sx={{
-        aspectRatio: { xs: '4/3', sm: '16/9' },
+        aspectRatio: '16/9',
         '& iframe': {
           border: 'none',
           opacity: isLoading ? 0 : 1,
@@ -131,7 +131,11 @@ const Support: FC = () => {
         pb={4}
         borderBottom="1px solid rgba(255, 255, 255, 0.04)"
       >
-        <Stack maxWidth={{ xs: '100%', md: '50%' }} flex={1}>
+        <Stack
+          maxWidth={{ xs: '100%', md: '50%' }}
+          flex={1}
+          order={{ xs: 2, md: 1 }}
+        >
           <SectionHeader title="How to launch a campaign" />
           <Typography variant="body2" mb={4}>
             Learn how to launch your campaign with ease—follow the written
@@ -171,6 +175,7 @@ const Support: FC = () => {
           top={{ xs: 0, md: 32 }}
           bottom={{ xs: 0, md: 32 }}
           height="fit-content"
+          order={{ xs: 1, md: 2 }}
         >
           <VideoWrapper
             src="https://www.youtube.com/embed/sYbcFpGnRq4?si=PmdrxdVlUiZNXXFm"
@@ -186,7 +191,11 @@ const Support: FC = () => {
         pb={4}
         borderBottom="1px solid rgba(255, 255, 255, 0.04)"
       >
-        <Stack maxWidth={{ xs: '100%', md: '50%' }} flex={1}>
+        <Stack
+          maxWidth={{ xs: '100%', md: '50%' }}
+          flex={1}
+          order={{ xs: 2, md: 1 }}
+        >
           <SectionHeader title="How to participate in a campaign" />
           <Typography variant="body2" mb={4}>
             Discover how to participate in a campaign with ease. Choose between
@@ -243,6 +252,7 @@ const Support: FC = () => {
           top={{ xs: 0, md: 32 }}
           bottom={{ xs: 0, md: 32 }}
           height="fit-content"
+          order={{ xs: 1, md: 2 }}
         >
           <VideoWrapper
             src="https://www.youtube.com/embed/8GtwoIhxlMc?si=YEckN6oAqvYFMlTz"

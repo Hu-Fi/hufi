@@ -27,6 +27,7 @@ import {
 import CryptoEntity from '@/components/CryptoEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { ThresholdFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
@@ -46,11 +47,15 @@ const ThresholdForm: FC<Props> = ({
   watch,
   isCreatingEscrow,
 }) => {
+  const isMobile = useIsMobile();
+
   const exchange = watch('exchange');
   const symbol = watch('symbol');
 
   const { data: currencies, isLoading: isLoadingCurrencies } =
     useExchangeCurrencies(exchange);
+
+  if (isMobile && isCreatingEscrow) return null;
 
   return (
     <>

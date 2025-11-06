@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import useCreateEscrow from '@/hooks/useCreateEscrow';
 import { useNetwork } from '@/providers/NetworkProvider';
 import {
@@ -53,6 +54,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
   } = useCreateEscrow();
   const queryClient = useQueryClient();
   const { appChainId } = useNetwork();
+  const isMobile = useIsMobile();
 
   const isCampaignCreated = stepsCompleted === steps.length;
 
@@ -130,10 +132,17 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        px: { xs: 2, md: 4 },
+        '& > form': {
+          width: { xs: '100%', md: 'auto' },
+        },
       }}
     >
       {showFinalView && (
-        <FinalView onViewDetails={onViewCampaignDetailsClick} />
+        <FinalView
+          campaignType={campaignType}
+          onViewDetails={onViewCampaignDetailsClick}
+        />
       )}
       {isError && <ErrorView onRetry={handleTryAgainClick} />}
       {!showFinalView && !isError && (
@@ -144,26 +153,42 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
             alignItems="center"
             gap={2}
           >
-            <Typography variant="h4" color="text.primary">
-              Create Campaign
+            <Typography
+              variant="h4"
+              color="text.primary"
+              textAlign="center"
+              sx={{ whiteSpace: 'pre-line' }}
+            >
+              {isMobile ? 'Launch\nCampaign' : 'Create Campaign'}
             </Typography>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Campaign Type:
-              </Typography>
+              {!isMobile && (
+                <Typography variant="subtitle2" color="text.secondary">
+                  Campaign Type:
+                </Typography>
+              )}
               <CampaignTypeLabel campaignType={campaignType} />
             </Box>
-            <Steps
-              stepsCompleted={stepsCompleted}
-              steps={steps}
-              isCreatingEscrow={isCreatingEscrow}
-            />
+            {!isMobile && (
+              <Steps
+                stepsCompleted={stepsCompleted}
+                steps={steps}
+                isCreatingEscrow={isCreatingEscrow}
+              />
+            )}
             <Box
               display="flex"
               flexDirection="column"
               gap={3}
               width={{ xs: '100%', sm: 625 }}
             >
+              {isMobile && isCreatingEscrow && (
+                <Steps
+                  stepsCompleted={stepsCompleted}
+                  steps={steps}
+                  isCreatingEscrow={isCreatingEscrow}
+                />
+              )}
               {campaignType === CampaignType.MARKET_MAKING && (
                 <MarketMakingForm
                   control={control as Control<MarketMakingFormValues>}
@@ -193,7 +218,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   size="large"
                   variant="contained"
                   type="submit"
-                  sx={{ mx: 'auto' }}
+                  fullWidth={isMobile}
+                  sx={{ mx: { xs: 0, md: 'auto' } }}
                   disabled={isCreatingEscrow}
                 >
                   Create Campaign
@@ -202,7 +228,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                 <Button
                   size="large"
                   variant="contained"
-                  sx={{ mx: 'auto' }}
+                  fullWidth={isMobile}
+                  sx={{ mx: { xs: 0, md: 'auto' } }}
                   onClick={() => setShowFinalView(true)}
                 >
                   Finish

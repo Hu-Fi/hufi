@@ -5,8 +5,10 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
 import DeleteApiKeyModal from '@/components/modals/DeleteApiKeyModal';
 import EditApiKeyModal from '@/components/modals/EditApiKeyModal';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { DeleteIcon, EditIcon } from '@/icons';
 import type { ExchangeApiKeyData } from '@/types';
+import { formatAddress } from '@/utils';
 
 type ApiKeysTableProps = {
   data: ExchangeApiKeyData[] | undefined;
@@ -15,6 +17,8 @@ type ApiKeysTableProps = {
 const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   const [editingItem, setEditingItem] = useState('');
   const [deletingItem, setDeletingItem] = useState('');
+
+  const isMobile = useIsMobile();
 
   const handleClickOnEdit = (exchangeName: string) => {
     setEditingItem(exchangeName);
@@ -46,13 +50,13 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'exchangeName',
       headerName: 'Exchange',
-      width: 160,
+      width: isMobile ? 130 : 160,
       renderCell: (params) => {
         return (
           <Typography
             display="flex"
             alignItems="center"
-            variant="body1"
+            variant={isMobile ? 'body2' : 'body1'}
             textTransform="capitalize"
           >
             {params.row.exchangeName}
@@ -64,11 +68,15 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       field: 'apiKey',
       headerName: 'API Key',
       flex: 1,
-      minWidth: longestApiKeyLength * 10 + 100,
+      minWidth: isMobile ? 90 : longestApiKeyLength * 10 + 100,
       renderCell: (params) => {
         return (
-          <Typography display="flex" alignItems="center" variant="body1">
-            {params.row.apiKey}
+          <Typography
+            display="flex"
+            alignItems="center"
+            variant={isMobile ? 'body2' : 'body1'}
+          >
+            {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
           </Typography>
         );
       },
@@ -76,7 +84,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'actions',
       headerName: '',
-      width: 64,
+      width: isMobile ? 82 : 64,
       renderCell: (params) => {
         return (
           <Box display="flex" alignItems="center" gap={2}>
@@ -85,14 +93,14 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
               disableRipple
               onClick={() => handleClickOnEdit(params.row.exchangeName)}
             >
-              <EditIcon />
+              <EditIcon sx={{ color: 'text.primary' }} />
             </IconButton>
             <IconButton
               sx={{ p: 0 }}
               disableRipple
               onClick={() => handleClickOnDelete(params.row.exchangeName)}
             >
-              <DeleteIcon />
+              <DeleteIcon sx={{ color: 'text.primary' }} />
             </IconButton>
           </Box>
         );
@@ -127,10 +135,11 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         sx={{
           border: 'none',
           '& .MuiDataGrid-main': {
-            p: 4,
+            p: isMobile ? 0 : 4,
             borderRadius: '16px',
             width: '100%',
             height: '450px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             background:
               'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 100%), #100735',
           },
@@ -139,7 +148,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             p: 2,
             overflow: 'visible !important',
             '&[data-field="actions"]': {
-              px: 0,
+              px: isMobile ? 1 : 0,
             },
           },
           '& .MuiDataGrid-cellEmpty': {
@@ -148,6 +157,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           '& .MuiDataGrid-columnHeader': {
             backgroundColor: 'rgba(255, 255, 255, 0.12) !important',
             fontSize: '12px',
+            fontWeight: 400,
             p: 2,
             overflow: 'visible !important',
             textTransform: 'uppercase',

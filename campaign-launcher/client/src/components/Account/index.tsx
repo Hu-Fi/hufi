@@ -16,6 +16,7 @@ import { useDisconnect } from 'wagmi';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -49,6 +50,7 @@ const Account: FC = () => {
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const formattedAddress = formatAddress(activeAddress);
 
@@ -74,14 +76,14 @@ const Account: FC = () => {
   return (
     <>
       <Button
-        size="medium"
+        size={isMobile ? 'small' : 'medium'}
         aria-describedby="account-popover"
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disableRipple
         sx={{
           bgcolor: 'primary.main',
           borderRadius: '4px',
-          height: '42px',
+          height: isMobile ? '30px' : '42px',
           width: 'fit-content',
           paddingX: 1,
           borderBottomLeftRadius: anchorEl ? 0 : 4,
@@ -132,7 +134,7 @@ const Account: FC = () => {
           {!isAuthenticated && (
             <ListItemButton sx={buttonSx} onClick={handleSignIn}>
               <LoginIcon />
-              Log In
+              Sign In
               <CustomTooltip
                 arrow
                 placement="left"

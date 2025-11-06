@@ -8,13 +8,13 @@ const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
       elevation={2}
       sx={{
         display: 'flex',
-        py: { xs: 4, xl: 8 },
-        px: { xs: 3, lg: 4, xl: 13 },
+        py: { xs: 2, md: 4, xl: 8 },
+        px: { xs: 2, md: 4, xl: 13 },
         flexDirection: 'column',
-        borderRadius: '20px',
+        borderRadius: { xs: '0px', md: '20px' },
         bgcolor: 'background.default',
-        minHeight: 'calc(100vh - 216px)',
-        gap: { xs: 4, xl: 7 },
+        minHeight: 'calc(100vh - 226px)',
+        gap: { xs: 3, md: 4, xl: 7 },
       }}
     >
       {children}
