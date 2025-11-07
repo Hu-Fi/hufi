@@ -70,13 +70,12 @@ export const NotificationProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const showNotification = useCallback(
     (message: string, options?: NotificationOptions) => {
-      const position = options?.position ?? DEFAULT_POSITION;
       const newNotification: Notification = {
         id: Date.now().toString(),
         message,
         severity: options?.severity || 'info',
         duration: options?.duration || DEFAULT_DURATION,
-        position,
+        position: options?.position ?? DEFAULT_POSITION,
       };
 
       setNotification(newNotification);
