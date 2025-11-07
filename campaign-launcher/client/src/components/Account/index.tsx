@@ -66,8 +66,7 @@ const Account: FC = () => {
   const handleSignIn = async () => {
     try {
       await signIn();
-    } catch (error) {
-      console.error(error);
+    } catch {
       showError('Failed to sign in. Please try again.');
     }
   };
