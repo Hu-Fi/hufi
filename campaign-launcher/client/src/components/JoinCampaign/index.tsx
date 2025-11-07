@@ -9,6 +9,7 @@ import {
   useJoinCampaign,
 } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useNotification } from '@/providers/NotificationProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
 
@@ -28,7 +29,8 @@ const JoinCampaign: FC<Props> = ({
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
-  const { mutate: joinCampaign, isPending: isJoining } = useJoinCampaign();
+  const { mutateAsync: joinCampaign, isPending: isJoining } = useJoinCampaign();
+  const { showError } = useNotification();
 
   const isMobile = useIsMobile();
 
@@ -48,7 +50,7 @@ const JoinCampaign: FC<Props> = ({
     return isMobile ? 'Join' : 'Join Campaign';
   };
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (isButtonDisabled || !campaign) {
       return;
     }
@@ -61,7 +63,15 @@ const JoinCampaign: FC<Props> = ({
       return;
     }
 
-    joinCampaign({ chainId: campaign.chain_id, address: campaign.address });
+    try {
+      await joinCampaign({
+        chainId: campaign.chain_id,
+        address: campaign.address,
+      });
+    } catch (error) {
+      console.error(error);
+      showError('Failed to join campaign. Please try again.');
+    }
   };
 
   if (!campaign || isCampaignFinished) {
@@ -71,7 +81,7 @@ const JoinCampaign: FC<Props> = ({
   if (!isAuthenticated && !isMobile) {
     return (
       <Button variant="contained" size="large" disabled sx={{ ml: 'auto' }}>
-        Connect Wallet to Join Campaign
+        Sign in to Join Campaign
       </Button>
     );
   }
@@ -91,7 +101,7 @@ const JoinCampaign: FC<Props> = ({
         endIcon={isMobile && isAlreadyJoined && <CheckIcon />}
       >
         {isJoining && (
-          <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />
+          <CircularProgress size={24} sx={{ color: 'primary.contrast' }} />
         )}
         {getButtonText()}
       </Button>

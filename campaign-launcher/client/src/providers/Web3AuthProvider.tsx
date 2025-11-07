@@ -60,6 +60,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } catch (e) {
       setIsAuthenticated(false);
       console.error('Failed to sign in', e);
+      throw e;
     } finally {
       setIsLoading(false);
     }

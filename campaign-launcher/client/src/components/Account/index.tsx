@@ -20,6 +20,7 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useNotification } from '@/providers/NotificationProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 
@@ -52,6 +53,7 @@ const Account: FC = () => {
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { showError } = useNotification();
 
   const formattedAddress = formatAddress(activeAddress);
 
@@ -61,8 +63,13 @@ const Account: FC = () => {
     navigate('/manage-api-keys');
   };
 
-  const handleSignIn = () => {
-    signIn();
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch (error) {
+      console.error(error);
+      showError('Failed to sign in. Please try again.');
+    }
   };
 
   const handleDisconnect = () => {

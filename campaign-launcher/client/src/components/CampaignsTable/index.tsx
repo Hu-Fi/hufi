@@ -217,7 +217,11 @@ const CampaignsTable: FC<Props> = ({
           );
         }
 
-        return <Typography>Symbol</Typography>;
+        return (
+          <Typography variant="body2" fontWeight={600}>
+            Symbol
+          </Typography>
+        );
       },
       renderCell: (params) => {
         let Row;

@@ -14,6 +14,7 @@ import Support from '@/pages/Support';
 import ActiveAccountProvider from '@/providers/ActiveAccountProvider';
 import ExchangesProvider from '@/providers/ExchangesProvider';
 import { NetworkProvider } from '@/providers/NetworkProvider';
+import { NotificationProvider } from '@/providers/NotificationProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
 import StakeProvider from '@/providers/StakeProvider';
 import ThemeProvider from '@/providers/ThemeProvider';
@@ -25,47 +26,49 @@ const App: FC = () => {
     <WagmiProvider>
       <QueryClientProvider>
         <ThemeProvider>
-          <NetworkProvider>
-            <ActiveAccountProvider>
-              <Web3AuthProvider>
-                <ExchangesProvider>
-                  <StakeProvider>
-                    <LocalizationProvider
-                      dateAdapter={AdapterDayjs}
-                      adapterLocale="en"
-                    >
-                      <BrowserRouter>
-                        <Layout>
-                          <Routes>
-                            <Route
-                              path={ROUTES.DASHBOARD}
-                              element={<Dashboard />}
-                            />
-                            <Route
-                              path={ROUTES.CAMPAIGN_DETAILS}
-                              element={<Campaign />}
-                            />
-                            <Route
-                              path={ROUTES.MANAGE_API_KEYS}
-                              element={
-                                <ProtectedRoute>
-                                  <ManageApiKeysPage />
-                                </ProtectedRoute>
-                              }
-                            />
-                            <Route
-                              path={ROUTES.SUPPORT}
-                              element={<Support />}
-                            />
-                          </Routes>
-                        </Layout>
-                      </BrowserRouter>
-                    </LocalizationProvider>
-                  </StakeProvider>
-                </ExchangesProvider>
-              </Web3AuthProvider>
-            </ActiveAccountProvider>
-          </NetworkProvider>
+          <NotificationProvider>
+            <NetworkProvider>
+              <ActiveAccountProvider>
+                <Web3AuthProvider>
+                  <ExchangesProvider>
+                    <StakeProvider>
+                      <LocalizationProvider
+                        dateAdapter={AdapterDayjs}
+                        adapterLocale="en"
+                      >
+                        <BrowserRouter>
+                          <Layout>
+                            <Routes>
+                              <Route
+                                path={ROUTES.DASHBOARD}
+                                element={<Dashboard />}
+                              />
+                              <Route
+                                path={ROUTES.CAMPAIGN_DETAILS}
+                                element={<Campaign />}
+                              />
+                              <Route
+                                path={ROUTES.MANAGE_API_KEYS}
+                                element={
+                                  <ProtectedRoute>
+                                    <ManageApiKeysPage />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path={ROUTES.SUPPORT}
+                                element={<Support />}
+                              />
+                            </Routes>
+                          </Layout>
+                        </BrowserRouter>
+                      </LocalizationProvider>
+                    </StakeProvider>
+                  </ExchangesProvider>
+                </Web3AuthProvider>
+              </ActiveAccountProvider>
+            </NetworkProvider>
+          </NotificationProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
