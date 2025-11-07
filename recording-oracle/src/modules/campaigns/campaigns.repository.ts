@@ -91,7 +91,7 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     const now = new Date();
     return this.find({
       where: {
-        status: CampaignStatus.ACTIVE,
+        status: In([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL]),
         startDate: LessThanOrEqual(now),
         endDate: MoreThan(now),
       },
