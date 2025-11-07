@@ -18,7 +18,6 @@ import { ContentType } from '@/common/enums';
 import dayjs from '@/common/utils/dayjs';
 import * as debugUtils from '@/common/utils/debug';
 import * as decimalUtils from '@/common/utils/decimal';
-import Environment from '@/common/utils/environment';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -80,22 +79,6 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
-
-const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_30_MINUTES;
-
-const CAMPAIGN_STATUSES_SYNC_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_5_MINUTES;
-
-const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_10_MINUTES;
-
-const REFRESH_INTERIM_PROGRESS_CACHE_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_10_MINUTES;
 
 const PROGRESS_PERIOD_DAYS = 1;
 
@@ -409,7 +392,7 @@ export class CampaignsService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron(PROGRESS_RECORDING_SCHEDULE)
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async recordCampaignsProgress(): Promise<void> {
     this.logger.debug('Campaigns progress recording job started');
 
@@ -939,7 +922,7 @@ export class CampaignsService implements OnApplicationBootstrap {
     }
   }
 
-  @Cron(CAMPAIGN_STATUSES_SYNC_SCHEDULE)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async syncCampaignStatuses(): Promise<void> {
     this.logger.debug('Campaign statuses sync job started');
 
@@ -1099,7 +1082,7 @@ export class CampaignsService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron(NEW_CAMPAIGNS_DISCOVERY_SCHEDULE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async discoverNewCampaigns(): Promise<void> {
     this.logger.debug('New campaigns discovery job started');
 
@@ -1204,7 +1187,7 @@ export class CampaignsService implements OnApplicationBootstrap {
     this.logger.debug('New campaigns discovery job finished');
   }
 
-  @Cron(REFRESH_INTERIM_PROGRESS_CACHE_SCHEDULE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async refreshInterimProgressCache(): Promise<void> {
     await this.pgAdvisoryLock.withLock(
       'refresh-interim-progress-cache',
