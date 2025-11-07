@@ -17,10 +17,10 @@ import { useDisconnect } from 'wagmi';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useNotification } from '@/hooks/useNotification';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { useNotification } from '@/providers/NotificationProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 

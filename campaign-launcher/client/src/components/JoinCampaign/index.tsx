@@ -9,7 +9,7 @@ import {
   useJoinCampaign,
 } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { useNotification } from '@/providers/NotificationProvider';
+import { useNotification } from '@/hooks/useNotification';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
 
