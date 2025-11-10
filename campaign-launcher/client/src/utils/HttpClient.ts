@@ -10,15 +10,22 @@ import { BaseError } from './BaseError';
 export class HttpError extends BaseError {
   constructor(
     message: string,
-    readonly status?: number
+    readonly status?: number,
+    readonly responseMessage?: string
   ) {
     super(message);
   }
 
   static fromAxiosError(error: AxiosError<{ message?: string }>): HttpError {
+    let responseMessage: string | undefined;
+    if (error.response?.status && error.response.status < 500) {
+      responseMessage = error.response?.data?.message;
+    }
+
     return new HttpError(
-      error.response?.data?.message || error.message || 'Request failed',
-      error.response?.status
+      error.message || 'Request failed',
+      error.response?.status,
+      responseMessage
     );
   }
 }

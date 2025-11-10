@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import { useMemo, type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -21,6 +21,7 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { HttpError } from '@/utils/HttpClient';
 
 import BaseModal from '../BaseModal';
 
@@ -53,7 +54,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
   const {
     mutate: postExchangeApiKey,
     reset: resetMutation,
-    error,
+    error: postExchangeApiKeyError,
     isPending,
     isIdle,
     isSuccess,
@@ -90,6 +91,16 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
     resetMutation();
     onClose();
   };
+
+  const userFacingError = useMemo(() => {
+    if (
+      postExchangeApiKeyError instanceof HttpError &&
+      postExchangeApiKeyError.responseMessage
+    ) {
+      return postExchangeApiKeyError.responseMessage;
+    }
+    return 'Failed to add API key.';
+  }, [postExchangeApiKeyError]);
 
   return (
     <BaseModal
@@ -197,7 +208,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               </Typography>
             </ModalSuccess>
           )}
-          {isError && <ModalError message={error?.message} />}
+          {isError && <ModalError message={userFacingError} />}
           {isIdle && (
             <Button
               size="large"

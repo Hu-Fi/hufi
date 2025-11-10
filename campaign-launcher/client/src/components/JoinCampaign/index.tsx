@@ -73,8 +73,8 @@ const JoinCampaign: FC<Props> = ({
       console.error('Failed to join campaign', error);
 
       let userFacingError = 'Failed to join campaign. Please try again.';
-      if (error instanceof HttpError) {
-        userFacingError = error.message;
+      if (error instanceof HttpError && error.responseMessage) {
+        userFacingError = error.responseMessage;
       }
       showError(userFacingError);
     }
