@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
+import { HttpError } from '@/utils/HttpClient';
 
 type Props = {
   campaign: CampaignDetails;
@@ -69,8 +70,13 @@ const JoinCampaign: FC<Props> = ({
         address: campaign.address,
       });
     } catch (error) {
-      console.error(error);
-      showError('Failed to join campaign. Please try again.');
+      console.error('Failed to join campaign', error);
+
+      let userFacingError = 'Failed to join campaign. Please try again.';
+      if (error instanceof HttpError) {
+        userFacingError = error.message;
+      }
+      showError(userFacingError);
     }
   };
 
