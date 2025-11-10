@@ -17,6 +17,7 @@ import { useDisconnect } from 'wagmi';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useNotification } from '@/hooks/useNotification';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -52,6 +53,7 @@ const Account: FC = () => {
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { showError } = useNotification();
 
   const formattedAddress = formatAddress(activeAddress);
 
@@ -61,8 +63,12 @@ const Account: FC = () => {
     navigate('/manage-api-keys');
   };
 
-  const handleSignIn = () => {
-    signIn();
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch {
+      showError('Failed to sign in. Please try again.');
+    }
   };
 
   const handleDisconnect = () => {
