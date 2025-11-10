@@ -5,7 +5,7 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { DatabaseError } from '@/common/errors/database';
 import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';

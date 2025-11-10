@@ -3,6 +3,7 @@ export type CampaignProgressCheckerSetup = {
   symbol: string;
   periodStart: Date;
   periodEnd: Date;
+  [x: string]: unknown;
 };
 
 export type ParticipantAuthKeys = {

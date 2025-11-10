@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 
+import EscrowABI from '@human-protocol/core/abis/Escrow.json';
 import {
   EscrowClient,
   EscrowStatus,
@@ -368,7 +369,7 @@ export class PayoutsService {
         /**
          * Escrow contract doesn't allow payout of 0 amount.
          * In case if the participant's share is so small
-         * that it's lower than minumum payable amount - omit it.
+         * that it's lower than minimum payable amount - omit it.
          */
         const truncatedRewardAmount = Number(
           rewardAmount.toFixed(tokenDecimals, Decimal.ROUND_DOWN),
@@ -480,31 +481,15 @@ export class PayoutsService {
       })
     )[0];
 
-    const bulkInterfaceV3 = new ethers.Interface([
-      'event BulkTransferV3(bytes32 indexed payoutId, address[] recipients, uint256[] amounts, bool isPartial, string finalResultsUrl)',
-    ]);
+    const bulkInterfaceV3 = new ethers.Interface(EscrowABI);
     const topicV3 = bulkInterfaceV3.getEvent('BulkTransferV3')!.topicHash;
 
-    let logs = await signer.provider.getLogs({
+    const logs = await signer.provider.getLogs({
       address: escrowAddress,
       topics: [topicV3],
       fromBlock: block,
       toBlock: 'latest',
     });
-
-    if (logs.length === 0) {
-      const bulkInterfaceV2 = new ethers.Interface([
-        'event BulkTransferV2(uint256 indexed _txId, address[] _recipients, uint256[] _amounts, bool _isPartial, string finalResultsUrl)',
-      ]);
-      const topicV2 = bulkInterfaceV2.getEvent('BulkTransferV2')!.topicHash;
-
-      logs = await signer.provider.getLogs({
-        address: escrowAddress,
-        topics: [topicV2],
-        fromBlock: block,
-        toBlock: 'latest',
-      });
-    }
 
     return logs.length;
   }

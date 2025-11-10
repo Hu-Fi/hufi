@@ -7,18 +7,17 @@ import {
   EscrowUtils,
   OrderDirection,
 } from '@human-protocol/sdk';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import dayjs from '@/common/utils/dayjs';
 import * as debugUtils from '@/common/utils/debug';
 import * as decimalUtils from '@/common/utils/decimal';
-import Environment from '@/common/utils/environment';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -56,10 +55,16 @@ import {
   HoldingProgressChecker,
   MarketMakingProgressChecker,
   ProgressCheckResult,
+  ThresholdProgressChecker,
 } from './progress-checking';
 import { HoldingMeta } from './progress-checking/holding';
 import { MarketMakingMeta } from './progress-checking/market-making';
-import { isHoldingCampaign, isMarketMakingCampaign } from './type-guards';
+import { ThresholdMeta } from './progress-checking/threshold';
+import {
+  isHoldingCampaign,
+  isMarketMakingCampaign,
+  isThresholdCampaign,
+} from './type-guards';
 import {
   CampaignEscrowInfo,
   CampaignManifest,
@@ -75,38 +80,20 @@ import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
-const PROGRESS_RECORDING_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_30_MINUTES;
-
-const CAMPAIGN_STATUSES_SYNC_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_5_MINUTES;
-
-const NEW_CAMPAIGNS_DISCOVERY_SCHEDULE = Environment.isDevelopment()
-  ? CronExpression.EVERY_MINUTE
-  : CronExpression.EVERY_10_MINUTES;
-
-const campaignsProgressCache = new LRUCache<
-  string,
-  CampaignProgress<CampaignProgressMeta>
->({
-  ttl: 1000 * 60 * 10,
-  max: 4200,
-  ttlAutopurge: false,
-  allowStale: false,
-  noDeleteOnStaleGet: false,
-  noUpdateTTL: false,
-  updateAgeOnGet: false,
-  updateAgeOnHas: false,
-});
-
 const PROGRESS_PERIOD_DAYS = 1;
 
 @Injectable()
-export class CampaignsService {
+export class CampaignsService implements OnApplicationBootstrap {
   private readonly logger = logger.child({
     context: CampaignsService.name,
+  });
+
+  private readonly campaignsInterimProgressCache = new LRUCache<
+    string,
+    CampaignProgress<CampaignProgressMeta>
+  >({
+    // expect not more than 100 active campaings atm
+    max: 100,
   });
 
   constructor(
@@ -120,6 +107,10 @@ export class CampaignsService {
     private readonly pgAdvisoryLock: PgAdvisoryLock,
     private readonly moduleRef: ModuleRef,
   ) {}
+
+  onApplicationBootstrap() {
+    void this.refreshInterimProgressCache();
+  }
 
   async findOneByChainIdAndAddress(
     chainId: number,
@@ -370,6 +361,9 @@ export class CampaignsService {
         case CampaignType.HOLDING:
           manifestUtils.assertValidHoldingCampaignManifest(manifest);
           break;
+        case CampaignType.THRESHOLD:
+          manifestUtils.assertValidThresholdCampaignManifest(manifest);
+          break;
         default:
           throw new Error(`Campaign type not supported: ${manifest.type}`);
       }
@@ -398,7 +392,7 @@ export class CampaignsService {
     };
   }
 
-  @Cron(PROGRESS_RECORDING_SCHEDULE)
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async recordCampaignsProgress(): Promise<void> {
     this.logger.debug('Campaigns progress recording job started');
 
@@ -582,6 +576,14 @@ export class CampaignsService {
           } else if (isHoldingCampaign(campaign)) {
             progressValueTarget = campaign.details.dailyBalanceTarget;
             progressValue = (progress.meta as HoldingMeta).total_balance;
+          } else if (isThresholdCampaign(campaign)) {
+            /**
+             * We are going to distribute daily reward pool fully in case there is at least one participant eligible for the reward.
+             * This is why we're using hardcoded 1 as a progressValueTarget and total_score instead of a balance for the progressValue.
+             * */
+            progressValueTarget = 1;
+            // TODO: Check this logic before releasing new contracts
+            progressValue = (progress.meta as ThresholdMeta).total_score;
           } else {
             throw new Error(
               `Unknown campaign type for reward pool calculation: ${campaign.type}`,
@@ -688,6 +690,7 @@ export class CampaignsService {
         symbol: campaign.symbol,
         periodStart: startDate,
         periodEnd: endDate,
+        ...campaign.details,
       },
     );
 
@@ -776,6 +779,11 @@ export class CampaignsService {
         );
       case CampaignType.HOLDING:
         return new HoldingProgressChecker(
+          exchangeApiClientFactory,
+          campaignCheckerSetup,
+        );
+      case CampaignType.THRESHOLD:
+        return new ThresholdProgressChecker(
           exchangeApiClientFactory,
           campaignCheckerSetup,
         );
@@ -914,7 +922,7 @@ export class CampaignsService {
     }
   }
 
-  @Cron(CAMPAIGN_STATUSES_SYNC_SCHEDULE)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async syncCampaignStatuses(): Promise<void> {
     this.logger.debug('Campaign statuses sync job started');
 
@@ -998,7 +1006,13 @@ export class CampaignsService {
     evmAddress: string,
     chainId: number,
     campaignAddress: string,
-  ) {
+  ): Promise<{
+    from: string;
+    to: string;
+    myScore: number;
+    myMeta: Record<string, unknown>;
+    totalMeta: Record<string, unknown>;
+  } | null> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
@@ -1032,55 +1046,23 @@ export class CampaignsService {
       throw new UserIsNotParticipatingError();
     }
 
-    // Calculate start of the active timeframe (end is now)
-    const timeframesPassed = Math.floor(
-      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
-    );
-
-    const timeframeStart = dayjs(campaign.startDate)
-      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
-      .add(1, 'millisecond')
-      .toDate();
-
-    let timeframeEnd: Date;
-    if (campaign.status === CampaignStatus.TO_CANCEL) {
-      const cancellationRequestedAt =
-        await escrowUtils.getCancellationRequestDate(
-          campaign.chainId,
-          campaign.address,
-        );
-      if (cancellationRequestedAt <= timeframeStart) {
-        throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
-      }
-      timeframeEnd = cancellationRequestedAt;
-    } else {
-      timeframeEnd = now;
-    }
-
-    /**
-     * Using timeframeStart in a key to prevent situations
-     * where new timeframe has started but cached value is not expired yet
-     */
-    const cacheKey = `${campaign.chainId}-${campaign.address}-${timeframeStart}`;
-
-    if (!campaignsProgressCache.has(cacheKey)) {
-      const progress = await this.checkCampaignProgressForPeriod(
-        campaign,
-        timeframeStart,
-        timeframeEnd,
+    const activeTimeframe = await this.getActiveTimeframe(campaign);
+    if (!activeTimeframe) {
+      throw new InvalidCampaign(
+        campaign.chainId,
+        campaign.address,
+        "Couldn't get active timeframe",
       );
-
-      campaignsProgressCache.set(cacheKey, {
-        from: progress.from,
-        to: progress.to,
-        meta: progress.meta,
-        participants_outcomes: progress.participants_outcomes,
-      });
     }
 
-    const progress = campaignsProgressCache.get(
-      cacheKey,
-    ) as CampaignProgress<CampaignProgressMeta>;
+    const progress = this.campaignsInterimProgressCache.get(campaign.id);
+    if (progress?.from !== activeTimeframe.start.toISOString()) {
+      /**
+       * Either no progress cached yet or cached for previous timeframe
+       */
+      return null;
+    }
+
     const {
       score: myScore,
       address: _address,
@@ -1100,7 +1082,7 @@ export class CampaignsService {
     };
   }
 
-  @Cron(NEW_CAMPAIGNS_DISCOVERY_SCHEDULE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async discoverNewCampaigns(): Promise<void> {
     this.logger.debug('New campaigns discovery job started');
 
@@ -1203,5 +1185,131 @@ export class CampaignsService {
     }
 
     this.logger.debug('New campaigns discovery job finished');
+  }
+
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async refreshInterimProgressCache(): Promise<void> {
+    await this.pgAdvisoryLock.withLock(
+      'refresh-interim-progress-cache',
+      async () => {
+        this.logger.debug('Refresh interim progress cache job started');
+
+        try {
+          /**
+           * Atm we don't expect many active campaigns
+           * so it's fine to get all at once, but later
+           * we might need to query them in batches or as stream.
+           */
+          const campaignsToRefresh =
+            await this.campaignsRepository.findOngoingCampaigns();
+
+          for (const campaign of campaignsToRefresh) {
+            /**
+             * Right now for simplicity process sequentially.
+             * Later we can add "fastq" usage for parallel processing
+             * and "backpressured" adding to the queue.
+             */
+            const campaignLogger = logger.child({
+              campaignId: campaign.id,
+              chainId: campaign.chainId,
+              campaignAddress: campaign.address,
+            });
+            const isCampaignEndingSoon = dayjs()
+              .add(5, 'minute')
+              .isSameOrAfter(campaign.endDate);
+            if (isCampaignEndingSoon) {
+              campaignLogger.debug(
+                'Campaign ends soon, skip interim progress cache refresh',
+              );
+              continue;
+            }
+
+            try {
+              const timeframe = await this.getActiveTimeframe(campaign);
+              if (!timeframe) {
+                campaignLogger.debug(
+                  'No active timeframe, skip interim progress cache refresh',
+                );
+                continue;
+              }
+              const progress = await this.checkCampaignProgressForPeriod(
+                campaign,
+                timeframe.start,
+                timeframe.end,
+              );
+              this.campaignsInterimProgressCache.set(campaign.id, progress);
+            } catch (error) {
+              campaignLogger.error(
+                'Failed to get interim progress for campaign',
+                {
+                  error,
+                },
+              );
+            }
+          }
+        } catch (error) {
+          this.logger.error(
+            'Error while refreshing interim progress cache',
+            error,
+          );
+        }
+
+        this.logger.debug('Refresh interim progress cache job finished');
+      },
+    );
+  }
+
+  async getActiveTimeframe(campaign: CampaignEntity): Promise<{
+    start: Date;
+    end: Date;
+  } | null> {
+    const now = new Date();
+    if (now < campaign.startDate) {
+      // campaign not started yet - no active timeframe
+      return null;
+    }
+
+    if (
+      [
+        CampaignStatus.PENDING_CANCELLATION,
+        CampaignStatus.CANCELLED,
+        CampaignStatus.COMPLETED,
+      ].includes(campaign.status) ||
+      now > campaign.endDate
+    ) {
+      // campaign already finished - no active timeframe
+      return null;
+    }
+
+    // Calculate start of the active timeframe (end is now)
+    const timeframesPassed = Math.floor(
+      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
+    );
+
+    const timeframeStart = dayjs(campaign.startDate)
+      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
+      .add(1, 'millisecond')
+      .toDate();
+
+    let timeframeEnd: Date;
+    if (campaign.status === CampaignStatus.TO_CANCEL) {
+      const cancellationRequestedAt =
+        await escrowUtils.getCancellationRequestDate(
+          campaign.chainId,
+          campaign.address,
+        );
+      if (cancellationRequestedAt <= timeframeStart) {
+        // cancellation requested earlier than current timeframe - no active timeframe
+        return null;
+      }
+      timeframeEnd = cancellationRequestedAt;
+    } else {
+      timeframeEnd = now;
+    }
+
+    return {
+      start: timeframeStart,
+      end: timeframeEnd,
+    };
   }
 }

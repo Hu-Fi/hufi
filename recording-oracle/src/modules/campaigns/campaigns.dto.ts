@@ -99,6 +99,19 @@ class HoldingCampaignDto extends JoinedCampaignDto {
   declare details: HoldingCampaignDetailsDto;
 }
 
+class ThresholdCampaignDetailsDto {
+  @ApiProperty({ name: 'minimum_balance_target' })
+  minimumBalanceTarget: number;
+}
+
+class ThresholdCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.THRESHOLD] })
+  declare type: CampaignType.THRESHOLD;
+
+  @ApiProperty()
+  declare details: ThresholdCampaignDetailsDto;
+}
+
 export class ListJoinedCampaignsQueryDto {
   @ApiPropertyOptional({
     enum: ReturnedCampaignStatus,
@@ -124,7 +137,11 @@ export class ListJoinedCampaignsQueryDto {
   skip?: number;
 }
 
-@ApiExtraModels(MarketMakingCampaignDto, HoldingCampaignDto)
+@ApiExtraModels(
+  MarketMakingCampaignDto,
+  HoldingCampaignDto,
+  ThresholdCampaignDto,
+)
 export class ListJoinedCampaignsSuccessDto {
   @ApiProperty({
     name: 'has_more',
@@ -135,12 +152,14 @@ export class ListJoinedCampaignsSuccessDto {
     oneOf: [
       { $ref: getSchemaPath(MarketMakingCampaignDto) },
       { $ref: getSchemaPath(HoldingCampaignDto) },
+      { $ref: getSchemaPath(ThresholdCampaignDto) },
     ],
     discriminator: {
       propertyName: 'type',
       mapping: {
         [CampaignType.MARKET_MAKING]: getSchemaPath(MarketMakingCampaignDto),
         [CampaignType.HOLDING]: getSchemaPath(HoldingCampaignDto),
+        [CampaignType.THRESHOLD]: getSchemaPath(ThresholdCampaignDto),
       },
     },
     isArray: true,

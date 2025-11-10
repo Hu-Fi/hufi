@@ -3,8 +3,9 @@ import {
   Catch,
   ArgumentsHost,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 import logger from '@/logger';
 
@@ -15,6 +16,10 @@ export class AdminControllerErrorsFilter implements ExceptionFilter {
   });
 
   catch(exception: Error, host: ArgumentsHost) {
+    if (exception instanceof HttpException) {
+      throw exception;
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -24,8 +29,8 @@ export class AdminControllerErrorsFilter implements ExceptionFilter {
       error: exception,
     });
 
-    return response.status(HttpStatus.OK).json({
-      error: exception.message,
+    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      error: exception,
     });
   }
 }

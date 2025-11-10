@@ -16,6 +16,8 @@ import { useDisconnect } from 'wagmi';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useNotification } from '@/hooks/useNotification';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -44,11 +46,14 @@ const buttonSx = {
 
 const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   const { activeAddress } = useActiveAccount();
   const { disconnect } = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
   const { signer } = useRetrieveSigner();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { showError } = useNotification();
 
   const formattedAddress = formatAddress(activeAddress);
 
@@ -58,8 +63,12 @@ const Account: FC = () => {
     navigate('/manage-api-keys');
   };
 
-  const handleSignIn = () => {
-    signIn();
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch {
+      showError('Failed to sign in. Please try again.');
+    }
   };
 
   const handleDisconnect = () => {
@@ -74,14 +83,14 @@ const Account: FC = () => {
   return (
     <>
       <Button
-        size="medium"
+        size={isMobile ? 'small' : 'medium'}
         aria-describedby="account-popover"
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disableRipple
         sx={{
           bgcolor: 'primary.main',
           borderRadius: '4px',
-          height: '42px',
+          height: isMobile ? '30px' : '42px',
           width: 'fit-content',
           paddingX: 1,
           borderBottomLeftRadius: anchorEl ? 0 : 4,
@@ -132,7 +141,7 @@ const Account: FC = () => {
           {!isAuthenticated && (
             <ListItemButton sx={buttonSx} onClick={handleSignIn}>
               <LoginIcon />
-              Log In
+              Sign In
               <CustomTooltip
                 arrow
                 placement="left"

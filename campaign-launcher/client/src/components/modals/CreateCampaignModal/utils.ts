@@ -3,11 +3,13 @@ import { CampaignType } from '@/types';
 import {
   holdingValidationSchema,
   marketMakingValidationSchema,
+  thresholdValidationSchema,
 } from './validation';
 
 const validationSchemasMap = {
   [CampaignType.MARKET_MAKING]: marketMakingValidationSchema,
   [CampaignType.HOLDING]: holdingValidationSchema,
+  [CampaignType.THRESHOLD]: thresholdValidationSchema,
 };
 
 const baseFormValues = {
@@ -30,6 +32,12 @@ const defaultFormValuesMap = {
     type: CampaignType.HOLDING,
     symbol: '',
     daily_balance_target: 1,
+  },
+  [CampaignType.THRESHOLD]: {
+    ...baseFormValues,
+    type: CampaignType.THRESHOLD,
+    symbol: '',
+    minimum_balance_target: 1,
   },
 };
 

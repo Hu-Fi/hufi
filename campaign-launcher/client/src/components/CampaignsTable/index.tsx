@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Button, Typography, Box, Stack } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -9,7 +9,12 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import LaunchCampaign from '@/components/LaunchCampaign';
-import { useIsXlDesktop, useIsLgDesktop } from '@/hooks/useBreakpoints';
+import StretchedLink from '@/components/StretchedLink';
+import {
+  useIsXlDesktop,
+  useIsLgDesktop,
+  useIsMobile,
+} from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
@@ -163,7 +168,10 @@ const StatusTooltip = () => {
         </Stack>
       }
     >
-      <InfoTooltipInner />
+      <InfoTooltipInner
+        width={{ xs: 24, md: 32 }}
+        height={{ xs: 24, md: 32 }}
+      />
     </CustomTooltip>
   );
 };
@@ -174,9 +182,9 @@ const CampaignsTable: FC<Props> = ({
   isMyCampaigns = false,
 }) => {
   const { exchangesMap } = useExchangesContext();
-  const navigate = useNavigate();
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
+  const isMobile = useIsMobile();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
 
@@ -196,14 +204,68 @@ const CampaignsTable: FC<Props> = ({
       field: 'symbol',
       headerName: 'Symbol',
       flex: 2,
-      minWidth: 250,
-      renderCell: (params) => (
-        <CampaignSymbol
-          symbol={params.row.symbol}
-          campaignType={params.row.type}
-          size="medium"
-        />
-      ),
+      minWidth: isMobile ? (isJoinedCampaigns ? 140 : 175) : 250,
+      renderHeader: () => {
+        if (isMobile) {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              {!isJoinedCampaigns && <StatusTooltip />}
+              <Typography variant="caption" fontWeight={700}>
+                Symbol
+              </Typography>
+            </Box>
+          );
+        }
+
+        return (
+          <Typography variant="body2" fontWeight={600}>
+            Symbol
+          </Typography>
+        );
+      },
+      renderCell: (params) => {
+        let Row;
+
+        if (isMobile) {
+          Row = (
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box
+                display={isJoinedCampaigns ? 'none' : 'flex'}
+                width="8px"
+                height="8px"
+                borderRadius="100%"
+                bgcolor={mapStatusToColor(
+                  params.row.status,
+                  params.row.start_date,
+                  params.row.end_date
+                )}
+              />
+              <CampaignSymbol
+                symbol={params.row.symbol}
+                campaignType={params.row.type}
+                size="xs"
+              />
+            </Box>
+          );
+        } else {
+          Row = (
+            <CampaignSymbol
+              symbol={params.row.symbol}
+              campaignType={params.row.type}
+              size="medium"
+            />
+          );
+        }
+        return (
+          <>
+            <StretchedLink
+              to={`/campaign-details/${params.row.address}`}
+              sx={{ textDecoration: 'none' }}
+            />
+            {Row}
+          </>
+        );
+      },
     },
     {
       field: 'exchange',
@@ -238,7 +300,11 @@ const CampaignsTable: FC<Props> = ({
             title={networkName || 'Unknown Network'}
             placement="top"
           >
-            <Box display="flex" alignItems="center">
+            <Box
+              display="flex"
+              alignItems="center"
+              sx={{ '& > svg': { fontSize: isMobile ? '16px' : '24px' } }}
+            >
               {getChainIcon(params.row.chain_id)}
             </Box>
           </CustomTooltip>
@@ -252,6 +318,7 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 175,
       renderCell: (params) => (
         <CampaignAddress
+          variant={isMobile ? 'caption' : 'subtitle2'}
           address={params.row.address}
           chainId={params.row.chain_id}
         />
@@ -264,7 +331,7 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 135,
       renderCell: (params) => {
         return (
-          <Typography variant="subtitle2">
+          <Typography variant={isMobile ? 'caption' : 'subtitle2'}>
             {formatDate(params.row.start_date)}
           </Typography>
         );
@@ -277,7 +344,7 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 135,
       renderCell: (params) => {
         return (
-          <Typography variant="subtitle2">
+          <Typography variant={isMobile ? 'caption' : 'subtitle2'}>
             {formatDate(params.row.end_date)}
           </Typography>
         );
@@ -292,7 +359,7 @@ const CampaignsTable: FC<Props> = ({
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row;
           return (
-            <Typography variant="subtitle2">
+            <Typography variant={isMobile ? 'caption' : 'subtitle2'}>
               <span>{fund_amount}</span> <span>{fund_token.toUpperCase()}</span>
             </Typography>
           );
@@ -302,7 +369,7 @@ const CampaignsTable: FC<Props> = ({
           params.row;
 
         return (
-          <Typography variant="subtitle2">
+          <Typography variant={isMobile ? 'caption' : 'subtitle2'}>
             {formatTokenAmount(fund_amount, fund_token_decimals)}{' '}
             {fund_token_symbol}
           </Typography>
@@ -346,10 +413,12 @@ const CampaignsTable: FC<Props> = ({
       rows={data || []}
       columns={columns}
       columnVisibilityModel={{
-        status: !isJoinedCampaigns,
+        status: !isJoinedCampaigns && !isMobile,
+        paddingLeft: !isMobile,
+        paddingRight: !isMobile,
       }}
       columnHeaderHeight={48}
-      rowHeight={noRows ? (isLg ? 50 : 95) : isXl ? 114 : 95}
+      rowHeight={noRows ? (isLg ? 50 : 95) : isXl ? 114 : isMobile ? 50 : 95}
       scrollbarSize={0}
       disableColumnMenu
       disableColumnSelector
@@ -357,13 +426,12 @@ const CampaignsTable: FC<Props> = ({
       disableColumnSorting
       disableColumnResize
       disableRowSelectionOnClick
-      getRowSpacing={({ isLastVisible }) => ({ bottom: isLastVisible ? 0 : 8 })}
-      disableVirtualization={!data}
+      getRowSpacing={({ isLastVisible }) => ({
+        bottom: isLastVisible || isMobile ? 0 : 8,
+      })}
+      disableVirtualization
       hideFooter
       hideFooterPagination
-      onRowClick={(params) => {
-        navigate(`/campaign-details/${params.row.address}`);
-      }}
       slots={{
         noRowsOverlay: () => (
           <Box
@@ -377,9 +445,9 @@ const CampaignsTable: FC<Props> = ({
             py={{ xs: 4, xl: 8 }}
             px={2}
             gap={5}
-            borderRadius="16px"
+            borderRadius={{ xs: 0, md: '16px' }}
             bgcolor="background.default"
-            border="1px solid rgba(255, 255, 255, 0.1)"
+            border={{ xs: 'none', md: '1px solid rgba(255, 255, 255, 0.1)' }}
           >
             {isMyCampaigns && <MyCampaignsNoRows />}
             {isJoinedCampaigns && <JoinedCampaignsNoRows />}
@@ -392,7 +460,8 @@ const CampaignsTable: FC<Props> = ({
         ),
       }}
       sx={{
-        border: 'none',
+        border: isMobile ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+        borderRadius: '16px',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',
         },
@@ -406,7 +475,7 @@ const CampaignsTable: FC<Props> = ({
           height: isLg ? '100px !important' : '190px !important',
         },
         '& .MuiDataGrid-topContainer': {
-          mb: 1,
+          mb: isMobile ? 0 : 1,
         },
         '& .MuiDataGrid-columnHeaders': {
           '& > div[role="row"]': {
@@ -425,22 +494,43 @@ const CampaignsTable: FC<Props> = ({
           '&[data-field="status"] .MuiDataGrid-columnHeaderTitleContainer': {
             justifyContent: 'center',
           },
+          ...(isMobile && {
+            '&[data-field="exchange"]': {
+              pl: 2,
+            },
+            '&[data-field="symbol"]': {
+              position: 'sticky',
+              left: '0',
+              bgcolor: 'background.default',
+              zIndex: '100',
+              pl: 1,
+            },
+          }),
         },
         '& .MuiDataGrid-columnHeaderTitle': {
-          fontWeight: 600,
-          fontSize: '14px',
-          lineHeight: '22px',
-          letterSpacing: '0.1px',
+          fontWeight: isMobile ? 700 : 600,
+          fontSize: isMobile ? '12px' : '14px',
+          lineHeight: isMobile ? '20px' : '22px',
+          letterSpacing: isMobile ? '0.4px' : '0.1px',
         },
         '& .MuiDataGrid-row': {
           display: 'flex',
           alignItems: 'center',
+          position: 'relative',
           cursor: 'pointer',
-          mb: 1,
+          mb: isMobile ? 0 : 1,
           py: isXl ? 4 : 2,
-          bgcolor: 'background.default',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
+          bgcolor: isMobile ? 'inherit' : 'background.default',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderLeft: isMobile ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+          borderRight: isMobile ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+          borderBottom: isMobile
+            ? 'none'
+            : '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: isMobile ? 0 : '16px',
+          ...(isMobile && {
+            position: 'relative',
+          }),
         },
         '& .MuiDataGrid-row--lastVisible': {
           mb: 0,
@@ -465,6 +555,22 @@ const CampaignsTable: FC<Props> = ({
           '&[data-field="status"]': {
             justifyContent: 'center',
           },
+          ...(isMobile && {
+            '& > p, & > span': {
+              fontSize: '12px',
+              fontWeight: 700,
+            },
+            '&[data-field="symbol"]': {
+              position: 'sticky',
+              left: '0',
+              bgcolor: 'background.default',
+              zIndex: '100',
+              pl: 2,
+            },
+            '&[data-field="exchange"]': {
+              pl: 2,
+            },
+          }),
         },
         '& .MuiDataGrid-cellEmpty': {
           display: 'none',

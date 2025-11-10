@@ -154,7 +154,7 @@ export class ExchangeApiKeysController {
     @Param() params: ExchangeNameParamDto,
   ): Promise<unknown> {
     if (Environment.isProduction()) {
-      throw new ForbiddenException();
+      throw new ForbiddenException('Not available in production');
     }
 
     const userId = request.user.id;

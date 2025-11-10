@@ -7,11 +7,22 @@ import { CampaignType } from '@/types';
 type Props = {
   symbol: string;
   campaignType: CampaignType;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'small' | 'medium' | 'large';
 };
 
-export const getSymbolStyles = (size: 'small' | 'medium' | 'large') => {
+export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
   switch (size) {
+    case 'xs':
+      return {
+        image: {
+          width: 16,
+          border: '1px solid white',
+        },
+        text: {
+          fontWeight: 700,
+          fontSize: 12,
+        },
+      };
     case 'small':
       return {
         image: {
@@ -67,7 +78,10 @@ const CampaignSymbol: FC<Props> = ({
 }) => {
   if (campaignType === CampaignType.MARKET_MAKING) {
     return <CryptoPairEntity symbol={symbol} size={size} />;
-  } else if (campaignType === CampaignType.HOLDING) {
+  } else if (
+    campaignType === CampaignType.HOLDING ||
+    campaignType === CampaignType.THRESHOLD
+  ) {
     return <CryptoEntity symbol={symbol} size={size} />;
   }
 };

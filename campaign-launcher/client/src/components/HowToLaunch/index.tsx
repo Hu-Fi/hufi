@@ -6,7 +6,7 @@ import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 const Card = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
   borderRadius: '16px',
-  padding: '40px 0px',
+  padding: '40px 16px',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
@@ -15,10 +15,12 @@ const Card = styled(Paper)(({ theme }) => ({
   boxShadow: 'none',
   width: '100%',
   [theme.breakpoints.down('xl')]: {
-    padding: '32px 0px',
+    padding: '32px 16px',
   },
   [theme.breakpoints.down('md')]: {
-    paddingLeft: '24px',
+    paddingLeft: '32px',
+    paddingTop: '16px',
+    paddingBottom: '16px',
     justifyContent: 'flex-start',
   },
 }));
@@ -40,9 +42,16 @@ const Circle = styled(Box)(({ theme }) => ({
     height: '56px',
     fontSize: '24px',
   },
+
+  [theme.breakpoints.down('md')]: {
+    width: '32px',
+    height: '32px',
+    fontSize: '14px',
+  },
 }));
 
 const Text = styled(Typography)(({ theme }) => ({
+  flex: 1,
   color: theme.palette.text.primary,
   fontSize: '32px',
   fontWeight: 800,
@@ -55,6 +64,13 @@ const Text = styled(Typography)(({ theme }) => ({
     lineHeight: '120%',
     letterSpacing: '0.25px',
   },
+
+  [theme.breakpoints.down('md')]: {
+    fontSize: '20px',
+    fontWeight: 500,
+    lineHeight: '160%',
+    letterSpacing: '0.15px',
+  },
 }));
 
 const HowToLaunch = () => {
@@ -65,39 +81,32 @@ const HowToLaunch = () => {
       component="section"
       display="flex"
       flexDirection="column"
-      gap={{ xs: 4, xl: 6.5 }}
+      gap={{ xs: 2, md: 4, xl: 6.5 }}
     >
-      <Typography variant={isXl ? 'h5' : 'h6'} textAlign="center">
+      <Typography
+        variant={isXl ? 'h5' : 'h6'}
+        px={{ xs: 2, md: 0 }}
+        textAlign={{ xs: 'unset', md: 'center' }}
+      >
         Easy and fast. How to launch a market making campaign.
       </Typography>
-      <Grid container spacing={2} justifyContent="center">
+      <Grid container spacing={{ xs: 1, md: 2 }} justifyContent="center">
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <Circle>1</Circle>
-            <Text>
-              Stake
-              {isXl ? <br /> : ' '}
-              HMT
-            </Text>
+            <Text>Stake HMT</Text>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <Circle>2</Circle>
-            <Text>
-              Launch
-              {isXl ? <br /> : ' '}
-              Campaign
-            </Text>
+            <Text>Launch Campaign</Text>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <Circle>3</Circle>
-            <Text>
-              Approve 3<br />
-              Transactions
-            </Text>
+            <Text>Approve 3 Transactions</Text>
           </Card>
         </Grid>
       </Grid>

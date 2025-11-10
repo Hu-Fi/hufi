@@ -3,12 +3,15 @@ import { useState, type FC } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 
 import CampaignAddress from '@/components/CampaignAddress';
+import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import CustomTooltip from '@/components/CustomTooltip';
+import JoinCampaign from '@/components/JoinCampaign';
 import ChartModal from '@/components/modals/ChartModal';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
 import type { CampaignDetails } from '@/types';
-import { getChainIcon, getNetworkName, mapStatusToColor } from '@/utils';
+import { getChainIcon, getNetworkName } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
 const formatDate = (dateString: string): string => {
@@ -22,105 +25,115 @@ const formatTime = (dateString: string): string => {
 
 type Props = {
   campaign: CampaignDetails;
+  isAlreadyJoined: boolean;
+  isJoinedLoading: boolean;
 };
 
-const CampaignInfo: FC<Props> = ({ campaign }) => {
+const CampaignInfo: FC<Props> = ({
+  campaign,
+  isAlreadyJoined,
+  isJoinedLoading,
+}) => {
   const [openChartModal, setOpenChartModal] = useState(false);
 
-  const isCompleted = campaign.status === 'completed';
+  const isMobile = useIsMobile();
+
   return (
     <Box
       display="flex"
-      alignItems="center"
+      alignItems={{ xs: 'flex-start', md: 'center' }}
+      flexDirection={{ xs: 'column', md: 'row' }}
       height={{ xs: 'auto', md: '40px' }}
-      gap={4}
-      flexWrap={{ xs: 'wrap', md: 'nowrap' }}
+      gap={{ xs: 3, md: 4 }}
+      width="100%"
     >
-      <CampaignTypeLabel campaignType={campaign.type} />
       <Box
         display="flex"
         alignItems="center"
-        justifyContent="center"
-        ml={-2}
-        px={2}
-        py="6px"
-        bgcolor={mapStatusToColor(
-          campaign.status,
-          campaign.start_date,
-          campaign.end_date
-        )}
-        borderRadius="4px"
-        textTransform="capitalize"
+        width={{ xs: '100%', md: 'auto' }}
+        gap={1}
+        order={1}
       >
-        <Typography
-          variant="subtitle2"
-          color={isCompleted ? 'secondary.contrast' : 'primary.contrast'}
-        >
-          {campaign.status.split('_').join(' ')}
-        </Typography>
+        <CampaignTypeLabel campaignType={campaign.type} />
+        <CampaignStatusLabel
+          campaignStatus={campaign.status}
+          startDate={campaign.start_date}
+          endDate={campaign.end_date}
+        />
+        {isMobile && (
+          <JoinCampaign
+            campaign={campaign}
+            isAlreadyJoined={isAlreadyJoined}
+            isJoinedLoading={isJoinedLoading}
+          />
+        )}
       </Box>
-      <CampaignAddress
-        address={campaign.address}
-        chainId={campaign.chain_id}
-        withCopy
-      />
-      <Box display="flex" alignItems="center" gap={1}>
-        {campaign?.start_date && campaign?.end_date && (
-          <>
-            <CalendarIcon />
-            <CustomTooltip
-              arrow
-              placement="top"
-              title={formatTime(campaign.start_date)}
+      <Box order={{ xs: 3, md: 2 }}>
+        <CampaignAddress
+          address={campaign.address}
+          chainId={campaign.chain_id}
+          withCopy
+        />
+      </Box>
+      <Box display="flex" alignItems="center" gap={3} order={{ xs: 2, md: 3 }}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <CalendarIcon />
+          <CustomTooltip
+            arrow
+            placement="top"
+            title={formatTime(campaign.start_date)}
+          >
+            <Typography
+              variant="subtitle2"
+              borderBottom="1px dashed"
+              sx={{ cursor: 'pointer' }}
             >
-              <Typography
-                variant="subtitle2"
-                borderBottom="1px dashed"
-                sx={{ cursor: 'pointer' }}
-              >
-                {formatDate(campaign.start_date)}
-              </Typography>
-            </CustomTooltip>
-            <Typography component="span" variant="subtitle2">
-              -
+              {formatDate(campaign.start_date)}
             </Typography>
-            <CustomTooltip
-              arrow
-              placement="top"
-              title={formatTime(campaign.end_date)}
+          </CustomTooltip>
+          <Typography component="span" variant="subtitle2">
+            -
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="top"
+            title={formatTime(campaign.end_date)}
+          >
+            <Typography
+              variant="subtitle2"
+              borderBottom="1px dashed"
+              sx={{ cursor: 'pointer' }}
             >
-              <Typography
-                variant="subtitle2"
-                borderBottom="1px dashed"
-                sx={{ cursor: 'pointer' }}
-              >
-                {formatDate(campaign.end_date)}
-              </Typography>
-            </CustomTooltip>
-          </>
-        )}
-      </Box>
-      <CustomTooltip
-        arrow
-        title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
-        placement="top"
-      >
-        <Box display="flex" sx={{ cursor: 'pointer' }}>
-          {getChainIcon(campaign.chain_id)}
+              {formatDate(campaign.end_date)}
+            </Typography>
+          </CustomTooltip>
         </Box>
-      </CustomTooltip>
-      <Button
-        variant="outlined"
-        size="medium"
-        onClick={() => setOpenChartModal(true)}
-      >
-        Paid Amount Chart
-      </Button>
-      <ChartModal
-        open={openChartModal}
-        onClose={() => setOpenChartModal(false)}
-        campaign={campaign}
-      />
+        <CustomTooltip
+          arrow
+          title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
+          placement="top"
+        >
+          <Box display="flex" sx={{ cursor: 'pointer' }}>
+            {getChainIcon(campaign.chain_id)}
+          </Box>
+        </CustomTooltip>
+      </Box>
+      {!isMobile && (
+        <Box ml={{ xs: 0, md: 'auto' }} order={4}>
+          <Button
+            variant="outlined"
+            size="medium"
+            onClick={() => setOpenChartModal(true)}
+          >
+            Paid Amount Chart
+          </Button>
+          <ChartModal
+            open={openChartModal}
+            onClose={() => setOpenChartModal(false)}
+            campaign={campaign}
+          />
+        </Box>
+      )}
     </Box>
   );
 };

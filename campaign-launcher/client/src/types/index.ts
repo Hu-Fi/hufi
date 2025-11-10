@@ -10,6 +10,7 @@ export enum ExchangeType {
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
   HOLDING = 'HOLDING',
+  THRESHOLD = 'THRESHOLD',
 }
 
 export enum CampaignsView {
@@ -56,6 +57,7 @@ export type Campaign = {
   details: {
     daily_volume_target?: number;
     daily_balance_target?: number;
+    minimum_balance_target?: number;
   };
   end_date: string;
   escrow_status: string;
@@ -112,7 +114,16 @@ export type HoldingManifestDto = BaseManifestDto & {
   daily_balance_target: number;
 };
 
-export type ManifestUploadDto = MarketMakingManifestDto | HoldingManifestDto;
+export type ThresholdManifestDto = BaseManifestDto & {
+  type: CampaignType.THRESHOLD;
+  symbol: string;
+  minimum_balance_target: number;
+};
+
+export type ManifestUploadDto =
+  | MarketMakingManifestDto
+  | HoldingManifestDto
+  | ThresholdManifestDto;
 
 export type CampaignsQueryParams = {
   chain_id: ChainId;
@@ -144,8 +155,17 @@ export type MarketMakingMeta = {
   total_volume: number;
 };
 
-export type MyMeta = HoldingResult | MarketMakingResult;
-export type TotalMeta = HoldingMeta | MarketMakingMeta;
+export type ThresholdResult = {
+  token_balance: number;
+};
+
+export type ThresholdMeta = {
+  total_balance: number;
+  total_score: number;
+};
+
+export type MyMeta = HoldingResult | MarketMakingResult | ThresholdResult;
+export type TotalMeta = HoldingMeta | MarketMakingMeta | ThresholdMeta;
 
 export type UserProgress = {
   from: string;
@@ -175,4 +195,13 @@ export type HoldingFormValues = BaseCampaignFormValues & {
   daily_balance_target: number;
 };
 
-export type CampaignFormValues = MarketMakingFormValues | HoldingFormValues;
+export type ThresholdFormValues = BaseCampaignFormValues & {
+  type: CampaignType.THRESHOLD;
+  symbol: string;
+  minimum_balance_target: number;
+};
+
+export type CampaignFormValues =
+  | MarketMakingFormValues
+  | HoldingFormValues
+  | ThresholdFormValues;

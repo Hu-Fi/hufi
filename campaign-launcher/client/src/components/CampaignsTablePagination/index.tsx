@@ -37,6 +37,14 @@ const CampaignsTablePagination: FC<Props> = ({
         return `${from}–${effectiveTo}`;
       }}
       slotProps={{
+        root: {
+          sx: {
+            mt: { xs: -2, md: 0 },
+            '& .MuiTablePagination-spacer': {
+              display: { xs: 'none', md: 'block' },
+            },
+          },
+        },
         actions: {
           nextButton: {
             disabled: !hasMore,

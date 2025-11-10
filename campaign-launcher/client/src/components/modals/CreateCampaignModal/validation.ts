@@ -6,6 +6,7 @@ import {
   CampaignType,
   type HoldingFormValues,
   type MarketMakingFormValues,
+  type ThresholdFormValues,
 } from '@/types';
 
 const mapTokenToMinValue: Record<FundToken, number> = {
@@ -85,12 +86,27 @@ export const holdingValidationSchema = yup.object({
     .required('Daily balance target is required'),
 }) as ObjectSchema<HoldingFormValues>;
 
+export const thresholdValidationSchema = yup.object({
+  ...baseValidationSchema,
+  symbol: yup
+    .string()
+    .matches(/^[\dA-Z]{3,10}$/, 'Invalid symbol')
+    .required('Required'),
+  minimum_balance_target: yup
+    .number()
+    .typeError('Minimum balance target is required')
+    .min(0.001, 'Minimum balance target must be greater than or equal to 0.001')
+    .required('Minimum balance target is required'),
+}) as ObjectSchema<ThresholdFormValues>;
+
 export const campaignValidationSchema = yup.lazy((value) => {
   if (value && typeof value === 'object' && 'type' in value) {
     if (value.type === CampaignType.HOLDING) {
       return holdingValidationSchema;
     } else if (value.type === CampaignType.MARKET_MAKING) {
       return marketMakingValidationSchema;
+    } else if (value.type === CampaignType.THRESHOLD) {
+      return thresholdValidationSchema;
     }
   }
   return marketMakingValidationSchema;

@@ -1,5 +1,6 @@
 import { type FC, useState } from 'react';
 
+import CheckIcon from '@mui/icons-material/CheckCircleOutline';
 import { Button, CircularProgress } from '@mui/material';
 
 import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
@@ -7,6 +8,8 @@ import {
   useGetEnrolledExchanges,
   useJoinCampaign,
 } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useNotification } from '@/hooks/useNotification';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
 
@@ -22,10 +25,14 @@ const JoinCampaign: FC<Props> = ({
   isJoinedLoading,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
+
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
-  const { mutate: joinCampaign, isPending: isJoining } = useJoinCampaign();
+  const { mutateAsync: joinCampaign, isPending: isJoining } = useJoinCampaign();
+  const { showError } = useNotification();
+
+  const isMobile = useIsMobile();
 
   const isCampaignFinished =
     campaign.status === CampaignStatus.TO_CANCEL ||
@@ -35,8 +42,16 @@ const JoinCampaign: FC<Props> = ({
   const isButtonDisabled =
     !isAuthenticated || isLoading || isAlreadyJoined || isCampaignFinished;
 
-  const handleButtonClick = () => {
-    if (isButtonDisabled) {
+  const getButtonText = () => {
+    if (isJoining) return null;
+    if (isAlreadyJoined) {
+      return isMobile ? 'Joined' : 'Registered to Campaign';
+    }
+    return isMobile ? 'Join' : 'Join Campaign';
+  };
+
+  const handleButtonClick = async () => {
+    if (isButtonDisabled || !campaign) {
       return;
     }
 
@@ -48,8 +63,28 @@ const JoinCampaign: FC<Props> = ({
       return;
     }
 
-    joinCampaign({ chainId: campaign.chain_id, address: campaign.address });
+    try {
+      await joinCampaign({
+        chainId: campaign.chain_id,
+        address: campaign.address,
+      });
+    } catch (error) {
+      console.error(error);
+      showError('Failed to join campaign. Please try again.');
+    }
   };
+
+  if (!campaign || isCampaignFinished) {
+    return null;
+  }
+
+  if (!isAuthenticated && !isMobile) {
+    return (
+      <Button variant="contained" size="large" disabled sx={{ ml: 'auto' }}>
+        Sign in to Join Campaign
+      </Button>
+    );
+  }
 
   return (
     <>
@@ -57,19 +92,18 @@ const JoinCampaign: FC<Props> = ({
         variant="contained"
         size="medium"
         sx={{
-          ml: { xs: 0, md: 'auto' },
-          mt: { xs: 2, md: 0 },
+          ml: 'auto',
           color: 'primary.contrast',
-          minWidth: { xs: '100%', sm: '135px' },
+          minWidth: isMobile ? '105px' : '135px',
         }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
+        endIcon={isMobile && isAlreadyJoined && <CheckIcon />}
       >
         {isJoining && (
-          <CircularProgress size={20} sx={{ color: 'primary.contrast' }} />
+          <CircularProgress size={24} sx={{ color: 'primary.contrast' }} />
         )}
-        {!isJoining &&
-          (isAlreadyJoined ? 'Registered to Campaign' : 'Join Campaign')}
+        {getButtonText()}
       </Button>
       <AddKeysPromptModal
         open={modalOpen}

@@ -34,7 +34,12 @@ const getLabels = (campaignType: CampaignType) => {
       };
     case CampaignType.HOLDING:
       return {
-        total: 'Total Balance',
+        total: 'Total Score',
+        my: 'My Balance',
+      };
+    case CampaignType.THRESHOLD:
+      return {
+        total: 'Total Score',
         my: 'My Balance',
       };
     default:
@@ -55,6 +60,11 @@ const getMyMeta = (
       }
       return 0;
     case CampaignType.HOLDING:
+      if ('token_balance' in data.my_meta) {
+        return data.my_meta.token_balance;
+      }
+      return 0;
+    case CampaignType.THRESHOLD:
       if ('token_balance' in data.my_meta) {
         return data.my_meta.token_balance;
       }
@@ -81,6 +91,11 @@ const getTotalMeta = (
         return data.total_meta.total_balance;
       }
       return 0;
+    case CampaignType.THRESHOLD:
+      if ('total_score' in data.total_meta) {
+        return data.total_meta.total_score;
+      }
+      return 0;
     default:
       return 0;
   }
@@ -92,6 +107,15 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
     campaign.type,
     campaign.symbol
   );
+
+  if (!isLoading && !data) {
+    return (
+      <Typography variant="subtitle2">
+        Interim progress data is not available at the moment. Please check
+        later.
+      </Typography>
+    );
+  }
 
   return (
     <Stack justifyContent="space-between" gap={{ xs: 2, md: 0 }}>
@@ -129,7 +153,10 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
             <Skeleton variant="text" width={180} height={32} />
           ) : (
             <Typography variant="h6" color="primary.violet" fontWeight={700}>
-              {getTotalMeta(campaign.type, data)} {targetTokenSymbol}
+              {getTotalMeta(campaign.type, data)}{' '}
+              {campaign.type !== CampaignType.THRESHOLD
+                ? targetTokenSymbol
+                : null}
             </Typography>
           )}
         </Box>

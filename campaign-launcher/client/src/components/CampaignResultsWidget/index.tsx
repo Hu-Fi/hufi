@@ -2,6 +2,7 @@ import type { FC, MouseEvent } from 'react';
 
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { OpenInNewIcon } from '@/icons';
 import { CampaignStatus } from '@/types';
 
@@ -64,6 +65,8 @@ const CampaignResultsWidget: FC<Props> = ({
   finalResultsUrl,
   intermediateResultsUrl,
 }) => {
+  const isMobile = useIsMobile();
+
   const isFinished = [
     CampaignStatus.CANCELLED,
     CampaignStatus.COMPLETED,
@@ -86,7 +89,12 @@ const CampaignResultsWidget: FC<Props> = ({
   return (
     <Box display="flex" alignItems="center">
       <Box p={0.5} borderRadius="50%" bgcolor={result.bgcolor} mr={1} />
-      <Typography variant="h6">{result.label}</Typography>
+      <Typography
+        variant={isMobile ? 'body2' : 'h6'}
+        fontWeight={isMobile ? 700 : 500}
+      >
+        {result.label}
+      </Typography>
       {result !== RESULT.none && (
         <IconButton
           sx={{

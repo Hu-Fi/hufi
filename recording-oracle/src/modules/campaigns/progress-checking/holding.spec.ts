@@ -56,10 +56,8 @@ describe('HoldingProgressChecker', () => {
       );
 
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
-        generateAccountBalance([
-          faker.finance.ethereumAddress(),
-          faker.finance.ethereumAddress(),
-        ]),
+        // adjust currency code to avoid overlaps with checker setup
+        generateAccountBalance([`${faker.finance.currencyCode()}0`]),
       );
     });
 
@@ -110,10 +108,10 @@ describe('HoldingProgressChecker', () => {
   });
 
   describe('abuse detection', () => {
-    const checkerSetup = generateHoldingCheckerSetup();
+    const progressCheckerSetup = generateHoldingCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangeApiClientFactory as ExchangeApiClientFactory,
-      checkerSetup,
+      progressCheckerSetup,
     );
 
     beforeEach(() => {
@@ -121,26 +119,15 @@ describe('HoldingProgressChecker', () => {
     });
 
     it('should return zeros if abuse detected', async () => {
-      mockedExchangeApiClient.fetchDepositAddress.mockResolvedValue(
-        faker.finance.ethereumAddress(),
+      const abuseAddrress = faker.finance.ethereumAddress();
+      mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
+        abuseAddrress,
       );
+      resultsChecker.ethDepositAddresses.add(abuseAddrress);
 
-      const mockedAccountBalance = generateAccountBalance([
-        checkerSetup.symbol,
-      ]);
-      const expectedBalance = mockedAccountBalance.total[checkerSetup.symbol];
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
-        mockedAccountBalance,
+        generateAccountBalance([progressCheckerSetup.symbol]),
       );
-
-      const normalResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-      );
-
-      expect(normalResult.abuseDetected).toBe(false);
-      expect(normalResult.score).toBe(expectedBalance);
-      expect(normalResult.token_balance).toBe(expectedBalance);
-
       const abuseResult = await resultsChecker.checkForParticipant(
         generateParticipantAuthKeys(),
       );

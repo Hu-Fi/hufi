@@ -12,7 +12,12 @@ import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
-import { tokenManager } from '@/utils/TokenManager';
+import SignInPromptModal from '@/components/modals/SignInPromptModal';
+import {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  tokenManager,
+} from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
 
@@ -21,6 +26,7 @@ type Web3AuthContextType = {
   isLoading: boolean;
   signIn: () => Promise<void>;
   logout: () => Promise<void>;
+  setShowSignInPrompt: (show: boolean) => void;
 };
 
 const Web3AuthContext = createContext<Web3AuthContextType>(
@@ -30,6 +36,8 @@ const Web3AuthContext = createContext<Web3AuthContextType>(
 export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
   const { activeAddress } = useActiveAccount();
@@ -52,6 +60,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } catch (e) {
       setIsAuthenticated(false);
       console.error('Failed to sign in', e);
+      throw e;
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +132,21 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (
+        event.key &&
+        [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY].includes(event.key)
+      ) {
+        const _isAuthenticated = tokenManager.hasTokens();
+        setIsAuthenticated(_isAuthenticated);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   return (
     <Web3AuthContext.Provider
       value={{
@@ -130,9 +154,14 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         isLoading,
         signIn,
         logout,
+        setShowSignInPrompt,
       }}
     >
       {children}
+      <SignInPromptModal
+        open={showSignInPrompt}
+        onClose={() => setShowSignInPrompt(false)}
+      />
     </Web3AuthContext.Provider>
   );
 };

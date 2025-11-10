@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
-import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 
+import dayjs from '@/common/utils/dayjs';
 import {
   generateExchangeName,
   generateTradingPair,
@@ -43,6 +43,11 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     case CampaignType.HOLDING:
       details = {
         dailyBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
+      };
+      break;
+    case CampaignType.THRESHOLD:
+      details = {
+        minimumBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
   }
@@ -102,6 +107,12 @@ export function generateCampaignProgress(
     case CampaignType.HOLDING:
       meta = {
         total_balance: 0,
+      };
+      break;
+    case CampaignType.THRESHOLD:
+      meta = {
+        total_balance: 0,
+        total_score: 0,
       };
       break;
   }

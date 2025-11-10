@@ -8,9 +8,11 @@ import {
   CampaignType,
   HoldingCampaignDetails,
   MarketMakingCampaignDetails,
+  ThresholdCampaignDetails,
   type CampaignManifest,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
+  type ThresholdCampaignManifest,
 } from './types';
 
 const baseManifestSchema = Joi.object({
@@ -78,6 +80,23 @@ export function assertValidHoldingCampaignManifest(
   }
 }
 
+const thresholdManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.THRESHOLD),
+  symbol: Joi.string()
+    .pattern(/^[\dA-Z]{3,10}$/)
+    .required(),
+  minimum_balance_target: Joi.number().greater(0).required(),
+});
+export function assertValidThresholdCampaignManifest(
+  manifest: CampaignManifestBase,
+): asserts manifest is ThresholdCampaignManifest {
+  try {
+    Joi.assert(manifest, thresholdManifestSchema);
+  } catch {
+    throw new Error('Invalid threshold campaign manifest schema');
+  }
+}
+
 export function extractCampaignDetails(manifest: CampaignManifest): {
   symbol: string;
   details: CampaignDetails;
@@ -97,6 +116,16 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as HoldingCampaignManifest;
       const details: HoldingCampaignDetails = {
         dailyBalanceTarget: _manifest.daily_balance_target,
+      };
+      return {
+        symbol: _manifest.symbol,
+        details,
+      };
+    }
+    case CampaignType.THRESHOLD: {
+      const _manifest = manifest as ThresholdCampaignManifest;
+      const details: ThresholdCampaignDetails = {
+        minimumBalanceTarget: _manifest.minimum_balance_target,
       };
       return {
         symbol: _manifest.symbol,
