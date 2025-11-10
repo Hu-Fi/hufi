@@ -32,7 +32,7 @@ import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
-import { Web3ConfigService } from '@/config';
+import { CampaignsConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
@@ -76,6 +76,7 @@ import {
   MockCampaignProgressChecker,
   MockProgressCheckResult,
   generateCampaignParticipant,
+  mockCampaignsConfigService,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -121,6 +122,10 @@ describe('CampaignsService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         CampaignsService,
+        {
+          provide: CampaignsConfigService,
+          useValue: mockCampaignsConfigService,
+        },
         {
           provide: CampaignsRepository,
           useValue: mockCampaignsRepository,

@@ -23,7 +23,7 @@ import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
-import { Web3ConfigService } from '@/config';
+import { CampaignsConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
@@ -41,6 +41,7 @@ import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
   CampaignCancelledError,
+  CampaignJoinLimitedError,
   CampaignNotFoundError,
   CampaignNotStartedError,
   InvalidCampaign,
@@ -97,6 +98,7 @@ export class CampaignsService implements OnApplicationBootstrap {
   });
 
   constructor(
+    private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
@@ -186,6 +188,14 @@ export class CampaignsService implements OnApplicationBootstrap {
       userId,
       campaign.exchangeName,
     );
+
+    if (this.checkCampaignTargetMet(campaign)) {
+      throw new CampaignJoinLimitedError(
+        campaign.chainId,
+        campaign.address,
+        'Target is met',
+      );
+    }
 
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
@@ -1320,5 +1330,28 @@ export class CampaignsService implements OnApplicationBootstrap {
       start: timeframeStart,
       end: timeframeEnd,
     };
+  }
+
+  checkCampaignTargetMet(campaign: CampaignEntity): boolean {
+    if (!isHoldingCampaign(campaign)) {
+      return false;
+    }
+
+    if (!this.campaignsConfigService.isHoldingJoinLimitEnabled) {
+      return false;
+    }
+
+    const campaignProgress = this.campaignsInterimProgressCache.get(
+      campaign.id,
+    ) as CampaignProgress<HoldingMeta> | undefined;
+    if (!campaignProgress) {
+      return false;
+    }
+
+    const isDailyBalanceTargetMet =
+      campaignProgress.meta.total_balance >=
+      campaign.details.dailyBalanceTarget;
+
+    return isDailyBalanceTargetMet;
   }
 }
