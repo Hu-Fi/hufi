@@ -1,4 +1,4 @@
-import { type FC, useEffect } from 'react';
+import { type FC, useEffect, useMemo } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -100,6 +100,16 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       secret: values.secret,
     });
   };
+
+  const userFacingError = useMemo(() => {
+    if (
+      postExchangeApiKeyError instanceof HttpError &&
+      postExchangeApiKeyError.responseMessage
+    ) {
+      return postExchangeApiKeyError.responseMessage;
+    }
+    return 'Failed to edit API key.';
+  }, [postExchangeApiKeyError]);
 
   return (
     <BaseModal
