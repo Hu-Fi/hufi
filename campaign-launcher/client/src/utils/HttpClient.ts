@@ -48,6 +48,15 @@ export class HttpClient {
         data,
         ...config,
       });
+
+      if (response.status === 204) {
+        /**
+         * According to fetch specs, it returns empty string
+         * as response data when no content in body
+         */
+        return undefined as unknown as T;
+      }
+
       return response.data;
     } catch (e) {
       if (e instanceof AxiosError) {

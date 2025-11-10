@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import dayjs from 'dayjs';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+
+import dayjs from '@/common/utils/dayjs';
 
 import { CampaignEntity } from './campaign.entity';
 import { PROGRESS_PERIOD_DAYS } from './constants';
@@ -84,5 +85,16 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     address: string,
   ): Promise<boolean> {
     return this.existsBy({ chainId, address });
+  }
+
+  async findOngoingCampaigns(): Promise<CampaignEntity[]> {
+    const now = new Date();
+    return this.find({
+      where: {
+        status: In([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL]),
+        startDate: LessThanOrEqual(now),
+        endDate: MoreThan(now),
+      },
+    });
   }
 }

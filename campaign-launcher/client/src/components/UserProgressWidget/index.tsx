@@ -108,6 +108,15 @@ const UserProgressWidget: FC<Props> = ({ campaign }) => {
     campaign.symbol
   );
 
+  if (!isLoading && !data) {
+    return (
+      <Typography variant="subtitle2">
+        Interim progress data is not available at the moment. Please check
+        later.
+      </Typography>
+    );
+  }
+
   return (
     <Stack justifyContent="space-between" gap={{ xs: 2, md: 0 }}>
       <Typography variant="subtitle2">My Campaign Progress</Typography>

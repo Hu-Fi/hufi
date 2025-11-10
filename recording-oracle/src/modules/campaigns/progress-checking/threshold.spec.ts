@@ -56,10 +56,8 @@ describe('ThresholdProgressChecker', () => {
       );
 
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
-        generateAccountBalance([
-          faker.finance.currencyCode(),
-          faker.finance.currencyCode(),
-        ]),
+        // adjust currency code to avoid overlaps with checker setup
+        generateAccountBalance([`${faker.finance.currencyCode()}0`]),
       );
     });
 
