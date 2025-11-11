@@ -2755,30 +2755,42 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe('checkUserJoined', () => {
+  describe('checkJoinStatus', () => {
     let userId: string;
     let chainId: number;
     let campaign: CampaignEntity;
+
+    let spyOnCheckCampaignTargetMet: jest.SpyInstance;
 
     beforeAll(() => {
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
       campaign = generateCampaignEntity();
+
+      spyOnCheckCampaignTargetMet = jest.spyOn(
+        campaignsService,
+        'checkCampaignTargetMet',
+      );
+      spyOnCheckCampaignTargetMet.mockImplementation();
     });
 
-    it('should return false if campaign does not exist', async () => {
+    afterAll(() => {
+      spyOnCheckCampaignTargetMet.mockRestore();
+    });
+
+    it('should return "can_join" if campaign does not exist', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         null,
       );
 
-      const result = await campaignsService.checkUserJoined(
+      const result = await campaignsService.checkJoinStatus(
         userId,
         chainId,
         // not checksummed address
         campaign.address.toLowerCase(),
       );
 
-      expect(result).toBe(false);
+      expect(result).toBe('can_join');
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
@@ -2792,21 +2804,21 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should return false if user not joined', async () => {
+    it('should return "already_joined" if user joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        true,
       );
 
-      const result = await campaignsService.checkUserJoined(
+      const result = await campaignsService.checkJoinStatus(
         userId,
         chainId,
         campaign.address,
       );
 
-      expect(result).toBe(false);
+      expect(result).toBe('already_joined');
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -2816,21 +2828,47 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should return true if user joined', async () => {
+    it('should return "can_join" if user not joined and campaign target is not met', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        false,
       );
+      spyOnCheckCampaignTargetMet.mockReturnValueOnce(false);
 
-      const result = await campaignsService.checkUserJoined(
+      const result = await campaignsService.checkJoinStatus(
         userId,
         chainId,
         campaign.address,
       );
 
-      expect(result).toBe(true);
+      expect(result).toBe('can_join');
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should return "join_limited" if user not joined and campaign target is met', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+
+      const result = await campaignsService.checkJoinStatus(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe('join_limited');
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,

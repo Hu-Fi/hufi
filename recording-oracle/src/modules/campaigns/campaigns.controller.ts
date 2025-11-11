@@ -26,8 +26,8 @@ import type { RequestWithUser } from '@/common/types';
 
 import {
   CampaignParamsDto,
-  CheckUserJoinedDto,
-  CheckUserJoinedResponseDto,
+  CheckJoinStatusDto,
+  CheckJoinStatusResponseDto,
   GetUserProgressResponseDto,
   JoinCampaignDto,
   JoinCampaignSuccessDto,
@@ -153,24 +153,22 @@ export class CampaignsController {
   @ApiResponse({
     status: 200,
     description: 'Result indicating if user joined the provided campaign',
-    type: CheckUserJoinedResponseDto,
+    type: CheckJoinStatusResponseDto,
   })
-  @ApiBody({ type: CheckUserJoinedDto })
+  @ApiBody({ type: CheckJoinStatusDto })
   @HttpCode(200)
-  @Post('/check-is-joined')
-  async checkIsJoined(
+  @Post('/check-join-status')
+  async checkJoinStatus(
     @Req() request: RequestWithUser,
-    @Body() data: CheckUserJoinedDto,
-  ): Promise<CheckUserJoinedResponseDto> {
-    const isUserJoined = await this.campaignsService.checkUserJoined(
+    @Body() data: CheckJoinStatusDto,
+  ): Promise<CheckJoinStatusResponseDto> {
+    const joinStatus = await this.campaignsService.checkJoinStatus(
       request.user.id,
       data.chainId,
       data.address,
     );
 
-    return {
-      isJoined: isUserJoined,
-    };
+    return { status: joinStatus };
   }
 
   @ApiOperation({

@@ -8,11 +8,13 @@ import {
   useEffect,
 } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
+import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
 import {
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
@@ -38,6 +40,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
+  const queryClient = useQueryClient();
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
   const { activeAddress } = useActiveAccount();
@@ -92,6 +95,12 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
+  const flushAuthedQueriesCache = useCallback(() => {
+    queryClient.removeQueries({
+      queryKey: [AUTHED_QUERY_TAG],
+    });
+  }, [queryClient]);
+
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -100,10 +109,11 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       console.error('Logout request failed', e);
     } finally {
       tokenManager.clearTokens();
+      flushAuthedQueriesCache();
       setIsAuthenticated(false);
       setIsLoading(false);
     }
-  }, []);
+  }, [flushAuthedQueriesCache]);
 
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
@@ -140,12 +150,15 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       ) {
         const _isAuthenticated = tokenManager.hasTokens();
         setIsAuthenticated(_isAuthenticated);
+        if (!_isAuthenticated) {
+          flushAuthedQueriesCache();
+        }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [flushAuthedQueriesCache]);
 
   return (
     <Web3AuthContext.Provider

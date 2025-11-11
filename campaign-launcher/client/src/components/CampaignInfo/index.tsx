@@ -10,7 +10,7 @@ import JoinCampaign from '@/components/JoinCampaign';
 import ChartModal from '@/components/modals/ChartModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
-import type { CampaignDetails } from '@/types';
+import type { CampaignDetails, CampaignJoinStatus } from '@/types';
 import { getChainIcon, getNetworkName } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -25,14 +25,14 @@ const formatTime = (dateString: string): string => {
 
 type Props = {
   campaign: CampaignDetails;
-  isAlreadyJoined: boolean;
-  isJoinedLoading: boolean;
+  joinStatus?: CampaignJoinStatus;
+  isJoinStatusLoading: boolean;
 };
 
 const CampaignInfo: FC<Props> = ({
   campaign,
-  isAlreadyJoined,
-  isJoinedLoading,
+  joinStatus,
+  isJoinStatusLoading,
 }) => {
   const [openChartModal, setOpenChartModal] = useState(false);
 
@@ -63,8 +63,8 @@ const CampaignInfo: FC<Props> = ({
         {isMobile && (
           <JoinCampaign
             campaign={campaign}
-            isAlreadyJoined={isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
+            joinStatus={joinStatus}
+            isJoinStatusLoading={isJoinStatusLoading}
           />
         )}
       </Box>

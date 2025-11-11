@@ -73,6 +73,7 @@ import {
   CampaignProgress,
   CampaignStatus,
   CampaignType,
+  CampaignJoinStatus,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
@@ -999,17 +1000,17 @@ export class CampaignsService implements OnApplicationBootstrap {
     this.logger.debug('Campaign statuses sync job finished');
   }
 
-  async checkUserJoined(
+  async checkJoinStatus(
     userId: string,
     chainId: number,
     campaignAddress: string,
-  ): Promise<boolean> {
+  ): Promise<CampaignJoinStatus> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
     );
     if (!campaign) {
-      return false;
+      return CampaignJoinStatus.USER_CAN_JOIN;
     }
 
     const isUserJoined =
@@ -1017,7 +1018,16 @@ export class CampaignsService implements OnApplicationBootstrap {
         userId,
         campaign.id,
       );
-    return isUserJoined;
+    if (isUserJoined) {
+      return CampaignJoinStatus.USER_ALREADY_JOINED;
+    }
+
+    const isCampaignTargetMet = this.checkCampaignTargetMet(campaign);
+    if (isCampaignTargetMet) {
+      return CampaignJoinStatus.JOIN_IS_LIMITED;
+    }
+
+    return CampaignJoinStatus.USER_CAN_JOIN;
   }
 
   async getUserProgress(

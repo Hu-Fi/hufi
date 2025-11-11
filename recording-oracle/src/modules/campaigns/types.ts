@@ -110,3 +110,9 @@ export type CampaignProgress<M> = {
   participants_outcomes: ParticipantOutcome[];
   meta: M;
 };
+
+export enum CampaignJoinStatus {
+  USER_ALREADY_JOINED = 'already_joined',
+  USER_CAN_JOIN = 'can_join',
+  JOIN_IS_LIMITED = 'join_limited',
+}

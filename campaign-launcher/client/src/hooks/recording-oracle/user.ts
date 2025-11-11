@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { recordingApi } from '@/api';
-import { QUERY_KEYS } from '@/constants/queryKeys';
+import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import type { EvmAddress } from '@/types';
 
@@ -9,7 +9,7 @@ export const useGetUserProgress = (address: EvmAddress) => {
   const { appChainId } = useNetwork();
 
   return useQuery({
-    queryKey: [QUERY_KEYS.USER_PROGRESS, appChainId, address],
+    queryKey: [AUTHED_QUERY_TAG, QUERY_KEYS.USER_PROGRESS, appChainId, address],
     queryFn: () => recordingApi.getUserProgress(appChainId, address),
     enabled: !!appChainId && !!address,
   });

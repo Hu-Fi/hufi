@@ -11,19 +11,23 @@ import {
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import { CampaignStatus, type CampaignDetails } from '@/types';
+import {
+  CampaignJoinStatus,
+  CampaignStatus,
+  type CampaignDetails,
+} from '@/types';
 import { HttpError } from '@/utils/HttpClient';
 
 type Props = {
   campaign: CampaignDetails;
-  isAlreadyJoined: boolean;
-  isJoinedLoading: boolean;
+  joinStatus?: CampaignJoinStatus;
+  isJoinStatusLoading: boolean;
 };
 
 const JoinCampaign: FC<Props> = ({
   campaign,
-  isAlreadyJoined,
-  isJoinedLoading,
+  joinStatus,
+  isJoinStatusLoading,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -39,15 +43,31 @@ const JoinCampaign: FC<Props> = ({
     campaign.status === CampaignStatus.TO_CANCEL ||
     campaign.end_date < new Date().toISOString();
 
-  const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoining;
+  const isLoading =
+    isEnrolledExchangesLoading || isJoinStatusLoading || isJoining;
+
+  const isAlreadyJoined = joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED;
+  const isJoinLimited = joinStatus === CampaignJoinStatus.JOIN_IS_LIMITED;
+
   const isButtonDisabled =
-    !isAuthenticated || isLoading || isAlreadyJoined || isCampaignFinished;
+    !isAuthenticated ||
+    isLoading ||
+    !joinStatus ||
+    isAlreadyJoined ||
+    isJoinLimited ||
+    isCampaignFinished;
 
   const getButtonText = () => {
     if (isJoining) return null;
+
     if (isAlreadyJoined) {
       return isMobile ? 'Joined' : 'Registered to Campaign';
     }
+
+    if (isJoinLimited) {
+      return isMobile ? 'Join' : 'Registration Closed';
+    }
+
     return isMobile ? 'Join' : 'Join Campaign';
   };
 
