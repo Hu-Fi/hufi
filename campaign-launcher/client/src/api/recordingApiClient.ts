@@ -197,7 +197,7 @@ export class RecordingApiClient extends HttpClient {
   async getUserProgress(
     chain_id: ChainId,
     campaign_address: EvmAddress
-  ): Promise<UserProgress | undefined> {
+  ): Promise<UserProgress | null> {
     const response = await this.get<UserProgress | undefined>(
       `/campaigns/${chain_id}-${campaign_address}/my-progress`,
       {
@@ -208,6 +208,6 @@ export class RecordingApiClient extends HttpClient {
       }
     );
 
-    return response;
+    return response || null;
   }
 }
