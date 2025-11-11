@@ -10,6 +10,7 @@ import {
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
@@ -17,7 +18,6 @@ import { LRUCache } from 'lru-cache';
 import { ContentType } from '@/common/enums';
 import dayjs from '@/common/utils/dayjs';
 import * as debugUtils from '@/common/utils/debug';
-import * as decimalUtils from '@/common/utils/decimal';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -811,41 +811,50 @@ export class CampaignsService implements OnApplicationBootstrap {
     return JSON.parse(intermediateResults.toString());
   }
 
-  calculateDailyReward(campaign: CampaignEntity): number {
+  calculateDailyReward(campaign: CampaignEntity): string {
     const campaignDurationDays = Math.ceil(
       dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
     );
 
-    const fundAmount = Number(campaign.fundAmount);
+    const fundAmount = new Decimal(campaign.fundAmount);
 
-    const dailyReward = decimalUtils.div(fundAmount, campaignDurationDays);
+    const dailyReward = fundAmount.div(campaignDurationDays);
 
-    const truncatedDailyReward = decimalUtils.truncate(
-      dailyReward,
+    const truncatedDailyReward = dailyReward.toFixed(
       campaign.fundTokenDecimals,
+      Decimal.ROUND_DOWN,
     );
+
+    if (Decimal(truncatedDailyReward).isZero()) {
+      return '0';
+    }
 
     return truncatedDailyReward;
   }
 
   calculateRewardPool(input: {
-    baseRewardPool: number;
+    baseRewardPool: string;
     maxRewardPoolRatio: number;
     progressValueTarget: number;
     progressValue: number;
     fundTokenDecimals: number;
-  }): number {
+  }): string {
     const rewardRatio = Math.min(
       input.progressValue / input.progressValueTarget,
       input.maxRewardPoolRatio,
     );
 
-    const rewardPool = rewardRatio * input.baseRewardPool;
+    const baseRewardPool = new Decimal(input.baseRewardPool);
+    const rewardPool = baseRewardPool.mul(rewardRatio);
 
-    const truncatedRewardPool = decimalUtils.truncate(
-      rewardPool,
+    const truncatedRewardPool = rewardPool.toFixed(
       input.fundTokenDecimals,
+      Decimal.ROUND_DOWN,
     );
+
+    if (Decimal(truncatedRewardPool).isZero()) {
+      return '0';
+    }
 
     return truncatedRewardPool;
   }

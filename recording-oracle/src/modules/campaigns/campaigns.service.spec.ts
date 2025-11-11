@@ -23,11 +23,11 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import dayjs from '@/common/utils/dayjs';
-import * as decimalUtils from '@/common/utils/decimal';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -2008,7 +2008,7 @@ describe('CampaignsService', () => {
             {
               from: campaignProgress.from,
               to: campaignProgress.to,
-              reserved_funds: 0,
+              reserved_funds: '0',
               participants_outcomes_batches: [],
               ...campaignProgress.meta,
             },
@@ -2039,7 +2039,7 @@ describe('CampaignsService', () => {
           {
             from: newCampaignProgress.from,
             to: newCampaignProgress.to,
-            reserved_funds: 0,
+            reserved_funds: '0',
             participants_outcomes_batches: [],
             ...newCampaignProgress.meta,
           },
@@ -2472,7 +2472,7 @@ describe('CampaignsService', () => {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: 0,
+        reserved_funds: '0',
         participants_outcomes_batches: [],
       });
     });
@@ -2517,7 +2517,7 @@ describe('CampaignsService', () => {
       expect(logger.info).toHaveBeenCalledWith('Campaign progress recorded', {
         from: campaignProgress.from,
         to: campaignProgress.to,
-        reserved_funds: 0,
+        reserved_funds: '0',
         resultsUrl: storedResultsMeta.url,
         ...campaignProgress.meta,
       });
@@ -3486,10 +3486,9 @@ describe('CampaignsService', () => {
 
       const dailyReward = campaignsService.calculateDailyReward(campaign);
 
-      const expectedDailyReward = decimalUtils.truncate(
-        decimalUtils.div(Number(campaign.fundAmount), duration),
-        campaign.fundTokenDecimals,
-      );
+      const expectedDailyReward = new Decimal(campaign.fundAmount)
+        .div(duration)
+        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
@@ -3508,10 +3507,26 @@ describe('CampaignsService', () => {
 
       const dailyReward = campaignsService.calculateDailyReward(campaign);
 
-      const expectedDailyReward = decimalUtils.truncate(
-        decimalUtils.div(Number(campaign.fundAmount), duration),
-        campaign.fundTokenDecimals,
-      );
+      const expectedDailyReward = new Decimal(campaign.fundAmount)
+        .div(duration)
+        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+      expect(dailyReward).toBe(expectedDailyReward);
+    });
+
+    it('should correctly truncate reward value', () => {
+      const duration = 6;
+      const campaign = generateCampaignEntity();
+      campaign.fundAmount = '10';
+      campaign.fundTokenDecimals = 18;
+      campaign.endDate = dayjs(campaign.startDate)
+        .add(duration, 'days')
+        .toDate();
+
+      const dailyReward = campaignsService.calculateDailyReward(campaign);
+
+      const expectedDailyReward = new Decimal(campaign.fundAmount)
+        .div(duration)
+        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
       expect(dailyReward).toBe(expectedDailyReward);
     });
   });
@@ -3519,12 +3534,12 @@ describe('CampaignsService', () => {
   describe('calculateRewardPool', () => {
     const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
 
-    let baseRewardPool: number;
+    let baseRewardPool: string;
     let progressValueTarget: number;
 
     beforeEach(() => {
-      baseRewardPool = faker.number.int({ min: 10, max: 100 });
-      progressValueTarget = faker.number.int({ min: 1, max: 1000 });
+      baseRewardPool = faker.number.float({ min: 10, max: 100 }).toString();
+      progressValueTarget = faker.number.float({ min: 1, max: 1000 });
     });
 
     it('should return 0 reward pool when generated volume is 0', () => {
@@ -3536,7 +3551,7 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      expect(rewardPool).toBe(0);
+      expect(rewardPool).toBe('0');
     });
 
     it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
@@ -3555,10 +3570,9 @@ describe('CampaignsService', () => {
       });
 
       const expectedRewardRatio = progressValue / progressValueTarget;
-      const expectedRewardPool = decimalUtils.truncate(
-        expectedRewardRatio * baseRewardPool,
-        TEST_TOKEN_DECIMALS,
-      );
+      const expectedRewardPool = new Decimal(baseRewardPool)
+        .mul(expectedRewardRatio)
+        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
@@ -3576,7 +3590,11 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      expect(rewardPool).toBe(baseRewardPool);
+      const expectedRewardPool = new Decimal(baseRewardPool).toFixed(
+        TEST_TOKEN_DECIMALS,
+        Decimal.ROUND_DOWN,
+      );
+      expect(rewardPool).toBe(expectedRewardPool);
     });
 
     it('should respect maxRewardPoolRatio', () => {
@@ -3595,10 +3613,9 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      const expectedRewardPool = decimalUtils.truncate(
-        baseRewardPool * maxRewardPoolRatio,
-        TEST_TOKEN_DECIMALS,
-      );
+      const expectedRewardPool = new Decimal(baseRewardPool)
+        .mul(maxRewardPoolRatio)
+        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
       expect(rewardPool).toBe(expectedRewardPool);
     });
   });
