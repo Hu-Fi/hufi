@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/support",
-      "destination": "https://YOUR-DOCS-PROJECT.vercel.app"
+      "destination": "https://hufi-docs.vercel.app/"
     },
     {
       "source": "/support/(.*)",
-      "destination": "https://YOUR-DOCS-PROJECT.vercel.app/$1"
+      "destination": "https://hufi-docs.vercel.app/$1"
     },
     {
       "source": "/(.*)",
