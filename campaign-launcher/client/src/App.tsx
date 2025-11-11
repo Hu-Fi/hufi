@@ -1,6 +1,5 @@
 import type { FC } from 'react';
-import { useEffect } from 'react';
-
+import { useLayoutEffect } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider/LocalizationProvider';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -21,10 +20,10 @@ import ThemeProvider from '@/providers/ThemeProvider';
 import WagmiProvider from '@/providers/WagmiProvider';
 import { Web3AuthProvider } from '@/providers/Web3AuthProvider';
 
-// Forces a full page load to the static /support page (so MkDocs serves it)
 const SupportRedirect: FC = () => {
-  useEffect(() => {
-    window.location.href = '/support';
+  useLayoutEffect(() => {
+    // Important: trailing slash to avoid an extra redirect and CSS flicker
+    window.location.replace('/support/');
   }, []);
   return null;
 };
@@ -45,30 +44,40 @@ const App: FC = () => {
                         adapterLocale="en"
                       >
                         <BrowserRouter>
-                          <Layout>
-                            <Routes>
-                              <Route
-                                path={ROUTES.DASHBOARD}
-                                element={<Dashboard />}
-                              />
-                              <Route
-                                path={ROUTES.CAMPAIGN_DETAILS}
-                                element={<Campaign />}
-                              />
-                              <Route
-                                path={ROUTES.MANAGE_API_KEYS}
-                                element={
-                                  <ProtectedRoute>
-                                    <ManageApiKeysPage />
-                                  </ProtectedRoute>
-                                }
-                              />
-                              <Route
-                                path={ROUTES.SUPPORT}
-                                element={<SupportRedirect />}
-                              />
-                            </Routes>
-                          </Layout>
+                          <Routes>
+                            {/* Handle /support without mounting your app layout */}
+                            <Route
+                              path="/support/*"
+                              element={<SupportRedirect />}
+                            />
+
+                            {/* Your regular app under Layout */}
+                            <Route
+                              path="*"
+                              element={
+                                <Layout>
+                                  <Routes>
+                                    <Route
+                                      path={ROUTES.DASHBOARD}
+                                      element={<Dashboard />}
+                                    />
+                                    <Route
+                                      path={ROUTES.CAMPAIGN_DETAILS}
+                                      element={<Campaign />}
+                                    />
+                                    <Route
+                                      path={ROUTES.MANAGE_API_KEYS}
+                                      element={
+                                        <ProtectedRoute>
+                                          <ManageApiKeysPage />
+                                        </ProtectedRoute>
+                                      }
+                                    />
+                                  </Routes>
+                                </Layout>
+                              }
+                            />
+                          </Routes>
                         </BrowserRouter>
                       </LocalizationProvider>
                     </StakeProvider>
