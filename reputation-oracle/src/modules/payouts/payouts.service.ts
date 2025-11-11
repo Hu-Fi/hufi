@@ -341,7 +341,7 @@ export class PayoutsService {
     intermediateResult: IntermediateResult,
     tokenDecimals: number,
   ): CalculatedRewardsBatch[] {
-    const rewardPool = intermediateResult.reserved_funds;
+    const rewardPool = new Decimal(intermediateResult.reserved_funds);
 
     let totalScore = new Decimal(0);
     for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {

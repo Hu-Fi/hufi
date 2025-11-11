@@ -36,7 +36,7 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: Date;
   to: Date;
-  reserved_funds: number;
+  reserved_funds: string | number;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
 };
 
