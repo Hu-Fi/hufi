@@ -2774,6 +2774,12 @@ describe('CampaignsService', () => {
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
       campaign = generateCampaignEntity();
+
+      spyOnCheckCampaignTargetMet = jest.spyOn(
+        campaignsService,
+        'checkCampaignTargetMet',
+      );
+      spyOnCheckCampaignTargetMet.mockImplementation();
     });
 
     afterAll(() => {
