@@ -1,5 +1,25 @@
 {
-    "rewrites": [
-      { "source": "/(.*)", "destination": "/" }
-    ]
-  }
+  "rewrites": [
+    {
+      "source": "/support",
+      "destination": "https://YOUR-DOCS-PROJECT.vercel.app"
+    },
+    {
+      "source": "/support/(.*)",
+      "destination": "https://YOUR-DOCS-PROJECT.vercel.app/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+    }
+  ],
+  "buildCommand": "yarn build",
+  "outputDirectory": "dist",
+  "framework": "vite"
+}
