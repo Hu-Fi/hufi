@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+import { useEffect } from 'react';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider/LocalizationProvider';
@@ -19,6 +20,14 @@ import StakeProvider from '@/providers/StakeProvider';
 import ThemeProvider from '@/providers/ThemeProvider';
 import WagmiProvider from '@/providers/WagmiProvider';
 import { Web3AuthProvider } from '@/providers/Web3AuthProvider';
+
+// Forces a full page load to the static /support page (so MkDocs serves it)
+const SupportRedirect: FC = () => {
+  useEffect(() => {
+    window.location.href = '/support';
+  }, []);
+  return null;
+};
 
 const App: FC = () => {
   return (
@@ -53,6 +62,10 @@ const App: FC = () => {
                                     <ManageApiKeysPage />
                                   </ProtectedRoute>
                                 }
+                              />
+                              <Route
+                                path={ROUTES.SUPPORT}
+                                element={<SupportRedirect />}
                               />
                             </Routes>
                           </Layout>
