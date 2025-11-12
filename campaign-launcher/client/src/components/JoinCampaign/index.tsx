@@ -40,23 +40,14 @@ const JoinCampaign: FC<Props> = ({
 
   const isMobile = useIsMobile();
 
-  const isCampaignFinished =
-    campaign.status === CampaignStatus.TO_CANCEL ||
-    campaign.end_date < new Date().toISOString();
-
   const isLoading =
     isEnrolledExchangesLoading || isJoinStatusLoading || isJoining;
 
   const isAlreadyJoined = joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED;
-  const isJoinLimited = joinStatus === CampaignJoinStatus.JOIN_IS_LIMITED;
+  const isJoinClosed = joinStatus === CampaignJoinStatus.JOIN_IS_CLOSED;
 
   const isButtonDisabled =
-    !isAuthenticated ||
-    isLoading ||
-    !joinStatus ||
-    isAlreadyJoined ||
-    isJoinLimited ||
-    isCampaignFinished;
+    !isAuthenticated || isLoading || isAlreadyJoined || isJoinClosed;
 
   const getButtonText = () => {
     if (isJoining) return null;
@@ -65,7 +56,7 @@ const JoinCampaign: FC<Props> = ({
       return isMobile ? 'Joined' : 'Registered to Campaign';
     }
 
-    if (isJoinLimited) {
+    if (isJoinClosed) {
       return isMobile ? 'Join' : 'Registration Closed';
     }
 
@@ -99,6 +90,9 @@ const JoinCampaign: FC<Props> = ({
     }
   };
 
+  const isCampaignFinished =
+    campaign.end_date < new Date().toISOString() ||
+    campaign.status !== CampaignStatus.ACTIVE;
   if (!campaign || isCampaignFinished) {
     return null;
   }
@@ -125,8 +119,7 @@ const JoinCampaign: FC<Props> = ({
         onClick={handleButtonClick}
         endIcon={
           isMobile &&
-          ((isAlreadyJoined && <CheckIcon />) ||
-            (isJoinLimited && <LockIcon />))
+          ((isAlreadyJoined && <CheckIcon />) || (isJoinClosed && <LockIcon />))
         }
       >
         {isJoining && (

@@ -209,5 +209,6 @@ export type CampaignFormValues =
 export enum CampaignJoinStatus {
   USER_ALREADY_JOINED = 'already_joined',
   USER_CAN_JOIN = 'can_join',
-  JOIN_IS_LIMITED = 'join_limited',
+  JOIN_IS_CLOSED = 'join_closed',
+  NOT_AVAILABLE = 'not_available',
 }

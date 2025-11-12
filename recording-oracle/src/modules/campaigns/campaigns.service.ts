@@ -1010,7 +1010,7 @@ export class CampaignsService implements OnApplicationBootstrap {
       campaignAddress,
     );
     if (!campaign) {
-      return CampaignJoinStatus.USER_CAN_JOIN;
+      return CampaignJoinStatus.NOT_AVAILABLE;
     }
 
     const isUserJoined =
@@ -1022,9 +1022,16 @@ export class CampaignsService implements OnApplicationBootstrap {
       return CampaignJoinStatus.USER_ALREADY_JOINED;
     }
 
+    if (
+      campaign.endDate.valueOf() <= Date.now() ||
+      campaign.status !== CampaignStatus.ACTIVE
+    ) {
+      return CampaignJoinStatus.JOIN_IS_CLOSED;
+    }
+
     const isCampaignTargetMet = this.checkCampaignTargetMet(campaign);
     if (isCampaignTargetMet) {
-      return CampaignJoinStatus.JOIN_IS_LIMITED;
+      return CampaignJoinStatus.JOIN_IS_CLOSED;
     }
 
     return CampaignJoinStatus.USER_CAN_JOIN;
