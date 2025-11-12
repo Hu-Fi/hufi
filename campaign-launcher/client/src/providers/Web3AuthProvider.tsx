@@ -51,7 +51,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       if (!_isAuthenticated) {
         tokenManager.clearTokens();
         queryClient.removeQueries({
-          queryKey: [AUTHED_QUERY_TAG],
+          predicate: (query) => query.queryKey.includes(AUTHED_QUERY_TAG),
         });
       }
     },
