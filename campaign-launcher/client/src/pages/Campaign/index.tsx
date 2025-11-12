@@ -10,10 +10,10 @@ import JoinCampaign from '@/components/JoinCampaign';
 import JoinedCampaigns from '@/components/JoinedCampaigns';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
-import { useCheckIsJoinedCampaign } from '@/hooks/recording-oracle';
+import { useCheckCampaignJoinStatus } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
-import type { EvmAddress } from '@/types';
+import { CampaignJoinStatus, type EvmAddress } from '@/types';
 import { isCampaignDetails } from '@/utils';
 
 const Campaign: FC = () => {
@@ -21,8 +21,8 @@ const Campaign: FC = () => {
   const [searchParams] = useSearchParams();
   const { data: campaign, isLoading: isCampaignLoading } =
     useCampaignDetails(address);
-  const { data: isAlreadyJoined, isLoading: isJoinedLoading } =
-    useCheckIsJoinedCampaign(address);
+  const { data: joinStatus, isLoading: isJoinStatusLoading } =
+    useCheckCampaignJoinStatus(address);
 
   const isMobile = useIsMobile();
 
@@ -55,8 +55,8 @@ const Campaign: FC = () => {
         {!isMobile && campaignData && (
           <JoinCampaign
             campaign={campaignData}
-            isAlreadyJoined={!!isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
+            joinStatus={joinStatus}
+            isJoinStatusLoading={isJoinStatusLoading}
           />
         )}
       </PageTitle>
@@ -69,13 +69,16 @@ const Campaign: FC = () => {
         <Box display="flex" flexWrap="wrap" gap={2}>
           <CampaignInfo
             campaign={campaignData}
-            isAlreadyJoined={!!isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
+            joinStatus={joinStatus}
+            isJoinStatusLoading={isJoinStatusLoading}
           />
         </Box>
       )}
       {showCampaignBlocks && (
-        <CampaignStats campaign={campaignData} isJoined={!!isAlreadyJoined} />
+        <CampaignStats
+          campaign={campaignData}
+          isJoined={joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED}
+        />
       )}
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns

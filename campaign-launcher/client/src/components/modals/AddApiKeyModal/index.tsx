@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import { type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -21,6 +21,7 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import * as errorUtils from '@/utils/error';
 
 import BaseModal from '../BaseModal';
 
@@ -53,7 +54,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
   const {
     mutate: postExchangeApiKey,
     reset: resetMutation,
-    error,
+    error: postExchangeApiKeyError,
     isPending,
     isIdle,
     isSuccess,
@@ -197,7 +198,14 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               </Typography>
             </ModalSuccess>
           )}
-          {isError && <ModalError message={error?.message} />}
+          {isError && (
+            <ModalError
+              message={
+                errorUtils.getMessageFromError(postExchangeApiKeyError) ||
+                'Failed to add API key.'
+              }
+            />
+          )}
           {isIdle && (
             <Button
               size="large"

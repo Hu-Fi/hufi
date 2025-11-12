@@ -49,7 +49,7 @@ const getLabels = (campaignType: CampaignType) => {
 
 const getMyMeta = (
   campaignType: CampaignType,
-  data: UserProgress | undefined
+  data: UserProgress | null | undefined
 ) => {
   if (!data) return null;
 
@@ -76,7 +76,7 @@ const getMyMeta = (
 
 const getTotalMeta = (
   campaignType: CampaignType,
-  data: UserProgress | undefined
+  data: UserProgress | null | undefined
 ) => {
   if (!data) return null;
 

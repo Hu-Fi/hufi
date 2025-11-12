@@ -2,7 +2,7 @@ import type { ChainId } from '@human-protocol/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { recordingApi } from '@/api';
-import { QUERY_KEYS } from '@/constants/queryKeys';
+import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
@@ -20,6 +20,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
 
   return useQuery({
     queryKey: [
+      AUTHED_QUERY_TAG,
       QUERY_KEYS.JOINED_CAMPAIGNS,
       isAuthenticated,
       !!signer,
@@ -55,25 +56,26 @@ export const useJoinCampaign = () => {
         queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS],
       });
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN],
+        queryKey: [QUERY_KEYS.CHECK_CAMPAIGN_JOIN_STATUS],
       });
     },
   });
 };
 
-export const useCheckIsJoinedCampaign = (address: EvmAddress) => {
+export const useCheckCampaignJoinStatus = (address: EvmAddress) => {
   const { appChainId } = useNetwork();
   const { isAuthenticated } = useWeb3Auth();
 
   return useQuery({
     queryKey: [
-      QUERY_KEYS.CHECK_IS_JOINED_CAMPAIGN,
+      AUTHED_QUERY_TAG,
+      QUERY_KEYS.CHECK_CAMPAIGN_JOIN_STATUS,
       appChainId,
       address,
       isAuthenticated,
     ],
-    queryFn: () => recordingApi.checkIsJoinedCampaign(appChainId, address),
-    select: (data) => data.is_joined,
+    queryFn: () => recordingApi.checkCampaignJoinStatus(appChainId, address),
+    select: (data) => data.status,
     enabled: isAuthenticated && !!appChainId && !!address,
   });
 };

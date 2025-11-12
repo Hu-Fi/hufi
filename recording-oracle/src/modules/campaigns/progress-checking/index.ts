@@ -15,3 +15,4 @@ export type CampaignProgressMeta =
   | HoldingMeta
   | MarketMakingMeta
   | ThresholdMeta;
+export type { HoldingMeta, MarketMakingMeta, ThresholdMeta };

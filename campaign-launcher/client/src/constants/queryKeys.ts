@@ -1,3 +1,5 @@
+export const AUTHED_QUERY_TAG = 'authed_query';
+
 export const QUERY_KEYS = {
   EXCHANGES: 'exchanges',
   EXCHANGES_WITH_API_KEYS: 'exchanges-with-api-keys',
@@ -10,6 +12,6 @@ export const QUERY_KEYS = {
   TOTAL_VOLUME: 'total-volume',
   TRADING_PAIRS: 'trading-pairs',
   EXCHANGE_CURRENCIES: 'exchange-currencies',
-  CHECK_IS_JOINED_CAMPAIGN: 'check-is-joined-campaign',
   USER_PROGRESS: 'user-progress',
+  CHECK_CAMPAIGN_JOIN_STATUS: 'check-campaign-join-status',
 };
