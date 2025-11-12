@@ -47,7 +47,11 @@ const JoinCampaign: FC<Props> = ({
   const isJoinClosed = joinStatus === CampaignJoinStatus.JOIN_IS_CLOSED;
 
   const isButtonDisabled =
-    !isAuthenticated || isLoading || isAlreadyJoined || isJoinClosed;
+    !isAuthenticated ||
+    isLoading ||
+    !joinStatus ||
+    isAlreadyJoined ||
+    isJoinClosed;
 
   const getButtonText = () => {
     if (isJoining) return null;
