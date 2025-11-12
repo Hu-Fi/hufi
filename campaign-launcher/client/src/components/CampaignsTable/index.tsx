@@ -303,6 +303,7 @@ const CampaignsTable: FC<Props> = ({
             <Box
               display="flex"
               alignItems="center"
+              zIndex={1}
               sx={{ '& > svg': { fontSize: isMobile ? '16px' : '24px' } }}
             >
               {getChainIcon(params.row.chain_id)}

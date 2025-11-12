@@ -41,7 +41,7 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
           border: '1px solid white',
         },
         text: {
-          fontWeight: 700,
+          fontWeight: 500,
           fontSize: 20,
         },
       };

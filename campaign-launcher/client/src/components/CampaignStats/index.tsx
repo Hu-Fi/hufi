@@ -1,6 +1,6 @@
 import { type FC, type PropsWithChildren, Children, useState } from 'react';
 
-import { Box, Button, styled, Typography } from '@mui/material';
+import { Box, Button, Skeleton, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
 import CampaignResultsWidget, {
@@ -27,6 +27,7 @@ import ChartModal from '../modals/ChartModal';
 type Props = {
   campaign: CampaignDetails | null | undefined;
   isJoined: boolean;
+  isCampaignLoading: boolean;
 };
 
 const StatsCard = styled(Box)(({ theme }) => ({
@@ -145,13 +146,58 @@ const renderProgressWidget = (campaign: CampaignDetails) => (
   </Grid>
 );
 
-const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
+const renderSkeletonBlocks = () => {
+  const firstRowNames = [
+    'Total Funded Amount',
+    'Amount Paid',
+    'Oracle fees',
+    'Daily Target',
+  ];
+  const secondRowNames = [
+    'Reserved funds',
+    'Campaign results',
+    'Exchange',
+    'Symbol',
+  ];
+  return (
+    <>
+      <Grid container spacing={{ xs: 1, md: 2 }} width="100%">
+        {firstRowNames.map((name) => (
+          <Grid size={{ xs: 6, md: 3 }} key={name}>
+            <StatsCard>
+              <Title variant="subtitle2">{name}</Title>
+              <Skeleton variant="text" width="100%" height={32} />
+            </StatsCard>
+          </Grid>
+        ))}
+      </Grid>
+      <Grid container spacing={{ xs: 1, md: 2 }} width="100%" mt={-2}>
+        {secondRowNames.map((name) => (
+          <Grid size={{ xs: 6, md: 3 }} key={name}>
+            <StatsCard>
+              <Title variant="subtitle2">{name}</Title>
+              <Skeleton variant="text" width="100%" height={32} />
+            </StatsCard>
+          </Grid>
+        ))}
+      </Grid>
+    </>
+  );
+};
+
+const CampaignStats: FC<Props> = ({
+  campaign,
+  isJoined,
+  isCampaignLoading,
+}) => {
   const [openChartModal, setOpenChartModal] = useState(false);
 
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
+
+  if (isCampaignLoading) return renderSkeletonBlocks();
 
   if (!campaign) return null;
 
@@ -316,7 +362,13 @@ const CampaignStats: FC<Props> = ({ campaign, isJoined }) => {
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
-          <StatsCard sx={{ '&:last-child p': { fontWeight: 700 } }}>
+          <StatsCard
+            sx={{
+              '&:last-child p': {
+                fontWeight: { xs: 700, md: 500 },
+              },
+            }}
+          >
             <Title variant="subtitle2">Symbol</Title>
             <CampaignSymbol
               symbol={campaign.symbol}

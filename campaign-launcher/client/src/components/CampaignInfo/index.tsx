@@ -1,6 +1,6 @@
 import { useState, type FC } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Skeleton, Stack, Typography } from '@mui/material';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
@@ -24,19 +24,35 @@ const formatTime = (dateString: string): string => {
 };
 
 type Props = {
-  campaign: CampaignDetails;
+  campaign: CampaignDetails | undefined;
+  isCampaignLoading: boolean;
   joinStatus?: CampaignJoinStatus;
   isJoinStatusLoading: boolean;
 };
 
 const CampaignInfo: FC<Props> = ({
   campaign,
+  isCampaignLoading,
   joinStatus,
   isJoinStatusLoading,
 }) => {
   const [openChartModal, setOpenChartModal] = useState(false);
 
   const isMobile = useIsMobile();
+
+  if (isCampaignLoading) {
+    if (!isMobile) return null;
+
+    return (
+      <Stack gap={3} width="100%">
+        <Skeleton variant="text" width="100%" height={36} />
+        <Skeleton variant="text" width="100%" height={24} />
+        <Skeleton variant="text" width="100%" height={24} />
+      </Stack>
+    );
+  }
+
+  if (!campaign) return null;
 
   return (
     <Box

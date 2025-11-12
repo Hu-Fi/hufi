@@ -1,6 +1,6 @@
 import { type FC, useMemo } from 'react';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Skeleton, Typography } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import CampaignInfo from '@/components/CampaignInfo';
@@ -47,7 +47,6 @@ const Campaign: FC = () => {
   }, [searchParams]);
 
   const campaignData = campaign || parsedData;
-  const showCampaignBlocks = !isCampaignLoading && !!campaignData;
 
   return (
     <PageWrapper>
@@ -60,26 +59,20 @@ const Campaign: FC = () => {
           />
         )}
       </PageTitle>
-      {isCampaignLoading && (
-        <CircularProgress
-          sx={{ width: '40px', height: '40px', margin: '0 auto' }}
-        />
+      {isCampaignLoading && !isMobile && (
+        <Skeleton variant="rectangular" width="100%" height={40} />
       )}
-      {showCampaignBlocks && (
-        <Box display="flex" flexWrap="wrap" gap={2}>
-          <CampaignInfo
-            campaign={campaignData}
-            joinStatus={joinStatus}
-            isJoinStatusLoading={isJoinStatusLoading}
-          />
-        </Box>
-      )}
-      {showCampaignBlocks && (
-        <CampaignStats
-          campaign={campaignData}
-          isJoined={joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED}
-        />
-      )}
+      <CampaignInfo
+        campaign={campaignData}
+        isCampaignLoading={isCampaignLoading}
+        joinStatus={joinStatus}
+        isJoinStatusLoading={isJoinStatusLoading}
+      />
+      <CampaignStats
+        campaign={campaignData}
+        isCampaignLoading={isCampaignLoading}
+        isJoined={joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED}
+      />
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns
         showOnlyActiveCampaigns={false}
