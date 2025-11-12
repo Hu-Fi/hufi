@@ -10,7 +10,7 @@ export const useGetEnrolledExchanges = () => {
   const { isConnected } = useAccount();
 
   return useQuery({
-    queryKey: [AUTHED_QUERY_TAG, QUERY_KEYS.ENROLLED_EXCHANGES],
+    queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES, AUTHED_QUERY_TAG],
     queryFn: () => recordingApi.getEnrolledExchanges(),
     enabled: isAuthenticated && isConnected,
   });
@@ -21,7 +21,7 @@ export const useGetExchangesWithApiKeys = () => {
   const { isConnected } = useAccount();
 
   return useQuery({
-    queryKey: [AUTHED_QUERY_TAG, QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
+    queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS, AUTHED_QUERY_TAG],
     queryFn: () => recordingApi.getExchangesWithApiKeys(),
     enabled: isAuthenticated && isConnected,
   });

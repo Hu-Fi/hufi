@@ -20,13 +20,13 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
 
   return useQuery({
     queryKey: [
-      AUTHED_QUERY_TAG,
       QUERY_KEYS.JOINED_CAMPAIGNS,
       isAuthenticated,
       !!signer,
       status,
       limit,
       skip,
+      AUTHED_QUERY_TAG,
     ],
     queryFn: () => recordingApi.getJoinedCampaigns(params),
     select: (data) => ({
@@ -68,11 +68,11 @@ export const useCheckCampaignJoinStatus = (address: EvmAddress) => {
 
   return useQuery({
     queryKey: [
-      AUTHED_QUERY_TAG,
       QUERY_KEYS.CHECK_CAMPAIGN_JOIN_STATUS,
       appChainId,
       address,
       isAuthenticated,
+      AUTHED_QUERY_TAG,
     ],
     queryFn: () => recordingApi.checkCampaignJoinStatus(appChainId, address),
     select: (data) => data.status,

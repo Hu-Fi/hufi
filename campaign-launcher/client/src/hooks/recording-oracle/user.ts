@@ -9,7 +9,7 @@ export const useGetUserProgress = (address: EvmAddress) => {
   const { appChainId } = useNetwork();
 
   return useQuery({
-    queryKey: [AUTHED_QUERY_TAG, QUERY_KEYS.USER_PROGRESS, appChainId, address],
+    queryKey: [QUERY_KEYS.USER_PROGRESS, appChainId, address, AUTHED_QUERY_TAG],
     queryFn: () => recordingApi.getUserProgress(appChainId, address),
     enabled: !!appChainId && !!address,
   });
