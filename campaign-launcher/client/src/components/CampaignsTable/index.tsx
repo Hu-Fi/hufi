@@ -551,6 +551,7 @@ const CampaignsTable: FC<Props> = ({
           },
           '&[data-field="network"]': {
             justifyContent: 'flex-start',
+            zIndex: 1,
           },
           '&[data-field="status"]': {
             justifyContent: 'center',

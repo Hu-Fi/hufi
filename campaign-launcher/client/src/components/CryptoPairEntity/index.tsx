@@ -39,7 +39,7 @@ const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
           />
         </>
       )}
-      <Typography color="primary" {...getSymbolStyles(size).text}>
+      <Typography color="text.primary" {...getSymbolStyles(size).text}>
         {isLarge ? (
           <>
             {baseLabel ?? base}
