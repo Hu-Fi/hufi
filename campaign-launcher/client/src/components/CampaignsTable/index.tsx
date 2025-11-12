@@ -276,6 +276,17 @@ const CampaignsTable: FC<Props> = ({
         const exchangeName = exchangesMap.get(
           params.row.exchange_name
         )?.display_name;
+        if (isMobile) {
+          return (
+            <>
+              <StretchedLink
+                to={`/campaign-details/${params.row.address}`}
+                sx={{ textDecoration: 'none' }}
+              />
+              <Typography>{exchangeName}</Typography>
+            </>
+          );
+        }
         return <Typography>{exchangeName}</Typography>;
       },
     },
@@ -303,7 +314,6 @@ const CampaignsTable: FC<Props> = ({
             <Box
               display="flex"
               alignItems="center"
-              zIndex={1}
               sx={{ '& > svg': { fontSize: isMobile ? '16px' : '24px' } }}
             >
               {getChainIcon(params.row.chain_id)}
@@ -552,6 +562,7 @@ const CampaignsTable: FC<Props> = ({
           },
           '&[data-field="network"]': {
             justifyContent: 'flex-start',
+            zIndex: 1,
           },
           '&[data-field="status"]': {
             justifyContent: 'center',
