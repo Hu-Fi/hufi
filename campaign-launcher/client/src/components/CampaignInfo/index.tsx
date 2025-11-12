@@ -24,7 +24,7 @@ const formatTime = (dateString: string): string => {
 };
 
 type Props = {
-  campaign: CampaignDetails | undefined;
+  campaign: CampaignDetails | null | undefined;
   isCampaignLoading: boolean;
   joinStatus?: CampaignJoinStatus;
   isJoinStatusLoading: boolean;
