@@ -91,7 +91,7 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: string;
   to: string;
-  reserved_funds: number;
+  reserved_funds: string;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
   [meta: string]: unknown;
 };
