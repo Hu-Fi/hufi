@@ -16,7 +16,7 @@ import {
   CampaignStatus,
   type CampaignDetails,
 } from '@/types';
-import { HttpError } from '@/utils/HttpClient';
+import * as errorUtils from '@/utils/error';
 
 type Props = {
   campaign: CampaignDetails;
@@ -91,12 +91,10 @@ const JoinCampaign: FC<Props> = ({
       });
     } catch (error) {
       console.error('Failed to join campaign', error);
-
-      let userFacingError = 'Failed to join campaign. Please try again.';
-      if (error instanceof HttpError && error.responseMessage) {
-        userFacingError = error.responseMessage;
-      }
-      showError(userFacingError);
+      showError(
+        errorUtils.getMessageFromError(error) ||
+          'Failed to join campaign. Please try again.'
+      );
     }
   };
 

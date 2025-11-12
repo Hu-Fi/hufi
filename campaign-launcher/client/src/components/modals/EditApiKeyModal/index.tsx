@@ -1,4 +1,4 @@
-import { type FC, useEffect, useMemo } from 'react';
+import { type FC, useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -20,7 +20,7 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { HttpError } from '@/utils/HttpClient';
+import * as errorUtils from '@/utils/error';
 
 import BaseModal from '../BaseModal';
 
@@ -100,16 +100,6 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       secret: values.secret,
     });
   };
-
-  const userFacingError = useMemo(() => {
-    if (
-      postExchangeApiKeyError instanceof HttpError &&
-      postExchangeApiKeyError.responseMessage
-    ) {
-      return postExchangeApiKeyError.responseMessage;
-    }
-    return 'Failed to edit API key.';
-  }, [postExchangeApiKeyError]);
 
   return (
     <BaseModal
@@ -213,7 +203,14 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
               </Typography>
             </ModalSuccess>
           )}
-          {isError && <ModalError message={userFacingError} />}
+          {isError && (
+            <ModalError
+              message={
+                errorUtils.getMessageFromError(postExchangeApiKeyError) ||
+                'Failed to edit API key.'
+              }
+            />
+          )}
           <Box
             display="flex"
             gap={{ xs: 2, md: 1 }}
