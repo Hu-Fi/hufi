@@ -108,12 +108,6 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [setAuthenticationState]);
 
-  const flushAuthedQueriesCache = useCallback(() => {
-    queryClient.removeQueries({
-      queryKey: [AUTHED_QUERY_TAG],
-    });
-  }, [queryClient]);
-
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {

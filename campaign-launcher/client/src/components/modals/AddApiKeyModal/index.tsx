@@ -92,16 +92,6 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
     onClose();
   };
 
-  const userFacingError = useMemo(() => {
-    if (
-      postExchangeApiKeyError instanceof HttpError &&
-      postExchangeApiKeyError.responseMessage
-    ) {
-      return postExchangeApiKeyError.responseMessage;
-    }
-    return 'Failed to add API key.';
-  }, [postExchangeApiKeyError]);
-
   return (
     <BaseModal
       open={open}
