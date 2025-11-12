@@ -147,35 +147,24 @@ const renderProgressWidget = (campaign: CampaignDetails) => (
 );
 
 const renderSkeletonBlocks = () => {
-  const firstRowNames = [
-    'Total Funded Amount',
-    'Amount Paid',
-    'Oracle fees',
-    'Daily Target',
-  ];
-  const secondRowNames = [
-    'Reserved funds',
-    'Campaign results',
-    'Exchange',
-    'Symbol',
-  ];
+  const row = Array(4).fill(0);
   return (
     <>
       <Grid container spacing={{ xs: 1, md: 2 }} width="100%">
-        {firstRowNames.map((name) => (
-          <Grid size={{ xs: 6, md: 3 }} key={name}>
+        {row.map((_, index) => (
+          <Grid size={{ xs: 6, md: 3 }} key={`first-${index}`}>
             <StatsCard>
-              <Title variant="subtitle2">{name}</Title>
+              <Skeleton variant="text" width="100%" height={22} />
               <Skeleton variant="text" width="100%" height={32} />
             </StatsCard>
           </Grid>
         ))}
       </Grid>
       <Grid container spacing={{ xs: 1, md: 2 }} width="100%" mt={-2}>
-        {secondRowNames.map((name) => (
-          <Grid size={{ xs: 6, md: 3 }} key={name}>
+        {row.map((_, index) => (
+          <Grid size={{ xs: 6, md: 3 }} key={`second-${index}`}>
             <StatsCard>
-              <Title variant="subtitle2">{name}</Title>
+              <Skeleton variant="text" width="100%" height={22} />
               <Skeleton variant="text" width="100%" height={32} />
             </StatsCard>
           </Grid>
