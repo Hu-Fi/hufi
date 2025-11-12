@@ -1,13 +1,11 @@
 import type { FC } from 'react';
 
 import GitHubIcon from '@mui/icons-material/GitHub';
-import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TelegramIcon from '@mui/icons-material/Telegram';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import { Box, IconButton, Link, styled, Typography } from '@mui/material';
+import XIcon from '@mui/icons-material/X';
+import { Box, IconButton, styled, Typography } from '@mui/material';
 
 import Container from '@/components/Container';
-import { DiscordIcon } from '@/icons';
 
 const SocialMediaIconButton = styled(IconButton)(({ theme }) => ({
   padding: 0,
@@ -22,16 +20,6 @@ const SocialMediaIconButton = styled(IconButton)(({ theme }) => ({
       fill: theme.palette.text.primary,
       fillOpacity: 1,
     },
-  },
-}));
-
-const StyledLink = styled(Link)(({ theme }) => ({
-  textDecoration: 'none',
-  color: theme.palette.text.secondary,
-  opacity: 0.7,
-
-  '&:hover > span': {
-    color: theme.palette.text.primary,
   },
 }));
 
@@ -52,35 +40,7 @@ const Footer: FC = () => {
           gap={{ xs: 3, md: 0 }}
           px={{ xs: 3, md: 0 }}
         >
-          <Box display="flex" flexDirection="column" gap={{ xs: 3, md: 2 }}>
-            <Box
-              display="flex"
-              alignItems={{ xs: 'flex-start', md: 'center' }}
-              gap={3}
-              flexDirection={{ xs: 'column', md: 'row' }}
-            >
-              <StyledLink
-                href="https://www.humanprotocol.org/privacy-policy"
-                target="_blank"
-              >
-                <Typography color="text.secondary" variant="caption">
-                  Privacy Policy
-                </Typography>
-              </StyledLink>
-              <StyledLink
-                href="https://www.humanprotocol.org/privacy-policy"
-                target="_blank"
-              >
-                <Typography color="text.secondary" variant="caption">
-                  Terms of Service
-                </Typography>
-              </StyledLink>
-              <StyledLink href="https://www.humanprotocol.org" target="_blank">
-                <Typography color="text.secondary" variant="caption">
-                  HUMAN Protocol
-                </Typography>
-              </StyledLink>
-            </Box>
+          <Box display="flex" flexDirection="column">
             <Typography color="text.secondary" variant="caption">
               © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
             </Typography>
@@ -103,22 +63,12 @@ const Footer: FC = () => {
               <GitHubIcon />
             </SocialMediaIconButton>
             <SocialMediaIconButton
-              aria-label="Discord"
-              onClick={() =>
-                handleClickOnSocialButton(
-                  import.meta.env.VITE_FOOTER_LINK_DISCORD
-                )
-              }
-            >
-              <DiscordIcon />
-            </SocialMediaIconButton>
-            <SocialMediaIconButton
               aria-label="X"
               onClick={() =>
                 handleClickOnSocialButton(import.meta.env.VITE_FOOTER_LINK_X)
               }
             >
-              <TwitterIcon />
+              <XIcon />
             </SocialMediaIconButton>
             <SocialMediaIconButton
               aria-label="Telegram"
@@ -129,16 +79,6 @@ const Footer: FC = () => {
               }
             >
               <TelegramIcon />
-            </SocialMediaIconButton>
-            <SocialMediaIconButton
-              aria-label="LinkedIn"
-              onClick={() =>
-                handleClickOnSocialButton(
-                  import.meta.env.VITE_FOOTER_LINK_LINKEDIN
-                )
-              }
-            >
-              <LinkedInIcon />
             </SocialMediaIconButton>
           </Box>
         </Box>

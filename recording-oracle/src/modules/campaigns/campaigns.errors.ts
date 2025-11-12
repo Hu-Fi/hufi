@@ -46,6 +46,16 @@ export class CampaignCancelledError extends BaseError {
   }
 }
 
+export class CampaignJoinLimitedError extends BaseError {
+  constructor(
+    readonly chainId: number,
+    readonly address: string,
+    readonly detail: string,
+  ) {
+    super('Joining the campaign is limited');
+  }
+}
+
 export class UserIsNotParticipatingError extends BaseError {
   constructor() {
     super('User is not participating in campaign');

@@ -2,7 +2,6 @@ import type { FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { DEFAULT_ERROR_MESSAGE, INTERNAL_SERVER_ERROR } from '@/constants';
 import { CloseIcon } from '@/icons';
 
 type Props = {
@@ -25,9 +24,7 @@ const ModalError: FC<Props> = ({ message }) => {
         <CloseIcon sx={{ width: 34, height: 34 }} />
       </Box>
       <Typography variant="subtitle2" color="error.main" mb={1} py={1}>
-        {message === INTERNAL_SERVER_ERROR
-          ? DEFAULT_ERROR_MESSAGE
-          : message || DEFAULT_ERROR_MESSAGE}
+        {message}
       </Typography>
     </>
   );

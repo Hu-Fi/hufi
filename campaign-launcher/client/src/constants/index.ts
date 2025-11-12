@@ -38,6 +38,3 @@ export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 
 export const MQ_MOBILE = 'screen and (max-width: 600px)';
-
-export const INTERNAL_SERVER_ERROR = 'Internal server error';
-export const DEFAULT_ERROR_MESSAGE = 'An error occurred, please try again.';

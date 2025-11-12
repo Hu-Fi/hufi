@@ -8,11 +8,13 @@ import {
   useEffect,
 } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
+import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
 import {
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
@@ -38,9 +40,23 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
+  const queryClient = useQueryClient();
   const { signMessageAsync } = useSignMessage();
   const { isConnected } = useAccount();
   const { activeAddress } = useActiveAccount();
+
+  const setAuthenticationState = useCallback(
+    (_isAuthenticated: boolean) => {
+      setIsAuthenticated(_isAuthenticated);
+      if (!_isAuthenticated) {
+        tokenManager.clearTokens();
+        queryClient.removeQueries({
+          queryKey: [AUTHED_QUERY_TAG],
+        });
+      }
+    },
+    [queryClient]
+  );
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
@@ -56,17 +72,17 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         access_token: authResponse.access_token,
         refresh_token: authResponse.refresh_token,
       });
-      setIsAuthenticated(true);
+      setAuthenticationState(true);
     } catch (e) {
-      setIsAuthenticated(false);
+      setAuthenticationState(false);
       console.error('Failed to sign in', e);
       throw e;
     } finally {
       setIsLoading(false);
     }
-  }, [activeAddress, signMessageAsync]);
+  }, [activeAddress, signMessageAsync, setAuthenticationState]);
 
-  const bootstrapAuthState = async () => {
+  const bootstrapAuthState = useCallback(async () => {
     const access_token = tokenManager.getAccessToken();
     const refresh_token = tokenManager.getRefreshToken();
 
@@ -80,17 +96,17 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       try {
         await recordingApi.performRefresh();
-        setIsAuthenticated(true);
+        setAuthenticationState(true);
       } catch (e) {
-        setIsAuthenticated(false);
+        setAuthenticationState(false);
         console.error('Failed to refresh token', e);
       } finally {
         setIsLoading(false);
       }
     } else {
-      setIsAuthenticated(true);
+      setAuthenticationState(true);
     }
-  };
+  }, [setAuthenticationState]);
 
   const logout = useCallback(async () => {
     setIsLoading(true);
@@ -99,11 +115,10 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } catch (e) {
       console.error('Logout request failed', e);
     } finally {
-      tokenManager.clearTokens();
-      setIsAuthenticated(false);
+      setAuthenticationState(false);
       setIsLoading(false);
     }
-  }, []);
+  }, [setAuthenticationState]);
 
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
@@ -111,12 +126,17 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } else {
       setIsLoading(false);
     }
-  }, [isConnected, isAuthenticated]);
+  }, [
+    isConnected,
+    isAuthenticated,
+    bootstrapAuthState,
+    setAuthenticationState,
+  ]);
 
   useEffect(() => {
     const handleRefreshFailureEvent = () => {
       if (isAuthenticated) {
-        setIsAuthenticated(false);
+        setAuthenticationState(false);
         setIsLoading(false);
       }
     };
@@ -130,7 +150,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       );
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setAuthenticationState]);
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -139,13 +159,13 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY].includes(event.key)
       ) {
         const _isAuthenticated = tokenManager.hasTokens();
-        setIsAuthenticated(_isAuthenticated);
+        setAuthenticationState(_isAuthenticated);
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [setAuthenticationState]);
 
   return (
     <Web3AuthContext.Provider

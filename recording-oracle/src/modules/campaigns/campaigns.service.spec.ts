@@ -23,16 +23,16 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Test } from '@nestjs/testing';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import dayjs from '@/common/utils/dayjs';
-import * as decimalUtils from '@/common/utils/decimal';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
-import { Web3ConfigService } from '@/config';
+import { CampaignsConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
@@ -76,6 +76,7 @@ import {
   MockCampaignProgressChecker,
   MockProgressCheckResult,
   generateCampaignParticipant,
+  mockCampaignsConfigService,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -121,6 +122,10 @@ describe('CampaignsService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         CampaignsService,
+        {
+          provide: CampaignsConfigService,
+          useValue: mockCampaignsConfigService,
+        },
         {
           provide: CampaignsRepository,
           useValue: mockCampaignsRepository,
@@ -2008,7 +2013,7 @@ describe('CampaignsService', () => {
             {
               from: campaignProgress.from,
               to: campaignProgress.to,
-              reserved_funds: 0,
+              reserved_funds: '0',
               participants_outcomes_batches: [],
               ...campaignProgress.meta,
             },
@@ -2039,7 +2044,7 @@ describe('CampaignsService', () => {
           {
             from: newCampaignProgress.from,
             to: newCampaignProgress.to,
-            reserved_funds: 0,
+            reserved_funds: '0',
             participants_outcomes_batches: [],
             ...newCampaignProgress.meta,
           },
@@ -2472,7 +2477,7 @@ describe('CampaignsService', () => {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: 0,
+        reserved_funds: '0',
         participants_outcomes_batches: [],
       });
     });
@@ -2517,7 +2522,7 @@ describe('CampaignsService', () => {
       expect(logger.info).toHaveBeenCalledWith('Campaign progress recorded', {
         from: campaignProgress.from,
         to: campaignProgress.to,
-        reserved_funds: 0,
+        reserved_funds: '0',
         resultsUrl: storedResultsMeta.url,
         ...campaignProgress.meta,
       });
@@ -2750,30 +2755,44 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe('checkUserJoined', () => {
+  describe('checkJoinStatus', () => {
     let userId: string;
     let chainId: number;
     let campaign: CampaignEntity;
 
+    let spyOnCheckCampaignTargetMet: jest.SpyInstance;
+
     beforeAll(() => {
+      spyOnCheckCampaignTargetMet = jest.spyOn(
+        campaignsService,
+        'checkCampaignTargetMet',
+      );
+      spyOnCheckCampaignTargetMet.mockImplementation();
+    });
+
+    beforeEach(() => {
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
       campaign = generateCampaignEntity();
     });
 
-    it('should return false if campaign does not exist', async () => {
+    afterAll(() => {
+      spyOnCheckCampaignTargetMet.mockRestore();
+    });
+
+    it('should return "not_available" if campaign does not exist', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         null,
       );
 
-      const result = await campaignsService.checkUserJoined(
+      const result = await campaignsService.checkJoinStatus(
         userId,
         chainId,
         // not checksummed address
         campaign.address.toLowerCase(),
       );
 
-      expect(result).toBe(false);
+      expect(result).toBe('not_available');
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
@@ -2787,21 +2806,21 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should return false if user not joined', async () => {
+    it('should return "already_joined" if user joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        true,
       );
 
-      const result = await campaignsService.checkUserJoined(
+      const result = await campaignsService.checkJoinStatus(
         userId,
         chainId,
         campaign.address,
       );
 
-      expect(result).toBe(false);
+      expect(result).toBe('already_joined');
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -2811,21 +2830,130 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should return true if user joined', async () => {
+    it('should return "join_closed" if user not joined and campaign target is met', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        false,
       );
+      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
 
-      const result = await campaignsService.checkUserJoined(
+      const result = await campaignsService.checkJoinStatus(
         userId,
         chainId,
         campaign.address,
       );
 
-      expect(result).toBe(true);
+      expect(result).toBe('join_closed');
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it.each(
+      Object.values(CampaignStatus).filter((s) => s !== CampaignStatus.ACTIVE),
+    )(
+      'should return "join_closed" if user not joined and campaign is not active: %s',
+      async (campaignStatus) => {
+        Object.assign(campaign, { status: campaignStatus });
+        mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+          campaign,
+        );
+        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+          false,
+        );
+        spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+
+        const result = await campaignsService.checkJoinStatus(
+          userId,
+          chainId,
+          campaign.address,
+        );
+
+        expect(result).toBe('join_closed');
+
+        expect(
+          mockUserCampaignsRepository.checkUserJoinedCampaign,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          mockUserCampaignsRepository.checkUserJoinedCampaign,
+        ).toHaveBeenCalledWith(userId, campaign.id);
+      },
+    );
+
+    it('should return "join_closed" if user not joined and campaign is ended', async () => {
+      Object.assign(campaign, { endDate: new Date(Date.now() - 1) });
+
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+
+      const result = await campaignsService.checkJoinStatus(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe('join_closed');
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should return "join_closed" if user not joined and ongoing campaign target is met', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+
+      const result = await campaignsService.checkJoinStatus(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe('join_closed');
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should return "can_join" if user not joined and ongoing campaign target is not met', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
+      spyOnCheckCampaignTargetMet.mockReturnValueOnce(false);
+
+      const result = await campaignsService.checkJoinStatus(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toBe('can_join');
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -3486,10 +3614,9 @@ describe('CampaignsService', () => {
 
       const dailyReward = campaignsService.calculateDailyReward(campaign);
 
-      const expectedDailyReward = decimalUtils.truncate(
-        decimalUtils.div(Number(campaign.fundAmount), duration),
-        campaign.fundTokenDecimals,
-      );
+      const expectedDailyReward = new Decimal(campaign.fundAmount)
+        .div(duration)
+        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
@@ -3508,10 +3635,26 @@ describe('CampaignsService', () => {
 
       const dailyReward = campaignsService.calculateDailyReward(campaign);
 
-      const expectedDailyReward = decimalUtils.truncate(
-        decimalUtils.div(Number(campaign.fundAmount), duration),
-        campaign.fundTokenDecimals,
-      );
+      const expectedDailyReward = new Decimal(campaign.fundAmount)
+        .div(duration)
+        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+      expect(dailyReward).toBe(expectedDailyReward);
+    });
+
+    it('should correctly truncate reward value', () => {
+      const duration = 6;
+      const campaign = generateCampaignEntity();
+      campaign.fundAmount = '10';
+      campaign.fundTokenDecimals = 18;
+      campaign.endDate = dayjs(campaign.startDate)
+        .add(duration, 'days')
+        .toDate();
+
+      const dailyReward = campaignsService.calculateDailyReward(campaign);
+
+      const expectedDailyReward = new Decimal(campaign.fundAmount)
+        .div(duration)
+        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
       expect(dailyReward).toBe(expectedDailyReward);
     });
   });
@@ -3519,12 +3662,12 @@ describe('CampaignsService', () => {
   describe('calculateRewardPool', () => {
     const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
 
-    let baseRewardPool: number;
+    let baseRewardPool: string;
     let progressValueTarget: number;
 
     beforeEach(() => {
-      baseRewardPool = faker.number.int({ min: 10, max: 100 });
-      progressValueTarget = faker.number.int({ min: 1, max: 1000 });
+      baseRewardPool = faker.number.float({ min: 10, max: 100 }).toString();
+      progressValueTarget = faker.number.float({ min: 1, max: 1000 });
     });
 
     it('should return 0 reward pool when generated volume is 0', () => {
@@ -3536,7 +3679,7 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      expect(rewardPool).toBe(0);
+      expect(rewardPool).toBe('0');
     });
 
     it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
@@ -3555,10 +3698,9 @@ describe('CampaignsService', () => {
       });
 
       const expectedRewardRatio = progressValue / progressValueTarget;
-      const expectedRewardPool = decimalUtils.truncate(
-        expectedRewardRatio * baseRewardPool,
-        TEST_TOKEN_DECIMALS,
-      );
+      const expectedRewardPool = new Decimal(baseRewardPool)
+        .mul(expectedRewardRatio)
+        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
@@ -3576,7 +3718,11 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      expect(rewardPool).toBe(baseRewardPool);
+      const expectedRewardPool = new Decimal(baseRewardPool).toFixed(
+        TEST_TOKEN_DECIMALS,
+        Decimal.ROUND_DOWN,
+      );
+      expect(rewardPool).toBe(expectedRewardPool);
     });
 
     it('should respect maxRewardPoolRatio', () => {
@@ -3595,10 +3741,9 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      const expectedRewardPool = decimalUtils.truncate(
-        baseRewardPool * maxRewardPoolRatio,
-        TEST_TOKEN_DECIMALS,
-      );
+      const expectedRewardPool = new Decimal(baseRewardPool)
+        .mul(maxRewardPoolRatio)
+        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
       expect(rewardPool).toBe(expectedRewardPool);
     });
   });

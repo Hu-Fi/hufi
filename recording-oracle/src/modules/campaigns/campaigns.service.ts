@@ -10,6 +10,7 @@ import {
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
@@ -17,13 +18,12 @@ import { LRUCache } from 'lru-cache';
 import { ContentType } from '@/common/enums';
 import dayjs from '@/common/utils/dayjs';
 import * as debugUtils from '@/common/utils/debug';
-import * as decimalUtils from '@/common/utils/decimal';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
-import { Web3ConfigService } from '@/config';
+import { CampaignsConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
@@ -41,6 +41,7 @@ import { CampaignEntity } from './campaign.entity';
 import {
   CampaignAlreadyFinishedError,
   CampaignCancelledError,
+  CampaignJoinLimitedError,
   CampaignNotFoundError,
   CampaignNotStartedError,
   InvalidCampaign,
@@ -72,6 +73,7 @@ import {
   CampaignProgress,
   CampaignStatus,
   CampaignType,
+  CampaignJoinStatus,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
@@ -97,6 +99,7 @@ export class CampaignsService implements OnApplicationBootstrap {
   });
 
   constructor(
+    private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
@@ -186,6 +189,14 @@ export class CampaignsService implements OnApplicationBootstrap {
       userId,
       campaign.exchangeName,
     );
+
+    if (this.checkCampaignTargetMet(campaign)) {
+      throw new CampaignJoinLimitedError(
+        campaign.chainId,
+        campaign.address,
+        'Target is met',
+      );
+    }
 
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
@@ -811,41 +822,50 @@ export class CampaignsService implements OnApplicationBootstrap {
     return JSON.parse(intermediateResults.toString());
   }
 
-  calculateDailyReward(campaign: CampaignEntity): number {
+  calculateDailyReward(campaign: CampaignEntity): string {
     const campaignDurationDays = Math.ceil(
       dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
     );
 
-    const fundAmount = Number(campaign.fundAmount);
+    const fundAmount = new Decimal(campaign.fundAmount);
 
-    const dailyReward = decimalUtils.div(fundAmount, campaignDurationDays);
+    const dailyReward = fundAmount.div(campaignDurationDays);
 
-    const truncatedDailyReward = decimalUtils.truncate(
-      dailyReward,
+    const truncatedDailyReward = dailyReward.toFixed(
       campaign.fundTokenDecimals,
+      Decimal.ROUND_DOWN,
     );
+
+    if (Decimal(truncatedDailyReward).isZero()) {
+      return '0';
+    }
 
     return truncatedDailyReward;
   }
 
   calculateRewardPool(input: {
-    baseRewardPool: number;
+    baseRewardPool: string;
     maxRewardPoolRatio: number;
     progressValueTarget: number;
     progressValue: number;
     fundTokenDecimals: number;
-  }): number {
+  }): string {
     const rewardRatio = Math.min(
       input.progressValue / input.progressValueTarget,
       input.maxRewardPoolRatio,
     );
 
-    const rewardPool = rewardRatio * input.baseRewardPool;
+    const baseRewardPool = new Decimal(input.baseRewardPool);
+    const rewardPool = baseRewardPool.mul(rewardRatio);
 
-    const truncatedRewardPool = decimalUtils.truncate(
-      rewardPool,
+    const truncatedRewardPool = rewardPool.toFixed(
       input.fundTokenDecimals,
+      Decimal.ROUND_DOWN,
     );
+
+    if (Decimal(truncatedRewardPool).isZero()) {
+      return '0';
+    }
 
     return truncatedRewardPool;
   }
@@ -980,17 +1000,17 @@ export class CampaignsService implements OnApplicationBootstrap {
     this.logger.debug('Campaign statuses sync job finished');
   }
 
-  async checkUserJoined(
+  async checkJoinStatus(
     userId: string,
     chainId: number,
     campaignAddress: string,
-  ): Promise<boolean> {
+  ): Promise<CampaignJoinStatus> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
     );
     if (!campaign) {
-      return false;
+      return CampaignJoinStatus.NOT_AVAILABLE;
     }
 
     const isUserJoined =
@@ -998,7 +1018,23 @@ export class CampaignsService implements OnApplicationBootstrap {
         userId,
         campaign.id,
       );
-    return isUserJoined;
+    if (isUserJoined) {
+      return CampaignJoinStatus.USER_ALREADY_JOINED;
+    }
+
+    if (
+      campaign.endDate.valueOf() <= Date.now() ||
+      campaign.status !== CampaignStatus.ACTIVE
+    ) {
+      return CampaignJoinStatus.JOIN_IS_CLOSED;
+    }
+
+    const isCampaignTargetMet = this.checkCampaignTargetMet(campaign);
+    if (isCampaignTargetMet) {
+      return CampaignJoinStatus.JOIN_IS_CLOSED;
+    }
+
+    return CampaignJoinStatus.USER_CAN_JOIN;
   }
 
   async getUserProgress(
@@ -1311,5 +1347,28 @@ export class CampaignsService implements OnApplicationBootstrap {
       start: timeframeStart,
       end: timeframeEnd,
     };
+  }
+
+  checkCampaignTargetMet(campaign: CampaignEntity): boolean {
+    if (!isHoldingCampaign(campaign)) {
+      return false;
+    }
+
+    if (!this.campaignsConfigService.isHoldingJoinLimitEnabled) {
+      return false;
+    }
+
+    const campaignProgress = this.campaignsInterimProgressCache.get(
+      campaign.id,
+    ) as CampaignProgress<HoldingMeta> | undefined;
+    if (!campaignProgress) {
+      return false;
+    }
+
+    const isDailyBalanceTargetMet =
+      campaignProgress.meta.total_balance >=
+      campaign.details.dailyBalanceTarget;
+
+    return isDailyBalanceTargetMet;
   }
 }

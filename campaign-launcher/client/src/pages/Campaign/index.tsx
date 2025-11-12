@@ -1,6 +1,6 @@
 import { type FC, useMemo } from 'react';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Skeleton, Typography } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import CampaignInfo from '@/components/CampaignInfo';
@@ -10,10 +10,10 @@ import JoinCampaign from '@/components/JoinCampaign';
 import JoinedCampaigns from '@/components/JoinedCampaigns';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
-import { useCheckIsJoinedCampaign } from '@/hooks/recording-oracle';
+import { useCheckCampaignJoinStatus } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
-import type { EvmAddress } from '@/types';
+import { CampaignJoinStatus, type EvmAddress } from '@/types';
 import { isCampaignDetails } from '@/utils';
 
 const Campaign: FC = () => {
@@ -21,8 +21,8 @@ const Campaign: FC = () => {
   const [searchParams] = useSearchParams();
   const { data: campaign, isLoading: isCampaignLoading } =
     useCampaignDetails(address);
-  const { data: isAlreadyJoined, isLoading: isJoinedLoading } =
-    useCheckIsJoinedCampaign(address);
+  const { data: joinStatus, isLoading: isJoinStatusLoading } =
+    useCheckCampaignJoinStatus(address);
 
   const isMobile = useIsMobile();
 
@@ -47,7 +47,6 @@ const Campaign: FC = () => {
   }, [searchParams]);
 
   const campaignData = campaign || parsedData;
-  const showCampaignBlocks = !isCampaignLoading && !!campaignData;
 
   return (
     <PageWrapper>
@@ -55,28 +54,25 @@ const Campaign: FC = () => {
         {!isMobile && campaignData && (
           <JoinCampaign
             campaign={campaignData}
-            isAlreadyJoined={!!isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
+            joinStatus={joinStatus}
+            isJoinStatusLoading={isJoinStatusLoading}
           />
         )}
       </PageTitle>
-      {isCampaignLoading && (
-        <CircularProgress
-          sx={{ width: '40px', height: '40px', margin: '0 auto' }}
-        />
+      {isCampaignLoading && !isMobile && (
+        <Skeleton variant="rectangular" width="100%" height={40} />
       )}
-      {showCampaignBlocks && (
-        <Box display="flex" flexWrap="wrap" gap={2}>
-          <CampaignInfo
-            campaign={campaignData}
-            isAlreadyJoined={!!isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
-          />
-        </Box>
-      )}
-      {showCampaignBlocks && (
-        <CampaignStats campaign={campaignData} isJoined={!!isAlreadyJoined} />
-      )}
+      <CampaignInfo
+        campaign={campaignData}
+        isCampaignLoading={isCampaignLoading}
+        joinStatus={joinStatus}
+        isJoinStatusLoading={isJoinStatusLoading}
+      />
+      <CampaignStats
+        campaign={campaignData}
+        isCampaignLoading={isCampaignLoading}
+        isJoined={joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED}
+      />
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns
         showOnlyActiveCampaigns={false}

@@ -1,6 +1,6 @@
 import { useState, type FC } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Skeleton, Stack, Typography } from '@mui/material';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
@@ -10,7 +10,7 @@ import JoinCampaign from '@/components/JoinCampaign';
 import ChartModal from '@/components/modals/ChartModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
-import type { CampaignDetails } from '@/types';
+import type { CampaignDetails, CampaignJoinStatus } from '@/types';
 import { getChainIcon, getNetworkName } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -24,19 +24,35 @@ const formatTime = (dateString: string): string => {
 };
 
 type Props = {
-  campaign: CampaignDetails;
-  isAlreadyJoined: boolean;
-  isJoinedLoading: boolean;
+  campaign: CampaignDetails | null | undefined;
+  isCampaignLoading: boolean;
+  joinStatus?: CampaignJoinStatus;
+  isJoinStatusLoading: boolean;
 };
 
 const CampaignInfo: FC<Props> = ({
   campaign,
-  isAlreadyJoined,
-  isJoinedLoading,
+  isCampaignLoading,
+  joinStatus,
+  isJoinStatusLoading,
 }) => {
   const [openChartModal, setOpenChartModal] = useState(false);
 
   const isMobile = useIsMobile();
+
+  if (isCampaignLoading) {
+    if (!isMobile) return null;
+
+    return (
+      <Stack gap={3} width="100%">
+        <Skeleton variant="text" width="100%" height={36} />
+        <Skeleton variant="text" width="100%" height={24} />
+        <Skeleton variant="text" width="100%" height={24} />
+      </Stack>
+    );
+  }
+
+  if (!campaign) return null;
 
   return (
     <Box
@@ -63,8 +79,8 @@ const CampaignInfo: FC<Props> = ({
         {isMobile && (
           <JoinCampaign
             campaign={campaign}
-            isAlreadyJoined={isAlreadyJoined}
-            isJoinedLoading={isJoinedLoading}
+            joinStatus={joinStatus}
+            isJoinStatusLoading={isJoinStatusLoading}
           />
         )}
       </Box>

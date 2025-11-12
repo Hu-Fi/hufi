@@ -20,7 +20,12 @@ import {
   type ChainId,
 } from '@/common/constants';
 
-import { CampaignDetails, CampaignType, ReturnedCampaignStatus } from './types';
+import {
+  CampaignDetails,
+  CampaignType,
+  CampaignJoinStatus,
+  ReturnedCampaignStatus,
+} from './types';
 
 export class JoinCampaignDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
@@ -167,7 +172,7 @@ export class ListJoinedCampaignsSuccessDto {
   results: JoinedCampaignDto[];
 }
 
-export class CheckUserJoinedDto {
+export class CheckJoinStatusDto {
   @ApiProperty({ name: 'chain_id', enum: ChainIds })
   @IsIn(ChainIds)
   chainId: ChainId;
@@ -177,11 +182,11 @@ export class CheckUserJoinedDto {
   address: string;
 }
 
-export class CheckUserJoinedResponseDto {
+export class CheckJoinStatusResponseDto {
   @ApiProperty({
-    name: 'is_joined',
+    enum: CampaignJoinStatus,
   })
-  isJoined: boolean;
+  status: CampaignJoinStatus;
 }
 
 export class CampaignParamsDto {

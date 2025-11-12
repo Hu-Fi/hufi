@@ -20,6 +20,7 @@ import {
   CampaignNotFoundError,
   InvalidCampaign,
   UserIsNotParticipatingError,
+  CampaignJoinLimitedError,
 } from './campaigns.errors';
 
 @Catch(
@@ -28,6 +29,7 @@ import {
   CampaignAlreadyFinishedError,
   CampaignNotStartedError,
   CampaignCancelledError,
+  CampaignJoinLimitedError,
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
   InvalidEvmAddressError,
@@ -49,6 +51,8 @@ export class CampaignsControllerErrorsFilter implements ExceptionFilter {
       message = exception.details;
     } else if (exception instanceof InvalidEvmAddressError) {
       status = HttpStatus.BAD_REQUEST;
+    } else if (exception instanceof CampaignJoinLimitedError) {
+      message = `${exception.message}. ${exception.detail}`;
     }
 
     return response.status(status).json({

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 
 import { recordingApi } from '@/api';
-import { QUERY_KEYS } from '@/constants/queryKeys';
+import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 export const useGetEnrolledExchanges = () => {
@@ -10,7 +10,7 @@ export const useGetEnrolledExchanges = () => {
   const { isConnected } = useAccount();
 
   return useQuery({
-    queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES],
+    queryKey: [AUTHED_QUERY_TAG, QUERY_KEYS.ENROLLED_EXCHANGES],
     queryFn: () => recordingApi.getEnrolledExchanges(),
     enabled: isAuthenticated && isConnected,
   });
@@ -21,7 +21,7 @@ export const useGetExchangesWithApiKeys = () => {
   const { isConnected } = useAccount();
 
   return useQuery({
-    queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
+    queryKey: [AUTHED_QUERY_TAG, QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
     queryFn: () => recordingApi.getExchangesWithApiKeys(),
     enabled: isAuthenticated && isConnected,
   });

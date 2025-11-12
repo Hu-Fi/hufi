@@ -91,7 +91,7 @@ export type ParticipantsOutcomesBatch = {
 export type IntermediateResult = {
   from: string;
   to: string;
-  reserved_funds: number;
+  reserved_funds: string;
   participants_outcomes_batches: ParticipantsOutcomesBatch[];
   [meta: string]: unknown;
 };
@@ -110,3 +110,10 @@ export type CampaignProgress<M> = {
   participants_outcomes: ParticipantOutcome[];
   meta: M;
 };
+
+export enum CampaignJoinStatus {
+  USER_ALREADY_JOINED = 'already_joined',
+  USER_CAN_JOIN = 'can_join',
+  JOIN_IS_CLOSED = 'join_closed',
+  NOT_AVAILABLE = 'not_available',
+}

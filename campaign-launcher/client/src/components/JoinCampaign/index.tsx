@@ -1,6 +1,7 @@
 import { type FC, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/CheckCircleOutline';
+import LockIcon from '@mui/icons-material/LockOutlined';
 import { Button, CircularProgress } from '@mui/material';
 
 import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
@@ -11,18 +12,23 @@ import {
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import { CampaignStatus, type CampaignDetails } from '@/types';
+import {
+  CampaignJoinStatus,
+  CampaignStatus,
+  type CampaignDetails,
+} from '@/types';
+import * as errorUtils from '@/utils/error';
 
 type Props = {
   campaign: CampaignDetails;
-  isAlreadyJoined: boolean;
-  isJoinedLoading: boolean;
+  joinStatus?: CampaignJoinStatus;
+  isJoinStatusLoading: boolean;
 };
 
 const JoinCampaign: FC<Props> = ({
   campaign,
-  isAlreadyJoined,
-  isJoinedLoading,
+  joinStatus,
+  isJoinStatusLoading,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -34,19 +40,30 @@ const JoinCampaign: FC<Props> = ({
 
   const isMobile = useIsMobile();
 
-  const isCampaignFinished =
-    campaign.status === CampaignStatus.TO_CANCEL ||
-    campaign.end_date < new Date().toISOString();
+  const isLoading =
+    isEnrolledExchangesLoading || isJoinStatusLoading || isJoining;
 
-  const isLoading = isEnrolledExchangesLoading || isJoinedLoading || isJoining;
+  const isAlreadyJoined = joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED;
+  const isJoinClosed = joinStatus === CampaignJoinStatus.JOIN_IS_CLOSED;
+
   const isButtonDisabled =
-    !isAuthenticated || isLoading || isAlreadyJoined || isCampaignFinished;
+    !isAuthenticated ||
+    isLoading ||
+    !joinStatus ||
+    isAlreadyJoined ||
+    isJoinClosed;
 
   const getButtonText = () => {
     if (isJoining) return null;
+
     if (isAlreadyJoined) {
       return isMobile ? 'Joined' : 'Registered to Campaign';
     }
+
+    if (isJoinClosed) {
+      return isMobile ? 'Join' : 'Registration Closed';
+    }
+
     return isMobile ? 'Join' : 'Join Campaign';
   };
 
@@ -69,11 +86,17 @@ const JoinCampaign: FC<Props> = ({
         address: campaign.address,
       });
     } catch (error) {
-      console.error(error);
-      showError('Failed to join campaign. Please try again.');
+      console.error('Failed to join campaign', error);
+      showError(
+        errorUtils.getMessageFromError(error) ||
+          'Failed to join campaign. Please try again.'
+      );
     }
   };
 
+  const isCampaignFinished =
+    campaign.end_date < new Date().toISOString() ||
+    campaign.status !== CampaignStatus.ACTIVE;
   if (!campaign || isCampaignFinished) {
     return null;
   }
@@ -98,7 +121,10 @@ const JoinCampaign: FC<Props> = ({
         }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
-        endIcon={isMobile && isAlreadyJoined && <CheckIcon />}
+        endIcon={
+          isMobile &&
+          ((isAlreadyJoined && <CheckIcon />) || (isJoinClosed && <LockIcon />))
+        }
       >
         {isJoining && (
           <CircularProgress size={24} sx={{ color: 'primary.contrast' }} />
