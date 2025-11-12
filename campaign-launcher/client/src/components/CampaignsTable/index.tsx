@@ -276,17 +276,6 @@ const CampaignsTable: FC<Props> = ({
         const exchangeName = exchangesMap.get(
           params.row.exchange_name
         )?.display_name;
-        if (isMobile) {
-          return (
-            <>
-              <StretchedLink
-                to={`/campaign-details/${params.row.address}`}
-                sx={{ textDecoration: 'none' }}
-              />
-              <Typography>{exchangeName}</Typography>
-            </>
-          );
-        }
         return <Typography>{exchangeName}</Typography>;
       },
     },
