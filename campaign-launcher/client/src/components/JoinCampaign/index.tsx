@@ -1,6 +1,7 @@
 import { type FC, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/CheckCircleOutline';
+import LockIcon from '@mui/icons-material/LockOutlined';
 import { Button, CircularProgress } from '@mui/material';
 
 import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
@@ -122,7 +123,11 @@ const JoinCampaign: FC<Props> = ({
         }}
         disabled={isButtonDisabled}
         onClick={handleButtonClick}
-        endIcon={isMobile && isAlreadyJoined && <CheckIcon />}
+        endIcon={
+          isMobile &&
+          ((isAlreadyJoined && <CheckIcon />) ||
+            (isJoinLimited && <LockIcon />))
+        }
       >
         {isJoining && (
           <CircularProgress size={24} sx={{ color: 'primary.contrast' }} />
