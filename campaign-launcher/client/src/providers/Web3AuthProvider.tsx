@@ -15,13 +15,14 @@ import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
 import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
-import {
-  ACCESS_TOKEN_KEY,
-  REFRESH_TOKEN_KEY,
-  tokenManager,
-} from '@/utils/TokenManager';
+import { tokenManager } from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
+
+type SetAuthenticationStateOptions = Partial<{
+  clearQueryCache: boolean;
+  clearTokens: boolean;
+}>;
 
 type Web3AuthContextType = {
   isAuthenticated: boolean;
@@ -46,13 +47,32 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const { activeAddress } = useActiveAccount();
 
   const setAuthenticationState = useCallback(
-    (_isAuthenticated: boolean) => {
+    (
+      _isAuthenticated: boolean,
+      options: SetAuthenticationStateOptions = {}
+    ) => {
       setIsAuthenticated(_isAuthenticated);
+
+      const _options = Object.assign<
+        Required<SetAuthenticationStateOptions>,
+        SetAuthenticationStateOptions
+      >(
+        {
+          clearQueryCache: true,
+          clearTokens: true,
+        },
+        options
+      );
       if (!_isAuthenticated) {
-        tokenManager.clearTokens();
-        queryClient.removeQueries({
-          predicate: (query) => query.queryKey.includes(AUTHED_QUERY_TAG),
-        });
+        if (_options.clearTokens) {
+          tokenManager.clearTokens();
+        }
+
+        if (_options.clearQueryCache) {
+          queryClient.removeQueries({
+            predicate: (query) => query.queryKey.includes(AUTHED_QUERY_TAG),
+          });
+        }
       }
     },
     [queryClient]
@@ -83,10 +103,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [activeAddress, signMessageAsync, setAuthenticationState]);
 
   const bootstrapAuthState = useCallback(async () => {
-    const access_token = tokenManager.getAccessToken();
-    const refresh_token = tokenManager.getRefreshToken();
-
-    if (!refresh_token || !access_token) {
+    if (!tokenManager.hasTokens()) {
       setIsLoading(false);
       return;
     }
@@ -153,18 +170,13 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [setAuthenticationState]);
 
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (
-        event.key &&
-        [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY].includes(event.key)
-      ) {
-        const _isAuthenticated = tokenManager.hasTokens();
-        setAuthenticationState(_isAuthenticated);
-      }
+    const handleTokenStorageSync = () => {
+      const _isAuthenticated = tokenManager.hasTokens();
+      setAuthenticationState(_isAuthenticated, { clearTokens: false });
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    tokenManager.addStorageSyncListener(handleTokenStorageSync);
+    return () => tokenManager.removeStorageSyncListener(handleTokenStorageSync);
   }, [setAuthenticationState]);
 
   return (

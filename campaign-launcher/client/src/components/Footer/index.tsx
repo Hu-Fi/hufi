@@ -40,11 +40,9 @@ const Footer: FC = () => {
           gap={{ xs: 3, md: 0 }}
           px={{ xs: 3, md: 0 }}
         >
-          <Box display="flex" flexDirection="column">
-            <Typography color="text.secondary" variant="caption">
-              © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
-            </Typography>
-          </Box>
+          <Typography color="text.secondary" variant="caption">
+            © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
+          </Typography>
           <Box
             display="flex"
             alignItems="center"

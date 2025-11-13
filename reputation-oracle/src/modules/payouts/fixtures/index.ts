@@ -71,15 +71,40 @@ export function generateParticipantOutcome(
   return outcome;
 }
 
+/**
+ * Generates intermediate result in a converted format, i.e.
+ * what is received after validation
+ */
 export function generateIntermediateResult(): IntermediateResult {
+  const reservedFunds = faker.number.float({
+    min: 1,
+    max: Number.MAX_SAFE_INTEGER,
+  });
   const intermediateResult = {
     from: faker.date.recent(),
     to: faker.date.soon(),
-    reserved_funds: faker.number.int({ min: 1 }),
+    reserved_funds: faker.helpers.arrayElement([
+      reservedFunds,
+      reservedFunds.toString(),
+    ]),
     participants_outcomes_batches: [],
   };
 
   return intermediateResult;
+}
+
+/**
+ * Generates intermediate result in raw format that corresponds to schema,
+ * not one that is a conversion result after validation
+ */
+export function generateRawIntermediateResult() {
+  const intermediateResult = generateIntermediateResult();
+
+  return {
+    ...intermediateResult,
+    from: intermediateResult.from.toISOString(),
+    to: intermediateResult.to.toISOString(),
+  };
 }
 
 export function generateIntermediateResultsData(): IntermediateResultsData {
