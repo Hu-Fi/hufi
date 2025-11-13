@@ -31,7 +31,7 @@ export function isThresholdManifest(
 const marketMakingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.MARKET_MAKING).required(),
   exchange: Joi.string().required(),
-  daily_volume_target: Joi.number().greater(0).required(),
+  daily_volume_target: Joi.number().strict().greater(0).required(),
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
@@ -42,7 +42,7 @@ const marketMakingManifestSchema = Joi.object({
 const holdingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.HOLDING).required(),
   exchange: Joi.string().required(),
-  daily_balance_target: Joi.number().greater(0).required(),
+  daily_balance_target: Joi.number().strict().greater(0).required(),
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
@@ -53,7 +53,7 @@ const holdingManifestSchema = Joi.object({
 const thresholdManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.THRESHOLD).required(),
   exchange: Joi.string().required(),
-  minimum_balance_target: Joi.number().greater(0).required(),
+  minimum_balance_target: Joi.number().strict().greater(0).required(),
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
