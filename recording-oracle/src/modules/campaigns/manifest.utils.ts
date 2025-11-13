@@ -51,7 +51,7 @@ const marketMakingManifestSchema = baseManifestSchema.keys({
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
-  daily_volume_target: Joi.number().greater(0).required(),
+  daily_volume_target: Joi.number().strict().greater(0).required(),
 });
 export function assertValidMarketMakingCampaignManifest(
   manifest: CampaignManifestBase,
@@ -68,7 +68,7 @@ const holdingManifestSchema = baseManifestSchema.keys({
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
-  daily_balance_target: Joi.number().greater(0).required(),
+  daily_balance_target: Joi.number().strict().greater(0).required(),
 });
 export function assertValidHoldingCampaignManifest(
   manifest: CampaignManifestBase,
@@ -85,7 +85,7 @@ const thresholdManifestSchema = baseManifestSchema.keys({
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
-  minimum_balance_target: Joi.number().greater(0).required(),
+  minimum_balance_target: Joi.number().strict().greater(0).required(),
 });
 export function assertValidThresholdCampaignManifest(
   manifest: CampaignManifestBase,
