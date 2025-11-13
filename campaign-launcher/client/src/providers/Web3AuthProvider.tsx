@@ -15,11 +15,7 @@ import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
 import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
-import {
-  ACCESS_TOKEN_KEY,
-  REFRESH_TOKEN_KEY,
-  tokenManager,
-} from '@/utils/TokenManager';
+import { TOKEN_DATA_KEY, tokenManager } from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
 
@@ -83,10 +79,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [activeAddress, signMessageAsync, setAuthenticationState]);
 
   const bootstrapAuthState = useCallback(async () => {
-    const access_token = tokenManager.getAccessToken();
-    const refresh_token = tokenManager.getRefreshToken();
-
-    if (!refresh_token || !access_token) {
+    if (!tokenManager.hasTokens()) {
       setIsLoading(false);
       return;
     }
@@ -154,10 +147,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      if (
-        event.key &&
-        [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY].includes(event.key)
-      ) {
+      if (event.key === TOKEN_DATA_KEY) {
         const _isAuthenticated = tokenManager.hasTokens();
         setAuthenticationState(_isAuthenticated);
       }

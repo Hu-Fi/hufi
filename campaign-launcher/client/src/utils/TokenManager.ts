@@ -5,8 +5,7 @@ export type TokenData = {
   refresh_token: string;
 };
 
-export const ACCESS_TOKEN_KEY = 'ro-access-token';
-export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
+export const TOKEN_DATA_KEY = 'ro-token-data';
 
 export class TokenManager {
   private static instance: TokenManager;
@@ -20,30 +19,30 @@ export class TokenManager {
     return TokenManager.instance;
   }
 
-  getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  private getTokens(): TokenData | null {
+    const tokenDataItem = localStorage.getItem(TOKEN_DATA_KEY);
+
+    return tokenDataItem ? JSON.parse(tokenDataItem) : null;
   }
 
-  getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
-  }
+  setTokens(tokenData: TokenData) {
+    if (!tokenData || !tokenData.access_token || !tokenData.refresh_token) {
+      throw new Error('Token data is incomplete');
+    }
 
-  setTokens(tokens: TokenData): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-  }
-
-  setAccessToken(token: string): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token);
-  }
-
-  setRefreshToken(token: string): void {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_DATA_KEY, JSON.stringify(tokenData));
   }
 
   clearTokens(): void {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(TOKEN_DATA_KEY);
+  }
+
+  getAccessToken(): string | null {
+    return this.getTokens()?.access_token || null;
+  }
+
+  getRefreshToken(): string | null {
+    return this.getTokens()?.refresh_token || null;
   }
 
   hasTokens(): boolean {
