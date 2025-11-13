@@ -223,6 +223,14 @@ describe('manifest utils', () => {
       Object.assign({}, validManifest, {
         daily_volume_target: undefined,
       }),
+      // volume target string
+      Object.assign({}, validManifest, {
+        daily_volume_target: faker.number.int({ min: 1 }).toString(),
+      }),
+      // unsafe volume target
+      Object.assign({}, validManifest, {
+        daily_volume_target: Number.MAX_SAFE_INTEGER + 42,
+      }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
       let thrownError;
       try {
@@ -276,6 +284,14 @@ describe('manifest utils', () => {
       Object.assign({}, validManifest, {
         daily_balance_target: undefined,
       }),
+      // balance target string
+      Object.assign({}, validManifest, {
+        daily_balance_target: faker.number.int({ min: 1 }).toString(),
+      }),
+      // unsafe balance target
+      Object.assign({}, validManifest, {
+        daily_balance_target: Number.MAX_SAFE_INTEGER + 42,
+      }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
       let thrownError;
       try {
@@ -328,6 +344,14 @@ describe('manifest utils', () => {
       // missing minimum balance target
       Object.assign({}, validManifest, {
         minimum_balance_target: undefined,
+      }),
+      // balance target string
+      Object.assign({}, validManifest, {
+        minimum_balance_target: faker.number.int({ min: 1 }).toString(),
+      }),
+      // unsafe balance target
+      Object.assign({}, validManifest, {
+        minimum_balance_target: Number.MAX_SAFE_INTEGER + 42,
       }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
       let thrownError;
