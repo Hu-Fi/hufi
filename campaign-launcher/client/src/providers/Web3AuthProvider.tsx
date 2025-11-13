@@ -19,6 +19,11 @@ import { tokenManager } from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
 
+type SetAuthenticationStateOptions = Partial<{
+  clearQueryCache: boolean;
+  clearTokens: boolean;
+}>;
+
 type Web3AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -42,13 +47,32 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const { activeAddress } = useActiveAccount();
 
   const setAuthenticationState = useCallback(
-    (_isAuthenticated: boolean) => {
+    (
+      _isAuthenticated: boolean,
+      options: SetAuthenticationStateOptions = {}
+    ) => {
       setIsAuthenticated(_isAuthenticated);
+
+      const _options = Object.assign<
+        Required<SetAuthenticationStateOptions>,
+        SetAuthenticationStateOptions
+      >(
+        {
+          clearQueryCache: true,
+          clearTokens: true,
+        },
+        options
+      );
       if (!_isAuthenticated) {
-        tokenManager.clearTokens();
-        queryClient.removeQueries({
-          predicate: (query) => query.queryKey.includes(AUTHED_QUERY_TAG),
-        });
+        if (_options.clearTokens) {
+          tokenManager.clearTokens();
+        }
+
+        if (_options.clearQueryCache) {
+          queryClient.removeQueries({
+            predicate: (query) => query.queryKey.includes(AUTHED_QUERY_TAG),
+          });
+        }
       }
     },
     [queryClient]
@@ -148,7 +172,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     const handleTokenStorageSync = () => {
       const _isAuthenticated = tokenManager.hasTokens();
-      setAuthenticationState(_isAuthenticated);
+      setAuthenticationState(_isAuthenticated, { clearTokens: false });
     };
 
     tokenManager.addStorageSyncListener(handleTokenStorageSync);
