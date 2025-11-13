@@ -5,13 +5,47 @@ export type TokenData = {
   refresh_token: string;
 };
 
-export const ACCESS_TOKEN_KEY = 'ro-access-token';
-export const REFRESH_TOKEN_KEY = 'ro-refresh-token';
+const ACCESS_TOKEN_KEY = 'ro-access-token';
+const REFRESH_TOKEN_KEY = 'ro-refresh-token';
+
+type TokenDataKey = keyof TokenData;
+type SyncEventTokenData = {
+  [K in TokenDataKey]: {
+    key: K;
+    oldValue: TokenData[K] | null;
+    newValue: TokenData[K] | null;
+  };
+}[TokenDataKey];
+export type TokenStorageSyncListener = (
+  newTokenData: SyncEventTokenData
+) => void;
 
 export class TokenManager {
   private static instance: TokenManager;
 
-  private constructor() {}
+  private storageSyncListeners = new Set<TokenStorageSyncListener>();
+
+  private constructor() {
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (!event.key) {
+        return;
+      }
+
+      if ([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY].includes(event.key)) {
+        for (const listener of this.storageSyncListeners.values()) {
+          try {
+            listener({
+              key: event.key as TokenDataKey,
+              oldValue: event.oldValue,
+              newValue: event.newValue,
+            });
+          } catch {
+            // noop
+          }
+        }
+      }
+    });
+  }
 
   static getInstance(): TokenManager {
     if (!TokenManager.instance) {
@@ -31,14 +65,6 @@ export class TokenManager {
   setTokens(tokens: TokenData): void {
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-  }
-
-  setAccessToken(token: string): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token);
-  }
-
-  setRefreshToken(token: string): void {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
   }
 
   clearTokens(): void {
@@ -61,6 +87,22 @@ export class TokenManager {
     const timeUntilExpiry = decodedAccessToken.exp - currentTime;
 
     return timeUntilExpiry < seconds;
+  }
+
+  addStorageSyncListener(listener: TokenStorageSyncListener): void {
+    if (this.storageSyncListeners.has(listener)) {
+      console.warn('Token storage sync listener already added', listener);
+    } else {
+      this.storageSyncListeners.add(listener);
+    }
+  }
+
+  removeStorageSyncListener(listener: TokenStorageSyncListener): void {
+    if (this.storageSyncListeners.has(listener)) {
+      this.storageSyncListeners.delete(listener);
+    } else {
+      console.warn('Token storage sync listener not attached', listener);
+    }
   }
 }
 
