@@ -7,7 +7,7 @@ import { BaseCampaignManifest, IntermediateResultsData } from './types';
 
 const participantOutcome = Joi.object({
   address: Joi.string().required(),
-  score: Joi.number().strict().positive().required(),
+  score: Joi.number().strict().min(0).required(),
 });
 
 const participantsOutcomesBatchSchema = Joi.object({

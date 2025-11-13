@@ -235,6 +235,41 @@ describe('payouts utils', () => {
       );
     });
 
+    it('should download intermediate results and pass validation when score is 0', async () => {
+      const mockedRawIntermediateResult = generateRawIntermediateResult();
+      const mockedParticipantOutcome = generateParticipantOutcome();
+      mockedParticipantOutcome.score = 0;
+
+      mockedRawIntermediateResult.participants_outcomes_batches.push({
+        id: faker.string.uuid(),
+        results: [mockedParticipantOutcome],
+      });
+
+      const mockedIntermediateResults = {
+        ...generateIntermediateResultsData(),
+        results: [mockedRawIntermediateResult],
+      };
+      const mockedIntermediateResultsHash = calculateIntermediateResultsHash(
+        mockedIntermediateResults,
+      );
+      const scope = nock(intermediateResultsUrl)
+        .get('/')
+        .reply(200, mockedIntermediateResults);
+
+      const intermediateResults =
+        await payoutsUtils.downloadIntermediateResults(
+          intermediateResultsUrl,
+          mockedIntermediateResultsHash,
+        );
+
+      scope.done();
+
+      expect(
+        intermediateResults.results[0].participants_outcomes_batches[0]
+          .results[0].score,
+      ).toBe(0);
+    });
+
     it.each([
       // invalid chain id format
       {
@@ -304,7 +339,7 @@ describe('payouts utils', () => {
           },
         ],
       },
-      // negative balance number
+      // negative reserved funds number
       {
         ...generateIntermediateResultsData(),
         results: [
@@ -312,12 +347,12 @@ describe('payouts utils', () => {
             ...generateRawIntermediateResult(),
             reserved_funds: faker.number.float({
               min: Number.MIN_SAFE_INTEGER,
-              max: -1,
+              max: 0,
             }),
           },
         ],
       },
-      // negative balance string
+      // negative reserved funds string
       {
         ...generateIntermediateResultsData(),
         results: [
@@ -326,7 +361,7 @@ describe('payouts utils', () => {
             reserved_funds: faker.number
               .float({
                 min: Number.MIN_SAFE_INTEGER,
-                max: -1,
+                max: 0,
               })
               .toString(),
           },
@@ -379,9 +414,9 @@ describe('payouts utils', () => {
                 results: [
                   {
                     ...generateParticipantOutcome(),
-                    score: faker.number.int({
+                    score: faker.number.float({
                       min: Number.MIN_SAFE_INTEGER,
-                      max: -1,
+                      max: 0,
                     }),
                   },
                 ],
