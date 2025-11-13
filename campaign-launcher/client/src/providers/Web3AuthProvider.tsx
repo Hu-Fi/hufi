@@ -15,7 +15,7 @@ import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
 import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
-import { TOKEN_DATA_KEY, tokenManager } from '@/utils/TokenManager';
+import { tokenManager } from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
 
@@ -146,15 +146,13 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [setAuthenticationState]);
 
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === TOKEN_DATA_KEY) {
-        const _isAuthenticated = tokenManager.hasTokens();
-        setAuthenticationState(_isAuthenticated);
-      }
+    const handleTokenStorageSync = () => {
+      const _isAuthenticated = tokenManager.hasTokens();
+      setAuthenticationState(_isAuthenticated);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    tokenManager.addStorageSyncListener(handleTokenStorageSync);
+    return () => tokenManager.removeStorageSyncListener(handleTokenStorageSync);
   }, [setAuthenticationState]);
 
   return (

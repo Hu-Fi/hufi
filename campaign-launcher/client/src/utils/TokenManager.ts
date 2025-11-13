@@ -5,12 +5,28 @@ export type TokenData = {
   refresh_token: string;
 };
 
-export const TOKEN_DATA_KEY = 'ro-token-data';
+const TOKEN_DATA_KEY = 'ro-token-data';
+
+export type TokenStorageSyncListener = (newTokenData: TokenData | null) => void;
 
 export class TokenManager {
   private static instance: TokenManager;
 
-  private constructor() {}
+  private storageSyncListeners = new Set<TokenStorageSyncListener>();
+
+  private constructor() {
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (event.key === TOKEN_DATA_KEY) {
+        for (const listener of this.storageSyncListeners.values()) {
+          try {
+            listener(this.getTokens());
+          } catch {
+            // noop
+          }
+        }
+      }
+    });
+  }
 
   static getInstance(): TokenManager {
     if (!TokenManager.instance) {
@@ -60,6 +76,22 @@ export class TokenManager {
     const timeUntilExpiry = decodedAccessToken.exp - currentTime;
 
     return timeUntilExpiry < seconds;
+  }
+
+  addStorageSyncListener(listener: TokenStorageSyncListener): void {
+    if (this.storageSyncListeners.has(listener)) {
+      console.warn('Token storage sync listener already added', listener);
+    } else {
+      this.storageSyncListeners.add(listener);
+    }
+  }
+
+  removeStorageSyncListener(listener: TokenStorageSyncListener): void {
+    if (this.storageSyncListeners.has(listener)) {
+      this.storageSyncListeners.delete(listener);
+    } else {
+      console.warn('Token storage sync listener not attached', listener);
+    }
   }
 }
 
