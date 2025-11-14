@@ -83,7 +83,7 @@ const DailyAmountPaidChart: FC<Props> = ({
   const dates = processedData.map((item) => item.date);
   const values = processedData.map((item) => item.value);
 
-  const hasValues = values.filter((value) => value > 0).length > 0;
+  const hasPoints = values.some((value) => value > 0);
 
   const chartData: ChartData<'line'> = {
     labels: dates,
@@ -209,7 +209,7 @@ const DailyAmountPaidChart: FC<Props> = ({
           drawTicks: false,
         },
         ticks: {
-          stepSize: hasValues ? Math.max(...values) / 4 : 1,
+          stepSize: hasPoints ? Math.max(...values) / 4 : 1,
           color: theme.palette.text.primary,
           font: {
             size: 10,
