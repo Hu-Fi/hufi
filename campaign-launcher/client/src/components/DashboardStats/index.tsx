@@ -14,7 +14,7 @@ export const StatsCard = styled(Box)(({ theme }) => ({
   height: '144px',
   backgroundColor: theme.palette.background.default,
   borderRadius: '16px',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
+  border: '1px solid rgba(247, 5, 169, 0.30)',
   padding: '16px 24px',
 
   [theme.breakpoints.down('xl')]: {
@@ -23,7 +23,7 @@ export const StatsCard = styled(Box)(({ theme }) => ({
 }));
 
 export const Value = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.violet,
+  color: theme.palette.primary.bright,
   fontSize: '40px',
   fontWeight: 800,
   letterSpacing: '-0.5px',
