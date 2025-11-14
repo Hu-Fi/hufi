@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 
 import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
-import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { UsersService } from '@/modules/users';
 
+import { ExchangeApiClientFactory } from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
 import {

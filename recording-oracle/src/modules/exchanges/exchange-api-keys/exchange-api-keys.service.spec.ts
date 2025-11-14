@@ -4,12 +4,9 @@ import { Test } from '@nestjs/testing';
 import { EncryptionConfigService } from '@/config';
 import { AesEncryptionService } from '@/modules/encryption';
 import { mockEncryptionConfigService } from '@/modules/encryption/fixtures';
-import {
-  ExchangeApiClient,
-  ExchangeApiClientFactory,
-} from '@/modules/exchange';
 import { UsersService } from '@/modules/users';
 
+import { ExchangeApiClient, ExchangeApiClientFactory } from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
@@ -84,7 +81,8 @@ describe('ExchangeApiKeysService', () => {
 
     it('should throw if not supported exchange name provided', async () => {
       const input = generateExchangeApiKeysData();
-      input.exchangeName = input.exchangeName.toUpperCase();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      input.exchangeName = input.exchangeName.toUpperCase() as any;
 
       let thrownError;
       try {

@@ -38,11 +38,9 @@ import {
   ExchangeApiAccessError,
   ExchangeApiClientError,
   ExchangeApiClientFactory,
-} from '@/modules/exchange';
-import {
   ExchangeApiKeyNotFoundError,
   ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
+} from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 import {

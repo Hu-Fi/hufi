@@ -1,5 +1,5 @@
 import { ETH_TOKEN_SYMBOL } from '@/common/constants';
-import { ExchangeApiClientFactory } from '@/modules/exchange';
+import { ExchangeApiClientFactory } from '@/modules/exchanges';
 
 import type {
   CampaignProgressChecker,

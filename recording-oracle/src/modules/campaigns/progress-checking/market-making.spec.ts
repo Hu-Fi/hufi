@@ -7,8 +7,8 @@ import {
   TakerOrMakerFlag,
   Trade,
   TradingSide,
-} from '@/modules/exchange';
-import { generateTrade } from '@/modules/exchange/fixtures';
+} from '@/modules/exchanges';
+import { generateTrade } from '@/modules/exchanges/fixtures';
 
 import {
   generateMarketMakingCheckerSetup,

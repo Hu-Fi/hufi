@@ -7,7 +7,6 @@ import {
 import type { Request, Response } from 'express';
 
 import logger from '@/logger';
-import { ExchangeApiClientError } from '@/modules/exchange/errors';
 import { UserNotFoundError } from '@/modules/users';
 
 import {
@@ -15,6 +14,7 @@ import {
   IncompleteKeySuppliedError,
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
+import { ExchangeApiClientError } from '../api-client/errors';
 
 @Catch(
   UserNotFoundError,

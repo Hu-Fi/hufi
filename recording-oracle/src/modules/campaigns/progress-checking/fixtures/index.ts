@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import {
   generateExchangeName,
   generateTradingPair,
-} from '@/modules/exchange/fixtures';
+} from '@/modules/exchanges/fixtures';
 
 import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from '../types';
 

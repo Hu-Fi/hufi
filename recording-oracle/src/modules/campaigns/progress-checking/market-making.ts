@@ -3,7 +3,7 @@ import {
   TakerOrMakerFlag,
   Trade,
   TradingSide,
-} from '@/modules/exchange';
+} from '@/modules/exchanges';
 
 import type {
   CampaignProgressChecker,

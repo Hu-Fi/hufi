@@ -5,7 +5,7 @@ import dayjs from '@/common/utils/dayjs';
 import {
   generateExchangeName,
   generateTradingPair,
-} from '@/modules/exchange/fixtures';
+} from '@/modules/exchanges/fixtures';
 import type { UserEntity } from '@/modules/users';
 import { generateUserEntity } from '@/modules/users/fixtures';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';

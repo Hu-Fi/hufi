@@ -4,8 +4,8 @@ import { createMock } from '@golevelup/ts-jest';
 import {
   ExchangeApiClient,
   ExchangeApiClientFactory,
-} from '@/modules/exchange';
-import { generateAccountBalance } from '@/modules/exchange/fixtures';
+} from '@/modules/exchanges';
+import { generateAccountBalance } from '@/modules/exchanges/fixtures';
 
 import {
   generateThresholdCheckerSetup,

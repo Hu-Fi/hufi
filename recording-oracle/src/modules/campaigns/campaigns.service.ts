@@ -28,12 +28,10 @@ import logger from '@/logger';
 import {
   ExchangeApiAccessError,
   ExchangeApiClientFactory,
-} from '@/modules/exchange';
-import {
   ExchangeApiKeyData,
   ExchangeApiKeyNotFoundError,
   ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
+} from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 

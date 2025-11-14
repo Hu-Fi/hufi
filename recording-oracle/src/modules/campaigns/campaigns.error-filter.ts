@@ -11,7 +11,7 @@ import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
-} from '@/modules/exchange-api-keys';
+} from '@/modules/exchanges';
 
 import {
   CampaignAlreadyFinishedError,

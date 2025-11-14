@@ -27,6 +27,10 @@ import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
 import logger from '@/logger';
+import {
+  generateExchangeName,
+  generateTradingPair,
+} from '@/modules/exchanges/fixtures';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
@@ -35,8 +39,6 @@ import {
   generateDepositAddressStructure,
   generateCcxtOpenOrder,
   generateCcxtTrade,
-  generateExchangeName,
-  generateTradingPair,
 } from './fixtures';
 
 const mockedCcxt = jest.mocked(ccxt);
