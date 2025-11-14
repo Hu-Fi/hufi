@@ -83,6 +83,8 @@ const DailyAmountPaidChart: FC<Props> = ({
   const dates = processedData.map((item) => item.date);
   const values = processedData.map((item) => item.value);
 
+  const hasPoints = values.some((value) => value > 0);
+
   const chartData: ChartData<'line'> = {
     labels: dates,
     datasets: [
@@ -157,10 +159,11 @@ const DailyAmountPaidChart: FC<Props> = ({
           label: (context) => {
             const value = context.raw as number;
             const formattedValue = numericFormatter(value.toString(), {
-              decimalScale: 2,
+              decimalScale: 3,
               fixedDecimalScale: false,
             });
-            return `${formattedValue} ${tokenSymbol}`;
+            const trimmedValue = parseFloat(formattedValue);
+            return `${trimmedValue} ${tokenSymbol}`;
           },
         },
       },
@@ -206,7 +209,7 @@ const DailyAmountPaidChart: FC<Props> = ({
           drawTicks: false,
         },
         ticks: {
-          stepSize: 200,
+          stepSize: hasPoints ? Math.max(...values) / 4 : 1,
           color: theme.palette.text.primary,
           font: {
             size: 10,
