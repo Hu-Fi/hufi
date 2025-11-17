@@ -57,6 +57,7 @@ const StyledLink = ({ to, text, sx, target, onClick }: StyledLinkProps) => {
   );
 };
 
+const DOCS_URL = import.meta.env.VITE_APP_DOCS_URL;
 const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 const LAUNCH_CAMPAIGN_TOOLTIP =
   "You'll need to connect your wallet before launching a campaign";
@@ -134,7 +135,7 @@ const Header: FC = () => {
             alignItems="center"
             height="100%"
           >
-            <StyledLink to={ROUTES.SUPPORT} text="Support" />
+            <StyledLink to={DOCS_URL} text="Support" target="_blank" />
             <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
             <StyledLink
               to={STAKING_DASHBOARD_URL}
