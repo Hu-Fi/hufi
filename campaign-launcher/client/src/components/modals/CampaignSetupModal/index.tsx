@@ -12,9 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
 
-import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useStakeContext } from '@/providers/StakeProvider';
 import { CampaignType } from '@/types';
