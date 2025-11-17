@@ -279,8 +279,7 @@ const CampaignSetupModal: FC<Props> = ({
               on HuFi.
             </Typography>
             <Link
-              to={ROUTES.SUPPORT}
-              component={RouterLink}
+              href={import.meta.env.VITE_APP_DOCS_URL}
               target="_blank"
               sx={{
                 width: 'fit-content',

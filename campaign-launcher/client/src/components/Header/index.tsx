@@ -186,7 +186,7 @@ const Header: FC = () => {
             }}
           >
             <StyledLink
-              to={ROUTES.SUPPORT}
+              to={DOCS_URL}
               text="Support"
               onClick={handleMenuClose}
             />
