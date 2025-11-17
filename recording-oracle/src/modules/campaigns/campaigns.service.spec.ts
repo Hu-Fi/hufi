@@ -2000,7 +2000,11 @@ describe('CampaignsService', () => {
 
     it('should record campaign progress to existing results', async () => {
       const intermediateResultsData = generateIntermediateResultsData({
-        results: [generateIntermediateResult()],
+        results: [
+          generateIntermediateResult({
+            endDate: dayjs(campaign.startDate).add(1, 'day').toDate(),
+          }),
+        ],
       });
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
