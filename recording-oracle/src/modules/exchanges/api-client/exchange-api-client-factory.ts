@@ -75,7 +75,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       this.preloadedCcxtClients.set(exchangeName, ccxtClient);
       logger.debug('Preloaded ccxt for exchange');
     } catch (error) {
-      this.logger.error('Failed to preload ccxt for exchange', {
+      logger.error('Failed to preload ccxt for exchange', {
         error,
       });
     }
