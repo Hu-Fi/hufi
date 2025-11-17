@@ -12,9 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
 
-import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useStakeContext } from '@/providers/StakeProvider';
 import { CampaignType } from '@/types';
@@ -279,8 +277,7 @@ const CampaignSetupModal: FC<Props> = ({
               on HuFi.
             </Typography>
             <Link
-              to={ROUTES.SUPPORT}
-              component={RouterLink}
+              href={import.meta.env.VITE_APP_DOCS_URL}
               target="_blank"
               sx={{
                 width: 'fit-content',
