@@ -5,13 +5,19 @@ import {
   generateTradingPair,
 } from '@/modules/exchanges/fixtures';
 
-import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from '../types';
+import { CampaignProgressCheckerSetup, ParticipantInfo } from '../types';
 
-export function generateParticipantAuthKeys(): ParticipantAuthKeys {
-  return {
-    apiKey: faker.string.sample(),
-    secret: faker.string.sample(),
+export function generateParticipantInfo(
+  overrides: Partial<ParticipantInfo> = {},
+): ParticipantInfo {
+  const info: ParticipantInfo = {
+    id: faker.string.uuid(),
+    joinedAt: faker.date.anytime(),
   };
+
+  Object.assign(info, overrides);
+
+  return info;
 }
 
 export function generateMarketMakingCheckerSetup(

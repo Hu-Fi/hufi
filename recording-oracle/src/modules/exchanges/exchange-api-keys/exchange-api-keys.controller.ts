@@ -61,7 +61,7 @@ export class ExchangeApiKeysController {
     const userId = request.user.id;
 
     const enrolledApiKeys =
-      await this.exchangeApiKeysService.retrievedEnrolledApiKeys(userId);
+      await this.exchangeApiKeysService.retrieveEnrolledApiKeys(userId);
 
     return enrolledApiKeys;
   }

@@ -1,14 +1,11 @@
+import type { CampaignParticipant } from '../types';
+
 export type CampaignProgressCheckerSetup = {
   exchangeName: string;
   symbol: string;
   periodStart: Date;
   periodEnd: Date;
   [x: string]: unknown;
-};
-
-export type ParticipantAuthKeys = {
-  apiKey: string;
-  secret: string;
 };
 
 export type BaseProgressCheckResult = {
@@ -18,13 +15,12 @@ export type BaseProgressCheckResult = {
 
 export type CampaignProgressMeta = Record<string, unknown>;
 
+export type ParticipantInfo = Pick<CampaignParticipant, 'id' | 'joinedAt'>;
+
 export interface CampaignProgressChecker<
   R extends BaseProgressCheckResult,
   M extends CampaignProgressMeta,
 > {
-  checkForParticipant(
-    authKeys: ParticipantAuthKeys,
-    participantJoinedAt: Date,
-  ): Promise<R>;
+  checkForParticipant(participant: ParticipantInfo): Promise<R>;
   getCollectedMeta(): M;
 }

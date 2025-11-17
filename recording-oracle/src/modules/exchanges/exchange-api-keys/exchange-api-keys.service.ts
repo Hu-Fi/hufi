@@ -101,26 +101,7 @@ export class ExchangeApiKeysService {
     };
   }
 
-  async assertUserHasAuthorizedKeys(
-    userId: string,
-    exchangeName: string,
-  ): Promise<string> {
-    const { id, apiKey, secretKey } = await this.retrieve(userId, exchangeName);
-
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
-      exchangeName,
-      { apiKey, secret: secretKey },
-    );
-
-    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
-    if (!hasRequiredAccess) {
-      throw new KeyAuthorizationError(exchangeName);
-    }
-
-    return id;
-  }
-
-  async retrievedEnrolledApiKeys(userId: string): Promise<EnrolledApiKeyDto[]> {
+  async retrieveEnrolledApiKeys(userId: string): Promise<EnrolledApiKeyDto[]> {
     const enrolledKeys =
       await this.exchangeApiKeysRepository.findByUserId(userId);
 

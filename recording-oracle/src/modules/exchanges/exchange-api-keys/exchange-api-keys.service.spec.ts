@@ -217,7 +217,7 @@ describe('ExchangeApiKeysService', () => {
     });
   });
 
-  describe('retrievedEnrolledApiKeys', () => {
+  describe('retrieveEnrolledApiKeys', () => {
     it('should return enrolled keys', async () => {
       const { userId, exchangeName, apiKey, secretKey } =
         generateExchangeApiKeysData();
@@ -235,7 +235,7 @@ describe('ExchangeApiKeysService', () => {
       ] as ExchangeApiKeyEntity[]);
 
       const results =
-        await exchangeApiKeysService.retrievedEnrolledApiKeys(userId);
+        await exchangeApiKeysService.retrieveEnrolledApiKeys(userId);
 
       expect(results.length).toBe(1);
 

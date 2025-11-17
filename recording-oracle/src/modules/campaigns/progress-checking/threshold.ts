@@ -1,11 +1,11 @@
 import { ETH_TOKEN_SYMBOL } from '@/common/constants';
-import { ExchangeApiClientFactory } from '@/modules/exchanges';
+import { ExchangesService } from '@/modules/exchanges';
 
 import type {
   CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  ParticipantAuthKeys,
   BaseProgressCheckResult,
+  ParticipantInfo,
 } from './types';
 
 export type ThresholdResult = BaseProgressCheckResult & {
@@ -30,7 +30,7 @@ export class ThresholdProgressChecker
   protected readonly ethDepositAddresses = new Set<string>();
 
   constructor(
-    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
+    private readonly exchangesService: ExchangesService,
     setupData: CampaignProgressCheckerSetup,
   ) {
     this.exchangeName = setupData.exchangeName;
@@ -44,11 +44,11 @@ export class ThresholdProgressChecker
   }
 
   async checkForParticipant(
-    authKeys: ParticipantAuthKeys,
+    participant: ParticipantInfo,
   ): Promise<ThresholdResult> {
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
+    const exchangeApiClient = await this.exchangesService.getClientForUser(
+      participant.id,
       this.exchangeName,
-      authKeys,
     );
 
     const [ethDepositAddress, accountBalance] = await Promise.all([

@@ -37,9 +37,8 @@ import logger from '@/logger';
 import {
   ExchangeApiAccessError,
   ExchangeApiClientError,
-  ExchangeApiClientFactory,
   ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysService,
+  ExchangesService,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -89,6 +88,7 @@ import {
   ThresholdProgressChecker,
 } from './progress-checking/threshold';
 import {
+  CampaignParticipant,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -103,7 +103,7 @@ import { VolumeStatsRepository } from './volume-stats.repository';
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
-const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
+const mockExchangesService = createMock<ExchangesService>();
 const mockStorageService = createMock<StorageService>();
 const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
 
@@ -129,12 +129,8 @@ describe('CampaignsService', () => {
           useValue: mockCampaignsRepository,
         },
         {
-          provide: ExchangeApiKeysService,
-          useValue: mockExchangeApiKeysService,
-        },
-        {
-          provide: ExchangeApiClientFactory,
-          useValue: createMock<ExchangeApiClientFactory>(),
+          provide: ExchangesService,
+          useValue: mockExchangesService,
         },
         {
           provide: UserCampaignsRepository,
@@ -859,7 +855,7 @@ describe('CampaignsService', () => {
         false,
       );
       const testError = new Error(faker.lorem.sentence());
-      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+      mockExchangesService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
         testError,
       );
 
@@ -901,7 +897,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
+      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
         faker.string.uuid(),
       );
 
@@ -1261,14 +1257,6 @@ describe('CampaignsService', () => {
         [mockCampaignProgressMetaProp]: mockCampaignProgressMetaValue,
       });
 
-      mockExchangeApiKeysService.retrieve.mockImplementation(
-        async (userId) => ({
-          id: faker.string.uuid(),
-          apiKey: `${userId}-apiKey`,
-          secretKey: `${userId}-secretKey`,
-        }),
-      );
-
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
         mockCampaignProgressChecker,
       );
@@ -1370,20 +1358,10 @@ describe('CampaignsService', () => {
         periodEnd,
       );
 
-      for (const { id: participantId, joinedAt } of participants) {
-        expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledWith(
-          participantId,
-          campaign.exchangeName,
-        );
+      for (const participant of participants) {
         expect(
           mockCampaignProgressChecker.checkForParticipant,
-        ).toHaveBeenCalledWith(
-          {
-            apiKey: `${participantId}-apiKey`,
-            secret: `${participantId}-secretKey`,
-          },
-          joinedAt,
-        );
+        ).toHaveBeenCalledWith(participant);
       }
     });
 
@@ -1440,27 +1418,23 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [normalParticipant, noApiKeyParticipant],
       );
-      mockExchangeApiKeysService.retrieve.mockImplementation(
-        async (userId, exchangeName) => {
-          if (userId === normalParticipant.id) {
-            return {
-              id: faker.string.uuid(),
-              apiKey: `${userId}-apiKey`,
-              secretKey: `${userId}-secretKey`,
-            };
-          }
-
-          throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
-        },
-      );
 
       const mockedParticipantsResult = {
         abuseDetected: false,
         score: faker.number.float(),
         [mockCampaignProgressMetaProp]: faker.number.float(),
       };
-      mockCampaignProgressChecker.checkForParticipant.mockResolvedValueOnce(
-        mockedParticipantsResult,
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        async (participant: CampaignParticipant) => {
+          if (participant.id === normalParticipant.id) {
+            return mockedParticipantsResult;
+          }
+
+          throw new ExchangeApiKeyNotFoundError(
+            participant.id,
+            campaign.exchangeName,
+          );
+        },
       );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
@@ -1502,15 +1476,18 @@ describe('CampaignsService', () => {
         score: faker.number.float(),
         [mockCampaignProgressMetaProp]: faker.number.float(),
       };
-      mockCampaignProgressChecker.checkForParticipant.mockResolvedValueOnce(
-        normalParticipantResult,
-      );
       const syntheticError = new ExchangeApiAccessError(
         `Api access failed for fetch_test_${faker.lorem.word()}`,
         faker.lorem.sentence(),
       );
-      mockCampaignProgressChecker.checkForParticipant.mockRejectedValueOnce(
-        syntheticError,
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        async (participant: CampaignParticipant) => {
+          if (participant.id === normalParticipant.id) {
+            return normalParticipantResult;
+          }
+
+          throw syntheticError;
+        },
       );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
@@ -3466,7 +3443,12 @@ describe('CampaignsService', () => {
 
       expect(thrownError).toBeInstanceOf(UserIsNotParticipatingError);
 
-      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(0);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
     it("should throw if can't get active timeframe", async () => {

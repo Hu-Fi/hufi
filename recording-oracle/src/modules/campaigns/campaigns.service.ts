@@ -8,7 +8,6 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
@@ -26,11 +25,9 @@ import { isValidExchangeName } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
+  ExchangesService,
   ExchangeApiAccessError,
-  ExchangeApiClientFactory,
-  ExchangeApiKeyData,
   ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysService,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -99,14 +96,13 @@ export class CampaignsService implements OnApplicationBootstrap {
   constructor(
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
-    private readonly exchangeApiKeysService: ExchangeApiKeysService,
+    private readonly exchangesService: ExchangesService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly storageService: StorageService,
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly pgAdvisoryLock: PgAdvisoryLock,
-    private readonly moduleRef: ModuleRef,
   ) {}
 
   onApplicationBootstrap() {
@@ -183,7 +179,7 @@ export class CampaignsService implements OnApplicationBootstrap {
       return campaign.id;
     }
 
-    await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
+    await this.exchangesService.assertUserHasAuthorizedKeys(
       userId,
       campaign.exchangeName,
     );
@@ -708,36 +704,9 @@ export class CampaignsService implements OnApplicationBootstrap {
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
-      let exchangeApiKey: ExchangeApiKeyData;
-      try {
-        exchangeApiKey = await this.exchangeApiKeysService.retrieve(
-          participant.id,
-          campaign.exchangeName,
-        );
-      } catch (error) {
-        if (error instanceof ExchangeApiKeyNotFoundError) {
-          /**
-           * We should remove all active participations before
-           * allowing to remove api key, but let's warn ourselves
-           * just in case if something unusual happens.
-           */
-          logger.warn('Participant lacks valid api key', {
-            participantId: participant.id,
-          });
-          continue;
-        }
-        throw error;
-      }
-
       try {
         const { abuseDetected, ...participantOutcomes } =
-          await campaignProgressChecker.checkForParticipant(
-            {
-              apiKey: exchangeApiKey.apiKey,
-              secret: exchangeApiKey.secretKey,
-            },
-            participant.joinedAt,
-          );
+          await campaignProgressChecker.checkForParticipant(participant);
 
         if (abuseDetected) {
           logger.warn('Abuse detected. Skipping participant outcome', {
@@ -751,7 +720,17 @@ export class CampaignsService implements OnApplicationBootstrap {
           ...participantOutcomes,
         });
       } catch (error) {
-        if (error instanceof ExchangeApiAccessError) {
+        if (error instanceof ExchangeApiKeyNotFoundError) {
+          /**
+           * We should remove all active participations before
+           * allowing to remove api key, but let's warn ourselves
+           * just in case if something unusual happens.
+           */
+          logger.warn('Participant lacks valid api key', {
+            participantId: participant.id,
+          });
+          continue;
+        } else if (error instanceof ExchangeApiAccessError) {
           logger.warn('Participant lacks necessary exchange API access', {
             participantId: participant.id,
             error,
@@ -775,25 +754,20 @@ export class CampaignsService implements OnApplicationBootstrap {
     campaignType: string,
     campaignCheckerSetup: CampaignProgressCheckerSetup,
   ): CampaignProgressChecker<ProgressCheckResult, CampaignProgressMeta> {
-    const exchangeApiClientFactory = this.moduleRef.get(
-      ExchangeApiClientFactory,
-      { strict: false },
-    );
-
     switch (campaignType) {
       case CampaignType.MARKET_MAKING:
         return new MarketMakingProgressChecker(
-          exchangeApiClientFactory,
+          this.exchangesService,
           campaignCheckerSetup,
         );
       case CampaignType.HOLDING:
         return new HoldingProgressChecker(
-          exchangeApiClientFactory,
+          this.exchangesService,
           campaignCheckerSetup,
         );
       case CampaignType.THRESHOLD:
         return new ThresholdProgressChecker(
-          exchangeApiClientFactory,
+          this.exchangesService,
           campaignCheckerSetup,
         );
       default:

@@ -1,21 +1,18 @@
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 
-import {
-  ExchangeApiClient,
-  ExchangeApiClientFactory,
-} from '@/modules/exchanges';
+import { ExchangeApiClient, ExchangesService } from '@/modules/exchanges';
 import { generateAccountBalance } from '@/modules/exchanges/fixtures';
 
 import {
   generateThresholdCheckerSetup,
-  generateParticipantAuthKeys,
+  generateParticipantInfo,
 } from './fixtures';
 import { ThresholdProgressChecker } from './threshold';
-import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from './types';
+import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
 
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
-const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
+const mockedExchangesService = createMock<ExchangesService>();
 
 class TestCampaignProgressChecker extends ThresholdProgressChecker {
   override ethDepositAddresses = new Set<string>();
@@ -23,7 +20,7 @@ class TestCampaignProgressChecker extends ThresholdProgressChecker {
 
 describe('ThresholdProgressChecker', () => {
   beforeEach(() => {
-    mockedExchangeApiClientFactory.create.mockReturnValue(
+    mockedExchangesService.getClientForUser.mockResolvedValue(
       mockedExchangeApiClient,
     );
   });
@@ -34,7 +31,7 @@ describe('ThresholdProgressChecker', () => {
 
   it('should be defined', () => {
     const resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      mockedExchangesService,
       generateThresholdCheckerSetup(),
     );
     expect(resultsChecker).toBeDefined();
@@ -42,16 +39,16 @@ describe('ThresholdProgressChecker', () => {
 
   describe('checkForParticipant', () => {
     let progressCheckerSetup: CampaignProgressCheckerSetup;
-    let participantAuthKeys: ParticipantAuthKeys;
+    let participantInfo: ParticipantInfo;
 
     let resultsChecker: TestCampaignProgressChecker;
 
     beforeEach(() => {
       progressCheckerSetup = generateThresholdCheckerSetup();
-      participantAuthKeys = generateParticipantAuthKeys();
+      participantInfo = generateParticipantInfo();
 
       resultsChecker = new TestCampaignProgressChecker(
-        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        mockedExchangesService,
         progressCheckerSetup,
       );
 
@@ -63,22 +60,22 @@ describe('ThresholdProgressChecker', () => {
 
     it('should properly init api client', async () => {
       const resultsChecker = new TestCampaignProgressChecker(
-        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        mockedExchangesService,
         progressCheckerSetup,
       );
 
-      await resultsChecker.checkForParticipant(participantAuthKeys);
+      await resultsChecker.checkForParticipant(participantInfo);
 
-      expect(mockedExchangeApiClientFactory.create).toHaveBeenCalledTimes(1);
-      expect(mockedExchangeApiClientFactory.create).toHaveBeenCalledWith(
+      expect(mockedExchangesService.getClientForUser).toHaveBeenCalledTimes(1);
+      expect(mockedExchangesService.getClientForUser).toHaveBeenCalledWith(
+        participantInfo.id,
         progressCheckerSetup.exchangeName,
-        participantAuthKeys,
       );
     });
 
     it('should return zeros when no token on balance', async () => {
       const result = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
+        generateParticipantInfo(),
       );
 
       expect(result).toEqual({
@@ -96,8 +93,7 @@ describe('ThresholdProgressChecker', () => {
         mockedAccountBalance,
       );
 
-      const result =
-        await resultsChecker.checkForParticipant(participantAuthKeys);
+      const result = await resultsChecker.checkForParticipant(participantInfo);
 
       const expectedBalance =
         mockedAccountBalance.total[progressCheckerSetup.symbol];
@@ -115,7 +111,7 @@ describe('ThresholdProgressChecker', () => {
   describe('abuse detection', () => {
     const progressCheckerSetup = generateThresholdCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      mockedExchangesService,
       progressCheckerSetup,
     );
 
@@ -134,7 +130,7 @@ describe('ThresholdProgressChecker', () => {
         generateAccountBalance([progressCheckerSetup.symbol]),
       );
       const abuseResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
+        generateParticipantInfo(),
       );
 
       expect(abuseResult.abuseDetected).toBe(true);
@@ -152,7 +148,7 @@ describe('ThresholdProgressChecker', () => {
       progressCheckerSetup = generateThresholdCheckerSetup();
 
       resultsChecker = new TestCampaignProgressChecker(
-        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        mockedExchangesService,
         progressCheckerSetup,
       );
     });
@@ -182,7 +178,7 @@ describe('ThresholdProgressChecker', () => {
             : 0;
         expectedTotalScore += expectedScore;
 
-        await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
+        await resultsChecker.checkForParticipant(generateParticipantInfo());
       }
 
       const meta = resultsChecker.getCollectedMeta();
@@ -202,9 +198,9 @@ describe('ThresholdProgressChecker', () => {
       );
 
       const normalResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
+        generateParticipantInfo(),
       );
-      await resultsChecker.checkForParticipant(generateParticipantAuthKeys());
+      await resultsChecker.checkForParticipant(generateParticipantInfo());
 
       const meta = resultsChecker.getCollectedMeta();
       expect(meta.total_balance).toBe(normalResult.token_balance);
