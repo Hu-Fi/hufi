@@ -1,6 +1,7 @@
 export {
   ExchangeApiClientError,
   ExchangeApiAccessError,
+  ExchangePermission,
   type Order,
   type Trade,
   type ExchangeApiClient,

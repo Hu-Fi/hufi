@@ -43,6 +43,7 @@ import {
   UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
+import { CAMPAIGN_PERMISSIONS_MAP, PROGRESS_PERIOD_DAYS } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
@@ -76,8 +77,6 @@ import {
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
-
-const PROGRESS_PERIOD_DAYS = 1;
 
 @Injectable()
 export class CampaignsService implements OnApplicationBootstrap {
@@ -182,6 +181,7 @@ export class CampaignsService implements OnApplicationBootstrap {
     await this.exchangesService.assertUserHasAuthorizedKeys(
       userId,
       campaign.exchangeName,
+      CAMPAIGN_PERMISSIONS_MAP[campaign.type],
     );
 
     if (this.checkCampaignTargetMet(campaign)) {

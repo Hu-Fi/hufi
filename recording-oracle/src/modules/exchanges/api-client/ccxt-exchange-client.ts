@@ -7,7 +7,13 @@ import type { Logger } from '@/logger';
 
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import type { ExchangeApiClient } from './exchange-api-client.interface';
-import { AccountBalance, Order, Trade } from './types';
+import {
+  AccountBalance,
+  ExchangePermission,
+  Order,
+  RequiredAccessCheckResult,
+  Trade,
+} from './types';
 
 type InitOptions = {
   apiKey: string;
@@ -108,6 +114,21 @@ function CatchApiAccessErrors() {
   };
 }
 
+async function permissionCheckHandler(
+  checkPromise: Promise<unknown>,
+): Promise<boolean> {
+  try {
+    await checkPromise;
+    return true;
+  } catch (error) {
+    if (error instanceof ccxt.NetworkError) {
+      throw error;
+    }
+
+    return false;
+  }
+}
+
 export class CcxtExchangeClient implements ExchangeApiClient {
   private logger: Logger;
   private ccxtClient: Exchange;
@@ -143,14 +164,64 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     return this.ccxtClient.checkRequiredCredentials(false);
   }
 
-  async checkRequiredAccess(): Promise<boolean> {
+  async checkRequiredAccess(
+    permissionsToCheck: Array<ExchangePermission>,
+  ): Promise<RequiredAccessCheckResult> {
+    const _permissionsToCheck = new Set(permissionsToCheck);
+    if (_permissionsToCheck.size === 0) {
+      throw new Error(
+        'At least one exchange permission must be provided for check',
+      );
+    }
+
     try {
-      // for MARKET_MAKING campaigns
-      await this.fetchMyTrades(ETH_USDT_PAIR, Date.now());
-      // for HOLDING & THRESHOLD campaigns
-      await this.fetchBalance();
-      await this.fetchDepositAddress(ETH_TOKEN_SYMBOL);
-      return true;
+      const checkHandlersMap = new Map<ExchangePermission, Promise<boolean>>();
+
+      if (_permissionsToCheck.has(ExchangePermission.FETCH_BALANCE)) {
+        checkHandlersMap.set(
+          ExchangePermission.FETCH_BALANCE,
+          permissionCheckHandler(this.fetchBalance()),
+        );
+      }
+
+      if (_permissionsToCheck.has(ExchangePermission.FETCH_DEPOSIT_ADDRESS)) {
+        checkHandlersMap.set(
+          ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+          permissionCheckHandler(this.fetchDepositAddress(ETH_TOKEN_SYMBOL)),
+        );
+      }
+
+      if (_permissionsToCheck.has(ExchangePermission.FETCH_MY_TRADES)) {
+        checkHandlersMap.set(
+          ExchangePermission.FETCH_MY_TRADES,
+          permissionCheckHandler(this.fetchMyTrades(ETH_USDT_PAIR, Date.now())),
+        );
+      }
+
+      /**
+       * To ensure try/catch handlers error in any promise
+       * and pre-resolve them
+       */
+      await Promise.all(Array.from(checkHandlersMap.values()));
+
+      const missingPermissions: Array<ExchangePermission> = [];
+      for (const [permission, checkResultPromise] of checkHandlersMap) {
+        const hasPermission = await checkResultPromise;
+        if (!hasPermission) {
+          missingPermissions.push(permission);
+        }
+      }
+
+      if (missingPermissions.length === 0) {
+        return {
+          success: true,
+        };
+      }
+
+      return {
+        success: false,
+        missing: missingPermissions,
+      };
     } catch (error) {
       if (error instanceof ccxt.NetworkError) {
         const message = 'Error while checking exchange access';
@@ -158,7 +229,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         throw new ExchangeApiClientError(message);
       }
 
-      return false;
+      throw error;
     }
   }
 

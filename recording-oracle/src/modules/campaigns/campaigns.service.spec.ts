@@ -897,9 +897,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
-        faker.string.uuid(),
-      );
+      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce();
 
       const now = new Date();
       jest.useFakeTimers({ now });

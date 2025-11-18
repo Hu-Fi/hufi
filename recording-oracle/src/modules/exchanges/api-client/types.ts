@@ -40,3 +40,18 @@ export type Trade = Pick<
 >;
 
 export type AccountBalance = CcxtAccountBalance;
+
+export enum ExchangePermission {
+  FETCH_BALANCE = 'VIEW_ACCOUNT_BALANCE',
+  FETCH_DEPOSIT_ADDRESS = 'VIEW_DEPOSIT_ADDRESS',
+  FETCH_MY_TRADES = 'VIEW_SPOT_TRADING_HISTORY',
+}
+
+export type RequiredAccessCheckResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      missing: Array<ExchangePermission>;
+    };

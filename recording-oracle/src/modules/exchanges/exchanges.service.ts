@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { ExchangeApiClient, ExchangeApiClientFactory } from './api-client';
+import {
+  ExchangeApiClient,
+  ExchangeApiClientFactory,
+  ExchangePermission,
+} from './api-client';
 import {
   ExchangeApiKeysService,
   KeyAuthorizationError,
@@ -36,12 +40,14 @@ export class ExchangesService {
   async assertUserHasAuthorizedKeys(
     userId: string,
     exchangeName: string,
+    permissionsToCheck: Array<ExchangePermission>,
   ): Promise<void> {
     const exchangeApiClient = await this.getClientForUser(userId, exchangeName);
 
-    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
-    if (!hasRequiredAccess) {
-      throw new KeyAuthorizationError(exchangeName);
+    const hasRequiredAccess =
+      await exchangeApiClient.checkRequiredAccess(permissionsToCheck);
+    if (!hasRequiredAccess.success) {
+      throw new KeyAuthorizationError(exchangeName, hasRequiredAccess.missing);
     }
   }
 }

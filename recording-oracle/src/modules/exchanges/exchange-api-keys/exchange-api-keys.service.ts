@@ -4,7 +4,7 @@ import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
 import { UsersService } from '@/modules/users';
 
-import { ExchangeApiClientFactory } from '../api-client';
+import { ExchangeApiClientFactory, ExchangePermission } from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
 import {
@@ -49,9 +49,11 @@ export class ExchangeApiKeysService {
       throw new IncompleteKeySuppliedError(exchangeName);
     }
 
-    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
-    if (!hasRequiredAccess) {
-      throw new KeyAuthorizationError(exchangeName);
+    const accessCheckResult = await exchangeApiClient.checkRequiredAccess(
+      Object.values(ExchangePermission),
+    );
+    if (!accessCheckResult.success) {
+      throw new KeyAuthorizationError(exchangeName, accessCheckResult.missing);
     }
 
     await this.usersService.assertUserExistsById(userId);

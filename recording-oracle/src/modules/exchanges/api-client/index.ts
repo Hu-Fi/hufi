@@ -8,4 +8,4 @@ export type {
   ExchangeApiClientInitOptions,
 } from './exchange-api-client.interface';
 
-export { TakerOrMakerFlag, TradingSide } from './types';
+export { ExchangePermission, TakerOrMakerFlag, TradingSide } from './types';

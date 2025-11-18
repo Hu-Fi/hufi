@@ -7,6 +7,7 @@ import {
 import type { Request, Response } from 'express';
 
 import { InvalidEvmAddressError } from '@/common/errors/web3';
+import { BaseErrorResponse } from '@/common/types';
 import logger from '@/logger';
 import {
   ExchangeApiKeyNotFoundError,
@@ -46,19 +47,21 @@ export class CampaignsControllerErrorsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.UNPROCESSABLE_ENTITY;
-    let message: string = exception.message;
+
+    const responseData: BaseErrorResponse = {
+      message: exception.message,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+    };
+
     if (exception instanceof InvalidCampaign) {
-      message = exception.details;
+      responseData.message = exception.details;
     } else if (exception instanceof InvalidEvmAddressError) {
       status = HttpStatus.BAD_REQUEST;
     } else if (exception instanceof CampaignJoinLimitedError) {
-      message = `${exception.message}. ${exception.detail}`;
+      responseData.message = `${exception.message}. ${exception.detail}`;
     }
 
-    return response.status(status).json({
-      message,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+    return response.status(status).json(responseData);
   }
 }
