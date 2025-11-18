@@ -60,6 +60,8 @@ export class CampaignsControllerErrorsFilter implements ExceptionFilter {
       status = HttpStatus.BAD_REQUEST;
     } else if (exception instanceof CampaignJoinLimitedError) {
       responseData.message = `${exception.message}. ${exception.detail}`;
+    } else if (exception instanceof KeyAuthorizationError) {
+      responseData.message = `${exception.message}. Missing: ${exception.missingPermissions.join(', ')}`;
     }
 
     return response.status(status).json(responseData);
