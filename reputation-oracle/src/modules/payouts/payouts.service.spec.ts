@@ -295,7 +295,7 @@ describe('PayoutsService', () => {
       /**
        * In this test we have to use good numbers in order to avoid
        * flaky results because of floating point precision
-       * in this particular test; we have a seprate test for precision
+       * in this particular test; we have a separate tests for precision
        */
       const intermediateResult = generateIntermediateResult();
 
@@ -326,7 +326,7 @@ describe('PayoutsService', () => {
         'calculateRewardsForIntermediateResult'
       ](intermediateResult, TEST_TOKEN_DECIMALS);
 
-      const rewardsMap = new Map<string, number>();
+      const rewardsMap = new Map<string, string>();
       for (
         let i = 0;
         i < intermediateResult.participants_outcomes_batches.length;
@@ -343,13 +343,16 @@ describe('PayoutsService', () => {
         }
       }
 
+      const expectedReward = equalReward.toString();
       for (const participant of participantAddressesSet) {
-        expect(rewardsMap.get(participant)).toBe(equalReward);
+        expect(rewardsMap.get(participant)).toBe(expectedReward);
       }
     });
 
     it('should correctly calculate rewards for precision-sensitive results', () => {
-      const rewards = payoutsService['calculateRewardsForIntermediateResult'](
+      const rewardsBathes = payoutsService[
+        'calculateRewardsForIntermediateResult'
+      ](
         Object.assign({}, precisionSensitiveResult, {
           from: new Date(precisionSensitiveResult.from),
           to: new Date(precisionSensitiveResult.to),
@@ -358,16 +361,50 @@ describe('PayoutsService', () => {
       );
 
       let total = new Decimal(0);
-      for (const reward of rewards[0].rewards) {
+      for (const reward of rewardsBathes[0].rewards) {
         total = total.plus(reward.amount);
       }
-      expect(total.toNumber()).toBe(41.99999999999999);
+
+      expect(total.toString()).toBe('41.999999999999999999');
       /**
        * Input and shanpshot for this test are based on real-data
        * and correct at the time of adding. They shouldn't be changed
        * unless some bug in input/output itself is found.
        */
-      expect(rewards).toMatchSnapshot();
+      expect(rewardsBathes).toMatchSnapshot();
+    });
+
+    it('should correctly truncate rewards for precision-sensitive results', () => {
+      const rewardAmount = '1.666666666666666666';
+      const intermediateResult = generateIntermediateResult();
+      intermediateResult.reserved_funds = rewardAmount;
+
+      const participantOutcome = generateParticipantOutcome({
+        /**
+         * Ensure score is positive to always get rewards
+         */
+        score: faker.number.float({ min: 0.01 }),
+      });
+      intermediateResult.participants_outcomes_batches = [
+        {
+          id: faker.string.uuid(),
+          results: [participantOutcome],
+        },
+      ];
+
+      const rewardsBatches = payoutsService[
+        'calculateRewardsForIntermediateResult'
+      ](intermediateResult, 18);
+
+      expect(rewardsBatches.length).toBe(1);
+      expect(rewardsBatches[0].id).toBe(
+        intermediateResult.participants_outcomes_batches[0].id,
+      );
+      expect(rewardsBatches[0].rewards.length).toBe(1);
+      expect(rewardsBatches[0].rewards[0]).toEqual({
+        address: participantOutcome.address,
+        amount: rewardAmount,
+      });
     });
   });
 

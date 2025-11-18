@@ -49,7 +49,7 @@ export type IntermediateResultsData = {
 
 export type CalculatedReward = {
   address: string;
-  amount: number;
+  amount: string;
 };
 
 export type CalculatedRewardsBatch = {
