@@ -21,7 +21,6 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import * as errorUtils from '@/utils/error';
 
 import BaseModal from '../BaseModal';
 
@@ -201,8 +200,9 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
           {isError && (
             <ModalError
               message={
-                errorUtils.getMessageFromError(postExchangeApiKeyError) ||
-                'Failed to add API key.'
+                typeof postExchangeApiKeyError === 'string'
+                  ? postExchangeApiKeyError
+                  : 'Failed to add API key.'
               }
             />
           )}

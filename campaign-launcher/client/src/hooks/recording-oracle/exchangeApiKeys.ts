@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
+import * as errorUtils from '@/utils/error';
 
 export const useGetEnrolledExchanges = () => {
   const { isAuthenticated } = useWeb3Auth();
@@ -38,12 +39,30 @@ export const usePostExchangeApiKey = () => {
 
   return useMutation({
     mutationKey: ['post-exchange-api-keys'],
-    mutationFn: (data: MutationPayload) =>
-      recordingApi.upsertExchangeApiKey(
-        data.exchangeName,
-        data.apiKey,
-        data.secret
-      ),
+    mutationFn: async (data: MutationPayload) => {
+      try {
+        await recordingApi.upsertExchangeApiKey(
+          data.exchangeName,
+          data.apiKey,
+          data.secret
+        );
+      } catch (error) {
+        let message = errorUtils.getMessageFromError(error);
+        if (!message) {
+          throw error;
+        }
+
+        const details = errorUtils.getDetailsFromError(error);
+        if (
+          Array.isArray(details?.missing_permissions) &&
+          details.missing_permissions.length
+        ) {
+          message += `. Missing permissions: ${details.missing_permissions.join(', ')}.`;
+        }
+
+        throw message;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
