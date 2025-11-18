@@ -3611,7 +3611,8 @@ describe('CampaignsService', () => {
 
       const expectedDailyReward = new Decimal(campaign.fundAmount)
         .div(duration)
-        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
@@ -3632,7 +3633,8 @@ describe('CampaignsService', () => {
 
       const expectedDailyReward = new Decimal(campaign.fundAmount)
         .div(duration)
-        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
@@ -3649,7 +3651,8 @@ describe('CampaignsService', () => {
 
       const expectedDailyReward = new Decimal(campaign.fundAmount)
         .div(duration)
-        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
       expect(dailyReward).toBe(expectedDailyReward);
     });
   });
@@ -3695,7 +3698,8 @@ describe('CampaignsService', () => {
       const expectedRewardRatio = progressValue / progressValueTarget;
       const expectedRewardPool = new Decimal(baseRewardPool)
         .mul(expectedRewardRatio)
-        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
+        .toString();
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
@@ -3713,10 +3717,9 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      const expectedRewardPool = new Decimal(baseRewardPool).toFixed(
-        TEST_TOKEN_DECIMALS,
-        Decimal.ROUND_DOWN,
-      );
+      const expectedRewardPool = new Decimal(baseRewardPool)
+        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
+        .toString();
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
@@ -3738,7 +3741,8 @@ describe('CampaignsService', () => {
 
       const expectedRewardPool = new Decimal(baseRewardPool)
         .mul(maxRewardPoolRatio)
-        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
+        .toString();
       expect(rewardPool).toBe(expectedRewardPool);
     });
   });

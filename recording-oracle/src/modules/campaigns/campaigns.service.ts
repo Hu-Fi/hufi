@@ -810,16 +810,9 @@ export class CampaignsService implements OnApplicationBootstrap {
 
     const dailyReward = fundAmount.div(campaignDurationDays);
 
-    const truncatedDailyReward = dailyReward.toFixed(
-      campaign.fundTokenDecimals,
-      Decimal.ROUND_DOWN,
-    );
-
-    if (Decimal(truncatedDailyReward).isZero()) {
-      return '0';
-    }
-
-    return truncatedDailyReward;
+    return dailyReward
+      .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+      .toString();
   }
 
   calculateRewardPool(input: {
@@ -837,16 +830,9 @@ export class CampaignsService implements OnApplicationBootstrap {
     const baseRewardPool = new Decimal(input.baseRewardPool);
     const rewardPool = baseRewardPool.mul(rewardRatio);
 
-    const truncatedRewardPool = rewardPool.toFixed(
-      input.fundTokenDecimals,
-      Decimal.ROUND_DOWN,
-    );
-
-    if (Decimal(truncatedRewardPool).isZero()) {
-      return '0';
-    }
-
-    return truncatedRewardPool;
+    return rewardPool
+      .toDecimalPlaces(input.fundTokenDecimals, Decimal.ROUND_DOWN)
+      .toString();
   }
 
   private async recordCampaignIntermediateResults(
