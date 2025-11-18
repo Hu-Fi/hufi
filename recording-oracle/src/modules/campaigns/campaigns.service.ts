@@ -631,6 +631,13 @@ export class CampaignsService implements OnApplicationBootstrap {
             rewardPool.toString(),
             campaign.fundTokenDecimals,
           );
+
+          logger.info('Going to record campaign progress', {
+            from: progress.from,
+            to: progress.to,
+            reserved_funds: rewardPool,
+          });
+
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(
               intermediateResults,

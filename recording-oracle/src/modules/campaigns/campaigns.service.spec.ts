@@ -2481,7 +2481,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should log recording details once results recorded', async () => {
+    it('should log recording details', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const campaignProgress = generateCampaignProgress(campaign);
@@ -2495,14 +2495,27 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      expect(logger.info).toHaveBeenCalledTimes(1);
-      expect(logger.info).toHaveBeenCalledWith('Campaign progress recorded', {
-        from: campaignProgress.from,
-        to: campaignProgress.to,
-        reserved_funds: '0',
-        resultsUrl: storedResultsMeta.url,
-        ...campaignProgress.meta,
-      });
+      expect(logger.info).toHaveBeenCalledTimes(2);
+      expect(logger.info).toHaveBeenNthCalledWith(
+        1,
+        'Going to record campaign progress',
+        {
+          from: campaignProgress.from,
+          to: campaignProgress.to,
+          reserved_funds: '0',
+        },
+      );
+      expect(logger.info).toHaveBeenNthCalledWith(
+        2,
+        'Campaign progress recorded',
+        {
+          from: campaignProgress.from,
+          to: campaignProgress.to,
+          reserved_funds: '0',
+          resultsUrl: storedResultsMeta.url,
+          ...campaignProgress.meta,
+        },
+      );
 
       expect(logger.error).toHaveBeenCalledTimes(0);
     });
