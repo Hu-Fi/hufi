@@ -24,9 +24,13 @@ export class HttpError extends BaseError {
     error: AxiosError<{ message?: string; details?: object }>
   ): HttpError {
     let details: HttpErrorDetails | undefined;
-    if (error.response?.status && error.response.status < 500) {
+    if (
+      error.response?.status &&
+      error.response.status < 500 &&
+      error.response?.data
+    ) {
       details = {
-        responseMessage: error.response?.data?.message,
+        responseMessage: error.response.data.message,
         ...error.response.data.details,
       };
     }
