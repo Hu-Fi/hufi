@@ -15,7 +15,7 @@ import type {
   ExchangeApiClientInitOptions,
 } from './exchange-api-client.interface';
 
-const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 7; // 7 minutes after previous load
+const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
 
 @Injectable()
 export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
