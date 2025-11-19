@@ -58,8 +58,15 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     const logger = this.logger.child({ exchangeName });
     try {
       logger.debug('Preloading ccxt for exchange');
-      const exchangeClass = ccxt[exchangeName];
-      const ccxtClient = new exchangeClass({});
+      let ccxtClient: CcxtExchange;
+      if (this.preloadedCcxtClients.has(exchangeName)) {
+        ccxtClient = this.preloadedCcxtClients.get(
+          exchangeName,
+        ) as CcxtExchange;
+      } else {
+        const exchangeClass = ccxt[exchangeName];
+        ccxtClient = new exchangeClass({});
+      }
 
       if (this.exchangeConfigService.useSandbox) {
         if (ccxtClient.has.sandbox) {
