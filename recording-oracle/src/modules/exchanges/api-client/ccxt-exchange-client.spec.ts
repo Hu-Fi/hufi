@@ -102,6 +102,14 @@ describe('CcxtExchangeClient', () => {
         expect(mockedCcxt[exchangeName]).toHaveBeenCalledWith({
           apiKey,
           secret,
+          enableRateLimit: true,
+          options: {
+            defaultType: 'spot',
+            fetchCurrencies: false,
+            fetchMarkets: {
+              types: ['spot'],
+            },
+          },
         });
 
         const expectedSandboxMode = Boolean(sandboxParam);

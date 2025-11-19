@@ -10,6 +10,7 @@ import { ExchangeConfigService } from '@/config';
 import logger from '@/logger';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
+import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import type {
   ExchangeApiClient,
   ExchangeApiClientInitOptions,
@@ -65,7 +66,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         ) as CcxtExchange;
       } else {
         const exchangeClass = ccxt[exchangeName];
-        ccxtClient = new exchangeClass({});
+        ccxtClient = new exchangeClass({ ...BASE_CCXT_CLIENT_OPTIONS });
       }
 
       if (this.exchangeConfigService.useSandbox) {
