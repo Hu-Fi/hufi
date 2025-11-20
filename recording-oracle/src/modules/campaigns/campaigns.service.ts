@@ -145,6 +145,15 @@ export class CampaignsService implements OnApplicationBootstrap {
       );
     }
 
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
+        userId,
+        campaign.id,
+      );
+    if (isUserJoined) {
+      return campaign.id;
+    }
+
     /**
      * After campaign is created, escrows can be manipulated
      * directly on blockchain (e.g. by admin), plus we have replication lag,
@@ -169,21 +178,6 @@ export class CampaignsService implements OnApplicationBootstrap {
       );
     }
 
-    const isUserJoined =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
-        userId,
-        campaign.id,
-      );
-    if (isUserJoined) {
-      return campaign.id;
-    }
-
-    await this.exchangesService.assertUserHasAuthorizedKeys(
-      userId,
-      campaign.exchangeName,
-      CAMPAIGN_PERMISSIONS_MAP[campaign.type],
-    );
-
     if (this.checkCampaignTargetMet(campaign)) {
       throw new CampaignJoinLimitedError(
         campaign.chainId,
@@ -191,6 +185,12 @@ export class CampaignsService implements OnApplicationBootstrap {
         'Target is met',
       );
     }
+
+    await this.exchangesService.assertUserHasAuthorizedKeys(
+      userId,
+      campaign.exchangeName,
+      CAMPAIGN_PERMISSIONS_MAP[campaign.type],
+    );
 
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
