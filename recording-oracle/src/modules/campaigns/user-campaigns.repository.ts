@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import type { UserEntity } from '@/modules/users';
 
 import { CampaignEntity } from './campaign.entity';
-import { CampaignStatus } from './types';
+import { CampaignParticipant, CampaignStatus } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 
 @Injectable()
@@ -47,7 +47,7 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
 
   async findCampaignParticipants(
     campaignId: string,
-  ): Promise<Array<UserEntity & { joinedAt: Date }>> {
+  ): Promise<Array<CampaignParticipant>> {
     const userCampaigns = await this.find({
       where: { campaignId },
       relations: {
@@ -57,6 +57,7 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
 
     return userCampaigns.map((e) => ({
       ...(e.user as UserEntity),
+      campaignId,
       joinedAt: e.createdAt,
     }));
   }

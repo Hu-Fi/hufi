@@ -228,7 +228,7 @@ export class PayoutsService {
         for (const { address, amount } of rewardsBatchToPay.rewards) {
           recipientToAmountMap.set(
             address,
-            ethers.parseUnits(amount.toString(), campaign.fundTokenDecimals),
+            ethers.parseUnits(amount, campaign.fundTokenDecimals),
           );
         }
 
@@ -371,13 +371,14 @@ export class PayoutsService {
          * In case if the participant's share is so small
          * that it's lower than minimum payable amount - omit it.
          */
-        const truncatedRewardAmount = Number(
-          rewardAmount.toFixed(tokenDecimals, Decimal.ROUND_DOWN),
+        const truncatedRewardAmount = rewardAmount.toDecimalPlaces(
+          tokenDecimals,
+          Decimal.ROUND_DOWN,
         );
-        if (truncatedRewardAmount > 0) {
+        if (truncatedRewardAmount.greaterThan(0)) {
           rewardsBatch.rewards.push({
             address: outcome.address,
-            amount: truncatedRewardAmount,
+            amount: truncatedRewardAmount.toString(),
           });
         }
       }

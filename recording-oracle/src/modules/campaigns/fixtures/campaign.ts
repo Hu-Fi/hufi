@@ -5,8 +5,7 @@ import dayjs from '@/common/utils/dayjs';
 import {
   generateExchangeName,
   generateTradingPair,
-} from '@/modules/exchange/fixtures';
-import type { UserEntity } from '@/modules/users';
+} from '@/modules/exchanges/fixtures';
 import { generateUserEntity } from '@/modules/users/fixtures';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 import { generateRandomHashString } from '~/test/fixtures/crypto';
@@ -19,6 +18,7 @@ import type {
 } from '../progress-checking';
 import {
   CampaignDetails,
+  CampaignParticipant,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -187,9 +187,10 @@ export class MockCampaignProgressChecker
 
 export function generateCampaignParticipant(
   campaign: CampaignEntity,
-): UserEntity & { joinedAt: Date } {
+): CampaignParticipant {
   return {
     ...generateUserEntity(),
+    campaignId: campaign.id,
     joinedAt: faker.date.soon({ refDate: campaign.createdAt }),
   };
 }

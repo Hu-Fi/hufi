@@ -8,7 +8,6 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
@@ -26,14 +25,10 @@ import { isValidExchangeName } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import {
+  ExchangesService,
   ExchangeApiAccessError,
-  ExchangeApiClientFactory,
-} from '@/modules/exchange';
-import {
-  ExchangeApiKeyData,
   ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
+} from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 
@@ -48,6 +43,7 @@ import {
   UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
+import { CAMPAIGN_PERMISSIONS_MAP, PROGRESS_PERIOD_DAYS } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
@@ -82,8 +78,6 @@ import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
-const PROGRESS_PERIOD_DAYS = 1;
-
 @Injectable()
 export class CampaignsService implements OnApplicationBootstrap {
   private readonly logger = logger.child({
@@ -101,14 +95,13 @@ export class CampaignsService implements OnApplicationBootstrap {
   constructor(
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
-    private readonly exchangeApiKeysService: ExchangeApiKeysService,
+    private readonly exchangesService: ExchangesService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly storageService: StorageService,
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly pgAdvisoryLock: PgAdvisoryLock,
-    private readonly moduleRef: ModuleRef,
   ) {}
 
   onApplicationBootstrap() {
@@ -152,6 +145,15 @@ export class CampaignsService implements OnApplicationBootstrap {
       );
     }
 
+    const isUserJoined =
+      await this.userCampaignsRepository.checkUserJoinedCampaign(
+        userId,
+        campaign.id,
+      );
+    if (isUserJoined) {
+      return campaign.id;
+    }
+
     /**
      * After campaign is created, escrows can be manipulated
      * directly on blockchain (e.g. by admin), plus we have replication lag,
@@ -176,20 +178,6 @@ export class CampaignsService implements OnApplicationBootstrap {
       );
     }
 
-    const isUserJoined =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
-        userId,
-        campaign.id,
-      );
-    if (isUserJoined) {
-      return campaign.id;
-    }
-
-    await this.exchangeApiKeysService.assertUserHasAuthorizedKeys(
-      userId,
-      campaign.exchangeName,
-    );
-
     if (this.checkCampaignTargetMet(campaign)) {
       throw new CampaignJoinLimitedError(
         campaign.chainId,
@@ -197,6 +185,12 @@ export class CampaignsService implements OnApplicationBootstrap {
         'Target is met',
       );
     }
+
+    await this.exchangesService.assertUserHasAuthorizedKeys(
+      userId,
+      campaign.exchangeName,
+      CAMPAIGN_PERMISSIONS_MAP[campaign.type],
+    );
 
     const newUserCampaign = new UserCampaignEntity();
     newUserCampaign.userId = userId;
@@ -637,6 +631,13 @@ export class CampaignsService implements OnApplicationBootstrap {
             rewardPool.toString(),
             campaign.fundTokenDecimals,
           );
+
+          logger.info('Going to record campaign progress', {
+            from: progress.from,
+            to: progress.to,
+            reserved_funds: rewardPool,
+          });
+
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(
               intermediateResults,
@@ -710,36 +711,9 @@ export class CampaignsService implements OnApplicationBootstrap {
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
-      let exchangeApiKey: ExchangeApiKeyData;
-      try {
-        exchangeApiKey = await this.exchangeApiKeysService.retrieve(
-          participant.id,
-          campaign.exchangeName,
-        );
-      } catch (error) {
-        if (error instanceof ExchangeApiKeyNotFoundError) {
-          /**
-           * We should remove all active participations before
-           * allowing to remove api key, but let's warn ourselves
-           * just in case if something unusual happens.
-           */
-          logger.warn('Participant lacks valid api key', {
-            participantId: participant.id,
-          });
-          continue;
-        }
-        throw error;
-      }
-
       try {
         const { abuseDetected, ...participantOutcomes } =
-          await campaignProgressChecker.checkForParticipant(
-            {
-              apiKey: exchangeApiKey.apiKey,
-              secret: exchangeApiKey.secretKey,
-            },
-            participant.joinedAt,
-          );
+          await campaignProgressChecker.checkForParticipant(participant);
 
         if (abuseDetected) {
           logger.warn('Abuse detected. Skipping participant outcome', {
@@ -753,7 +727,17 @@ export class CampaignsService implements OnApplicationBootstrap {
           ...participantOutcomes,
         });
       } catch (error) {
-        if (error instanceof ExchangeApiAccessError) {
+        if (error instanceof ExchangeApiKeyNotFoundError) {
+          /**
+           * We should remove all active participations before
+           * allowing to remove api key, but let's warn ourselves
+           * just in case if something unusual happens.
+           */
+          logger.warn('Participant lacks valid api key', {
+            participantId: participant.id,
+          });
+          continue;
+        } else if (error instanceof ExchangeApiAccessError) {
           logger.warn('Participant lacks necessary exchange API access', {
             participantId: participant.id,
             error,
@@ -777,25 +761,20 @@ export class CampaignsService implements OnApplicationBootstrap {
     campaignType: string,
     campaignCheckerSetup: CampaignProgressCheckerSetup,
   ): CampaignProgressChecker<ProgressCheckResult, CampaignProgressMeta> {
-    const exchangeApiClientFactory = this.moduleRef.get(
-      ExchangeApiClientFactory,
-      { strict: false },
-    );
-
     switch (campaignType) {
       case CampaignType.MARKET_MAKING:
         return new MarketMakingProgressChecker(
-          exchangeApiClientFactory,
+          this.exchangesService,
           campaignCheckerSetup,
         );
       case CampaignType.HOLDING:
         return new HoldingProgressChecker(
-          exchangeApiClientFactory,
+          this.exchangesService,
           campaignCheckerSetup,
         );
       case CampaignType.THRESHOLD:
         return new ThresholdProgressChecker(
-          exchangeApiClientFactory,
+          this.exchangesService,
           campaignCheckerSetup,
         );
       default:
@@ -831,16 +810,9 @@ export class CampaignsService implements OnApplicationBootstrap {
 
     const dailyReward = fundAmount.div(campaignDurationDays);
 
-    const truncatedDailyReward = dailyReward.toFixed(
-      campaign.fundTokenDecimals,
-      Decimal.ROUND_DOWN,
-    );
-
-    if (Decimal(truncatedDailyReward).isZero()) {
-      return '0';
-    }
-
-    return truncatedDailyReward;
+    return dailyReward
+      .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+      .toString();
   }
 
   calculateRewardPool(input: {
@@ -858,16 +830,9 @@ export class CampaignsService implements OnApplicationBootstrap {
     const baseRewardPool = new Decimal(input.baseRewardPool);
     const rewardPool = baseRewardPool.mul(rewardRatio);
 
-    const truncatedRewardPool = rewardPool.toFixed(
-      input.fundTokenDecimals,
-      Decimal.ROUND_DOWN,
-    );
-
-    if (Decimal(truncatedRewardPool).isZero()) {
-      return '0';
-    }
-
-    return truncatedRewardPool;
+    return rewardPool
+      .toDecimalPlaces(input.fundTokenDecimals, Decimal.ROUND_DOWN)
+      .toString();
   }
 
   private async recordCampaignIntermediateResults(

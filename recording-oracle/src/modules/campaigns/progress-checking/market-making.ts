@@ -1,15 +1,15 @@
 import {
-  ExchangeApiClientFactory,
+  ExchangesService,
   TakerOrMakerFlag,
   Trade,
   TradingSide,
-} from '@/modules/exchange';
+} from '@/modules/exchanges';
 
 import type {
   CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  ParticipantAuthKeys,
   BaseProgressCheckResult,
+  ParticipantInfo,
 } from './types';
 
 const N_TRADES_FOR_ABUSE_CHECK = 5;
@@ -35,7 +35,7 @@ export class MarketMakingProgressChecker
   private totalVolumeMeta: number = 0;
 
   constructor(
-    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
+    private readonly exchangesService: ExchangesService,
     setupData: CampaignProgressCheckerSetup,
   ) {
     this.exchangeName = setupData.exchangeName;
@@ -45,14 +45,13 @@ export class MarketMakingProgressChecker
   }
 
   async checkForParticipant(
-    authKeys: ParticipantAuthKeys,
-    participantJoinedAt: Date,
+    participant: ParticipantInfo,
   ): Promise<MarketMakingResult> {
     let abuseDetected = false;
 
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
+    const exchangeApiClient = await this.exchangesService.getClientForUser(
+      participant.id,
       this.exchangeName,
-      authKeys,
     );
 
     let score = 0;
@@ -61,7 +60,7 @@ export class MarketMakingProgressChecker
 
     let since = Math.max(
       this.tradingPeriodStart.valueOf(),
-      participantJoinedAt.valueOf(),
+      participant.joinedAt.valueOf(),
     );
     while (since < this.tradingPeriodEnd.valueOf() && !abuseDetected) {
       const trades = await exchangeApiClient.fetchMyTrades(

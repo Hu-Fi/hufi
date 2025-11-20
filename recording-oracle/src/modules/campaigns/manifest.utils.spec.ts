@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
 
-import { generateTradingPair } from '@/modules/exchange/fixtures';
+import { generateTradingPair } from '@/modules/exchanges/fixtures';
 
 import {
   generateManifestResponse,

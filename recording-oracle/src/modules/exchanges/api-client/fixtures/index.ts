@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
 import type { AccountBalance, AddressStructure, Order, Trade } from 'ccxt';
 
-import { generateTradingPair } from './exchange';
+import { generateTradingPair } from '@/modules/exchanges/fixtures';
+
 import { TakerOrMakerFlag, TradingSide } from '../types';
 
 const TRADING_SIDES = Object.values(TradingSide);

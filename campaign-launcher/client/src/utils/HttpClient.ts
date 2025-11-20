@@ -7,25 +7,38 @@ import axios, {
 
 import { BaseError } from './BaseError';
 
+type HttpErrorDetails = {
+  responseMessage?: string;
+  [responseDetails: string]: unknown;
+};
 export class HttpError extends BaseError {
   constructor(
     message: string,
     readonly status?: number,
-    readonly responseMessage?: string
+    readonly details?: HttpErrorDetails
   ) {
     super(message);
   }
 
-  static fromAxiosError(error: AxiosError<{ message?: string }>): HttpError {
-    let responseMessage: string | undefined;
-    if (error.response?.status && error.response.status < 500) {
-      responseMessage = error.response?.data?.message;
+  static fromAxiosError(
+    error: AxiosError<{ message?: string; details?: object }>
+  ): HttpError {
+    let details: HttpErrorDetails | undefined;
+    if (
+      error.response?.status &&
+      error.response.status < 500 &&
+      error.response?.data
+    ) {
+      details = {
+        responseMessage: error.response.data.message,
+        ...error.response.data.details,
+      };
     }
 
     return new HttpError(
       error.message || 'Request failed',
       error.response?.status,
-      responseMessage
+      details
     );
   }
 }

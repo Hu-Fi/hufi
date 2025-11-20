@@ -14,7 +14,7 @@ import { DatabaseModule } from './database';
 import { AdminModule } from './modules/admin';
 import { AuthModule } from './modules/auth';
 import { CampaignsModule } from './modules/campaigns';
-import { ExchangeApiKeysModule } from './modules/exchange-api-keys';
+import { ExchangesModule } from './modules/exchanges';
 import { HealthModule } from './modules/health';
 import { StatisticsModule } from './modules/statistics';
 import { UsersModule } from './modules/users';
@@ -63,7 +63,7 @@ import { UsersModule } from './modules/users';
     CampaignsModule,
     DatabaseModule,
     EnvConfigModule,
-    ExchangeApiKeysModule,
+    ExchangesModule,
     HealthModule,
     UsersModule,
     StatisticsModule,

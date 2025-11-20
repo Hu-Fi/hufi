@@ -5,6 +5,7 @@ import { LRUCache } from 'lru-cache';
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import logger from '@/logger';
 
+import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { ExchangeDataDto } from './exchanges.dto';
 import { ExchangeType } from './types';
 
@@ -55,7 +56,7 @@ export class ExchangesService {
   async getExchangeTradingPairs(exchangeName: string): Promise<string[]> {
     try {
       if (!tradingPairsCache.has(exchangeName)) {
-        const exchange = new ccxt[exchangeName]();
+        const exchange = new ccxt[exchangeName](BASE_CCXT_CLIENT_OPTIONS);
         await exchange.loadMarkets();
 
         const tradingPairs = (exchange.symbols || []).filter((symbol) => {
@@ -89,7 +90,7 @@ export class ExchangesService {
   async getExchangeCurrencies(exchangeName: string): Promise<string[]> {
     try {
       if (!currenciesCache.has(exchangeName)) {
-        const exchange = new ccxt[exchangeName]();
+        const exchange = new ccxt[exchangeName](BASE_CCXT_CLIENT_OPTIONS);
         await exchange.loadMarkets();
 
         const currencies = Object.keys(exchange.currencies || []).filter(

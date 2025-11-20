@@ -27,6 +27,10 @@ import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
 import logger from '@/logger';
+import {
+  generateExchangeName,
+  generateTradingPair,
+} from '@/modules/exchanges/fixtures';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
@@ -35,9 +39,8 @@ import {
   generateDepositAddressStructure,
   generateCcxtOpenOrder,
   generateCcxtTrade,
-  generateExchangeName,
-  generateTradingPair,
 } from './fixtures';
+import { ExchangePermission } from './types';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -49,6 +52,8 @@ const testCcxtApiAccessErrors = [
   ccxt.BadSymbol,
   ccxt.PermissionDenied,
 ] as const;
+
+const exchangePermissions = Object.values(ExchangePermission);
 
 describe('CcxtExchangeClient', () => {
   afterEach(() => {
@@ -97,6 +102,14 @@ describe('CcxtExchangeClient', () => {
         expect(mockedCcxt[exchangeName]).toHaveBeenCalledWith({
           apiKey,
           secret,
+          enableRateLimit: true,
+          options: {
+            defaultType: 'spot',
+            fetchCurrencies: false,
+            fetchMarkets: {
+              types: ['spot'],
+            },
+          },
         });
 
         const expectedSandboxMode = Boolean(sandboxParam);
@@ -156,12 +169,14 @@ describe('CcxtExchangeClient', () => {
 
         let thrownError;
         try {
-          await ccxtExchangeApiClient.checkRequiredAccess();
+          await ccxtExchangeApiClient.checkRequiredAccess(exchangePermissions);
         } catch (error) {
           thrownError = error;
         }
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
 
         const expectedMessage = 'Error while checking exchange access';
         expect(thrownError).toBeInstanceOf(ExchangeApiClientError);
@@ -176,12 +191,21 @@ describe('CcxtExchangeClient', () => {
 
         jest.useFakeTimers({ now });
 
-        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+        const result = await ccxtExchangeApiClient.checkRequiredAccess([
+          ExchangePermission.FETCH_MY_TRADES,
+        ]);
 
         jest.useRealTimers();
 
-        expect(result).toBe(false);
+        expect(result).toEqual({
+          success: false,
+          missing: [ExchangePermission.FETCH_MY_TRADES],
+        });
+
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(0);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(0);
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
+
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
           'ETH/USDT',
           now,
@@ -193,10 +217,18 @@ describe('CcxtExchangeClient', () => {
         const syntheticAuthError = new Error(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
 
-        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+        const result = await ccxtExchangeApiClient.checkRequiredAccess([
+          ExchangePermission.FETCH_BALANCE,
+        ]);
 
-        expect(result).toBe(false);
+        expect(result).toEqual({
+          success: false,
+          missing: [ExchangePermission.FETCH_BALANCE],
+        });
+
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(0);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(0);
       });
 
       it("should return false if can't fetch deposit address", async () => {
@@ -210,12 +242,19 @@ describe('CcxtExchangeClient', () => {
           syntheticAuthError,
         );
 
-        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+        const result = await ccxtExchangeApiClient.checkRequiredAccess([
+          ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+        ]);
 
-        expect(result).toBe(false);
-        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+        expect(result).toEqual({
+          success: false,
+          missing: [ExchangePermission.FETCH_DEPOSIT_ADDRESS],
+        });
 
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(0);
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(0);
+
         expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
           'ETH',
           {},
@@ -231,10 +270,16 @@ describe('CcxtExchangeClient', () => {
           generateDepositAddressStructure(),
         );
 
-        const result = await ccxtExchangeApiClient.checkRequiredAccess();
+        const result =
+          await ccxtExchangeApiClient.checkRequiredAccess(exchangePermissions);
 
-        expect(result).toBe(true);
+        expect(result).toEqual({
+          success: true,
+        });
+
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
       });
     });
 

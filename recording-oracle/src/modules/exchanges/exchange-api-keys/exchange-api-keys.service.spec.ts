@@ -1,15 +1,17 @@
+import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
 
 import { EncryptionConfigService } from '@/config';
 import { AesEncryptionService } from '@/modules/encryption';
 import { mockEncryptionConfigService } from '@/modules/encryption/fixtures';
+import { UsersService } from '@/modules/users';
+
 import {
   ExchangeApiClient,
   ExchangeApiClientFactory,
-} from '@/modules/exchange';
-import { UsersService } from '@/modules/users';
-
+  ExchangePermission,
+} from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
@@ -84,7 +86,8 @@ describe('ExchangeApiKeysService', () => {
 
     it('should throw if not supported exchange name provided', async () => {
       const input = generateExchangeApiKeysData();
-      input.exchangeName = input.exchangeName.toUpperCase();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      input.exchangeName = input.exchangeName.toUpperCase() as any;
 
       let thrownError;
       try {
@@ -115,7 +118,15 @@ describe('ExchangeApiKeysService', () => {
 
     it('should throw if provided keys do not have required access', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
-      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce(false);
+
+      const missingPermissions = faker.helpers.arrayElements(
+        Object.values(ExchangePermission),
+        faker.number.int({ min: 1, max: 3 }),
+      );
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: false,
+        missing: missingPermissions,
+      });
 
       const input = generateExchangeApiKeysData();
 
@@ -128,11 +139,14 @@ describe('ExchangeApiKeysService', () => {
 
       expect(thrownError).toBeInstanceOf(KeyAuthorizationError);
       expect(thrownError.exchangeName).toBe(input.exchangeName);
+      expect(thrownError.missingPermissions).toBe(missingPermissions);
     });
 
     it('should rethrow if user not exists', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
-      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce(true);
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: true,
+      });
 
       const testError = new Error('Synthetic user not exist');
       mockUsersService.assertUserExistsById.mockRejectedValueOnce(testError);
@@ -151,7 +165,9 @@ describe('ExchangeApiKeysService', () => {
 
     it('should upsert encrypted keys if data is valid', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
-      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce(true);
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: true,
+      });
 
       const input = generateExchangeApiKeysData();
 
@@ -219,7 +235,7 @@ describe('ExchangeApiKeysService', () => {
     });
   });
 
-  describe('retrievedEnrolledApiKeys', () => {
+  describe('retrieveEnrolledApiKeys', () => {
     it('should return enrolled keys', async () => {
       const { userId, exchangeName, apiKey, secretKey } =
         generateExchangeApiKeysData();
@@ -237,7 +253,7 @@ describe('ExchangeApiKeysService', () => {
       ] as ExchangeApiKeyEntity[]);
 
       const results =
-        await exchangeApiKeysService.retrievedEnrolledApiKeys(userId);
+        await exchangeApiKeysService.retrieveEnrolledApiKeys(userId);
 
       expect(results.length).toBe(1);
 

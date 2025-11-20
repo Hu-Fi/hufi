@@ -7,4 +7,4 @@ import { ExchangeApiClientFactory } from './exchange-api-client-factory';
   providers: [ExchangeApiClientFactory],
   exports: [ExchangeApiClientFactory],
 })
-export class ExchangeModule {}
+export class ExchangeApiClientModule {}

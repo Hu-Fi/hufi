@@ -20,7 +20,6 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import * as errorUtils from '@/utils/error';
 
 import BaseModal from '../BaseModal';
 
@@ -206,8 +205,9 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
           {isError && (
             <ModalError
               message={
-                errorUtils.getMessageFromError(postExchangeApiKeyError) ||
-                'Failed to edit API key.'
+                typeof postExchangeApiKeyError === 'string'
+                  ? postExchangeApiKeyError
+                  : 'Failed to edit API key.'
               }
             />
           )}

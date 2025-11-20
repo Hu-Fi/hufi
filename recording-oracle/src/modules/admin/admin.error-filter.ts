@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+import { BaseErrorResponse } from '@/common/types';
 import logger from '@/logger';
 
 @Catch()
@@ -29,8 +30,12 @@ export class AdminControllerErrorsFilter implements ExceptionFilter {
       error: exception,
     });
 
-    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      error: exception,
-    });
+    const responseData: BaseErrorResponse = {
+      message: 'Failed to execute admin op',
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      details: exception,
+    };
+    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json(responseData);
   }
 }
