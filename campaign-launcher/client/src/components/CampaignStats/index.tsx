@@ -37,7 +37,7 @@ const StatsCard = styled(Box)(({ theme }) => ({
   padding: '16px 32px',
   backgroundColor: theme.palette.background.default,
   borderRadius: '16px',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
+  border: '1px solid rgba(247, 5, 169, 0.30)',
 
   [theme.breakpoints.down('xl')]: {
     height: 'unset',
@@ -240,7 +240,7 @@ const CampaignStats: FC<Props> = ({
             <Title variant="subtitle2">Total Funded Amount</Title>
             <Typography
               variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
+              color="primary.bright"
               fontWeight={700}
               lineHeight={isMobile ? '1.5rem' : '2.25rem'}
             >
@@ -251,7 +251,7 @@ const CampaignStats: FC<Props> = ({
             <Title variant="subtitle2">Amount Paid</Title>
             <Typography
               variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
+              color="primary.bright"
               fontWeight={700}
               lineHeight={isMobile ? '1.5rem' : '2.25rem'}
             >
@@ -262,7 +262,7 @@ const CampaignStats: FC<Props> = ({
             <Title variant="subtitle2">Oracle fees</Title>
             <Typography
               variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
+              color="primary.bright"
               fontWeight={700}
               lineHeight={isMobile ? '1.5rem' : '2.25rem'}
             >
@@ -286,7 +286,7 @@ const CampaignStats: FC<Props> = ({
             </Title>
             <Typography
               variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
+              color="primary.bright"
               fontWeight={700}
               lineHeight={isMobile ? '1.5rem' : '2.25rem'}
             >
@@ -306,7 +306,7 @@ const CampaignStats: FC<Props> = ({
             <Title variant="subtitle2">Reserved funds</Title>
             <Typography
               variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
+              color="primary.bright"
               fontWeight={700}
               lineHeight={isMobile ? '1.5rem' : '2.25rem'}
             >
