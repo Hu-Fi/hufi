@@ -8,6 +8,7 @@ import {
 import type { Request, Response } from 'express';
 
 import { DatabaseError } from '@/common/errors/database';
+import { BaseErrorResponse } from '@/common/types';
 import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';
 import logger from '@/logger';
 
@@ -21,8 +22,11 @@ export class ExceptionFilter implements IExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    const responseBody: { message: string; [x: string]: unknown } = {
+
+    const responseBody: BaseErrorResponse = {
       message: 'Internal server error',
+      timestamp: new Date().toISOString(),
+      path: request.url,
     };
 
     if (exception instanceof DatabaseError) {
@@ -33,13 +37,8 @@ export class ExceptionFilter implements IExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         responseBody.message = exceptionResponse;
       } else {
-        Object.assign(
-          responseBody,
-          {
-            message: exception.message,
-          },
-          transformKeysFromCamelToSnake(exceptionResponse),
-        );
+        responseBody.message = exception.message;
+        responseBody.details = transformKeysFromCamelToSnake(exceptionResponse);
       }
     } else {
       this.logger.error('Unhandled exception', exception);
@@ -47,15 +46,6 @@ export class ExceptionFilter implements IExceptionFilter {
 
     response.removeHeader('Cache-Control');
 
-    response.status(status).json(
-      Object.assign(
-        {
-          status_code: status,
-          path: request.url,
-          timestamp: new Date().toISOString(),
-        },
-        responseBody,
-      ),
-    );
+    response.status(status).json(responseBody);
   }
 }

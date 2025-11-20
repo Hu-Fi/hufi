@@ -10,12 +10,13 @@ import { ExchangeConfigService } from '@/config';
 import logger from '@/logger';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
+import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import type {
   ExchangeApiClient,
   ExchangeApiClientInitOptions,
 } from './exchange-api-client.interface';
 
-const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 7; // 7 minutes after previous load
+const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
 
 @Injectable()
 export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
@@ -58,8 +59,15 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     const logger = this.logger.child({ exchangeName });
     try {
       logger.debug('Preloading ccxt for exchange');
-      const exchangeClass = ccxt[exchangeName];
-      const ccxtClient = new exchangeClass({});
+      let ccxtClient: CcxtExchange;
+      if (this.preloadedCcxtClients.has(exchangeName)) {
+        ccxtClient = this.preloadedCcxtClients.get(
+          exchangeName,
+        ) as CcxtExchange;
+      } else {
+        const exchangeClass = ccxt[exchangeName];
+        ccxtClient = new exchangeClass({ ...BASE_CCXT_CLIENT_OPTIONS });
+      }
 
       if (this.exchangeConfigService.useSandbox) {
         if (ccxtClient.has.sandbox) {
@@ -75,7 +83,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       this.preloadedCcxtClients.set(exchangeName, ccxtClient);
       logger.debug('Preloaded ccxt for exchange');
     } catch (error) {
-      this.logger.error('Failed to preload ccxt for exchange', {
+      logger.error('Failed to preload ccxt for exchange', {
         error,
       });
     }

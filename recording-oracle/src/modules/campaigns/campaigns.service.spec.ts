@@ -37,12 +37,9 @@ import logger from '@/logger';
 import {
   ExchangeApiAccessError,
   ExchangeApiClientError,
-  ExchangeApiClientFactory,
-} from '@/modules/exchange';
-import {
   ExchangeApiKeyNotFoundError,
-  ExchangeApiKeysService,
-} from '@/modules/exchange-api-keys';
+  ExchangesService,
+} from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 import {
@@ -91,6 +88,7 @@ import {
   ThresholdProgressChecker,
 } from './progress-checking/threshold';
 import {
+  CampaignParticipant,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -105,7 +103,7 @@ import { VolumeStatsRepository } from './volume-stats.repository';
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
-const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
+const mockExchangesService = createMock<ExchangesService>();
 const mockStorageService = createMock<StorageService>();
 const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
 
@@ -131,12 +129,8 @@ describe('CampaignsService', () => {
           useValue: mockCampaignsRepository,
         },
         {
-          provide: ExchangeApiKeysService,
-          useValue: mockExchangeApiKeysService,
-        },
-        {
-          provide: ExchangeApiClientFactory,
-          useValue: createMock<ExchangeApiClientFactory>(),
+          provide: ExchangesService,
+          useValue: mockExchangesService,
         },
         {
           provide: UserCampaignsRepository,
@@ -861,7 +855,7 @@ describe('CampaignsService', () => {
         false,
       );
       const testError = new Error(faker.lorem.sentence());
-      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+      mockExchangesService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
         testError,
       );
 
@@ -903,9 +897,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         false,
       );
-      mockExchangeApiKeysService.assertUserHasAuthorizedKeys.mockResolvedValueOnce(
-        faker.string.uuid(),
-      );
+      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce();
 
       const now = new Date();
       jest.useFakeTimers({ now });
@@ -952,6 +944,9 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        false,
+      );
 
       let thrownError;
       try {
@@ -976,6 +971,9 @@ describe('CampaignsService', () => {
       async (escrowStatus, errorClass) => {
         mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
           campaign,
+        );
+        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+          false,
         );
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
@@ -1263,14 +1261,6 @@ describe('CampaignsService', () => {
         [mockCampaignProgressMetaProp]: mockCampaignProgressMetaValue,
       });
 
-      mockExchangeApiKeysService.retrieve.mockImplementation(
-        async (userId) => ({
-          id: faker.string.uuid(),
-          apiKey: `${userId}-apiKey`,
-          secretKey: `${userId}-secretKey`,
-        }),
-      );
-
       spyOnGetCampaignProgressChecker.mockReturnValueOnce(
         mockCampaignProgressChecker,
       );
@@ -1372,20 +1362,10 @@ describe('CampaignsService', () => {
         periodEnd,
       );
 
-      for (const { id: participantId, joinedAt } of participants) {
-        expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledWith(
-          participantId,
-          campaign.exchangeName,
-        );
+      for (const participant of participants) {
         expect(
           mockCampaignProgressChecker.checkForParticipant,
-        ).toHaveBeenCalledWith(
-          {
-            apiKey: `${participantId}-apiKey`,
-            secret: `${participantId}-secretKey`,
-          },
-          joinedAt,
-        );
+        ).toHaveBeenCalledWith(participant);
       }
     });
 
@@ -1442,27 +1422,23 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [normalParticipant, noApiKeyParticipant],
       );
-      mockExchangeApiKeysService.retrieve.mockImplementation(
-        async (userId, exchangeName) => {
-          if (userId === normalParticipant.id) {
-            return {
-              id: faker.string.uuid(),
-              apiKey: `${userId}-apiKey`,
-              secretKey: `${userId}-secretKey`,
-            };
-          }
-
-          throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
-        },
-      );
 
       const mockedParticipantsResult = {
         abuseDetected: false,
         score: faker.number.float(),
         [mockCampaignProgressMetaProp]: faker.number.float(),
       };
-      mockCampaignProgressChecker.checkForParticipant.mockResolvedValueOnce(
-        mockedParticipantsResult,
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        async (participant: CampaignParticipant) => {
+          if (participant.id === normalParticipant.id) {
+            return mockedParticipantsResult;
+          }
+
+          throw new ExchangeApiKeyNotFoundError(
+            participant.id,
+            campaign.exchangeName,
+          );
+        },
       );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
@@ -1504,15 +1480,18 @@ describe('CampaignsService', () => {
         score: faker.number.float(),
         [mockCampaignProgressMetaProp]: faker.number.float(),
       };
-      mockCampaignProgressChecker.checkForParticipant.mockResolvedValueOnce(
-        normalParticipantResult,
-      );
       const syntheticError = new ExchangeApiAccessError(
         `Api access failed for fetch_test_${faker.lorem.word()}`,
         faker.lorem.sentence(),
       );
-      mockCampaignProgressChecker.checkForParticipant.mockRejectedValueOnce(
-        syntheticError,
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        async (participant: CampaignParticipant) => {
+          if (participant.id === normalParticipant.id) {
+            return normalParticipantResult;
+          }
+
+          throw syntheticError;
+        },
       );
 
       const progress = await campaignsService.checkCampaignProgressForPeriod(
@@ -2025,7 +2004,11 @@ describe('CampaignsService', () => {
 
     it('should record campaign progress to existing results', async () => {
       const intermediateResultsData = generateIntermediateResultsData({
-        results: [generateIntermediateResult()],
+        results: [
+          generateIntermediateResult({
+            endDate: dayjs(campaign.startDate).add(1, 'day').toDate(),
+          }),
+        ],
       });
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
@@ -2504,7 +2487,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should log recording details once results recorded', async () => {
+    it('should log recording details', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const campaignProgress = generateCampaignProgress(campaign);
@@ -2518,14 +2501,27 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      expect(logger.info).toHaveBeenCalledTimes(1);
-      expect(logger.info).toHaveBeenCalledWith('Campaign progress recorded', {
-        from: campaignProgress.from,
-        to: campaignProgress.to,
-        reserved_funds: '0',
-        resultsUrl: storedResultsMeta.url,
-        ...campaignProgress.meta,
-      });
+      expect(logger.info).toHaveBeenCalledTimes(2);
+      expect(logger.info).toHaveBeenNthCalledWith(
+        1,
+        'Going to record campaign progress',
+        {
+          from: campaignProgress.from,
+          to: campaignProgress.to,
+          reserved_funds: '0',
+        },
+      );
+      expect(logger.info).toHaveBeenNthCalledWith(
+        2,
+        'Campaign progress recorded',
+        {
+          from: campaignProgress.from,
+          to: campaignProgress.to,
+          reserved_funds: '0',
+          resultsUrl: storedResultsMeta.url,
+          ...campaignProgress.meta,
+        },
+      );
 
       expect(logger.error).toHaveBeenCalledTimes(0);
     });
@@ -3468,7 +3464,12 @@ describe('CampaignsService', () => {
 
       expect(thrownError).toBeInstanceOf(UserIsNotParticipatingError);
 
-      expect(mockExchangeApiKeysService.retrieve).toHaveBeenCalledTimes(0);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
     it("should throw if can't get active timeframe", async () => {
@@ -3616,7 +3617,8 @@ describe('CampaignsService', () => {
 
       const expectedDailyReward = new Decimal(campaign.fundAmount)
         .div(duration)
-        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
@@ -3637,7 +3639,8 @@ describe('CampaignsService', () => {
 
       const expectedDailyReward = new Decimal(campaign.fundAmount)
         .div(duration)
-        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
@@ -3654,7 +3657,8 @@ describe('CampaignsService', () => {
 
       const expectedDailyReward = new Decimal(campaign.fundAmount)
         .div(duration)
-        .toFixed(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
       expect(dailyReward).toBe(expectedDailyReward);
     });
   });
@@ -3700,7 +3704,8 @@ describe('CampaignsService', () => {
       const expectedRewardRatio = progressValue / progressValueTarget;
       const expectedRewardPool = new Decimal(baseRewardPool)
         .mul(expectedRewardRatio)
-        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
+        .toString();
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
@@ -3718,10 +3723,9 @@ describe('CampaignsService', () => {
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
       });
 
-      const expectedRewardPool = new Decimal(baseRewardPool).toFixed(
-        TEST_TOKEN_DECIMALS,
-        Decimal.ROUND_DOWN,
-      );
+      const expectedRewardPool = new Decimal(baseRewardPool)
+        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
+        .toString();
       expect(rewardPool).toBe(expectedRewardPool);
     });
 
@@ -3743,7 +3747,8 @@ describe('CampaignsService', () => {
 
       const expectedRewardPool = new Decimal(baseRewardPool)
         .mul(maxRewardPoolRatio)
-        .toFixed(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN);
+        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
+        .toString();
       expect(rewardPool).toBe(expectedRewardPool);
     });
   });

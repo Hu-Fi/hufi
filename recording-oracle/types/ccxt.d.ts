@@ -99,9 +99,14 @@ declare module 'ccxt' {
     BadSymbol: ErrorConstructor;
     PermissionDenied: ErrorConstructor;
     NetworkError: ErrorConstructor;
+    // https://docs.ccxt.com/#/README?id=exchange-properties
     [x: string]: new (options: {
       apiKey?: string;
       secret?: string;
+      enableRateLimit?: boolean;
+      options: {
+        [x: string]: unknown;
+      };
     }) => Exchange;
   };
   export = ccxt;

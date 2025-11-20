@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
-import { ExchangeModule } from '@/modules/exchange';
-import { ExchangeApiKeysModule } from '@/modules/exchange-api-keys';
+import { ExchangesModule } from '@/modules/exchanges';
 import { StorageModule } from '@/modules/storage';
 import { Web3Module } from '@/modules/web3';
 
@@ -13,7 +12,7 @@ import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
 @Module({
-  imports: [ExchangeModule, ExchangeApiKeysModule, StorageModule, Web3Module],
+  imports: [ExchangesModule, StorageModule, Web3Module],
   providers: [
     CampaignsRepository,
     CampaignsService,

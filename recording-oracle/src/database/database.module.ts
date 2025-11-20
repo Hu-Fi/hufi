@@ -11,7 +11,7 @@ import {
   UserCampaignEntity,
   VolumeStatEntity,
 } from '@/modules/campaigns';
-import { ExchangeApiKeyEntity } from '@/modules/exchange-api-keys';
+import { ExchangeApiKeyEntity } from '@/modules/exchanges';
 import { UserEntity } from '@/modules/users';
 
 @Module({

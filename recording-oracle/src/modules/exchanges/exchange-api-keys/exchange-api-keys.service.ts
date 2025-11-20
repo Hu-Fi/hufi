@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 
 import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
-import { ExchangeApiClientFactory } from '@/modules/exchange';
 import { UsersService } from '@/modules/users';
 
+import { ExchangeApiClientFactory, ExchangePermission } from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
 import {
@@ -49,9 +49,11 @@ export class ExchangeApiKeysService {
       throw new IncompleteKeySuppliedError(exchangeName);
     }
 
-    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
-    if (!hasRequiredAccess) {
-      throw new KeyAuthorizationError(exchangeName);
+    const accessCheckResult = await exchangeApiClient.checkRequiredAccess(
+      Object.values(ExchangePermission),
+    );
+    if (!accessCheckResult.success) {
+      throw new KeyAuthorizationError(exchangeName, accessCheckResult.missing);
     }
 
     await this.usersService.assertUserExistsById(userId);
@@ -101,26 +103,7 @@ export class ExchangeApiKeysService {
     };
   }
 
-  async assertUserHasAuthorizedKeys(
-    userId: string,
-    exchangeName: string,
-  ): Promise<string> {
-    const { id, apiKey, secretKey } = await this.retrieve(userId, exchangeName);
-
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
-      exchangeName,
-      { apiKey, secret: secretKey },
-    );
-
-    const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess();
-    if (!hasRequiredAccess) {
-      throw new KeyAuthorizationError(exchangeName);
-    }
-
-    return id;
-  }
-
-  async retrievedEnrolledApiKeys(userId: string): Promise<EnrolledApiKeyDto[]> {
+  async retrieveEnrolledApiKeys(userId: string): Promise<EnrolledApiKeyDto[]> {
     const enrolledKeys =
       await this.exchangeApiKeysRepository.findByUserId(userId);
 

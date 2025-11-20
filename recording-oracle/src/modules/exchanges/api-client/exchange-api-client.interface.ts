@@ -1,4 +1,10 @@
-import { AccountBalance, Order, Trade } from './types';
+import {
+  AccountBalance,
+  ExchangePermission,
+  Order,
+  RequiredAccessCheckResult,
+  Trade,
+} from './types';
 
 export type ExchangeApiClientInitOptions = {
   apiKey: string;
@@ -10,7 +16,9 @@ export interface ExchangeApiClient {
 
   checkRequiredCredentials(): boolean;
 
-  checkRequiredAccess(): Promise<boolean>;
+  checkRequiredAccess(
+    permissionsToCheck: Array<ExchangePermission>,
+  ): Promise<RequiredAccessCheckResult>;
 
   fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
 

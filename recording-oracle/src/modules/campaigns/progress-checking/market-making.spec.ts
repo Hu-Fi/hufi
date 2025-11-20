@@ -3,22 +3,22 @@ import { createMock } from '@golevelup/ts-jest';
 
 import {
   ExchangeApiClient,
-  ExchangeApiClientFactory,
+  ExchangesService,
   TakerOrMakerFlag,
   Trade,
   TradingSide,
-} from '@/modules/exchange';
-import { generateTrade } from '@/modules/exchange/fixtures';
+} from '@/modules/exchanges';
+import { generateTrade } from '@/modules/exchanges/fixtures';
 
 import {
   generateMarketMakingCheckerSetup,
-  generateParticipantAuthKeys,
+  generateParticipantInfo,
 } from './fixtures';
 import { MarketMakingProgressChecker } from './market-making';
-import { CampaignProgressCheckerSetup, ParticipantAuthKeys } from './types';
+import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
 
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
-const mockedExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
+const mockedExchangesService = createMock<ExchangesService>();
 
 class TestCampaignProgressChecker extends MarketMakingProgressChecker {
   override tradeSamples = new Set<string>();
@@ -30,7 +30,7 @@ class TestCampaignProgressChecker extends MarketMakingProgressChecker {
 
 describe('MarketMakingProgressChecker', () => {
   beforeEach(() => {
-    mockedExchangeApiClientFactory.create.mockReturnValue(
+    mockedExchangesService.getClientForUser.mockResolvedValue(
       mockedExchangeApiClient,
     );
     mockedExchangeApiClient.fetchMyTrades.mockResolvedValue([]);
@@ -42,7 +42,7 @@ describe('MarketMakingProgressChecker', () => {
 
   it('should be defined', () => {
     const resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      mockedExchangesService,
       generateMarketMakingCheckerSetup(),
     );
     expect(resultsChecker).toBeDefined();
@@ -50,7 +50,7 @@ describe('MarketMakingProgressChecker', () => {
 
   describe('calculateTradeScore', () => {
     const resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      mockedExchangesService,
       generateMarketMakingCheckerSetup(),
     );
 
@@ -93,18 +93,18 @@ describe('MarketMakingProgressChecker', () => {
 
   describe('checkForParticipant', () => {
     let progressCheckerSetup: CampaignProgressCheckerSetup;
-    let participantAuthKeys: ParticipantAuthKeys;
-    let participantJoinedAt: Date;
+    let participantInfo: ParticipantInfo;
 
     let resultsChecker: TestCampaignProgressChecker;
 
     beforeEach(() => {
       progressCheckerSetup = generateMarketMakingCheckerSetup();
-      participantAuthKeys = generateParticipantAuthKeys();
-      participantJoinedAt = progressCheckerSetup.periodStart;
+      participantInfo = generateParticipantInfo({
+        joinedAt: progressCheckerSetup.periodStart,
+      });
 
       resultsChecker = new TestCampaignProgressChecker(
-        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        mockedExchangesService,
         progressCheckerSetup,
       );
     });
@@ -118,14 +118,11 @@ describe('MarketMakingProgressChecker', () => {
       });
 
       const resultsChecker = new TestCampaignProgressChecker(
-        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        mockedExchangesService,
         setup,
       );
 
-      const result = await resultsChecker.checkForParticipant(
-        participantAuthKeys,
-        anytime,
-      );
+      const result = await resultsChecker.checkForParticipant(participantInfo);
 
       expect(result).toEqual({
         abuseDetected: false,
@@ -133,20 +130,17 @@ describe('MarketMakingProgressChecker', () => {
         score: 0,
       });
 
-      expect(mockedExchangeApiClientFactory.create).toHaveBeenCalledTimes(1);
-      expect(mockedExchangeApiClientFactory.create).toHaveBeenCalledWith(
+      expect(mockedExchangesService.getClientForUser).toHaveBeenCalledTimes(1);
+      expect(mockedExchangesService.getClientForUser).toHaveBeenCalledWith(
+        participantInfo.id,
         setup.exchangeName,
-        participantAuthKeys,
       );
     });
 
     it('should return zeros when no trades found', async () => {
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([]);
 
-      const result = await resultsChecker.checkForParticipant(
-        participantAuthKeys,
-        participantJoinedAt,
-      );
+      const result = await resultsChecker.checkForParticipant(participantInfo);
 
       expect(result).toEqual({
         abuseDetected: false,
@@ -165,10 +159,7 @@ describe('MarketMakingProgressChecker', () => {
         mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(page);
       }
 
-      await resultsChecker.checkForParticipant(
-        participantAuthKeys,
-        participantJoinedAt,
-      );
+      await resultsChecker.checkForParticipant(participantInfo);
 
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(3);
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
@@ -189,21 +180,18 @@ describe('MarketMakingProgressChecker', () => {
     });
 
     it('should paginate through trades starting from join date not setup start', async () => {
-      participantJoinedAt = faker.date.between({
+      participantInfo.joinedAt = faker.date.between({
         from: progressCheckerSetup.periodStart.valueOf() + 1,
         to: progressCheckerSetup.periodEnd.valueOf() - 1,
       });
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([]);
 
-      await resultsChecker.checkForParticipant(
-        participantAuthKeys,
-        participantJoinedAt,
-      );
+      await resultsChecker.checkForParticipant(participantInfo);
 
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(1);
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledWith(
         progressCheckerSetup.symbol,
-        participantJoinedAt.valueOf(),
+        participantInfo.joinedAt.valueOf(),
       );
     });
 
@@ -230,10 +218,7 @@ describe('MarketMakingProgressChecker', () => {
         ...tradesOutOfRange,
       ]);
 
-      const result = await resultsChecker.checkForParticipant(
-        participantAuthKeys,
-        participantJoinedAt,
-      );
+      const result = await resultsChecker.checkForParticipant(participantInfo);
 
       const expectedTotalVolume = tradesInRange.reduce(
         (acc, curr) => acc + curr.cost,
@@ -255,7 +240,7 @@ describe('MarketMakingProgressChecker', () => {
 
     const progressCheckerSetup = generateMarketMakingCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+      mockedExchangesService,
       progressCheckerSetup,
     );
 
@@ -301,16 +286,18 @@ describe('MarketMakingProgressChecker', () => {
       ]);
 
       const normalResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
       expect(normalResult.abuseDetected).toBe(false);
       expect(normalResult.score).toBeGreaterThan(0);
       expect(normalResult.total_volume).toBeGreaterThan(0);
 
       const abuseResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
       expect(abuseResult.abuseDetected).toBe(true);
       expect(abuseResult.score).toBe(0);
@@ -329,8 +316,9 @@ describe('MarketMakingProgressChecker', () => {
       }
 
       const result = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
       expect(result.abuseDetected).toBe(true);
 
@@ -341,8 +329,9 @@ describe('MarketMakingProgressChecker', () => {
       const trades = Array.from({ length: 6 }, () => generateTrade());
       mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(trades);
       await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
 
       expect(resultsChecker.tradeSamples.size).toBe(5);
@@ -362,8 +351,9 @@ describe('MarketMakingProgressChecker', () => {
       ]);
 
       const result = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
 
       expect(result.abuseDetected).toBe(false);
@@ -381,7 +371,7 @@ describe('MarketMakingProgressChecker', () => {
       progressCheckerSetup = generateMarketMakingCheckerSetup();
 
       resultsChecker = new TestCampaignProgressChecker(
-        mockedExchangeApiClientFactory as ExchangeApiClientFactory,
+        mockedExchangesService,
         progressCheckerSetup,
       );
     });
@@ -396,8 +386,9 @@ describe('MarketMakingProgressChecker', () => {
         expectedTotalVolume += trade.cost;
 
         await resultsChecker.checkForParticipant(
-          generateParticipantAuthKeys(),
-          progressCheckerSetup.periodStart,
+          generateParticipantInfo({
+            joinedAt: progressCheckerSetup.periodStart,
+          }),
         );
       }
 
@@ -428,12 +419,14 @@ describe('MarketMakingProgressChecker', () => {
       ]);
 
       const normalResult = await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
       await resultsChecker.checkForParticipant(
-        generateParticipantAuthKeys(),
-        progressCheckerSetup.periodStart,
+        generateParticipantInfo({
+          joinedAt: progressCheckerSetup.periodStart,
+        }),
       );
 
       const meta = resultsChecker.getCollectedMeta();

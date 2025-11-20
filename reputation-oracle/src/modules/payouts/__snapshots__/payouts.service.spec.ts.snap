@@ -7,11 +7,11 @@ exports[`PayoutsService calculateRewardsForIntermediateResult should correctly c
     "rewards": [
       {
         "address": "0x0000000000000000000000000000000000000001",
-        "amount": 0.9756486072118352,
+        "amount": "0.975648607211835214",
       },
       {
         "address": "0x0000000000000000000000000000000000000002",
-        "amount": 41.02435139278816,
+        "amount": "41.024351392788164785",
       },
     ],
   },
