@@ -3,12 +3,17 @@ import type { Exchange, Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 import _ from 'lodash';
 
 import { ETH_TOKEN_SYMBOL, ETH_USDT_PAIR } from '@/common/constants';
+import * as cryptoUtils from '@/common/utils/crypto';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
-import type { ExchangeApiClient } from './exchange-api-client.interface';
+import type {
+  ExchangeApiClient,
+  ExchangeApiClientInitOptions,
+  ExchangeApiClientLoggingConfig,
+} from './exchange-api-client.interface';
 import {
   AccountBalance,
   ExchangePermission,
@@ -17,12 +22,10 @@ import {
   Trade,
 } from './types';
 
-type InitOptions = {
-  apiKey: string;
-  secret: string;
+interface InitOptions extends ExchangeApiClientInitOptions {
   sandbox?: boolean;
   preloadedExchangeClient?: Exchange;
-};
+}
 
 export function mapCcxtOrder(order: CcxtOrder): Order {
   return {
@@ -49,6 +52,17 @@ export function mapCcxtTrade(trade: CcxtTrade): Trade {
     amount: trade.amount,
     cost: trade.cost,
   };
+}
+
+function mapCcxtError(error: unknown) {
+  if (error instanceof ccxt.BaseError || error instanceof Error) {
+    return {
+      name: error.constructor.name,
+      message: error.message,
+    };
+  }
+
+  return error;
 }
 
 const ERROR_EXCHANGE_NAME_PROP = Symbol(
@@ -93,16 +107,27 @@ function CatchApiAccessErrors() {
   return function (
     _target: unknown,
     propertyKey: string,
-    descriptor: PropertyDescriptor,
+    descriptor: TypedPropertyDescriptor<
+      (this: CcxtExchangeClient, ...args: unknown[]) => unknown
+    >,
   ) {
-    const original = descriptor.value;
-    descriptor.value = async function (...args: unknown[]) {
+    const original = descriptor.value!;
+
+    descriptor.value = async function (
+      this: CcxtExchangeClient,
+      ...args: unknown[]
+    ) {
       try {
         return await original.apply(this, args);
       } catch (error) {
-        error[ERROR_EXCHANGE_NAME_PROP] = (
-          this as CcxtExchangeClient
-        ).exchangeName;
+        if (this.loggingConfig.logPermissionErrors) {
+          this.logger.info('Failed to access exchange API', {
+            method: propertyKey,
+            errorDetails: mapCcxtError(error),
+          });
+        }
+
+        error[ERROR_EXCHANGE_NAME_PROP] = this.exchangeName;
         if (isExchangeApiAccessError(error)) {
           throw new ExchangeApiAccessError(
             `Api access failed for ${propertyKey}`,
@@ -132,17 +157,31 @@ async function permissionCheckHandler(
 }
 
 export class CcxtExchangeClient implements ExchangeApiClient {
-  private logger: Logger;
   private ccxtClient: Exchange;
   readonly sandbox: boolean;
+  readonly userId: string;
+
+  protected logger: Logger;
+  protected loggingConfig: ExchangeApiClientLoggingConfig = {
+    logPermissionErrors: false,
+  };
 
   constructor(
     readonly exchangeName: string,
-    { apiKey, secret, sandbox, preloadedExchangeClient }: InitOptions,
+    {
+      apiKey,
+      secret,
+      userId,
+      sandbox,
+      preloadedExchangeClient,
+      loggingConfig,
+    }: InitOptions,
   ) {
     if (!(exchangeName in ccxt)) {
       throw new Error(`Exchange not supported: ${exchangeName}`);
     }
+
+    this.userId = userId;
 
     const exchangeClass = ccxt[exchangeName];
     this.ccxtClient = new exchangeClass(
@@ -157,10 +196,16 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       this.ccxtClient.setSandboxMode(true);
     }
 
+    this.loggingConfig = {
+      ...this.loggingConfig,
+      ...loggingConfig,
+    };
     this.logger = logger.child({
       context: CcxtExchangeClient.name,
       exchangeName,
       sandbox: this.sandbox,
+      userId,
+      apiKeyHash: cryptoUtils.hashString(apiKey),
     });
   }
 
@@ -179,7 +224,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     }
 
     try {
-      const checkHandlersMap = new Map<ExchangePermission, Promise<boolean>>();
+      const checkHandlersMap = new Map<
+        ExchangePermission,
+        ReturnType<typeof permissionCheckHandler>
+      >();
 
       if (_permissionsToCheck.has(ExchangePermission.FETCH_BALANCE)) {
         checkHandlersMap.set(

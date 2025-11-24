@@ -42,7 +42,11 @@ export class ExchangeApiKeysService {
 
     const exchangeApiClient = this.exchangeApiClientFactory.create(
       exchangeName,
-      { apiKey, secret: secretKey },
+      {
+        apiKey,
+        secret: secretKey,
+        userId,
+      },
     );
 
     if (!exchangeApiClient.checkRequiredCredentials()) {

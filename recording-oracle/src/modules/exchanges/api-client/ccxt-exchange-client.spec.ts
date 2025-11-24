@@ -26,6 +26,7 @@ import { createMock } from '@golevelup/ts-jest';
 import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
+import * as cryptoUtils from '@/common/utils/crypto';
 import logger from '@/logger';
 import {
   generateExchangeName,
@@ -86,15 +87,47 @@ describe('CcxtExchangeClient', () => {
       );
     });
 
+    it('should create instance with correct public values and logger context', () => {
+      const spyOnLoggerChild = jest.spyOn(logger, 'child');
+
+      try {
+        const apiKey = faker.string.sample();
+        const secret = faker.string.sample();
+        const userId = faker.string.uuid();
+
+        const ccxtExchangeClient = new CcxtExchangeClient(exchangeName, {
+          apiKey,
+          secret,
+          userId,
+        });
+
+        expect(ccxtExchangeClient.exchangeName).toBe(exchangeName);
+        expect(ccxtExchangeClient.userId).toBe(userId);
+
+        expect(spyOnLoggerChild).toHaveBeenCalledTimes(1);
+        expect(spyOnLoggerChild).toHaveBeenCalledWith({
+          context: CcxtExchangeClient.name,
+          exchangeName,
+          userId,
+          sandbox: expect.any(Boolean),
+          apiKeyHash: cryptoUtils.hashString(apiKey, 'sha256'),
+        });
+      } finally {
+        spyOnLoggerChild.mockRestore();
+      }
+    });
+
     it.each([true, false, undefined])(
       'should create instance with sandbox mode [%#]',
       (sandboxParam) => {
         const apiKey = faker.string.sample();
         const secret = faker.string.sample();
+        const userId = faker.string.uuid();
 
-        new CcxtExchangeClient(exchangeName, {
+        const ccxtExchangeClient = new CcxtExchangeClient(exchangeName, {
           apiKey,
           secret,
+          userId,
           sandbox: sandboxParam,
         });
 
@@ -113,6 +146,7 @@ describe('CcxtExchangeClient', () => {
         });
 
         const expectedSandboxMode = Boolean(sandboxParam);
+        expect(ccxtExchangeClient.sandbox).toBe(expectedSandboxMode);
         if (expectedSandboxMode) {
           expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(1);
           expect(mockedExchange.setSandboxMode).toHaveBeenCalledWith(
@@ -139,6 +173,7 @@ describe('CcxtExchangeClient', () => {
       ccxtExchangeApiClient = new CcxtExchangeClient(exchangeName, {
         apiKey: faker.string.sample(),
         secret: faker.string.sample(),
+        userId: faker.string.uuid(),
       });
     });
 
