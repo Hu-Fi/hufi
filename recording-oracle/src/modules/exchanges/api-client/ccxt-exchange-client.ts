@@ -120,15 +120,14 @@ function CatchApiAccessErrors() {
       try {
         return await original.apply(this, args);
       } catch (error) {
-        if (this.loggingConfig.logPermissionErrors) {
-          this.logger.info('Failed to access exchange API', {
-            method: propertyKey,
-            errorDetails: mapCcxtError(error),
-          });
-        }
-
         error[ERROR_EXCHANGE_NAME_PROP] = this.exchangeName;
         if (isExchangeApiAccessError(error)) {
+          if (this.loggingConfig.logPermissionErrors) {
+            this.logger.info('Failed to access exchange API', {
+              method: propertyKey,
+              errorDetails: mapCcxtError(error),
+            });
+          }
           throw new ExchangeApiAccessError(
             `Api access failed for ${propertyKey}`,
             error.message,
