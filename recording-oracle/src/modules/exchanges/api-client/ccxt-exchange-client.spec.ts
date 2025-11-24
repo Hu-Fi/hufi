@@ -184,9 +184,30 @@ describe('CcxtExchangeClient', () => {
         expect(logger.error).toHaveBeenCalledWith(expectedMessage, testError);
       });
 
-      it("should return false if can't fetch trades", async () => {
+      it('should re-throw unknown error', async () => {
+        const testError = new Error(faker.lorem.sentence());
+        mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
+
+        let thrownError;
+        try {
+          await ccxtExchangeApiClient.checkRequiredAccess(exchangePermissions);
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
+
+        expect(thrownError).toBeInstanceOf(Error);
+        expect(thrownError.message).toBe(testError.message);
+      });
+
+      it("should return false if can't fetch trades due to missing access", async () => {
         const now = Date.now();
-        const syntheticAuthError = new Error(faker.lorem.sentence());
+        const syntheticAuthError = new ExchangeApiAccessError(
+          faker.lorem.sentence(),
+        );
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
 
         jest.useFakeTimers({ now });
@@ -212,9 +233,11 @@ describe('CcxtExchangeClient', () => {
         );
       });
 
-      it("should return false if can't fetch the balance", async () => {
+      it("should return false if can't fetch the balance due to missing access", async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
-        const syntheticAuthError = new Error(faker.lorem.sentence());
+        const syntheticAuthError = new ExchangeApiAccessError(
+          faker.lorem.sentence(),
+        );
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
@@ -231,13 +254,15 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(0);
       });
 
-      it("should return false if can't fetch deposit address", async () => {
+      it("should return false if can't fetch deposit address due to missing access", async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         mockedExchange.fetchBalance.mockResolvedValueOnce(
           generateAccountBalance([faker.finance.currencyCode()]),
         );
 
-        const syntheticAuthError = new Error(faker.lorem.sentence());
+        const syntheticAuthError = new ExchangeApiAccessError(
+          faker.lorem.sentence(),
+        );
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
           syntheticAuthError,
         );

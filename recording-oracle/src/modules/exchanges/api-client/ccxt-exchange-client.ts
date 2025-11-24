@@ -123,11 +123,11 @@ async function permissionCheckHandler(
     await checkPromise;
     return true;
   } catch (error) {
-    if (error instanceof ccxt.NetworkError) {
-      throw error;
+    if (error instanceof ExchangeApiAccessError) {
+      return false;
     }
 
-    return false;
+    throw error;
   }
 }
 
