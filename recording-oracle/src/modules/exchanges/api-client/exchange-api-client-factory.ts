@@ -6,7 +6,7 @@ import {
   SUPPORTED_EXCHANGE_NAMES,
   SupportedExchange,
 } from '@/common/constants';
-import { ExchangeConfigService } from '@/config';
+import { ExchangeConfigService, LoggingConfigService } from '@/config';
 import logger from '@/logger';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
@@ -28,7 +28,10 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     new Map();
   private preloadCcxtTimeoutId: NodeJS.Timeout;
 
-  constructor(private readonly exchangeConfigService: ExchangeConfigService) {}
+  constructor(
+    private readonly exchangeConfigService: ExchangeConfigService,
+    private readonly loggingConfigService: LoggingConfigService,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await this.preloadCcxtClients();
@@ -91,7 +94,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
 
   create(
     exchangeName: string,
-    initOptions: ExchangeApiClientInitOptions,
+    initOptions: Omit<ExchangeApiClientInitOptions, 'loggingConfig'>,
   ): ExchangeApiClient {
     return new CcxtExchangeClient(exchangeName, {
       ...initOptions,
@@ -99,6 +102,10 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       preloadedExchangeClient: this.preloadedCcxtClients.get(
         exchangeName as SupportedExchange,
       ),
+      loggingConfig: {
+        logPermissionErrors:
+          this.loggingConfigService.logExchangePermissionErrors,
+      },
     });
   }
 }

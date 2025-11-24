@@ -62,4 +62,6 @@ export const envValidator = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string(),
   S3_USE_SSL: Joi.string().valid('true', 'false'),
+  // Logging
+  LOG_EXCHANGE_PERMISSION_ERRORS: Joi.string().valid('true', 'false'),
 });
