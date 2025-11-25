@@ -98,6 +98,7 @@ declare module 'ccxt' {
     AccountSuspended: ErrorConstructor;
     AuthenticationError: ErrorConstructor;
     BadSymbol: ErrorConstructor;
+    InvalidAddress: ErrorConstructor;
     PermissionDenied: ErrorConstructor;
     NetworkError: ErrorConstructor;
     // https://docs.ccxt.com/#/README?id=exchange-properties

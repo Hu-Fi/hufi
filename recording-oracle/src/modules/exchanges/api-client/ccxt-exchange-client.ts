@@ -97,6 +97,17 @@ function isExchangeApiAccessError(error: any) {
     if (error.message.includes('10072')) {
       return true;
     }
+
+    /**
+     * This can happen in case case deposit address not exist,
+     * so user will have to create one
+     */
+    if (
+      error instanceof ccxt.InvalidAddress &&
+      error.message.includes('cannot find a deposit address')
+    ) {
+      return true;
+    }
   }
   // ============== MEXC specific API errors end ==============
 
