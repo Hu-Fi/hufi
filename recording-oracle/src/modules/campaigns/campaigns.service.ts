@@ -861,6 +861,8 @@ export class CampaignsService implements OnApplicationBootstrap {
 
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
+    const latestNonce = await signer.getNonce('latest');
+
     await escrowClient.storeResults(
       campaignAddress,
       resultsUrl,
@@ -868,6 +870,7 @@ export class CampaignsService implements OnApplicationBootstrap {
       fundsToReserve,
       {
         gasPrice,
+        nonce: latestNonce,
       },
     );
 

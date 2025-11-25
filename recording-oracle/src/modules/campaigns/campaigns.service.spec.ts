@@ -41,7 +41,7 @@ import {
   ExchangesService,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
-import { Web3Service } from '@/modules/web3';
+import { WalletWithProvider, Web3Service } from '@/modules/web3';
 import {
   generateTestnetChainId,
   mockWeb3ConfigService,
@@ -1168,11 +1168,13 @@ describe('CampaignsService', () => {
 
   describe('recordCampaignIntermediateResults', () => {
     const mockStoreResults = jest.fn();
+    const mockedSigner = createMock<WalletWithProvider>();
 
     beforeEach(() => {
       mockedEscrowClient.build.mockResolvedValue({
         storeResults: mockStoreResults,
       } as unknown as EscrowClient);
+      mockWeb3Service.getSigner.mockReturnValueOnce(mockedSigner);
     });
 
     it('should upload results to storage and store url in escrow', async () => {
@@ -1181,6 +1183,9 @@ describe('CampaignsService', () => {
 
       const mockGasPrice = faker.number.bigInt({ min: 1 });
       mockWeb3Service.calculateGasPrice.mockResolvedValueOnce(mockGasPrice);
+
+      const latestNonce = faker.number.int();
+      mockedSigner.getNonce.mockResolvedValueOnce(latestNonce);
 
       const intermediateResultsData = generateIntermediateResultsData();
       const stringifiedResultsData = JSON.stringify(intermediateResultsData);
@@ -1204,6 +1209,9 @@ describe('CampaignsService', () => {
         'application/json',
       );
 
+      expect(mockedSigner.getNonce).toHaveBeenCalledTimes(1);
+      expect(mockedSigner.getNonce).toHaveBeenCalledWith('latest');
+
       expect(mockStoreResults).toHaveBeenCalledTimes(1);
       expect(mockStoreResults).toHaveBeenCalledWith(
         intermediateResultsData.address,
@@ -1212,6 +1220,7 @@ describe('CampaignsService', () => {
         fundsToReserve,
         {
           gasPrice: mockGasPrice,
+          nonce: latestNonce,
         },
       );
     });
