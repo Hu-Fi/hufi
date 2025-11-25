@@ -109,6 +109,7 @@ const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
 
 const mockWeb3Service = createMock<Web3Service>();
 (mockWeb3Service.supportedChainIds as any) = [];
+const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
@@ -1168,7 +1169,6 @@ describe('CampaignsService', () => {
 
   describe('recordCampaignIntermediateResults', () => {
     const mockStoreResults = jest.fn();
-    const mockedSigner = createMock<WalletWithProvider>();
 
     beforeEach(() => {
       mockedEscrowClient.build.mockResolvedValue({
