@@ -235,6 +235,7 @@ export class PayoutsService {
         const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
+        const latestNonce = await signer.getNonce('latest');
 
         await escrowClient.bulkPayOut(
           campaign.address,
@@ -246,6 +247,7 @@ export class PayoutsService {
           false,
           {
             gasPrice,
+            nonce: latestNonce,
           },
         );
 

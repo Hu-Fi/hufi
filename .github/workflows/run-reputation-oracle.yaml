@@ -112,7 +112,6 @@ jobs:
           # testnet URLs; will be empty in mainnet env
           RPC_URL_SEPOLIA: ${{ secrets.RPC_URL_SEPOLIA }}
           RPC_URL_POLYGON_AMOY: ${{ secrets.RPC_URL_POLYGON_AMOY }}
-          RPC_URL_AURORA_TESTNET: ${{ secrets.RPC_URL_AURORA_TESTNET }}
 
           SUBGRAPH_API_KEY: ${{ secrets.SUBGRAPH_API_KEY }}
 

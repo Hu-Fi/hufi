@@ -22,7 +22,7 @@ import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { StorageService } from '@/modules/storage';
-import { Web3Service } from '@/modules/web3';
+import { WalletWithProvider, Web3Service } from '@/modules/web3';
 import {
   generateTestnetChainId,
   mockWeb3ConfigService,
@@ -50,6 +50,8 @@ const mockWeb3Service = createMock<Web3Service>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
+
+const mockedSigner = createMock<WalletWithProvider>();
 
 describe('PayoutsService', () => {
   let payoutsService: PayoutsService;
@@ -636,7 +638,7 @@ describe('PayoutsService', () => {
       mockedGetEscrowReservedFunds.mockReset().mockResolvedValueOnce(
         faker.number.int({
           max:
-            mockedIntermediateResult.reserved_funds -
+            Number(mockedIntermediateResult.reserved_funds) -
             faker.number.float({ min: 0.0000001 }),
         }),
       );
@@ -654,7 +656,14 @@ describe('PayoutsService', () => {
     });
 
     it('should run payouts and not attempt finish campaign if not ended', async () => {
+      mockWeb3Service.getSigner.mockReturnValueOnce(mockedSigner);
+      const latestNonce = faker.number.int();
+      mockedSigner.getNonce.mockResolvedValueOnce(latestNonce);
+
       await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
+
+      expect(mockedSigner.getNonce).toHaveBeenCalledTimes(1);
+      expect(mockedSigner.getNonce).toHaveBeenCalledWith('latest');
 
       expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
       expect(mockedBulkPayOut).toHaveBeenCalledWith(
@@ -672,6 +681,7 @@ describe('PayoutsService', () => {
         false,
         {
           gasPrice: mockedGasPrice,
+          nonce: latestNonce,
         },
       );
 

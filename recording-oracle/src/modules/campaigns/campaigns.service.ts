@@ -7,8 +7,17 @@ import {
   EscrowUtils,
   OrderDirection,
 } from '@human-protocol/sdk';
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import {
+  Injectable,
+  OnApplicationBootstrap,
+  OnModuleDestroy,
+} from '@nestjs/common';
+import {
+  Cron,
+  CronExpression,
+  Interval as ScheduleInterval,
+  SchedulerRegistry,
+} from '@nestjs/schedule';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
@@ -43,7 +52,11 @@ import {
   UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
-import { CAMPAIGN_PERMISSIONS_MAP, PROGRESS_PERIOD_DAYS } from './constants';
+import {
+  CAMPAIGN_PERMISSIONS_MAP,
+  CampaignServiceJob,
+  PROGRESS_PERIOD_DAYS,
+} from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
   type CampaignProgressChecker,
@@ -79,7 +92,9 @@ import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
 @Injectable()
-export class CampaignsService implements OnApplicationBootstrap {
+export class CampaignsService
+  implements OnApplicationBootstrap, OnModuleDestroy
+{
   private readonly logger = logger.child({
     context: CampaignsService.name,
   });
@@ -102,10 +117,21 @@ export class CampaignsService implements OnApplicationBootstrap {
     private readonly web3Service: Web3Service,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly pgAdvisoryLock: PgAdvisoryLock,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
 
   onApplicationBootstrap() {
     void this.refreshInterimProgressCache();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    for (const [jobName, jobRef] of this.schedulerRegistry.getCronJobs()) {
+      if (jobRef.isCallbackRunning) {
+        this.logger.warn('Campaign service job is running while shutdown', {
+          jobName,
+        });
+      }
+    }
   }
 
   async findOneByChainIdAndAddress(
@@ -397,7 +423,10 @@ export class CampaignsService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron(CronExpression.EVERY_30_MINUTES)
+  @Cron(CronExpression.EVERY_30_MINUTES, {
+    name: CampaignServiceJob.RECORD_CAMPAIGNS_PROGRESS,
+    waitForCompletion: true,
+  })
   async recordCampaignsProgress(): Promise<void> {
     this.logger.debug('Campaigns progress recording job started');
 
@@ -861,6 +890,8 @@ export class CampaignsService implements OnApplicationBootstrap {
 
     const gasPrice = await this.web3Service.calculateGasPrice(chainId);
 
+    const latestNonce = await signer.getNonce('latest');
+
     await escrowClient.storeResults(
       campaignAddress,
       resultsUrl,
@@ -868,6 +899,7 @@ export class CampaignsService implements OnApplicationBootstrap {
       fundsToReserve,
       {
         gasPrice,
+        nonce: latestNonce,
       },
     );
 
@@ -907,7 +939,10 @@ export class CampaignsService implements OnApplicationBootstrap {
     }
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @ScheduleInterval(
+    CampaignServiceJob.SYNC_CAMPAIGN_STATUSES,
+    dayjs.duration(3, 'minutes').asMilliseconds(),
+  )
   async syncCampaignStatuses(): Promise<void> {
     this.logger.debug('Campaign statuses sync job started');
 
@@ -1083,7 +1118,10 @@ export class CampaignsService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @ScheduleInterval(
+    CampaignServiceJob.DISCOVER_NEW_CAMPAIGNS,
+    dayjs.duration(10, 'minutes').asMilliseconds(),
+  )
   async discoverNewCampaigns(): Promise<void> {
     this.logger.debug('New campaigns discovery job started');
 
@@ -1188,7 +1226,10 @@ export class CampaignsService implements OnApplicationBootstrap {
     this.logger.debug('New campaigns discovery job finished');
   }
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_10_MINUTES, {
+    name: CampaignServiceJob.REFRESH_INTERIM_PROGRESS_CACHE,
+    waitForCompletion: true,
+  })
   async refreshInterimProgressCache(): Promise<void> {
     await this.pgAdvisoryLock.withLock(
       'refresh-interim-progress-cache',

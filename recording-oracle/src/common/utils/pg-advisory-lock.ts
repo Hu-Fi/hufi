@@ -1,13 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 import logger from '@/logger';
 
 @Injectable()
-export class PgAdvisoryLock {
+export class PgAdvisoryLock implements OnModuleDestroy {
   private readonly logger = logger.child({ context: PgAdvisoryLock.name });
 
+  private readonly lockedKeys = new Set<string>();
+
   constructor(private readonly dataSource: DataSource) {}
+
+  onModuleDestroy() {
+    if (this.lockedKeys.size > 0) {
+      this.logger.warn('Locks are not yet released while shutdown', {
+        keys: Array.from(this.lockedKeys.values()),
+      });
+    }
+  }
 
   /**
    * Run `fn` only if the advisory lock can be acquired.
@@ -30,10 +40,15 @@ export class PgAdvisoryLock {
       return null;
     }
 
+    this.lockedKeys.add(key);
+
     try {
       return await fn();
     } finally {
       await runner.query('SELECT pg_advisory_unlock(hashtext($1))', [key]);
+
+      this.lockedKeys.delete(key);
+
       await runner.release();
     }
   }

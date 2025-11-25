@@ -804,43 +804,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:5.0.0":
-  version: 5.0.0
-  resolution: "@human-protocol/core@npm:5.0.0"
+"@human-protocol/core@npm:5.0.1":
+  version: 5.0.1
+  resolution: "@human-protocol/core@npm:5.0.1"
   peerDependencies:
     ethers: ~6.15.0
-  checksum: 10c0/2cfb8446fbf35dbbe9a3d453ebb915affd5cd6be4d280bb773a19a9d4363e81989ecfef8651cc8ab90103f33c5265e1f14a2d5fdb7cea5ac079b85b731491dd4
+  checksum: 10c0/77feca00dc8b11248a223c92286c799139842d76f4965d16b3e49df53e3edbc5fc6f9765798661f0af5fa2e3fd6e6ea9fc8dc8a308ccac42b488c4d0a60ec9cb
   languageName: node
   linkType: hard
 
-"@human-protocol/logger@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@human-protocol/logger@npm:1.1.0"
+"@human-protocol/logger@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@human-protocol/logger@npm:1.2.0"
   dependencies:
-    pino: "npm:^9.7.0"
-    pino-pretty: "npm:^13.0.0"
+    pino: "npm:^10.1.0"
+    pino-pretty: "npm:^13.1.2"
   peerDependencies:
     "@nestjs/common": ^10.2.7
-  checksum: 10c0/1f9703579eb43a7becfaabf8edd697eba78589b21cda7e69ee8866dfa975c1331bf1c82602dd1ed17410f842c6c026ab63b45641d48a4b81bbd398d8bd8df2a5
+  checksum: 10c0/7cf63223b91df5156b9aab8c3c4ecaf5307c518a84faaf8491e445859b01af6ba26260eab5216ccc0c31d818bd3d283ec5d589d90128ad5ba87b6b1de23e8d66
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@human-protocol/sdk@npm:5.0.0"
+"@human-protocol/sdk@npm:^5.2.0":
+  version: 5.2.0
+  resolution: "@human-protocol/sdk@npm:5.2.0"
   dependencies:
-    "@human-protocol/core": "npm:5.0.0"
+    "@human-protocol/core": "npm:5.0.1"
     axios: "npm:^1.4.0"
     ethers: "npm:~6.15.0"
     graphql: "npm:^16.8.1"
-    graphql-request: "npm:^6.1.0"
+    graphql-request: "npm:^7.3.4"
     graphql-tag: "npm:^2.12.6"
     minio: "npm:7.1.3"
-    openpgp: "npm:^5.11.2"
+    openpgp: "npm:^6.2.2"
     secp256k1: "npm:^5.0.1"
     validator: "npm:^13.12.0"
     vitest: "npm:^3.0.9"
-  checksum: 10c0/6341ebe1b821cdaba0bd63855ca34c4d75bc498958571fc6507a4d60a1af84df716073de6e53faa9c4f5095e1596775b2ec7b7b51e61df32510e6e76da09a78c
+  checksum: 10c0/75addaeb9ceec385eb6a7b28719c3a0f6867e5d37c1f637f2f788d7a481dad0dbd07a5e245565515129a709a0e215d9807ad0041631d1ae8548933cdd8087372
   languageName: node
   linkType: hard
 
@@ -1753,6 +1753,13 @@ __metadata:
   version: 2.1.0
   resolution: "@open-draft/until@npm:2.1.0"
   checksum: 10c0/61d3f99718dd86bb393fee2d7a785f961dcaf12f2055f0c693b27f4d0cd5f7a03d498a6d9289773b117590d794a43cd129366fd8e99222e4832f67b1653d54cf
+  languageName: node
+  linkType: hard
+
+"@pinojs/redact@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@pinojs/redact@npm:0.4.0"
+  checksum: 10c0/4b311ba17ee0cf154ff9c39eb063ec04cd0d0017cb3750efcdf06c2d485df3e1095e13e872175993568c5568c23e4508dd877c981bbc9c5ae5e384d569efcdff
   languageName: node
   linkType: hard
 
@@ -3055,18 +3062,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asn1.js@npm:^5.0.0":
-  version: 5.4.1
-  resolution: "asn1.js@npm:5.4.1"
-  dependencies:
-    bn.js: "npm:^4.0.0"
-    inherits: "npm:^2.0.1"
-    minimalistic-assert: "npm:^1.0.0"
-    safer-buffer: "npm:^2.1.0"
-  checksum: 10c0/b577232fa6069cc52bb128e564002c62b2b1fe47f7137bdcd709c0b8495aa79cee0f8cc458a831b2d8675900eea0d05781b006be5e1aa4f0ae3577a73ec20324
-  languageName: node
-  linkType: hard
-
 "assertion-error@npm:^2.0.1":
   version: 2.0.1
   resolution: "assertion-error@npm:2.0.1"
@@ -3235,7 +3230,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bn.js@npm:^4.0.0, bn.js@npm:^4.11.9":
+"bn.js@npm:^4.11.9":
   version: 4.12.2
   resolution: "bn.js@npm:4.12.2"
   checksum: 10c0/09a249faa416a9a1ce68b5f5ec8bbca87fe54e5dd4ef8b1cc8a4969147b80035592bddcb1e9cc814c3ba79e573503d5c5178664b722b509fb36d93620dba9b57
@@ -3701,15 +3696,6 @@ __metadata:
   version: 1.1.1
   resolution: "create-require@npm:1.1.1"
   checksum: 10c0/157cbc59b2430ae9a90034a5f3a1b398b6738bf510f713edc4d4e45e169bc514d3d99dd34d8d01ca7ae7830b5b8b537e46ae8f3c8f932371b0875c0151d7ec91
-  languageName: node
-  linkType: hard
-
-"cross-fetch@npm:^3.1.5":
-  version: 3.2.0
-  resolution: "cross-fetch@npm:3.2.0"
-  dependencies:
-    node-fetch: "npm:^2.7.0"
-  checksum: 10c0/d8596adf0269130098a676f6739a0922f3cc7b71cc89729925411ebe851a87026171c82ea89154c4811c9867c01c44793205a52e618ce2684650218c7fbeeb9f
   languageName: node
   linkType: hard
 
@@ -4665,13 +4651,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-redact@npm:^3.1.1":
-  version: 3.5.0
-  resolution: "fast-redact@npm:3.5.0"
-  checksum: 10c0/7e2ce4aad6e7535e0775bf12bd3e4f2e53d8051d8b630e0fa9e67f68cb0b0e6070d2f7a94b1d0522ef07e32f7c7cda5755e2b677a6538f1e9070ca053c42343a
-  languageName: node
-  linkType: hard
-
 "fast-safe-stringify@npm:2.1.1, fast-safe-stringify@npm:^2.1.1":
   version: 2.1.1
   resolution: "fast-safe-stringify@npm:2.1.1"
@@ -5146,15 +5125,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^6.1.0":
-  version: 6.1.0
-  resolution: "graphql-request@npm:6.1.0"
+"graphql-request@npm:^7.3.4":
+  version: 7.3.4
+  resolution: "graphql-request@npm:7.3.4"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.2.0"
-    cross-fetch: "npm:^3.1.5"
   peerDependencies:
     graphql: 14 - 16
-  checksum: 10c0/f8167925a110e8e1de93d56c14245e7e64391dc8dce5002dd01bf24a3059f345d4ca1bb6ce2040e2ec78264211b0704e75da3e63984f0f74d2042f697a4e8cc6
+  checksum: 10c0/dc4d012f614b11c1f92b6eeb273bcc936f621b10e751710a899b88d9762160601b523773ac60a01b702728c9d98c9461602d472554cf4b0cb97b1fac6687c139
   languageName: node
   linkType: hard
 
@@ -5396,7 +5374,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"inherits@npm:2, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4":
+"inherits@npm:2, inherits@npm:^2.0.3, inherits@npm:^2.0.4":
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
   checksum: 10c0/4e531f648b29039fb7426fb94075e6545faa1eb9fe83c29f0b6d9e7263aceb4289d2d4557db0d428188eeb449cc7c5e77b0a0b2c4e248ff2a65933a0dee49ef2
@@ -6950,20 +6928,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.7.0":
-  version: 2.7.0
-  resolution: "node-fetch@npm:2.7.0"
-  dependencies:
-    whatwg-url: "npm:^5.0.0"
-  peerDependencies:
-    encoding: ^0.1.0
-  peerDependenciesMeta:
-    encoding:
-      optional: true
-  checksum: 10c0/b55786b6028208e6fbe594ccccc213cab67a72899c9234eb59dba51062a299ea853210fcf526998eaa2867b0963ad72338824450905679ff0fa304b8c5093ae8
-  languageName: node
-  linkType: hard
-
 "node-gyp-build@npm:^4.2.0":
   version: 4.8.4
   resolution: "node-gyp-build@npm:4.8.4"
@@ -7124,12 +7088,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openpgp@npm:^5.11.2":
-  version: 5.11.3
-  resolution: "openpgp@npm:5.11.3"
-  dependencies:
-    asn1.js: "npm:^5.0.0"
-  checksum: 10c0/0e7b9c562d6eb9fefb132a6c70675ad149b3f7bbec8d60b79f198f4834fcd54c15c0d199809b2c01e787c5769e50a9a18f950d9f49416d8c28587ac84bc171c1
+"openpgp@npm:^6.2.2":
+  version: 6.2.2
+  resolution: "openpgp@npm:6.2.2"
+  checksum: 10c0/dd284ff20ad087c341ec86369e12d5c210056aa28edacba192b20bd0d20892ce21c6aef83c6d79f082f533343e80b8ad63a58ee9ebf5d7651173890e70833ae2
   languageName: node
   linkType: hard
 
@@ -7373,9 +7335,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino-pretty@npm:^13.0.0":
-  version: 13.1.1
-  resolution: "pino-pretty@npm:13.1.1"
+"pino-pretty@npm:^13.1.2":
+  version: 13.1.2
+  resolution: "pino-pretty@npm:13.1.2"
   dependencies:
     colorette: "npm:^2.0.7"
     dateformat: "npm:^4.6.3"
@@ -7392,7 +7354,7 @@ __metadata:
     strip-json-comments: "npm:^5.0.2"
   bin:
     pino-pretty: bin.js
-  checksum: 10c0/845c07afd3d73cb96ad2049cfa7fca12b8280a51e30d6db8b490857690637556bb8e7f05b2fa640b3e4a7edd9b1369110042d670fda743ef98fe3be29876c8c7
+  checksum: 10c0/4d8e7472e37bdb6e0d6d7d34f25f65ced46c0f64a9579bb805602321caf1c0b10359f89a1ee9742bea875f411a02ce7c19730f7a1e5387dfcfd10ff5c9804709
   languageName: node
   linkType: hard
 
@@ -7403,12 +7365,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino@npm:^9.7.0":
-  version: 9.9.0
-  resolution: "pino@npm:9.9.0"
+"pino@npm:^10.1.0":
+  version: 10.1.0
+  resolution: "pino@npm:10.1.0"
   dependencies:
+    "@pinojs/redact": "npm:^0.4.0"
     atomic-sleep: "npm:^1.0.0"
-    fast-redact: "npm:^3.1.1"
     on-exit-leak-free: "npm:^2.1.0"
     pino-abstract-transport: "npm:^2.0.0"
     pino-std-serializers: "npm:^7.0.0"
@@ -7420,7 +7382,7 @@ __metadata:
     thread-stream: "npm:^3.0.0"
   bin:
     pino: bin.js
-  checksum: 10c0/e2b05d4b1cf73447648ec98d247fd0f1f8020a819ebc2c97fab7fa8b9efe2d1a82ebf674ed2489bb7a1d3a75350c044c776f124e9c29c004bfb133b9e2ac0871
+  checksum: 10c0/49c1dd80d5f99f02bde1acf2f60cef7686948a937f751f6cb368c2868c7e82e54aeabac63a34587e16019965cbf0eb6e609edf92c439a98a0a4fcb0add277eaf
   languageName: node
   linkType: hard
 
@@ -7691,8 +7653,8 @@ __metadata:
     "@eslint/js": "npm:^9.27.0"
     "@faker-js/faker": "npm:^9.9.0"
     "@golevelup/ts-jest": "npm:^0.7.0"
-    "@human-protocol/logger": "npm:^1.1.0"
-    "@human-protocol/sdk": "npm:^5.0.0"
+    "@human-protocol/logger": "npm:^1.2.0"
+    "@human-protocol/sdk": "npm:^5.2.0"
     "@nestjs/cli": "npm:^11.0.0"
     "@nestjs/common": "npm:^11.0.1"
     "@nestjs/config": "npm:^4.0.2"
@@ -7967,7 +7929,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:^2.1.0":
+"safer-buffer@npm:>= 2.1.2 < 3.0.0":
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: 10c0/7e3c8b2e88a1841c9671094bbaeebd94448111dd90a81a1f606f3f67708a6ec57763b3b47f06da09fc6054193e0e6709e77325415dc8422b04497a8070fa02d4
@@ -8704,13 +8666,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tr46@npm:~0.0.3":
-  version: 0.0.3
-  resolution: "tr46@npm:0.0.3"
-  checksum: 10c0/047cb209a6b60c742f05c9d3ace8fa510bff609995c129a37ace03476a9b12db4dbf975e74600830ef0796e18882b2381fb5fb1f6b4f96b832c374de3ab91a11
-  languageName: node
-  linkType: hard
-
 "tree-kill@npm:1.2.2":
   version: 1.2.2
   resolution: "tree-kill@npm:1.2.2"
@@ -9379,13 +9334,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webidl-conversions@npm:^3.0.0":
-  version: 3.0.1
-  resolution: "webidl-conversions@npm:3.0.1"
-  checksum: 10c0/5612d5f3e54760a797052eb4927f0ddc01383550f542ccd33d5238cfd65aeed392a45ad38364970d0a0f4fea32e1f4d231b3d8dac4a3bdd385e5cf802ae097db
-  languageName: node
-  linkType: hard
-
 "webpack-node-externals@npm:3.0.0":
   version: 3.0.0
   resolution: "webpack-node-externals@npm:3.0.0"
@@ -9435,16 +9383,6 @@ __metadata:
   bin:
     webpack: bin/webpack.js
   checksum: 10c0/0add75d44c482634c6879a3fc87fa2af6a6c7c8eacda5d5f60ed778a2ce13d33fd6178a2b4750368706a49e769af6d828934c28914b4faa2e21be790f92b4110
-  languageName: node
-  linkType: hard
-
-"whatwg-url@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "whatwg-url@npm:5.0.0"
-  dependencies:
-    tr46: "npm:~0.0.3"
-    webidl-conversions: "npm:^3.0.0"
-  checksum: 10c0/1588bed84d10b72d5eec1d0faa0722ba1962f1821e7539c535558fb5398d223b0c50d8acab950b8c488b4ba69043fd833cc2697056b167d8ad46fac3995a55d5
   languageName: node
   linkType: hard
 
