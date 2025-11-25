@@ -24,9 +24,6 @@ export const envValidator = Joi.object({
   RPC_URL_POLYGON_AMOY: Joi.string()
     .uri({ scheme: ['http', 'https'] })
     .allow(''),
-  RPC_URL_AURORA_TESTNET: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .allow(''),
   RPC_URL_LOCALHOST: Joi.string(),
 
   EXCHANGE_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),

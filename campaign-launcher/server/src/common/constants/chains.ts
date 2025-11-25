@@ -10,7 +10,6 @@ export enum ProductionChainId {
 export enum DevelopmentChainId {
   SEPOLIA = SdkChainId.SEPOLIA,
   POLYGON_AMOY = SdkChainId.POLYGON_AMOY,
-  AURORA_TESTNET = SdkChainId.AURORA_TESTNET,
   LOCALHOST = SdkChainId.LOCALHOST,
 }
 

@@ -28,11 +28,7 @@ export const USDC_CONTRACT_ADDRESS: Partial<Record<ChainId, string>> = {
   [ChainId.SEPOLIA]: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
 };
 
-export const TESTNET_CHAIN_IDS = [
-  ChainId.SEPOLIA,
-  ChainId.POLYGON_AMOY,
-  ChainId.AURORA_TESTNET,
-];
+export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
 export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 

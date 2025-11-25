@@ -4,7 +4,6 @@ import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
 import {
   mainnet,
-  auroraTestnet,
   localhost,
   polygon,
   polygonAmoy,
@@ -33,7 +32,6 @@ export const config = isMainnet
       chains: [
         polygonAmoy,
         sepolia,
-        auroraTestnet,
         {
           ...localhost,
           id: ChainId.LOCALHOST,
@@ -47,7 +45,6 @@ export const config = isMainnet
       transports: {
         [polygonAmoy.id]: http(),
         [sepolia.id]: http(),
-        [auroraTestnet.id]: http(),
         [ChainId.LOCALHOST]: http(),
       },
     });
