@@ -22,6 +22,7 @@ import {
   IEscrow,
   OrderDirection,
 } from '@human-protocol/sdk';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
@@ -106,6 +107,7 @@ const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
 const mockExchangesService = createMock<ExchangesService>();
 const mockStorageService = createMock<StorageService>();
 const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
+const mockSchedulerRegistry = createMock<SchedulerRegistry>();
 
 const mockWeb3Service = createMock<Web3Service>();
 (mockWeb3Service.supportedChainIds as any) = [];
@@ -156,6 +158,10 @@ describe('CampaignsService', () => {
         {
           provide: PgAdvisoryLock,
           useValue: mockPgAdvisoryLock,
+        },
+        {
+          provide: SchedulerRegistry,
+          useValue: mockSchedulerRegistry,
         },
       ],
     }).compile();

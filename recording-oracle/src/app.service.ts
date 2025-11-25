@@ -17,7 +17,7 @@ export class AppService implements OnApplicationShutdown {
   }
 
   async onApplicationShutdown(signal?: string): Promise<void> {
-    this.logger.info('Application is going to shutdown', {
+    this.logger.info('Application is about to shutdown', {
       signal,
     });
 
