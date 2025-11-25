@@ -787,31 +787,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:5.0.0":
-  version: 5.0.0
-  resolution: "@human-protocol/core@npm:5.0.0"
+"@human-protocol/core@npm:5.0.1":
+  version: 5.0.1
+  resolution: "@human-protocol/core@npm:5.0.1"
   peerDependencies:
     ethers: ~6.15.0
-  checksum: 10c0/2cfb8446fbf35dbbe9a3d453ebb915affd5cd6be4d280bb773a19a9d4363e81989ecfef8651cc8ab90103f33c5265e1f14a2d5fdb7cea5ac079b85b731491dd4
+  checksum: 10c0/77feca00dc8b11248a223c92286c799139842d76f4965d16b3e49df53e3edbc5fc6f9765798661f0af5fa2e3fd6e6ea9fc8dc8a308ccac42b488c4d0a60ec9cb
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@human-protocol/sdk@npm:5.0.0"
+"@human-protocol/sdk@npm:^5.2.0":
+  version: 5.2.0
+  resolution: "@human-protocol/sdk@npm:5.2.0"
   dependencies:
-    "@human-protocol/core": "npm:5.0.0"
+    "@human-protocol/core": "npm:5.0.1"
     axios: "npm:^1.4.0"
     ethers: "npm:~6.15.0"
     graphql: "npm:^16.8.1"
-    graphql-request: "npm:^6.1.0"
+    graphql-request: "npm:^7.3.4"
     graphql-tag: "npm:^2.12.6"
     minio: "npm:7.1.3"
-    openpgp: "npm:^5.11.2"
+    openpgp: "npm:^6.2.2"
     secp256k1: "npm:^5.0.1"
     validator: "npm:^13.12.0"
     vitest: "npm:^3.0.9"
-  checksum: 10c0/6341ebe1b821cdaba0bd63855ca34c4d75bc498958571fc6507a4d60a1af84df716073de6e53faa9c4f5095e1596775b2ec7b7b51e61df32510e6e76da09a78c
+  checksum: 10c0/75addaeb9ceec385eb6a7b28719c3a0f6867e5d37c1f637f2f788d7a481dad0dbd07a5e245565515129a709a0e215d9807ad0041631d1ae8548933cdd8087372
   languageName: node
   linkType: hard
 
@@ -3447,18 +3447,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asn1.js@npm:^5.0.0":
-  version: 5.4.1
-  resolution: "asn1.js@npm:5.4.1"
-  dependencies:
-    bn.js: "npm:^4.0.0"
-    inherits: "npm:^2.0.1"
-    minimalistic-assert: "npm:^1.0.0"
-    safer-buffer: "npm:^2.1.0"
-  checksum: 10c0/b577232fa6069cc52bb128e564002c62b2b1fe47f7137bdcd709c0b8495aa79cee0f8cc458a831b2d8675900eea0d05781b006be5e1aa4f0ae3577a73ec20324
-  languageName: node
-  linkType: hard
-
 "assert@npm:^2.0.0":
   version: 2.1.0
   resolution: "assert@npm:2.1.0"
@@ -3895,7 +3883,7 @@ __metadata:
     "@emotion/styled": "npm:^11.11.5"
     "@eslint/js": "npm:^9.37.0"
     "@hookform/resolvers": "npm:^3.3.4"
-    "@human-protocol/sdk": "npm:^5.0.0"
+    "@human-protocol/sdk": "npm:^5.2.0"
     "@mui/icons-material": "npm:^6.4.10"
     "@mui/material": "npm:^6.4.10"
     "@mui/x-data-grid": "npm:^7.28.3"
@@ -4205,7 +4193,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-fetch@npm:^3.1.4, cross-fetch@npm:^3.1.5":
+"cross-fetch@npm:^3.1.4":
   version: 3.2.0
   resolution: "cross-fetch@npm:3.2.0"
   dependencies:
@@ -5725,15 +5713,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^6.1.0":
-  version: 6.1.0
-  resolution: "graphql-request@npm:6.1.0"
+"graphql-request@npm:^7.3.4":
+  version: 7.3.4
+  resolution: "graphql-request@npm:7.3.4"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.2.0"
-    cross-fetch: "npm:^3.1.5"
   peerDependencies:
     graphql: 14 - 16
-  checksum: 10c0/f8167925a110e8e1de93d56c14245e7e64391dc8dce5002dd01bf24a3059f345d4ca1bb6ce2040e2ec78264211b0704e75da3e63984f0f74d2042f697a4e8cc6
+  checksum: 10c0/dc4d012f614b11c1f92b6eeb273bcc936f621b10e751710a899b88d9762160601b523773ac60a01b702728c9d98c9461602d472554cf4b0cb97b1fac6687c139
   languageName: node
   linkType: hard
 
@@ -7270,12 +7257,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openpgp@npm:^5.11.2":
-  version: 5.11.3
-  resolution: "openpgp@npm:5.11.3"
-  dependencies:
-    asn1.js: "npm:^5.0.0"
-  checksum: 10c0/0e7b9c562d6eb9fefb132a6c70675ad149b3f7bbec8d60b79f198f4834fcd54c15c0d199809b2c01e787c5769e50a9a18f950d9f49416d8c28587ac84bc171c1
+"openpgp@npm:^6.2.2":
+  version: 6.2.2
+  resolution: "openpgp@npm:6.2.2"
+  checksum: 10c0/dd284ff20ad087c341ec86369e12d5c210056aa28edacba192b20bd0d20892ce21c6aef83c6d79f082f533343e80b8ad63a58ee9ebf5d7651173890e70833ae2
   languageName: node
   linkType: hard
 
@@ -8355,7 +8340,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:^2.1.0":
+"safer-buffer@npm:>= 2.1.2 < 3.0.0":
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: 10c0/7e3c8b2e88a1841c9671094bbaeebd94448111dd90a81a1f606f3f67708a6ec57763b3b47f06da09fc6054193e0e6709e77325415dc8422b04497a8070fa02d4
