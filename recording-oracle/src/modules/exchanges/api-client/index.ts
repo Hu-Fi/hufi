@@ -6,6 +6,7 @@ export type { Order, Trade } from './types';
 export type {
   ExchangeApiClient,
   ExchangeApiClientInitOptions,
+  ExchangeApiClientLoggingConfig,
 } from './exchange-api-client.interface';
 
 export { ExchangePermission, TakerOrMakerFlag, TradingSide } from './types';

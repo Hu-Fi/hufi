@@ -6,9 +6,15 @@ import {
   Trade,
 } from './types';
 
+export type ExchangeApiClientLoggingConfig = {
+  logPermissionErrors: boolean;
+};
+
 export type ExchangeApiClientInitOptions = {
+  userId: string;
   apiKey: string;
   secret: string;
+  loggingConfig?: Partial<ExchangeApiClientLoggingConfig>;
 };
 
 export interface ExchangeApiClient {

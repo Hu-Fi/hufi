@@ -38,9 +38,6 @@ export class Web3ConfigService {
       ),
       [ProductionChainId.ETHEREUM]: this.configService.get('RPC_URL_ETHEREUM'),
       [DevelopmentChainId.SEPOLIA]: this.configService.get('RPC_URL_SEPOLIA'),
-      [DevelopmentChainId.AURORA_TESTNET]: this.configService.get(
-        'RPC_URL_AURORA_TESTNET',
-      ),
       [DevelopmentChainId.LOCALHOST]:
         this.configService.get('RPC_URL_LOCALHOST'),
     };

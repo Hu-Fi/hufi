@@ -31,6 +31,7 @@ export class ExchangesService {
       {
         apiKey,
         secret: secretKey,
+        userId,
       },
     );
 

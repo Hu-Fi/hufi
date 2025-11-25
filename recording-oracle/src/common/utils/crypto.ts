@@ -11,3 +11,10 @@ export function safeCompare(a: string, b: string): boolean {
 
   return crypto.timingSafeEqual(bufA, bufB);
 }
+
+export function hashString(
+  input: string,
+  algorithm: string = 'sha256',
+): string {
+  return crypto.createHash(algorithm).update(input).digest('hex');
+}

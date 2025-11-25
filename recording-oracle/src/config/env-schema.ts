@@ -50,9 +50,6 @@ export const envValidator = Joi.object({
   RPC_URL_POLYGON_AMOY: Joi.string()
     .uri({ scheme: ['http', 'https'] })
     .allow(''),
-  RPC_URL_AURORA_TESTNET: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .allow(''),
   RPC_URL_LOCALHOST: Joi.string(),
   ALCHEMY_API_KEY: Joi.string(),
   // S3
@@ -62,4 +59,6 @@ export const envValidator = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string(),
   S3_USE_SSL: Joi.string().valid('true', 'false'),
+  // Logging
+  LOG_EXCHANGE_PERMISSION_ERRORS: Joi.string().valid('true', 'false'),
 });

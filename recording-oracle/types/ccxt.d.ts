@@ -93,6 +93,7 @@ declare module 'ccxt' {
   const ccxt: {
     version: string;
     exchanges: string[];
+    BaseError: ErrorConstructor;
     AccountNotEnabled: ErrorConstructor;
     AccountSuspended: ErrorConstructor;
     AuthenticationError: ErrorConstructor;

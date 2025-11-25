@@ -18,3 +18,10 @@ export const CAMPAIGN_PERMISSIONS_MAP: Record<
     ExchangePermission.FETCH_DEPOSIT_ADDRESS,
   ],
 } as const;
+
+export enum CampaignServiceJob {
+  RECORD_CAMPAIGNS_PROGRESS = 'recordCampaignsProgress',
+  SYNC_CAMPAIGN_STATUSES = 'syncCampaignStatuses',
+  DISCOVER_NEW_CAMPAIGNS = 'discoverNewCampaigns',
+  REFRESH_INTERIM_PROGRESS_CACHE = 'refreshInterimProgressCache',
+}

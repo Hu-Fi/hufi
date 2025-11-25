@@ -4,6 +4,7 @@ import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { ExceptionFilter } from './common/filters/exception';
 import { JwtAuthGuard } from './common/guards';
 import { TransformInterceptor } from './common/interceptors';
@@ -21,6 +22,7 @@ import { UsersModule } from './modules/users';
 
 @Module({
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
