@@ -760,6 +760,11 @@ export class CampaignsService
           ...participantOutcomes,
         });
       } catch (error) {
+        /**
+         * We should remove all active participations before
+         * allowing to remove api key, but let's warn ourselves
+         * just in case if something unusual happens.
+         */
         if (
           error instanceof ExchangeApiKeyNotFoundError ||
           error instanceof ExchangeApiAccessError
