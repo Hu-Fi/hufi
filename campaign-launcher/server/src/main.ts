@@ -1,3 +1,4 @@
+import { ShutdownSignal } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -13,7 +14,7 @@ async function bootstrap(): Promise<void> {
     cors: true,
     logger: nestLoggerOverride,
   });
-  app.enableShutdownHooks();
+  app.enableShutdownHooks([ShutdownSignal.SIGINT, ShutdownSignal.SIGTERM]);
 
   const config = new DocumentBuilder()
     .setTitle('Campaign Launcher API')

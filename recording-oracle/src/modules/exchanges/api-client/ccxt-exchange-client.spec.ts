@@ -76,6 +76,7 @@ describe('CcxtExchangeClient', () => {
         new CcxtExchangeClient(exchangeName, {
           apiKey: faker.string.sample(),
           secret: faker.string.sample(),
+          userId: faker.string.uuid(),
         });
       } catch (error) {
         thrownError = error;
@@ -419,6 +420,7 @@ describe('CcxtExchangeClient', () => {
             mexcClient = new CcxtExchangeClient(exchangeName, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
           });
 
@@ -458,6 +460,7 @@ describe('CcxtExchangeClient', () => {
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
 
             const nonMexcError = new Error(
@@ -559,6 +562,7 @@ describe('CcxtExchangeClient', () => {
             mexcClient = new CcxtExchangeClient(exchangeName, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
           });
 
@@ -598,6 +602,7 @@ describe('CcxtExchangeClient', () => {
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
 
             const nonMexcError = new Error(
@@ -665,6 +670,7 @@ describe('CcxtExchangeClient', () => {
             mexcClient = new CcxtExchangeClient(exchangeName, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
           });
 
@@ -701,6 +707,7 @@ describe('CcxtExchangeClient', () => {
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
 
             const nonMexcError = new Error(
@@ -776,6 +783,7 @@ describe('CcxtExchangeClient', () => {
             mexcClient = new CcxtExchangeClient(exchangeName, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
           });
 
@@ -814,6 +822,7 @@ describe('CcxtExchangeClient', () => {
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
+              userId: faker.string.uuid(),
             });
 
             const nonMexcError = new Error(
@@ -837,18 +846,19 @@ describe('CcxtExchangeClient', () => {
         });
       });
 
-      it('shold fetch deposit address info for ERC20 network on gate', async () => {
-        const CCXT_GATE_NAME = 'gate';
-        mockedCcxt[CCXT_GATE_NAME].mockReturnValueOnce(mockedExchange);
+      it('should fetch deposit address info for ERC20 network on gate', async () => {
+        const GATE_EXCHANGE_NAME = 'gate';
+        mockedCcxt[GATE_EXCHANGE_NAME].mockReturnValueOnce(mockedExchange);
 
         const mockedAddressStructure = generateDepositAddressStructure();
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
           mockedAddressStructure,
         );
 
-        ccxtExchangeApiClient = new CcxtExchangeClient(CCXT_GATE_NAME, {
+        ccxtExchangeApiClient = new CcxtExchangeClient(GATE_EXCHANGE_NAME, {
           apiKey: faker.string.sample(),
           secret: faker.string.sample(),
+          userId: faker.string.uuid(),
         });
 
         const address = await ccxtExchangeApiClient.fetchDepositAddress(
@@ -862,6 +872,36 @@ describe('CcxtExchangeClient', () => {
           mockedAddressStructure.currency,
           {
             network: 'ERC20',
+          },
+        );
+      });
+
+      it('should fetch deposit address info for ETH network on xt', async () => {
+        const XT_EXCHANGE_NAME = 'xt';
+        mockedCcxt[XT_EXCHANGE_NAME].mockReturnValueOnce(mockedExchange);
+
+        const mockedAddressStructure = generateDepositAddressStructure();
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          mockedAddressStructure,
+        );
+
+        ccxtExchangeApiClient = new CcxtExchangeClient(XT_EXCHANGE_NAME, {
+          apiKey: faker.string.sample(),
+          secret: faker.string.sample(),
+          userId: faker.string.uuid(),
+        });
+
+        const address = await ccxtExchangeApiClient.fetchDepositAddress(
+          mockedAddressStructure.currency,
+        );
+
+        expect(address).toEqual(mockedAddressStructure.address);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          mockedAddressStructure.currency,
+          {
+            network: 'ETH',
           },
         );
       });

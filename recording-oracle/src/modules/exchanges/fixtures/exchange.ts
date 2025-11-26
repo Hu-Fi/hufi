@@ -1,8 +1,11 @@
 import { faker } from '@faker-js/faker';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import {
+  SUPPORTED_EXCHANGE_NAMES,
+  SupportedExchange,
+} from '@/common/constants';
 
-export function generateExchangeName() {
+export function generateExchangeName(): SupportedExchange {
   return faker.helpers.arrayElement(SUPPORTED_EXCHANGE_NAMES);
 }
 

@@ -2,7 +2,11 @@ import * as ccxt from 'ccxt';
 import type { Exchange, Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 import _ from 'lodash';
 
-import { ETH_TOKEN_SYMBOL, ETH_USDT_PAIR } from '@/common/constants';
+import {
+  ETH_TOKEN_SYMBOL,
+  ETH_USDT_PAIR,
+  SupportedExchange,
+} from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
@@ -87,20 +91,51 @@ function isExchangeApiAccessError(error: any) {
     return true;
   }
 
-  // ============== MEXC specific API errors start ==============
-  if (error?.[ERROR_EXCHANGE_NAME_PROP] === 'mexc') {
-    // https://www.mexc.com/api-docs/spot-v3/general-info#error-code
-    /**
-     * This can be returned e.g. in case when api key is removed.
-     * NOTE: after it's removed it's still valid for some time on their end
-     */
-    if (error.message.includes('10072')) {
-      return true;
-    }
+  if (!error) {
+    return false;
   }
-  // ============== MEXC specific API errors end ==============
 
-  return false;
+  switch (error[ERROR_EXCHANGE_NAME_PROP] as SupportedExchange) {
+    case 'mexc': {
+      // https://www.mexc.com/api-docs/spot-v3/general-info#error-code
+      /**
+       * This can be returned e.g. in case when api key is removed.
+       * NOTE: after it's removed it's still valid for some time on their end
+       */
+      if (error.message.includes('10072')) {
+        return true;
+      }
+
+      /**
+       * This can happen in case case deposit address not exist,
+       * so user will have to create one
+       */
+      if (
+        error instanceof ccxt.InvalidAddress &&
+        error.message.includes('cannot find a deposit address')
+      ) {
+        return true;
+      }
+
+      return false;
+    }
+    case 'gate': {
+      /**
+       * This can happen in case case deposit address not exist,
+       * so user will have to create one
+       */
+      if (
+        error instanceof ccxt.InvalidAddress &&
+        error.message.includes('address is undefined')
+      ) {
+        return true;
+      }
+
+      return false;
+    }
+    default:
+      return false;
+  }
 }
 
 function CatchApiAccessErrors() {
@@ -159,6 +194,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   private ccxtClient: Exchange;
   readonly sandbox: boolean;
   readonly userId: string;
+  readonly exchangeName: SupportedExchange;
 
   protected logger: Logger;
   protected loggingConfig: ExchangeApiClientLoggingConfig = {
@@ -166,7 +202,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   };
 
   constructor(
-    readonly exchangeName: string,
+    exchangeName: string,
     {
       apiKey,
       secret,
@@ -179,7 +215,11 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     if (!(exchangeName in ccxt)) {
       throw new Error(`Exchange not supported: ${exchangeName}`);
     }
+    if (!userId) {
+      throw new Error('userId is missing');
+    }
 
+    this.exchangeName = exchangeName as SupportedExchange;
     this.userId = userId;
 
     const exchangeClass = ccxt[exchangeName];
@@ -324,6 +364,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     switch (this.exchangeName) {
       case 'gate': {
         fetchParams.network = 'ERC20';
+        break;
+      }
+      case 'xt': {
+        fetchParams.network = 'ETH';
         break;
       }
       case 'bybit': {
