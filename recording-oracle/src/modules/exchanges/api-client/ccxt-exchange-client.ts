@@ -194,6 +194,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   private ccxtClient: Exchange;
   readonly sandbox: boolean;
   readonly userId: string;
+  readonly exchangeName: SupportedExchange;
 
   protected logger: Logger;
   protected loggingConfig: ExchangeApiClientLoggingConfig = {
@@ -201,7 +202,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   };
 
   constructor(
-    readonly exchangeName: string,
+    exchangeName: string,
     {
       apiKey,
       secret,
@@ -214,7 +215,11 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     if (!(exchangeName in ccxt)) {
       throw new Error(`Exchange not supported: ${exchangeName}`);
     }
+    if (!userId) {
+      throw new Error('userId is missing');
+    }
 
+    this.exchangeName = exchangeName as SupportedExchange;
     this.userId = userId;
 
     const exchangeClass = ccxt[exchangeName];
@@ -359,6 +364,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     switch (this.exchangeName) {
       case 'gate': {
         fetchParams.network = 'ERC20';
+        break;
+      }
+      case 'xt': {
+        fetchParams.network = 'ETH';
         break;
       }
       case 'bybit': {
