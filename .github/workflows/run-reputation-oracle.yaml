@@ -116,7 +116,7 @@ jobs:
           SUBGRAPH_API_KEY: ${{ secrets.SUBGRAPH_API_KEY }}
 
       - name: Upload rewards info
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rewards-info-${{ github.run_id }}-${{ github.run_attempt }}
           path: reputation-oracle/rewards_batch_*.json
