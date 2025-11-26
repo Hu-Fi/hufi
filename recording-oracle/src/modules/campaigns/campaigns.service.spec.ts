@@ -75,6 +75,7 @@ import {
   MockProgressCheckResult,
   generateCampaignParticipant,
   mockCampaignsConfigService,
+  generateUserJoinedDate,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -833,7 +834,7 @@ describe('CampaignsService', () => {
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        generateUserJoinedDate(campaign),
       );
 
       const id = await campaignsService.join(
@@ -859,7 +860,7 @@ describe('CampaignsService', () => {
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
       const testError = new Error(faker.lorem.sentence());
       mockExchangesService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
@@ -902,7 +903,7 @@ describe('CampaignsService', () => {
       });
 
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
       mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce();
 
@@ -952,7 +953,7 @@ describe('CampaignsService', () => {
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
 
       let thrownError;
@@ -980,7 +981,7 @@ describe('CampaignsService', () => {
           campaign,
         );
         mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-          false,
+          null,
         );
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
@@ -2803,7 +2804,9 @@ describe('CampaignsService', () => {
         campaign.address.toLowerCase(),
       );
 
-      expect(result).toBe('not_available');
+      expect(result).toEqual({
+        status: 'not_available',
+      });
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
@@ -2817,12 +2820,14 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should return "already_joined" if user joined', async () => {
+    it('should return "already_joined" and join date if user joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+
+      const userJoinedAt = generateUserJoinedDate(campaign);
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        userJoinedAt,
       );
 
       const result = await campaignsService.checkJoinStatus(
@@ -2831,32 +2836,10 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(result).toBe('already_joined');
-
-      expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
-      ).toHaveBeenCalledWith(userId, campaign.id);
-    });
-
-    it('should return "join_closed" if user not joined and campaign target is met', async () => {
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
-      );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
-      );
-      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
-
-      const result = await campaignsService.checkJoinStatus(
-        userId,
-        chainId,
-        campaign.address,
-      );
-
-      expect(result).toBe('join_closed');
+      expect(result).toEqual({
+        status: 'already_joined',
+        joinedAt: userJoinedAt,
+      });
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -2876,7 +2859,7 @@ describe('CampaignsService', () => {
           campaign,
         );
         mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-          false,
+          null,
         );
         spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
 
@@ -2886,7 +2869,10 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
-        expect(result).toBe('join_closed');
+        expect(result).toEqual({
+          status: 'join_closed',
+          reason: 'ended',
+        });
 
         expect(
           mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -2904,7 +2890,7 @@ describe('CampaignsService', () => {
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
       spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
 
@@ -2914,7 +2900,10 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(result).toBe('join_closed');
+      expect(result).toEqual({
+        status: 'join_closed',
+        reason: 'ended',
+      });
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -2929,7 +2918,7 @@ describe('CampaignsService', () => {
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
       spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
 
@@ -2939,7 +2928,10 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(result).toBe('join_closed');
+      expect(result).toEqual({
+        status: 'join_closed',
+        reason: 'target_met',
+      });
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -2954,7 +2946,7 @@ describe('CampaignsService', () => {
         campaign,
       );
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
       spyOnCheckCampaignTargetMet.mockReturnValueOnce(false);
 
@@ -2964,7 +2956,9 @@ describe('CampaignsService', () => {
         campaign.address,
       );
 
-      expect(result).toBe('can_join');
+      expect(result).toEqual({
+        status: 'can_join',
+      });
 
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
@@ -3462,7 +3456,7 @@ describe('CampaignsService', () => {
 
     it('should throw if user not joined', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        false,
+        null,
       );
 
       let thrownError;
@@ -3517,7 +3511,7 @@ describe('CampaignsService', () => {
 
     it('should return campaign progress for participant from cache if same timeframe', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        generateUserJoinedDate(campaign),
       );
 
       const participantMetaProp = faker.lorem.word();
@@ -3567,7 +3561,7 @@ describe('CampaignsService', () => {
 
     it('should return null if no value for campaign in cache', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        generateUserJoinedDate(campaign),
       );
 
       const mockedActiveTimeframe = {
@@ -3588,7 +3582,7 @@ describe('CampaignsService', () => {
 
     it('should return null if value in cache is for previous timeframe', async () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        true,
+        generateUserJoinedDate(campaign),
       );
 
       const mockedActiveTimeframe = {

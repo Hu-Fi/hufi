@@ -194,3 +194,9 @@ export function generateCampaignParticipant(
     joinedAt: faker.date.soon({ refDate: campaign.createdAt }),
   };
 }
+
+export function generateUserJoinedDate(campaign: CampaignEntity): string {
+  return faker.date
+    .between({ from: campaign.startDate, to: campaign.endDate })
+    .toISOString();
+}

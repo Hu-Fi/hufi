@@ -41,8 +41,22 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
   async checkUserJoinedCampaign(
     userId: string,
     campaignId: string,
-  ): Promise<boolean> {
-    return this.existsBy({ userId, campaignId });
+  ): Promise<string | null> {
+    const joinRecord = await this.findOne({
+      where: {
+        userId,
+        campaignId,
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+
+    if (!joinRecord) {
+      return null;
+    }
+
+    return joinRecord.createdAt.toISOString();
   }
 
   async findCampaignParticipants(

@@ -187,6 +187,12 @@ export class CheckJoinStatusResponseDto {
     enum: CampaignJoinStatus,
   })
   status: CampaignJoinStatus;
+
+  @ApiPropertyOptional({ name: 'joined_at' })
+  joinedAt?: string;
+
+  @ApiPropertyOptional()
+  reason?: string;
 }
 
 export class CampaignParamsDto {
