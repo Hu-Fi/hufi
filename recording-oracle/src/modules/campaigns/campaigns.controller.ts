@@ -168,7 +168,7 @@ export class CampaignsController {
       data.address,
     );
 
-    return { status: joinStatus };
+    return joinStatus;
   }
 
   @ApiOperation({

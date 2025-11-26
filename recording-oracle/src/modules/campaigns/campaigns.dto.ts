@@ -187,6 +187,12 @@ export class CheckJoinStatusResponseDto {
     enum: CampaignJoinStatus,
   })
   status: CampaignJoinStatus;
+
+  @ApiPropertyOptional({ name: 'joined_at' })
+  joinedAt?: string;
+
+  @ApiPropertyOptional({ name: 'closed_due' })
+  closedDue?: string;
 }
 
 export class CampaignParamsDto {

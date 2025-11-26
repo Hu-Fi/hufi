@@ -171,12 +171,12 @@ export class CampaignsService
       );
     }
 
-    const isUserJoined =
+    const userJoinedAt =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );
-    if (isUserJoined) {
+    if (userJoinedAt) {
       return campaign.id;
     }
 
@@ -1004,37 +1004,58 @@ export class CampaignsService
     userId: string,
     chainId: number,
     campaignAddress: string,
-  ): Promise<CampaignJoinStatus> {
+  ): Promise<
+    | { status: CampaignJoinStatus.USER_ALREADY_JOINED; joinedAt: string }
+    | { status: CampaignJoinStatus.JOIN_IS_CLOSED; closedDue: string }
+    | {
+        status:
+          | CampaignJoinStatus.NOT_AVAILABLE
+          | CampaignJoinStatus.USER_CAN_JOIN;
+      }
+  > {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
     );
     if (!campaign) {
-      return CampaignJoinStatus.NOT_AVAILABLE;
+      return {
+        status: CampaignJoinStatus.NOT_AVAILABLE,
+      };
     }
 
-    const isUserJoined =
+    const userJoinedAt =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );
-    if (isUserJoined) {
-      return CampaignJoinStatus.USER_ALREADY_JOINED;
+    if (userJoinedAt) {
+      return {
+        status: CampaignJoinStatus.USER_ALREADY_JOINED,
+        joinedAt: userJoinedAt,
+      };
     }
 
     if (
       campaign.endDate.valueOf() <= Date.now() ||
       campaign.status !== CampaignStatus.ACTIVE
     ) {
-      return CampaignJoinStatus.JOIN_IS_CLOSED;
+      return {
+        status: CampaignJoinStatus.JOIN_IS_CLOSED,
+        closedDue: 'ended',
+      };
     }
 
     const isCampaignTargetMet = this.checkCampaignTargetMet(campaign);
     if (isCampaignTargetMet) {
-      return CampaignJoinStatus.JOIN_IS_CLOSED;
+      return {
+        status: CampaignJoinStatus.JOIN_IS_CLOSED,
+        closedDue: 'target_met',
+      };
     }
 
-    return CampaignJoinStatus.USER_CAN_JOIN;
+    return {
+      status: CampaignJoinStatus.USER_CAN_JOIN,
+    };
   }
 
   async getUserProgress(
@@ -1073,12 +1094,12 @@ export class CampaignsService
       throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
     }
 
-    const isUserJoined =
+    const userJoinedAt =
       await this.userCampaignsRepository.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );
-    if (!isUserJoined) {
+    if (!userJoinedAt) {
       throw new UserIsNotParticipatingError();
     }
 
