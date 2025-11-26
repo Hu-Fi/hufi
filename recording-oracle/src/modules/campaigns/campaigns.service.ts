@@ -1006,7 +1006,7 @@ export class CampaignsService
     campaignAddress: string,
   ): Promise<
     | { status: CampaignJoinStatus.USER_ALREADY_JOINED; joinedAt: string }
-    | { status: CampaignJoinStatus.JOIN_IS_CLOSED; closedDue: string }
+    | { status: CampaignJoinStatus.JOIN_IS_CLOSED; reason: string }
     | {
         status:
           | CampaignJoinStatus.NOT_AVAILABLE
@@ -1041,7 +1041,7 @@ export class CampaignsService
     ) {
       return {
         status: CampaignJoinStatus.JOIN_IS_CLOSED,
-        closedDue: 'ended',
+        reason: 'ended',
       };
     }
 
@@ -1049,7 +1049,7 @@ export class CampaignsService
     if (isCampaignTargetMet) {
       return {
         status: CampaignJoinStatus.JOIN_IS_CLOSED,
-        closedDue: 'target_met',
+        reason: 'target_met',
       };
     }
 

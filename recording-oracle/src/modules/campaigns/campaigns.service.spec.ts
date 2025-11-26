@@ -2871,7 +2871,7 @@ describe('CampaignsService', () => {
 
         expect(result).toEqual({
           status: 'join_closed',
-          closedDue: 'ended',
+          reason: 'ended',
         });
 
         expect(
@@ -2902,7 +2902,7 @@ describe('CampaignsService', () => {
 
       expect(result).toEqual({
         status: 'join_closed',
-        closedDue: 'ended',
+        reason: 'ended',
       });
 
       expect(
@@ -2930,7 +2930,7 @@ describe('CampaignsService', () => {
 
       expect(result).toEqual({
         status: 'join_closed',
-        closedDue: 'target_met',
+        reason: 'target_met',
       });
 
       expect(

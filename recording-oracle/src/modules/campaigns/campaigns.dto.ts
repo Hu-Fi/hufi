@@ -191,8 +191,8 @@ export class CheckJoinStatusResponseDto {
   @ApiPropertyOptional({ name: 'joined_at' })
   joinedAt?: string;
 
-  @ApiPropertyOptional({ name: 'closed_due' })
-  closedDue?: string;
+  @ApiPropertyOptional()
+  reason?: string;
 }
 
 export class CampaignParamsDto {
