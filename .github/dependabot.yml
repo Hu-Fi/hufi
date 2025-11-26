@@ -1,0 +1,31 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    
+    # Even though we use yarn, according to the documentation, value should be 'npm': 
+    # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
+  - package-ecosystem: "npm" 
+    directories:
+      - "/campaign-launcher/client"
+      - "/campaign-launcher/server"
+      - "/recording-oracle"
+      - "/reputation-oracle"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    # Grouping minor and patch updates to 1 PR to reduce the noise:
+    # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
+    groups:
+      minor-patch-updates:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 5 # Reasonable number to start with
