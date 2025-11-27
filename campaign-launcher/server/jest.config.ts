@@ -11,7 +11,6 @@ module.exports = {
   testEnvironment: 'node',
   testRegex: '.*\\.spec\\.ts$',
   modulePaths: [compilerOptions.baseUrl],
-
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
   clearMocks: true,
 };
