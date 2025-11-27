@@ -16,9 +16,10 @@ export type HoldingMeta = {
   total_balance: number;
 };
 
-export class HoldingProgressChecker
-  implements CampaignProgressChecker<HoldingResult, HoldingMeta>
-{
+export class HoldingProgressChecker implements CampaignProgressChecker<
+  HoldingResult,
+  HoldingMeta
+> {
   readonly exchangeName: string;
   readonly holdingTokenSymbol: string;
 

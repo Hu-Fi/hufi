@@ -17,9 +17,10 @@ export type ThresholdMeta = {
   total_score: number;
 };
 
-export class ThresholdProgressChecker
-  implements CampaignProgressChecker<ThresholdResult, ThresholdMeta>
-{
+export class ThresholdProgressChecker implements CampaignProgressChecker<
+  ThresholdResult,
+  ThresholdMeta
+> {
   readonly exchangeName: string;
   readonly thresholdTokenSymbol: string;
   readonly minimumBalanceTarget: number;

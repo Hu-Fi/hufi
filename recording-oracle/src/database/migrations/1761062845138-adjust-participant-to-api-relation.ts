@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AdjustParticipantToApiRelation1761062845138
-  implements MigrationInterface
-{
+export class AdjustParticipantToApiRelation1761062845138 implements MigrationInterface {
   name = 'AdjustParticipantToApiRelation1761062845138';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
