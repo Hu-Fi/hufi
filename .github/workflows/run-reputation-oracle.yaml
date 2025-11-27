@@ -73,7 +73,7 @@ jobs:
       group: reputation-oracle-run-${{ matrix.env_name }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Enable corepack
         run: corepack enable
