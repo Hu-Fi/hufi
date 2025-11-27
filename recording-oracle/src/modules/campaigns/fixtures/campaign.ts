@@ -66,6 +66,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
     details,
     lastResultsAt: null,
+    resultsCutoffAt: null,
     status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
