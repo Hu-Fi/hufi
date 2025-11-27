@@ -13,7 +13,7 @@
     "format": "cd scripts && make format",
     "test": "cd scripts && make test"
   },
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.12.0",
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0"
