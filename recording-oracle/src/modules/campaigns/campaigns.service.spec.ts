@@ -708,6 +708,7 @@ describe('CampaignsService', () => {
         },
         status: 'active',
         lastResultsAt: null,
+        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -755,6 +756,7 @@ describe('CampaignsService', () => {
         },
         status: 'active',
         lastResultsAt: null,
+        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -802,6 +804,7 @@ describe('CampaignsService', () => {
         },
         status: 'active',
         lastResultsAt: null,
+        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -2285,6 +2288,7 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...campaign,
         lastResultsAt: currentDate,
+        resultsCutoffAt: dayjs(campaign.startDate).add(1, 'day').toDate(),
       });
     });
 
@@ -2315,6 +2319,7 @@ describe('CampaignsService', () => {
         ...campaign,
         status: 'pending_completion',
         lastResultsAt: currentDate,
+        resultsCutoffAt: campaign.endDate,
       });
     });
 
@@ -2356,6 +2361,7 @@ describe('CampaignsService', () => {
         ...campaign,
         status: 'pending_completion',
         lastResultsAt: currentDate,
+        resultsCutoffAt: campaign.endDate,
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
@@ -2396,14 +2402,19 @@ describe('CampaignsService', () => {
         ...campaign,
         status: 'pending_cancellation',
         lastResultsAt: now,
+        resultsCutoffAt: cancellationRequestedAt,
       });
     });
 
     it('should move campaign to "pending_cancellation" when cancellation requested before campaign start', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const cancellationRequestedAt = new Date(
+        campaign.startDate.valueOf() - 1,
+      );
       spyOnGetCancellationRequestDate.mockResolvedValueOnce(
-        new Date(campaign.startDate.valueOf() - 1),
+        cancellationRequestedAt,
       );
 
       const now = new Date();
@@ -2420,6 +2431,7 @@ describe('CampaignsService', () => {
         ...campaign,
         status: 'pending_cancellation',
         lastResultsAt: now,
+        resultsCutoffAt: cancellationRequestedAt,
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
@@ -2460,6 +2472,7 @@ describe('CampaignsService', () => {
         ...campaign,
         status: 'pending_cancellation',
         lastResultsAt: now,
+        resultsCutoffAt: cancellationRequestedAt,
       });
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);

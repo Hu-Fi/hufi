@@ -251,6 +251,7 @@ export class CampaignsService
     newCampaign.details = details;
     newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.lastResultsAt = null;
+    newCampaign.resultsCutoffAt = null;
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -577,6 +578,7 @@ export class CampaignsService
                */
               campaign.status = CampaignStatus.PENDING_CANCELLATION;
               campaign.lastResultsAt = new Date();
+              campaign.resultsCutoffAt = endDate;
               await this.campaignsRepository.save(campaign);
               return;
             } else {
@@ -591,6 +593,7 @@ export class CampaignsService
                */
               campaign.status = CampaignStatus.PENDING_COMPLETION;
               campaign.lastResultsAt = new Date();
+              campaign.resultsCutoffAt = endDate;
               await this.campaignsRepository.save(campaign);
               return;
             }
@@ -699,6 +702,7 @@ export class CampaignsService
           }
 
           campaign.lastResultsAt = new Date();
+          campaign.resultsCutoffAt = endDate;
           await this.campaignsRepository.save(campaign);
         } catch (error) {
           logger.error('Failure while recording campaign progress', error);

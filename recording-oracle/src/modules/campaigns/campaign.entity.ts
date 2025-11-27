@@ -56,6 +56,9 @@ export class CampaignEntity {
   @Column({ type: 'timestamptz', nullable: true })
   lastResultsAt: Date | null;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  resultsCutoffAt: Date | null;
+
   @Column({
     type: 'enum',
     enum: CampaignStatus,
