@@ -70,7 +70,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4",
-    "@types/node": "^22.10.7",
+    "@types/node": "^24.10.1",
     "@types/passport": "^0",
     "@types/passport-jwt": "^4",
     "@types/pg": "^8",
@@ -85,7 +85,7 @@
     "nock": "^14.0.5",
     "prettier": "^3.4.2",
     "supertest": "^7.0.0",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3",
@@ -97,5 +97,5 @@
       "eslint --fix"
     ]
   },
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.12.0"
 }

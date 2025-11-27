@@ -11,7 +11,6 @@ module.exports = {
   testEnvironment: 'node',
   testRegex: '.*\\.spec\\.ts$',
   modulePaths: [compilerOptions.baseUrl],
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
   clearMocks: true,
 };
