@@ -1,6 +1,5 @@
 export const SUPPORTED_EXCHANGE_NAMES = [
   'bigone',
-  'binance',
   'bybit',
   'gate',
   'htx',

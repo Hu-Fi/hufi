@@ -251,6 +251,7 @@ export class CampaignsService
     newCampaign.details = details;
     newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.lastResultsAt = null;
+    newCampaign.resultsCutoffAt = null;
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -577,6 +578,7 @@ export class CampaignsService
                */
               campaign.status = CampaignStatus.PENDING_CANCELLATION;
               campaign.lastResultsAt = new Date();
+              campaign.resultsCutoffAt = endDate;
               await this.campaignsRepository.save(campaign);
               return;
             } else {
@@ -591,6 +593,7 @@ export class CampaignsService
                */
               campaign.status = CampaignStatus.PENDING_COMPLETION;
               campaign.lastResultsAt = new Date();
+              campaign.resultsCutoffAt = endDate;
               await this.campaignsRepository.save(campaign);
               return;
             }
@@ -600,6 +603,7 @@ export class CampaignsService
             campaign,
             startDate,
             endDate,
+            { logWarnings: true },
           );
 
           let progressValueTarget: number;
@@ -698,6 +702,7 @@ export class CampaignsService
           }
 
           campaign.lastResultsAt = new Date();
+          campaign.resultsCutoffAt = endDate;
           await this.campaignsRepository.save(campaign);
         } catch (error) {
           logger.error('Failure while recording campaign progress', error);
@@ -712,6 +717,7 @@ export class CampaignsService
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
+    options: { logWarnings?: boolean } = {},
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
     const logger = this.logger.child({
       action: 'checkCampaignProgressForPeriod',
@@ -745,9 +751,11 @@ export class CampaignsService
           await campaignProgressChecker.checkForParticipant(participant);
 
         if (abuseDetected) {
-          logger.warn('Abuse detected. Skipping participant outcome', {
-            participantId: participant.id,
-          });
+          if (options.logWarnings) {
+            logger.warn('Abuse detected. Skipping participant outcome', {
+              participantId: participant.id,
+            });
+          }
           continue;
         }
 
@@ -756,21 +764,21 @@ export class CampaignsService
           ...participantOutcomes,
         });
       } catch (error) {
-        if (error instanceof ExchangeApiKeyNotFoundError) {
-          /**
-           * We should remove all active participations before
-           * allowing to remove api key, but let's warn ourselves
-           * just in case if something unusual happens.
-           */
-          logger.warn('Participant lacks valid api key', {
-            participantId: participant.id,
-          });
-          continue;
-        } else if (error instanceof ExchangeApiAccessError) {
-          logger.warn('Participant lacks necessary exchange API access', {
-            participantId: participant.id,
-            error,
-          });
+        /**
+         * We should remove all active participations before
+         * allowing to remove api key, but let's warn ourselves
+         * just in case if something unusual happens.
+         */
+        if (
+          error instanceof ExchangeApiKeyNotFoundError ||
+          error instanceof ExchangeApiAccessError
+        ) {
+          if (options.logWarnings) {
+            logger.warn('Participant api key is not valid', {
+              participantId: participant.id,
+              error,
+            });
+          }
           continue;
         }
 

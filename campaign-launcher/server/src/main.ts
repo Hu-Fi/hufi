@@ -16,6 +16,14 @@ async function bootstrap(): Promise<void> {
   });
   app.enableShutdownHooks([ShutdownSignal.SIGINT, ShutdownSignal.SIGTERM]);
 
+  const server = app.getHttpServer();
+  // https://nodejs.org/docs/latest/api/http.html#serverrequesttimeout
+  server.requestTimeout = 60 * 1000;
+  // https://nodejs.org/docs/latest/api/http.html#serverkeepalivetimeout
+  server.keepAliveTimeout = 10 * 1000;
+  // https://nodejs.org/docs/latest/api/http.html#serverheaderstimeout
+  server.headersTimeout = server.keepAliveTimeout + 5 * 1000;
+
   const config = new DocumentBuilder()
     .setTitle('Campaign Launcher API')
     .setDescription('Swagger Campaign Launcher API')

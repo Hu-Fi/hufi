@@ -22,9 +22,10 @@ export type MarketMakingMeta = {
   total_volume: number;
 };
 
-export class MarketMakingProgressChecker
-  implements CampaignProgressChecker<MarketMakingResult, MarketMakingMeta>
-{
+export class MarketMakingProgressChecker implements CampaignProgressChecker<
+  MarketMakingResult,
+  MarketMakingMeta
+> {
   readonly exchangeName: string;
   readonly tradingPair: string;
   readonly tradingPeriodStart: Date;

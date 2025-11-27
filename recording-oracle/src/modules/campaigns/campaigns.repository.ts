@@ -40,7 +40,7 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
             AND (
               campaign.endDate <= :now
               OR (campaign.startDate <= :timeAgo AND campaign.lastResultsAt IS NULL)
-              OR campaign.lastResultsAt <= :timeAgo
+              OR (campaign.resultsCutoffAt IS NOT NULL AND campaign.resultsCutoffAt <= :timeAgo)
             )
           )
         `,

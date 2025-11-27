@@ -2,6 +2,7 @@ import bnbLogo from '@/assets/tokens/bnb.png';
 import btcLogo from '@/assets/tokens/btc.png';
 import ethLogo from '@/assets/tokens/eth.png';
 import hmtLogo from '@/assets/tokens/hmt.png';
+import icbxLogo from '@/assets/tokens/icbx.png';
 import usdcLogo from '@/assets/tokens/usdc.png';
 import usdtLogo from '@/assets/tokens/usdt.png';
 import xinLogo from '@/assets/tokens/xin.png';
@@ -47,6 +48,11 @@ export const TOKENS: TokenData[] = [
     name: 'xin',
     label: 'XIN',
     icon: xinLogo,
+  },
+  {
+    name: 'icbx',
+    label: 'ICBX',
+    icon: icbxLogo,
   },
 ];
 

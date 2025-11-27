@@ -66,6 +66,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
     details,
     lastResultsAt: null,
+    resultsCutoffAt: null,
     status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
@@ -172,15 +173,12 @@ export function generateStoredResultsMeta(): { url: string; hash: string } {
 export type MockProgressCheckResult = BaseProgressCheckResult & {
   [meta: string]: unknown;
 };
-export class MockCampaignProgressChecker
-  implements
-    CampaignProgressChecker<
-      MockProgressCheckResult,
-      {
-        [meta: string]: unknown;
-      }
-    >
-{
+export class MockCampaignProgressChecker implements CampaignProgressChecker<
+  MockProgressCheckResult,
+  {
+    [meta: string]: unknown;
+  }
+> {
   checkForParticipant = jest.fn();
   getCollectedMeta = jest.fn();
 }

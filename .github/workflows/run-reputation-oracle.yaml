@@ -73,12 +73,12 @@ jobs:
       group: reputation-oracle-run-${{ matrix.env_name }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Enable corepack
         run: corepack enable
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: yarn
@@ -116,7 +116,7 @@ jobs:
           SUBGRAPH_API_KEY: ${{ secrets.SUBGRAPH_API_KEY }}
 
       - name: Upload rewards info
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rewards-info-${{ github.run_id }}-${{ github.run_attempt }}
           path: reputation-oracle/rewards_batch_*.json
