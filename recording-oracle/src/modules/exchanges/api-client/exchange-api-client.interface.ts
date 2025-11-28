@@ -1,3 +1,4 @@
+import { StringLiteral } from 'typescript';
 import {
   AccountBalance,
   ExchangePermission,
@@ -14,6 +15,7 @@ export type ExchangeApiClientInitOptions = {
   userId: string;
   apiKey: string;
   secret: string;
+  uid?: string;
   loggingConfig?: Partial<ExchangeApiClientLoggingConfig>;
 };
 

@@ -210,6 +210,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       sandbox,
       preloadedExchangeClient,
       loggingConfig,
+      uid,
     }: InitOptions,
   ) {
     if (!(exchangeName in ccxt)) {
@@ -224,7 +225,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
     const exchangeClass = ccxt[exchangeName];
     this.ccxtClient = new exchangeClass(
-      _.merge(BASE_CCXT_CLIENT_OPTIONS, { apiKey, secret }),
+      _.merge(BASE_CCXT_CLIENT_OPTIONS, { apiKey, secret, uid }),
     );
     if (preloadedExchangeClient) {
       this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
