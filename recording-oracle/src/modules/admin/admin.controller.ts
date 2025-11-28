@@ -11,9 +11,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import dayjs from 'dayjs';
 
 import { Public } from '@/common/decorators';
-import dayjs from '@/common/utils/dayjs';
 import Environment from '@/common/utils/environment';
 import { CampaignsService } from '@/modules/campaigns';
 

@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
+import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 
-import dayjs from '@/common/utils/dayjs';
 import {
   generateExchangeName,
   generateTradingPair,

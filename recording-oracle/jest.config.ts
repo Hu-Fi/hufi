@@ -1,10 +1,11 @@
+import type { Config as JestConfig } from 'jest';
 import { createDefaultPreset, pathsToModuleNameMapper } from 'ts-jest';
 
 import { compilerOptions } from './tsconfig.json';
 
 const jestTsPreset = createDefaultPreset({});
 
-module.exports = {
+const config: JestConfig = {
   ...jestTsPreset,
   moduleFileExtensions: ['js', 'json', 'ts'],
   roots: ['<rootDir>/src'],
@@ -13,4 +14,7 @@ module.exports = {
   modulePaths: [compilerOptions.baseUrl],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
   clearMocks: true,
+  setupFiles: ['<rootDir>/test/setup-libs.ts'],
 };
+
+module.exports = config;

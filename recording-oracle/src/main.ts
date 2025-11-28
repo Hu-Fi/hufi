@@ -8,8 +8,11 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ServerConfigService } from './config';
 import logger, { nestLoggerOverride } from './logger';
+import { setupLibraries } from './setup-libs';
 
 async function bootstrap(): Promise<void> {
+  setupLibraries();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true,
     logger: nestLoggerOverride,
