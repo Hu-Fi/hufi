@@ -10,6 +10,7 @@ import helmet from 'helmet';
  * so every lib is already configured before its import there
  */
 import './setup-libs';
+
 import { AppModule } from './app.module';
 import { ServerConfigService } from './config';
 import logger, { nestLoggerOverride } from './logger';
