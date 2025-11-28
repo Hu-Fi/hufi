@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import dayjs from 'dayjs';
 import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
-
-import dayjs from '@/common/utils/dayjs';
 
 import { CampaignEntity } from './campaign.entity';
 import { PROGRESS_PERIOD_DAYS } from './constants';

@@ -1,5 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 
+/**
+ * Setup for libs must be done before any other module is imported,
+ * so every lib is already configured before its import there
+ */
+import './setup-libs';
+
 import { PayoutsService } from '@/modules/payouts';
 
 import { AppModule } from './app.module';

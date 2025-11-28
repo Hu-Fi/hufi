@@ -24,11 +24,11 @@ import {
 } from '@human-protocol/sdk';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
+import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
-import dayjs from '@/common/utils/dayjs';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';

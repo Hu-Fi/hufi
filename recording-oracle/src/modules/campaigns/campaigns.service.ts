@@ -18,13 +18,13 @@ import {
   Interval as ScheduleInterval,
   SchedulerRegistry,
 } from '@nestjs/schedule';
+import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
-import dayjs from '@/common/utils/dayjs';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
