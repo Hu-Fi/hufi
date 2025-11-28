@@ -14,7 +14,7 @@ const config: JestConfig = {
   modulePaths: [compilerOptions.baseUrl],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
   clearMocks: true,
-  setupFiles: ['<rootDir>/test/setup-libs.ts'],
+  setupFiles: ['<rootDir>/src/setup-libs.ts'],
 };
 
 module.exports = config;
