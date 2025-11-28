@@ -36,6 +36,7 @@ import {
   generateManifest,
   generateParticipantOutcome,
 } from './fixtures';
+import notationSensitiveResult from './fixtures/notation_sensitive_result.json';
 import precisionSensitiveResult from './fixtures/precision_sensitive_result.json';
 import { PayoutsService } from './payouts.service';
 import * as payoutsUtils from './payouts.utils';
@@ -407,6 +408,34 @@ describe('PayoutsService', () => {
         address: participantOutcome.address,
         amount: rewardAmount,
       });
+    });
+
+    /**
+     * It might be that after truncating small values are in exponential notation
+     * which is not supported by ethers.js; have to catch that
+     */
+    it('should correctly truncate rewards for small results in correct notation', () => {
+      const rewardsBathes = payoutsService[
+        'calculateRewardsForIntermediateResult'
+      ](
+        Object.assign({}, notationSensitiveResult, {
+          from: new Date(notationSensitiveResult.from),
+          to: new Date(notationSensitiveResult.to),
+        }),
+        18,
+      );
+
+      let total = new Decimal(0);
+      for (const reward of rewardsBathes[0].rewards) {
+        total = total.plus(reward.amount);
+      }
+
+      /**
+       * Input and shanpshot for this test are based on real-data
+       * and correct at the time of adding. They shouldn't be changed
+       * unless some bug in input/output itself is found.
+       */
+      expect(rewardsBathes).toMatchSnapshot();
     });
   });
 

@@ -3,7 +3,7 @@
 exports[`PayoutsService calculateRewardsForIntermediateResult should correctly calculate rewards for precision-sensitive results 1`] = `
 [
   {
-    "id": "db634797-f8c2-44ce-b8ac-4c09038a7bdd",
+    "id": "00000000-00000000-00000000-00000000",
     "rewards": [
       {
         "address": "0x0000000000000000000000000000000000000001",
@@ -12,6 +12,44 @@ exports[`PayoutsService calculateRewardsForIntermediateResult should correctly c
       {
         "address": "0x0000000000000000000000000000000000000002",
         "amount": "41.024351392788164785",
+      },
+    ],
+  },
+]
+`;
+
+exports[`PayoutsService calculateRewardsForIntermediateResult should correctly truncate rewards for small results in correct notation 1`] = `
+[
+  {
+    "id": "00000000-00000000-00000000-00000000",
+    "rewards": [
+      {
+        "address": "0x0000000000000000000000000000000000000003",
+        "amount": "0.000000877514591842",
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000006",
+        "amount": "0.000001910348553022",
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000008",
+        "amount": "0.02518828986145523",
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000009",
+        "amount": "0.000001910938530946",
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000010",
+        "amount": "0.001016434106232323",
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000011",
+        "amount": "0.023790181932286853",
+      },
+      {
+        "address": "0x0000000000000000000000000000000000000012",
+        "amount": "0.00000039529834978",
       },
     ],
   },
