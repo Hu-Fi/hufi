@@ -17,6 +17,8 @@ updates:
       - "/reputation-oracle"
     schedule:
       interval: "weekly"
+    allow:
+      - dependency-type: "direct"
     target-branch: "develop"
     # Grouping minor and patch updates to 1 PR to reduce the noise:
     # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
