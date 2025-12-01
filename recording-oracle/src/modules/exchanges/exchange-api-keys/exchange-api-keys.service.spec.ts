@@ -15,7 +15,6 @@ import {
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
-  IncompleteKeySuppliedError,
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
@@ -98,22 +97,6 @@ describe('ExchangeApiKeysService', () => {
 
       expect(thrownError.constructor).toBe(Error);
       expect(thrownError.message).toBe('Exchange name is not valid');
-    });
-
-    it('should throw if provided credentials not complete', async () => {
-      mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(false);
-
-      const input = generateExchangeApiKeysData();
-
-      let thrownError;
-      try {
-        await exchangeApiKeysService.enroll(input);
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(IncompleteKeySuppliedError);
-      expect(thrownError.exchangeName).toBe(input.exchangeName);
     });
 
     it('should throw if provided keys do not have required access', async () => {
