@@ -1930,9 +1930,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/cli@npm:^11.0.13":
-  version: 11.0.13
-  resolution: "@nestjs/cli@npm:11.0.13"
+"@nestjs/cli@npm:^11.0.14":
+  version: 11.0.14
+  resolution: "@nestjs/cli@npm:11.0.14"
   dependencies:
     "@angular-devkit/core": "npm:19.2.19"
     "@angular-devkit/schematics": "npm:19.2.19"
@@ -1962,7 +1962,7 @@ __metadata:
       optional: true
   bin:
     nest: bin/nest.js
-  checksum: 10c0/8dc6d9ee3cc25d6c7f2aebefa4b2ad4ec369d4ad86a8735bd79ee834d12e9b3c79bc97bdcb3ff9b7fcd4a4635fca36f23dbc27d87606ba83a9cce1747a04e9bf
+  checksum: 10c0/c3311db3fcb37d7192212f90943c561f6b0dd6d2a68b5d1e6131210eacae7be092d9bf361900d7e91f6c1d5f7484fe5b9c3c0e53a8fec19d671d1e87a911ebc6
   languageName: node
   linkType: hard
 
@@ -7858,12 +7858,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.7.1":
-  version: 3.7.1
-  resolution: "prettier@npm:3.7.1"
+"prettier@npm:^3.7.3":
+  version: 3.7.3
+  resolution: "prettier@npm:3.7.3"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/a6610043ee0a64a3251a948bf82fad3e59d984a8e8dea206400cfa190585417e3343b32c1f6ae7d8f40798a9b4bd91affc08fa7795dd99a9dec5c9bccdf31500
+  checksum: 10c0/ee86bb06121c74dadc54f30b6f99aff6288966d9b842ce501d6991e20d20c6ce2d45028651b3b0955ca6e5fa89c1bee1e72b6f810243a93cef8bc69737972ef7
   languageName: node
   linkType: hard
 
@@ -8063,7 +8063,7 @@ __metadata:
     "@golevelup/ts-jest": "npm:^0.7.0"
     "@human-protocol/logger": "npm:^1.2.0"
     "@human-protocol/sdk": "npm:^5.2.0"
-    "@nestjs/cli": "npm:^11.0.13"
+    "@nestjs/cli": "npm:^11.0.14"
     "@nestjs/common": "npm:^11.1.9"
     "@nestjs/config": "npm:^4.0.2"
     "@nestjs/core": "npm:^11.1.9"
@@ -8085,7 +8085,7 @@ __metadata:
     lodash: "npm:^4.17.21"
     minio: "npm:^7.1.3"
     nock: "npm:^14.0.5"
-    prettier: "npm:^3.7.1"
+    prettier: "npm:^3.7.3"
     reflect-metadata: "npm:^0.2.2"
     ts-jest: "npm:^29.4.5"
     ts-node: "npm:^10.9.2"
@@ -9624,8 +9624,8 @@ __metadata:
   linkType: hard
 
 "vite@npm:^5.0.0 || ^6.0.0 || ^7.0.0-0":
-  version: 7.2.4
-  resolution: "vite@npm:7.2.4"
+  version: 7.2.6
+  resolution: "vite@npm:7.2.6"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.5.0"
@@ -9674,7 +9674,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/26aa0cad01d6e00f17c837b2a0587ab52f6bd0d0e64606b4220cfc58fa5fa76a4095ef3ea27c886bea542a346363912c4fad9f9462ef1e6757262fedfd5196b2
+  checksum: 10c0/d444a159ab8f0f854d596d1938f201b449d59ed4d336e587be9dc89005467214d85848c212c2495f76a8421372ffe4d061d023d659600f1aaa3ba5ac13e804f7
   languageName: node
   linkType: hard
 
