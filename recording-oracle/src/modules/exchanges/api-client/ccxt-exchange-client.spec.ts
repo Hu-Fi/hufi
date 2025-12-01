@@ -34,6 +34,7 @@ import {
 } from '@/modules/exchanges/fixtures';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
+import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import {
   generateAccountBalance,
@@ -132,20 +133,6 @@ describe('CcxtExchangeClient', () => {
           sandbox: sandboxParam,
         });
 
-        expect(mockedCcxt[exchangeName]).toHaveBeenCalledTimes(1);
-        expect(mockedCcxt[exchangeName]).toHaveBeenCalledWith({
-          apiKey,
-          secret,
-          enableRateLimit: true,
-          options: {
-            defaultType: 'spot',
-            fetchCurrencies: false,
-            fetchMarkets: {
-              types: ['spot'],
-            },
-          },
-        });
-
         const expectedSandboxMode = Boolean(sandboxParam);
         expect(ccxtExchangeClient.sandbox).toBe(expectedSandboxMode);
         if (expectedSandboxMode) {
@@ -158,6 +145,43 @@ describe('CcxtExchangeClient', () => {
         }
       },
     );
+
+    it('should use base client option and avoid mutating them', () => {
+      const EXPECTED_BASE_OPTIONS = Object.freeze({
+        enableRateLimit: true,
+        options: {
+          fetchCurrencies: false,
+          fetchMarkets: {
+            types: ['spot'],
+          },
+          defaultType: 'spot',
+        },
+      });
+
+      const apiKey = faker.string.sample();
+      const secret = faker.string.sample();
+      const userId = faker.string.uuid();
+      const uid = faker.string.sample();
+
+      new CcxtExchangeClient(exchangeName, {
+        apiKey,
+        secret,
+        userId,
+        extraCreds: {
+          uid,
+        },
+      });
+
+      expect(mockedCcxt[exchangeName]).toHaveBeenCalledTimes(1);
+      expect(mockedCcxt[exchangeName]).toHaveBeenCalledWith({
+        ...EXPECTED_BASE_OPTIONS,
+        apiKey,
+        secret,
+        uid,
+      });
+
+      expect(BASE_CCXT_CLIENT_OPTIONS).toEqual(EXPECTED_BASE_OPTIONS);
+    });
   });
 
   describe('instance methods', () => {

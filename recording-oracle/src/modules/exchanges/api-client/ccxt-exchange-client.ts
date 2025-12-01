@@ -226,7 +226,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
     const exchangeClass = ccxt[exchangeName];
     this.ccxtClient = new exchangeClass(
-      _.merge(BASE_CCXT_CLIENT_OPTIONS, { apiKey, secret, ...extraCreds }),
+      _.merge({}, BASE_CCXT_CLIENT_OPTIONS, { apiKey, secret, ...extraCreds }),
     );
     if (preloadedExchangeClient) {
       this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
