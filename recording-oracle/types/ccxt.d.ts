@@ -74,6 +74,11 @@ declare module 'ccxt' {
 
   export interface Exchange {
     has: Record<string, boolean | undefined>;
+    requiredCredentials: {
+      apiKey: boolean;
+      secret: boolean;
+      [extraCredential: string]: boolean;
+    };
     setSandboxMode(enabled: boolean): void;
     loadMarkets(): Promise<void>;
     setMarketsFromExchange(sourceExchange: unknown): void;

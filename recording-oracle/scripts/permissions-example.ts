@@ -5,6 +5,9 @@ import { CcxtExchangeClient } from '@/modules/exchanges/api-client/ccxt-exchange
 // Api key pair for exchange
 const API_KEY = 'replace_me';
 const SECRET_KEY = 'replace_me';
+const EXTRA_CREDS = {
+  // uid: 'replace_and_uncomment_if_needed',
+} as const;
 
 const EXCHANGE_NAME = 'replace_me';
 const SANDBOX = false;
@@ -14,6 +17,7 @@ const run = async () => {
     sandbox: SANDBOX,
     apiKey: API_KEY,
     secret: SECRET_KEY,
+    extraCreds: EXTRA_CREDS,
     userId: 'scripts-permissions-example',
     loggingConfig: {
       logPermissionErrors: true,
@@ -32,7 +36,9 @@ const run = async () => {
     Object.values(ExchangePermission),
   );
 
-  logger.info('Permission check result', permissionsCheckResult);
+  logger.info('Permission check result', {
+    result: permissionsCheckResult,
+  });
 };
 
 /**

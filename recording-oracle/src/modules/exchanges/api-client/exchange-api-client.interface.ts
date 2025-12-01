@@ -14,6 +14,7 @@ export type ExchangeApiClientInitOptions = {
   userId: string;
   apiKey: string;
   secret: string;
+  extraCreds?: Record<string, string>;
   loggingConfig?: Partial<ExchangeApiClientLoggingConfig>;
 };
 
