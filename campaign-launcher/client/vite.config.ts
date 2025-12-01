@@ -1,5 +1,6 @@
 import { resolve } from 'path';
 
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
@@ -10,6 +11,7 @@ export default defineConfig(() => {
       port: 3001,
     },
     plugins: [
+      react(),
       nodePolyfills({
         protocolImports: true,
       }),
