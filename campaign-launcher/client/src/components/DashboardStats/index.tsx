@@ -1,7 +1,6 @@
 import type { FC } from 'react';
 
-import { Box, Skeleton, styled, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Skeleton, styled, Typography, Grid } from '@mui/material';
 
 import FormattedNumber from '@/components/FormattedNumber';
 import TotalVolume from '@/components/TotalVolume';
