@@ -15,15 +15,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@coinbase/wallet-sdk": "~4.3.6",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@hookform/resolvers": "^3.3.4",
     "@human-protocol/sdk": "^5.2.0",
+    "@metamask/sdk": "~0.33.1",
     "@mui/icons-material": "^6.4.10",
     "@mui/material": "^6.4.10",
     "@mui/x-data-grid": "^7.28.3",
     "@mui/x-date-pickers": "^7.1.1",
     "@tanstack/react-query": "^5.90.11",
+    "@walletconnect/ethereum-provider": "~2.21.1",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "chartjs-plugin-annotation": "^3.1.0",
