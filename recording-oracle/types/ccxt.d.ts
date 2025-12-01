@@ -106,7 +106,7 @@ declare module 'ccxt' {
       apiKey?: string;
       secret?: string;
       enableRateLimit?: boolean;
-      options: {
+      options?: {
         [x: string]: unknown;
       };
     }) => Exchange;
