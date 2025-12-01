@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { useAccount } from 'wagmi';
+import { useConnection } from 'wagmi';
 
 import type { EvmAddress } from '@/types';
 
@@ -33,7 +33,7 @@ const ActiveAccountProvider: FC<PropsWithChildren> = ({ children }) => {
     isConnected: isWalletConnected,
     isConnecting: isWalletConnecting,
     address: addressInWallet,
-  } = useAccount();
+  } = useConnection();
 
   const setActiveAddress = useCallback((address: EvmAddress) => {
     setActiveAddressState(address);

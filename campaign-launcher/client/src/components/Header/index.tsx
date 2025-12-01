@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { useConnection } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
 import Account from '@/components/Account';
@@ -66,7 +66,7 @@ const Header: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { activeAddress } = useActiveAccount();
-  const { isConnected } = useAccount();
+  const { isConnected } = useConnection();
   const { signer } = useRetrieveSigner();
   const isMobile = useIsMobile();
 
