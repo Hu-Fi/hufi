@@ -1,5 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength, Validate } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Validate,
+} from 'class-validator';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { ExchangeNameValidator } from '@/common/validators';
@@ -16,6 +22,10 @@ export class EnrollExchangeApiKeysDto {
   @IsNotEmpty()
   @MaxLength(5000)
   secretKey: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  extras?: Record<string, unknown>;
 }
 
 export class ExchangeNameParamDto {

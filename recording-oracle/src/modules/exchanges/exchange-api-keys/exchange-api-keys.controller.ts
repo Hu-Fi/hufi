@@ -112,6 +112,7 @@ export class ExchangeApiKeysController {
       exchangeName,
       apiKey: data.apiKey,
       secretKey: data.secretKey,
+      extras: data.extras,
     });
 
     return { id: key.id };

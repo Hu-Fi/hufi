@@ -27,7 +27,7 @@ import {
   Trade,
 } from './types';
 
-interface InitOptions extends ExchangeApiClientInitOptions {
+export interface CcxtExchangeClientInitOptions extends ExchangeApiClientInitOptions {
   sandbox?: boolean;
   preloadedExchangeClient?: Exchange;
 }
@@ -212,7 +212,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       sandbox,
       preloadedExchangeClient,
       loggingConfig,
-    }: InitOptions,
+    }: CcxtExchangeClientInitOptions,
   ) {
     if (!(exchangeName in ccxt)) {
       throw new Error(`Exchange not supported: ${exchangeName}`);

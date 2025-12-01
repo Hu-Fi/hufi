@@ -9,14 +9,26 @@ import {
 import { ExchangeConfigService, LoggingConfigService } from '@/config';
 import logger from '@/logger';
 
-import { CcxtExchangeClient } from './ccxt-exchange-client';
+import {
+  CcxtExchangeClient,
+  CcxtExchangeClientInitOptions,
+} from './ccxt-exchange-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { IncompleteKeySuppliedError } from './errors';
 import type {
   ExchangeApiClient,
   ExchangeApiClientInitOptions,
 } from './exchange-api-client.interface';
+import { ExchangeExtras } from './types';
 
 const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
+
+type CreateExchangeApiClientInitOptions = Omit<
+  ExchangeApiClientInitOptions,
+  'extraCreds' | 'loggingConfig'
+> & {
+  extras?: ExchangeExtras;
+};
 
 @Injectable()
 export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
@@ -94,10 +106,12 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
 
   create(
     exchangeName: string,
-    initOptions: Omit<ExchangeApiClientInitOptions, 'loggingConfig'>,
+    initOptions: CreateExchangeApiClientInitOptions,
   ): ExchangeApiClient {
-    return new CcxtExchangeClient(exchangeName, {
-      ...initOptions,
+    const clientInitOptions: CcxtExchangeClientInitOptions = {
+      apiKey: initOptions.apiKey,
+      secret: initOptions.secret,
+      userId: initOptions.userId,
       sandbox: this.exchangeConfigService.useSandbox,
       preloadedExchangeClient: this.preloadedCcxtClients.get(
         exchangeName as SupportedExchange,
@@ -106,6 +120,24 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         logPermissionErrors:
           this.loggingConfigService.logExchangePermissionErrors,
       },
-    });
+    };
+
+    switch (exchangeName as SupportedExchange) {
+      case 'bitmart':
+        clientInitOptions.extraCreds = {
+          uid: initOptions.extras?.apiKeyMemo as string,
+        };
+        break;
+    }
+
+    const ccxtExchangeClient = new CcxtExchangeClient(
+      exchangeName,
+      clientInitOptions,
+    );
+    if (ccxtExchangeClient.checkRequiredCredentials()) {
+      return ccxtExchangeClient;
+    } else {
+      throw new IncompleteKeySuppliedError(exchangeName);
+    }
   }
 }

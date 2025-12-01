@@ -9,12 +9,6 @@ export class ExchangeApiKeyNotFoundError extends BaseError {
   }
 }
 
-export class IncompleteKeySuppliedError extends BaseError {
-  constructor(readonly exchangeName: string) {
-    super('Incomplete credentials supplied for exchange');
-  }
-}
-
 export class KeyAuthorizationError extends BaseError {
   constructor(
     readonly exchangeName: string,

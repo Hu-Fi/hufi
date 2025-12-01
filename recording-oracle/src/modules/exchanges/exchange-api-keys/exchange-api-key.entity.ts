@@ -35,6 +35,10 @@ export class ExchangeApiKeyEntity {
   @Column('varchar', { length: 10000 })
   secretKey: string;
 
+  @Column('jsonb', { nullable: true })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  extras: Record<string, any> | null;
+
   @ManyToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
   user?: UserEntity;
 
