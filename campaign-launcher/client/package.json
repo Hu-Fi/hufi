@@ -33,7 +33,7 @@
     "notistack": "^3.0.2",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.1",
-    "react-dom": "^18.2.0",
+    "react-dom": "^19.2.0",
     "react-hook-form": "^7.67.0",
     "react-number-format": "^5.4.4",
     "react-router-dom": "^6.22.3",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
+    "@types/react-dom": "^19.2.3",
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
