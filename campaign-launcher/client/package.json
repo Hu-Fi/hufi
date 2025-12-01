@@ -40,7 +40,7 @@
     "react-window": "^1.8.10",
     "uuid": "^9.0.1",
     "viem": "2.x",
-    "wagmi": "^2.14.16",
+    "wagmi": "^3.0.2",
     "yup": "^1.4.0"
   },
   "devDependencies": {
