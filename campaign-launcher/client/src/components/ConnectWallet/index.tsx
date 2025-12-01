@@ -2,7 +2,12 @@ import { type FC, useState, type MouseEvent } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, Popover, Box, Typography, IconButton } from '@mui/material';
-import { useConnect, useDisconnect, type Connector } from 'wagmi';
+import {
+  useConnect,
+  useConnectors,
+  useDisconnect,
+  type Connector,
+} from 'wagmi';
 
 import coinbaseSvg from '@/assets/coinbase.svg';
 import metaMaskSvg from '@/assets/metamask.svg';
@@ -21,7 +26,8 @@ const WALLET_ICONS: Record<string, string> = {
 const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  const { connectAsync, connectors } = useConnect();
+  const { connectAsync } = useConnect();
+  const connectors = useConnectors();
   const { isConnecting } = useActiveAccount();
   const { setShowSignInPrompt } = useWeb3Auth();
   const { disconnectAsync } = useDisconnect();

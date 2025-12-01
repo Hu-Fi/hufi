@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { BrowserProvider, type JsonRpcSigner } from 'ethers';
-import { useAccount, useWalletClient, type Config } from 'wagmi';
+import { useConnection, useWalletClient, type Config } from 'wagmi';
 
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
@@ -12,7 +12,7 @@ const useRetrieveSigner = () => {
 
   const { appChainId, isSwitching } = useNetwork();
   const { activeAddress } = useActiveAccount();
-  const { isConnected, chainId: walletChainId } = useAccount();
+  const { isConnected, chainId: walletChainId } = useConnection();
   const { data: client } = useWalletClient<Config>({
     account: activeAddress,
     chainId: walletChainId, // this is crucial to avoid the mismatch error
