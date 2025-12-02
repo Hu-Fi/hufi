@@ -156,9 +156,9 @@ const ThresholdForm: FC<Props> = ({
                 closeOnSelect
                 disablePast
                 {...field}
+                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 onChange={(newValue) => field.onChange(newValue?.toDate())}
-                disabled={isCreatingEscrow}
               />
             )}
           />
@@ -177,9 +177,9 @@ const ThresholdForm: FC<Props> = ({
                 closeOnSelect
                 disablePast
                 {...field}
+                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 onChange={(newValue) => field.onChange(newValue?.toDate())}
-                disabled={isCreatingEscrow}
               />
             )}
           />

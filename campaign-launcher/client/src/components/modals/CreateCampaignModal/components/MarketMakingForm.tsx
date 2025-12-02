@@ -160,9 +160,9 @@ const MarketMakingForm: FC<Props> = ({
                 closeOnSelect
                 disablePast
                 {...field}
+                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 onChange={(newValue) => field.onChange(newValue?.toDate())}
-                disabled={isCreatingEscrow}
               />
             )}
           />
@@ -181,9 +181,9 @@ const MarketMakingForm: FC<Props> = ({
                 closeOnSelect
                 disablePast
                 {...field}
+                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 onChange={(newValue) => field.onChange(newValue?.toDate())}
-                disabled={isCreatingEscrow}
               />
             )}
           />
@@ -263,7 +263,6 @@ const MarketMakingForm: FC<Props> = ({
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
-                    step: '0.000001',
                     sx: {
                       fieldSizing: 'content',
                       maxWidth: '12ch',
