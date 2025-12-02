@@ -1,16 +1,46 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiProperty,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
+import { plainToInstance, Transform } from 'class-transformer';
 import {
   IsNotEmpty,
-  IsOptional,
+  IsObject,
   IsString,
   MaxLength,
   Validate,
+  ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import {
+  SUPPORTED_EXCHANGE_NAMES,
+  type SupportedExchange,
+} from '@/common/constants';
+import { ClassConstructor } from '@/common/types';
 import { ExchangeNameValidator } from '@/common/validators';
 
-export class EnrollExchangeApiKeysDto {
+export class ExchangeNameParamDto {
+  @ApiProperty({
+    name: 'exchange_name',
+    enum: SUPPORTED_EXCHANGE_NAMES,
+  })
+  @Validate(ExchangeNameValidator)
+  exchangeName: SupportedExchange;
+}
+
+export class BitmartExtras {
+  @ApiProperty({ name: 'api_key_memo' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(32)
+  apiKeyMemo: string;
+}
+
+@ApiExtraModels(BitmartExtras)
+export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
   @ApiProperty({ name: 'api_key' })
   @IsString()
   @IsNotEmpty()
@@ -23,27 +53,40 @@ export class EnrollExchangeApiKeysDto {
   @MaxLength(5000)
   secretKey: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  extras?: Record<string, unknown>;
-}
-
-export class ExchangeNameParamDto {
-  @ApiProperty({
-    name: 'exchange_name',
-    enum: SUPPORTED_EXCHANGE_NAMES,
+  @ApiPropertyOptional({
+    description: 'Exchange-specific extras',
+    oneOf: [{ $ref: getSchemaPath(BitmartExtras) }],
   })
-  @Validate(ExchangeNameValidator)
-  exchangeName: string;
+  @ValidateIf((o: EnrollExchangeApiKeysDto) =>
+    ['bitmart'].includes(o.exchangeName),
+  )
+  @ValidateNested()
+  @Transform((params: { obj: EnrollExchangeApiKeysDto; value: unknown }) => {
+    let exchangeExtrasDtoClass: ClassConstructor<BitmartExtras> | undefined;
+
+    switch (params.obj.exchangeName) {
+      case 'bitmart': {
+        exchangeExtrasDtoClass = BitmartExtras;
+        break;
+      }
+    }
+
+    if (exchangeExtrasDtoClass) {
+      return plainToInstance(exchangeExtrasDtoClass, params.value || {});
+    }
+  })
+  /**
+   * Transform decorator is not called if property doesn't exist in input (request body),
+   * so add basic check that the extras object is provided to fail-early
+   */
+  @IsObject()
+  extras?: BitmartExtras;
 }
-export class EncrollExchangeApiKeysParamsDto extends ExchangeNameParamDto {}
 
 export class EnrollExchangeApiKeysResponseDto {
   @ApiProperty()
   id: string;
 }
-
-export class DeleteExchangeApiKeysParamsDto extends ExchangeNameParamDto {}
 
 export class EnrolledApiKeyDto {
   @ApiProperty({ name: 'exchange_name' })

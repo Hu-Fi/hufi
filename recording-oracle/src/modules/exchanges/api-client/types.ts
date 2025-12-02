@@ -59,4 +59,4 @@ export type RequiredAccessCheckResult =
 export type ExtraCreds = { uid: string };
 
 export type BitmartExtras = { apiKeyMemo: string };
-export type ExchangeExtras = BitmartExtras | Record<string, unknown>;
+export type ExchangeExtras = BitmartExtras;
