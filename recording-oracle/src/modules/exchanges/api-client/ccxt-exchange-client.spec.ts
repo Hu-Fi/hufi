@@ -1,24 +1,3 @@
-jest.mock('ccxt', () => {
-  const actualCcxt = jest.requireActual<typeof import('ccxt')>('ccxt');
-
-  const mockedCcxt = new Proxy<Record<string, unknown>>(
-    {
-      version: actualCcxt.version,
-      exchanges: actualCcxt.exchanges,
-      NetworkError: actualCcxt.NetworkError,
-    },
-    {
-      get: (target, prop: string) => {
-        if (!(prop in target)) {
-          target[prop] = jest.fn();
-        }
-
-        return target[prop];
-      },
-    },
-  );
-  return mockedCcxt;
-});
 jest.mock('@/logger');
 
 import { faker } from '@faker-js/faker';
@@ -56,6 +35,10 @@ const testCcxtApiAccessErrors = [
 ] as const;
 
 const exchangePermissions = Object.values(ExchangePermission);
+
+const EXPECTED_BASE_OPTIONS = Object.freeze({
+  ...BASE_CCXT_CLIENT_OPTIONS,
+});
 
 describe('CcxtExchangeClient', () => {
   afterEach(() => {
@@ -146,18 +129,7 @@ describe('CcxtExchangeClient', () => {
       },
     );
 
-    it('should use base client option and avoid mutating them', () => {
-      const EXPECTED_BASE_OPTIONS = Object.freeze({
-        enableRateLimit: true,
-        options: {
-          fetchCurrencies: false,
-          fetchMarkets: {
-            types: ['spot'],
-          },
-          defaultType: 'spot',
-        },
-      });
-
+    it('should use base client options and avoid mutating them', () => {
       const apiKey = faker.string.sample();
       const secret = faker.string.sample();
       const userId = faker.string.uuid();

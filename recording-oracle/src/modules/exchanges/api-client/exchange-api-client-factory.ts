@@ -53,7 +53,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     clearTimeout(this.preloadCcxtTimeoutId);
   }
 
-  async preloadCcxtClients(): Promise<void> {
+  protected async preloadCcxtClients(): Promise<void> {
     this.logger.debug('Started ccxt clients preloading');
 
     await Promise.all(
@@ -70,7 +70,9 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  async preloadCcxtClient(exchangeName: SupportedExchange): Promise<void> {
+  protected async preloadCcxtClient(
+    exchangeName: SupportedExchange,
+  ): Promise<void> {
     const logger = this.logger.child({ exchangeName });
     try {
       logger.debug('Preloading ccxt for exchange');
