@@ -11,6 +11,8 @@ import {
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 import { UserEntity } from '@/modules/users';
 
+import { ExchangeExtras } from '../api-client';
+
 /**
  * We expect API keys to be <=200 charactes, so after encryption
  * the string should be less than 500 chars. At the same time,
@@ -36,8 +38,7 @@ export class ExchangeApiKeyEntity {
   secretKey: string;
 
   @Column('jsonb', { nullable: true })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  extras: Record<string, any> | null;
+  extras: ExchangeExtras | null;
 
   @ManyToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
   user?: UserEntity;

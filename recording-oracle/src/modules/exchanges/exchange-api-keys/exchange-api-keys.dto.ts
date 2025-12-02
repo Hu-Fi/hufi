@@ -88,10 +88,16 @@ export class EnrollExchangeApiKeysResponseDto {
   id: string;
 }
 
+@ApiExtraModels(BitmartExtras)
 export class EnrolledApiKeyDto {
   @ApiProperty({ name: 'exchange_name' })
   exchangeName: string;
 
   @ApiProperty({ name: 'api_key' })
   apiKey: string;
+
+  @ApiPropertyOptional({
+    oneOf: [{ $ref: getSchemaPath(BitmartExtras) }],
+  })
+  extras?: object;
 }

@@ -106,6 +106,7 @@ export class ExchangeApiKeysService {
       id: entity.id,
       apiKey: decryptedApiKey.toString(),
       secretKey: decryptedSecretKey.toString(),
+      extras: entity.extras ?? undefined,
     };
   }
 
@@ -123,6 +124,7 @@ export class ExchangeApiKeysService {
         return {
           exchangeName: enrolledKey.exchangeName,
           apiKey: decodedApiKey.toString(),
+          extras: enrolledKey.extras === null ? undefined : enrolledKey.extras,
         };
       };
 
