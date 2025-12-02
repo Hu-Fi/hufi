@@ -153,15 +153,15 @@ const MarketMakingForm: FC<Props> = ({
           <Controller
             name="start_date"
             control={control}
-            render={({ field: { onChange, value, ...field } }) => (
+            render={({ field }) => (
               <DatePicker
                 label="Start Date"
                 format="YYYY-MM-DD"
                 closeOnSelect
                 disablePast
                 {...field}
-                value={dayjs(value)}
-                onChange={(newValue) => onChange(newValue?.toDate())}
+                value={dayjs(field.value)}
+                onChange={(newValue) => field.onChange(newValue?.toDate())}
                 disabled={isCreatingEscrow}
               />
             )}
@@ -174,15 +174,15 @@ const MarketMakingForm: FC<Props> = ({
           <Controller
             name="end_date"
             control={control}
-            render={({ field: { onChange, value, ...field } }) => (
+            render={({ field }) => (
               <DatePicker
                 label="End Date"
                 format="YYYY-MM-DD"
                 closeOnSelect
                 disablePast
                 {...field}
-                value={dayjs(value)}
-                onChange={(newValue) => onChange(newValue?.toDate())}
+                value={dayjs(field.value)}
+                onChange={(newValue) => field.onChange(newValue?.toDate())}
                 disabled={isCreatingEscrow}
               />
             )}
