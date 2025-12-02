@@ -185,6 +185,7 @@ const CampaignsTable: FC<Props> = ({
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
 
@@ -447,6 +448,19 @@ const CampaignsTable: FC<Props> = ({
       getRowSpacing={({ isLastVisible }) => ({
         bottom: isLastVisible || isMobile ? 0 : 8,
       })}
+      onRowClick={(params, event) => {
+        if (isMobile) {
+          const target = event.target as HTMLElement;
+          const cell = target.closest('[data-field]');
+          const field = cell?.getAttribute('data-field');
+
+          if (field === 'symbol') {
+            return;
+          }
+
+          navigate(`/campaign-details/${params.row.address}`);
+        }
+      }}
       disableVirtualization
       hideFooter
       hideFooterPagination
