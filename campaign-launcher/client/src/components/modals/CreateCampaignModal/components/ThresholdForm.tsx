@@ -32,6 +32,8 @@ import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { ThresholdFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
+import { parseNumber } from '../utils';
+
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
@@ -149,15 +151,16 @@ const ThresholdForm: FC<Props> = ({
           <Controller
             name="start_date"
             control={control}
-            render={({ field }) => (
+            render={({ field: { onChange, value, ...field } }) => (
               <DatePicker
                 label="Start Date"
                 format="YYYY-MM-DD"
                 closeOnSelect
                 disablePast
                 {...field}
+                value={dayjs(value)}
+                onChange={(newValue) => onChange(newValue?.toDate())}
                 disabled={isCreatingEscrow}
-                value={dayjs(field.value)}
               />
             )}
           />
@@ -169,15 +172,16 @@ const ThresholdForm: FC<Props> = ({
           <Controller
             name="end_date"
             control={control}
-            render={({ field }) => (
+            render={({ field: { onChange, value, ...field } }) => (
               <DatePicker
                 label="End Date"
                 format="YYYY-MM-DD"
                 closeOnSelect
                 disablePast
                 {...field}
+                value={dayjs(value)}
+                onChange={(newValue) => onChange(newValue?.toDate())}
                 disabled={isCreatingEscrow}
-                value={dayjs(field.value)}
               />
             )}
           />
@@ -246,13 +250,14 @@ const ThresholdForm: FC<Props> = ({
           <Controller
             name="minimum_balance_target"
             control={control}
-            render={({ field }) => (
+            render={({ field: { onChange, ...field } }) => (
               <TextField
                 id="minimum-balance-target-input"
                 label="Minimum Balance Target"
                 type="number"
                 error={!!errors.minimum_balance_target}
                 {...field}
+                onChange={(e) => onChange(parseNumber(e.target.value))}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
@@ -261,11 +266,6 @@ const ThresholdForm: FC<Props> = ({
                       maxWidth: '12ch',
                       minWidth: '1ch',
                       width: 'unset',
-                      '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button':
-                        {
-                          WebkitAppearance: 'none',
-                          margin: 0,
-                        },
                     },
                   },
                   input: {

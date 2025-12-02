@@ -46,3 +46,13 @@ export const getValidationSchema = <T extends CampaignType>(campaignType: T) =>
 
 export const getFormDefaultValues = <T extends CampaignType>(campaignType: T) =>
   defaultFormValuesMap[campaignType];
+
+export const parseNumber = (value: string): number | string => {
+  const normalized = value.replace(',', '.');
+
+  if (normalized.endsWith('.')) {
+    return normalized;
+  }
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? normalized : parsed;
+};
