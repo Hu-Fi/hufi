@@ -32,8 +32,6 @@ import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { ThresholdFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
-import { parseNumber } from '../utils';
-
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
@@ -250,14 +248,14 @@ const ThresholdForm: FC<Props> = ({
           <Controller
             name="minimum_balance_target"
             control={control}
-            render={({ field: { onChange, ...field } }) => (
+            render={({ field }) => (
               <TextField
                 id="minimum-balance-target-input"
                 label="Minimum Balance Target"
                 type="number"
                 error={!!errors.minimum_balance_target}
                 {...field}
-                onChange={(e) => onChange(parseNumber(e.target.value))}
+                onBlur={(e) => field.onChange(+e.target.value)}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {

@@ -33,8 +33,6 @@ import { useTradingPairs } from '@/hooks/useTradingPairs';
 import type { MarketMakingFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
-import { parseNumber } from '../utils';
-
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
@@ -254,17 +252,18 @@ const MarketMakingForm: FC<Props> = ({
           <Controller
             name="daily_volume_target"
             control={control}
-            render={({ field: { onChange, ...field } }) => (
+            render={({ field }) => (
               <TextField
                 id="daily-volume-target-input"
                 label="Daily Volume Target"
                 type="number"
                 error={!!errors.daily_volume_target}
                 {...field}
-                onChange={(e) => onChange(parseNumber(e.target.value))}
+                onBlur={(e) => field.onChange(+e.target.value)}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
+                    step: '0.000001',
                     sx: {
                       fieldSizing: 'content',
                       maxWidth: '12ch',
