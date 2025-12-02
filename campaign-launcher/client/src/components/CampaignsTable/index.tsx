@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
@@ -185,6 +185,7 @@ const CampaignsTable: FC<Props> = ({
   const isLg = useIsLgDesktop();
   const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
 
@@ -300,13 +301,31 @@ const CampaignsTable: FC<Props> = ({
             title={networkName || 'Unknown Network'}
             placement="top"
           >
-            <Box
-              display="flex"
-              alignItems="center"
-              sx={{ '& > svg': { fontSize: isMobile ? '16px' : '24px' } }}
-            >
-              {getChainIcon(params.row.chain_id)}
-            </Box>
+            {isMobile ? (
+              <Box
+                display="flex"
+                alignItems="center"
+                sx={{
+                  '& > svg': { fontSize: '16px' },
+                }}
+              >
+                {getChainIcon(params.row.chain_id)}
+              </Box>
+            ) : (
+              <Link
+                component={RouterLink}
+                to={`/campaign-details/${params.row.address}`}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  p: 0,
+                  color: 'text.primary',
+                  zIndex: 1,
+                }}
+              >
+                {getChainIcon(params.row.chain_id)}
+              </Link>
+            )}
           </CustomTooltip>
         );
       },
@@ -429,6 +448,19 @@ const CampaignsTable: FC<Props> = ({
       getRowSpacing={({ isLastVisible }) => ({
         bottom: isLastVisible || isMobile ? 0 : 8,
       })}
+      onRowClick={(params, event) => {
+        if (isMobile) {
+          const target = event.target as HTMLElement;
+          const cell = target.closest('[data-field]');
+          const field = cell?.getAttribute('data-field');
+
+          if (field === 'symbol') {
+            return;
+          }
+
+          navigate(`/campaign-details/${params.row.address}`);
+        }
+      }}
       disableVirtualization
       hideFooter
       hideFooterPagination
@@ -551,7 +583,6 @@ const CampaignsTable: FC<Props> = ({
           },
           '&[data-field="network"]': {
             justifyContent: 'flex-start',
-            zIndex: 1,
           },
           '&[data-field="status"]': {
             justifyContent: 'center',
