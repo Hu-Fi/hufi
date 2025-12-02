@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
@@ -300,13 +300,31 @@ const CampaignsTable: FC<Props> = ({
             title={networkName || 'Unknown Network'}
             placement="top"
           >
-            <Box
-              display="flex"
-              alignItems="center"
-              sx={{ '& > svg': { fontSize: isMobile ? '16px' : '24px' } }}
-            >
-              {getChainIcon(params.row.chain_id)}
-            </Box>
+            {isMobile ? (
+              <Box
+                display="flex"
+                alignItems="center"
+                sx={{
+                  '& > svg': { fontSize: '16px' },
+                }}
+              >
+                {getChainIcon(params.row.chain_id)}
+              </Box>
+            ) : (
+              <Link
+                component={RouterLink}
+                to={`/campaign-details/${params.row.address}`}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  p: 0,
+                  color: 'text.primary',
+                  zIndex: 1,
+                }}
+              >
+                {getChainIcon(params.row.chain_id)}
+              </Link>
+            )}
           </CustomTooltip>
         );
       },
@@ -551,7 +569,6 @@ const CampaignsTable: FC<Props> = ({
           },
           '&[data-field="network"]': {
             justifyContent: 'flex-start',
-            zIndex: 1,
           },
           '&[data-field="status"]': {
             justifyContent: 'center',
