@@ -1,6 +1,7 @@
 import {
   AccountBalance,
   ExchangePermission,
+  ExtraCreds,
   Order,
   RequiredAccessCheckResult,
   Trade,
@@ -14,6 +15,7 @@ export type ExchangeApiClientInitOptions = {
   userId: string;
   apiKey: string;
   secret: string;
+  extraCreds?: ExtraCreds;
   loggingConfig?: Partial<ExchangeApiClientLoggingConfig>;
 };
 

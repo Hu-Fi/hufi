@@ -12,15 +12,16 @@ import {
   ExchangeApiClientFactory,
   ExchangePermission,
 } from '../api-client';
-import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
-  IncompleteKeySuppliedError,
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
 import { ExchangeApiKeysService } from './exchange-api-keys.service';
-import { generateExchangeApiKeysData } from './fixtures';
+import {
+  generateExchangeApiKey,
+  generateExchangeApiKeysData,
+} from './fixtures';
 
 const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockUsersService = createMock<UsersService>();
@@ -100,22 +101,6 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Exchange name is not valid');
     });
 
-    it('should throw if provided credentials not complete', async () => {
-      mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(false);
-
-      const input = generateExchangeApiKeysData();
-
-      let thrownError;
-      try {
-        await exchangeApiKeysService.enroll(input);
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(IncompleteKeySuppliedError);
-      expect(thrownError.exchangeName).toBe(input.exchangeName);
-    });
-
     it('should throw if provided keys do not have required access', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
 
@@ -163,13 +148,14 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError).toEqual(testError);
     });
 
-    it('should upsert encrypted keys if data is valid', async () => {
+    it('should upsert encrypted keys if data is valid and extras not provided', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
       });
 
       const input = generateExchangeApiKeysData();
+      delete input.extras;
 
       const entity = await exchangeApiKeysService.enroll(input);
 
@@ -177,6 +163,36 @@ describe('ExchangeApiKeysService', () => {
       expect(entity.exchangeName).toBe(input.exchangeName);
       expect(entity.apiKey).not.toBe(input.apiKey);
       expect(entity.secretKey).not.toBe(input.secretKey);
+      expect(entity.extras).toBeNull();
+
+      const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
+        aesEncryptionService.decrypt(entity.apiKey),
+        aesEncryptionService.decrypt(entity.secretKey),
+      ]);
+
+      expect(decryptedApiKey.toString()).toBe(input.apiKey);
+      expect(decryptedSecretKey.toString()).toBe(input.secretKey);
+    });
+
+    it('should upsert encrypted keys if data is valid and extras provided', async () => {
+      mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: true,
+      });
+
+      const input = generateExchangeApiKeysData();
+      input.extras = {
+        [faker.string.alpha()]: faker.string.sample(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any;
+
+      const entity = await exchangeApiKeysService.enroll(input);
+
+      expect(entity.userId).toBe(input.userId);
+      expect(entity.exchangeName).toBe(input.exchangeName);
+      expect(entity.apiKey).not.toBe(input.apiKey);
+      expect(entity.secretKey).not.toBe(input.secretKey);
+      expect(entity.extras).toEqual(input.extras);
 
       const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
         aesEncryptionService.decrypt(entity.apiKey),
@@ -208,18 +224,27 @@ describe('ExchangeApiKeysService', () => {
     });
 
     it('should return decrypted keys', async () => {
-      const { userId, exchangeName, apiKey, secretKey } =
+      const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
 
       const [encryptedApiKey, encryptedSecretKey] = await Promise.all([
         aesEncryptionService.encrypt(Buffer.from(apiKey)),
         aesEncryptionService.encrypt(Buffer.from(secretKey)),
       ]);
-      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+
+      const mockedExchangeApiKey = generateExchangeApiKey(
         {
-          apiKey: encryptedApiKey,
-          secretKey: encryptedSecretKey,
-        } as ExchangeApiKeyEntity,
+          encryptedApiKey,
+          encryptedSecretKey,
+        },
+        {
+          userId,
+          exchangeName,
+          extras,
+        },
+      );
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        mockedExchangeApiKey,
       );
 
       const result = await exchangeApiKeysService.retrieve(
@@ -229,6 +254,7 @@ describe('ExchangeApiKeysService', () => {
 
       expect(result.apiKey).toBe(apiKey);
       expect(result.secretKey).toBe(secretKey);
+      expect(result.extras).toEqual(extras);
       expect(
         mockExchangeApiKeysRepository.findOneByUserAndExchange,
       ).toHaveBeenCalledWith(userId, exchangeName);
@@ -237,20 +263,27 @@ describe('ExchangeApiKeysService', () => {
 
   describe('retrieveEnrolledApiKeys', () => {
     it('should return enrolled keys', async () => {
-      const { userId, exchangeName, apiKey, secretKey } =
+      const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
 
       const [encryptedApiKey, encryptedSecretKey] = await Promise.all([
         aesEncryptionService.encrypt(Buffer.from(apiKey)),
         aesEncryptionService.encrypt(Buffer.from(secretKey)),
       ]);
-      mockExchangeApiKeysRepository.findByUserId.mockResolvedValueOnce([
+      const mockedExchangeApiKey = generateExchangeApiKey(
         {
-          exchangeName,
-          apiKey: encryptedApiKey,
-          secretKey: encryptedSecretKey,
+          encryptedApiKey,
+          encryptedSecretKey,
         },
-      ] as ExchangeApiKeyEntity[]);
+        {
+          userId,
+          exchangeName,
+          extras,
+        },
+      );
+      mockExchangeApiKeysRepository.findByUserId.mockResolvedValueOnce([
+        mockedExchangeApiKey,
+      ]);
 
       const results =
         await exchangeApiKeysService.retrieveEnrolledApiKeys(userId);
@@ -260,6 +293,7 @@ describe('ExchangeApiKeysService', () => {
       const enrolledApiKey = results[0];
       expect(enrolledApiKey.exchangeName).toBe(exchangeName);
       expect(enrolledApiKey.apiKey).toBe(apiKey);
+      expect(enrolledApiKey.extras).toEqual(extras);
 
       expect(mockExchangeApiKeysRepository.findByUserId).toHaveBeenCalledWith(
         userId,

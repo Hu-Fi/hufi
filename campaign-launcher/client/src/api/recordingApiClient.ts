@@ -144,7 +144,8 @@ export class RecordingApiClient extends HttpClient {
     apiKey: string,
     secret: string
   ): Promise<void> {
-    await this.post(`/exchange-api-keys/${exchangeName}`, {
+    await this.post('/exchange-api-keys', {
+      exchange_name: exchangeName,
       api_key: apiKey,
       secret_key: secret,
     });

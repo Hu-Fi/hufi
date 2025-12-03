@@ -21,16 +21,15 @@ export class ExchangesService {
     userId: string,
     exchangeName: string,
   ): Promise<ExchangeApiClient> {
-    const { apiKey, secretKey } = await this.exchangeApiKeysService.retrieve(
-      userId,
-      exchangeName,
-    );
+    const { apiKey, secretKey, extras } =
+      await this.exchangeApiKeysService.retrieve(userId, exchangeName);
 
     const exchangeApiClient = this.exchangeApiClientFactory.create(
       exchangeName,
       {
         apiKey,
         secret: secretKey,
+        extras,
         userId,
       },
     );

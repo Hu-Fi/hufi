@@ -27,7 +27,7 @@ export class ExchangeNameValidator implements ValidatorConstraintInterface {
   }
 
   defaultMessage({ property }: ValidationArguments): string {
-    return `${property} must be one of the allowed values`;
+    return `${property} must be one of the allowed values: ${SUPPORTED_EXCHANGE_NAMES}`;
   }
 }
 

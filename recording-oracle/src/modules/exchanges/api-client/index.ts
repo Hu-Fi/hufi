@@ -1,12 +1,22 @@
+export {
+  ExchangeApiClientError,
+  ExchangeApiAccessError,
+  IncompleteKeySuppliedError,
+} from './errors';
+
 export { ExchangeApiClientModule } from './exchange-api-client.module';
 export { ExchangeApiClientFactory } from './exchange-api-client-factory';
-export { ExchangeApiClientError, ExchangeApiAccessError } from './errors';
-export type { Order, Trade } from './types';
-
 export type {
   ExchangeApiClient,
   ExchangeApiClientInitOptions,
   ExchangeApiClientLoggingConfig,
 } from './exchange-api-client.interface';
 
-export { ExchangePermission, TakerOrMakerFlag, TradingSide } from './types';
+export {
+  type ExchangeExtras,
+  type Order,
+  type Trade,
+  ExchangePermission,
+  TakerOrMakerFlag,
+  TradingSide,
+} from './types';

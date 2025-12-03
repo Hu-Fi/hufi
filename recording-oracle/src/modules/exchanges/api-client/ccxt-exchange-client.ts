@@ -8,6 +8,7 @@ import {
   SupportedExchange,
 } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
+import Environment from '@/common/utils/environment';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
@@ -26,7 +27,7 @@ import {
   Trade,
 } from './types';
 
-interface InitOptions extends ExchangeApiClientInitOptions {
+export interface CcxtExchangeClientInitOptions extends ExchangeApiClientInitOptions {
   sandbox?: boolean;
   preloadedExchangeClient?: Exchange;
 }
@@ -206,11 +207,12 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     {
       apiKey,
       secret,
+      extraCreds,
       userId,
       sandbox,
       preloadedExchangeClient,
       loggingConfig,
-    }: InitOptions,
+    }: CcxtExchangeClientInitOptions,
   ) {
     if (!(exchangeName in ccxt)) {
       throw new Error(`Exchange not supported: ${exchangeName}`);
@@ -224,7 +226,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
     const exchangeClass = ccxt[exchangeName];
     this.ccxtClient = new exchangeClass(
-      _.merge(BASE_CCXT_CLIENT_OPTIONS, { apiKey, secret }),
+      _.merge({}, BASE_CCXT_CLIENT_OPTIONS, { apiKey, secret, ...extraCreds }),
     );
     if (preloadedExchangeClient) {
       this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
@@ -249,7 +251,22 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   }
 
   checkRequiredCredentials(): boolean {
-    return this.ccxtClient.checkRequiredCredentials(false);
+    const hasAllRequiredCredentials =
+      this.ccxtClient.checkRequiredCredentials(false);
+
+    if (Environment.isDevelopment() && !hasAllRequiredCredentials) {
+      const requiredCredentials: string[] = [];
+      for (const credential in this.ccxtClient.requiredCredentials) {
+        if (this.ccxtClient.requiredCredentials[credential]) {
+          requiredCredentials.push(credential);
+        }
+      }
+      this.logger.debug('Incomplete required credentials for exchange', {
+        requiredCredentials,
+      });
+    }
+
+    return hasAllRequiredCredentials;
   }
 
   async checkRequiredAccess(

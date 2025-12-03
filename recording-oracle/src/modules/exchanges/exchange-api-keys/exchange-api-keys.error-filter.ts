@@ -12,10 +12,12 @@ import { UserNotFoundError } from '@/modules/users';
 
 import {
   ExchangeApiKeyNotFoundError,
-  IncompleteKeySuppliedError,
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
-import { ExchangeApiClientError } from '../api-client';
+import {
+  ExchangeApiClientError,
+  IncompleteKeySuppliedError,
+} from '../api-client';
 
 @Catch(
   UserNotFoundError,

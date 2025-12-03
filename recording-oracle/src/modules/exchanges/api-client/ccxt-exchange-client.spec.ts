@@ -1,24 +1,3 @@
-jest.mock('ccxt', () => {
-  const actualCcxt = jest.requireActual<typeof import('ccxt')>('ccxt');
-
-  const mockedCcxt = new Proxy<Record<string, unknown>>(
-    {
-      version: actualCcxt.version,
-      exchanges: actualCcxt.exchanges,
-      NetworkError: actualCcxt.NetworkError,
-    },
-    {
-      get: (target, prop: string) => {
-        if (!(prop in target)) {
-          target[prop] = jest.fn();
-        }
-
-        return target[prop];
-      },
-    },
-  );
-  return mockedCcxt;
-});
 jest.mock('@/logger');
 
 import { faker } from '@faker-js/faker';
@@ -34,6 +13,7 @@ import {
 } from '@/modules/exchanges/fixtures';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
+import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import {
   generateAccountBalance,
@@ -55,6 +35,10 @@ const testCcxtApiAccessErrors = [
 ] as const;
 
 const exchangePermissions = Object.values(ExchangePermission);
+
+const EXPECTED_BASE_OPTIONS = Object.freeze({
+  ...BASE_CCXT_CLIENT_OPTIONS,
+});
 
 describe('CcxtExchangeClient', () => {
   afterEach(() => {
@@ -132,20 +116,6 @@ describe('CcxtExchangeClient', () => {
           sandbox: sandboxParam,
         });
 
-        expect(mockedCcxt[exchangeName]).toHaveBeenCalledTimes(1);
-        expect(mockedCcxt[exchangeName]).toHaveBeenCalledWith({
-          apiKey,
-          secret,
-          enableRateLimit: true,
-          options: {
-            defaultType: 'spot',
-            fetchCurrencies: false,
-            fetchMarkets: {
-              types: ['spot'],
-            },
-          },
-        });
-
         const expectedSandboxMode = Boolean(sandboxParam);
         expect(ccxtExchangeClient.sandbox).toBe(expectedSandboxMode);
         if (expectedSandboxMode) {
@@ -158,6 +128,32 @@ describe('CcxtExchangeClient', () => {
         }
       },
     );
+
+    it('should use base client options and avoid mutating them', () => {
+      const apiKey = faker.string.sample();
+      const secret = faker.string.sample();
+      const userId = faker.string.uuid();
+      const uid = faker.string.sample();
+
+      new CcxtExchangeClient(exchangeName, {
+        apiKey,
+        secret,
+        userId,
+        extraCreds: {
+          uid,
+        },
+      });
+
+      expect(mockedCcxt[exchangeName]).toHaveBeenCalledTimes(1);
+      expect(mockedCcxt[exchangeName]).toHaveBeenCalledWith({
+        ...EXPECTED_BASE_OPTIONS,
+        apiKey,
+        secret,
+        uid,
+      });
+
+      expect(BASE_CCXT_CLIENT_OPTIONS).toEqual(EXPECTED_BASE_OPTIONS);
+    });
   });
 
   describe('instance methods', () => {

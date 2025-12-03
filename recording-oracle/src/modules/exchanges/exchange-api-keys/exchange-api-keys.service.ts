@@ -4,12 +4,15 @@ import { isValidExchangeName } from '@/common/validators';
 import { AesEncryptionService } from '@/modules/encryption';
 import { UsersService } from '@/modules/users';
 
-import { ExchangeApiClientFactory, ExchangePermission } from '../api-client';
+import {
+  ExchangeApiClientFactory,
+  ExchangePermission,
+  type ExchangeExtras,
+} from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
 import {
   ExchangeApiKeyNotFoundError,
-  IncompleteKeySuppliedError,
   KeyAuthorizationError,
 } from './exchange-api-keys.errors';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
@@ -29,8 +32,9 @@ export class ExchangeApiKeysService {
     exchangeName: string;
     apiKey: string;
     secretKey: string;
+    extras?: ExchangeExtras;
   }): Promise<ExchangeApiKeyEntity> {
-    const { userId, exchangeName, apiKey, secretKey } = input;
+    const { userId, exchangeName, apiKey, secretKey, extras } = input;
 
     if (!userId || !apiKey || !secretKey) {
       throw new Error('Invalid arguments');
@@ -45,13 +49,10 @@ export class ExchangeApiKeysService {
       {
         apiKey,
         secret: secretKey,
+        extras,
         userId,
       },
     );
-
-    if (!exchangeApiClient.checkRequiredCredentials()) {
-      throw new IncompleteKeySuppliedError(exchangeName);
-    }
 
     const accessCheckResult = await exchangeApiClient.checkRequiredAccess(
       Object.values(ExchangePermission),
@@ -72,6 +73,7 @@ export class ExchangeApiKeysService {
     ]);
     enrolledKey.apiKey = encryptedApiKey;
     enrolledKey.secretKey = encryptedSecretKey;
+    enrolledKey.extras = extras ?? null;
     enrolledKey.updatedAt = new Date();
 
     await this.exchangeApiKeysRepository.upsert(enrolledKey, [
@@ -104,6 +106,7 @@ export class ExchangeApiKeysService {
       id: entity.id,
       apiKey: decryptedApiKey.toString(),
       secretKey: decryptedSecretKey.toString(),
+      extras: entity.extras ?? undefined,
     };
   }
 
@@ -121,6 +124,7 @@ export class ExchangeApiKeysService {
         return {
           exchangeName: enrolledKey.exchangeName,
           apiKey: decodedApiKey.toString(),
+          extras: enrolledKey.extras === null ? undefined : enrolledKey.extras,
         };
       };
 
