@@ -43,7 +43,15 @@ const validationSchema = yup.object({
     .required('Required')
     .trim()
     .max(200, 'Max 200 characters'),
-  memo: yup.string().optional().trim().max(32, 'Max 32 characters'),
+  memo: yup
+    .string()
+    .when('exchange', {
+      is: 'bitmart',
+      then: (schema) => schema.required('Required'),
+      otherwise: (schema) => schema.optional(),
+    })
+    .trim()
+    .max(32, 'Max 32 characters'),
   exchange: yup.string().required('Required'),
 });
 
@@ -64,6 +72,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
     reset,
     watch,
   } = useForm<APIKeyFormValues>({
+    mode: 'onBlur',
     resolver: yupResolver(validationSchema),
     defaultValues: {
       exchange: '',
