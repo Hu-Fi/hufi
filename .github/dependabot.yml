@@ -9,6 +9,7 @@ updates:
     
     # Even though we use yarn, according to the documentation, value should be 'npm': 
     # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
+    # Regular dependency updates
   - package-ecosystem: "npm" 
     directories:
       - "/campaign-launcher/client"
@@ -31,3 +32,17 @@ updates:
           - "minor"
           - "patch"
     open-pull-requests-limit: 5 # Reasonable number to start with
+
+    # Security dependency updates
+  - package-ecosystem: npm
+    security-updates-only: true
+    directories:
+      - "/campaign-launcher/client"
+      - "/campaign-launcher/server"
+      - "/recording-oracle"
+      - "/reputation-oracle"
+    schedule:
+      interval: daily
+    allow:
+      - dependency-type: "all"
+    target-branch: "develop"
