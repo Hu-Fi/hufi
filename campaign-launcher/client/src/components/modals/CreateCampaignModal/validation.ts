@@ -12,7 +12,6 @@ import {
 const mapTokenToMinValue: Record<FundToken, number> = {
   usdt: 0.001,
   usdc: 0.001,
-  hmt: 0.1,
 };
 
 const baseValidationSchema = {
