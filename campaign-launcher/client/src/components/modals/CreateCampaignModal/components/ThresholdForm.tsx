@@ -158,7 +158,6 @@ const ThresholdForm: FC<Props> = ({
                 {...field}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
-                onChange={(newValue) => field.onChange(newValue?.toDate())}
               />
             )}
           />
@@ -179,7 +178,6 @@ const ThresholdForm: FC<Props> = ({
                 {...field}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
-                onChange={(newValue) => field.onChange(newValue?.toDate())}
               />
             )}
           />
@@ -230,6 +228,7 @@ const ThresholdForm: FC<Props> = ({
               <TextField
                 id="fund-amount-input"
                 label="Fund Amount"
+                placeholder="1"
                 error={!!errors.fund_amount}
                 type="number"
                 {...field}
@@ -252,10 +251,10 @@ const ThresholdForm: FC<Props> = ({
               <TextField
                 id="minimum-balance-target-input"
                 label="Minimum Balance Target"
+                placeholder="1"
                 type="number"
                 error={!!errors.minimum_balance_target}
                 {...field}
-                onBlur={(e) => field.onChange(+e.target.value)}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {

@@ -56,5 +56,5 @@ export const TOKENS: TokenData[] = [
   },
 ];
 
-export const FUND_TOKENS = ['hmt', 'usdt', 'usdc'] as const;
+export const FUND_TOKENS = ['usdt', 'usdc'] as const;
 export type FundToken = (typeof FUND_TOKENS)[number];

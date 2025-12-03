@@ -162,7 +162,6 @@ const MarketMakingForm: FC<Props> = ({
                 {...field}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
-                onChange={(newValue) => field.onChange(newValue?.toDate())}
               />
             )}
           />
@@ -183,7 +182,6 @@ const MarketMakingForm: FC<Props> = ({
                 {...field}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
-                onChange={(newValue) => field.onChange(newValue?.toDate())}
               />
             )}
           />
@@ -234,6 +232,7 @@ const MarketMakingForm: FC<Props> = ({
               <TextField
                 id="fund-amount-input"
                 label="Fund Amount"
+                placeholder="1"
                 error={!!errors.fund_amount}
                 type="number"
                 {...field}
@@ -256,10 +255,10 @@ const MarketMakingForm: FC<Props> = ({
               <TextField
                 id="daily-volume-target-input"
                 label="Daily Volume Target"
+                placeholder="1"
                 type="number"
                 error={!!errors.daily_volume_target}
                 {...field}
-                onBlur={(e) => field.onChange(+e.target.value)}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {

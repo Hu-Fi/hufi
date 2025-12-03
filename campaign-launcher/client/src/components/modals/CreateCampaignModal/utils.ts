@@ -16,8 +16,8 @@ const baseFormValues = {
   exchange: '',
   start_date: new Date(),
   end_date: new Date(),
-  fund_token: 'hmt',
-  fund_amount: 0.1,
+  fund_token: 'usdt',
+  fund_amount: '',
 };
 
 const defaultFormValuesMap = {
@@ -25,19 +25,19 @@ const defaultFormValuesMap = {
     ...baseFormValues,
     type: CampaignType.MARKET_MAKING,
     pair: '',
-    daily_volume_target: 1,
+    daily_volume_target: '',
   },
   [CampaignType.HOLDING]: {
     ...baseFormValues,
     type: CampaignType.HOLDING,
     symbol: '',
-    daily_balance_target: 1,
+    daily_balance_target: '',
   },
   [CampaignType.THRESHOLD]: {
     ...baseFormValues,
     type: CampaignType.THRESHOLD,
     symbol: '',
-    minimum_balance_target: 1,
+    minimum_balance_target: '',
   },
 };
 

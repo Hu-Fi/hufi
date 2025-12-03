@@ -180,25 +180,25 @@ type BaseCampaignFormValues = {
   start_date: Date;
   end_date: Date;
   fund_token: string;
-  fund_amount: number;
+  fund_amount: number | string;
 };
 
 export type MarketMakingFormValues = BaseCampaignFormValues & {
   type: CampaignType.MARKET_MAKING;
   pair: string;
-  daily_volume_target: number;
+  daily_volume_target: number | string;
 };
 
 export type HoldingFormValues = BaseCampaignFormValues & {
   type: CampaignType.HOLDING;
   symbol: string;
-  daily_balance_target: number;
+  daily_balance_target: number | string;
 };
 
 export type ThresholdFormValues = BaseCampaignFormValues & {
   type: CampaignType.THRESHOLD;
   symbol: string;
-  minimum_balance_target: number;
+  minimum_balance_target: number | string;
 };
 
 export type CampaignFormValues =
