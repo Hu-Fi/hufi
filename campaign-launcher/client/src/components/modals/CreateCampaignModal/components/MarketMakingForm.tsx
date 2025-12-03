@@ -236,6 +236,12 @@ const MarketMakingForm: FC<Props> = ({
                 error={!!errors.fund_amount}
                 type="number"
                 {...field}
+                onChange={(e) => {
+                  const value = e.target.value
+                    .replace(/^0+(?=\d)/, '')
+                    .replace(/(\.\d{3})\d+$/, '$1');
+                  field.onChange(value);
+                }}
                 disabled={isCreatingEscrow}
               />
             )}
@@ -259,6 +265,12 @@ const MarketMakingForm: FC<Props> = ({
                 type="number"
                 error={!!errors.daily_volume_target}
                 {...field}
+                onChange={(e) => {
+                  const value = e.target.value
+                    .replace(/^0+(?=\d)/, '')
+                    .replace(/(\.\d{3})\d+$/, '$1');
+                  field.onChange(value);
+                }}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
