@@ -32,6 +32,8 @@ import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { ThresholdFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
+import { formatInputValue } from '../utils';
+
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
@@ -228,9 +230,14 @@ const ThresholdForm: FC<Props> = ({
               <TextField
                 id="fund-amount-input"
                 label="Fund Amount"
+                placeholder="1"
                 error={!!errors.fund_amount}
                 type="number"
                 {...field}
+                onChange={(e) => {
+                  const value = formatInputValue(e.target.value);
+                  field.onChange(value);
+                }}
                 disabled={isCreatingEscrow}
               />
             )}
@@ -250,9 +257,14 @@ const ThresholdForm: FC<Props> = ({
               <TextField
                 id="minimum-balance-target-input"
                 label="Minimum Balance Target"
+                placeholder="1"
                 type="number"
                 error={!!errors.minimum_balance_target}
                 {...field}
+                onChange={(e) => {
+                  const value = formatInputValue(e.target.value);
+                  field.onChange(value);
+                }}
                 disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
@@ -261,11 +273,6 @@ const ThresholdForm: FC<Props> = ({
                       maxWidth: '12ch',
                       minWidth: '1ch',
                       width: 'unset',
-                      '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button':
-                        {
-                          WebkitAppearance: 'none',
-                          margin: 0,
-                        },
                     },
                   },
                   input: {
