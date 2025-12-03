@@ -48,6 +48,7 @@ export type Exchange = {
 export type ExchangeApiKeyData = {
   exchange_name: string;
   api_key: string;
+  extras?: Record<string, string>;
 };
 
 export type Campaign = {

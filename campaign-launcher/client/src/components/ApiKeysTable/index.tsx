@@ -3,6 +3,8 @@ import { type FC, useMemo, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
+import CustomTooltip from '@/components/CustomTooltip';
+import InfoTooltipInner from '@/components/InfoTooltipInner';
 import DeleteApiKeyModal from '@/components/modals/DeleteApiKeyModal';
 import EditApiKeyModal from '@/components/modals/EditApiKeyModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -36,10 +38,11 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     setDeletingItem('');
   };
 
-  const rows = data?.map(({ exchange_name, api_key }) => ({
+  const rows = data?.map(({ exchange_name, api_key, extras }) => ({
     id: exchange_name,
     exchangeName: exchange_name,
     apiKey: api_key,
+    extras: extras,
   }));
 
   const longestApiKeyLength = useMemo(() => {
@@ -70,6 +73,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       flex: 1,
       minWidth: isMobile ? 90 : longestApiKeyLength * 10 + 100,
       renderCell: (params) => {
+        const isBitmart = params.row.exchangeName === 'bitmart';
         return (
           <Typography
             display="flex"
@@ -77,6 +81,28 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             variant={isMobile ? 'body2' : 'body1'}
           >
             {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
+            {isBitmart && !!params.row.extras?.api_key_memo && (
+              <CustomTooltip
+                arrow
+                placement="left"
+                title={
+                  <Typography variant="tooltip">
+                    Memo: {params.row.extras.api_key_memo}
+                  </Typography>
+                }
+              >
+                <InfoTooltipInner
+                  sx={{
+                    ml: 1,
+                    width: '20px',
+                    height: '20px',
+                    px: 1,
+                    bgcolor: 'background.default',
+                    cursor: 'pointer',
+                  }}
+                />
+              </CustomTooltip>
+            )}
           </Typography>
         );
       },

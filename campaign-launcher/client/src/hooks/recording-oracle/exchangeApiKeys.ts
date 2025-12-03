@@ -32,6 +32,7 @@ type MutationPayload = {
   exchangeName: string;
   apiKey: string;
   secret: string;
+  extras?: Record<string, string>;
 };
 
 export const usePostExchangeApiKey = () => {
@@ -44,7 +45,8 @@ export const usePostExchangeApiKey = () => {
         await recordingApi.upsertExchangeApiKey(
           data.exchangeName,
           data.apiKey,
-          data.secret
+          data.secret,
+          data.extras
         );
       } catch (error) {
         let message = errorUtils.getMessageFromError(error);
