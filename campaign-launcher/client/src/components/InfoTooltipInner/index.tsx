@@ -33,6 +33,4 @@ const InfoTooltipInner = forwardRef((props: BoxProps, ref) => {
   );
 });
 
-InfoTooltipInner.displayName = 'InfoTooltipInner';
-
 export default InfoTooltipInner;

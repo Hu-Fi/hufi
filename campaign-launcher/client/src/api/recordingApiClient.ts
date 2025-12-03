@@ -142,12 +142,14 @@ export class RecordingApiClient extends HttpClient {
   async upsertExchangeApiKey(
     exchangeName: string,
     apiKey: string,
-    secret: string
+    secret: string,
+    extras?: Record<string, string>
   ): Promise<void> {
     await this.post('/exchange-api-keys', {
       exchange_name: exchangeName,
       api_key: apiKey,
       secret_key: secret,
+      extras,
     });
   }
 

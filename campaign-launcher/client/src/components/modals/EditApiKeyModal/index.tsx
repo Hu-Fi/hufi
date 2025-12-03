@@ -33,6 +33,7 @@ type APIKeyFormValues = {
   apiKey: string;
   secret: string;
   exchange: string;
+  memo?: string;
 };
 
 const validationSchema = yup.object({
@@ -42,6 +43,7 @@ const validationSchema = yup.object({
     .required('Required')
     .trim()
     .max(200, 'Max 200 characters'),
+  memo: yup.string().optional().trim().max(32, 'Max 32 characters'),
   exchange: yup.string().required('Required'),
 });
 
@@ -67,12 +69,23 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       exchange: '',
       apiKey: '',
       secret: '',
+      memo: '',
     },
   });
 
   const isMobile = useIsMobile();
-  const [apiKeyValue, secretValue] = watch(['apiKey', 'secret']);
-  const isSaveDisabled = !apiKeyValue?.trim() || !secretValue?.trim();
+  const [apiKeyValue, secretValue, exchange, memoValue] = watch([
+    'apiKey',
+    'secret',
+    'exchange',
+    'memo',
+  ]);
+
+  const isBitmart = exchange === 'bitmart';
+  const isSaveDisabled =
+    !apiKeyValue?.trim() ||
+    !secretValue?.trim() ||
+    (isBitmart && !memoValue?.trim());
 
   useEffect(() => {
     if (open && exchangeName) {
@@ -80,6 +93,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
         exchange: exchangeName,
         apiKey: '',
         secret: '',
+        memo: '',
       });
     }
   }, [open, exchangeName, reset]);
@@ -97,6 +111,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
       exchangeName: values.exchange,
       apiKey: values.apiKey,
       secret: values.secret,
+      extras: isBitmart ? { api_key_memo: values.memo || '' } : undefined,
     });
   };
 
@@ -173,7 +188,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
               </Box>
               <FormControl
                 error={!!errors.secret}
-                sx={{ mb: { xs: 3, md: 4 }, width: '100%' }}
+                sx={{ mb: 3, width: '100%' }}
               >
                 <Controller
                   name="secret"
@@ -193,6 +208,29 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
                   <FormHelperText>{errors.secret.message}</FormHelperText>
                 )}
               </FormControl>
+              {isBitmart && (
+                <FormControl
+                  error={!!errors.memo}
+                  sx={{ mb: 3, width: '100%' }}
+                >
+                  <Controller
+                    name="memo"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        type="text"
+                        id="memo-input"
+                        label="Memo"
+                        placeholder="Memo"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.memo && (
+                    <FormHelperText>{errors.memo.message}</FormHelperText>
+                  )}
+                </FormControl>
+              )}
             </>
           )}
           {isSuccess && (

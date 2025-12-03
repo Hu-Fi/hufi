@@ -33,6 +33,7 @@ type APIKeyFormValues = {
   apiKey: string;
   secret: string;
   exchange: string;
+  memo?: string;
 };
 
 const validationSchema = yup.object({
@@ -46,6 +47,7 @@ const validationSchema = yup.object({
     .required('Required')
     .trim()
     .max(200, 'Max 200 characters'),
+  memo: yup.string().optional().trim().max(32, 'Max 32 characters'),
   exchange: yup.string().required('Required'),
 });
 
@@ -64,22 +66,28 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
     formState: { errors },
     handleSubmit,
     reset,
+    watch,
   } = useForm<APIKeyFormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
       exchange: '',
       apiKey: '',
       secret: '',
+      memo: '',
     },
   });
 
   const isMobile = useIsMobile();
+  const selectedExchange = watch('exchange');
+
+  const isBitmart = selectedExchange === 'bitmart';
 
   const onSubmit = (values: APIKeyFormValues) => {
     postExchangeApiKey({
       exchangeName: values.exchange,
       apiKey: values.apiKey,
       secret: values.secret,
+      extras: isBitmart ? { api_key_memo: values.memo || '' } : undefined,
     });
   };
 
@@ -168,7 +176,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
               </Box>
               <FormControl
                 error={!!errors.secret}
-                sx={{ mb: { xs: 3, md: 4 }, width: '100%' }}
+                sx={{ mb: 3, width: '100%' }}
               >
                 <Controller
                   name="secret"
@@ -188,6 +196,29 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                   <FormHelperText>{errors.secret.message}</FormHelperText>
                 )}
               </FormControl>
+              {isBitmart && (
+                <FormControl
+                  error={!!errors.memo}
+                  sx={{ mb: 3, width: '100%' }}
+                >
+                  <Controller
+                    name="memo"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        type="text"
+                        id="memo-input"
+                        label="Memo"
+                        placeholder="Memo"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.memo && (
+                    <FormHelperText>{errors.memo.message}</FormHelperText>
+                  )}
+                </FormControl>
+              )}
             </>
           )}
           {isSuccess && (
