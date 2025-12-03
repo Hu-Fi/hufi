@@ -237,6 +237,9 @@ const MarketMakingForm: FC<Props> = ({
                 type="number"
                 {...field}
                 onChange={(e) => {
+                  /*
+                  This regex is used to remove leading zeros and limit the number of digits after decimal point to 3
+                  */
                   const value = e.target.value
                     .replace(/^0+(?=\d)/, '')
                     .replace(/(\.\d{3})\d+$/, '$1');
