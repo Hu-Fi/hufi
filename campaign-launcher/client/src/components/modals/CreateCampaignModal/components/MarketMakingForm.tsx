@@ -33,6 +33,8 @@ import { useTradingPairs } from '@/hooks/useTradingPairs';
 import type { MarketMakingFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
+import { formatInputValue } from '../utils';
+
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
@@ -237,12 +239,7 @@ const MarketMakingForm: FC<Props> = ({
                 type="number"
                 {...field}
                 onChange={(e) => {
-                  /*
-                  This regex is used to remove leading zeros and limit the number of digits after decimal point to 3
-                  */
-                  const value = e.target.value
-                    .replace(/^0+(?=\d)/, '')
-                    .replace(/(\.\d{3})\d+$/, '$1');
+                  const value = formatInputValue(e.target.value);
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}
@@ -269,9 +266,7 @@ const MarketMakingForm: FC<Props> = ({
                 error={!!errors.daily_volume_target}
                 {...field}
                 onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/^0+(?=\d)/, '')
-                    .replace(/(\.\d{3})\d+$/, '$1');
+                  const value = formatInputValue(e.target.value);
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}

@@ -32,6 +32,8 @@ import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { ThresholdFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
+import { formatInputValue } from '../utils';
+
 import ExchangeInfoTooltip from './ExchangeInfoTooltip';
 
 type Props = {
@@ -233,9 +235,7 @@ const ThresholdForm: FC<Props> = ({
                 type="number"
                 {...field}
                 onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/^0+(?=\d)/, '')
-                    .replace(/(\.\d{3})\d+$/, '$1');
+                  const value = formatInputValue(e.target.value);
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}
@@ -262,9 +262,7 @@ const ThresholdForm: FC<Props> = ({
                 error={!!errors.minimum_balance_target}
                 {...field}
                 onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/^0+(?=\d)/, '')
-                    .replace(/(\.\d{3})\d+$/, '$1');
+                  const value = formatInputValue(e.target.value);
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}

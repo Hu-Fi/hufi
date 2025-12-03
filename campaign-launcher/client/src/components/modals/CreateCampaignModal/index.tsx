@@ -72,6 +72,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     handleSubmit,
     reset: resetForm,
   } = useForm<CampaignFormValues>({
+    mode: 'onBlur',
     resolver: yupResolver(campaignValidationSchema),
     defaultValues: getFormDefaultValues(campaignType),
   });
