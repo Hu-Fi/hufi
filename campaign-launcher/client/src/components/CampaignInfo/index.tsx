@@ -27,6 +27,7 @@ type Props = {
   campaign: CampaignDetails | null | undefined;
   isCampaignLoading: boolean;
   joinStatus?: CampaignJoinStatus;
+  joinedAt?: string;
   isJoinStatusLoading: boolean;
 };
 
@@ -34,6 +35,7 @@ const CampaignInfo: FC<Props> = ({
   campaign,
   isCampaignLoading,
   joinStatus,
+  joinedAt,
   isJoinStatusLoading,
 }) => {
   const [openChartModal, setOpenChartModal] = useState(false);
@@ -80,6 +82,7 @@ const CampaignInfo: FC<Props> = ({
           <JoinCampaign
             campaign={campaign}
             joinStatus={joinStatus}
+            joinedAt={joinedAt}
             isJoinStatusLoading={isJoinStatusLoading}
           />
         )}

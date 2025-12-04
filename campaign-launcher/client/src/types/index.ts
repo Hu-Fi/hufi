@@ -213,3 +213,9 @@ export enum CampaignJoinStatus {
   JOIN_IS_CLOSED = 'join_closed',
   NOT_AVAILABLE = 'not_available',
 }
+
+export type CheckCampaignJoinStatusResponse = {
+  status: CampaignJoinStatus;
+  joined_at?: string;
+  reason?: string;
+};

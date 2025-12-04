@@ -21,7 +21,7 @@ const Campaign: FC = () => {
   const [searchParams] = useSearchParams();
   const { data: campaign, isLoading: isCampaignLoading } =
     useCampaignDetails(address);
-  const { data: joinStatus, isLoading: isJoinStatusLoading } =
+  const { data: joinStatusInfo, isLoading: isJoinStatusLoading } =
     useCheckCampaignJoinStatus(address);
 
   const isMobile = useIsMobile();
@@ -54,7 +54,8 @@ const Campaign: FC = () => {
         {!isMobile && campaignData && (
           <JoinCampaign
             campaign={campaignData}
-            joinStatus={joinStatus}
+            joinStatus={joinStatusInfo?.status}
+            joinedAt={joinStatusInfo?.joined_at}
             isJoinStatusLoading={isJoinStatusLoading}
           />
         )}
@@ -65,13 +66,16 @@ const Campaign: FC = () => {
       <CampaignInfo
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
-        joinStatus={joinStatus}
+        joinStatus={joinStatusInfo?.status}
+        joinedAt={joinStatusInfo?.joined_at}
         isJoinStatusLoading={isJoinStatusLoading}
       />
       <CampaignStats
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
-        isJoined={joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED}
+        isJoined={
+          joinStatusInfo?.status === CampaignJoinStatus.USER_ALREADY_JOINED
+        }
       />
       <Typography variant="h6">Joined Campaigns</Typography>
       <JoinedCampaigns

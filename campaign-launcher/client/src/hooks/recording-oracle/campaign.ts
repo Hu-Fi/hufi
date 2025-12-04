@@ -75,7 +75,6 @@ export const useCheckCampaignJoinStatus = (address: EvmAddress) => {
       AUTHED_QUERY_TAG,
     ],
     queryFn: () => recordingApi.checkCampaignJoinStatus(appChainId, address),
-    select: (data) => data.status,
     enabled: isAuthenticated && !!appChainId && !!address,
   });
 };
