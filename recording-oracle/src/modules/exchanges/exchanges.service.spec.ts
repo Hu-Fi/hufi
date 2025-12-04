@@ -151,7 +151,7 @@ describe('ExchangesService', () => {
     });
   });
 
-  describe('markApiKeyAsInvalid', () => {
+  describe('revalidateApiKey', () => {
     const mockExchangeApiClient = createMock<ExchangeApiClient>();
 
     let userId: string;

@@ -1439,7 +1439,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should skip participant if it api key not found', async () => {
+    it('should skip participant if its api key not found', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noApiKeyParticipant = generateCampaignParticipant(campaign);
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
