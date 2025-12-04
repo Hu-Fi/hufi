@@ -395,7 +395,7 @@ describe('ExchangeApiKeysService', () => {
       });
     });
 
-    it('should override invalid permissions with new values', async () => {
+    it('should override missing permissions with new values', async () => {
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),
@@ -418,6 +418,30 @@ describe('ExchangeApiKeysService', () => {
         exchangeName,
         missingPermissions,
       );
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: false,
+        missingPermissions,
+      });
+    });
+
+    it('should save missing permissions w/o duplicates', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      const missingPermissions =
+        faker.helpers.arrayElements(exchangePermissions);
+      await exchangeApiKeysService.markAsInvalid(userId, exchangeName, [
+        ...missingPermissions,
+        ...missingPermissions,
+      ]);
 
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({

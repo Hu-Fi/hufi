@@ -160,7 +160,7 @@ export class ExchangeApiKeysService {
     }
 
     entity.isValid = false;
-    entity.missingPermissions = missingPermissions;
+    entity.missingPermissions = Array.from(new Set(missingPermissions));
 
     await this.exchangeApiKeysRepository.save(entity);
   }
