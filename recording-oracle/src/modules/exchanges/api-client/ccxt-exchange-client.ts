@@ -1,5 +1,5 @@
 import * as ccxt from 'ccxt';
-import type { Exchange, Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
+import type { Exchange } from 'ccxt';
 import _ from 'lodash';
 
 import {
@@ -12,6 +12,7 @@ import Environment from '@/common/utils/environment';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
+import * as ccxtClientUtils from './ccxt-exchange-client.utils';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import type {
@@ -32,113 +33,6 @@ export interface CcxtExchangeClientInitOptions extends ExchangeApiClientInitOpti
   preloadedExchangeClient?: Exchange;
 }
 
-export function mapCcxtOrder(order: CcxtOrder): Order {
-  return {
-    id: order.id,
-    status: order.status,
-    timestamp: order.timestamp,
-    symbol: order.symbol,
-    side: order.side,
-    type: order.type,
-    amount: order.amount,
-    filled: order.filled,
-    cost: order.cost,
-  };
-}
-
-export function mapCcxtTrade(trade: CcxtTrade): Trade {
-  return {
-    id: trade.id,
-    timestamp: trade.timestamp,
-    symbol: trade.symbol,
-    side: trade.side,
-    takerOrMaker: trade.takerOrMaker,
-    price: trade.price,
-    amount: trade.amount,
-    cost: trade.cost,
-  };
-}
-
-function mapCcxtError(error: unknown) {
-  if (error instanceof ccxt.BaseError || error instanceof Error) {
-    return {
-      name: error.constructor.name,
-      message: error.message,
-    };
-  }
-
-  return error;
-}
-
-const ERROR_EXCHANGE_NAME_PROP = Symbol(
-  'extra "exchange name" property for ccxt error',
-);
-
-const ccxtApiAccessErrors = [
-  ccxt.AccountNotEnabled,
-  ccxt.AccountSuspended,
-  ccxt.AuthenticationError,
-  ccxt.BadSymbol,
-  ccxt.PermissionDenied,
-] as const;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isExchangeApiAccessError(error: any) {
-  if (
-    ccxtApiAccessErrors.some(
-      (ccxtApiAccessError) => error instanceof ccxtApiAccessError,
-    )
-  ) {
-    return true;
-  }
-
-  if (!error) {
-    return false;
-  }
-
-  switch (error[ERROR_EXCHANGE_NAME_PROP] as SupportedExchange) {
-    case 'mexc': {
-      // https://www.mexc.com/api-docs/spot-v3/general-info#error-code
-      /**
-       * This can be returned e.g. in case when api key is removed.
-       * NOTE: after it's removed it's still valid for some time on their end
-       */
-      if (error.message.includes('10072')) {
-        return true;
-      }
-
-      /**
-       * This can happen in case case deposit address not exist,
-       * so user will have to create one
-       */
-      if (
-        error instanceof ccxt.InvalidAddress &&
-        error.message.includes('cannot find a deposit address')
-      ) {
-        return true;
-      }
-
-      return false;
-    }
-    case 'gate': {
-      /**
-       * This can happen in case case deposit address not exist,
-       * so user will have to create one
-       */
-      if (
-        error instanceof ccxt.InvalidAddress &&
-        error.message.includes('address is undefined')
-      ) {
-        return true;
-      }
-
-      return false;
-    }
-    default:
-      return false;
-  }
-}
-
 function CatchApiAccessErrors() {
   return function (
     _target: unknown,
@@ -156,16 +50,17 @@ function CatchApiAccessErrors() {
       try {
         return await original.apply(this, args);
       } catch (error) {
-        error[ERROR_EXCHANGE_NAME_PROP] = this.exchangeName;
-        if (isExchangeApiAccessError(error)) {
+        error[ccxtClientUtils.ERROR_EXCHANGE_NAME_PROP] = this.exchangeName;
+        if (ccxtClientUtils.isExchangeApiAccessError(error)) {
           if (this.loggingConfig.logPermissionErrors) {
             this.logger.info('Failed to access exchange API', {
               method: propertyKey,
-              errorDetails: mapCcxtError(error),
+              errorDetails: ccxtClientUtils.mapCcxtError(error),
             });
           }
           throw new ExchangeApiAccessError(
-            `Api access failed for ${propertyKey}`,
+            this.exchangeName,
+            propertyKey,
             error.message,
           );
         }
@@ -334,7 +229,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       if (error instanceof ccxt.NetworkError) {
         const message = 'Error while checking exchange access';
         this.logger.error(message, error);
-        throw new ExchangeApiClientError(message);
+        throw new ExchangeApiClientError(message, this.exchangeName);
       }
 
       throw error;
@@ -349,7 +244,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
      */
     const orders = await this.ccxtClient.fetchOpenOrders(symbol, since);
 
-    return orders.map(mapCcxtOrder);
+    return orders.map(ccxtClientUtils.mapCcxtOrder);
   }
 
   /**
@@ -364,7 +259,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
      */
     const trades = await this.ccxtClient.fetchMyTrades(symbol, since);
 
-    return trades.map(mapCcxtTrade);
+    return trades.map(ccxtClientUtils.mapCcxtTrade);
   }
 
   @CatchApiAccessErrors()

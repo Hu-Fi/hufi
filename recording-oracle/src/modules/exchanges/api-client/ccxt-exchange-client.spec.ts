@@ -157,14 +157,14 @@ describe('CcxtExchangeClient', () => {
   });
 
   describe('instance methods', () => {
+    /**
+     * In some methods we rely on exact exchange name to adjust params,
+     * so for general tests we don't mind, but will override where needed
+     */
+    const exchangeName = faker.lorem.slug();
     let ccxtExchangeApiClient: CcxtExchangeClient;
 
     beforeAll(() => {
-      /**
-       * In some methods we rely on exact exchange name to adjust params,
-       * so for general tests we don't mind, but will override where needed
-       */
-      const exchangeName = faker.lorem.slug();
       mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
 
       ccxtExchangeApiClient = new CcxtExchangeClient(exchangeName, {
@@ -213,6 +213,7 @@ describe('CcxtExchangeClient', () => {
         const expectedMessage = 'Error while checking exchange access';
         expect(thrownError).toBeInstanceOf(ExchangeApiClientError);
         expect(thrownError.message).toBe(expectedMessage);
+        expect(thrownError.exchangeName).toBe(exchangeName);
         expect(logger.error).toHaveBeenCalledWith(expectedMessage, testError);
       });
 
@@ -401,7 +402,8 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe('Api access failed for fetchMyTrades');
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.method).toBe('fetchMyTrades');
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -442,9 +444,8 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchMyTrades',
-              );
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.method).toBe('fetchMyTrades');
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
@@ -541,9 +542,8 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe(
-          'Api access failed for fetchOpenOrders',
-        );
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.method).toBe('fetchOpenOrders');
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -584,9 +584,8 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchOpenOrders',
-              );
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.method).toBe('fetchOpenOrders');
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
@@ -651,7 +650,8 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe('Api access failed for fetchBalance');
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.method).toBe('fetchBalance');
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -689,9 +689,8 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchBalance',
-              );
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.method).toBe('fetchBalance');
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
@@ -762,9 +761,8 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe(
-          'Api access failed for fetchDepositAddress',
-        );
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.method).toBe('fetchDepositAddress');
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -804,9 +802,8 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchDepositAddress',
-              );
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.method).toBe('fetchDepositAddress');
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
