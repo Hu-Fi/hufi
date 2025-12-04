@@ -4766,7 +4766,7 @@ __metadata:
     "@types/node": "npm:^24.10.1"
     "@types/supertest": "npm:^6.0.3"
     alchemy-sdk: "npm:^3.6.5"
-    ccxt: "npm:^4.5.22"
+    ccxt: "npm:^4.5.24"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.3"
     dayjs: "npm:^1.11.19"
@@ -4810,12 +4810,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ccxt@npm:^4.5.22":
-  version: 4.5.22
-  resolution: "ccxt@npm:4.5.22"
+"ccxt@npm:^4.5.24":
+  version: 4.5.24
+  resolution: "ccxt@npm:4.5.24"
   dependencies:
     ws: "npm:^8.8.1"
-  checksum: 10c0/ec177d9bfa0a70c5e7f1b062dc20dc51d6de41296434aea6abe0927fb99823fe622cd02ac93abe58c8babcd270ea3d25a0bdb2578eafa8202d2e0125abf4becf
+  checksum: 10c0/a7d53b69389c886bf472c6d2dcd5d0a403a7ade2da9ff4b9608237578d309a833e77866f6638e69d4e9674b81b01de12f410ffc3be642b97cd33971cbb757250
   languageName: node
   linkType: hard
 
