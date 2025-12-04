@@ -139,6 +139,10 @@ export class ExchangesService {
       return true;
     }
 
+    if (symbol.includes('$')) {
+      return true;
+    }
+
     return symbol.length < 3 || symbol.length > 10;
   }
 }
