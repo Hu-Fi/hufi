@@ -9,7 +9,7 @@ import {
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
 
-const CustomTooltip = ({ children, ...props }: TooltipProps) => {
+const CustomTooltip = ({ children, sx, ...props }: TooltipProps) => {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -47,6 +47,7 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
           {...props}
         >
           <Box
+            sx={sx}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -62,7 +63,7 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
 
   return (
     <Tooltip {...props}>
-      <Box component="span" sx={{ cursor: 'pointer', ...props.sx }}>
+      <Box component="span" sx={{ cursor: 'pointer', ...sx }}>
         {children}
       </Box>
     </Tooltip>
