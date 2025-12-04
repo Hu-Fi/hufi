@@ -18,7 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/e2e/jest.config.json"
+    "test:e2e": "jest --config ./test/e2e/jest.config.json",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@human-protocol/logger": "^1.2.0",
