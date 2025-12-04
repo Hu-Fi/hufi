@@ -123,7 +123,7 @@ const JoinCampaign: FC<Props> = ({
         placement="top"
         sx={{ ml: 'auto' }}
       >
-        <Box component="span" sx={{ cursor: 'pointer' }}>
+        <Box component="span">
           <Button
             variant="contained"
             size="medium"
@@ -131,7 +131,6 @@ const JoinCampaign: FC<Props> = ({
             sx={{
               color: 'primary.contrast',
               minWidth: isMobile ? '105px' : '135px',
-              cursor: 'pointer',
             }}
             endIcon={isMobile && <CheckIcon />}
           >

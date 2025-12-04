@@ -62,7 +62,7 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
 
   return (
     <Tooltip {...props}>
-      <Box component="span" sx={props.sx}>
+      <Box component="span" sx={{ cursor: 'pointer', ...props.sx }}>
         {children}
       </Box>
     </Tooltip>

@@ -17,7 +17,6 @@ const InfoTooltipInner = forwardRef((props: BoxProps, ref) => {
       sx={{
         background:
           'linear-gradient(13deg, rgba(247, 248, 253, 0.05) 20.33%, rgba(255, 255, 255, 0.05) 48.75%)',
-        cursor: 'pointer',
       }}
       {...props}
     >

@@ -102,11 +102,7 @@ const CampaignInfo: FC<Props> = ({
             placement="top"
             title={formatTime(campaign.start_date)}
           >
-            <Typography
-              variant="subtitle2"
-              borderBottom="1px dashed"
-              sx={{ cursor: 'pointer' }}
-            >
+            <Typography variant="subtitle2" borderBottom="1px dashed">
               {formatDate(campaign.start_date)}
             </Typography>
           </CustomTooltip>
@@ -118,11 +114,7 @@ const CampaignInfo: FC<Props> = ({
             placement="top"
             title={formatTime(campaign.end_date)}
           >
-            <Typography
-              variant="subtitle2"
-              borderBottom="1px dashed"
-              sx={{ cursor: 'pointer' }}
-            >
+            <Typography variant="subtitle2" borderBottom="1px dashed">
               {formatDate(campaign.end_date)}
             </Typography>
           </CustomTooltip>
@@ -132,9 +124,7 @@ const CampaignInfo: FC<Props> = ({
           title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
           placement="top"
         >
-          <Box display="flex" sx={{ cursor: 'pointer' }}>
-            {getChainIcon(campaign.chain_id)}
-          </Box>
+          <Box display="flex">{getChainIcon(campaign.chain_id)}</Box>
         </CustomTooltip>
       </Box>
       {!isMobile && (

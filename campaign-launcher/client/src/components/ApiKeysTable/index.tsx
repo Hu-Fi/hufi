@@ -96,7 +96,6 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
                     height: '20px',
                     px: 1,
                     bgcolor: 'background.default',
-                    cursor: 'pointer',
                   }}
                 />
               </CustomTooltip>
