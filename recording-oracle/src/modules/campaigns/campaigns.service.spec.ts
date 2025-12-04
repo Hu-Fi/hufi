@@ -39,6 +39,7 @@ import {
   ExchangeApiAccessError,
   ExchangeApiClientError,
   ExchangeApiKeyNotFoundError,
+  ExchangePermission,
   ExchangesService,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
@@ -116,6 +117,8 @@ const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
+
+const exchangePermissions = Object.values(ExchangePermission);
 
 describe('CampaignsService', () => {
   let campaignsService: CampaignsService;
@@ -1507,7 +1510,7 @@ describe('CampaignsService', () => {
       };
       const syntheticError = new ExchangeApiAccessError(
         campaign.exchangeName,
-        faker.lorem.slug(),
+        faker.helpers.arrayElement(exchangePermissions),
         `Api access failed for fetch_test_${faker.lorem.word()}`,
       );
       mockCampaignProgressChecker.checkForParticipant.mockImplementation(

@@ -1,5 +1,7 @@
 import { BaseError } from '@/common/errors/base';
 
+import { ExchangePermission } from './types';
+
 export class ExchangeApiClientError extends BaseError {
   constructor(
     message: string,
@@ -12,7 +14,7 @@ export class ExchangeApiClientError extends BaseError {
 export class ExchangeApiAccessError extends ExchangeApiClientError {
   constructor(
     exchangeName: string,
-    readonly method: string,
+    readonly permission: ExchangePermission,
     readonly cause: string,
   ) {
     super('Failed to access exchange API', exchangeName);

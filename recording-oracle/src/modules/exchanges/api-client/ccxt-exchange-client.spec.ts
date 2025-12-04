@@ -240,7 +240,7 @@ describe('CcxtExchangeClient', () => {
         const now = Date.now();
         const syntheticAuthError = new ExchangeApiAccessError(
           exchangeName,
-          'fetchMyTrades',
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
           faker.lorem.sentence(),
         );
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
@@ -248,14 +248,14 @@ describe('CcxtExchangeClient', () => {
         jest.useFakeTimers({ now });
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
-          ExchangePermission.FETCH_MY_TRADES,
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
         ]);
 
         jest.useRealTimers();
 
         expect(result).toEqual({
           success: false,
-          missing: [ExchangePermission.FETCH_MY_TRADES],
+          missing: [ExchangePermission.VIEW_SPOT_TRADING_HISTORY],
         });
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(0);
@@ -272,18 +272,18 @@ describe('CcxtExchangeClient', () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         const syntheticAuthError = new ExchangeApiAccessError(
           exchangeName,
-          'fetchMyTrades',
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
           faker.lorem.sentence(),
         );
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
-          ExchangePermission.FETCH_BALANCE,
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
         ]);
 
         expect(result).toEqual({
           success: false,
-          missing: [ExchangePermission.FETCH_BALANCE],
+          missing: [ExchangePermission.VIEW_ACCOUNT_BALANCE],
         });
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
@@ -299,7 +299,7 @@ describe('CcxtExchangeClient', () => {
 
         const syntheticAuthError = new ExchangeApiAccessError(
           exchangeName,
-          'fetchMyTrades',
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
           faker.lorem.sentence(),
         );
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
@@ -307,12 +307,12 @@ describe('CcxtExchangeClient', () => {
         );
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
-          ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
         ]);
 
         expect(result).toEqual({
           success: false,
-          missing: [ExchangePermission.FETCH_DEPOSIT_ADDRESS],
+          missing: [ExchangePermission.VIEW_DEPOSIT_ADDRESS],
         });
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(0);
@@ -409,7 +409,9 @@ describe('CcxtExchangeClient', () => {
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
         expect(thrownError.message).toBe('Failed to access exchange API');
-        expect(thrownError.method).toBe('fetchMyTrades');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
+        );
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -451,7 +453,9 @@ describe('CcxtExchangeClient', () => {
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
               expect(thrownError.message).toBe('Failed to access exchange API');
-              expect(thrownError.method).toBe('fetchMyTrades');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
+              );
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
@@ -549,7 +553,9 @@ describe('CcxtExchangeClient', () => {
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
         expect(thrownError.message).toBe('Failed to access exchange API');
-        expect(thrownError.method).toBe('fetchOpenOrders');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
+        );
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -591,7 +597,9 @@ describe('CcxtExchangeClient', () => {
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
               expect(thrownError.message).toBe('Failed to access exchange API');
-              expect(thrownError.method).toBe('fetchOpenOrders');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
+              );
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
@@ -657,7 +665,9 @@ describe('CcxtExchangeClient', () => {
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
         expect(thrownError.message).toBe('Failed to access exchange API');
-        expect(thrownError.method).toBe('fetchBalance');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
+        );
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -696,7 +706,9 @@ describe('CcxtExchangeClient', () => {
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
               expect(thrownError.message).toBe('Failed to access exchange API');
-              expect(thrownError.method).toBe('fetchBalance');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_ACCOUNT_BALANCE,
+              );
               expect(thrownError.cause).toBe(errorMessage);
             },
           );
@@ -768,7 +780,9 @@ describe('CcxtExchangeClient', () => {
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
         expect(thrownError.message).toBe('Failed to access exchange API');
-        expect(thrownError.method).toBe('fetchDepositAddress');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
+        );
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -809,7 +823,9 @@ describe('CcxtExchangeClient', () => {
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
               expect(thrownError.message).toBe('Failed to access exchange API');
-              expect(thrownError.method).toBe('fetchDepositAddress');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_DEPOSIT_ADDRESS,
+              );
               expect(thrownError.cause).toBe(errorMessage);
             },
           );

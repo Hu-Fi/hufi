@@ -64,11 +64,9 @@ export class ExchangesService {
     accessError: ExchangeApiAccessError,
   ): Promise<void> {
     try {
-      await this.exchangeApiKeysService.markAsInvalid(
-        userId,
-        exchangeName,
-        accessError.cause,
-      );
+      await this.exchangeApiKeysService.markAsInvalid(userId, exchangeName, [
+        accessError.permission,
+      ]);
     } catch (error) {
       this.logger.error('Failed to mark exchange api key as invalid', {
         userId,

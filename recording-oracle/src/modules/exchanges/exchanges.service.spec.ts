@@ -22,6 +22,8 @@ import { ExchangesService } from './exchanges.service';
 const mockExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
 
+const exchangePermissions = Object.values(ExchangePermission);
+
 describe('ExchangesService', () => {
   let exchangesService: ExchangesService;
 
@@ -57,6 +59,8 @@ describe('ExchangesService', () => {
         apiKey,
         secretKey,
         extras,
+        isValid: true,
+        missingPermissions: [],
       });
       const mockClient = {} as ExchangeApiClient;
       mockExchangeApiClientFactory.create.mockReturnValue(mockClient);
@@ -83,9 +87,7 @@ describe('ExchangesService', () => {
 
   describe('assertUserHasAuthorizedKeys', () => {
     const { userId, exchangeName } = generateExchangeApiKeysData();
-    const permissionsToCheck = faker.helpers.arrayElements(
-      Object.values(ExchangePermission),
-    );
+    const permissionsToCheck = faker.helpers.arrayElements(exchangePermissions);
 
     const mockExchangeApiClient = createMock<ExchangeApiClient>();
     let spyOnGetClientForUser: jest.SpyInstance;
@@ -157,7 +159,7 @@ describe('ExchangesService', () => {
     it('should call original method with correct params', async () => {
       const accessError = new ExchangeApiAccessError(
         exchangeName,
-        faker.lorem.word(),
+        faker.helpers.arrayElement(exchangePermissions),
         faker.lorem.words(),
       );
 
@@ -171,7 +173,7 @@ describe('ExchangesService', () => {
       expect(mockExchangeApiKeysService.markAsInvalid).toHaveBeenCalledWith(
         userId,
         exchangeName,
-        accessError.cause,
+        [accessError.permission],
       );
     });
 
@@ -183,7 +185,7 @@ describe('ExchangesService', () => {
 
       const accessError = new ExchangeApiAccessError(
         exchangeName,
-        faker.lorem.word(),
+        faker.helpers.arrayElement(exchangePermissions),
         faker.lorem.words(),
       );
 

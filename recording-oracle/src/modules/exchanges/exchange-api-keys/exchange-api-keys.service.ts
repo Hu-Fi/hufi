@@ -75,6 +75,7 @@ export class ExchangeApiKeysService {
     enrolledKey.secretKey = encryptedSecretKey;
     enrolledKey.extras = extras ?? null;
     enrolledKey.isValid = true;
+    enrolledKey.missingPermissions = [];
     enrolledKey.updatedAt = new Date();
 
     await this.exchangeApiKeysRepository.upsert(enrolledKey, [
@@ -108,6 +109,8 @@ export class ExchangeApiKeysService {
       apiKey: decryptedApiKey.toString(),
       secretKey: decryptedSecretKey.toString(),
       extras: entity.extras ?? undefined,
+      isValid: entity.isValid,
+      missingPermissions: entity.missingPermissions,
     };
   }
 
@@ -126,6 +129,8 @@ export class ExchangeApiKeysService {
           exchangeName: enrolledKey.exchangeName,
           apiKey: decodedApiKey.toString(),
           extras: enrolledKey.extras === null ? undefined : enrolledKey.extras,
+          isValid: enrolledKey.isValid,
+          missingPermissions: enrolledKey.missingPermissions,
         };
       };
 
@@ -138,10 +143,10 @@ export class ExchangeApiKeysService {
   async markAsInvalid(
     userId: string,
     exchangeName: string,
-    validationError: string,
+    missingPermissions: ExchangePermission[],
   ): Promise<void> {
-    if (!validationError) {
-      throw new Error('Details on invalidity required');
+    if (!missingPermissions.length) {
+      throw new Error('At least one missing permission must be provided');
     }
 
     const entity =
@@ -155,7 +160,9 @@ export class ExchangeApiKeysService {
     }
 
     entity.isValid = false;
-    entity.validationError = validationError;
+    entity.missingPermissions = Array.from(
+      new Set([...entity.missingPermissions, ...missingPermissions]),
+    );
 
     await this.exchangeApiKeysRepository.save(entity);
   }

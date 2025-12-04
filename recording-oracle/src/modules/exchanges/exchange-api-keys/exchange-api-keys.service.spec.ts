@@ -28,6 +28,8 @@ const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockUsersService = createMock<UsersService>();
 const mockExchangeApiClient = createMock<ExchangeApiClient>();
 
+const exchangePermissions = Object.values(ExchangePermission);
+
 describe('ExchangeApiKeysService', () => {
   let exchangeApiKeysService: ExchangeApiKeysService;
   let aesEncryptionService: AesEncryptionService;
@@ -106,7 +108,7 @@ describe('ExchangeApiKeysService', () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
 
       const missingPermissions = faker.helpers.arrayElements(
-        Object.values(ExchangePermission),
+        exchangePermissions,
         faker.number.int({ min: 1, max: 3 }),
       );
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
@@ -167,6 +169,7 @@ describe('ExchangeApiKeysService', () => {
         secretKey: expect.any(String),
         extras: null,
         isValid: true,
+        missingPermissions: [],
         updatedAt: expect.any(Date),
       });
 
@@ -200,6 +203,7 @@ describe('ExchangeApiKeysService', () => {
         secretKey: expect.any(String),
         extras: input.extras,
         isValid: true,
+        missingPermissions: [],
         updatedAt: expect.any(Date),
       });
 
@@ -319,17 +323,19 @@ describe('ExchangeApiKeysService', () => {
       exchangeName = faker.lorem.slug();
     });
 
-    it('should throw if validation error is empty string', async () => {
+    it('should throw if no missing permissions', async () => {
       let thrownError;
 
       try {
-        await exchangeApiKeysService.markAsInvalid(userId, exchangeName, '');
+        await exchangeApiKeysService.markAsInvalid(userId, exchangeName, []);
       } catch (error) {
         thrownError = error;
       }
 
       expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe('Details on invalidity required');
+      expect(thrownError.message).toBe(
+        'At least one missing permission must be provided',
+      );
 
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
     });
@@ -344,7 +350,7 @@ describe('ExchangeApiKeysService', () => {
         await exchangeApiKeysService.markAsInvalid(
           userId,
           exchangeName,
-          faker.lorem.words(),
+          faker.helpers.arrayElements(exchangePermissions),
         );
       } catch (error) {
         thrownError = error;
@@ -365,28 +371,35 @@ describe('ExchangeApiKeysService', () => {
     });
 
     it('should mark existing key as invalid', async () => {
+      const missingPermissions =
+        faker.helpers.arrayElements(exchangePermissions);
+
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),
       });
+      apiKeyEntity.missingPermissions.push(
+        faker.helpers.arrayElement(missingPermissions),
+      );
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         { ...apiKeyEntity } as ExchangeApiKeyEntity,
       );
 
-      const validationError = faker.lorem.words();
-
       await exchangeApiKeysService.markAsInvalid(
         userId,
         exchangeName,
-        validationError,
+        missingPermissions,
       );
 
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
         ...apiKeyEntity,
         isValid: false,
-        validationError,
+        missingPermissions: expect.any(Array),
       });
+      expect(
+        mockExchangeApiKeysRepository.save.mock.calls[0][0].missingPermissions?.sort(),
+      ).toEqual(missingPermissions.sort());
     });
   });
 });

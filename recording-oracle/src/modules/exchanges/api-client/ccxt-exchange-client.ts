@@ -33,7 +33,7 @@ export interface CcxtExchangeClientInitOptions extends ExchangeApiClientInitOpti
   preloadedExchangeClient?: Exchange;
 }
 
-function CatchApiAccessErrors() {
+function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
   return function (
     _target: unknown,
     propertyKey: string,
@@ -58,9 +58,10 @@ function CatchApiAccessErrors() {
               errorDetails: ccxtClientUtils.mapCcxtError(error),
             });
           }
+
           throw new ExchangeApiAccessError(
             this.exchangeName,
-            propertyKey,
+            expectedPermission,
             error.message,
           );
         }
@@ -180,23 +181,25 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         ReturnType<typeof permissionCheckHandler>
       >();
 
-      if (_permissionsToCheck.has(ExchangePermission.FETCH_BALANCE)) {
+      if (_permissionsToCheck.has(ExchangePermission.VIEW_ACCOUNT_BALANCE)) {
         checkHandlersMap.set(
-          ExchangePermission.FETCH_BALANCE,
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
           permissionCheckHandler(this.fetchBalance()),
         );
       }
 
-      if (_permissionsToCheck.has(ExchangePermission.FETCH_DEPOSIT_ADDRESS)) {
+      if (_permissionsToCheck.has(ExchangePermission.VIEW_DEPOSIT_ADDRESS)) {
         checkHandlersMap.set(
-          ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
           permissionCheckHandler(this.fetchDepositAddress(ETH_TOKEN_SYMBOL)),
         );
       }
 
-      if (_permissionsToCheck.has(ExchangePermission.FETCH_MY_TRADES)) {
+      if (
+        _permissionsToCheck.has(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
+      ) {
         checkHandlersMap.set(
-          ExchangePermission.FETCH_MY_TRADES,
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
           permissionCheckHandler(this.fetchMyTrades(ETH_USDT_PAIR, Date.now())),
         );
       }
@@ -236,7 +239,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     }
   }
 
-  @CatchApiAccessErrors()
+  @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
   async fetchOpenOrders(symbol: string, since: number): Promise<Order[]> {
     /**
      * Use default value for "limit" because it varies
@@ -251,7 +254,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
    * Returns all historical trades, both for fully and partially filled orders,
    * i.e. returns historical data for actual buy/sell that happened.
    */
-  @CatchApiAccessErrors()
+  @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
   async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
     /**
      * Use default value for "limit" because it varies
@@ -262,14 +265,14 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     return trades.map(ccxtClientUtils.mapCcxtTrade);
   }
 
-  @CatchApiAccessErrors()
+  @CatchApiAccessErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)
   async fetchBalance(): Promise<AccountBalance> {
     const balance = await this.ccxtClient.fetchBalance();
 
     return balance;
   }
 
-  @CatchApiAccessErrors()
+  @CatchApiAccessErrors(ExchangePermission.VIEW_DEPOSIT_ADDRESS)
   async fetchDepositAddress(symbol: string): Promise<string> {
     const fetchParams: Record<string, unknown> = {};
 

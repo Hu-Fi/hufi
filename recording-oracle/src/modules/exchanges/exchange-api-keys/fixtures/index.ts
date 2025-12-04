@@ -38,7 +38,7 @@ export function generateExchangeApiKey(
     secretKey: input.encryptedSecretKey,
     extras: overrides.extras ?? null,
     isValid: true,
-    validationError: null,
+    missingPermissions: [],
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };
