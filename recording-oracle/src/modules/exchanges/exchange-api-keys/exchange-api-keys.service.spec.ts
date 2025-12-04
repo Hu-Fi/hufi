@@ -12,6 +12,7 @@ import {
   ExchangeApiClientFactory,
   ExchangePermission,
 } from '../api-client';
+import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
@@ -306,6 +307,86 @@ describe('ExchangeApiKeysService', () => {
       expect(mockExchangeApiKeysRepository.findByUserId).toHaveBeenCalledWith(
         userId,
       );
+    });
+  });
+
+  describe('markAsInvalid', () => {
+    let userId: string;
+    let exchangeName: string;
+
+    beforeAll(() => {
+      userId = faker.string.uuid();
+      exchangeName = faker.lorem.slug();
+    });
+
+    it('should throw if validation error is empty string', async () => {
+      let thrownError;
+
+      try {
+        await exchangeApiKeysService.markAsInvalid(userId, exchangeName, '');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe('Details on invalidity required');
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
+    });
+
+    it('should throw if key not found', async () => {
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        null,
+      );
+      let thrownError;
+
+      try {
+        await exchangeApiKeysService.markAsInvalid(
+          userId,
+          exchangeName,
+          faker.lorem.words(),
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(ExchangeApiKeyNotFoundError);
+      expect(thrownError.userId).toBe(userId);
+      expect(thrownError.exchangeName).toBe(exchangeName);
+
+      expect(
+        mockExchangeApiKeysRepository.findOneByUserAndExchange,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockExchangeApiKeysRepository.findOneByUserAndExchange,
+      ).toHaveBeenCalledWith(userId, exchangeName);
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
+    });
+
+    it('should mark existing key as invalid', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      const validationError = faker.lorem.words();
+
+      await exchangeApiKeysService.markAsInvalid(
+        userId,
+        exchangeName,
+        validationError,
+      );
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: false,
+        validationError,
+      });
     });
   });
 });

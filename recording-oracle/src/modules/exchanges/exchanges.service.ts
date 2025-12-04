@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
+import logger from '@/logger';
+
 import {
+  ExchangeApiAccessError,
   ExchangeApiClient,
   ExchangeApiClientFactory,
   ExchangePermission,
@@ -12,6 +15,10 @@ import {
 
 @Injectable()
 export class ExchangesService {
+  private readonly logger = logger.child({
+    context: ExchangesService.name,
+  });
+
   constructor(
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
@@ -48,6 +55,27 @@ export class ExchangesService {
       await exchangeApiClient.checkRequiredAccess(permissionsToCheck);
     if (!hasRequiredAccess.success) {
       throw new KeyAuthorizationError(exchangeName, hasRequiredAccess.missing);
+    }
+  }
+
+  async markApiKeyAsInvalid(
+    userId: string,
+    exchangeName: string,
+    accessError: ExchangeApiAccessError,
+  ): Promise<void> {
+    try {
+      await this.exchangeApiKeysService.markAsInvalid(
+        userId,
+        exchangeName,
+        accessError.cause,
+      );
+    } catch (error) {
+      this.logger.error('Failed to mark exchange api key as invalid', {
+        userId,
+        exchangeName,
+        accessError,
+        error,
+      });
     }
   }
 }

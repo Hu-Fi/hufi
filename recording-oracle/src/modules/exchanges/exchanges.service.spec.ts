@@ -1,11 +1,16 @@
+jest.mock('@/logger');
+
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
+
+import logger from '@/logger';
 
 import {
   ExchangeApiClientFactory,
   ExchangeApiClient,
   ExchangePermission,
+  ExchangeApiAccessError,
 } from './api-client';
 import {
   ExchangeApiKeysService,
@@ -137,6 +142,67 @@ describe('ExchangesService', () => {
       expect(thrownError).toBeInstanceOf(KeyAuthorizationError);
       expect(thrownError.exchangeName).toBe(exchangeName);
       expect(thrownError.missingPermissions).toEqual([missingPermission]);
+    });
+  });
+
+  describe('markApiKeyAsInvalid', () => {
+    let userId: string;
+    let exchangeName: string;
+
+    beforeAll(() => {
+      userId = faker.string.uuid();
+      exchangeName = faker.lorem.slug();
+    });
+
+    it('should call original method with correct params', async () => {
+      const accessError = new ExchangeApiAccessError(
+        exchangeName,
+        faker.lorem.word(),
+        faker.lorem.words(),
+      );
+
+      await exchangesService.markApiKeyAsInvalid(
+        userId,
+        exchangeName,
+        accessError,
+      );
+
+      expect(mockExchangeApiKeysService.markAsInvalid).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysService.markAsInvalid).toHaveBeenCalledWith(
+        userId,
+        exchangeName,
+        accessError.cause,
+      );
+    });
+
+    it('should not throw but log if operation fails', async () => {
+      const syntheticError = new Error(faker.lorem.words());
+      mockExchangeApiKeysService.markAsInvalid.mockRejectedValueOnce(
+        syntheticError,
+      );
+
+      const accessError = new ExchangeApiAccessError(
+        exchangeName,
+        faker.lorem.word(),
+        faker.lorem.words(),
+      );
+
+      await exchangesService.markApiKeyAsInvalid(
+        userId,
+        exchangeName,
+        accessError,
+      );
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to mark exchange api key as invalid',
+        {
+          userId,
+          exchangeName,
+          accessError,
+          error: syntheticError,
+        },
+      );
     });
   });
 });

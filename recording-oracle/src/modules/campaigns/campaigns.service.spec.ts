@@ -1436,7 +1436,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should skip participant if it does not have valid api key', async () => {
+    it('should skip participant if it api key not found', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noApiKeyParticipant = generateCampaignParticipant(campaign);
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1483,15 +1483,17 @@ describe('CampaignsService', () => {
 
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
-        'Participant api key is not valid',
+        'Participant api key not found',
         {
           participantId: noApiKeyParticipant.id,
           error: noApiKeyError,
         },
       );
+
+      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledTimes(0);
     });
 
-    it('should skip participant if it lacks exchange api access', async () => {
+    it('should skip participant if it lacks exchange api access and mark his api key as invalid', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noAccessParticipant = generateCampaignParticipant(campaign);
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1504,8 +1506,9 @@ describe('CampaignsService', () => {
         [mockCampaignProgressMetaProp]: faker.number.float(),
       };
       const syntheticError = new ExchangeApiAccessError(
+        campaign.exchangeName,
+        faker.lorem.slug(),
         `Api access failed for fetch_test_${faker.lorem.word()}`,
-        faker.lorem.sentence(),
       );
       mockCampaignProgressChecker.checkForParticipant.mockImplementation(
         async (participant: CampaignParticipant) => {
@@ -1538,11 +1541,18 @@ describe('CampaignsService', () => {
 
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
-        'Participant api key is not valid',
+        'Exchange access failed for provided api key',
         {
           participantId: noAccessParticipant.id,
           error: syntheticError,
         },
+      );
+
+      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledTimes(1);
+      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledWith(
+        noAccessParticipant.id,
+        campaign.exchangeName,
+        syntheticError,
       );
     });
 
@@ -1558,7 +1568,10 @@ describe('CampaignsService', () => {
         abuseDetected: false,
         score: faker.number.float(),
       });
-      const syntheticError = new ExchangeApiClientError(faker.lorem.sentence());
+      const syntheticError = new ExchangeApiClientError(
+        faker.lorem.sentence(),
+        campaign.exchangeName,
+      );
       mockCampaignProgressChecker.checkForParticipant.mockRejectedValueOnce(
         syntheticError,
       );
@@ -1575,6 +1588,8 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toEqual(syntheticError);
+
+      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledTimes(0);
     });
   });
 

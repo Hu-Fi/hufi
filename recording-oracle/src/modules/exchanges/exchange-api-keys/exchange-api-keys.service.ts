@@ -134,4 +134,29 @@ export class ExchangeApiKeysService {
 
     return await Promise.all(retrievalPromises);
   }
+
+  async markAsInvalid(
+    userId: string,
+    exchangeName: string,
+    validationError: string,
+  ): Promise<void> {
+    if (!validationError) {
+      throw new Error('Details on invalidity required');
+    }
+
+    const entity =
+      await this.exchangeApiKeysRepository.findOneByUserAndExchange(
+        userId,
+        exchangeName,
+      );
+
+    if (!entity) {
+      throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
+    }
+
+    entity.isValid = false;
+    entity.validationError = validationError;
+
+    await this.exchangeApiKeysRepository.save(entity);
+  }
 }

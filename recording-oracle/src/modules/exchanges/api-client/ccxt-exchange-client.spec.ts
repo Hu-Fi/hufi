@@ -239,6 +239,8 @@ describe('CcxtExchangeClient', () => {
       it("should return false if can't fetch trades due to missing access", async () => {
         const now = Date.now();
         const syntheticAuthError = new ExchangeApiAccessError(
+          exchangeName,
+          'fetchMyTrades',
           faker.lorem.sentence(),
         );
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
@@ -269,6 +271,8 @@ describe('CcxtExchangeClient', () => {
       it("should return false if can't fetch the balance due to missing access", async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         const syntheticAuthError = new ExchangeApiAccessError(
+          exchangeName,
+          'fetchMyTrades',
           faker.lorem.sentence(),
         );
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
@@ -294,6 +298,8 @@ describe('CcxtExchangeClient', () => {
         );
 
         const syntheticAuthError = new ExchangeApiAccessError(
+          exchangeName,
+          'fetchMyTrades',
           faker.lorem.sentence(),
         );
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
