@@ -159,11 +159,15 @@ describe('ExchangeApiKeysService', () => {
 
       const entity = await exchangeApiKeysService.enroll(input);
 
-      expect(entity.userId).toBe(input.userId);
-      expect(entity.exchangeName).toBe(input.exchangeName);
-      expect(entity.apiKey).not.toBe(input.apiKey);
-      expect(entity.secretKey).not.toBe(input.secretKey);
-      expect(entity.extras).toBeNull();
+      expect(entity).toEqual({
+        userId: input.userId,
+        exchangeName: input.exchangeName,
+        apiKey: expect.any(String),
+        secretKey: expect.any(String),
+        extras: null,
+        isValid: true,
+        updatedAt: expect.any(Date),
+      });
 
       const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
         aesEncryptionService.decrypt(entity.apiKey),
@@ -188,11 +192,15 @@ describe('ExchangeApiKeysService', () => {
 
       const entity = await exchangeApiKeysService.enroll(input);
 
-      expect(entity.userId).toBe(input.userId);
-      expect(entity.exchangeName).toBe(input.exchangeName);
-      expect(entity.apiKey).not.toBe(input.apiKey);
-      expect(entity.secretKey).not.toBe(input.secretKey);
-      expect(entity.extras).toEqual(input.extras);
+      expect(entity).toEqual({
+        userId: input.userId,
+        exchangeName: input.exchangeName,
+        apiKey: expect.any(String),
+        secretKey: expect.any(String),
+        extras: input.extras,
+        isValid: true,
+        updatedAt: expect.any(Date),
+      });
 
       const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
         aesEncryptionService.decrypt(entity.apiKey),

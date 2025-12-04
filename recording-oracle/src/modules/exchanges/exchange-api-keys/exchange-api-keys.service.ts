@@ -74,6 +74,7 @@ export class ExchangeApiKeysService {
     enrolledKey.apiKey = encryptedApiKey;
     enrolledKey.secretKey = encryptedSecretKey;
     enrolledKey.extras = extras ?? null;
+    enrolledKey.isValid = true;
     enrolledKey.updatedAt = new Date();
 
     await this.exchangeApiKeysRepository.upsert(enrolledKey, [

@@ -40,6 +40,12 @@ export class ExchangeApiKeyEntity {
   @Column('jsonb', { nullable: true })
   extras: ExchangeExtras | null;
 
+  @Column('boolean')
+  isValid: boolean;
+
+  @Column('varchar', { length: 1000, nullable: true })
+  validationError: string | null;
+
   @ManyToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
   user?: UserEntity;
 
