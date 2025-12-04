@@ -146,10 +146,11 @@ const statusTooltipData = [
 ];
 
 const StatusTooltip = () => {
+  const isMobile = useIsMobile();
   return (
     <CustomTooltip
       arrow
-      placement="left"
+      placement={isMobile ? 'right' : 'left'}
       title={
         <Stack gap={0.5}>
           {statusTooltipData.map((item) => (
@@ -300,6 +301,7 @@ const CampaignsTable: FC<Props> = ({
           <CustomTooltip
             title={networkName || 'Unknown Network'}
             placement="top"
+            sx={{ zIndex: 1 }}
           >
             {isMobile ? (
               <Box
@@ -320,7 +322,6 @@ const CampaignsTable: FC<Props> = ({
                   alignItems: 'center',
                   p: 0,
                   color: 'text.primary',
-                  zIndex: 1,
                 }}
               >
                 {getChainIcon(params.row.chain_id)}

@@ -212,6 +212,8 @@ const Header: FC = () => {
               <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
               {!signer && (
                 <CustomTooltip
+                  arrow
+                  placement="left"
                   title={
                     <Typography variant="tooltip">
                       {LAUNCH_CAMPAIGN_TOOLTIP}
@@ -222,11 +224,10 @@ const Header: FC = () => {
                       sx: {
                         width: '150px',
                         lineHeight: '14px',
+                        mr: '12px !important',
                       },
                     },
                   }}
-                  arrow
-                  placement="left"
                 >
                   <InfoTooltipInner />
                 </CustomTooltip>

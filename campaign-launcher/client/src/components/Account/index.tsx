@@ -172,7 +172,6 @@ const Account: FC = () => {
               >
                 <InfoTooltipInner
                   sx={{
-                    ml: 'auto',
                     width: '20px',
                     height: '20px',
                     px: 1,

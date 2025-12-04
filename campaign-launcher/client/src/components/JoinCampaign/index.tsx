@@ -2,8 +2,9 @@ import { type FC, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/CheckCircleOutline';
 import LockIcon from '@mui/icons-material/LockOutlined';
-import { Button, CircularProgress } from '@mui/material';
+import { Box, Button, CircularProgress } from '@mui/material';
 
+import CustomTooltip from '@/components/CustomTooltip';
 import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
 import {
   useGetEnrolledExchanges,
@@ -22,12 +23,14 @@ import * as errorUtils from '@/utils/error';
 type Props = {
   campaign: CampaignDetails;
   joinStatus?: CampaignJoinStatus;
+  joinedAt?: string;
   isJoinStatusLoading: boolean;
 };
 
 const JoinCampaign: FC<Props> = ({
   campaign,
   joinStatus,
+  joinedAt,
   isJoinStatusLoading,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -106,6 +109,35 @@ const JoinCampaign: FC<Props> = ({
       <Button variant="contained" size="large" disabled sx={{ ml: 'auto' }}>
         Sign in to Join Campaign
       </Button>
+    );
+  }
+
+  if (isAlreadyJoined && joinedAt) {
+    return (
+      <CustomTooltip
+        title={`Joined at 
+          ${new Date(joinedAt).toLocaleTimeString()} 
+          ${new Date(joinedAt).toLocaleDateString()}
+        `}
+        arrow
+        placement="top"
+        sx={{ ml: 'auto' }}
+      >
+        <Box component="span">
+          <Button
+            variant="contained"
+            size="medium"
+            disabled
+            sx={{
+              color: 'primary.contrast',
+              minWidth: isMobile ? '105px' : '135px',
+            }}
+            endIcon={isMobile && <CheckIcon />}
+          >
+            {isMobile ? 'Joined' : 'Registered to Campaign'}
+          </Button>
+        </Box>
+      </CustomTooltip>
     );
   }
 

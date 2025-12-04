@@ -75,35 +75,32 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       renderCell: (params) => {
         const isBitmart = params.row.exchangeName === 'bitmart';
         return (
-          <Typography
-            display="flex"
-            alignItems="center"
-            variant={isMobile ? 'body2' : 'body1'}
-          >
-            {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
+          <Box display="flex" alignItems="center">
+            <Typography variant={isMobile ? 'body2' : 'body1'}>
+              {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
+            </Typography>
             {isBitmart && !!params.row.extras?.api_key_memo && (
               <CustomTooltip
                 arrow
-                placement="left"
+                placement="top"
                 title={
                   <Typography variant="tooltip">
                     Memo: {params.row.extras.api_key_memo}
                   </Typography>
                 }
+                sx={{ ml: 1 }}
               >
                 <InfoTooltipInner
                   sx={{
-                    ml: 1,
                     width: '20px',
                     height: '20px',
                     px: 1,
                     bgcolor: 'background.default',
-                    cursor: 'pointer',
                   }}
                 />
               </CustomTooltip>
             )}
-          </Typography>
+          </Box>
         );
       },
     },
