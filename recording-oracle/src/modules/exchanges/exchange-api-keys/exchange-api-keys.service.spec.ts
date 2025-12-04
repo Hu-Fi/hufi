@@ -371,20 +371,16 @@ describe('ExchangeApiKeysService', () => {
     });
 
     it('should mark existing key as invalid', async () => {
-      const missingPermissions =
-        faker.helpers.arrayElements(exchangePermissions);
-
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),
       });
-      apiKeyEntity.missingPermissions.push(
-        faker.helpers.arrayElement(missingPermissions),
-      );
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         { ...apiKeyEntity } as ExchangeApiKeyEntity,
       );
 
+      const missingPermissions =
+        faker.helpers.arrayElements(exchangePermissions);
       await exchangeApiKeysService.markAsInvalid(
         userId,
         exchangeName,
@@ -395,11 +391,40 @@ describe('ExchangeApiKeysService', () => {
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
         ...apiKeyEntity,
         isValid: false,
-        missingPermissions: expect.any(Array),
+        missingPermissions,
       });
-      expect(
-        mockExchangeApiKeysRepository.save.mock.calls[0][0].missingPermissions?.sort(),
-      ).toEqual(missingPermissions.sort());
+    });
+
+    it('should override invalid permissions with new values', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      apiKeyEntity.isValid = false;
+      apiKeyEntity.missingPermissions = exchangePermissions;
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      const missingPermissions = faker.helpers.arrayElements(
+        exchangePermissions,
+        {
+          min: 1,
+          max: 2,
+        },
+      );
+      await exchangeApiKeysService.markAsInvalid(
+        userId,
+        exchangeName,
+        missingPermissions,
+      );
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: false,
+        missingPermissions,
+      });
     });
   });
 });

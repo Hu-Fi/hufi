@@ -786,10 +786,9 @@ export class CampaignsService
               error,
             });
           }
-          void this.exchangesService.markApiKeyAsInvalid(
+          void this.exchangesService.revalidateApiKey(
             participant.id,
             campaign.exchangeName,
-            error,
           );
           continue;
         }

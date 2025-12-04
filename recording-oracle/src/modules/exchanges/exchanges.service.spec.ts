@@ -10,7 +10,6 @@ import {
   ExchangeApiClientFactory,
   ExchangeApiClient,
   ExchangePermission,
-  ExchangeApiAccessError,
 } from './api-client';
 import {
   ExchangeApiKeysService,
@@ -86,13 +85,18 @@ describe('ExchangesService', () => {
   });
 
   describe('assertUserHasAuthorizedKeys', () => {
-    const { userId, exchangeName } = generateExchangeApiKeysData();
-    const permissionsToCheck = faker.helpers.arrayElements(exchangePermissions);
-
     const mockExchangeApiClient = createMock<ExchangeApiClient>();
+
+    let userId: string;
+    let exchangeName: string;
+    let permissionsToCheck: ExchangePermission[];
+
     let spyOnGetClientForUser: jest.SpyInstance;
 
     beforeAll(() => {
+      ({ userId, exchangeName } = generateExchangeApiKeysData());
+      permissionsToCheck = faker.helpers.arrayElements(exchangePermissions);
+
       spyOnGetClientForUser = jest.spyOn(exchangesService, 'getClientForUser');
       spyOnGetClientForUser.mockImplementation(() => mockExchangeApiClient);
     });
@@ -148,60 +152,65 @@ describe('ExchangesService', () => {
   });
 
   describe('markApiKeyAsInvalid', () => {
+    const mockExchangeApiClient = createMock<ExchangeApiClient>();
+
     let userId: string;
     let exchangeName: string;
+    let missingPermissions: ExchangePermission[];
+    let spyOnGetClientForUser: jest.SpyInstance;
 
     beforeAll(() => {
-      userId = faker.string.uuid();
-      exchangeName = faker.lorem.slug();
+      ({ userId, exchangeName } = generateExchangeApiKeysData());
+      missingPermissions = faker.helpers.arrayElements(exchangePermissions);
+
+      spyOnGetClientForUser = jest.spyOn(exchangesService, 'getClientForUser');
+      spyOnGetClientForUser.mockImplementation(() => mockExchangeApiClient);
     });
 
-    it('should call original method with correct params', async () => {
-      const accessError = new ExchangeApiAccessError(
-        exchangeName,
-        faker.helpers.arrayElement(exchangePermissions),
-        faker.lorem.words(),
-      );
+    afterAll(() => {
+      spyOnGetClientForUser.mockRestore();
+    });
 
-      await exchangesService.markApiKeyAsInvalid(
-        userId,
-        exchangeName,
-        accessError,
-      );
+    it('should mark key as invalid if access check fails', async () => {
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: false,
+        missing: missingPermissions,
+      });
+
+      await exchangesService.revalidateApiKey(userId, exchangeName);
 
       expect(mockExchangeApiKeysService.markAsInvalid).toHaveBeenCalledTimes(1);
       expect(mockExchangeApiKeysService.markAsInvalid).toHaveBeenCalledWith(
         userId,
         exchangeName,
-        [accessError.permission],
+        missingPermissions,
       );
+    });
+
+    it('should not mark key as invalid if access check fails', async () => {
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: true,
+      });
+
+      await exchangesService.revalidateApiKey(userId, exchangeName);
+
+      expect(mockExchangeApiKeysService.markAsInvalid).toHaveBeenCalledTimes(0);
     });
 
     it('should not throw but log if operation fails', async () => {
       const syntheticError = new Error(faker.lorem.words());
-      mockExchangeApiKeysService.markAsInvalid.mockRejectedValueOnce(
+      mockExchangeApiClient.checkRequiredAccess.mockRejectedValueOnce(
         syntheticError,
       );
 
-      const accessError = new ExchangeApiAccessError(
-        exchangeName,
-        faker.helpers.arrayElement(exchangePermissions),
-        faker.lorem.words(),
-      );
-
-      await exchangesService.markApiKeyAsInvalid(
-        userId,
-        exchangeName,
-        accessError,
-      );
+      await exchangesService.revalidateApiKey(userId, exchangeName);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to mark exchange api key as invalid',
+        'Failed to revalidate exchange api key',
         {
           userId,
           exchangeName,
-          accessError,
           error: syntheticError,
         },
       );

@@ -1492,11 +1492,9 @@ describe('CampaignsService', () => {
           error: noApiKeyError,
         },
       );
-
-      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledTimes(0);
     });
 
-    it('should skip participant if it lacks exchange api access and mark his api key as invalid', async () => {
+    it('should skip participant if it lacks exchange api access and revalidate his api key', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noAccessParticipant = generateCampaignParticipant(campaign);
       mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1551,11 +1549,10 @@ describe('CampaignsService', () => {
         },
       );
 
-      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledTimes(1);
-      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledWith(
+      expect(mockExchangesService.revalidateApiKey).toHaveBeenCalledTimes(1);
+      expect(mockExchangesService.revalidateApiKey).toHaveBeenCalledWith(
         noAccessParticipant.id,
         campaign.exchangeName,
-        syntheticError,
       );
     });
 
@@ -1591,8 +1588,6 @@ describe('CampaignsService', () => {
       }
 
       expect(thrownError).toEqual(syntheticError);
-
-      expect(mockExchangesService.markApiKeyAsInvalid).toHaveBeenCalledTimes(0);
     });
   });
 
