@@ -8,6 +8,9 @@ export const NotificationProvider: FC<PropsWithChildren> = ({ children }) => {
     <SnackbarProvider maxSnack={5} preventDuplicate>
       <GlobalStyles
         styles={{
+          '.notistack-MuiContent': {
+            flexWrap: 'nowrap',
+          },
           '.notistack-MuiContent-success': {
             backgroundColor: '#0ad397',
           },
