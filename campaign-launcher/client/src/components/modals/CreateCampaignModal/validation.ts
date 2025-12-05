@@ -1,19 +1,12 @@
 import * as yup from 'yup';
 import type { ObjectSchema } from 'yup';
 
-import type { FundToken } from '@/constants/tokens';
 import {
   CampaignType,
   type HoldingFormValues,
   type MarketMakingFormValues,
   type ThresholdFormValues,
 } from '@/types';
-
-const mapTokenToMinValue: Record<FundToken, number> = {
-  usdt: 0.001,
-  usdc: 0.001,
-  hmt: 0.42,
-};
 
 const baseValidationSchema = {
   type: yup
@@ -29,11 +22,18 @@ const baseValidationSchema = {
     .test('min-amount', function (value) {
       if (!value)
         return this.createError({ message: 'Must be greater than 0' });
-      const fundToken: FundToken = this.parent.fund_token;
-      const minValue = mapTokenToMinValue[fundToken];
+
+      const { start_date, end_date } = this.parent;
+      if (!start_date || !end_date) return true;
+
+      const startMs = new Date(start_date).getTime();
+      const endMs = new Date(end_date).getTime();
+      const days = Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000));
+      const minValue = 10 * days;
+
       if (value < minValue) {
         return this.createError({
-          message: `Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
+          message: `Minimum amount is ${minValue} (10 ${this.parent.fund_token.toUpperCase()} per day for ${days} days)`,
         });
       }
 
