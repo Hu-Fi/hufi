@@ -160,6 +160,9 @@ export class ExchangeApiKeysService {
     }
 
     entity.isValid = false;
+    /**
+     * Just a safety belt in case method is misused with duplicated values
+     */
     entity.missingPermissions = Array.from(new Set(missingPermissions));
 
     await this.exchangeApiKeysRepository.save(entity);
