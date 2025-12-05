@@ -25,7 +25,7 @@ const CampaignsTablePagination: FC<Props> = ({
     <MuiTablePagination
       count={Number.MAX_SAFE_INTEGER}
       component="div"
-      rowsPerPageOptions={[5, 25, 50]}
+      rowsPerPageOptions={[10, 25, 50]}
       rowsPerPage={pageSize}
       page={page}
       onPageChange={() => {}}
