@@ -185,6 +185,12 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
               flexDirection="column"
               gap={3}
               width={{ xs: '100%', sm: 625 }}
+              sx={{
+                '& .MuiFormHelperText-root': {
+                  mx: 1,
+                  whiteSpace: 'pre-line',
+                },
+              }}
             >
               {isMobile && isCreatingEscrow && (
                 <Steps

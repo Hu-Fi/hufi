@@ -23,7 +23,7 @@ const baseValidationSchema = {
       if (!value)
         return this.createError({ message: 'Must be greater than 0' });
 
-      const { start_date, end_date } = this.parent;
+      const { start_date, end_date, fund_token } = this.parent;
       if (!start_date || !end_date) return true;
 
       const startMs = new Date(start_date).getTime();
@@ -31,9 +31,10 @@ const baseValidationSchema = {
       const days = Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000));
       const minValue = 10 * days;
 
-      if (value < minValue) {
+      // keeping HMT not validated for testing purposes
+      if (value < minValue && fund_token !== 'hmt') {
         return this.createError({
-          message: `Minimum amount is ${minValue} (10 ${this.parent.fund_token.toUpperCase()} per day for ${days} days)`,
+          message: `Minimum amount is ${minValue} \n(10 ${fund_token.toUpperCase()} per day for ${days} days)`,
         });
       }
 
