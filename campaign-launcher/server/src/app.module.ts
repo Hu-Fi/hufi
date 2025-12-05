@@ -40,6 +40,7 @@ import { StatisticsModule } from './modules/statistics';
     },
   ],
   imports: [
+    HealthModule,
     ConfigModule.forRoot({
       /**
        * First value found takes precendece
@@ -50,7 +51,6 @@ import { StatisticsModule } from './modules/statistics';
     CampaignModule,
     EnvConfigModule,
     ExchangesModule,
-    HealthModule,
     StatisticsModule,
   ],
   controllers: [AppController],
