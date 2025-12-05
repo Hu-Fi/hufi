@@ -1,19 +1,12 @@
 import * as yup from 'yup';
 import type { ObjectSchema } from 'yup';
 
-import type { FundToken } from '@/constants/tokens';
 import {
   CampaignType,
   type HoldingFormValues,
   type MarketMakingFormValues,
   type ThresholdFormValues,
 } from '@/types';
-
-const mapTokenToMinValue: Record<FundToken, number> = {
-  usdt: 0.001,
-  usdc: 0.001,
-  hmt: 0.42,
-};
 
 const baseValidationSchema = {
   type: yup
@@ -29,11 +22,19 @@ const baseValidationSchema = {
     .test('min-amount', function (value) {
       if (!value)
         return this.createError({ message: 'Must be greater than 0' });
-      const fundToken: FundToken = this.parent.fund_token;
-      const minValue = mapTokenToMinValue[fundToken];
-      if (value < minValue) {
+
+      const { start_date, end_date, fund_token } = this.parent;
+      if (!start_date || !end_date) return true;
+
+      const startMs = new Date(start_date).getTime();
+      const endMs = new Date(end_date).getTime();
+      const days = Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000));
+      const minValue = 10 * days;
+
+      // keeping HMT not validated for testing purposes
+      if (value < minValue && fund_token !== 'hmt') {
         return this.createError({
-          message: `Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
+          message: `Minimum amount is ${minValue} \n(10 ${fund_token.toUpperCase()} per day for ${days} days)`,
         });
       }
 
@@ -45,16 +46,13 @@ const baseValidationSchema = {
     .required('Required')
     .test(
       'is-after-start',
-      'Must be at least one day after start date',
+      'Must be at least 6 hours after start date',
       function (value) {
         if (!value || !this.parent.start_date) return true;
 
         const startDate = new Date(this.parent.start_date);
-        startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(value);
-        endDate.setHours(0, 0, 0, 0);
-        const minEndDate = new Date(startDate);
-        minEndDate.setDate(minEndDate.getDate() + 1);
+        const minEndDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000);
         return endDate >= minEndDate;
       }
     ),

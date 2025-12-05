@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import { DEFAULT_TABLE_PAGE_SIZE } from '@/constants';
+
 type PaginationState = {
   params: {
     limit: number;
@@ -16,7 +18,7 @@ type PaginationState = {
 
 const usePagination = (): PaginationState => {
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
 
   const skip = page * pageSize;
 

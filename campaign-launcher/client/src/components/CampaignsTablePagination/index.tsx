@@ -2,6 +2,8 @@ import type { FC } from 'react';
 
 import MuiTablePagination from '@mui/material/TablePagination';
 
+import { DEFAULT_TABLE_PAGE_SIZE } from '@/constants';
+
 type Props = {
   page: number;
   resultsLength: number;
@@ -25,7 +27,7 @@ const CampaignsTablePagination: FC<Props> = ({
     <MuiTablePagination
       count={Number.MAX_SAFE_INTEGER}
       component="div"
-      rowsPerPageOptions={[5, 25, 50]}
+      rowsPerPageOptions={[DEFAULT_TABLE_PAGE_SIZE, 25, 50]}
       rowsPerPage={pageSize}
       page={page}
       onPageChange={() => {}}

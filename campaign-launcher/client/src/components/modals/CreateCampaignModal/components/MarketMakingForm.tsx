@@ -15,7 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import dayjs from 'dayjs';
 import {
   Controller,
@@ -156,14 +156,19 @@ const MarketMakingForm: FC<Props> = ({
             name="start_date"
             control={control}
             render={({ field }) => (
-              <DatePicker
+              <MobileDateTimePicker
                 label="Start Date"
-                format="YYYY-MM-DD"
-                closeOnSelect
+                format="DD-MM-YYYY HH:mm"
+                ampm={false}
                 disablePast
                 {...field}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
+                slotProps={{
+                  textField: {
+                    error: !!errors.start_date,
+                  },
+                }}
               />
             )}
           />
@@ -176,10 +181,10 @@ const MarketMakingForm: FC<Props> = ({
             name="end_date"
             control={control}
             render={({ field }) => (
-              <DatePicker
+              <MobileDateTimePicker
                 label="End Date"
-                format="YYYY-MM-DD"
-                closeOnSelect
+                format="DD-MM-YYYY HH:mm"
+                ampm={false}
                 disablePast
                 {...field}
                 disabled={isCreatingEscrow}
