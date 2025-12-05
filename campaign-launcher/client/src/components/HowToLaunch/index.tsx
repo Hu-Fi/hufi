@@ -1,5 +1,4 @@
-import { Box, Paper, Typography, styled } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Paper, Typography, styled, Grid } from '@mui/material';
 
 import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 

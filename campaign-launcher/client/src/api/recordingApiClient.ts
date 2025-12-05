@@ -11,7 +11,7 @@ import type {
   ExchangeApiKeyData,
   CampaignsResponse,
   UserProgress,
-  CampaignJoinStatus,
+  CheckCampaignJoinStatusResponse,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -142,11 +142,14 @@ export class RecordingApiClient extends HttpClient {
   async upsertExchangeApiKey(
     exchangeName: string,
     apiKey: string,
-    secret: string
+    secret: string,
+    extras?: Record<string, string>
   ): Promise<void> {
-    await this.post(`/exchange-api-keys/${exchangeName}`, {
+    await this.post('/exchange-api-keys', {
+      exchange_name: exchangeName,
       api_key: apiKey,
       secret_key: secret,
+      extras,
     });
   }
 
@@ -183,8 +186,8 @@ export class RecordingApiClient extends HttpClient {
   async checkCampaignJoinStatus(
     chain_id: ChainId,
     address: EvmAddress
-  ): Promise<{ status: CampaignJoinStatus }> {
-    const response = await this.post<{ status: CampaignJoinStatus }>(
+  ): Promise<CheckCampaignJoinStatusResponse> {
+    const response = await this.post<CheckCampaignJoinStatusResponse>(
       '/campaigns/check-join-status',
       {
         chain_id,

@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useConnection, useSignMessage } from 'wagmi';
 
 import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
@@ -43,7 +43,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const queryClient = useQueryClient();
   const { signMessageAsync } = useSignMessage();
-  const { isConnected } = useAccount();
+  const { isConnected } = useConnection();
   const { activeAddress } = useActiveAccount();
 
   const setAuthenticationState = useCallback(

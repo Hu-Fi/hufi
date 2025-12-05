@@ -23,7 +23,6 @@ import Environment from '@/common/utils/environment';
 import { UserCampaignsRepository } from '@/modules/campaigns/user-campaigns.repository';
 
 import {
-  EncrollExchangeApiKeysParamsDto,
   EnrollExchangeApiKeysDto,
   EnrollExchangeApiKeysResponseDto,
   EnrolledApiKeyDto,
@@ -98,20 +97,20 @@ export class ExchangeApiKeysController {
   })
   @ApiBody({ type: EnrollExchangeApiKeysDto })
   @HttpCode(200)
-  @Post('/:exchange_name')
+  @Post('/')
   async enroll(
     @Req() request: RequestWithUser,
-    @Param() params: EncrollExchangeApiKeysParamsDto,
     @Body() data: EnrollExchangeApiKeysDto,
   ): Promise<EnrollExchangeApiKeysResponseDto> {
     const userId = request.user.id;
-    const exchangeName = params.exchangeName;
+    const { exchangeName, apiKey, secretKey, extras } = data;
 
     const key = await this.exchangeApiKeysService.enroll({
       userId,
       exchangeName,
-      apiKey: data.apiKey,
-      secretKey: data.secretKey,
+      apiKey,
+      secretKey,
+      extras,
     });
 
     return { id: key.id };
@@ -128,7 +127,7 @@ export class ExchangeApiKeysController {
   @Delete('/:exchange_name')
   async delete(
     @Req() request: RequestWithUser,
-    @Param() params: EncrollExchangeApiKeysParamsDto,
+    @Param() params: ExchangeNameParamDto,
   ): Promise<void> {
     const userId = request.user.id;
     const exchangeName = params.exchangeName;

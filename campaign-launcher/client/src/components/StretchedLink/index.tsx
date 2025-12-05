@@ -12,7 +12,7 @@ const StretchedLink: FC<StretchedLinkProps> = ({ sx, ...props }) => {
       {...props}
       sx={{
         ...sx,
-        '&::after': {
+        '&::before': {
           content: '""',
           position: 'absolute',
           top: 0,

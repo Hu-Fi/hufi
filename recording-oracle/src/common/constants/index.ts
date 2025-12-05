@@ -5,6 +5,7 @@ export const JWT_STRATEGY_NAME = 'jwt-http';
 
 export const SUPPORTED_EXCHANGE_NAMES = [
   'bigone',
+  'bitmart',
   'bybit',
   'gate',
   'htx',

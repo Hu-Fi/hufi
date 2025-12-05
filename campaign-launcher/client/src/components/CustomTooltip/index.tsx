@@ -9,7 +9,7 @@ import {
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
 
-const CustomTooltip = ({ children, ...props }: TooltipProps) => {
+const CustomTooltip = ({ children, sx, ...props }: TooltipProps) => {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -30,16 +30,16 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
             popper: {
               sx: {
                 '.MuiTooltip-tooltipPlacementTop': {
-                  mb: '8px !important',
+                  mb: '12px !important',
                 },
                 '.MuiTooltip-tooltipPlacementBottom': {
-                  mt: '8px !important',
+                  mt: '12px !important',
                 },
                 '.MuiTooltip-tooltipPlacementLeft': {
-                  mr: '8px !important',
+                  mr: '12px !important',
                 },
                 '.MuiTooltip-tooltipPlacementRight': {
-                  ml: '8px !important',
+                  ml: '12px !important',
                 },
               },
             },
@@ -47,6 +47,7 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
           {...props}
         >
           <Box
+            sx={sx}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -60,7 +61,13 @@ const CustomTooltip = ({ children, ...props }: TooltipProps) => {
     );
   }
 
-  return <Tooltip {...props}>{children}</Tooltip>;
+  return (
+    <Tooltip {...props}>
+      <Box component="span" sx={{ cursor: 'pointer', ...sx }}>
+        {children}
+      </Box>
+    </Tooltip>
+  );
 };
 
 export default CustomTooltip;

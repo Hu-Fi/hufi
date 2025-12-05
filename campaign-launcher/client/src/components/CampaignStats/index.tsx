@@ -1,7 +1,6 @@
 import { type FC, type PropsWithChildren, Children, useState } from 'react';
 
-import { Box, Button, Skeleton, styled, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Button, Skeleton, styled, Typography, Grid } from '@mui/material';
 
 import CampaignResultsWidget, {
   StatusTooltip,

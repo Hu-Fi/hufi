@@ -1,4 +1,4 @@
-import { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Box, Button, Typography } from '@mui/material';
@@ -55,7 +55,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
   const queryClient = useQueryClient();
   const { appChainId } = useNetwork();
   const isMobile = useIsMobile();
-
+  const formValuesRef = useRef<CampaignFormValues | null>(null);
   const isCampaignCreated = stepsCompleted === steps.length;
 
   useEffect(() => {
@@ -71,34 +71,38 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     watch,
     handleSubmit,
     reset: resetForm,
-    getValues,
   } = useForm<CampaignFormValues>({
+    mode: 'onBlur',
     resolver: yupResolver(campaignValidationSchema),
     defaultValues: getFormDefaultValues(campaignType),
   });
 
   const submitForm = async (data: CampaignFormValues) => {
+    formValuesRef.current = data;
     await createEscrow(data);
   };
 
   const handleTryAgainClick = useCallback(() => {
     if (stepsCompleted > 0) {
-      createEscrow(getValues());
+      if (formValuesRef.current) {
+        createEscrow(formValuesRef.current);
+      }
     } else {
+      formValuesRef.current = null;
       resetCreateEscrow();
     }
-  }, [stepsCompleted, createEscrow, getValues, resetCreateEscrow]);
+  }, [stepsCompleted, createEscrow, resetCreateEscrow]);
 
   const handleClose = useCallback(() => {
+    formValuesRef.current = null;
     resetForm();
     resetCreateEscrow();
     onClose();
   }, [resetForm, resetCreateEscrow, onClose]);
 
   const onViewCampaignDetailsClick = useCallback(() => {
-    if (!escrowData) return;
+    if (!escrowData || !formValuesRef.current) return;
 
-    const formData = getValues();
     const {
       escrowAddress,
       tokenDecimals,
@@ -114,7 +118,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     const payload = constructCampaignDetails({
       chainId: appChainId,
       address: escrowAddress,
-      data: formData,
+      data: formValuesRef.current,
       tokenDecimals,
       fees,
     });
@@ -122,7 +126,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     setShowFinalView(false);
     handleClose();
-  }, [appChainId, getValues, handleClose, navigate, escrowData]);
+  }, [appChainId, handleClose, navigate, escrowData]);
 
   return (
     <BaseModal

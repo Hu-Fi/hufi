@@ -23,7 +23,7 @@ export class ExceptionFilter implements IExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const responseBody: BaseErrorResponse = {
+    const responseBody: BaseErrorResponse & { validation_errors?: string[] } = {
       message: 'Internal server error',
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -37,8 +37,13 @@ export class ExceptionFilter implements IExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         responseBody.message = exceptionResponse;
       } else {
-        responseBody.message = exception.message;
-        responseBody.details = transformKeysFromCamelToSnake(exceptionResponse);
+        Object.assign(
+          responseBody,
+          {
+            message: exception.message,
+          },
+          transformKeysFromCamelToSnake(exceptionResponse),
+        );
       }
     } else {
       this.logger.error('Unhandled exception', exception);
