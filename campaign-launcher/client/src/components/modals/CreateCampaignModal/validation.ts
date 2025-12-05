@@ -45,16 +45,13 @@ const baseValidationSchema = {
     .required('Required')
     .test(
       'is-after-start',
-      'Must be at least one day after start date',
+      'Must be at least 6 hours after start date',
       function (value) {
         if (!value || !this.parent.start_date) return true;
 
         const startDate = new Date(this.parent.start_date);
-        startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(value);
-        endDate.setHours(0, 0, 0, 0);
-        const minEndDate = new Date(startDate);
-        minEndDate.setDate(minEndDate.getDate() + 1);
+        const minEndDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000);
         return endDate >= minEndDate;
       }
     ),
