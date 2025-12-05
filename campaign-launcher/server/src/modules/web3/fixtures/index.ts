@@ -12,7 +12,9 @@ export function generateTestnetChainId() {
 }
 
 export const mockWeb3ConfigService: Omit<Web3ConfigService, 'configService'> = {
+  alchemyApiKey: faker.string.sample(),
   getRpcUrlByChainId: () => faker.internet.url(),
+  exchangeOracle: faker.finance.ethereumAddress(),
   recordingOracle: faker.finance.ethereumAddress(),
   reputationOracle: faker.finance.ethereumAddress(),
 };

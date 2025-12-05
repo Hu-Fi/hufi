@@ -9,13 +9,13 @@ export const CAMPAIGN_PERMISSIONS_MAP: Record<
   Array<ExchangePermission>
 > = {
   [CampaignType.HOLDING]: [
-    ExchangePermission.FETCH_BALANCE,
-    ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+    ExchangePermission.VIEW_ACCOUNT_BALANCE,
+    ExchangePermission.VIEW_DEPOSIT_ADDRESS,
   ],
-  [CampaignType.MARKET_MAKING]: [ExchangePermission.FETCH_MY_TRADES],
+  [CampaignType.MARKET_MAKING]: [ExchangePermission.VIEW_SPOT_TRADING_HISTORY],
   [CampaignType.THRESHOLD]: [
-    ExchangePermission.FETCH_BALANCE,
-    ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+    ExchangePermission.VIEW_ACCOUNT_BALANCE,
+    ExchangePermission.VIEW_DEPOSIT_ADDRESS,
   ],
 } as const;
 

@@ -52,6 +52,7 @@ import { UsersModule } from './modules/users';
     },
   ],
   imports: [
+    HealthModule,
     AdminModule,
     ConfigModule.forRoot({
       /**
@@ -66,7 +67,6 @@ import { UsersModule } from './modules/users';
     DatabaseModule,
     EnvConfigModule,
     ExchangesModule,
-    HealthModule,
     UsersModule,
     StatisticsModule,
   ],

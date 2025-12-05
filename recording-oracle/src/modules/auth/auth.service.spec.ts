@@ -22,6 +22,7 @@ import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 const { publicKey, privateKey } = generateES256Keys();
 const mockAuthConfigService: Omit<AuthConfigService, 'configService'> = {
+  adminApiKey: faker.string.sample(),
   jwtPrivateKey: privateKey,
   jwtPublicKey: publicKey,
   accessTokenExpiresIn: 600,
