@@ -74,6 +74,8 @@ export class ExchangeApiKeysService {
     enrolledKey.apiKey = encryptedApiKey;
     enrolledKey.secretKey = encryptedSecretKey;
     enrolledKey.extras = extras ?? null;
+    enrolledKey.isValid = true;
+    enrolledKey.missingPermissions = [];
     enrolledKey.updatedAt = new Date();
 
     await this.exchangeApiKeysRepository.upsert(enrolledKey, [
@@ -107,6 +109,8 @@ export class ExchangeApiKeysService {
       apiKey: decryptedApiKey.toString(),
       secretKey: decryptedSecretKey.toString(),
       extras: entity.extras ?? undefined,
+      isValid: entity.isValid,
+      missingPermissions: entity.missingPermissions,
     };
   }
 
@@ -125,6 +129,8 @@ export class ExchangeApiKeysService {
           exchangeName: enrolledKey.exchangeName,
           apiKey: decodedApiKey.toString(),
           extras: enrolledKey.extras === null ? undefined : enrolledKey.extras,
+          isValid: enrolledKey.isValid,
+          missingPermissions: enrolledKey.missingPermissions,
         };
       };
 
@@ -132,5 +138,33 @@ export class ExchangeApiKeysService {
     }
 
     return await Promise.all(retrievalPromises);
+  }
+
+  async markAsInvalid(
+    userId: string,
+    exchangeName: string,
+    missingPermissions: ExchangePermission[],
+  ): Promise<void> {
+    if (!missingPermissions.length) {
+      throw new Error('At least one missing permission must be provided');
+    }
+
+    const entity =
+      await this.exchangeApiKeysRepository.findOneByUserAndExchange(
+        userId,
+        exchangeName,
+      );
+
+    if (!entity) {
+      throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
+    }
+
+    entity.isValid = false;
+    /**
+     * Just a safety belt in case method is misused with duplicated values
+     */
+    entity.missingPermissions = Array.from(new Set(missingPermissions));
+
+    await this.exchangeApiKeysRepository.save(entity);
   }
 }

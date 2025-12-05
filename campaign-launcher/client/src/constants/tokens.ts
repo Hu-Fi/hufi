@@ -56,5 +56,13 @@ export const TOKENS: TokenData[] = [
   },
 ];
 
-export const FUND_TOKENS = ['usdt', 'usdc'] as const;
+const BASE_FUND_TOKENS = ['usdt', 'usdc'] as const;
+const TESTNET_FUND_TOKENS = ['hmt'] as const;
+
+export const FUND_TOKENS = [
+  ...BASE_FUND_TOKENS,
+  ...(import.meta.env.VITE_APP_WEB3_ENV === 'mainnet'
+    ? []
+    : TESTNET_FUND_TOKENS),
+] as const;
 export type FundToken = (typeof FUND_TOKENS)[number];

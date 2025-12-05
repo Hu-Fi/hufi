@@ -769,16 +769,27 @@ export class CampaignsService
          * allowing to remove api key, but let's warn ourselves
          * just in case if something unusual happens.
          */
-        if (
-          error instanceof ExchangeApiKeyNotFoundError ||
-          error instanceof ExchangeApiAccessError
-        ) {
+        if (error instanceof ExchangeApiKeyNotFoundError) {
           if (options.logWarnings) {
-            logger.warn('Participant api key is not valid', {
+            logger.warn('Participant api key not found', {
               participantId: participant.id,
               error,
             });
           }
+          continue;
+        }
+
+        if (error instanceof ExchangeApiAccessError) {
+          if (options.logWarnings) {
+            logger.warn('Exchange access failed for provided api key', {
+              participantId: participant.id,
+              error,
+            });
+          }
+          void this.exchangesService.revalidateApiKey(
+            participant.id,
+            campaign.exchangeName,
+          );
           continue;
         }
 

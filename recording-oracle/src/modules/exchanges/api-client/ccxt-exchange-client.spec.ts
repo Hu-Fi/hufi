@@ -157,14 +157,14 @@ describe('CcxtExchangeClient', () => {
   });
 
   describe('instance methods', () => {
+    /**
+     * In some methods we rely on exact exchange name to adjust params,
+     * so for general tests we don't mind, but will override where needed
+     */
+    const exchangeName = faker.lorem.slug();
     let ccxtExchangeApiClient: CcxtExchangeClient;
 
     beforeAll(() => {
-      /**
-       * In some methods we rely on exact exchange name to adjust params,
-       * so for general tests we don't mind, but will override where needed
-       */
-      const exchangeName = faker.lorem.slug();
       mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
 
       ccxtExchangeApiClient = new CcxtExchangeClient(exchangeName, {
@@ -213,6 +213,7 @@ describe('CcxtExchangeClient', () => {
         const expectedMessage = 'Error while checking exchange access';
         expect(thrownError).toBeInstanceOf(ExchangeApiClientError);
         expect(thrownError.message).toBe(expectedMessage);
+        expect(thrownError.exchangeName).toBe(exchangeName);
         expect(logger.error).toHaveBeenCalledWith(expectedMessage, testError);
       });
 
@@ -238,6 +239,8 @@ describe('CcxtExchangeClient', () => {
       it("should return false if can't fetch trades due to missing access", async () => {
         const now = Date.now();
         const syntheticAuthError = new ExchangeApiAccessError(
+          exchangeName,
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
           faker.lorem.sentence(),
         );
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
@@ -245,14 +248,14 @@ describe('CcxtExchangeClient', () => {
         jest.useFakeTimers({ now });
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
-          ExchangePermission.FETCH_MY_TRADES,
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
         ]);
 
         jest.useRealTimers();
 
         expect(result).toEqual({
           success: false,
-          missing: [ExchangePermission.FETCH_MY_TRADES],
+          missing: [ExchangePermission.VIEW_SPOT_TRADING_HISTORY],
         });
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(0);
@@ -268,17 +271,19 @@ describe('CcxtExchangeClient', () => {
       it("should return false if can't fetch the balance due to missing access", async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         const syntheticAuthError = new ExchangeApiAccessError(
+          exchangeName,
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
           faker.lorem.sentence(),
         );
         mockedExchange.fetchBalance.mockRejectedValueOnce(syntheticAuthError);
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
-          ExchangePermission.FETCH_BALANCE,
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
         ]);
 
         expect(result).toEqual({
           success: false,
-          missing: [ExchangePermission.FETCH_BALANCE],
+          missing: [ExchangePermission.VIEW_ACCOUNT_BALANCE],
         });
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
@@ -293,6 +298,8 @@ describe('CcxtExchangeClient', () => {
         );
 
         const syntheticAuthError = new ExchangeApiAccessError(
+          exchangeName,
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
           faker.lorem.sentence(),
         );
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
@@ -300,12 +307,12 @@ describe('CcxtExchangeClient', () => {
         );
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
-          ExchangePermission.FETCH_DEPOSIT_ADDRESS,
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
         ]);
 
         expect(result).toEqual({
           success: false,
-          missing: [ExchangePermission.FETCH_DEPOSIT_ADDRESS],
+          missing: [ExchangePermission.VIEW_DEPOSIT_ADDRESS],
         });
 
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(0);
@@ -401,7 +408,10 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe('Api access failed for fetchMyTrades');
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
+        );
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -442,8 +452,9 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchMyTrades',
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
               );
               expect(thrownError.cause).toBe(errorMessage);
             },
@@ -541,8 +552,9 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe(
-          'Api access failed for fetchOpenOrders',
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
         );
         expect(thrownError.cause).toBe(testError.message);
       });
@@ -584,8 +596,9 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchOpenOrders',
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
               );
               expect(thrownError.cause).toBe(errorMessage);
             },
@@ -651,7 +664,10 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe('Api access failed for fetchBalance');
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_ACCOUNT_BALANCE,
+        );
         expect(thrownError.cause).toBe(testError.message);
       });
 
@@ -689,8 +705,9 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchBalance',
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_ACCOUNT_BALANCE,
               );
               expect(thrownError.cause).toBe(errorMessage);
             },
@@ -762,8 +779,9 @@ describe('CcxtExchangeClient', () => {
         }
 
         expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-        expect(thrownError.message).toBe(
-          'Api access failed for fetchDepositAddress',
+        expect(thrownError.message).toBe('Failed to access exchange API');
+        expect(thrownError.permission).toBe(
+          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
         );
         expect(thrownError.cause).toBe(testError.message);
       });
@@ -804,8 +822,9 @@ describe('CcxtExchangeClient', () => {
               }
 
               expect(thrownError).toBeInstanceOf(ExchangeApiAccessError);
-              expect(thrownError.message).toBe(
-                'Api access failed for fetchDepositAddress',
+              expect(thrownError.message).toBe('Failed to access exchange API');
+              expect(thrownError.permission).toBe(
+                ExchangePermission.VIEW_DEPOSIT_ADDRESS,
               );
               expect(thrownError.cause).toBe(errorMessage);
             },

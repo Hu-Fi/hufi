@@ -12,6 +12,7 @@ import {
   ExchangeApiClientFactory,
   ExchangePermission,
 } from '../api-client';
+import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
@@ -26,6 +27,8 @@ import {
 const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockUsersService = createMock<UsersService>();
 const mockExchangeApiClient = createMock<ExchangeApiClient>();
+
+const exchangePermissions = Object.values(ExchangePermission);
 
 describe('ExchangeApiKeysService', () => {
   let exchangeApiKeysService: ExchangeApiKeysService;
@@ -105,7 +108,7 @@ describe('ExchangeApiKeysService', () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
 
       const missingPermissions = faker.helpers.arrayElements(
-        Object.values(ExchangePermission),
+        exchangePermissions,
         faker.number.int({ min: 1, max: 3 }),
       );
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
@@ -159,11 +162,16 @@ describe('ExchangeApiKeysService', () => {
 
       const entity = await exchangeApiKeysService.enroll(input);
 
-      expect(entity.userId).toBe(input.userId);
-      expect(entity.exchangeName).toBe(input.exchangeName);
-      expect(entity.apiKey).not.toBe(input.apiKey);
-      expect(entity.secretKey).not.toBe(input.secretKey);
-      expect(entity.extras).toBeNull();
+      expect(entity).toEqual({
+        userId: input.userId,
+        exchangeName: input.exchangeName,
+        apiKey: expect.any(String),
+        secretKey: expect.any(String),
+        extras: null,
+        isValid: true,
+        missingPermissions: [],
+        updatedAt: expect.any(Date),
+      });
 
       const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
         aesEncryptionService.decrypt(entity.apiKey),
@@ -188,11 +196,16 @@ describe('ExchangeApiKeysService', () => {
 
       const entity = await exchangeApiKeysService.enroll(input);
 
-      expect(entity.userId).toBe(input.userId);
-      expect(entity.exchangeName).toBe(input.exchangeName);
-      expect(entity.apiKey).not.toBe(input.apiKey);
-      expect(entity.secretKey).not.toBe(input.secretKey);
-      expect(entity.extras).toEqual(input.extras);
+      expect(entity).toEqual({
+        userId: input.userId,
+        exchangeName: input.exchangeName,
+        apiKey: expect.any(String),
+        secretKey: expect.any(String),
+        extras: input.extras,
+        isValid: true,
+        missingPermissions: [],
+        updatedAt: expect.any(Date),
+      });
 
       const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
         aesEncryptionService.decrypt(entity.apiKey),
@@ -298,6 +311,144 @@ describe('ExchangeApiKeysService', () => {
       expect(mockExchangeApiKeysRepository.findByUserId).toHaveBeenCalledWith(
         userId,
       );
+    });
+  });
+
+  describe('markAsInvalid', () => {
+    let userId: string;
+    let exchangeName: string;
+
+    beforeAll(() => {
+      userId = faker.string.uuid();
+      exchangeName = faker.lorem.slug();
+    });
+
+    it('should throw if no missing permissions', async () => {
+      let thrownError;
+
+      try {
+        await exchangeApiKeysService.markAsInvalid(userId, exchangeName, []);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'At least one missing permission must be provided',
+      );
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
+    });
+
+    it('should throw if key not found', async () => {
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        null,
+      );
+      let thrownError;
+
+      try {
+        await exchangeApiKeysService.markAsInvalid(
+          userId,
+          exchangeName,
+          faker.helpers.arrayElements(exchangePermissions),
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(ExchangeApiKeyNotFoundError);
+      expect(thrownError.userId).toBe(userId);
+      expect(thrownError.exchangeName).toBe(exchangeName);
+
+      expect(
+        mockExchangeApiKeysRepository.findOneByUserAndExchange,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockExchangeApiKeysRepository.findOneByUserAndExchange,
+      ).toHaveBeenCalledWith(userId, exchangeName);
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
+    });
+
+    it('should mark existing key as invalid', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      const missingPermissions =
+        faker.helpers.arrayElements(exchangePermissions);
+      await exchangeApiKeysService.markAsInvalid(
+        userId,
+        exchangeName,
+        missingPermissions,
+      );
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: false,
+        missingPermissions,
+      });
+    });
+
+    it('should override missing permissions with new values', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      apiKeyEntity.isValid = false;
+      apiKeyEntity.missingPermissions = exchangePermissions;
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      const missingPermissions = faker.helpers.arrayElements(
+        exchangePermissions,
+        {
+          min: 1,
+          max: 2,
+        },
+      );
+      await exchangeApiKeysService.markAsInvalid(
+        userId,
+        exchangeName,
+        missingPermissions,
+      );
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: false,
+        missingPermissions,
+      });
+    });
+
+    it('should save missing permissions w/o duplicates', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      const missingPermissions =
+        faker.helpers.arrayElements(exchangePermissions);
+      await exchangeApiKeysService.markAsInvalid(userId, exchangeName, [
+        ...missingPermissions,
+        ...missingPermissions,
+      ]);
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: false,
+        missingPermissions,
+      });
     });
   });
 });

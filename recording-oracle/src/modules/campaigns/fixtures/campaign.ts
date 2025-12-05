@@ -138,7 +138,7 @@ export function generateIntermediateResult({
   const intermediateResult = {
     from: dayjs(to).subtract(1, 'day').toISOString(),
     to: to.toISOString(),
-    reserved_funds: faker.number.float(),
+    reserved_funds: faker.number.float().toString(),
     participants_outcomes_batches: [],
   };
 

@@ -1,5 +1,5 @@
 import { Trade } from '../api-client';
-import { mapCcxtTrade } from '../api-client/ccxt-exchange-client';
+import { mapCcxtTrade } from '../api-client/ccxt-exchange-client.utils';
 import {
   generateCcxtTrade,
   generateAccountBalance,
