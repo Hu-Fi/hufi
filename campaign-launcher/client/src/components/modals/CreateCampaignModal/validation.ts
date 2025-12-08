@@ -11,7 +11,7 @@ import {
 const MAX_DURATION = 100 * 24 * 60 * 60 * 1000; // 100 days
 const MIN_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
-const campaignDurationValidation = (startDate: Date, endDate: Date) => {
+const validateCampaignDuration = (startDate: Date, endDate: Date) => {
   const duration = endDate.getTime() - startDate.getTime();
   return duration <= MAX_DURATION && duration >= MIN_DURATION;
 };
@@ -60,7 +60,7 @@ const baseValidationSchema = {
       'Campaign duration must be between 6 hours and 100 days',
       function (value) {
         if (!value || !this.parent.end_date) return true;
-        return campaignDurationValidation(value, this.parent.end_date);
+        return validateCampaignDuration(value, this.parent.end_date);
       }
     ),
   end_date: yup
@@ -75,7 +75,7 @@ const baseValidationSchema = {
       'Campaign duration must be between 6 hours and 100 days',
       function (value) {
         if (!value || !this.parent.start_date) return true;
-        return campaignDurationValidation(this.parent.start_date, value);
+        return validateCampaignDuration(this.parent.start_date, value);
       }
     ),
 };
