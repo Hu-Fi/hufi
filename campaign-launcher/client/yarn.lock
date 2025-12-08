@@ -2272,13 +2272,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9.0.8":
-  version: 9.0.8
-  resolution: "@types/uuid@npm:9.0.8"
-  checksum: 10c0/b411b93054cb1d4361919579ef3508a1f12bf15b5fdd97337d3d351bece6c921b52b6daeef89b62340fd73fd60da407878432a1af777f40648cbe53a01723489
-  languageName: node
-  linkType: hard
-
 "@typescript-eslint/eslint-plugin@npm:8.48.1, @typescript-eslint/eslint-plugin@npm:^8.48.1":
   version: 8.48.1
   resolution: "@typescript-eslint/eslint-plugin@npm:8.48.1"
@@ -3844,7 +3837,6 @@ __metadata:
     "@types/react": "npm:^18.2.66"
     "@types/react-dom": "npm:^18.2.22"
     "@types/react-is": "npm:^18"
-    "@types/uuid": "npm:^9.0.8"
     "@typescript-eslint/eslint-plugin": "npm:^8.48.1"
     "@typescript-eslint/parser": "npm:^8.48.1"
     "@vitejs/plugin-react": "npm:^5.1.1"
@@ -3873,11 +3865,9 @@ __metadata:
     react-router-dom: "npm:^6.22.3"
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^8.48.1"
-    uuid: "npm:^9.0.1"
     viem: "npm:2.x"
     vite: "npm:^7.2.7"
     vite-plugin-node-polyfills: "npm:^0.24.0"
-    vitest: "npm:^3.2.0"
     wagmi: "npm:^3.1.0"
     yup: "npm:^1.4.0"
   languageName: unknown
@@ -9338,7 +9328,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:^3.0.9, vitest@npm:^3.2.0":
+"vitest@npm:^3.0.9":
   version: 3.2.4
   resolution: "vitest@npm:3.2.4"
   dependencies:

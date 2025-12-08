@@ -41,7 +41,6 @@
     "react-is": "18.3.1",
     "react-number-format": "^5.4.4",
     "react-router-dom": "^6.22.3",
-    "uuid": "^9.0.1",
     "viem": "2.x",
     "wagmi": "^3.1.0",
     "yup": "^1.4.0"
@@ -51,7 +50,6 @@
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@types/react-is": "^18",
-    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
     "@vitejs/plugin-react": "^5.1.1",
@@ -66,8 +64,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",
     "vite": "^7.2.7",
-    "vite-plugin-node-polyfills": "^0.24.0",
-    "vitest": "^3.2.0"
+    "vite-plugin-node-polyfills": "^0.24.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

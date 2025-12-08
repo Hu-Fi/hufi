@@ -2,7 +2,6 @@ import { useCallback, useRef, useState } from 'react';
 
 import { EscrowClient } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
-import { v4 as uuidV4 } from 'uuid';
 
 import ERC20ABI from '@/abi/ERC20.json';
 import { launcherApi } from '@/api';
@@ -147,7 +146,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           const oracleFees = await launcherApi.getOracleFees(appChainId);
           const _escrowAddress = await escrowClient.createEscrow(
             tokenAddress,
-            uuidV4()
+            crypto.randomUUID()
           );
 
           escrowState.current.escrowAddress = _escrowAddress;
