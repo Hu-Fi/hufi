@@ -100,4 +100,10 @@ export class EnrolledApiKeyDto {
     oneOf: [{ $ref: getSchemaPath(BitmartExtras) }],
   })
   extras?: object;
+
+  @ApiProperty({ name: 'is_valid' })
+  isValid: boolean;
+
+  @ApiProperty({ name: 'missing_permissions' })
+  missingPermissions: string[];
 }

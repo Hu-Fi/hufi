@@ -101,8 +101,6 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
   };
 
   const handleClose = () => {
-    if (isPending) return;
-
     reset();
     resetMutation();
     onClose();
@@ -112,6 +110,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
     <BaseModal
       open={open}
       onClose={handleClose}
+      isLoading={isPending}
       sx={{
         textAlign: 'center',
         color: 'text.primary',

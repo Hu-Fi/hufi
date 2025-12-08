@@ -10,6 +10,7 @@ import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import LaunchCampaign from '@/components/LaunchCampaign';
 import StretchedLink from '@/components/StretchedLink';
+import { DEFAULT_TABLE_PAGE_SIZE } from '@/constants';
 import {
   useIsXlDesktop,
   useIsLgDesktop,
@@ -436,6 +437,13 @@ const CampaignsTable: FC<Props> = ({
         status: !isJoinedCampaigns && !isMobile,
         paddingLeft: !isMobile,
         paddingRight: !isMobile,
+      }}
+      initialState={{
+        pagination: {
+          paginationModel: {
+            pageSize: DEFAULT_TABLE_PAGE_SIZE,
+          },
+        },
       }}
       columnHeaderHeight={48}
       rowHeight={noRows ? (isLg ? 50 : 95) : isXl ? 114 : isMobile ? 50 : 95}

@@ -108,8 +108,6 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
   }, [open, exchangeName, reset]);
 
   const handleClose = () => {
-    if (isPending) return;
-
     reset();
     resetMutation();
     onClose();
@@ -128,6 +126,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
     <BaseModal
       open={open}
       onClose={handleClose}
+      isLoading={isPending}
       sx={{
         textAlign: 'center',
         color: 'text.primary',

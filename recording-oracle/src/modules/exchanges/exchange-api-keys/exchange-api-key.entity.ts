@@ -11,7 +11,7 @@ import {
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 import { UserEntity } from '@/modules/users';
 
-import { ExchangeExtras } from '../api-client';
+import { ExchangeExtras, ExchangePermission } from '../api-client';
 
 /**
  * We expect API keys to be <=200 charactes, so after encryption
@@ -39,6 +39,16 @@ export class ExchangeApiKeyEntity {
 
   @Column('jsonb', { nullable: true })
   extras: ExchangeExtras | null;
+
+  @Column('boolean')
+  isValid: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: ExchangePermission,
+    array: true,
+  })
+  missingPermissions: ExchangePermission[];
 
   @ManyToOne('UserEntity', { persistence: false, onDelete: 'CASCADE' })
   user?: UserEntity;

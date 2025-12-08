@@ -19,6 +19,10 @@ updates:
       interval: "weekly"
     allow:
       - dependency-type: "direct"
+    # By default dependabot doesn't respect semver ranges in package.json,
+    # so we switch to this versioning strategy to have such deps highlighted
+    # instead of increasing them all
+    versioning-strategy: increase-if-necessary
     target-branch: "develop"
     # Grouping minor and patch updates to 1 PR to reduce the noise:
     # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
