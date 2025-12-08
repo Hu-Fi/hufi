@@ -163,3 +163,25 @@ test:
 	$(MAKE) test-recording-oracle
 	$(MAKE) test-reputation-oracle
 	@echo "Finished unit tests"
+
+# Typecheck
+typecheck-campaign-launcher-client:
+	cd $(PROJECT_ROOT)/campaign-launcher/client && yarn typecheck
+
+typecheck-campaign-launcher-server:
+	cd $(PROJECT_ROOT)/campaign-launcher/server && yarn typecheck
+
+typecheck-recording-oracle:
+	cd $(PROJECT_ROOT)/recording-oracle && yarn typecheck
+
+typecheck-reputation-oracle:
+	cd $(PROJECT_ROOT)/reputation-oracle && yarn typecheck
+
+.PHONY: typecheck
+typecheck:
+	@echo "Typechecking code..."
+	$(MAKE) typecheck-campaign-launcher-client
+	$(MAKE) typecheck-campaign-launcher-server
+	$(MAKE) typecheck-recording-oracle
+	$(MAKE) typecheck-reputation-oracle
+	@echo "Finished typechecking code"

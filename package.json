@@ -11,7 +11,8 @@
     "lint": "cd scripts && make lint",
     "lint:fix": "cd scripts && make lint-fix",
     "format": "cd scripts && make format",
-    "test": "cd scripts && make test"
+    "test": "cd scripts && make test",
+    "typecheck": "cd scripts && make typecheck"
   },
   "packageManager": "yarn@4.12.0",
   "devDependencies": {
