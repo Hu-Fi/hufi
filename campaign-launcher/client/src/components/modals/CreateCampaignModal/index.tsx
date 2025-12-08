@@ -138,6 +138,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     <BaseModal
       open={open}
       onClose={handleClose}
+      isLoading={isCreatingEscrow}
       sx={{
         display: 'flex',
         flexDirection: 'column',

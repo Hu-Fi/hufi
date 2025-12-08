@@ -1,4 +1,4 @@
-import type { FC, PropsWithChildren } from 'react';
+import { type FC, type PropsWithChildren, useCallback } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import {
@@ -13,6 +13,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   elevation?: number;
+  isLoading?: boolean;
   sx?: SxProps<Theme>;
 };
 
@@ -20,13 +21,19 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
   open,
   onClose,
   elevation = 0,
+  isLoading = false,
   children,
   sx,
 }) => {
+  const handleClose = useCallback(() => {
+    if (isLoading) return;
+    onClose();
+  }, [isLoading, onClose]);
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -59,7 +66,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
         }}
       >
         <IconButton
-          onClick={onClose}
+          onClick={handleClose}
           sx={{
             p: 0,
             color: 'text.primary',
