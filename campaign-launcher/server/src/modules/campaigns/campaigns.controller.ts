@@ -43,7 +43,7 @@ export class CampaignsController {
       chainId,
       {
         launcherAddress: query.launcher,
-        status: query.status,
+        statuses: query.status ? [query.status] : [],
       },
       {
         limit: limit + 1,

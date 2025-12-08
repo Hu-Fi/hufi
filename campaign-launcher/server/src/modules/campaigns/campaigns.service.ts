@@ -57,7 +57,8 @@ export class CampaignsService {
     chainId: ChainId,
     filters?: Partial<{
       launcherAddress: string;
-      status: CampaignStatus;
+      statuses: CampaignStatus[];
+      since: Date;
     }>,
     pagination?: Partial<{
       skip: number;
@@ -67,8 +68,10 @@ export class CampaignsService {
     const campaigns: CampaignData[] = [];
 
     let statuses: EscrowStatus[] | undefined;
-    if (filters?.status) {
-      statuses = CAMPAIGN_STATUS_TO_ESCROW_STATUSES[filters.status];
+    if (filters?.statuses?.length) {
+      statuses = filters.statuses.flatMap(
+        (status) => CAMPAIGN_STATUS_TO_ESCROW_STATUSES[status],
+      );
     }
     const campaignEscrows = await EscrowUtils.getEscrows({
       chainId: chainId as number,
@@ -79,6 +82,7 @@ export class CampaignsService {
       status: statuses,
       first: pagination?.limit,
       skip: pagination?.skip,
+      from: filters?.since,
     });
 
     for (const campaignEscrow of campaignEscrows) {
@@ -152,8 +156,10 @@ export class CampaignsService {
         recordingOracle: campaignEscrow.recordingOracle as string,
         reputationOracle: campaignEscrow.reputationOracle as string,
         balance: campaignEscrow.balance.toString(),
+        amountPaid: campaignEscrow.amountPaid.toString(),
         intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
         finalResultsUrl: campaignEscrow.finalResultsUrl,
+        createdAt: campaignEscrow.createdAt,
       });
     }
 
@@ -207,7 +213,6 @@ export class CampaignsService {
       method: 'bulkTransfer',
     });
 
-    let totalTransfersAmount = 0n;
     const amountsPerDay: Record<string, bigint> = {};
     for (const tx of transactions) {
       let totalTransfersAmountInTx = 0n;
@@ -222,7 +227,6 @@ export class CampaignsService {
       }
 
       amountsPerDay[day] += totalTransfersAmountInTx;
-      totalTransfersAmount += totalTransfersAmountInTx;
     }
 
     const reservedFunds = await this.getReservedFunds(campaignEscrow);
@@ -266,22 +270,23 @@ export class CampaignsService {
       fundTokenDecimals: campaignTokenDecimals,
       status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
       escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
-      // details
-      amountPaid: totalTransfersAmount.toString(),
-      dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
-        date,
-        amount: amount.toString(),
-      })),
       launcher: ethers.getAddress(campaignEscrow.launcher),
       exchangeOracle: campaignEscrow.exchangeOracle as string,
       recordingOracle: campaignEscrow.recordingOracle as string,
       reputationOracle: campaignEscrow.reputationOracle as string,
       balance: campaignEscrow.balance.toString(),
+      amountPaid: campaignEscrow.amountPaid.toString(),
+      intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
+      finalResultsUrl: campaignEscrow.finalResultsUrl,
+      createdAt: campaignEscrow.createdAt,
+      // details
+      dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
+        date,
+        amount: amount.toString(),
+      })),
       exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
       recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
       reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
-      intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
-      finalResultsUrl: campaignEscrow.finalResultsUrl,
       reservedFunds: reservedFunds.toString(),
     };
   }
