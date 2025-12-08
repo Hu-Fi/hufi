@@ -15,12 +15,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import dayjs from 'dayjs';
 import {
   Controller,
   type Control,
   type FieldErrors,
+  type UseFormTrigger,
   type UseFormWatch,
 } from 'react-hook-form';
 
@@ -40,6 +41,7 @@ type Props = {
   control: Control<ThresholdFormValues>;
   errors: FieldErrors<ThresholdFormValues>;
   watch: UseFormWatch<ThresholdFormValues>;
+  trigger: UseFormTrigger<ThresholdFormValues>;
   isCreatingEscrow: boolean;
 };
 
@@ -47,6 +49,7 @@ const ThresholdForm: FC<Props> = ({
   control,
   errors,
   watch,
+  trigger,
   isCreatingEscrow,
 }) => {
   const isMobile = useIsMobile();
@@ -152,14 +155,24 @@ const ThresholdForm: FC<Props> = ({
             name="start_date"
             control={control}
             render={({ field }) => (
-              <DatePicker
+              <MobileDateTimePicker
                 label="Start Date"
-                format="YYYY-MM-DD"
-                closeOnSelect
+                format="DD-MM-YYYY HH:mm"
+                ampm={false}
                 disablePast
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  trigger('start_date');
+                  trigger('end_date');
+                }}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
+                slotProps={{
+                  textField: {
+                    error: !!errors.start_date,
+                  },
+                }}
               />
             )}
           />
@@ -172,14 +185,25 @@ const ThresholdForm: FC<Props> = ({
             name="end_date"
             control={control}
             render={({ field }) => (
-              <DatePicker
+              <MobileDateTimePicker
                 label="End Date"
-                format="YYYY-MM-DD"
-                closeOnSelect
+                format="DD-MM-YYYY HH:mm"
+                ampm={false}
                 disablePast
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  trigger('start_date');
+                  trigger('end_date');
+                }}
                 disabled={isCreatingEscrow}
+                minDateTime={dayjs(watch('start_date')).add(6, 'hour')}
                 value={dayjs(field.value)}
+                slotProps={{
+                  textField: {
+                    error: !!errors.end_date,
+                  },
+                }}
               />
             )}
           />

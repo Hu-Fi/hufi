@@ -33,3 +33,5 @@ export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 
 export const MQ_MOBILE = 'screen and (max-width: 600px)';
+
+export const DEFAULT_TABLE_PAGE_SIZE = 10;

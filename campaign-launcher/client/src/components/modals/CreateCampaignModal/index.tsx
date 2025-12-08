@@ -3,7 +3,12 @@ import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Box, Button, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { useForm, type Control, type UseFormWatch } from 'react-hook-form';
+import {
+  useForm,
+  type Control,
+  type UseFormTrigger,
+  type UseFormWatch,
+} from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
@@ -69,6 +74,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
     control,
     formState: { errors },
     watch,
+    trigger,
     handleSubmit,
     reset: resetForm,
   } = useForm<CampaignFormValues>({
@@ -185,6 +191,12 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
               flexDirection="column"
               gap={3}
               width={{ xs: '100%', sm: 625 }}
+              sx={{
+                '& .MuiFormHelperText-root': {
+                  mx: 1,
+                  whiteSpace: 'pre-line',
+                },
+              }}
             >
               {isMobile && isCreatingEscrow && (
                 <Steps
@@ -198,6 +210,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   control={control as Control<MarketMakingFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<MarketMakingFormValues>}
+                  trigger={trigger as UseFormTrigger<MarketMakingFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
                 />
               )}
@@ -206,6 +219,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   control={control as Control<HoldingFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<HoldingFormValues>}
+                  trigger={trigger as UseFormTrigger<HoldingFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
                 />
               )}
@@ -214,6 +228,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   control={control as Control<ThresholdFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<ThresholdFormValues>}
+                  trigger={trigger as UseFormTrigger<ThresholdFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
                 />
               )}
