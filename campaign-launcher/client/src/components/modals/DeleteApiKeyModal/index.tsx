@@ -35,8 +35,6 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
   };
 
   const handleClose = () => {
-    if (isPending) return;
-
     resetMutation();
     onClose();
   };
@@ -45,6 +43,7 @@ const DeleteApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
     <BaseModal
       open={open}
       onClose={handleClose}
+      isLoading={isPending}
       sx={{
         color: 'text.primary',
         px: { xs: 2, md: 4 },
