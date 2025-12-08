@@ -3868,7 +3868,6 @@ __metadata:
     viem: "npm:2.x"
     vite: "npm:^7.2.7"
     vite-plugin-node-polyfills: "npm:^0.24.0"
-    vitest: "npm:^3.2.0"
     wagmi: "npm:^3.1.0"
     yup: "npm:^1.4.0"
   languageName: unknown
@@ -9329,7 +9328,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:^3.0.9, vitest@npm:^3.2.0":
+"vitest@npm:^3.0.9":
   version: 3.2.4
   resolution: "vitest@npm:3.2.4"
   dependencies:
