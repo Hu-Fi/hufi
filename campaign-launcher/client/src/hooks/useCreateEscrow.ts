@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { EscrowClient } from '@human-protocol/sdk';
-import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 
@@ -45,21 +44,11 @@ type EscrowState = {
   reputationOracleFee: string;
 };
 
-const transformManifestTime = (date: Date, isStartDate = true): string => {
-  const pickedDate = dayjs(date);
-  const localDate = isStartDate
-    ? pickedDate.isSame(dayjs(), 'day')
-      ? pickedDate
-      : pickedDate.startOf('day')
-    : pickedDate.endOf('day');
-  return localDate.toISOString();
-};
-
 const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
   const baseManifest = {
     exchange: data.exchange,
-    start_date: transformManifestTime(data.start_date, true),
-    end_date: transformManifestTime(data.end_date, false),
+    start_date: data.start_date.toISOString(),
+    end_date: data.end_date.toISOString(),
   };
 
   switch (data.type) {

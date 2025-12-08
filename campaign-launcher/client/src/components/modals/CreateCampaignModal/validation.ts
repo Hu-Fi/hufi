@@ -1,7 +1,6 @@
 import * as yup from 'yup';
 import type { ObjectSchema } from 'yup';
 
-import type { FundToken } from '@/constants/tokens';
 import {
   CampaignType,
   type HoldingFormValues,
@@ -9,10 +8,12 @@ import {
   type ThresholdFormValues,
 } from '@/types';
 
-const mapTokenToMinValue: Record<FundToken, number> = {
-  usdt: 0.001,
-  usdc: 0.001,
-  hmt: 0.42,
+const MAX_DURATION = 100 * 24 * 60 * 60 * 1000; // 100 days
+const MIN_DURATION = 6 * 60 * 60 * 1000; // 6 hours
+
+const validateCampaignDuration = (startDate: Date, endDate: Date) => {
+  const duration = endDate.getTime() - startDate.getTime();
+  return duration <= MAX_DURATION && duration >= MIN_DURATION;
 };
 
 const baseValidationSchema = {
@@ -29,33 +30,52 @@ const baseValidationSchema = {
     .test('min-amount', function (value) {
       if (!value)
         return this.createError({ message: 'Must be greater than 0' });
-      const fundToken: FundToken = this.parent.fund_token;
-      const minValue = mapTokenToMinValue[fundToken];
-      if (value < minValue) {
+
+      const { start_date, end_date, fund_token } = this.parent;
+      if (!start_date || !end_date) return true;
+
+      const startMs = new Date(start_date).getTime();
+      const endMs = new Date(end_date).getTime();
+      const days = Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000));
+      const minValue = 10 * days;
+
+      // keeping HMT not validated for testing purposes
+      if (value < minValue && fund_token !== 'hmt') {
         return this.createError({
-          message: `Minimum amount for ${fundToken.toUpperCase()} is ${minValue}`,
+          message: `Minimum amount is ${minValue} \n(10 ${fund_token.toUpperCase()} per day for ${days} day(s))`,
         });
       }
 
       return true;
     }),
-  start_date: yup.date().required('Required'),
+  start_date: yup
+    .date()
+    .required('Required')
+    .test('is-future', 'Start date cannot be in the past', function (value) {
+      if (!value) return true;
+      return value.getTime() > Date.now();
+    })
+    .test(
+      'duration',
+      'Campaign duration must be between 6 hours and 100 days',
+      function (value) {
+        if (!value || !this.parent.end_date) return true;
+        return validateCampaignDuration(value, this.parent.end_date);
+      }
+    ),
   end_date: yup
     .date()
     .required('Required')
+    .test('is-future', 'End date cannot be in the past', function (value) {
+      if (!value) return true;
+      return value.getTime() > Date.now();
+    })
     .test(
-      'is-after-start',
-      'Must be at least one day after start date',
+      'duration',
+      'Campaign duration must be between 6 hours and 100 days',
       function (value) {
         if (!value || !this.parent.start_date) return true;
-
-        const startDate = new Date(this.parent.start_date);
-        startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(value);
-        endDate.setHours(0, 0, 0, 0);
-        const minEndDate = new Date(startDate);
-        minEndDate.setDate(minEndDate.getDate() + 1);
-        return endDate >= minEndDate;
+        return validateCampaignDuration(this.parent.start_date, value);
       }
     ),
 };
