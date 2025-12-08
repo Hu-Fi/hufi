@@ -197,6 +197,7 @@ const HoldingForm: FC<Props> = ({
                   trigger('end_date');
                 }}
                 disabled={isCreatingEscrow}
+                minDateTime={dayjs(watch('start_date')).add(6, 'hour')}
                 value={dayjs(field.value)}
                 slotProps={{
                   textField: {
