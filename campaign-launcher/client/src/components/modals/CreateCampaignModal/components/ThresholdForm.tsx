@@ -21,6 +21,7 @@ import {
   Controller,
   type Control,
   type FieldErrors,
+  type UseFormTrigger,
   type UseFormWatch,
 } from 'react-hook-form';
 
@@ -40,6 +41,7 @@ type Props = {
   control: Control<ThresholdFormValues>;
   errors: FieldErrors<ThresholdFormValues>;
   watch: UseFormWatch<ThresholdFormValues>;
+  trigger: UseFormTrigger<ThresholdFormValues>;
   isCreatingEscrow: boolean;
 };
 
@@ -47,6 +49,7 @@ const ThresholdForm: FC<Props> = ({
   control,
   errors,
   watch,
+  trigger,
   isCreatingEscrow,
 }) => {
   const isMobile = useIsMobile();
@@ -158,6 +161,11 @@ const ThresholdForm: FC<Props> = ({
                 ampm={false}
                 disablePast
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  trigger('start_date');
+                  trigger('end_date');
+                }}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 slotProps={{
@@ -183,6 +191,11 @@ const ThresholdForm: FC<Props> = ({
                 ampm={false}
                 disablePast
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  trigger('start_date');
+                  trigger('end_date');
+                }}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 slotProps={{

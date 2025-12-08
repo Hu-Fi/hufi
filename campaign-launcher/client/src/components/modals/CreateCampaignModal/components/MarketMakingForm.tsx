@@ -21,6 +21,7 @@ import {
   Controller,
   type Control,
   type FieldErrors,
+  type UseFormTrigger,
   type UseFormWatch,
 } from 'react-hook-form';
 
@@ -41,6 +42,7 @@ type Props = {
   control: Control<MarketMakingFormValues>;
   errors: FieldErrors<MarketMakingFormValues>;
   watch: UseFormWatch<MarketMakingFormValues>;
+  trigger: UseFormTrigger<MarketMakingFormValues>;
   isCreatingEscrow: boolean;
 };
 
@@ -48,6 +50,7 @@ const MarketMakingForm: FC<Props> = ({
   control,
   errors,
   watch,
+  trigger,
   isCreatingEscrow,
 }) => {
   const isMobile = useIsMobile();
@@ -162,6 +165,11 @@ const MarketMakingForm: FC<Props> = ({
                 ampm={false}
                 disablePast
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  trigger('start_date');
+                  trigger('end_date');
+                }}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 slotProps={{
@@ -187,8 +195,18 @@ const MarketMakingForm: FC<Props> = ({
                 ampm={false}
                 disablePast
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  trigger('start_date');
+                  trigger('end_date');
+                }}
                 disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
+                slotProps={{
+                  textField: {
+                    error: !!errors.end_date,
+                  },
+                }}
               />
             )}
           />

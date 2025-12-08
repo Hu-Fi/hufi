@@ -8,6 +8,14 @@ import {
   type ThresholdFormValues,
 } from '@/types';
 
+const MAX_DURATION = 100 * 24 * 60 * 60 * 1000; // 100 days
+const MIN_DURATION = 6 * 60 * 60 * 1000; // 6 hours
+
+const campaignDurationValidation = (startDate: Date, endDate: Date) => {
+  const duration = endDate.getTime() - startDate.getTime();
+  return duration <= MAX_DURATION && duration >= MIN_DURATION;
+};
+
 const baseValidationSchema = {
   type: yup
     .mixed<CampaignType>()
@@ -34,7 +42,7 @@ const baseValidationSchema = {
       // keeping HMT not validated for testing purposes
       if (value < minValue && fund_token !== 'hmt') {
         return this.createError({
-          message: `Minimum amount is ${minValue} \n(10 ${fund_token.toUpperCase()} per day for ${days} days)`,
+          message: `Minimum amount is ${minValue} \n(10 ${fund_token.toUpperCase()} per day for ${days} day(s))`,
         });
       }
 
@@ -45,21 +53,29 @@ const baseValidationSchema = {
     .required('Required')
     .test('is-future', 'Start date cannot be in the past', function (value) {
       if (!value) return true;
-      return new Date(value).getTime() > Date.now();
-    }),
+      return value.getTime() > Date.now();
+    })
+    .test(
+      'duration',
+      'Campaign duration must be between 6 hours and 100 days',
+      function (value) {
+        if (!value || !this.parent.end_date) return true;
+        return campaignDurationValidation(value, this.parent.end_date);
+      }
+    ),
   end_date: yup
     .date()
     .required('Required')
+    .test('is-future', 'End date cannot be in the past', function (value) {
+      if (!value) return true;
+      return value.getTime() > Date.now();
+    })
     .test(
-      'is-after-start',
-      'Must be at least 6 hours after start date',
+      'duration',
+      'Campaign duration must be between 6 hours and 100 days',
       function (value) {
         if (!value || !this.parent.start_date) return true;
-
-        const startDate = new Date(this.parent.start_date);
-        const endDate = new Date(value);
-        const minEndDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000);
-        return endDate >= minEndDate;
+        return campaignDurationValidation(this.parent.start_date, value);
       }
     ),
 };
