@@ -66,6 +66,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
         }}
       >
         <IconButton
+          disabled={isLoading}
           onClick={handleClose}
           sx={{
             p: 0,
