@@ -40,7 +40,13 @@ const baseValidationSchema = {
 
       return true;
     }),
-  start_date: yup.date().required('Required'),
+  start_date: yup
+    .date()
+    .required('Required')
+    .test('is-future', 'Start date cannot be in the past', function (value) {
+      if (!value) return true;
+      return new Date(value).getTime() > Date.now();
+    }),
   end_date: yup
     .date()
     .required('Required')
