@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@human-protocol/core": "^5.0.1",
     "@human-protocol/logger": "^1.2.0",
     "@human-protocol/sdk": "^5.2.0",
     "@nestjs/common": "^11.1.9",
