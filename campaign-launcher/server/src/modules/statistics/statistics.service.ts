@@ -166,7 +166,6 @@ export class StatisticsService implements OnModuleInit {
       });
 
       let nCompleted = 0;
-      let nChecked = 0;
       let lastCheckedCampaignCreatedAt = 0;
       do {
         const campaigns = await this.campaignsService.getCampaigns(
@@ -176,7 +175,7 @@ export class StatisticsService implements OnModuleInit {
             since: checkCampaignsSince,
           },
           {
-            skip: nChecked,
+            skip: nCompleted,
           },
         );
 
@@ -186,8 +185,6 @@ export class StatisticsService implements OnModuleInit {
 
         nCompleted += campaigns.length;
         lastCheckedCampaignCreatedAt = campaigns.at(-1)!.createdAt;
-
-        nChecked += campaigns.length;
         // eslint-disable-next-line no-constant-condition
       } while (true);
 
