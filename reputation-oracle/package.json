@@ -28,7 +28,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.9",
     "decimal.js": "^10.6.0",
-    "ethers": "~6.15.0",
+    "ethers": "~6.16.0",
     "joi": "^17.13.3",
     "lodash": "^4.17.21",
     "minio": "^7.1.3",
