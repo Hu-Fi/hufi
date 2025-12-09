@@ -86,74 +86,17 @@ export class CampaignsService {
     });
 
     for (const campaignEscrow of campaignEscrows) {
-      if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
-        continue;
-      }
-
-      let manifest: CampaignManifest;
+      let campaignData: CampaignData;
       try {
-        manifest = await this.retrieveCampaignManifset(
-          campaignEscrow.manifest,
-          campaignEscrow.manifestHash,
-        );
-      } catch (noop) {
-        continue;
+        campaignData = await this.retrieveCampaignData(campaignEscrow);
+      } catch (error) {
+        if (error instanceof InvalidCampaignManifestError) {
+          continue;
+        }
+        throw error;
       }
 
-      const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
-        this.web3Service.getTokenSymbol(chainId, campaignEscrow.token),
-        this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
-      ]);
-
-      let details: CampaignDetails;
-      let symbol: string;
-
-      if (manifestUtils.isMarketMakingManifest(manifest)) {
-        symbol = manifest.pair;
-        details = {
-          dailyVolumeTarget: manifest.daily_volume_target,
-        };
-      } else if (manifestUtils.isHoldingManifest(manifest)) {
-        symbol = manifest.symbol;
-        details = {
-          dailyBalanceTarget: manifest.daily_balance_target,
-        };
-      } else if (manifestUtils.isThresholdManifest(manifest)) {
-        symbol = manifest.symbol;
-        details = {
-          minimumBalanceTarget: manifest.minimum_balance_target,
-        };
-      } else {
-        // Should not happen at this point, just for typescript types
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        throw new Error(`Unknown campaign type: ${(manifest as any).type}`);
-      }
-
-      campaigns.push({
-        chainId,
-        address: ethers.getAddress(campaignEscrow.address),
-        type: manifest.type as CampaignType,
-        exchangeName: manifest.exchange,
-        symbol,
-        details,
-        startDate: manifest.start_date.toISOString(),
-        endDate: manifest.end_date.toISOString(),
-        fundAmount: campaignEscrow.totalFundedAmount.toString(),
-        fundToken: ethers.getAddress(campaignEscrow.token),
-        fundTokenSymbol: campaignTokenSymbol,
-        fundTokenDecimals: campaignTokenDecimals,
-        status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
-        escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
-        launcher: ethers.getAddress(campaignEscrow.launcher),
-        exchangeOracle: campaignEscrow.exchangeOracle as string,
-        recordingOracle: campaignEscrow.recordingOracle as string,
-        reputationOracle: campaignEscrow.reputationOracle as string,
-        balance: campaignEscrow.balance.toString(),
-        amountPaid: campaignEscrow.amountPaid.toString(),
-        intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
-        finalResultsUrl: campaignEscrow.finalResultsUrl,
-        createdAt: campaignEscrow.createdAt,
-      });
+      campaigns.push(campaignData);
     }
 
     return campaigns;
@@ -172,32 +115,7 @@ export class CampaignsService {
       return null;
     }
 
-    if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
-      throw new InvalidCampaignManifestError(
-        chainId,
-        escrowAddress,
-        'Manifest is missing',
-      );
-    }
-
-    let manifest: CampaignManifest;
-    try {
-      manifest = await this.retrieveCampaignManifset(
-        campaignEscrow.manifest,
-        campaignEscrow.manifestHash,
-      );
-    } catch (error) {
-      throw new InvalidCampaignManifestError(
-        chainId,
-        escrowAddress,
-        error.message as string,
-      );
-    }
-
-    const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
-      this.web3Service.getTokenSymbol(chainId, campaignEscrow.token),
-      this.web3Service.getTokenDecimals(chainId, campaignEscrow.token),
-    ]);
+    const campaignData = await this.retrieveCampaignData(campaignEscrow);
 
     const transactions = await TransactionUtils.getTransactions({
       chainId: chainId as number,
@@ -228,6 +146,72 @@ export class CampaignsService {
 
     const reservedFunds = await this.getReservedFunds(campaignEscrow);
 
+    return {
+      ...campaignData,
+      // details
+      dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
+        date,
+        amount: amount.toString(),
+      })),
+      exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
+      recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
+      reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
+      reservedFunds: reservedFunds.toString(),
+    };
+  }
+
+  private async retrieveCampaignManifset(
+    manifestUrlOrJson: string,
+    manifestHash: string,
+  ): Promise<CampaignManifest> {
+    let manifestString;
+    if (httpUtils.isValidHttpUrl(manifestUrlOrJson)) {
+      manifestString = await manifestUtils.donwload(
+        manifestUrlOrJson,
+        manifestHash,
+      );
+    } else {
+      manifestString = manifestUrlOrJson;
+    }
+
+    let manifestJson: unknown;
+    try {
+      manifestJson = JSON.parse(manifestString);
+    } catch {
+      throw new Error('Manifest is not valid JSON');
+    }
+
+    return manifestUtils.validateSchema(manifestJson);
+  }
+
+  private async retrieveCampaignData(
+    campaignEscrow: IEscrow,
+  ): Promise<CampaignData> {
+    const chainId = campaignEscrow.chainId;
+    const address = ethers.getAddress(campaignEscrow.address);
+
+    if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
+      throw new InvalidCampaignManifestError(
+        chainId,
+        address,
+        'Manifest is missing',
+      );
+    }
+
+    let manifest: CampaignManifest;
+    try {
+      manifest = await this.retrieveCampaignManifset(
+        campaignEscrow.manifest,
+        campaignEscrow.manifestHash,
+      );
+    } catch (error) {
+      throw new InvalidCampaignManifestError(
+        chainId,
+        address,
+        error.message as string,
+      );
+    }
+
     let details: CampaignDetails;
     let symbol: string;
 
@@ -248,13 +232,23 @@ export class CampaignsService {
       };
     } else {
       // Should not happen at this point, just for typescript types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      throw new Error(`Unknown campaign type: ${(manifest as any).type}`);
+      throw new InvalidCampaignManifestError(
+        chainId,
+        address,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        `Unknown campaign type: ${(manifest as any).type}`,
+      );
     }
+
+    const fundToken = ethers.getAddress(campaignEscrow.token);
+    const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
+      this.web3Service.getTokenSymbol(chainId, fundToken),
+      this.web3Service.getTokenDecimals(chainId, fundToken),
+    ]);
 
     return {
       chainId,
-      address: ethers.getAddress(escrowAddress),
+      address,
       type: manifest.type as CampaignType,
       exchangeName: manifest.exchange,
       symbol,
@@ -262,7 +256,7 @@ export class CampaignsService {
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
       fundAmount: campaignEscrow.totalFundedAmount.toString(),
-      fundToken: ethers.getAddress(campaignEscrow.token),
+      fundToken,
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
       status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
@@ -276,40 +270,7 @@ export class CampaignsService {
       intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
       finalResultsUrl: campaignEscrow.finalResultsUrl,
       createdAt: campaignEscrow.createdAt,
-      // details
-      dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
-        date,
-        amount: amount.toString(),
-      })),
-      exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
-      recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
-      reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
-      reservedFunds: reservedFunds.toString(),
     };
-  }
-
-  private async retrieveCampaignManifset(
-    manifestUrlOrJson: string,
-    manifestHash?: string,
-  ): Promise<CampaignManifest> {
-    let manifestString;
-    if (httpUtils.isValidHttpUrl(manifestUrlOrJson)) {
-      manifestString = await manifestUtils.donwload(
-        manifestUrlOrJson,
-        manifestHash as string,
-      );
-    } else {
-      manifestString = manifestUrlOrJson;
-    }
-
-    let manifestJson: unknown;
-    try {
-      manifestJson = JSON.parse(manifestString);
-    } catch {
-      throw new Error('Manifest is not valid JSON');
-    }
-
-    return manifestUtils.validateSchema(manifestJson);
   }
 
   private async getReservedFunds(escrow: IEscrow): Promise<bigint> {
