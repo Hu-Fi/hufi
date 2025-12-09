@@ -8,9 +8,6 @@ import logger from '@/logger';
 import { CampaignsService, CampaignStatus } from '@/modules/campaigns';
 import { Web3Service } from '@/modules/web3';
 
-/**
- * TODO: remove warnings from 'getCampaigns' call in this file
- */
 @Injectable()
 export class StatisticsService implements OnModuleInit {
   private readonly logger = logger.child({
@@ -139,7 +136,7 @@ export class StatisticsService implements OnModuleInit {
   async refreshCompletedCampaignsStatsForChain(
     chainId: ChainId,
   ): Promise<void> {
-    this.logger.info('Refreshing completed campaigns stats', { chainId });
+    this.logger.debug('Refreshing completed campaigns stats', { chainId });
 
     let nCompleted = 0;
     let paidRewardsUsd = 0;
@@ -191,7 +188,7 @@ export class StatisticsService implements OnModuleInit {
       // eslint-disable-next-line no-constant-condition
     } while (true);
 
-    this.logger.info('Completed campaigns stats refresh', {
+    this.logger.debug('Completed campaigns stats refreshed', {
       nCompleted,
       paidRewardsUsd,
       lastCheckedCampaignCreatedAt,

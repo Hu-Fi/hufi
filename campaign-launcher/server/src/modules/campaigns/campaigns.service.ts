@@ -96,14 +96,7 @@ export class CampaignsService {
           campaignEscrow.manifest,
           campaignEscrow.manifestHash,
         );
-      } catch (error) {
-        this.logger.warn('Failed to retrieve campaign manifest', {
-          chainId,
-          campaignAddress: campaignEscrow.address,
-          manifest: campaignEscrow.manifest,
-          manifestHash: campaignEscrow.manifestHash,
-          error,
-        });
+      } catch (noop) {
         continue;
       }
 
