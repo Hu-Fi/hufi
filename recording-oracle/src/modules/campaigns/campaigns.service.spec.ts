@@ -48,6 +48,7 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
+import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
 import { CampaignEntity } from './campaign.entity';
 import {
@@ -835,7 +836,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should return campaign id if exists and user already joined', async () => {
+    it('should return campaign id if campaign exists and user already joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -859,6 +860,75 @@ describe('CampaignsService', () => {
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should return campaign id if campaign exists and user not joined yet', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        null,
+      );
+
+      const id = await campaignsService.join(
+        userId,
+        chainId,
+        // not checksummed address
+        campaign.address.toLowerCase(),
+      );
+
+      expect(id).toBe(campaign.id);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+        userId,
+        campaignId: campaign.id,
+        createdAt: expect.any(Date),
+      });
+    });
+
+    it('should return campaign id if campaign exists and user joined with race condition', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        null,
+      );
+      mockUserCampaignsRepository.insert.mockRejectedValueOnce(
+        createDuplicatedKeyError(),
+      );
+
+      const id = await campaignsService.join(
+        userId,
+        chainId,
+        // not checksummed address
+        campaign.address.toLowerCase(),
+      );
+
+      expect(id).toBe(campaign.id);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+        userId,
+        campaignId: campaign.id,
+        createdAt: expect.any(Date),
+      });
     });
 
     it('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {

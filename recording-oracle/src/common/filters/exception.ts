@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-import { DatabaseError } from '@/common/errors/database';
 import { BaseErrorResponse } from '@/common/types';
 import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';
 import logger from '@/logger';
@@ -29,9 +28,7 @@ export class ExceptionFilter implements IExceptionFilter {
       path: request.url,
     };
 
-    if (exception instanceof DatabaseError) {
-      this.logger.error('Database error', exception);
-    } else if (exception instanceof HttpException) {
+    if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
       if (typeof exceptionResponse === 'string') {

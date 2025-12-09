@@ -32,6 +32,7 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
+import { isDuplicatedError } from '@/database';
 import logger from '@/logger';
 import {
   ExchangesService,
@@ -223,7 +224,15 @@ export class CampaignsService
     newUserCampaign.campaignId = campaign.id;
     newUserCampaign.createdAt = new Date();
 
-    await this.userCampaignsRepository.insert(newUserCampaign);
+    try {
+      await this.userCampaignsRepository.insert(newUserCampaign);
+    } catch (error) {
+      if (isDuplicatedError(error)) {
+        // joined w/ race condition, noop;
+      } else {
+        throw error;
+      }
+    }
 
     return campaign.id;
   }
