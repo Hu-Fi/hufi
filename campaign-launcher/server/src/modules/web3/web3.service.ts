@@ -129,7 +129,7 @@ export class Web3Service {
   }
 
   async getTokenSymbol(chainId: number, tokenAddress: string): Promise<string> {
-    const cacheKey = `token-symbol-${chainId}-${tokenAddress}`;
+    const cacheKey = `token-symbol-${chainId}-${tokenAddress.toLowerCase()}`;
 
     try {
       if (!operationPromisesCache.has(cacheKey)) {

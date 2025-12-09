@@ -204,6 +204,10 @@ export class CampaignsService {
       fromAddress: escrowAddress,
       toAddress: escrowAddress,
       method: 'bulkTransfer',
+      /**
+       * TODO: paginate through all transactions
+       */
+      first: 1000,
     });
 
     const amountsPerDay: Record<string, bigint> = {};
