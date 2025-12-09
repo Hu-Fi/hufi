@@ -117,32 +117,40 @@ export class CampaignsService {
 
     const campaignData = await this.retrieveCampaignData(campaignEscrow);
 
-    const transactions = await TransactionUtils.getTransactions({
-      chainId: chainId as number,
-      fromAddress: escrowAddress,
-      toAddress: escrowAddress,
-      method: 'bulkTransfer',
-      /**
-       * TODO: paginate through all transactions
-       */
-      first: 1000,
-    });
-
     const amountsPerDay: Record<string, bigint> = {};
-    for (const tx of transactions) {
-      let totalTransfersAmountInTx = 0n;
-      for (const internalTx of tx.internalTransactions) {
-        totalTransfersAmountInTx += internalTx.value;
+    let nTxsChecked = 0;
+    do {
+      const transactions = await TransactionUtils.getTransactions({
+        chainId: chainId as number,
+        fromAddress: escrowAddress,
+        toAddress: escrowAddress,
+        method: 'bulkTransfer',
+        first: 100,
+        skip: nTxsChecked,
+      });
+
+      if (transactions.length === 0) {
+        break;
       }
 
-      const day = dayjs(tx.timestamp).format('YYYY-MM-DD');
+      for (const tx of transactions) {
+        let totalTransfersAmountInTx = 0n;
+        for (const internalTx of tx.internalTransactions) {
+          totalTransfersAmountInTx += internalTx.value;
+        }
 
-      if (amountsPerDay[day] === undefined) {
-        amountsPerDay[day] = 0n;
+        const day = dayjs(tx.timestamp).format('YYYY-MM-DD');
+
+        if (amountsPerDay[day] === undefined) {
+          amountsPerDay[day] = 0n;
+        }
+
+        amountsPerDay[day] += totalTransfersAmountInTx;
       }
 
-      amountsPerDay[day] += totalTransfersAmountInTx;
-    }
+      nTxsChecked += transactions.length;
+      // eslint-disable-next-line no-constant-condition
+    } while (true);
 
     const reservedFunds = await this.getReservedFunds(campaignEscrow);
 
