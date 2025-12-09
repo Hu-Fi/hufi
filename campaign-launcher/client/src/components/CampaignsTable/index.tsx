@@ -503,7 +503,7 @@ const CampaignsTable: FC<Props> = ({
       sx={{
         border: isMobile ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         borderRadius: '16px',
-        backgroundColor: 'inherit',
+        bgcolor: 'inherit',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',
         },
