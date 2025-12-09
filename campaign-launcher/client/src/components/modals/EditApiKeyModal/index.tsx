@@ -36,7 +36,7 @@ type APIKeyFormValues = {
   memo?: string;
 };
 
-const validationSchema = yup.object({
+const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
   apiKey: yup.string().required('Required').trim().max(50, 'Max 50 characters'),
   secret: yup
     .string()
