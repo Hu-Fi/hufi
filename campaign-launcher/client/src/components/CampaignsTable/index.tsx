@@ -503,6 +503,7 @@ const CampaignsTable: FC<Props> = ({
       sx={{
         border: isMobile ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         borderRadius: '16px',
+        backgroundColor: 'inherit',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',
         },
@@ -519,6 +520,7 @@ const CampaignsTable: FC<Props> = ({
           mb: isMobile ? 0 : 1,
         },
         '& .MuiDataGrid-columnHeaders': {
+          bgcolor: 'transparent',
           '& > div[role="row"]': {
             bgcolor: 'inherit',
           },
@@ -528,6 +530,7 @@ const CampaignsTable: FC<Props> = ({
           px: isXl ? 0 : 1,
           textTransform: 'uppercase',
           cursor: 'default',
+          bgcolor: 'transparent',
           '&[data-field="fundAmount"] .MuiDataGrid-columnHeaderTitleContainer':
             {
               justifyContent: isJoinedCampaigns ? 'flex-end' : 'flex-start',
@@ -572,6 +575,9 @@ const CampaignsTable: FC<Props> = ({
           ...(isMobile && {
             position: 'relative',
           }),
+          '&:hover': {
+            bgcolor: 'rgba(255, 255, 255, 0.1)',
+          },
         },
         '& .MuiDataGrid-row--lastVisible': {
           mb: 0,
