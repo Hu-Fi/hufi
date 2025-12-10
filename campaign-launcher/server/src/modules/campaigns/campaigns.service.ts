@@ -115,11 +115,11 @@ export class CampaignsService {
 
   async getCampaignWithDetails(
     chainId: ChainId,
-    escrowAddress: string,
+    campaignAddress: string,
   ): Promise<CampaignDataWithDetails | null> {
     const campaignEscrow = await EscrowUtils.getEscrow(
       chainId as number,
-      escrowAddress,
+      campaignAddress,
     );
 
     if (!campaignEscrow) {
@@ -133,8 +133,8 @@ export class CampaignsService {
     do {
       const transactions = await TransactionUtils.getTransactions({
         chainId: chainId as number,
-        fromAddress: escrowAddress,
-        toAddress: escrowAddress,
+        fromAddress: campaignAddress,
+        toAddress: campaignAddress,
         method: 'bulkTransfer',
         first: 100,
         skip: nTxsChecked,
@@ -203,9 +203,6 @@ export class CampaignsService {
     return manifestUtils.validateSchema(manifestJson);
   }
 
-  /**
-   * TODO: cache successful retrievals
-   */
   private async retrieveCampaignData(
     campaignEscrow: IEscrow,
   ): Promise<CampaignData> {
@@ -336,15 +333,15 @@ export class CampaignsService {
    */
   async getCampaignLeaderboard(
     chainId: ChainId,
-    address: string,
+    campaignAddress: string,
   ): Promise<LeaderboardEntry[]> {
     const campaignEscrow = await EscrowUtils.getEscrow(
       chainId as number,
-      address,
+      campaignAddress,
     );
 
     if (!campaignEscrow) {
-      throw new CampaignEscrowNotFoundError(chainId, address);
+      throw new CampaignEscrowNotFoundError(chainId, campaignAddress);
     }
 
     /**
@@ -353,8 +350,6 @@ export class CampaignsService {
     if (!campaignEscrow.intermediateResultsUrl) {
       return [];
     }
-
-    const campaignData = await this.retrieveCampaignData(campaignEscrow);
 
     let intermediateResultsData: IntermediateResultsData;
     try {
@@ -367,50 +362,89 @@ export class CampaignsService {
         'Failed to get intermediate results data for leaderboard',
         {
           chainId,
-          address,
+          campaignAddress,
           error,
         },
       );
       throw new Error('Failed to retrieve results for leaderboard');
     }
 
-    const leaderboardEntriesMap = new Map<
-      string,
-      { score: Decimal; rewards: 0n }
-    >();
+    const leaderboardEntriesMap: {
+      [lowercasedAddress: string]: {
+        score: Decimal;
+        rewards: bigint;
+      };
+    } = {};
 
     for (const intermediateResult of intermediateResultsData.results) {
       for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
         for (const participantOutcome of outcomesBatch.results) {
-          if (!leaderboardEntriesMap.has(participantOutcome.address)) {
-            leaderboardEntriesMap.set(participantOutcome.address, {
+          const participantAddress = participantOutcome.address.toLowerCase();
+
+          if (!leaderboardEntriesMap[participantAddress]) {
+            leaderboardEntriesMap[participantAddress] = {
               score: new Decimal(0),
               rewards: 0n,
-            });
+            };
           }
 
-          const participantEntry = leaderboardEntriesMap.get(
-            participantOutcome.address,
-          )!;
-          participantEntry.score = participantEntry.score.add(
-            participantOutcome.score,
-          );
+          leaderboardEntriesMap[participantAddress].score =
+            leaderboardEntriesMap[participantAddress].score.add(
+              participantOutcome.score,
+            );
         }
       }
     }
 
+    let nTxsChecked = 0;
+    do {
+      const transactions = await TransactionUtils.getTransactions({
+        chainId: chainId as number,
+        fromAddress: campaignAddress,
+        toAddress: campaignAddress,
+        method: 'bulkTransfer',
+        first: 100,
+        skip: nTxsChecked,
+      });
+
+      if (transactions.length === 0) {
+        break;
+      }
+
+      for (const tx of transactions) {
+        for (const internalTx of tx.internalTransactions) {
+          const receiverAddress = internalTx.receiver || '';
+          if (!leaderboardEntriesMap[receiverAddress]) {
+            /**
+             * Oracle fees and launcher refunds might also be here
+             */
+            continue;
+          }
+
+          leaderboardEntriesMap[receiverAddress].rewards += internalTx.value;
+        }
+      }
+
+      nTxsChecked += transactions.length;
+      // eslint-disable-next-line no-constant-condition
+    } while (true);
+
+    const fundTokenDecimals = await this.web3Service.getTokenDecimals(
+      campaignEscrow.chainId,
+      campaignEscrow.token,
+    );
     const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, entryData] of leaderboardEntriesMap.entries()) {
+    for (const [address, entryData] of Object.entries(leaderboardEntriesMap)) {
       leaderboardEntries.push({
-        address,
+        address: ethers.getAddress(address),
         score: Number(
           entryData.score.toDecimalPlaces(
-            campaignData.fundTokenDecimals,
+            fundTokenDecimals,
             Decimal.ROUND_DOWN,
           ),
         ),
         rewards: Number(
-          ethers.formatUnits(entryData.rewards, campaignData.fundTokenDecimals),
+          ethers.formatUnits(entryData.rewards, fundTokenDecimals),
         ),
       });
     }
