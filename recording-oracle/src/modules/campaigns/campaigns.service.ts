@@ -1430,7 +1430,9 @@ export class CampaignsService
   }
 
   /**
-   * TODO: add caching
+   * TODOs:
+   * - add caching?
+   * - take into account that "score" for some campaigns is not "cumulative" value
    */
   async getCampaignLeaderboard(
     chainId: number,
