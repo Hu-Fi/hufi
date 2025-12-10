@@ -187,7 +187,7 @@ export class GetCampaignsResponseDto {
   results: CampaignData[];
 }
 
-export class GetCampaignWithDetailsParamsDto {
+export class SpecificCampaignParamsDto {
   @ApiProperty({
     name: 'chain_id',
     enum: ChainIds,
@@ -232,4 +232,20 @@ export class CampaignDataWithDetails extends CampaignData {
     name: 'reserved_funds',
   })
   reservedFunds: string;
+}
+
+export class LeaderboardEntry {
+  @ApiProperty()
+  address: string;
+
+  @ApiProperty()
+  score: number;
+
+  @ApiProperty()
+  rewards: number;
+}
+
+export class CampaignLeaderboardResponseDto {
+  @ApiProperty()
+  data: LeaderboardEntry[];
 }

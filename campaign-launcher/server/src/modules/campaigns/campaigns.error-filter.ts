@@ -6,19 +6,24 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { InvalidCampaignManifestError } from './campaigns.errors';
+import {
+  CampaignEscrowNotFoundError,
+  InvalidCampaignManifestError,
+} from './campaigns.errors';
 
-@Catch(InvalidCampaignManifestError)
+@Catch(InvalidCampaignManifestError, CampaignEscrowNotFoundError)
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = HttpStatus.UNPROCESSABLE_ENTITY;
+    let status = HttpStatus.UNPROCESSABLE_ENTITY;
 
     let message: string = exception.message;
     if (exception instanceof InvalidCampaignManifestError) {
       message = `${exception.message}. ${exception.details}`;
+    } else if (exception instanceof CampaignEscrowNotFoundError) {
+      status = HttpStatus.NOT_FOUND;
     }
 
     return response.status(status).json({

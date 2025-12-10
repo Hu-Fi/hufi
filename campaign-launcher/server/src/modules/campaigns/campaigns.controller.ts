@@ -13,10 +13,13 @@ import {
   GetCampaignsResponseDto,
   CampaignDataWithDetails,
   GetCampaignsQueryDto,
-  GetCampaignWithDetailsParamsDto,
+  CampaignLeaderboardResponseDto,
+  SpecificCampaignParamsDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
+
+const SPECIFIC_CAMPAIGN_ROUTE = '/:chain_id-:campaign_address';
 
 @ApiTags('Campaigns')
 @Controller('campaigns')
@@ -66,9 +69,9 @@ export class CampaignsController {
     type: CampaignDataWithDetails,
   })
   @Header('Cache-Control', 'public, max-age=60')
-  @Get('/:chain_id-:campaign_address')
+  @Get(SPECIFIC_CAMPAIGN_ROUTE)
   async getCampaignWithDetails(
-    @Param() params: GetCampaignWithDetailsParamsDto,
+    @Param() params: SpecificCampaignParamsDto,
   ): Promise<CampaignDataWithDetails> {
     const { chainId, campaignAddress } = params;
 
@@ -82,5 +85,28 @@ export class CampaignsController {
     }
 
     return campaign;
+  }
+
+  @ApiOperation({
+    summary: 'Get leaderboard for campaign',
+    description: 'Returns leaderboard data for specific campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CampaignLeaderboardResponseDto,
+  })
+  @Header('Cache-Control', 'public, max-age=600')
+  @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/leaderboard`)
+  async getCampaignLeaderboard(
+    @Param() params: SpecificCampaignParamsDto,
+  ): Promise<CampaignLeaderboardResponseDto> {
+    const { chainId, campaignAddress } = params;
+
+    const data = await this.campaignsService.getCampaignLeaderboard(
+      chainId,
+      campaignAddress,
+    );
+
+    return { data };
   }
 }

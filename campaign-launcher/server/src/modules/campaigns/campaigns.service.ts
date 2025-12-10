@@ -7,7 +7,9 @@ import {
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
+import _ from 'lodash';
 
 import { ChainId, ReadableEscrowStatus } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
@@ -19,10 +21,19 @@ import {
   CampaignData,
   CampaignDataWithDetails,
   CampaignDetails,
+  LeaderboardEntry,
 } from './campaigns.dto';
-import { InvalidCampaignManifestError } from './campaigns.errors';
+import {
+  CampaignEscrowNotFoundError,
+  InvalidCampaignManifestError,
+} from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
-import { CampaignManifest, CampaignStatus, CampaignType } from './types';
+import {
+  CampaignManifest,
+  CampaignStatus,
+  CampaignType,
+  IntermediateResultsData,
+} from './types';
 
 const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
@@ -192,6 +203,9 @@ export class CampaignsService {
     return manifestUtils.validateSchema(manifestJson);
   }
 
+  /**
+   * TODO: cache successful retrievals
+   */
   private async retrieveCampaignData(
     campaignEscrow: IEscrow,
   ): Promise<CampaignData> {
@@ -315,5 +329,92 @@ export class CampaignsService {
       });
       throw new Error(message);
     }
+  }
+
+  /**
+   * TODO: add caching
+   */
+  async getCampaignLeaderboard(
+    chainId: ChainId,
+    address: string,
+  ): Promise<LeaderboardEntry[]> {
+    const campaignEscrow = await EscrowUtils.getEscrow(
+      chainId as number,
+      address,
+    );
+
+    if (!campaignEscrow) {
+      throw new CampaignEscrowNotFoundError(chainId, address);
+    }
+
+    /**
+     * If no intermediates results file yet - no entries for leaderboard
+     */
+    if (!campaignEscrow.intermediateResultsUrl) {
+      return [];
+    }
+
+    const campaignData = await this.retrieveCampaignData(campaignEscrow);
+
+    let intermediateResultsData: IntermediateResultsData;
+    try {
+      const intermediateResultsFile = await httpUtils.downloadFile(
+        campaignEscrow.intermediateResultsUrl,
+      );
+      intermediateResultsData = JSON.parse(intermediateResultsFile.toString());
+    } catch (error) {
+      this.logger.error(
+        'Failed to get intermediate results data for leaderboard',
+        {
+          chainId,
+          address,
+          error,
+        },
+      );
+      throw new Error('Failed to retrieve results for leaderboard');
+    }
+
+    const leaderboardEntriesMap = new Map<
+      string,
+      { score: Decimal; rewards: 0n }
+    >();
+
+    for (const intermediateResult of intermediateResultsData.results) {
+      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
+        for (const participantOutcome of outcomesBatch.results) {
+          if (!leaderboardEntriesMap.has(participantOutcome.address)) {
+            leaderboardEntriesMap.set(participantOutcome.address, {
+              score: new Decimal(0),
+              rewards: 0n,
+            });
+          }
+
+          const participantEntry = leaderboardEntriesMap.get(
+            participantOutcome.address,
+          )!;
+          participantEntry.score = participantEntry.score.add(
+            participantOutcome.score,
+          );
+        }
+      }
+    }
+
+    const leaderboardEntries: LeaderboardEntry[] = [];
+    for (const [address, entryData] of leaderboardEntriesMap.entries()) {
+      leaderboardEntries.push({
+        address,
+        score: Number(
+          entryData.score.toDecimalPlaces(
+            campaignData.fundTokenDecimals,
+            Decimal.ROUND_DOWN,
+          ),
+        ),
+        rewards: Number(
+          ethers.formatUnits(entryData.rewards, campaignData.fundTokenDecimals),
+        ),
+      });
+    }
+
+    return _.orderBy(leaderboardEntries, 'score', 'desc');
   }
 }
