@@ -6,6 +6,7 @@ import {
   EscrowStatus,
   EscrowUtils,
   OrderDirection,
+  TransactionUtils,
 } from '@human-protocol/sdk';
 import {
   Injectable,
@@ -43,6 +44,7 @@ import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
+import { LeaderboardEntry } from './campaigns.dto';
 import {
   CampaignAlreadyFinishedError,
   CampaignCancelledError,
@@ -1425,5 +1427,129 @@ export class CampaignsService
       campaign.details.dailyBalanceTarget;
 
     return isDailyBalanceTargetMet;
+  }
+
+  /**
+   * TODO: add caching
+   */
+  async getCampaignLeaderboard(
+    chainId: number,
+    campaignAddress: string,
+  ): Promise<LeaderboardEntry[]> {
+    const campaign = await this.findOneByChainIdAndAddress(
+      chainId,
+      campaignAddress,
+    );
+    if (!campaign) {
+      /**
+       * It might be that campaign escrow is not synced yet,
+       * so return empty results in this case
+       */
+      return [];
+    }
+
+    const leaderboardEntriesMap: {
+      [lowercasedAddress: string]: {
+        score: Decimal;
+        rewards: bigint;
+      };
+    } = {};
+
+    const allParticipantsResults: ParticipantOutcome[] = [];
+
+    if (campaign.resultsCutoffAt) {
+      const intermediateResultsData =
+        await this.retrieveCampaignIntermediateResults(campaign);
+
+      for (const intermediateResult of intermediateResultsData?.results || []) {
+        for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
+          allParticipantsResults.push(...outcomesBatch.results);
+        }
+      }
+    }
+
+    const cachedInterimResults = this.campaignsInterimProgressCache.get(
+      campaign.id,
+    );
+
+    if (
+      cachedInterimResults &&
+      (campaign.resultsCutoffAt === null ||
+        dayjs(cachedInterimResults.from).isAfter(campaign.resultsCutoffAt))
+    ) {
+      /**
+       * Include interim results for calculation only if they are only results
+       * available or for timeframe that is after latest recorded results (cache might be stale)
+       */
+      allParticipantsResults.push(
+        ...cachedInterimResults.participants_outcomes,
+      );
+    }
+
+    for (const participantOutcome of allParticipantsResults) {
+      const participantAddress = participantOutcome.address.toLowerCase();
+
+      if (!leaderboardEntriesMap[participantAddress]) {
+        leaderboardEntriesMap[participantAddress] = {
+          score: new Decimal(0),
+          rewards: 0n,
+        };
+      }
+
+      leaderboardEntriesMap[participantAddress].score = leaderboardEntriesMap[
+        participantAddress
+      ].score.add(participantOutcome.score);
+    }
+
+    let nTxsChecked = 0;
+    do {
+      const transactions = await TransactionUtils.getTransactions({
+        chainId: chainId as number,
+        fromAddress: campaignAddress,
+        toAddress: campaignAddress,
+        method: 'bulkTransfer',
+        first: 100,
+        skip: nTxsChecked,
+      });
+
+      if (transactions.length === 0) {
+        break;
+      }
+
+      for (const tx of transactions) {
+        for (const internalTx of tx.internalTransactions) {
+          const receiverAddress = internalTx.receiver || '';
+          if (!leaderboardEntriesMap[receiverAddress]) {
+            /**
+             * Oracle fees and launcher refunds might also be here
+             */
+            continue;
+          }
+
+          leaderboardEntriesMap[receiverAddress].rewards += internalTx.value;
+        }
+      }
+
+      nTxsChecked += transactions.length;
+      // eslint-disable-next-line no-constant-condition
+    } while (true);
+
+    const leaderboardEntries: LeaderboardEntry[] = [];
+    for (const [address, entryData] of Object.entries(leaderboardEntriesMap)) {
+      leaderboardEntries.push({
+        address: ethers.getAddress(address),
+        score: Number(
+          entryData.score.toDecimalPlaces(
+            campaign.fundTokenDecimals,
+            Decimal.ROUND_DOWN,
+          ),
+        ),
+        rewards: Number(
+          ethers.formatUnits(entryData.rewards, campaign.fundTokenDecimals),
+        ),
+      });
+    }
+
+    return _.orderBy(leaderboardEntries, 'score', 'desc');
   }
 }

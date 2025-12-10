@@ -37,27 +37,3 @@ export enum CampaignType {
   HOLDING = 'HOLDING',
   THRESHOLD = 'THRESHOLD',
 }
-
-export type ParticipantOutcome = {
-  address: string;
-  score: number;
-};
-
-export type ParticipantsOutcomesBatch = {
-  id: string;
-  results: ParticipantOutcome[];
-};
-
-export type IntermediateResult = {
-  from: Date;
-  to: Date;
-  reserved_funds: string | number;
-  participants_outcomes_batches: ParticipantsOutcomesBatch[];
-};
-
-export type IntermediateResultsData = {
-  chain_id: number;
-  address: string;
-  exchange: string;
-  results: IntermediateResult[];
-};

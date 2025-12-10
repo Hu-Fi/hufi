@@ -7,9 +7,7 @@ import {
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
-import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
-import _ from 'lodash';
 
 import { ChainId, ReadableEscrowStatus } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
@@ -21,19 +19,10 @@ import {
   CampaignData,
   CampaignDataWithDetails,
   CampaignDetails,
-  LeaderboardEntry,
 } from './campaigns.dto';
-import {
-  CampaignEscrowNotFoundError,
-  InvalidCampaignManifestError,
-} from './campaigns.errors';
+import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
-import {
-  CampaignManifest,
-  CampaignStatus,
-  CampaignType,
-  IntermediateResultsData,
-} from './types';
+import { CampaignManifest, CampaignStatus, CampaignType } from './types';
 
 const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
   CampaignStatus,
@@ -326,129 +315,5 @@ export class CampaignsService {
       });
       throw new Error(message);
     }
-  }
-
-  /**
-   * TODO: add caching
-   */
-  async getCampaignLeaderboard(
-    chainId: ChainId,
-    campaignAddress: string,
-  ): Promise<LeaderboardEntry[]> {
-    const campaignEscrow = await EscrowUtils.getEscrow(
-      chainId as number,
-      campaignAddress,
-    );
-
-    if (!campaignEscrow) {
-      throw new CampaignEscrowNotFoundError(chainId, campaignAddress);
-    }
-
-    /**
-     * If no intermediates results file yet - no entries for leaderboard
-     */
-    if (!campaignEscrow.intermediateResultsUrl) {
-      return [];
-    }
-
-    let intermediateResultsData: IntermediateResultsData;
-    try {
-      const intermediateResultsFile = await httpUtils.downloadFile(
-        campaignEscrow.intermediateResultsUrl,
-      );
-      intermediateResultsData = JSON.parse(intermediateResultsFile.toString());
-    } catch (error) {
-      this.logger.error(
-        'Failed to get intermediate results data for leaderboard',
-        {
-          chainId,
-          campaignAddress,
-          error,
-        },
-      );
-      throw new Error('Failed to retrieve results for leaderboard');
-    }
-
-    const leaderboardEntriesMap: {
-      [lowercasedAddress: string]: {
-        score: Decimal;
-        rewards: bigint;
-      };
-    } = {};
-
-    for (const intermediateResult of intermediateResultsData.results) {
-      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
-        for (const participantOutcome of outcomesBatch.results) {
-          const participantAddress = participantOutcome.address.toLowerCase();
-
-          if (!leaderboardEntriesMap[participantAddress]) {
-            leaderboardEntriesMap[participantAddress] = {
-              score: new Decimal(0),
-              rewards: 0n,
-            };
-          }
-
-          leaderboardEntriesMap[participantAddress].score =
-            leaderboardEntriesMap[participantAddress].score.add(
-              participantOutcome.score,
-            );
-        }
-      }
-    }
-
-    let nTxsChecked = 0;
-    do {
-      const transactions = await TransactionUtils.getTransactions({
-        chainId: chainId as number,
-        fromAddress: campaignAddress,
-        toAddress: campaignAddress,
-        method: 'bulkTransfer',
-        first: 100,
-        skip: nTxsChecked,
-      });
-
-      if (transactions.length === 0) {
-        break;
-      }
-
-      for (const tx of transactions) {
-        for (const internalTx of tx.internalTransactions) {
-          const receiverAddress = internalTx.receiver || '';
-          if (!leaderboardEntriesMap[receiverAddress]) {
-            /**
-             * Oracle fees and launcher refunds might also be here
-             */
-            continue;
-          }
-
-          leaderboardEntriesMap[receiverAddress].rewards += internalTx.value;
-        }
-      }
-
-      nTxsChecked += transactions.length;
-      // eslint-disable-next-line no-constant-condition
-    } while (true);
-
-    const fundTokenDecimals = await this.web3Service.getTokenDecimals(
-      campaignEscrow.chainId,
-      campaignEscrow.token,
-    );
-    const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, entryData] of Object.entries(leaderboardEntriesMap)) {
-      leaderboardEntries.push({
-        address: ethers.getAddress(address),
-        score: Number(
-          entryData.score.toDecimalPlaces(
-            fundTokenDecimals,
-            Decimal.ROUND_DOWN,
-          ),
-        ),
-        rewards: Number(
-          ethers.formatUnits(entryData.rewards, fundTokenDecimals),
-        ),
-      });
-    }
-
-    return _.orderBy(leaderboardEntries, 'score', 'desc');
   }
 }

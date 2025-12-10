@@ -13,7 +13,6 @@ import {
   GetCampaignsResponseDto,
   CampaignDataWithDetails,
   GetCampaignsQueryDto,
-  CampaignLeaderboardResponseDto,
   SpecificCampaignParamsDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
@@ -85,28 +84,5 @@ export class CampaignsController {
     }
 
     return campaign;
-  }
-
-  @ApiOperation({
-    summary: 'Get leaderboard for campaign',
-    description: 'Returns leaderboard data for specific campaign',
-  })
-  @ApiResponse({
-    status: 200,
-    type: CampaignLeaderboardResponseDto,
-  })
-  @Header('Cache-Control', 'public, max-age=600')
-  @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/leaderboard`)
-  async getCampaignLeaderboard(
-    @Param() params: SpecificCampaignParamsDto,
-  ): Promise<CampaignLeaderboardResponseDto> {
-    const { chainId, campaignAddress } = params;
-
-    const data = await this.campaignsService.getCampaignLeaderboard(
-      chainId,
-      campaignAddress,
-    );
-
-    return { data };
   }
 }

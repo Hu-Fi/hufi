@@ -233,3 +233,28 @@ export class GetUserProgressResponseDto {
   })
   totalMeta: object;
 }
+
+export class LeaderboardEntry {
+  @ApiProperty()
+  address: string;
+
+  @ApiProperty({
+    description: `
+      This field represents different value based on campaign type:
+        - for market making it is participant score
+        - for holders (holding and threshold campaigns) it is amount of held tokens
+    `,
+  })
+  score: number;
+
+  @ApiProperty()
+  rewards: number;
+}
+
+export class CampaignLeaderboardResponseDto {
+  @ApiProperty({
+    type: LeaderboardEntry,
+    isArray: true,
+  })
+  data: LeaderboardEntry[];
+}
