@@ -1454,7 +1454,7 @@ export class CampaignsService
         break;
       case LeaderboardRanking.CURRENT_PROGRESS:
         leaderboardEntries =
-          this.getCurrentProgressLeaderboardEntries(campaign);
+          await this.getCurrentProgressLeaderboardEntries(campaign);
         break;
       default:
         throw new Error(`Leaderboard ranking by "${rankBy}" is not supported`);
@@ -1468,9 +1468,6 @@ export class CampaignsService
     return _.orderBy(leaderboardEntries, 'result', 'desc');
   }
 
-  /**
-   * TODO: add caching
-   */
   private async getRewardsLeaderboardEntries(
     campaign: CampaignEntity,
   ): Promise<LeaderboardEntry[]> {
@@ -1550,22 +1547,46 @@ export class CampaignsService
     return leaderboardEntries;
   }
 
-  private getCurrentProgressLeaderboardEntries(
+  private async getCurrentProgressLeaderboardEntries(
     campaign: CampaignEntity,
-  ): LeaderboardEntry[] {
-    const cachedInterimResults = this.campaignsInterimProgressCache.get(
-      campaign.id,
-    );
+  ): Promise<LeaderboardEntry[]> {
+    if (
+      [CampaignStatus.CANCELLED, CampaignStatus.COMPLETED].includes(
+        campaign.status,
+      )
+    ) {
+      throw new CampaignAlreadyFinishedError(
+        campaign.chainId,
+        campaign.address,
+      );
+    }
 
-    if (!cachedInterimResults) {
-      return [];
+    let resultsToInspect: ParticipantOutcome[] = [];
+    if (
+      [
+        CampaignStatus.PENDING_CANCELLATION,
+        CampaignStatus.PENDING_COMPLETION,
+      ].includes(campaign.status)
+    ) {
+      const intermediateResultsData =
+        await this.retrieveCampaignIntermediateResults(campaign);
+
+      const latestIntermediateResult = intermediateResultsData!.results.at(-1)!;
+      for (const outcomesBatch of latestIntermediateResult.participants_outcomes_batches) {
+        resultsToInspect.push(...outcomesBatch.results);
+      }
+    } else {
+      const cachedInterimResults = this.campaignsInterimProgressCache.get(
+        campaign.id,
+      );
+      resultsToInspect = cachedInterimResults?.participants_outcomes || [];
     }
 
     const leaderboardEntriesMap: {
       [lowercasedAddress: string]: Decimal;
     } = {};
 
-    for (const participantOutcome of cachedInterimResults.participants_outcomes) {
+    for (const participantOutcome of resultsToInspect) {
       leaderboardEntriesMap[participantOutcome.address] = (
         leaderboardEntriesMap[participantOutcome.address] || new Decimal(0)
       ).add(participantOutcome.score);
