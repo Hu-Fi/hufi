@@ -123,3 +123,8 @@ export enum CampaignJoinStatus {
   JOIN_IS_CLOSED = 'join_closed',
   NOT_AVAILABLE = 'not_available',
 }
+
+export enum LeaderboardRanking {
+  TOTAL_REWARDS = 'rewards',
+  CURRENT_PROGRESS = 'current_progress',
+}

@@ -89,6 +89,7 @@ import {
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
+  LeaderboardRanking,
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -1429,14 +1430,10 @@ export class CampaignsService
     return isDailyBalanceTargetMet;
   }
 
-  /**
-   * TODOs:
-   * - add caching?
-   * - take into account that "score" for some campaigns is not "cumulative" value
-   */
   async getCampaignLeaderboard(
     chainId: number,
     campaignAddress: string,
+    rankBy: LeaderboardRanking,
   ): Promise<LeaderboardEntry[]> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
@@ -1450,65 +1447,66 @@ export class CampaignsService
       return [];
     }
 
-    const leaderboardEntriesMap: {
-      [lowercasedAddress: string]: {
-        score: Decimal;
-        rewards: bigint;
-      };
-    } = {};
+    let leaderboardEntries: LeaderboardEntry[];
+    switch (rankBy) {
+      case LeaderboardRanking.TOTAL_REWARDS:
+        leaderboardEntries = await this.getRewardsLeaderboardEntries(campaign);
+        break;
+      case LeaderboardRanking.CURRENT_PROGRESS:
+        leaderboardEntries =
+          this.getCurrentProgressLeaderboardEntries(campaign);
+        break;
+      default:
+        throw new Error(`Leaderboard ranking by "${rankBy}" is not supported`);
+    }
 
-    const allParticipantsResults: ParticipantOutcome[] = [];
+    leaderboardEntries = leaderboardEntries.map(({ address, result }) => ({
+      address: ethers.getAddress(address),
+      result,
+    }));
 
-    if (campaign.resultsCutoffAt) {
-      const intermediateResultsData =
-        await this.retrieveCampaignIntermediateResults(campaign);
+    return _.orderBy(leaderboardEntries, 'result', 'desc');
+  }
 
-      for (const intermediateResult of intermediateResultsData?.results || []) {
-        for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
-          allParticipantsResults.push(...outcomesBatch.results);
+  /**
+   * TODO: add caching
+   */
+  private async getRewardsLeaderboardEntries(
+    campaign: CampaignEntity,
+  ): Promise<LeaderboardEntry[]> {
+    if (!campaign.resultsCutoffAt) {
+      return [];
+    }
+
+    const participantAdresses = new Set<string>();
+
+    const intermediateResultsData =
+      await this.retrieveCampaignIntermediateResults(campaign);
+
+    for (const intermediateResult of intermediateResultsData?.results || []) {
+      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
+        for (const participantOutcome of outcomesBatch.results) {
+          participantAdresses.add(participantOutcome.address);
         }
       }
     }
 
-    const cachedInterimResults = this.campaignsInterimProgressCache.get(
-      campaign.id,
-    );
-
-    if (
-      cachedInterimResults &&
-      (campaign.resultsCutoffAt === null ||
-        dayjs(cachedInterimResults.from).isAfter(campaign.resultsCutoffAt))
-    ) {
+    const leaderboardEntriesMap: {
       /**
-       * Include interim results for calculation only if they are only results
-       * available or for timeframe that is after latest recorded results (cache might be stale)
+       * Subgraph returns lowercased data, so use same here
        */
-      allParticipantsResults.push(
-        ...cachedInterimResults.participants_outcomes,
-      );
-    }
-
-    for (const participantOutcome of allParticipantsResults) {
-      const participantAddress = participantOutcome.address.toLowerCase();
-
-      if (!leaderboardEntriesMap[participantAddress]) {
-        leaderboardEntriesMap[participantAddress] = {
-          score: new Decimal(0),
-          rewards: 0n,
-        };
-      }
-
-      leaderboardEntriesMap[participantAddress].score = leaderboardEntriesMap[
-        participantAddress
-      ].score.add(participantOutcome.score);
+      [lowercasedAddress: string]: bigint;
+    } = {};
+    for (const address of participantAdresses) {
+      leaderboardEntriesMap[address.toLowerCase()] = 0n;
     }
 
     let nTxsChecked = 0;
     do {
       const transactions = await TransactionUtils.getTransactions({
-        chainId: chainId as number,
-        fromAddress: campaignAddress,
-        toAddress: campaignAddress,
+        chainId: campaign.chainId,
+        fromAddress: campaign.address,
+        toAddress: campaign.address,
         method: 'bulkTransfer',
         first: 100,
         skip: nTxsChecked,
@@ -1521,14 +1519,15 @@ export class CampaignsService
       for (const tx of transactions) {
         for (const internalTx of tx.internalTransactions) {
           const receiverAddress = internalTx.receiver || '';
-          if (!leaderboardEntriesMap[receiverAddress]) {
+          if (leaderboardEntriesMap[receiverAddress] === undefined) {
             /**
-             * Oracle fees and launcher refunds might also be here
+             * Oracle fees and launcher refunds are also
+             * in array of internal transactions
              */
             continue;
           }
 
-          leaderboardEntriesMap[receiverAddress].rewards += internalTx.value;
+          leaderboardEntriesMap[receiverAddress] += internalTx.value;
         }
       }
 
@@ -1537,21 +1536,56 @@ export class CampaignsService
     } while (true);
 
     const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, entryData] of Object.entries(leaderboardEntriesMap)) {
+    for (const [address, totalRewards] of Object.entries(
+      leaderboardEntriesMap,
+    )) {
       leaderboardEntries.push({
-        address: ethers.getAddress(address),
-        score: Number(
-          entryData.score.toDecimalPlaces(
-            campaign.fundTokenDecimals,
-            Decimal.ROUND_DOWN,
-          ),
-        ),
-        rewards: Number(
-          ethers.formatUnits(entryData.rewards, campaign.fundTokenDecimals),
+        address,
+        result: Number(
+          ethers.formatUnits(totalRewards, campaign.fundTokenDecimals),
         ),
       });
     }
 
-    return _.orderBy(leaderboardEntries, 'score', 'desc');
+    return leaderboardEntries;
+  }
+
+  private getCurrentProgressLeaderboardEntries(
+    campaign: CampaignEntity,
+  ): LeaderboardEntry[] {
+    const cachedInterimResults = this.campaignsInterimProgressCache.get(
+      campaign.id,
+    );
+
+    if (!cachedInterimResults) {
+      return [];
+    }
+
+    const leaderboardEntriesMap: {
+      [lowercasedAddress: string]: Decimal;
+    } = {};
+
+    for (const participantOutcome of cachedInterimResults.participants_outcomes) {
+      leaderboardEntriesMap[participantOutcome.address] = (
+        leaderboardEntriesMap[participantOutcome.address] || new Decimal(0)
+      ).add(participantOutcome.score);
+    }
+
+    const leaderboardEntries: LeaderboardEntry[] = [];
+    for (const [address, currentScore] of Object.entries(
+      leaderboardEntriesMap,
+    )) {
+      leaderboardEntries.push({
+        address,
+        result: Number(
+          currentScore.toDecimalPlaces(
+            campaign.fundTokenDecimals,
+            Decimal.ROUND_DOWN,
+          ),
+        ),
+      });
+    }
+
+    return leaderboardEntries;
   }
 }
