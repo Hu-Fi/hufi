@@ -3244,6 +3244,9 @@ describe('CampaignsService', () => {
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
       });
+    });
+
+    afterEach(() => {
       mockInterimProgressCache.clear();
     });
 
@@ -3421,7 +3424,9 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+    });
 
+    afterEach(() => {
       mockInterimProgressCache.clear();
     });
 
@@ -4398,5 +4403,142 @@ describe('CampaignsService', () => {
       ]);
       expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(2);
     });
+  });
+
+  describe('getCurrentProgressLeaderboardEntries', () => {
+    const mockInterimProgressCache = new Map();
+    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
+
+    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      replacedInterimProgressCacheRef = jest.replaceProperty(
+        campaignsService as any,
+        'campaignsInterimProgressCache',
+        mockInterimProgressCache,
+      );
+
+      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignIntermediateResults',
+      );
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+    });
+
+    beforeEach(() => {
+      campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
+    });
+
+    afterEach(() => {
+      mockInterimProgressCache.clear();
+    });
+
+    afterAll(() => {
+      replacedInterimProgressCacheRef.restore();
+
+      spyOnRetrieveCampaignIntermediateResults.mockRestore();
+    });
+
+    it.each([CampaignStatus.CANCELLED, CampaignStatus.COMPLETED])(
+      'should throw when campaign already finished w/ "%s" status',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        let thrownError;
+        try {
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+        expect(thrownError.chainId).toBe(campaign.chainId);
+        expect(thrownError.address).toBe(campaign.address);
+      },
+    );
+
+    it.each([
+      CampaignStatus.PENDING_CANCELLATION,
+      CampaignStatus.PENDING_COMPLETION,
+    ])(
+      'should return data based on intermediate results for "%s" campaign',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        const intermediateResultsData = generateIntermediateResultsData();
+        const participantOutcome = generateParticipantOutcome();
+        intermediateResultsData.results[0].participants_outcomes_batches.push({
+          id: faker.string.uuid(),
+          results: [participantOutcome],
+        });
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+          intermediateResultsData,
+        );
+
+        const data =
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+
+        expect(data).toEqual([
+          {
+            address: participantOutcome.address,
+            result: Number(
+              new Decimal(participantOutcome.score).toDecimalPlaces(
+                campaign.fundTokenDecimals,
+                Decimal.ROUND_DOWN,
+              ),
+            ),
+          },
+        ]);
+      },
+    );
+
+    it.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
+      'should return data based on interim cache for "%s" campaign',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        const participantOutcome = generateParticipantOutcome();
+        mockInterimProgressCache.set(campaign.id, {
+          participants_outcomes: [participantOutcome],
+        });
+
+        const data =
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+
+        expect(data).toEqual([
+          {
+            address: participantOutcome.address,
+            result: Number(
+              new Decimal(participantOutcome.score).toDecimalPlaces(
+                campaign.fundTokenDecimals,
+                Decimal.ROUND_DOWN,
+              ),
+            ),
+          },
+        ]);
+      },
+    );
+
+    it.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
+      'should handle empty interim cache for "%s" campaign',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        const data =
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+
+        expect(data).toEqual([]);
+      },
+    );
   });
 });
