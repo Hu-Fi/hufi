@@ -78,6 +78,7 @@ import {
   generateCampaignParticipant,
   mockCampaignsConfigService,
   generateUserJoinedDate,
+  generateLeaderboardEntries,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -98,6 +99,7 @@ import {
   CampaignType,
   HoldingCampaignDetails,
   IntermediateResultsData,
+  LeaderboardRanking,
   MarketMakingCampaignDetails,
   ThresholdCampaignDetails,
 } from './types';
@@ -4162,6 +4164,110 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.checkCampaignExists).toHaveBeenCalledTimes(
         escrows.length,
       );
+    });
+  });
+
+  describe('getCampaignLeaderboard', () => {
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      campaign = generateCampaignEntity();
+    });
+
+    beforeEach(() => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+    });
+
+    it('should return empty data if campaign not found', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress
+        .mockReset()
+        .mockResolvedValueOnce(null);
+
+      const data = await campaignsService.getCampaignLeaderboard(
+        campaign.chainId,
+        campaign.address,
+        faker.helpers.arrayElement(Object.values(LeaderboardRanking)),
+      );
+
+      expect(data).toEqual([]);
+    });
+
+    it('should throw if ranking option is not supported', async () => {
+      const notSupportedRankingOption = faker.lorem.word();
+
+      let thrownError;
+      try {
+        await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+          notSupportedRankingOption as LeaderboardRanking,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        `Leaderboard ranking by "${notSupportedRankingOption}" is not supported`,
+      );
+    });
+
+    it('should return rewards leaderboard data in correct format', async () => {
+      const spyOnGetRewardsLeaderboard = jest.spyOn(
+        campaignsService as any,
+        'getRewardsLeaderboardEntries',
+      );
+
+      const leaderboardEntries = generateLeaderboardEntries();
+      spyOnGetRewardsLeaderboard.mockResolvedValueOnce(leaderboardEntries);
+
+      const data = await campaignsService.getCampaignLeaderboard(
+        campaign.chainId,
+        campaign.address,
+        LeaderboardRanking.TOTAL_REWARDS,
+      );
+
+      expect(data).toEqual(
+        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
+          address: ethers.getAddress(e.address),
+          result: e.result,
+        })),
+      );
+      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledTimes(1);
+      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledWith(campaign);
+
+      spyOnGetRewardsLeaderboard.mockRestore();
+    });
+
+    it('should return current progress leaderboard data in correct format', async () => {
+      const spyOnGetCurrentProgressLeaderboard = jest.spyOn(
+        campaignsService as any,
+        'getCurrentProgressLeaderboardEntries',
+      );
+
+      const leaderboardEntries = generateLeaderboardEntries();
+      spyOnGetCurrentProgressLeaderboard.mockResolvedValueOnce(
+        leaderboardEntries,
+      );
+
+      const data = await campaignsService.getCampaignLeaderboard(
+        campaign.chainId,
+        campaign.address,
+        LeaderboardRanking.CURRENT_PROGRESS,
+      );
+
+      expect(data).toEqual(
+        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
+          address: ethers.getAddress(e.address),
+          result: e.result,
+        })),
+      );
+      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledTimes(1);
+      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledWith(campaign);
+
+      spyOnGetCurrentProgressLeaderboard.mockRestore();
     });
   });
 });
