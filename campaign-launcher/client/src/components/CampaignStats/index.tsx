@@ -110,7 +110,7 @@ const getDailyTargetCardLabel = (campaignType: CampaignType) => {
     case CampaignType.HOLDING:
       return 'Daily balance target';
     case CampaignType.THRESHOLD:
-      return 'Minumum balance target';
+      return 'Minimum balance target';
     default:
       return campaignType as never;
   }

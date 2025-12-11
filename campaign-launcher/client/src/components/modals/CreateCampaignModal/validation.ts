@@ -3,6 +3,7 @@ import type { ObjectSchema } from 'yup';
 
 import {
   CampaignType,
+  type CampaignFormValues,
   type HoldingFormValues,
   type MarketMakingFormValues,
   type ThresholdFormValues,
@@ -130,4 +131,4 @@ export const campaignValidationSchema = yup.lazy((value) => {
     }
   }
   return marketMakingValidationSchema;
-});
+}) as unknown as ObjectSchema<CampaignFormValues>;
