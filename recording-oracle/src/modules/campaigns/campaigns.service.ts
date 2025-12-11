@@ -1488,6 +1488,10 @@ export class CampaignsService
       }
     }
 
+    if (participantAdresses.size === 0) {
+      return [];
+    }
+
     const leaderboardEntriesMap: {
       /**
        * Subgraph returns lowercased data, so use same here

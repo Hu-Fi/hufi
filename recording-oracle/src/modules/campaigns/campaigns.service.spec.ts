@@ -19,8 +19,10 @@ import {
   EscrowClient,
   EscrowStatus,
   EscrowUtils,
-  IEscrow,
+  type IEscrow,
+  type ITransaction,
   OrderDirection,
+  TransactionUtils,
 } from '@human-protocol/sdk';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
@@ -120,6 +122,7 @@ const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
+const mockedTransactionUtils = jest.mocked(TransactionUtils);
 
 const exchangePermissions = Object.values(ExchangePermission);
 
@@ -4268,6 +4271,132 @@ describe('CampaignsService', () => {
       expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledWith(campaign);
 
       spyOnGetCurrentProgressLeaderboard.mockRestore();
+    });
+  });
+
+  describe('getRewardsLeaderboardEntries', () => {
+    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignIntermediateResults',
+      );
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+    });
+
+    beforeEach(() => {
+      campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
+    });
+
+    afterAll(() => {
+      spyOnRetrieveCampaignIntermediateResults.mockRestore();
+    });
+
+    it('should return empty data if results not yet recorded', async () => {
+      campaign.resultsCutoffAt = null;
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([]);
+    });
+
+    it('should return empty result if no participants in results', async () => {
+      const intermediateResultsData = generateIntermediateResultsData();
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([]);
+    });
+
+    it('should return zeros if no reward transactions for participants yet', async () => {
+      const intermediateResultsData = generateIntermediateResultsData();
+      const participantOutcome = generateParticipantOutcome();
+      intermediateResultsData.results[0].participants_outcomes_batches.push({
+        id: faker.string.uuid(),
+        results: [participantOutcome],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([
+        {
+          address: participantOutcome.address.toLowerCase(),
+          result: 0,
+        },
+      ]);
+      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(1);
+      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledWith({
+        chainId: campaign.chainId,
+        fromAddress: campaign.address,
+        toAddress: campaign.address,
+        method: 'bulkTransfer',
+        first: 100,
+        skip: 0,
+      });
+    });
+
+    it('should return only participants data for leaderboard', async () => {
+      const intermediateResultsData = generateIntermediateResultsData();
+      const participantOutcome = generateParticipantOutcome();
+      intermediateResultsData.results[0].participants_outcomes_batches.push({
+        id: faker.string.uuid(),
+        results: [participantOutcome],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      const participantRewardValue = faker.number.bigInt();
+      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([
+        {
+          internalTransactions: [
+            {
+              receiver: participantOutcome.address.toLowerCase(),
+              value: participantRewardValue,
+            },
+            // imitate broken value
+            {
+              receiver: null,
+              value: faker.number.bigInt(),
+            },
+            // imitate oracle fee/launcher refund payout
+            {
+              receiver: faker.finance.ethereumAddress(),
+              value: faker.number.bigInt(),
+            },
+          ],
+        },
+      ] as ITransaction[]);
+      // next page request
+      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([
+        {
+          address: participantOutcome.address.toLowerCase(),
+          result: Number(
+            ethers.formatUnits(
+              participantRewardValue,
+              campaign.fundTokenDecimals,
+            ),
+          ),
+        },
+      ]);
+      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(2);
     });
   });
 });
