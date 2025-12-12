@@ -36,10 +36,6 @@ export class ExchangeNameValidator implements ValidatorConstraintInterface {
   }
 }
 
-/**
- * TODO: Remove "ALL" value from ChainId enum in sdk
- * to avoid selecting it as valid value in flows
- */
 export function IsChainId() {
   return applyDecorators(
     IsIn(ChainIds),

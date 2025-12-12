@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 
+import { Public } from '@/common/decorators';
 import type { RequestWithUser } from '@/common/types';
 
 import {
@@ -33,6 +34,8 @@ import {
   JoinCampaignSuccessDto,
   ListJoinedCampaignsQueryDto,
   ListJoinedCampaignsSuccessDto,
+  CampaignLeaderboardResponseDto,
+  GetLeaderboardQueryDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignNotFoundError } from './campaigns.errors';
@@ -68,13 +71,15 @@ for (const [returnedCampaignStatus, campaignStatuses] of Object.entries(
   }
 }
 
+const SPECIFIC_CAMPAIGN_ROUTE = '/:chain_id-:campaign_address';
+
 @ApiTags('Campaigns')
 @Controller('/campaigns')
-@ApiBearerAuth()
 @UseFilters(CampaignsControllerErrorsFilter)
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'List joined campaigns.',
     description: 'Retrieve the list of campaign addresses user joined.',
@@ -123,6 +128,7 @@ export class CampaignsController {
     };
   }
 
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Join campaign.',
     description: 'Endpoint for joining the campaign.',
@@ -147,6 +153,7 @@ export class CampaignsController {
     return { id: campaignId };
   }
 
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Check if user has joined the campaign',
   })
@@ -171,6 +178,7 @@ export class CampaignsController {
     return joinStatus;
   }
 
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Check user progress for the campaign',
   })
@@ -184,7 +192,7 @@ export class CampaignsController {
     description: 'No progress available yet',
   })
   @Header('Cache-Control', 'private, max-age=30')
-  @Get('/:chain_id-:campaign_address/my-progress')
+  @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/my-progress`)
   async getUserProgress(
     @Req() request: RequestWithUser,
     @Param() { chainId, campaignAddress }: CampaignParamsDto,
@@ -221,5 +229,29 @@ export class CampaignsController {
 
       throw error;
     }
+  }
+
+  @ApiOperation({
+    summary: 'Get leaderboard for campaign',
+    description: 'Returns leaderboard data for specific campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CampaignLeaderboardResponseDto,
+  })
+  @Header('Cache-Control', 'public, max-age=30')
+  @Public()
+  @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/leaderboard`)
+  async getCampaignLeaderboard(
+    @Param() { chainId, campaignAddress }: CampaignParamsDto,
+    @Query() { rankBy }: GetLeaderboardQueryDto,
+  ): Promise<CampaignLeaderboardResponseDto> {
+    const data = await this.campaignsService.getCampaignLeaderboard(
+      chainId,
+      campaignAddress,
+      rankBy,
+    );
+
+    return { data };
   }
 }

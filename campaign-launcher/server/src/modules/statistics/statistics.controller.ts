@@ -41,6 +41,8 @@ export class StatisticsController {
       const cachedValue: CampaignsStatsDto = {
         nActiveCampaigns: result.nActive,
         rewardsPoolUsd: result.rewardsPoolUsd,
+        nCompletedCampaigns: result.nCompleted,
+        paidRewardsUsd: result.paidRewardsUsd,
       };
 
       statsCache.set(cacheKey, cachedValue);
