@@ -5,6 +5,12 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 
+/**
+ * Setup for libs must be done before any other module is imported,
+ * so every lib is already configured before its import there
+ */
+import './setup-libs';
+
 import { AppModule } from './app.module';
 import { ServerConfigService } from './config';
 import logger, { nestLoggerOverride } from './logger';

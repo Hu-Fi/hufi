@@ -25,4 +25,17 @@ export class CampaignsStatsDto {
       'Total amount of funds available for rewards on active campaigns',
   })
   rewardsPoolUsd: number;
+
+  @ApiProperty({
+    name: 'n_completed_campaigns',
+    description: 'Total number of completed campaigns',
+  })
+  nCompletedCampaigns: number;
+
+  @ApiProperty({
+    name: 'total_rewards_distributed',
+    description:
+      'Total amount of funds distrubited as rewards on completed campaigns',
+  })
+  paidRewardsUsd: number;
 }

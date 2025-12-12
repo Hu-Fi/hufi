@@ -19,8 +19,10 @@ import {
   EscrowClient,
   EscrowStatus,
   EscrowUtils,
-  IEscrow,
+  type IEscrow,
+  type ITransaction,
   OrderDirection,
+  TransactionUtils,
 } from '@human-protocol/sdk';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
@@ -48,6 +50,7 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
+import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
 import { CampaignEntity } from './campaign.entity';
 import {
@@ -77,6 +80,7 @@ import {
   generateCampaignParticipant,
   mockCampaignsConfigService,
   generateUserJoinedDate,
+  generateLeaderboardEntries,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -97,6 +101,7 @@ import {
   CampaignType,
   HoldingCampaignDetails,
   IntermediateResultsData,
+  LeaderboardRanking,
   MarketMakingCampaignDetails,
   ThresholdCampaignDetails,
 } from './types';
@@ -117,6 +122,7 @@ const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
+const mockedTransactionUtils = jest.mocked(TransactionUtils);
 
 const exchangePermissions = Object.values(ExchangePermission);
 
@@ -835,7 +841,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should return campaign id if exists and user already joined', async () => {
+    it('should return campaign id if campaign exists and user already joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -859,6 +865,75 @@ describe('CampaignsService', () => {
       expect(
         mockUserCampaignsRepository.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
+    it('should return campaign id if campaign exists and user not joined yet', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        null,
+      );
+
+      const id = await campaignsService.join(
+        userId,
+        chainId,
+        // not checksummed address
+        campaign.address.toLowerCase(),
+      );
+
+      expect(id).toBe(campaign.id);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+        userId,
+        campaignId: campaign.id,
+        createdAt: expect.any(Date),
+      });
+    });
+
+    it('should return campaign id if campaign exists and user joined with race condition', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        null,
+      );
+      mockUserCampaignsRepository.insert.mockRejectedValueOnce(
+        createDuplicatedKeyError(),
+      );
+
+      const id = await campaignsService.join(
+        userId,
+        chainId,
+        // not checksummed address
+        campaign.address.toLowerCase(),
+      );
+
+      expect(id).toBe(campaign.id);
+
+      expect(
+        mockCampaignsRepository.findOneByChainIdAndAddress,
+      ).toHaveBeenCalledWith(chainId, campaign.address);
+
+      expect(
+        mockUserCampaignsRepository.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+        userId,
+        campaignId: campaign.id,
+        createdAt: expect.any(Date),
+      });
     });
 
     it('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {
@@ -3169,6 +3244,9 @@ describe('CampaignsService', () => {
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
       });
+    });
+
+    afterEach(() => {
       mockInterimProgressCache.clear();
     });
 
@@ -3346,7 +3424,9 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+    });
 
+    afterEach(() => {
       mockInterimProgressCache.clear();
     });
 
@@ -4093,5 +4173,372 @@ describe('CampaignsService', () => {
         escrows.length,
       );
     });
+  });
+
+  describe('getCampaignLeaderboard', () => {
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      campaign = generateCampaignEntity();
+    });
+
+    beforeEach(() => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+    });
+
+    it('should return empty data if campaign not found', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress
+        .mockReset()
+        .mockResolvedValueOnce(null);
+
+      const data = await campaignsService.getCampaignLeaderboard(
+        campaign.chainId,
+        campaign.address,
+        faker.helpers.arrayElement(Object.values(LeaderboardRanking)),
+      );
+
+      expect(data).toEqual([]);
+    });
+
+    it('should throw if ranking option is not supported', async () => {
+      const notSupportedRankingOption = faker.lorem.word();
+
+      let thrownError;
+      try {
+        await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+          notSupportedRankingOption as LeaderboardRanking,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        `Leaderboard ranking by "${notSupportedRankingOption}" is not supported`,
+      );
+    });
+
+    it('should return rewards leaderboard data in correct format', async () => {
+      const spyOnGetRewardsLeaderboard = jest.spyOn(
+        campaignsService as any,
+        'getRewardsLeaderboardEntries',
+      );
+
+      const leaderboardEntries = generateLeaderboardEntries();
+      spyOnGetRewardsLeaderboard.mockResolvedValueOnce(leaderboardEntries);
+
+      const data = await campaignsService.getCampaignLeaderboard(
+        campaign.chainId,
+        campaign.address,
+        LeaderboardRanking.TOTAL_REWARDS,
+      );
+
+      expect(data).toEqual(
+        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
+          address: ethers.getAddress(e.address),
+          result: e.result,
+        })),
+      );
+      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledTimes(1);
+      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledWith(campaign);
+
+      spyOnGetRewardsLeaderboard.mockRestore();
+    });
+
+    it('should return current progress leaderboard data in correct format', async () => {
+      const spyOnGetCurrentProgressLeaderboard = jest.spyOn(
+        campaignsService as any,
+        'getCurrentProgressLeaderboardEntries',
+      );
+
+      const leaderboardEntries = generateLeaderboardEntries();
+      spyOnGetCurrentProgressLeaderboard.mockResolvedValueOnce(
+        leaderboardEntries,
+      );
+
+      const data = await campaignsService.getCampaignLeaderboard(
+        campaign.chainId,
+        campaign.address,
+        LeaderboardRanking.CURRENT_PROGRESS,
+      );
+
+      expect(data).toEqual(
+        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
+          address: ethers.getAddress(e.address),
+          result: e.result,
+        })),
+      );
+      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledTimes(1);
+      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledWith(campaign);
+
+      spyOnGetCurrentProgressLeaderboard.mockRestore();
+    });
+  });
+
+  describe('getRewardsLeaderboardEntries', () => {
+    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignIntermediateResults',
+      );
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+    });
+
+    beforeEach(() => {
+      campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
+    });
+
+    afterAll(() => {
+      spyOnRetrieveCampaignIntermediateResults.mockRestore();
+    });
+
+    it('should return empty data if results not yet recorded', async () => {
+      campaign.resultsCutoffAt = null;
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([]);
+    });
+
+    it('should return empty result if no participants in results', async () => {
+      const intermediateResultsData = generateIntermediateResultsData();
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([]);
+    });
+
+    it('should return zeros if no reward transactions for participants yet', async () => {
+      const intermediateResultsData = generateIntermediateResultsData();
+      const participantOutcome = generateParticipantOutcome();
+      intermediateResultsData.results[0].participants_outcomes_batches.push({
+        id: faker.string.uuid(),
+        results: [participantOutcome],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([
+        {
+          address: participantOutcome.address.toLowerCase(),
+          result: 0,
+        },
+      ]);
+      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(1);
+      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledWith({
+        chainId: campaign.chainId,
+        fromAddress: campaign.address,
+        toAddress: campaign.address,
+        method: 'bulkTransfer',
+        first: 100,
+        skip: 0,
+      });
+    });
+
+    it('should return only participants data for leaderboard', async () => {
+      const intermediateResultsData = generateIntermediateResultsData();
+      const participantOutcome = generateParticipantOutcome();
+      intermediateResultsData.results[0].participants_outcomes_batches.push({
+        id: faker.string.uuid(),
+        results: [participantOutcome],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      const participantRewardValue = faker.number.bigInt();
+      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([
+        {
+          internalTransactions: [
+            {
+              receiver: participantOutcome.address.toLowerCase(),
+              value: participantRewardValue,
+            },
+            // imitate broken value
+            {
+              receiver: null,
+              value: faker.number.bigInt(),
+            },
+            // imitate oracle fee/launcher refund payout
+            {
+              receiver: faker.finance.ethereumAddress(),
+              value: faker.number.bigInt(),
+            },
+          ],
+        },
+      ] as ITransaction[]);
+      // next page request
+      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
+
+      const data =
+        await campaignsService['getRewardsLeaderboardEntries'](campaign);
+
+      expect(data).toEqual([
+        {
+          address: participantOutcome.address.toLowerCase(),
+          result: Number(
+            ethers.formatUnits(
+              participantRewardValue,
+              campaign.fundTokenDecimals,
+            ),
+          ),
+        },
+      ]);
+      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('getCurrentProgressLeaderboardEntries', () => {
+    const mockInterimProgressCache = new Map();
+    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
+
+    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
+    let campaign: CampaignEntity;
+
+    beforeAll(() => {
+      replacedInterimProgressCacheRef = jest.replaceProperty(
+        campaignsService as any,
+        'campaignsInterimProgressCache',
+        mockInterimProgressCache,
+      );
+
+      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignIntermediateResults',
+      );
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+    });
+
+    beforeEach(() => {
+      campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
+    });
+
+    afterEach(() => {
+      mockInterimProgressCache.clear();
+    });
+
+    afterAll(() => {
+      replacedInterimProgressCacheRef.restore();
+
+      spyOnRetrieveCampaignIntermediateResults.mockRestore();
+    });
+
+    it.each([CampaignStatus.CANCELLED, CampaignStatus.COMPLETED])(
+      'should throw when campaign already finished w/ "%s" status',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        let thrownError;
+        try {
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
+        expect(thrownError.chainId).toBe(campaign.chainId);
+        expect(thrownError.address).toBe(campaign.address);
+      },
+    );
+
+    it.each([
+      CampaignStatus.PENDING_CANCELLATION,
+      CampaignStatus.PENDING_COMPLETION,
+    ])(
+      'should return data based on intermediate results for "%s" campaign',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        const intermediateResultsData = generateIntermediateResultsData();
+        const participantOutcome = generateParticipantOutcome();
+        intermediateResultsData.results[0].participants_outcomes_batches.push({
+          id: faker.string.uuid(),
+          results: [participantOutcome],
+        });
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+          intermediateResultsData,
+        );
+
+        const data =
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+
+        expect(data).toEqual([
+          {
+            address: participantOutcome.address,
+            result: Number(
+              new Decimal(participantOutcome.score).toDecimalPlaces(
+                campaign.fundTokenDecimals,
+                Decimal.ROUND_DOWN,
+              ),
+            ),
+          },
+        ]);
+      },
+    );
+
+    it.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
+      'should return data based on interim cache for "%s" campaign',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        const participantOutcome = generateParticipantOutcome();
+        mockInterimProgressCache.set(campaign.id, {
+          participants_outcomes: [participantOutcome],
+        });
+
+        const data =
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+
+        expect(data).toEqual([
+          {
+            address: participantOutcome.address,
+            result: Number(
+              new Decimal(participantOutcome.score).toDecimalPlaces(
+                campaign.fundTokenDecimals,
+                Decimal.ROUND_DOWN,
+              ),
+            ),
+          },
+        ]);
+      },
+    );
+
+    it.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
+      'should handle empty interim cache for "%s" campaign',
+      async (campaignStatus) => {
+        campaign.status = campaignStatus;
+
+        const data =
+          await campaignsService['getCurrentProgressLeaderboardEntries'](
+            campaign,
+          );
+
+        expect(data).toEqual([]);
+      },
+    );
   });
 });

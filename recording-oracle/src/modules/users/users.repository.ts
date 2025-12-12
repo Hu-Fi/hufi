@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 
-import { DatabaseError, handleDbError } from '@/common/errors/database';
-
 import { UserEntity } from './user.entity';
 
 @Injectable()
@@ -27,22 +25,18 @@ export class UsersRepository extends Repository<UserEntity> {
     id: string,
     partialEntity: Partial<UserEntity>,
   ): Promise<boolean> {
-    try {
-      const result = await this.update(id, {
-        ...partialEntity,
-        updatedAt: new Date(),
-      });
+    const result = await this.update(id, {
+      ...partialEntity,
+      updatedAt: new Date(),
+    });
 
-      if (result.affected === undefined) {
-        throw new DatabaseError(
-          'Driver "update" operation does not provide expected result',
-        );
-      }
-
-      return result.affected > 0;
-    } catch (error) {
-      throw handleDbError(error as Error);
+    if (result.affected === undefined) {
+      throw new Error(
+        'Driver "update" operation does not provide expected result',
+      );
     }
+
+    return result.affected > 0;
   }
 
   async existsById(userId: string): Promise<boolean> {

@@ -198,3 +198,13 @@ export function generateUserJoinedDate(campaign: CampaignEntity): string {
     .between({ from: campaign.startDate, to: campaign.endDate })
     .toISOString();
 }
+
+export function generateLeaderboardEntries(): Array<{
+  address: string;
+  result: number;
+}> {
+  return Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
+    address: faker.finance.ethereumAddress(),
+    result: faker.number.float({ max: 1000 }),
+  }));
+}
