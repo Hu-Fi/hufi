@@ -14,19 +14,6 @@ import logger from '@/logger';
 
 import type { Chain } from './types';
 
-const operationPromisesCache = new Map<string, Promise<unknown>>();
-
-const tokenPriceCache = new LRUCache<string, number>({
-  ttl: 1000 * 60 * 1,
-  max: 4200,
-  ttlAutopurge: false,
-  allowStale: false,
-  noDeleteOnStaleGet: false,
-  noUpdateTTL: false,
-  updateAgeOnGet: false,
-  updateAgeOnHas: false,
-});
-
 const MISSING_TOKEN_PRICE = -1;
 
 @Injectable()
@@ -37,7 +24,20 @@ export class Web3Service {
     [chainId: number]: JsonRpcProvider;
   } = {};
 
+  private readonly operationPromisesCache = new Map<string, Promise<unknown>>();
+
   private readonly alchemySdk: Alchemy;
+
+  private readonly tokenPriceCache = new LRUCache<string, number>({
+    ttl: 1000 * 60 * 1,
+    max: 4200,
+    ttlAutopurge: false,
+    allowStale: false,
+    noDeleteOnStaleGet: false,
+    noUpdateTTL: false,
+    updateAgeOnGet: false,
+    updateAgeOnHas: false,
+  });
 
   constructor(private readonly web3ConfigService: Web3ConfigService) {
     for (const chain of this.supportedChains) {
@@ -95,7 +95,7 @@ export class Web3Service {
     const cacheKey = `token-decimals-${chainId}-${tokenAddress}`;
 
     try {
-      if (!operationPromisesCache.has(cacheKey)) {
+      if (!this.operationPromisesCache.has(cacheKey)) {
         const provider = this.getProvider(chainId);
 
         const tokenContract = new ethers.Contract(
@@ -104,10 +104,10 @@ export class Web3Service {
           provider,
         );
 
-        operationPromisesCache.set(cacheKey, tokenContract.decimals());
+        this.operationPromisesCache.set(cacheKey, tokenContract.decimals());
       }
 
-      const operationPromise = operationPromisesCache.get(
+      const operationPromise = this.operationPromisesCache.get(
         cacheKey,
       ) as Promise<bigint>;
 
@@ -115,7 +115,7 @@ export class Web3Service {
 
       return Number(decimals);
     } catch (error) {
-      operationPromisesCache.delete(cacheKey);
+      this.operationPromisesCache.delete(cacheKey);
 
       const message = 'Failed to get token decimals';
       this.logger.error(message, {
@@ -132,7 +132,7 @@ export class Web3Service {
     const cacheKey = `token-symbol-${chainId}-${tokenAddress.toLowerCase()}`;
 
     try {
-      if (!operationPromisesCache.has(cacheKey)) {
+      if (!this.operationPromisesCache.has(cacheKey)) {
         const provider = this.getProvider(chainId);
 
         const tokenContract = new ethers.Contract(
@@ -141,13 +141,13 @@ export class Web3Service {
           provider,
         );
 
-        operationPromisesCache.set(cacheKey, tokenContract.symbol());
+        this.operationPromisesCache.set(cacheKey, tokenContract.symbol());
       }
 
-      const symbol = await operationPromisesCache.get(cacheKey);
+      const symbol = await this.operationPromisesCache.get(cacheKey);
       return symbol as string;
     } catch (error) {
-      operationPromisesCache.delete(cacheKey);
+      this.operationPromisesCache.delete(cacheKey);
 
       const message = 'Failed to get token symbol';
       this.logger.error(message, {
@@ -162,10 +162,15 @@ export class Web3Service {
 
   async getTokenPriceUsd(symbol: string): Promise<number | null> {
     const uppercasedSymbol = symbol.toUpperCase();
+
+    if (['USDT', 'USDT0', 'USDC'].includes(uppercasedSymbol)) {
+      return 1;
+    }
+
     const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
 
     try {
-      let tokenPriceUsd = tokenPriceCache.get(cacheKey);
+      let tokenPriceUsd = this.tokenPriceCache.get(cacheKey);
 
       if (tokenPriceUsd === undefined) {
         const {
@@ -194,12 +199,12 @@ export class Web3Service {
           tokenPriceUsd = MISSING_TOKEN_PRICE;
         }
 
-        tokenPriceCache.set(cacheKey, tokenPriceUsd);
+        this.tokenPriceCache.set(cacheKey, tokenPriceUsd);
       }
 
       return tokenPriceUsd === MISSING_TOKEN_PRICE ? null : tokenPriceUsd;
     } catch (error) {
-      this.logger.error('Error while getting token price', {
+      this.logger.error('Failed to get token price', {
         symbol,
         error,
       });
