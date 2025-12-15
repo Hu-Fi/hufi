@@ -26,6 +26,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -923,16 +924,34 @@ export class CampaignsService
 
     const latestNonce = await signer.getNonce('latest');
 
-    await escrowClient.storeResults(
-      campaignAddress,
-      resultsUrl,
-      resultsHash,
-      fundsToReserve,
-      {
-        gasPrice,
+    /**
+     * TODO: replace with `timeout` option once implemented in SDK
+     */
+    try {
+      await controlFlow.withTimeout(
+        escrowClient.storeResults(
+          campaignAddress,
+          resultsUrl,
+          resultsHash,
+          fundsToReserve,
+          {
+            gasPrice,
+            nonce: latestNonce,
+          },
+        ),
+        this.campaignsConfigService.storeResultsTimeout,
+        'storeResults transaction timed out',
+      );
+    } catch (error) {
+      this.logger.error('Failed storeResults call', {
+        error,
+        chainId,
+        campaignAddress,
         nonce: latestNonce,
-      },
-    );
+        gasPrice,
+      });
+      throw error;
+    }
 
     return { url: resultsUrl, hash: resultsHash };
   }

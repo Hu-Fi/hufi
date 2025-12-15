@@ -62,4 +62,7 @@ export const envValidator = Joi.object({
   S3_USE_SSL: Joi.string().valid('true', 'false'),
   // Logging
   LOG_EXCHANGE_PERMISSION_ERRORS: Joi.string().valid('true', 'false'),
+  // Campaigns
+  FEATURE_LIMIT_HOLDING_JOIN: Joi.string().valid('true', 'false'),
+  STORE_RESULTS_TIMEOUT: Joi.number().positive().integer(),
 });

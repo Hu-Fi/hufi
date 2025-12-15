@@ -12,6 +12,7 @@ jest.mock('@human-protocol/sdk', () => {
 jest.mock('@/logger');
 
 import crypto from 'crypto';
+import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
@@ -31,6 +32,7 @@ import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
+import { TimeoutError } from '@/common/utils/control-flow';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -1257,23 +1259,25 @@ describe('CampaignsService', () => {
 
   describe('recordCampaignIntermediateResults', () => {
     const mockStoreResults = jest.fn();
+    let mockGasPrice: bigint;
+    let mockLatestNonce: number;
 
     beforeEach(() => {
       mockedEscrowClient.build.mockResolvedValue({
         storeResults: mockStoreResults,
       } as unknown as EscrowClient);
       mockWeb3Service.getSigner.mockReturnValueOnce(mockedSigner);
+
+      mockGasPrice = faker.number.bigInt({ min: 1 });
+      mockWeb3Service.calculateGasPrice.mockResolvedValueOnce(mockGasPrice);
+
+      mockLatestNonce = faker.number.int();
+      mockedSigner.getNonce.mockResolvedValueOnce(mockLatestNonce);
     });
 
     it('should upload results to storage and store url in escrow', async () => {
       const mockedResultsFileUrl = faker.internet.url();
       mockStorageService.uploadData.mockResolvedValueOnce(mockedResultsFileUrl);
-
-      const mockGasPrice = faker.number.bigInt({ min: 1 });
-      mockWeb3Service.calculateGasPrice.mockResolvedValueOnce(mockGasPrice);
-
-      const latestNonce = faker.number.int();
-      mockedSigner.getNonce.mockResolvedValueOnce(latestNonce);
 
       const intermediateResultsData = generateIntermediateResultsData();
       const stringifiedResultsData = JSON.stringify(intermediateResultsData);
@@ -1308,9 +1312,40 @@ describe('CampaignsService', () => {
         fundsToReserve,
         {
           gasPrice: mockGasPrice,
-          nonce: latestNonce,
+          nonce: mockLatestNonce,
         },
       );
+    });
+
+    it('should throw if times out', async () => {
+      mockStoreResults.mockImplementationOnce(async () => {
+        await delay(mockCampaignsConfigService.storeResultsTimeout + 10);
+      });
+
+      const intermediateResultsData = generateIntermediateResultsData();
+
+      let thrownError;
+
+      try {
+        await campaignsService['recordCampaignIntermediateResults'](
+          intermediateResultsData,
+          faker.number.bigInt({ min: 1 }),
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(TimeoutError);
+      expect(thrownError.message).toBe('storeResults transaction timed out');
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith('Failed storeResults call', {
+        error: thrownError,
+        chainId: intermediateResultsData.chain_id,
+        campaignAddress: intermediateResultsData.address,
+        nonce: mockLatestNonce,
+        gasPrice: mockGasPrice,
+      });
     });
   });
 
