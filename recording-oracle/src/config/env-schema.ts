@@ -33,6 +33,7 @@ export const envValidator = Joi.object({
   USE_EXCHANGE_SANDBOX: Joi.string().valid('true', 'false'),
   // Web3
   WEB3_PRIVATE_KEY: Joi.string().required(),
+  GAS_PRICE_MULTIPLIER: Joi.number().positive().integer(),
   /**
    * Allow empty strings for URLs to pass validation,
    * because for the code it's the same case
