@@ -34,7 +34,7 @@
     "ethers": "~6.15.0",
     "jwt-decode": "^4.0.0",
     "notistack": "^3.0.2",
-    "react": "^18.2.0",
+    "react": "^19.2.3",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.68.0",
@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@types/react": "^18.2.66",
+    "@types/react": "^19.2.7",
     "@types/react-dom": "^18.2.22",
     "@types/react-is": "^18",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
