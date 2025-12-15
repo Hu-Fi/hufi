@@ -489,6 +489,11 @@ export class CampaignsService
           exchangeName: campaign.exchangeName,
           symbol: campaign.symbol,
           type: campaign.type,
+          /**
+           * Add it for debug purpose in order to see if some campaign
+           * failed to update it because of e.g. timed out `storeResults` tx
+           */
+          resultsCutoffAt: campaign.resultsCutoffAt?.toISOString(),
         });
         logger.debug('Campaign progress recording started');
 

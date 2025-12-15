@@ -1773,6 +1773,7 @@ describe('CampaignsService', () => {
     it('should run with pessimistic lock and correct child logger', async () => {
       const spyOnLoggerChild = jest.spyOn(logger, 'child');
 
+      campaign.resultsCutoffAt = faker.date.recent();
       try {
         await campaignsService.recordCampaignProgress(campaign);
 
@@ -1791,6 +1792,7 @@ describe('CampaignsService', () => {
           exchangeName: campaign.exchangeName,
           symbol: campaign.symbol,
           type: campaign.type,
+          resultsCutoffAt: campaign.resultsCutoffAt.toISOString(),
         });
 
         expect(logger.debug).toHaveBeenCalledTimes(2);
