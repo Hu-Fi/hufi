@@ -157,6 +157,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         }}
         sx={{
           border: 'none',
+          bgcolor: 'inherit',
           '& .MuiDataGrid-main': {
             p: isMobile ? 0 : 4,
             borderRadius: '16px',
@@ -177,6 +178,9 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           '& .MuiDataGrid-cellEmpty': {
             display: 'none',
           },
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: 'transparent',
+          },
           '& .MuiDataGrid-columnHeader': {
             backgroundColor: 'rgba(255, 255, 255, 0.12) !important',
             fontSize: '12px',
@@ -188,6 +192,9 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           },
           '& .MuiDataGrid-row': {
             borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+            },
           },
           '& .MuiDataGrid-footerContainer': {
             border: 'none',
