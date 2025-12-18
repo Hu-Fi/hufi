@@ -23,7 +23,7 @@ export class AuthConfigService {
 
   /**
    * The expiration time (in seconds) for access tokens.
-   * Default: 600
+   * Default: 600 (10 minutes)
    */
   get accessTokenExpiresIn(): number {
     return Number(this.configService.get('JWT_ACCESS_TOKEN_EXPIRES_IN')) || 600;
@@ -31,7 +31,7 @@ export class AuthConfigService {
 
   /**
    * The expiration time (in ms) for refresh tokens.
-   * Default: 3600000
+   * Default: 3600000 (60 minutes)
    */
   get refreshTokenExpiresIn(): number {
     const configValueSeconds =

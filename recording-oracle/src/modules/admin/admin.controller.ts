@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  ForbiddenException,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -14,7 +13,6 @@ import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import dayjs from 'dayjs';
 
 import { Public } from '@/common/decorators';
-import Environment from '@/common/utils/environment';
 import { CampaignsService } from '@/modules/campaigns';
 
 import {
@@ -65,10 +63,6 @@ export class AdminController {
   }
 
   private assertCronJobTriggerAvailable(cronJobId: AdminCronJobId): void {
-    if (Environment.isProduction()) {
-      throw new ForbiddenException('Not available in production');
-    }
-
     const lastTriggerTimestamp = this.cronJobTriggerTimes.get(cronJobId) || 0;
     if (dayjs().diff(lastTriggerTimestamp, 'minute') >= 1) {
       this.cronJobTriggerTimes.set(cronJobId, Date.now());
