@@ -12,11 +12,11 @@ export class CampaignsConfigService {
   /**
    * It might be that by some reason `storeResults` tx is stuck on RPC.
    * This timeout value controls the wait time before job on RecO is dropped for later retry
-   * Default: 60000 (60 seconds)
+   * Default: 90000 (90 seconds)
    */
   get storeResultsTimeout(): number {
     const configValueSeconds =
-      Number(this.configService.get('STORE_RESULTS_TIMEOUT')) || 60;
+      Number(this.configService.get('STORE_RESULTS_TIMEOUT')) || 90;
     return configValueSeconds * 1000;
   }
 }
