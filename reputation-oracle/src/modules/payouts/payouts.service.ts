@@ -480,7 +480,7 @@ export class PayoutsService {
       await TransactionUtils.getTransactions({
         chainId: chainId as number,
         escrow: escrowAddress,
-        method: 'setup',
+        method: 'createEscrow',
       })
     )[0];
 
