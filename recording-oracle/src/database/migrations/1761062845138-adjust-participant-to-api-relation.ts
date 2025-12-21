@@ -13,6 +13,6 @@ export class AdjustParticipantToApiRelation1761062845138 implements MigrationInt
   }
 
   public async down(): Promise<void> {
-    // one-way migraiton
+    // one-way migration
   }
 }

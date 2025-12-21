@@ -161,11 +161,19 @@ export class CampaignData {
   @ApiProperty()
   balance: string;
 
+  @ApiProperty({
+    name: 'amount_paid',
+  })
+  amountPaid: string;
+
   @ApiProperty({ name: 'intermediate_results_url' })
   intermediateResultsUrl: string | null;
 
   @ApiProperty({ name: 'final_results_url' })
   finalResultsUrl: string | null;
+
+  @ApiProperty({ name: 'created_at' })
+  createdAt: number;
 }
 
 export class GetCampaignsResponseDto {
@@ -179,7 +187,7 @@ export class GetCampaignsResponseDto {
   results: CampaignData[];
 }
 
-export class GetCampaignWithDetailsParamsDto {
+export class SpecificCampaignParamsDto {
   @ApiProperty({
     name: 'chain_id',
     enum: ChainIds,
@@ -204,11 +212,6 @@ class DailyPaidAmount {
 }
 
 export class CampaignDataWithDetails extends CampaignData {
-  @ApiProperty({
-    name: 'amount_paid',
-  })
-  amountPaid: string;
-
   @ApiProperty({
     name: 'daily_paid_amounts',
     type: DailyPaidAmount,

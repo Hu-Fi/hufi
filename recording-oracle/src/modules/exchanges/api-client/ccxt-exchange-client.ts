@@ -38,7 +38,8 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
     _target: unknown,
     propertyKey: string,
     descriptor: TypedPropertyDescriptor<
-      (this: CcxtExchangeClient, ...args: unknown[]) => unknown
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this: CcxtExchangeClient, ...args: unknown[]) => any
     >,
   ) {
     const original = descriptor.value!;
@@ -69,6 +70,8 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
         throw error;
       }
     };
+
+    return descriptor;
   };
 }
 

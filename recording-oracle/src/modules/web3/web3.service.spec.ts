@@ -311,5 +311,17 @@ describe('Web3Service', () => {
         );
       },
     );
+
+    it.each(['usdt', 'usdt0', 'usdc'])(
+      'should return 1 for %s w/o making alchemy call ',
+      async (token) => {
+        const result = await web3Service.getTokenPriceUsd(token);
+
+        expect(result).toBe(1);
+        expect(
+          mockAlchemySdk.prices.getTokenPriceBySymbol,
+        ).toHaveBeenCalledTimes(0);
+      },
+    );
   });
 });

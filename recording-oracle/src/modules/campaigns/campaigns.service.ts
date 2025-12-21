@@ -6,6 +6,7 @@ import {
   EscrowStatus,
   EscrowUtils,
   OrderDirection,
+  TransactionUtils,
 } from '@human-protocol/sdk';
 import {
   Injectable,
@@ -25,6 +26,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -32,6 +34,7 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
+import { isDuplicatedError } from '@/database';
 import logger from '@/logger';
 import {
   ExchangesService,
@@ -42,6 +45,7 @@ import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
+import { LeaderboardEntry } from './campaigns.dto';
 import {
   CampaignAlreadyFinishedError,
   CampaignCancelledError,
@@ -86,6 +90,7 @@ import {
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
+  LeaderboardRanking,
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -223,7 +228,15 @@ export class CampaignsService
     newUserCampaign.campaignId = campaign.id;
     newUserCampaign.createdAt = new Date();
 
-    await this.userCampaignsRepository.insert(newUserCampaign);
+    try {
+      await this.userCampaignsRepository.insert(newUserCampaign);
+    } catch (error) {
+      if (isDuplicatedError(error)) {
+        // joined w/ race condition, noop;
+      } else {
+        throw error;
+      }
+    }
 
     return campaign.id;
   }
@@ -476,6 +489,11 @@ export class CampaignsService
           exchangeName: campaign.exchangeName,
           symbol: campaign.symbol,
           type: campaign.type,
+          /**
+           * Add it for debug purpose in order to see if some campaign
+           * failed to update it because of e.g. timed out `storeResults` tx
+           */
+          resultsCutoffAt: campaign.resultsCutoffAt?.toISOString(),
         });
         logger.debug('Campaign progress recording started');
 
@@ -911,16 +929,34 @@ export class CampaignsService
 
     const latestNonce = await signer.getNonce('latest');
 
-    await escrowClient.storeResults(
-      campaignAddress,
-      resultsUrl,
-      resultsHash,
-      fundsToReserve,
-      {
-        gasPrice,
+    /**
+     * TODO: replace with `timeout` option once implemented in SDK
+     */
+    try {
+      await controlFlow.withTimeout(
+        escrowClient.storeResults(
+          campaignAddress,
+          resultsUrl,
+          resultsHash,
+          fundsToReserve,
+          {
+            gasPrice,
+            nonce: latestNonce,
+          },
+        ),
+        this.campaignsConfigService.storeResultsTimeout,
+        'storeResults transaction timed out',
+      );
+    } catch (error) {
+      this.logger.error('Failed storeResults call', {
+        error,
+        chainId,
+        campaignAddress,
         nonce: latestNonce,
-      },
-    );
+        gasPrice,
+      });
+      throw error;
+    }
 
     return { url: resultsUrl, hash: resultsHash };
   }
@@ -1416,5 +1452,189 @@ export class CampaignsService
       campaign.details.dailyBalanceTarget;
 
     return isDailyBalanceTargetMet;
+  }
+
+  async getCampaignLeaderboard(
+    chainId: number,
+    campaignAddress: string,
+    rankBy: LeaderboardRanking,
+  ): Promise<LeaderboardEntry[]> {
+    const campaign = await this.findOneByChainIdAndAddress(
+      chainId,
+      campaignAddress,
+    );
+    if (!campaign) {
+      /**
+       * It might be that campaign escrow is not synced yet,
+       * so return empty results in this case
+       */
+      return [];
+    }
+
+    let leaderboardEntries: LeaderboardEntry[];
+    switch (rankBy) {
+      case LeaderboardRanking.TOTAL_REWARDS:
+        leaderboardEntries = await this.getRewardsLeaderboardEntries(campaign);
+        break;
+      case LeaderboardRanking.CURRENT_PROGRESS:
+        leaderboardEntries =
+          await this.getCurrentProgressLeaderboardEntries(campaign);
+        break;
+      default:
+        throw new Error(`Leaderboard ranking by "${rankBy}" is not supported`);
+    }
+
+    leaderboardEntries = leaderboardEntries.map(({ address, result }) => ({
+      address: ethers.getAddress(address),
+      result,
+    }));
+
+    return _.orderBy(leaderboardEntries, 'result', 'desc');
+  }
+
+  private async getRewardsLeaderboardEntries(
+    campaign: CampaignEntity,
+  ): Promise<LeaderboardEntry[]> {
+    if (!campaign.resultsCutoffAt) {
+      return [];
+    }
+
+    const participantAdresses = new Set<string>();
+
+    const intermediateResultsData =
+      await this.retrieveCampaignIntermediateResults(campaign);
+
+    for (const intermediateResult of intermediateResultsData?.results || []) {
+      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
+        for (const participantOutcome of outcomesBatch.results) {
+          participantAdresses.add(participantOutcome.address);
+        }
+      }
+    }
+
+    if (participantAdresses.size === 0) {
+      return [];
+    }
+
+    const leaderboardEntriesMap: {
+      /**
+       * Subgraph returns lowercased data, so use same here
+       */
+      [lowercasedAddress: string]: bigint;
+    } = {};
+    for (const address of participantAdresses) {
+      leaderboardEntriesMap[address.toLowerCase()] = 0n;
+    }
+
+    let nTxsChecked = 0;
+    do {
+      const transactions = await TransactionUtils.getTransactions({
+        chainId: campaign.chainId,
+        fromAddress: campaign.address,
+        toAddress: campaign.address,
+        method: 'bulkTransfer',
+        first: 100,
+        skip: nTxsChecked,
+      });
+
+      if (transactions.length === 0) {
+        break;
+      }
+
+      for (const tx of transactions) {
+        for (const internalTx of tx.internalTransactions) {
+          const receiverAddress = internalTx.receiver || '';
+          if (leaderboardEntriesMap[receiverAddress] === undefined) {
+            /**
+             * Oracle fees and launcher refunds are also
+             * in array of internal transactions
+             */
+            continue;
+          }
+
+          leaderboardEntriesMap[receiverAddress] += internalTx.value;
+        }
+      }
+
+      nTxsChecked += transactions.length;
+      // eslint-disable-next-line no-constant-condition
+    } while (true);
+
+    const leaderboardEntries: LeaderboardEntry[] = [];
+    for (const [address, totalRewards] of Object.entries(
+      leaderboardEntriesMap,
+    )) {
+      leaderboardEntries.push({
+        address,
+        result: Number(
+          ethers.formatUnits(totalRewards, campaign.fundTokenDecimals),
+        ),
+      });
+    }
+
+    return leaderboardEntries;
+  }
+
+  private async getCurrentProgressLeaderboardEntries(
+    campaign: CampaignEntity,
+  ): Promise<LeaderboardEntry[]> {
+    if (
+      [CampaignStatus.CANCELLED, CampaignStatus.COMPLETED].includes(
+        campaign.status,
+      )
+    ) {
+      throw new CampaignAlreadyFinishedError(
+        campaign.chainId,
+        campaign.address,
+      );
+    }
+
+    let resultsToInspect: ParticipantOutcome[] = [];
+    if (
+      [
+        CampaignStatus.PENDING_CANCELLATION,
+        CampaignStatus.PENDING_COMPLETION,
+      ].includes(campaign.status)
+    ) {
+      const intermediateResultsData =
+        await this.retrieveCampaignIntermediateResults(campaign);
+
+      const latestIntermediateResult = intermediateResultsData!.results.at(-1)!;
+      for (const outcomesBatch of latestIntermediateResult.participants_outcomes_batches) {
+        resultsToInspect.push(...outcomesBatch.results);
+      }
+    } else {
+      const cachedInterimResults = this.campaignsInterimProgressCache.get(
+        campaign.id,
+      );
+      resultsToInspect = cachedInterimResults?.participants_outcomes || [];
+    }
+
+    const leaderboardEntriesMap: {
+      [lowercasedAddress: string]: Decimal;
+    } = {};
+
+    for (const participantOutcome of resultsToInspect) {
+      leaderboardEntriesMap[participantOutcome.address] = (
+        leaderboardEntriesMap[participantOutcome.address] || new Decimal(0)
+      ).add(participantOutcome.score);
+    }
+
+    const leaderboardEntries: LeaderboardEntry[] = [];
+    for (const [address, currentScore] of Object.entries(
+      leaderboardEntriesMap,
+    )) {
+      leaderboardEntries.push({
+        address,
+        result: Number(
+          currentScore.toDecimalPlaces(
+            campaign.fundTokenDecimals,
+            Decimal.ROUND_DOWN,
+          ),
+        ),
+      });
+    }
+
+    return leaderboardEntries;
   }
 }

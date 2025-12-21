@@ -177,6 +177,11 @@ export class Web3Service {
 
   async getTokenPriceUsd(symbol: string): Promise<number | null> {
     const uppercasedSymbol = symbol.toUpperCase();
+
+    if (['USDT', 'USDT0', 'USDC'].includes(uppercasedSymbol)) {
+      return 1;
+    }
+
     const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
 
     try {
