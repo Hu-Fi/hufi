@@ -938,10 +938,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@golevelup/ts-jest@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@golevelup/ts-jest@npm:0.7.0"
-  checksum: 10c0/98f8663bca40c42c02cd875259b4a37671f5e931a20c44c64f86f2a9cb98431a0b3e96b14a6b2b07ce6f8407cd40015c127714d95fa6acda7e99f22de1a22199
+"@golevelup/ts-jest@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@golevelup/ts-jest@npm:1.1.1"
+  checksum: 10c0/1bf381721b6f816b44177f3e31c739eb3049ae2e20cde077fd1cbf95614ff9c339b4688cf669ac558c435bc40726765d72a7660e320f69eca5f6b8c1b68d27c9
   languageName: node
   linkType: hard
 
@@ -8043,7 +8043,7 @@ __metadata:
   dependencies:
     "@eslint/js": "npm:^9.39.1"
     "@faker-js/faker": "npm:^9.9.0"
-    "@golevelup/ts-jest": "npm:^0.7.0"
+    "@golevelup/ts-jest": "npm:^1.1.1"
     "@human-protocol/core": "npm:^5.0.1"
     "@human-protocol/logger": "npm:^1.2.0"
     "@human-protocol/sdk": "npm:^5.2.0"
