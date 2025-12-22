@@ -1326,17 +1326,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:^9.8.0":
+"@faker-js/faker@npm:^9.9.0":
   version: 9.9.0
   resolution: "@faker-js/faker@npm:9.9.0"
   checksum: 10c0/02107cb6915217b4831fa4b261603165972eb7f09d2ab2e1d4b75807df2d425a2bac8621cddbfdcc158c2c447c2bce2e14939d51c4a63fbd832df55452e7f73c
   languageName: node
   linkType: hard
 
-"@golevelup/ts-jest@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@golevelup/ts-jest@npm:0.7.0"
-  checksum: 10c0/98f8663bca40c42c02cd875259b4a37671f5e931a20c44c64f86f2a9cb98431a0b3e96b14a6b2b07ce6f8407cd40015c127714d95fa6acda7e99f22de1a22199
+"@golevelup/ts-jest@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@golevelup/ts-jest@npm:1.1.1"
+  checksum: 10c0/1bf381721b6f816b44177f3e31c739eb3049ae2e20cde077fd1cbf95614ff9c339b4688cf669ac558c435bc40726765d72a7660e320f69eca5f6b8c1b68d27c9
   languageName: node
   linkType: hard
 
@@ -3398,7 +3398,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/passport-jwt@npm:^4":
+"@types/passport-jwt@npm:^4.0.1":
   version: 4.0.1
   resolution: "@types/passport-jwt@npm:4.0.1"
   dependencies:
@@ -3418,7 +3418,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/passport@npm:*":
+"@types/passport@npm:*, @types/passport@npm:^1.0.17":
   version: 1.0.17
   resolution: "@types/passport@npm:1.0.17"
   dependencies:
@@ -3427,16 +3427,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/passport@npm:^0":
-  version: 0.4.7
-  resolution: "@types/passport@npm:0.4.7"
-  dependencies:
-    "@types/express": "npm:*"
-  checksum: 10c0/58ca21800b7910385961b7a3dc9071fc9db6223242b96ff88d16c9d004ce7173524e7c17c63363595565af3f85ad932ee301efc8cc3e378bea172eebc9e07703
-  languageName: node
-  linkType: hard
-
-"@types/pg@npm:^8":
+"@types/pg@npm:^8.16.0":
   version: 8.16.0
   resolution: "@types/pg@npm:8.16.0"
   dependencies:
@@ -10178,8 +10169,8 @@ __metadata:
   resolution: "recording-oracle@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.39.1"
-    "@faker-js/faker": "npm:^9.8.0"
-    "@golevelup/ts-jest": "npm:^0.7.0"
+    "@faker-js/faker": "npm:^9.9.0"
+    "@golevelup/ts-jest": "npm:^1.1.1"
     "@human-protocol/logger": "npm:^1.2.0"
     "@human-protocol/sdk": "npm:^5.2.0"
     "@nestjs/cli": "npm:^11.0.14"
@@ -10199,9 +10190,9 @@ __metadata:
     "@types/jest": "npm:^29.5.14"
     "@types/lodash": "npm:^4"
     "@types/node": "npm:^24.10.1"
-    "@types/passport": "npm:^0"
-    "@types/passport-jwt": "npm:^4"
-    "@types/pg": "npm:^8"
+    "@types/passport": "npm:^1.0.17"
+    "@types/passport-jwt": "npm:^4.0.1"
+    "@types/pg": "npm:^8.16.0"
     "@types/supertest": "npm:^6.0.2"
     alchemy-sdk: "npm:^3.6.5"
     ccxt: "npm:^4.5.28"
