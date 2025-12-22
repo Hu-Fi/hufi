@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "module": "node18",
-    "moduleResolution": "node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolvePackageJsonExports": true,
     "esModuleInterop": true,
+    "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "emitDecoratorMetadata": true,
@@ -17,7 +19,6 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "isolatedModules": true,
     "paths": {
       "@/*": ["src/*"],
       "~/test/*": ["test/*"]
