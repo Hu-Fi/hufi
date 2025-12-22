@@ -1,3 +1,4 @@
+import { ShutdownSignal } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 /**
@@ -14,6 +15,9 @@ import logger, { nestLoggerOverride } from './logger';
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: nestLoggerOverride,
+  });
+  app.enableShutdownHooks([ShutdownSignal.SIGINT, ShutdownSignal.SIGTERM], {
+    useProcessExit: true,
   });
 
   logger.debug('Application bootstrapped');
