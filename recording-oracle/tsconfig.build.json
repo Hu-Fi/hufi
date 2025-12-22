@@ -6,7 +6,6 @@
     "test",
     "**/fixtures",
     "**/*spec.ts",
-    "jest.config.ts",
     "typeorm-migrations-datasource.ts"
   ]
 }
