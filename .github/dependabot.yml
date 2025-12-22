@@ -25,12 +25,6 @@ updates:
     versioning-strategy: increase-if-necessary
     target-branch: "develop"
     ignore:
-        # Ignore versions of Jest and related packages that are equal to
-        # or greater than 30.0.0 because it introduces module system change
-        # and it must be updated together with some other packages (nest, ts-jest, etc.)
-        # including some extra configuration changes
-      - dependency-name: "*jest*"
-        versions: [">=30.0.0"]
         # Not compatible w/ jest: https://fakerjs.dev/guide/upgrading#incompatibility-with-jest
       - dependency-name: "@faker-js/faker"
         versions: [">=10.0.0"]
