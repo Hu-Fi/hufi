@@ -1,11 +1,10 @@
-import type { Config as JestConfig } from 'jest';
-import { createDefaultPreset, pathsToModuleNameMapper } from 'ts-jest';
+const { createDefaultPreset, pathsToModuleNameMapper } = require('ts-jest');
 
-import { compilerOptions } from './tsconfig.json';
+const { compilerOptions } = require('./tsconfig.json');
 
 const jestTsPreset = createDefaultPreset({});
 
-const config: JestConfig = {
+const config = {
   ...jestTsPreset,
   moduleFileExtensions: ['js', 'json', 'ts'],
   roots: ['<rootDir>/src'],
