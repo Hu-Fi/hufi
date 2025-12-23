@@ -1,5 +1,3 @@
-import { setTimeout } from 'timers/promises';
-
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 
 import logger from '@/logger';
@@ -20,10 +18,5 @@ export class AppService implements OnApplicationShutdown {
     this.logger.info('Application is about to shutdown', {
       signal,
     });
-
-    /**
-     * Wait a second to flush all buffered logs
-     */
-    await setTimeout(1000);
   }
 }
