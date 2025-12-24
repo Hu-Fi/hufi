@@ -13,10 +13,10 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 type Props = {
   stepsCompleted: number;
   steps: string[];
-  isCreatingEscrow: boolean;
+  isLoading: boolean;
 };
 
-const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
+const Steps: FC<Props> = ({ stepsCompleted, steps, isLoading }) => {
   const isMobile = useIsMobile();
 
   return (
@@ -25,7 +25,7 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
       orientation={isMobile ? 'vertical' : 'horizontal'}
       connector={isMobile ? null : <StepConnector />}
       sx={{
-        mb: 2,
+        my: 0,
         mx: 'auto',
         gap: { xs: '20px', md: 0 },
         width: { xs: 'fit-content', md: '100%' },
@@ -51,7 +51,7 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
                 },
                 stepIcon: {
                   icon:
-                    isCreatingEscrow && idx === stepsCompleted ? (
+                    isLoading && idx === stepsCompleted ? (
                       <CircularProgress size={24} />
                     ) : (
                       idx + 1
