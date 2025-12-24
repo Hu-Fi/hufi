@@ -13,6 +13,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   elevation?: number;
+  showCloseButton?: boolean;
   isLoading?: boolean;
   sx?: SxProps<Theme>;
 };
@@ -21,6 +22,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
   open,
   onClose,
   elevation = 0,
+  showCloseButton = true,
   isLoading = false,
   children,
   sx,
@@ -69,6 +71,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           disabled={isLoading}
           onClick={handleClose}
           sx={{
+            display: showCloseButton ? 'flex' : 'none',
             p: 0,
             color: 'text.primary',
             position: 'absolute',
