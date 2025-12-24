@@ -67,7 +67,7 @@ const ThresholdForm: FC<Props> = ({
   return (
     <>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <Box display="flex" gap={2} alignItems="center" width="100%">
+        <Box display="flex" gap={1} alignItems="center" width="100%">
           <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
             <Controller
               name="exchange"

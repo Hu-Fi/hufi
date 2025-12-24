@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { EscrowClient } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
@@ -31,16 +31,8 @@ type CreateEscrowMutationState = {
   isError: boolean;
   isSuccess: boolean;
   isIdle: boolean;
-  stepsCompleted: number;
   mutate: (variables: CampaignFormValues) => Promise<void>;
   reset: () => void;
-};
-
-type EscrowState = {
-  escrowAddress: string;
-  exchangeOracleFee: string;
-  recordingOracleFee: string;
-  reputationOracleFee: string;
 };
 
 const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
@@ -79,22 +71,12 @@ const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
   }
 };
 
-const initialEscrowState: EscrowState = {
-  escrowAddress: '',
-  exchangeOracleFee: '',
-  recordingOracleFee: '',
-  reputationOracleFee: '',
-};
-
 const useCreateEscrow = (): CreateEscrowMutationState => {
   const [data, setData] = useState<CreateEscrowMutationResult | undefined>(
     undefined
   );
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const [stepsCompleted, setStepsCompleted] = useState(0);
-
-  const escrowState = useRef<EscrowState>(initialEscrowState);
 
   const { appChainId } = useNetwork();
   const { signer } = useRetrieveSigner();
@@ -123,8 +105,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         throw new Error('Fund token is not supported.');
       }
 
-      let _stepsCompleted = stepsCompleted;
-
       const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, signer);
 
       const _tokenDecimals = await tokenContract.decimals();
@@ -138,69 +118,39 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       const manifest = createManifest(variables);
 
       try {
-        if (_stepsCompleted < 1) {
-          /*
+        /*
           Before creating the escrow, we need to get the oracle fees in order to
           make sure the backend won't interrupt the process and users won't lose their funds
         */
-          const oracleFees = await launcherApi.getOracleFees(appChainId);
-          const _escrowAddress = await escrowClient.createEscrow(
-            tokenAddress,
-            crypto.randomUUID()
-          );
+        const oracleFees = await launcherApi.getOracleFees(appChainId);
 
-          escrowState.current.escrowAddress = _escrowAddress;
-          escrowState.current.exchangeOracleFee =
-            oracleFees.exchange_oracle_fee;
-          escrowState.current.recordingOracleFee =
-            oracleFees.recording_oracle_fee;
-          escrowState.current.reputationOracleFee =
-            oracleFees.reputation_oracle_fee;
+        const manifestString = JSON.stringify(manifest);
+        const manifestHash = await calculateHash(manifestString);
 
-          _stepsCompleted = 1;
-          setStepsCompleted(_stepsCompleted);
-        }
+        const escrowConfig = {
+          exchangeOracle: oracles.exchangeOracle,
+          recordingOracle: oracles.recordingOracle,
+          reputationOracle: oracles.reputationOracle,
+          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
+          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
+          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
+          manifest: manifestString,
+          manifestHash: manifestHash,
+        };
 
-        if (_stepsCompleted < 2) {
-          await escrowClient.fund(
-            escrowState.current.escrowAddress,
-            fundAmount
-          );
-          _stepsCompleted = 2;
-          setStepsCompleted(_stepsCompleted);
-        }
-
-        if (_stepsCompleted < 3) {
-          const manifestString = JSON.stringify(manifest);
-          const manifestHash = await calculateHash(manifestString);
-
-          const escrowConfig = {
-            exchangeOracle: oracles.exchangeOracle,
-            recordingOracle: oracles.recordingOracle,
-            reputationOracle: oracles.reputationOracle,
-            exchangeOracleFee: BigInt(escrowState.current.exchangeOracleFee),
-            recordingOracleFee: BigInt(escrowState.current.recordingOracleFee),
-            reputationOracleFee: BigInt(
-              escrowState.current.reputationOracleFee
-            ),
-            manifest: manifestString,
-            manifestHash: manifestHash,
-          };
-
-          await escrowClient.setup(
-            escrowState.current.escrowAddress,
-            escrowConfig
-          );
-          _stepsCompleted = 3;
-          setStepsCompleted(_stepsCompleted);
-        }
+        const _escrowAddress = await escrowClient.createFundAndSetupEscrow(
+          tokenAddress,
+          fundAmount,
+          crypto.randomUUID(),
+          escrowConfig
+        );
 
         const result = {
-          escrowAddress: escrowState.current.escrowAddress,
+          escrowAddress: _escrowAddress,
           tokenDecimals,
-          exchangeOracleFee: BigInt(escrowState.current.exchangeOracleFee),
-          recordingOracleFee: BigInt(escrowState.current.recordingOracleFee),
-          reputationOracleFee: BigInt(escrowState.current.reputationOracleFee),
+          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
+          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
+          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
         };
 
         return result;
@@ -209,7 +159,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         throw e;
       }
     },
-    [signer, appChainId, stepsCompleted]
+    [signer, appChainId]
   );
 
   const mutate = useCallback(
@@ -220,7 +170,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         const result = await createEscrowMutation(variables);
         setData(result);
       } catch (e) {
-        console.error(e);
         const err =
           e instanceof Error ? e : new Error('Unknown error occurred');
         setError(err);
@@ -236,8 +185,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
     setData(undefined);
     setError(undefined);
     setIsLoading(false);
-    setStepsCompleted(0);
-    escrowState.current = initialEscrowState;
   }, []);
 
   return {
@@ -247,7 +194,6 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
     isError,
     isSuccess,
     isIdle,
-    stepsCompleted,
     mutate,
     reset,
   };

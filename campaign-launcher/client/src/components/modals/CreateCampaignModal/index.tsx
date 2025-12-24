@@ -1,144 +1,48 @@
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import { type FC, useCallback, useState } from 'react';
 
-import { yupResolver } from '@hookform/resolvers/yup';
-import { Box, Button, Typography } from '@mui/material';
-import { useQueryClient } from '@tanstack/react-query';
-import {
-  useForm,
-  type Control,
-  type UseFormTrigger,
-  type UseFormWatch,
-} from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-
-import CampaignTypeLabel from '@/components/CampaignTypeLabel';
-import { QUERY_KEYS } from '@/constants/queryKeys';
-import { useIsMobile } from '@/hooks/useBreakpoints';
-import useCreateEscrow from '@/hooks/useCreateEscrow';
-import { useNetwork } from '@/providers/NetworkProvider';
-import {
-  CampaignType,
-  type ThresholdFormValues,
-  type CampaignFormValues,
-  type HoldingFormValues,
-  type MarketMakingFormValues,
-} from '@/types';
-import { constructCampaignDetails } from '@/utils';
+import { type CampaignType } from '@/types';
 
 import BaseModal from '../BaseModal';
 
-import {
-  ErrorView,
-  FinalView,
-  HoldingForm,
-  MarketMakingForm,
-  Steps,
-  ThresholdForm,
-} from './components';
-import { getFormDefaultValues } from './utils';
-import { campaignValidationSchema } from './validation';
+import { FirstStep, SecondStep } from './components';
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  campaignType: CampaignType;
 };
 
-const steps = ['Create Escrow', 'Fund Escrow', 'Setup Escrow'];
+type FormValues = {
+  campaignType: CampaignType | null;
+  fundToken: string;
+  fundAmount: string;
+};
 
-const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
-  const [showFinalView, setShowFinalView] = useState(false);
-  const navigate = useNavigate();
-  const {
-    data: escrowData,
-    stepsCompleted,
-    mutate: createEscrow,
-    reset: resetCreateEscrow,
-    isLoading: isCreatingEscrow,
-    isError,
-  } = useCreateEscrow();
-  const queryClient = useQueryClient();
-  const { appChainId } = useNetwork();
-  const isMobile = useIsMobile();
-  const formValuesRef = useRef<CampaignFormValues | null>(null);
-  const isCampaignCreated = stepsCompleted === steps.length;
-
-  useEffect(() => {
-    if (isCampaignCreated) {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MY_CAMPAIGNS] });
-    }
-  }, [queryClient, isCampaignCreated]);
-
-  const {
-    control,
-    formState: { errors },
-    watch,
-    trigger,
-    handleSubmit,
-    reset: resetForm,
-  } = useForm<CampaignFormValues>({
-    mode: 'onBlur',
-    resolver: yupResolver(campaignValidationSchema),
-    defaultValues: getFormDefaultValues(campaignType),
+const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
+  const [step, setStep] = useState(1);
+  const [formValues, setFormValues] = useState<FormValues>({
+    campaignType: null,
+    fundToken: '',
+    fundAmount: '',
   });
-
-  const submitForm = async (data: CampaignFormValues) => {
-    formValuesRef.current = data;
-    await createEscrow(data);
-  };
-
-  const handleTryAgainClick = useCallback(() => {
-    if (stepsCompleted > 0) {
-      if (formValuesRef.current) {
-        createEscrow(formValuesRef.current);
-      }
-    } else {
-      formValuesRef.current = null;
-      resetCreateEscrow();
-    }
-  }, [stepsCompleted, createEscrow, resetCreateEscrow]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClose = useCallback(() => {
-    formValuesRef.current = null;
-    resetForm();
-    resetCreateEscrow();
     onClose();
-  }, [resetForm, resetCreateEscrow, onClose]);
+  }, [onClose]);
 
-  const onViewCampaignDetailsClick = useCallback(() => {
-    if (!escrowData || !formValuesRef.current) return;
-
-    const {
-      escrowAddress,
-      tokenDecimals,
-      exchangeOracleFee,
-      recordingOracleFee,
-      reputationOracleFee,
-    } = escrowData;
-    const fees = {
-      exchangeOracleFee: exchangeOracleFee,
-      recordingOracleFee: recordingOracleFee,
-      reputationOracleFee: reputationOracleFee,
-    };
-    const payload = constructCampaignDetails({
-      chainId: appChainId,
-      address: escrowAddress,
-      data: formValuesRef.current,
-      tokenDecimals,
-      fees,
-    });
-    const encodedData = btoa(JSON.stringify(payload));
-    navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
-    setShowFinalView(false);
-    handleClose();
-  }, [appChainId, handleClose, navigate, escrowData]);
+  const prepareFormValues = useCallback((newState: FormValues) => {
+    setFormValues((prev) => ({
+      ...prev,
+      ...newState,
+    }));
+  }, []);
 
   return (
     <BaseModal
       open={open}
       onClose={handleClose}
-      isLoading={isCreatingEscrow}
+      isLoading={isLoading}
+      showCloseButton={false}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -149,118 +53,21 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
         },
       }}
     >
-      {showFinalView && (
-        <FinalView
-          campaignType={campaignType}
-          onViewDetails={onViewCampaignDetailsClick}
+      {step === 1 && (
+        <FirstStep
+          prepareFormValues={prepareFormValues}
+          handleChangeFormStep={setStep}
+          handleChangeLoading={setIsLoading}
+          handleCloseModal={handleClose}
         />
       )}
-      {isError && <ErrorView onRetry={handleTryAgainClick} />}
-      {!showFinalView && !isError && (
-        <form onSubmit={handleSubmit(submitForm)}>
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            gap={2}
-          >
-            <Typography
-              variant="h4"
-              color="text.primary"
-              textAlign="center"
-              sx={{ whiteSpace: 'pre-line' }}
-            >
-              {isMobile ? 'Launch\nCampaign' : 'Create Campaign'}
-            </Typography>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              {!isMobile && (
-                <Typography variant="subtitle2" color="text.secondary">
-                  Campaign Type:
-                </Typography>
-              )}
-              <CampaignTypeLabel campaignType={campaignType} />
-            </Box>
-            {!isMobile && (
-              <Steps
-                stepsCompleted={stepsCompleted}
-                steps={steps}
-                isCreatingEscrow={isCreatingEscrow}
-              />
-            )}
-            <Box
-              display="flex"
-              flexDirection="column"
-              gap={3}
-              width={{ xs: '100%', sm: 625 }}
-              sx={{
-                '& .MuiFormHelperText-root': {
-                  mx: 1,
-                  whiteSpace: 'pre-line',
-                },
-              }}
-            >
-              {isMobile && isCreatingEscrow && (
-                <Steps
-                  stepsCompleted={stepsCompleted}
-                  steps={steps}
-                  isCreatingEscrow={isCreatingEscrow}
-                />
-              )}
-              {campaignType === CampaignType.MARKET_MAKING && (
-                <MarketMakingForm
-                  control={control as Control<MarketMakingFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<MarketMakingFormValues>}
-                  trigger={trigger as UseFormTrigger<MarketMakingFormValues>}
-                  isCreatingEscrow={isCreatingEscrow}
-                  campaignType={campaignType}
-                />
-              )}
-              {campaignType === CampaignType.HOLDING && (
-                <HoldingForm
-                  control={control as Control<HoldingFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<HoldingFormValues>}
-                  trigger={trigger as UseFormTrigger<HoldingFormValues>}
-                  isCreatingEscrow={isCreatingEscrow}
-                  campaignType={campaignType}
-                />
-              )}
-              {campaignType === CampaignType.THRESHOLD && (
-                <ThresholdForm
-                  control={control as Control<ThresholdFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<ThresholdFormValues>}
-                  trigger={trigger as UseFormTrigger<ThresholdFormValues>}
-                  isCreatingEscrow={isCreatingEscrow}
-                  campaignType={campaignType}
-                />
-              )}
-              {stepsCompleted < steps.length ? (
-                <Button
-                  size="large"
-                  variant="contained"
-                  type="submit"
-                  fullWidth={isMobile}
-                  sx={{ mx: { xs: 0, md: 'auto' } }}
-                  disabled={isCreatingEscrow}
-                >
-                  Create Campaign
-                </Button>
-              ) : (
-                <Button
-                  size="large"
-                  variant="contained"
-                  fullWidth={isMobile}
-                  sx={{ mx: { xs: 0, md: 'auto' } }}
-                  onClick={() => setShowFinalView(true)}
-                >
-                  Finish
-                </Button>
-              )}
-            </Box>
-          </Box>
-        </form>
+      {step === 2 && formValues.campaignType && (
+        <SecondStep
+          formValues={formValues as FormValues & { campaignType: CampaignType }}
+          handleChangeLoading={setIsLoading}
+          handleChangeFormStep={setStep}
+          handleCloseModal={handleClose}
+        />
       )}
     </BaseModal>
   );

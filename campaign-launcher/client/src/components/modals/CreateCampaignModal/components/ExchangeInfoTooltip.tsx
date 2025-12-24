@@ -13,21 +13,19 @@ const ExchangeInfoTooltip = () => {
       arrow
       placement={isMobile ? 'left' : 'right'}
       title={
-        <>
-          <Typography component="p" variant="tooltip" color="primary.contrast">
-            Can&apos;t find the exchange? <br />
-            Click the link below to submit a request. <br />
-            We&apos;d love to hear from you! <br />
-            <Link
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              color="primary.contrast"
-            >
-              Submit request
-            </Link>
-          </Typography>
-        </>
+        <Typography component="p" variant="tooltip" color="primary.contrast">
+          Can&apos;t find the exchange? <br />
+          Click the link below to submit a request. <br />
+          We&apos;d love to hear from you! <br />
+          <Link
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            color="primary.contrast"
+          >
+            Submit request
+          </Link>
+        </Typography>
       }
     >
       <InfoTooltipInner />
