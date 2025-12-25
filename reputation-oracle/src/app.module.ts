@@ -5,6 +5,7 @@ import Environment from './common/utils/environment';
 import { EnvConfigModule, envValidator } from './config';
 import { PayoutModule } from './modules/payouts';
 import { StorageModule } from './modules/storage';
+import { TdxVerificationModule } from './modules/tdx-verification';
 import { Web3Module } from './modules/web3';
 
 @Module({
@@ -20,6 +21,7 @@ import { Web3Module } from './modules/web3';
     PayoutModule,
     StorageModule,
     Web3Module,
+    TdxVerificationModule,
   ],
 })
 export class AppModule {}

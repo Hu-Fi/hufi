@@ -1,0 +1,360 @@
+#cloud-config
+# Cloud-init configuration for TDX Recording Oracle VM
+# This creates a reproducible, minimal VM for running the recording oracle
+
+# Set hostname
+hostname: recording-oracle-tdx
+
+# Create the oracle user
+users:
+  - name: oracle
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+# Install required packages
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose
+  - curl
+  - jq
+  - python3
+  - python3-pip
+  - build-essential
+  - git
+
+# Write files
+write_files:
+  # TDX attestation proxy service
+  - path: /opt/recording-oracle/tdx-attestation-proxy.py
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env python3
+      """TDX Attestation Proxy - provides TDX quotes to containers via HTTP"""
+      import http.server
+      import subprocess
+      import json
+      import sys
+      import os
+
+      class TdxAttestationHandler(http.server.BaseHTTPRequestHandler):
+          def do_GET(self):
+              if self.path == "/quote" or self.path.startswith("/quote?"):
+                  self.handle_quote()
+              elif self.path == "/status":
+                  self.handle_status()
+              elif self.path == "/health":
+                  self.send_json(200, {"status": "healthy"})
+              else:
+                  self.send_response(404)
+                  self.end_headers()
+
+          def handle_quote(self):
+              try:
+                  # Parse report_data from query string if present
+                  report_data = None
+                  if "?" in self.path:
+                      query = self.path.split("?")[1]
+                      for param in query.split("&"):
+                          if param.startswith("report_data="):
+                              report_data = param.split("=")[1]
+
+                  cmd = ["/opt/recording-oracle/tdx_quote_gen"]
+                  if report_data:
+                      cmd.append(report_data)
+
+                  result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                  if result.returncode == 0:
+                      self.send_json(200, json.loads(result.stdout))
+                  else:
+                      self.send_json(500, {"error": result.stderr or "Quote generation failed"})
+              except subprocess.TimeoutExpired:
+                  self.send_json(500, {"error": "Quote generation timed out"})
+              except Exception as e:
+                  self.send_json(500, {"error": str(e)})
+
+          def handle_status(self):
+              tdx_available = os.path.exists("/dev/tdx_guest")
+              quote_gen_available = os.path.exists("/opt/recording-oracle/tdx_quote_gen")
+              self.send_json(200, {
+                  "available": tdx_available and quote_gen_available,
+                  "tdx_device": tdx_available,
+                  "quote_generator": quote_gen_available,
+                  "message": "TDX attestation proxy running"
+              })
+
+          def send_json(self, status, data):
+              self.send_response(status)
+              self.send_header("Content-Type", "application/json")
+              self.send_header("Access-Control-Allow-Origin", "*")
+              self.end_headers()
+              self.wfile.write(json.dumps(data).encode())
+
+          def log_message(self, format, *args):
+              pass  # Suppress logging
+
+      if __name__ == "__main__":
+          port = int(sys.argv[1]) if len(sys.argv) > 1 else 8081
+          server = http.server.HTTPServer(("0.0.0.0", port), TdxAttestationHandler)
+          print(f"TDX Attestation Proxy running on port {port}")
+          server.serve_forever()
+
+  # TDX quote generator source
+  - path: /opt/recording-oracle/tdx_quote_gen.c
+    permissions: '0644'
+    content: |
+      /* TDX Quote Generator - generates TDX attestation quotes */
+      #include <stdio.h>
+      #include <stdlib.h>
+      #include <string.h>
+      #include <stdint.h>
+      #include <tdx_attest.h>
+
+      static const char* base64_chars = 
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+      char* base64_encode(const uint8_t* data, size_t len) {
+          size_t out_len = 4 * ((len + 2) / 3);
+          char* out = malloc(out_len + 1);
+          if (!out) return NULL;
+          
+          size_t i, j;
+          for (i = 0, j = 0; i < len;) {
+              uint32_t a = i < len ? data[i++] : 0;
+              uint32_t b = i < len ? data[i++] : 0;
+              uint32_t c = i < len ? data[i++] : 0;
+              uint32_t triple = (a << 16) | (b << 8) | c;
+              out[j++] = base64_chars[(triple >> 18) & 0x3F];
+              out[j++] = base64_chars[(triple >> 12) & 0x3F];
+              out[j++] = base64_chars[(triple >> 6) & 0x3F];
+              out[j++] = base64_chars[triple & 0x3F];
+          }
+          
+          size_t mod = len % 3;
+          if (mod) {
+              out[out_len - 1] = '=';
+              if (mod == 1) out[out_len - 2] = '=';
+          }
+          out[out_len] = '\0';
+          return out;
+      }
+
+      int hex_to_bytes(const char* hex, uint8_t* out, size_t max_len) {
+          size_t hex_len = strlen(hex);
+          if (hex_len % 2 != 0 || hex_len / 2 > max_len) return -1;
+          for (size_t i = 0; i < hex_len / 2; i++) {
+              unsigned int byte;
+              if (sscanf(hex + 2*i, "%2x", &byte) != 1) return -1;
+              out[i] = (uint8_t)byte;
+          }
+          return hex_len / 2;
+      }
+
+      int main(int argc, char* argv[]) {
+          tdx_report_data_t report_data = {0};
+          tdx_report_t report = {0};
+          tdx_uuid_t selected_att_key_id = {0};
+          uint8_t* quote = NULL;
+          uint32_t quote_size = 0;
+
+          if (argc > 1) {
+              int len = hex_to_bytes(argv[1], report_data.d, sizeof(report_data.d));
+              if (len < 0) {
+                  fprintf(stderr, "{\"error\": \"Invalid hex report data\"}\n");
+                  return 1;
+              }
+          }
+
+          tdx_attest_error_t ret = tdx_att_get_report(&report_data, &report);
+          if (ret != TDX_ATTEST_SUCCESS) {
+              fprintf(stderr, "{\"error\": \"Failed to get TD report\", \"code\": %d}\n", ret);
+              return 1;
+          }
+
+          ret = tdx_att_get_quote(&report_data, NULL, 0, &selected_att_key_id, &quote, &quote_size, 0);
+          if (ret != TDX_ATTEST_SUCCESS) {
+              fprintf(stderr, "{\"error\": \"Failed to get TD quote\", \"code\": %d}\n", ret);
+              return 1;
+          }
+
+          char* quote_b64 = base64_encode(quote, quote_size);
+          char* report_b64 = base64_encode((uint8_t*)&report, sizeof(report));
+          char* report_data_b64 = base64_encode(report_data.d, sizeof(report_data.d));
+
+          printf("{\n");
+          printf("  \"quote\": \"%s\",\n", quote_b64);
+          printf("  \"quote_size\": %u,\n", quote_size);
+          printf("  \"report\": \"%s\",\n", report_b64);
+          printf("  \"report_data\": \"%s\"\n", report_data_b64);
+          printf("}\n");
+
+          free(quote_b64);
+          free(report_b64);
+          free(report_data_b64);
+          tdx_att_free_quote(quote);
+          return 0;
+      }
+
+  # Systemd service for TDX attestation proxy
+  - path: /etc/systemd/system/tdx-attestation-proxy.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=TDX Attestation Proxy
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/usr/bin/python3 /opt/recording-oracle/tdx-attestation-proxy.py 8081
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+  # Systemd service for recording oracle
+  - path: /etc/systemd/system/recording-oracle.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Recording Oracle
+      After=docker.service tdx-attestation-proxy.service
+      Requires=docker.service
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStartPre=/usr/bin/docker pull ${RECORDING_ORACLE_IMAGE:-ghcr.io/posix4e/hufi/recording-oracle-tdx:latest}
+      ExecStart=/usr/bin/docker run --rm --name recording-oracle \
+        --network host \
+        --add-host=host.docker.internal:host-gateway \
+        -e TDX_ATTESTATION_PROXY_URL=http://localhost:8081 \
+        -e HOST=0.0.0.0 \
+        -e PORT=3000 \
+        ${RECORDING_ORACLE_IMAGE:-ghcr.io/posix4e/hufi/recording-oracle-tdx:latest}
+      ExecStop=/usr/bin/docker stop recording-oracle
+      Restart=always
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+
+  # Docker compose for full stack (optional)
+  - path: /opt/recording-oracle/docker-compose.yml
+    permissions: '0644'
+    content: |
+      version: '3.8'
+      services:
+        postgres:
+          image: postgres:15-alpine
+          environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: recording
+          volumes:
+            - postgres_data:/var/lib/postgresql/data
+          healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+        minio:
+          image: minio/minio:latest
+          command: server /data --console-address ":9001"
+          environment:
+            MINIO_ROOT_USER: minioadmin
+            MINIO_ROOT_PASSWORD: minioadmin
+          volumes:
+            - minio_data:/data
+          healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+        recording-oracle:
+          image: ${RECORDING_ORACLE_IMAGE:-ghcr.io/posix4e/hufi/recording-oracle-tdx:latest}
+          depends_on:
+            postgres:
+              condition: service_healthy
+            minio:
+              condition: service_healthy
+          ports:
+            - "3000:3000"
+          extra_hosts:
+            - "host.docker.internal:host-gateway"
+          environment:
+            TDX_ATTESTATION_PROXY_URL: http://host.docker.internal:8081
+            HOST: 0.0.0.0
+            PORT: 3000
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DATABASE: recording
+            POSTGRES_SSL: "false"
+            S3_ENDPOINT: minio
+            S3_PORT: 9000
+            S3_ACCESS_KEY: minioadmin
+            S3_SECRET_KEY: minioadmin
+            S3_BUCKET: recordings
+            S3_USE_SSL: "false"
+
+      volumes:
+        postgres_data:
+        minio_data:
+
+  # Setup script
+  - path: /opt/recording-oracle/setup.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+      
+      echo "Setting up Recording Oracle TDX VM..."
+      
+      # Compile TDX quote generator if TDX libraries are available
+      if [ -f /usr/include/tdx_attest.h ]; then
+          echo "Compiling TDX quote generator..."
+          gcc -o /opt/recording-oracle/tdx_quote_gen \
+              /opt/recording-oracle/tdx_quote_gen.c \
+              -ltdx_attest -static-libgcc
+          chmod +x /opt/recording-oracle/tdx_quote_gen
+      else
+          echo "TDX attestation libraries not found, skipping quote generator compilation"
+      fi
+      
+      # Enable and start services
+      systemctl daemon-reload
+      systemctl enable tdx-attestation-proxy
+      systemctl enable recording-oracle
+      systemctl enable docker
+      
+      # Start services
+      systemctl start docker
+      systemctl start tdx-attestation-proxy
+      
+      echo "Setup complete!"
+
+# Run commands after boot
+runcmd:
+  - mkdir -p /opt/recording-oracle
+  - chmod +x /opt/recording-oracle/setup.sh
+  - /opt/recording-oracle/setup.sh
+  - systemctl start recording-oracle || echo "Recording oracle will start after image is pulled"
+
+# Final message
+final_message: |
+  Recording Oracle TDX VM is ready!
+  
+  TDX Attestation Proxy: http://localhost:8081
+  Recording Oracle: http://localhost:3000
+  
+  To check TDX status: curl http://localhost:8081/status
+  To get TDX quote: curl http://localhost:8081/quote

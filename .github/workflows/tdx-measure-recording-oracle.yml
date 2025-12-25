@@ -1,0 +1,124 @@
+name: TDX Measure Recording Oracle
+
+on:
+  push:
+    branches: [main, tdx-remote-attestation]
+    paths:
+      - 'recording-oracle/**'
+      - '.github/workflows/tdx-measure-recording-oracle.yml'
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish measurements to release'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  TDX_HOST: ns3222044.ip-57-130-10.eu
+  TDX_GUEST_SSH_PORT: 44451
+  TDX_GUEST_USER: tdx
+  RECORDING_ORACLE_PORT: 12000
+
+jobs:
+  measure-tdx:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TDX_HOST_SSH_KEY }}" > ~/.ssh/tdx_host_key
+          chmod 600 ~/.ssh/tdx_host_key
+          ssh-keyscan -H ${{ env.TDX_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Get TDX measurements
+        id: get-measurements
+        env:
+          TDX_HOST: ${{ env.TDX_HOST }}
+          TDX_HOST_SSH_KEY: ~/.ssh/tdx_host_key
+          TDX_GUEST_SSH_PORT: ${{ env.TDX_GUEST_SSH_PORT }}
+          TDX_GUEST_USER: ${{ env.TDX_GUEST_USER }}
+          TDX_GUEST_PASSWORD: ${{ secrets.TDX_GUEST_PASSWORD }}
+          RECORDING_ORACLE_PORT: ${{ env.RECORDING_ORACLE_PORT }}
+        run: ./recording-oracle/scripts/deploy-to-tdx.sh measure
+
+      - name: Verify TDX attestation status
+        env:
+          TDX_HOST: ${{ env.TDX_HOST }}
+          TDX_HOST_SSH_KEY: ~/.ssh/tdx_host_key
+          TDX_GUEST_SSH_PORT: ${{ env.TDX_GUEST_SSH_PORT }}
+          TDX_GUEST_USER: ${{ env.TDX_GUEST_USER }}
+          TDX_GUEST_PASSWORD: ${{ secrets.TDX_GUEST_PASSWORD }}
+          RECORDING_ORACLE_PORT: ${{ env.RECORDING_ORACLE_PORT }}
+        run: ./recording-oracle/scripts/deploy-to-tdx.sh status
+
+      - name: Create measurement manifest
+        run: |
+          export MRTD="${{ steps.get-measurements.outputs.mrtd }}"
+          export RTMR0="${{ steps.get-measurements.outputs.rtmr0 }}"
+          export RTMR1="${{ steps.get-measurements.outputs.rtmr1 }}"
+          export RTMR2="${{ steps.get-measurements.outputs.rtmr2 }}"
+          export RTMR3="${{ steps.get-measurements.outputs.rtmr3 }}"
+          export GIT_SHA="${{ github.sha }}"
+          export GIT_REF="${{ github.ref }}"
+          export WORKFLOW_RUN_ID="${{ github.run_id }}"
+          export WORKFLOW_RUN_NUMBER="${{ github.run_number }}"
+          export TDX_HOST="${{ env.TDX_HOST }}"
+          ./recording-oracle/scripts/create-measurement-manifest.sh > measurements.json
+          echo "=== TDX Measurement Manifest ==="
+          cat measurements.json
+
+      - name: Create reproduction instructions
+        run: ./recording-oracle/scripts/create-reproduce-md.sh measurements.json > REPRODUCE.md
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdx-measurements
+          path: |
+            measurements.json
+            REPRODUCE.md
+          retention-days: 90
+
+      - name: Create release with measurements
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.publish_release == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: recording-oracle-${{ github.sha }}
+          name: Recording Oracle TDX Build - ${{ github.sha }}
+          body: |
+            ## TDX Recording Oracle Measurements
+            
+            Measurements from recording oracle running on **real TDX hardware**.
+            
+            ### Build Info
+            | Field | Value |
+            |-------|-------|
+            | Git SHA | `${{ github.sha }}` |
+            
+            ### TDX Measurements
+            | Register | Value |
+            |----------|-------|
+            | MRTD | `${{ steps.get-measurements.outputs.mrtd }}` |
+            | RTMR[0] | `${{ steps.get-measurements.outputs.rtmr0 }}` |
+            | RTMR[1] | `${{ steps.get-measurements.outputs.rtmr1 }}` |
+            | RTMR[2] | `${{ steps.get-measurements.outputs.rtmr2 }}` |
+            | RTMR[3] | `${{ steps.get-measurements.outputs.rtmr3 }}` |
+            
+            ### Building Reputation Oracle with These Measurements
+            
+            ```bash
+            eval $(./reputation-oracle/scripts/set-tdx-measurements.sh measurements.json)
+            cd reputation-oracle && yarn build
+            ```
+          files: |
+            measurements.json
+            REPRODUCE.md
+          draft: false
+          prerelease: false

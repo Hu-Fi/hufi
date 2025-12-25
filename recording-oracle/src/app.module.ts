@@ -18,6 +18,7 @@ import { CampaignsModule } from './modules/campaigns';
 import { ExchangesModule } from './modules/exchanges';
 import { HealthModule } from './modules/health';
 import { StatisticsModule } from './modules/statistics';
+import { TdxAttestationModule } from './modules/tdx-attestation';
 import { UsersModule } from './modules/users';
 
 @Module({
@@ -54,6 +55,7 @@ import { UsersModule } from './modules/users';
   imports: [
     HealthModule,
     AdminModule,
+    TdxAttestationModule,
     ConfigModule.forRoot({
       /**
        * First value found takes precendece
