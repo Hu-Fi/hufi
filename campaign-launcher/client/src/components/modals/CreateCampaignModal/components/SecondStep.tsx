@@ -26,6 +26,7 @@ import {
   type CampaignFormValues,
   CampaignType,
   type MarketMakingFormValues,
+  AllowanceType,
 } from '@/types';
 import { constructCampaignDetails } from '@/utils';
 
@@ -122,7 +123,11 @@ const SecondStep: FC<Props> = ({
 
   const submitForm = async (data: CampaignFormValues) => {
     const allowance = await fetchAllowance(data.fund_token);
-    if (!allowance || Number(allowance) < Number(data.fund_amount)) {
+    if (
+      !allowance ||
+      (allowance !== AllowanceType.UNLIMITED &&
+        Number(allowance) < Number(data.fund_amount))
+    ) {
       showError('Insufficient allowance, go back to the previous step');
       return;
     }
