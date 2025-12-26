@@ -1,0 +1,75 @@
+---
+# Check TDX Recording Oracle status
+# Usage: ansible-playbook playbooks/status.yml
+
+- name: Check TDX Recording Oracle Status
+  hosts: tdx_host
+  gather_facts: no
+  become: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Check VM state
+      ansible.builtin.command:
+        cmd: virsh domstate {{ vm_name }}
+      register: vm_state
+      failed_when: false
+      changed_when: false
+
+    - name: Display VM state
+      ansible.builtin.debug:
+        msg: "VM {{ vm_name }} state: {{ vm_state.stdout | default('not found') }}"
+
+    - name: Check recording oracle connectivity
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ recording_oracle_port }}/"
+        method: GET
+        timeout: 10
+        follow_redirects: none
+        status_code: [200, 301, 302, 308]
+      register: oracle_check
+      failed_when: false
+
+    - name: Display oracle status
+      ansible.builtin.debug:
+        msg: "Recording Oracle: {{ 'Running (port ' + recording_oracle_port|string + ')' if oracle_check.status | default(0) in [200, 301, 302, 308] else 'Not available' }}"
+
+    - name: Check TDX attestation proxy status
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ tdx_proxy_port | default(8082) }}/status"
+        method: GET
+        timeout: 10
+      register: tdx_status
+      failed_when: false
+
+    - name: Display TDX proxy status
+      ansible.builtin.debug:
+        var: tdx_status.json
+      when: tdx_status.status | default(0) == 200
+
+    - name: Check docker compose services (via SSH to VM)
+      ansible.builtin.command:
+        cmd: >
+          sshpass -p '{{ guest_password }}'
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+          -p {{ vm_ssh_port }} {{ guest_user }}@127.0.0.1
+          "cd /opt/recording-oracle && docker compose ps --format json 2>/dev/null || docker compose ps"
+      register: docker_status
+      failed_when: false
+      changed_when: false
+
+    - name: Display docker compose status
+      ansible.builtin.debug:
+        msg: "{{ docker_status.stdout_lines | default(['Docker compose status unavailable']) }}"
+
+    - name: Display overall status
+      ansible.builtin.debug:
+        msg: |
+          TDX Recording Oracle Status:
+            VM State: {{ vm_state.stdout | default('not found') | trim }}
+            Recording Oracle: {{ 'Running' if oracle_check.status | default(0) in [200, 301, 302, 308] else 'Not available' }}
+            TDX Proxy: {{ 'Running' if tdx_status.status | default(0) == 200 else 'Not available' }}
+            TDX Available: {{ tdx_status.json.available | default('Unknown') if tdx_status.status | default(0) == 200 else 'Unknown' }}
+            TDX Device: {{ tdx_status.json.device | default('Unknown') if tdx_status.status | default(0) == 200 else 'Unknown' }}

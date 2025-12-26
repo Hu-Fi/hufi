@@ -1,0 +1,251 @@
+---
+# Wait for TDX VM to be ready
+
+- name: Wait for VM to be in running state
+  ansible.builtin.command:
+    cmd: virsh domstate {{ vm_name }}
+  register: vm_state
+  until: vm_state.stdout | trim == 'running'
+  retries: 30
+  delay: 5
+  changed_when: false
+
+- name: Wait for VM to boot (initial delay)
+  ansible.builtin.pause:
+    seconds: 60
+  when: true
+
+- name: Wait for SSH port to be available
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ vm_ssh_port }}"
+    timeout: "{{ vm_ready_timeout }}"
+    state: started
+  register: ssh_wait
+
+- name: Wait additional time for cloud-init to complete
+  ansible.builtin.pause:
+    seconds: 60
+  when: ssh_wait is changed or ssh_wait.elapsed | default(0) < 10
+
+- name: Test SSH connection
+  block:
+    - name: Attempt SSH connection
+      ansible.builtin.command:
+        cmd: >
+          sshpass -p '{{ guest_password }}' ssh
+          -o StrictHostKeyChecking=no
+          -o UserKnownHostsFile=/dev/null
+          -o ConnectTimeout={{ ssh_connect_timeout }}
+          -p {{ vm_ssh_port }}
+          {{ guest_user }}@127.0.0.1
+          'echo SSH_OK'
+      register: ssh_test
+      until: ssh_test.rc == 0 and 'SSH_OK' in ssh_test.stdout
+      retries: 60
+      delay: 5
+      changed_when: false
+
+    - name: Display SSH connection status
+      ansible.builtin.debug:
+        msg: "SSH connection established to {{ vm_name }}"
+
+  rescue:
+    - name: Check VM state
+      ansible.builtin.command:
+        cmd: virsh domstate {{ vm_name }}
+      register: vm_state
+      failed_when: false
+      changed_when: false
+
+    - name: Show VM state
+      ansible.builtin.debug:
+        msg: "VM state: {{ vm_state.stdout | default('unknown') }}"
+
+    - name: Get VM serial console PTY device
+      ansible.builtin.shell:
+        cmd: |
+          virsh dumpxml {{ vm_name }} | grep -A2 '<serial type' | grep 'source path' | sed "s/.*path='\([^']*\)'.*/\1/"
+      register: serial_pty
+      failed_when: false
+      changed_when: false
+
+    - name: Show serial PTY device
+      ansible.builtin.debug:
+        msg: "Serial PTY: {{ serial_pty.stdout | default('not found') }}"
+
+    - name: Read serial console output (non-blocking)
+      ansible.builtin.shell:
+        cmd: |
+          PTY="{{ serial_pty.stdout | trim }}"
+          if [ -n "$PTY" ] && [ -e "$PTY" ]; then
+            echo "=== Reading from $PTY ==="
+            # Read available data with timeout
+            timeout 5 cat "$PTY" 2>/dev/null || echo "No data or timeout"
+          else
+            echo "Serial PTY not available: $PTY"
+          fi
+      register: serial_output
+      failed_when: false
+      changed_when: false
+      when: serial_pty.stdout is defined and serial_pty.stdout | trim | length > 0
+
+    - name: Show serial console output
+      ansible.builtin.debug:
+        var: serial_output.stdout_lines
+      when: serial_output.stdout_lines is defined
+
+    - name: Check VM IP addresses
+      ansible.builtin.shell:
+        cmd: |
+          echo "=== Checking VM network info ==="
+          virsh domifaddr {{ vm_name }} --source agent 2>/dev/null || echo "Agent source not available"
+          virsh domifaddr {{ vm_name }} --source lease 2>/dev/null || echo "Lease source not available"
+          virsh domifaddr {{ vm_name }} --source arp 2>/dev/null || echo "ARP source not available"
+      register: vm_network
+      failed_when: false
+      changed_when: false
+
+    - name: Show VM network info
+      ansible.builtin.debug:
+        var: vm_network.stdout_lines
+      when: vm_network.stdout_lines is defined
+
+    - name: Check QEMU monitor for VM info
+      ansible.builtin.shell:
+        cmd: |
+          echo "=== QEMU Monitor Info ==="
+          virsh qemu-monitor-command {{ vm_name }} --hmp 'info network' 2>/dev/null || echo "Monitor command failed"
+          echo "=== QEMU Block Info ==="
+          virsh qemu-monitor-command {{ vm_name }} --hmp 'info block' 2>/dev/null || echo "Monitor command failed"
+          echo "=== QEMU Status ==="
+          virsh qemu-monitor-command {{ vm_name }} --hmp 'info status' 2>/dev/null || echo "Monitor command failed"
+          echo "=== QEMU CPUs ==="
+          virsh qemu-monitor-command {{ vm_name }} --hmp 'info cpus' 2>/dev/null || echo "Monitor command failed"
+      register: qemu_info
+      failed_when: false
+      changed_when: false
+
+    - name: Show QEMU monitor info
+      ansible.builtin.debug:
+        var: qemu_info.stdout_lines
+      when: qemu_info.stdout_lines is defined
+
+    - name: Check VM console log file
+      ansible.builtin.shell:
+        cmd: |
+          echo "=== Checking for console log files ==="
+          ls -la /var/log/libvirt/qemu/{{ vm_name }}* 2>/dev/null || echo "No log files found"
+          echo "=== Last 100 lines of serial log ==="
+          tail -100 /var/log/libvirt/qemu/{{ vm_name }}-serial.log 2>/dev/null || echo "No serial log content"
+          echo "=== Last 50 lines of main log ==="
+          tail -50 /var/log/libvirt/qemu/{{ vm_name }}.log 2>/dev/null || echo "No main log content"
+      register: console_log_file
+      failed_when: false
+      changed_when: false
+
+    - name: Show console log file
+      ansible.builtin.debug:
+        var: console_log_file.stdout_lines
+      when: console_log_file.stdout_lines is defined
+
+    - name: Check dmesg for TDX/VM related messages
+      ansible.builtin.shell:
+        cmd: |
+          echo "=== Host dmesg for TDX/KVM ==="
+          dmesg | grep -iE 'tdx|kvm|qemu' | tail -30 || echo "No TDX/KVM messages"
+      register: host_dmesg
+      failed_when: false
+      changed_when: false
+
+    - name: Show host dmesg
+      ansible.builtin.debug:
+        var: host_dmesg.stdout_lines
+      when: host_dmesg.stdout_lines is defined
+
+    - name: Check cloud-init status via guest agent
+      ansible.builtin.shell:
+        cmd: |
+          virsh qemu-agent-command {{ vm_name }} '{"execute":"guest-exec","arguments":{"path":"/usr/bin/cloud-init","arg":["status"],"capture-output":true}}' 2>/dev/null || echo "Guest agent not available"
+      register: cloud_init_status
+      failed_when: false
+      changed_when: false
+
+    - name: Show cloud-init status
+      ansible.builtin.debug:
+        var: cloud_init_status.stdout_lines
+      when: cloud_init_status.stdout_lines is defined
+
+    - name: Check if port is actually listening
+      ansible.builtin.shell:
+        cmd: ss -tlnp | grep {{ vm_ssh_port }} || netstat -tlnp | grep {{ vm_ssh_port }} || echo "Port {{ vm_ssh_port }} not found"
+      register: port_check
+      changed_when: false
+
+    - name: Show port status
+      ansible.builtin.debug:
+        var: port_check.stdout_lines
+
+    - name: Check QEMU process
+      ansible.builtin.shell:
+        cmd: ps aux | grep -E 'qemu|{{ vm_name }}' | grep -v grep || echo "No QEMU process found"
+      register: qemu_check
+      changed_when: false
+
+    - name: Show QEMU process
+      ansible.builtin.debug:
+        var: qemu_check.stdout_lines
+
+    - name: Check VM XML for network config
+      ansible.builtin.command:
+        cmd: virsh dumpxml {{ vm_name }}
+      register: vm_xml
+      changed_when: false
+
+    - name: Show VM network configuration
+      ansible.builtin.debug:
+        msg: "{{ vm_xml.stdout | regex_findall('(<interface.*?</interface>|<qemu:commandline.*?</qemu:commandline>)', '(?s)') }}"
+
+    - name: Fail with helpful message
+      ansible.builtin.fail:
+        msg: |
+          SSH connection to VM failed after 60 retries.
+          Last SSH error: {{ ssh_test.stderr | default('No error message') }}
+          
+          Possible causes:
+          1. Cloud-init may not have completed - check console output above
+          2. SSH service may not be running inside the VM
+          3. Network configuration issue with QEMU user-mode networking
+          4. The base image may not have SSH installed
+          
+          Debug info collected above. Check the VM console output for boot messages.
+
+- name: Check if recording oracle is running
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ recording_oracle_port }}/"
+    method: GET
+    timeout: 10
+    follow_redirects: none
+    status_code: [200, 301, 302, 308]
+  register: oracle_check
+  until: oracle_check.status in [200, 301, 302, 308]
+  retries: 60
+  delay: 5
+  failed_when: false
+
+- name: Display oracle status
+  ansible.builtin.debug:
+    msg: "Recording oracle: {{ 'Running' if oracle_check.status | default(0) in [200, 301, 302, 308] else 'Not ready yet' }}"
+
+- name: Check TDX attestation proxy status
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ tdx_proxy_port | default(8082) }}/status"
+    method: GET
+    timeout: 10
+  register: tdx_status
+  failed_when: false
+
+- name: Display TDX status
+  ansible.builtin.debug:
+    msg: "TDX Proxy: {{ tdx_status.json | default({'available': 'unknown'}) }}"
+  when: tdx_status.status | default(0) == 200

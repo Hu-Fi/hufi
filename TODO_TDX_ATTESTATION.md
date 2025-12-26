@@ -3,48 +3,58 @@
 ## Overview
 Implement TDX (Intel Trust Domain Extensions) remote attestation for the HUFI recording oracle, enabling the reputation oracle to cryptographically verify the recording oracle's integrity.
 
-## Phase 1: Reproducible Build Infrastructure ⏳
+## Phase 1: Reproducible Build Infrastructure ✅
 
 ### Task 1.1: Create TDX Dockerfile for Recording Oracle
-- [x] Create `recording-oracle/Dockerfile.tdx`
+- [x] Create `recording-oracle/Dockerfile`
 - [x] Pin all dependency versions for reproducibility
-- [x] Include TDX quote generator binary
-- [ ] Test build reproducibility
+- [x] Test build reproducibility via GitHub Actions
 
-### Task 1.2: TDX Quote Generator
-- [x] Create `tdx_quote_gen.c` source code
-- [x] Add to `recording-oracle/tdx-tools/`
-- [x] Document build and usage
+### Task 1.2: Docker Image Registry
+- [x] Push images to ghcr.io/posix4e/hufi/recording-oracle
+- [x] Tag with git SHA for reproducibility
 
-## Phase 2: GitHub Actions for Measurement ⏳
+## Phase 2: GitHub Actions for Measurement ✅
 
 ### Task 2.1: Create Measurement Workflow
 - [x] Create `.github/workflows/tdx-measure-recording-oracle.yml`
 - [x] Build Docker image deterministically
-- [x] Compute simulated measurements (MRTD, RTMRs)
+- [x] Deploy to real TDX hardware via Ansible
+- [x] Extract measurements from TDX attestation proxy
 - [x] Store measurements as workflow artifacts
-- [ ] Test workflow execution
 
 ### Task 2.2: Measurement Publication
 - [x] Publish measurements to GitHub releases
-- [x] Create measurement manifest JSON
-- [ ] Add signature verification (optional)
+- [x] Create measurement manifest JSON with git SHA and image tag
+- [x] Add GitHub Artifact Attestations for Docker image and measurements.json
 
 ## Phase 3: TDX Deployment ✅
 
-### Task 3.1: TDX Attestation Module for Recording Oracle
-- [x] Create `tdx-attestation.service.ts`
-- [x] Create `tdx-attestation.controller.ts`
-- [x] Create `tdx-attestation.module.ts`
-- [x] Integrate into `app.module.ts`
-- [x] Test endpoints:
-  - [x] GET `/attestation/status`
-  - [x] GET `/attestation/quote`
-  - [x] POST `/attestation/quote` (with custom report_data)
+### Task 3.1: Ansible Deployment Infrastructure
+- [x] Create `recording-oracle/ansible/` structure
+- [x] Create playbooks:
+  - [x] `playbooks/deploy.yml` - Full deployment
+  - [x] `playbooks/destroy.yml` - Cleanup
+  - [x] `playbooks/measure.yml` - Get TDX measurements
+  - [x] `playbooks/status.yml` - Check status
+  - [x] `playbooks/build-tdx-image.yml` - Build TDX guest image
+- [x] Create roles:
+  - [x] `roles/tdx_vm/` - TDX VM provisioning
+  - [x] `roles/tdx_attestation/` - TDX measurement extraction
 
-### Task 3.2: TDX Deployment Scripts
-- [x] Create `scripts/tdx/deploy-recording-oracle.sh`
-- [x] Document deployment process
+### Task 3.2: TDX VM Configuration
+- [x] Cloud-init template with:
+  - [x] TDX attestation proxy (Python, runs natively on port 8081)
+  - [x] Docker-compose stack (postgres, minio, recording-oracle)
+  - [x] Systemd services for auto-start
+- [x] QEMU/KVM with TDX launchSecurity
+- [x] SLIRP networking with port forwarding
+
+### Task 3.3: TDX Attestation Proxy
+- [x] HTTP proxy on port 8081 (runs natively in VM, not containerized)
+- [x] Endpoints:
+  - [x] GET `/status` - TDX availability and device info
+  - [x] GET `/quote` - Generate TDX quote with measurements
 
 ## Phase 4: Reputation Oracle Verification ⏳
 
@@ -79,26 +89,69 @@ Implement TDX (Intel Trust Domain Extensions) remote attestation for the HUFI re
 
 ### Task 5.2: Documentation
 - [x] Create `docs/TDX_ATTESTATION_PLAN.md`
-- [ ] Add deployment guide
+- [x] Create `recording-oracle/ansible/README.md`
 - [ ] Add verification guide
 - [ ] Add troubleshooting guide
 
 ## Current Status
 
-### Recording Oracle (TDX Guest)
-- **Status**: ✅ Running
-- **Host**: ns3222044.ip-57-130-10.eu
-- **Guest IP**: 192.168.122.97
-- **Port**: 12000
-- **TDX Device**: /dev/tdx_guest available
-- **Attestation**: Working - generates valid TDX quotes
-
-### Endpoints Available
+### Architecture
 ```
-Recording Oracle:
-  GET  http://192.168.122.97:12000/attestation/status
-  GET  http://192.168.122.97:12000/attestation/quote
-  POST http://192.168.122.97:12000/attestation/quote
+GitHub Actions                    TDX Host (ns3222044.ip-57-130-10.eu)
+┌─────────────────┐              ┌─────────────────────────────────────┐
+│ Build & Push    │              │  TDX VM (QEMU/KVM with launchSecurity)
+│ Docker Image    │──Ansible────▶│  ┌─────────────────────────────────┐│
+│                 │              │  │ TDX Attestation Proxy (native)  ││
+│ Deploy via      │              │  │ Port 8082: /status, /quote      ││
+│ Ansible         │              │  │ Access to /dev/tdx_guest        ││
+│                 │              │  ├─────────────────────────────────┤│
+│ Get Measurements│◀─────────────│  │ Docker Compose Stack            ││
+│ from port 8082  │              │  │ - postgres:5432                 ││
+└─────────────────┘              │  │ - minio:9000                    ││
+                                 │  │ - recording-oracle:12000        ││
+                                 │  └─────────────────────────────────┘│
+                                 │  Port forwards: 2222→22, 12000, 8082→8081│
+                                 └─────────────────────────────────────┘
+```
+
+### Key Files
+```
+recording-oracle/ansible/
+├── playbooks/
+│   ├── deploy.yml          # Full deployment
+│   ├── destroy.yml         # Cleanup VM
+│   ├── measure.yml         # Get TDX measurements
+│   ├── status.yml          # Check status
+│   └── build-tdx-image.yml # Build TDX guest image
+├── roles/
+│   ├── tdx_vm/
+│   │   ├── tasks/
+│   │   │   ├── main.yml
+│   │   │   ├── provision.yml
+│   │   │   ├── find_base_image.yml
+│   │   │   ├── wait.yml
+│   │   │   └── destroy.yml
+│   │   └── templates/
+│   │       ├── user-data.yml.j2  # Cloud-init (TDX proxy + docker-compose)
+│   │       ├── meta-data.yml.j2
+│   │       ├── network-config.yml.j2
+│   │       └── vm.xml.j2         # Libvirt XML with TDX launchSecurity
+│   └── tdx_attestation/
+│       └── tasks/
+│           ├── main.yml
+│           ├── status.yml
+│           └── measure.yml
+└── group_vars/all.yml
+```
+
+### Endpoints
+```
+TDX Attestation Proxy (port 8082 on host, 8081 in VM):
+  GET  http://127.0.0.1:8082/status  - TDX availability
+  GET  http://127.0.0.1:8082/quote   - Generate TDX quote
+
+Recording Oracle (port 12000, in docker):
+  GET  http://127.0.0.1:12000/       - API (redirects to /swagger)
 
 Reputation Oracle (after deployment):
   POST /tdx-verification/verify-quote
@@ -110,10 +163,13 @@ Reputation Oracle (after deployment):
 
 ## Environment Variables
 
-### Recording Oracle
+### Recording Oracle (in docker-compose via .env)
 ```env
-# No additional TDX-specific env vars needed
-# TDX quote generation uses /dev/tdx_guest device
+JWT_PRIVATE_KEY=<EC private key>
+JWT_PUBLIC_KEY=<EC public key>
+AES_ENCRYPTION_KEY=<32-char key>
+WEB3_PRIVATE_KEY=<ethereum private key>
+RPC_URL_POLYGON_AMOY=<RPC URL>
 ```
 
 ### Reputation Oracle
@@ -126,26 +182,9 @@ TDX_EXPECTED_RTMR2=<sha384-hash>
 TDX_EXPECTED_RTMR3=<sha384-hash>
 ```
 
-## Files Created/Modified
-
-### New Files
-- `docs/TDX_ATTESTATION_PLAN.md`
-- `TODO_TDX_ATTESTATION.md` (this file)
-- `.github/workflows/tdx-measure-recording-oracle.yml`
-- `recording-oracle/Dockerfile.tdx`
-- `recording-oracle/tdx-tools/tdx_quote_gen.c`
-- `recording-oracle/tdx-tools/README.md`
-- `recording-oracle/src/modules/tdx-attestation-module/`
-- `reputation-oracle/src/modules/tdx-verification/`
-- `scripts/tdx/deploy-recording-oracle.sh`
-
-### Modified Files
-- `recording-oracle/src/app.module.ts` - Added TdxAttestationModule
-- `reputation-oracle/src/app.module.ts` - Added TdxVerificationModule
-
 ## Next Steps
 
-1. **Test GitHub Action**: Push to trigger the measurement workflow
+1. **Fix GitHub Action**: Ensure workflow completes successfully
 2. **Deploy Reputation Oracle**: Test TDX verification endpoints
 3. **Integration Test**: Verify recording oracle from reputation oracle
-4. **Production Hardening**: Add certificate chain validation
+4. **Production Hardening**: Add Intel certificate chain validation

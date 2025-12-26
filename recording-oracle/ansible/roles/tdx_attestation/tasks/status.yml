@@ -1,0 +1,24 @@
+---
+# Check TDX attestation status via TDX proxy
+
+- name: Check TDX attestation status
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ tdx_proxy_port }}{{ tdx_proxy_status_endpoint }}"
+    method: GET
+    timeout: 30
+    return_content: yes
+  register: tdx_status
+  retries: 3
+  delay: 5
+
+- name: Display TDX status
+  ansible.builtin.debug:
+    var: tdx_status.json
+
+- name: Verify TDX is available
+  ansible.builtin.assert:
+    that:
+      - tdx_status.json.available | default(false)
+    fail_msg: "TDX is not available on this system"
+    success_msg: "TDX is available and ready for attestation"
+  when: require_tdx | default(true)

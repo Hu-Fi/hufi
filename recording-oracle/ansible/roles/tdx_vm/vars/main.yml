@@ -1,0 +1,15 @@
+---
+# TDX VM Role Variables
+
+# VM state tracking
+vm_disk_path: "{{ libvirt_images_dir }}/{{ vm_name }}.qcow2"
+cloud_init_iso_path: "{{ cloud_init_dir }}/{{ vm_name }}-cloud-init.iso"
+vm_xml_path: "{{ cloud_init_dir }}/{{ vm_name }}.xml"
+
+# TDX-specific paths
+tdx_quote_gen_path: /dev/tdx_guest
+tdx_device_path: /dev/tdx_guest
+
+# OVMF paths for TDX
+ovmf_code_path: /usr/share/qemu/OVMF.fd
+ovmf_vars_template: /usr/share/qemu/OVMF_VARS.fd

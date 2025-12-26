@@ -1,0 +1,37 @@
+---
+# Deploy TDX Recording Oracle VM
+# Usage: ansible-playbook playbooks/deploy.yml -e "recording_oracle_image=ghcr.io/posix4e/hufi/recording-oracle:sha-abc123"
+
+- name: Deploy TDX Recording Oracle
+  hosts: tdx_host
+  gather_facts: yes
+  become: yes
+  
+  vars_files:
+    - ../group_vars/all.yml
+  
+  tasks:
+    - name: Display deployment parameters
+      ansible.builtin.debug:
+        msg: |
+          Deploying TDX Recording Oracle:
+            VM Name: {{ vm_name }}
+            Image: {{ recording_oracle_image }}
+            Memory: {{ vm_memory_mb }}MB
+            CPUs: {{ vm_cpus }}
+            SSH Port: {{ vm_ssh_port }}
+
+    - name: Include TDX VM role
+      ansible.builtin.include_role:
+        name: tdx_vm
+      tags:
+        - deploy
+
+    - name: Display deployment complete message
+      ansible.builtin.debug:
+        msg: |
+          TDX Recording Oracle deployed successfully!
+          
+          SSH Access: ssh -p {{ vm_ssh_port }} {{ guest_user }}@127.0.0.1
+          Recording Oracle: http://127.0.0.1:{{ recording_oracle_port }}
+          TDX Status: http://127.0.0.1:{{ recording_oracle_port }}/attestation/status

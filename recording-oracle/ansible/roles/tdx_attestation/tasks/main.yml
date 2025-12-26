@@ -1,0 +1,17 @@
+---
+# TDX Attestation tasks
+
+- name: Include role variables
+  ansible.builtin.include_vars:
+    file: main.yml
+
+- name: Get TDX attestation status
+  ansible.builtin.include_tasks: status.yml
+  tags:
+    - status
+    - measure
+
+- name: Get TDX quote and measurements
+  ansible.builtin.include_tasks: measure.yml
+  tags:
+    - measure

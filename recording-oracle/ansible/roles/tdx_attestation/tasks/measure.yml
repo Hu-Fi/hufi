@@ -1,0 +1,74 @@
+---
+# Get TDX measurements from the TDX attestation proxy
+
+- name: Wait for TDX attestation proxy to be ready
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ tdx_proxy_port }}{{ tdx_proxy_status_endpoint }}"
+    method: GET
+    timeout: 10
+  register: tdx_status
+  until: tdx_status.status == 200
+  retries: 30
+  delay: 5
+
+- name: Display TDX status
+  ansible.builtin.debug:
+    var: tdx_status.json
+  when: debug_mode | default(false)
+
+- name: Check if TDX is available
+  ansible.builtin.fail:
+    msg: "TDX device not available on this host"
+  when: not (tdx_status.json.available | default(false))
+
+- name: Generate TDX quote
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ tdx_proxy_port }}{{ tdx_proxy_quote_endpoint }}"
+    method: GET
+    timeout: 60
+    return_content: yes
+  register: tdx_quote
+  retries: 3
+  delay: 5
+
+- name: Display raw quote response
+  ansible.builtin.debug:
+    var: tdx_quote.json
+  when: debug_mode | default(false)
+
+- name: Extract measurements from quote
+  ansible.builtin.set_fact:
+    tdx_measurements:
+      mrtd: "{{ tdx_quote.json.measurements.mrtd | default('') }}"
+      rtmr0: "{{ tdx_quote.json.measurements.rtmr0 | default('') }}"
+      rtmr1: "{{ tdx_quote.json.measurements.rtmr1 | default('') }}"
+      rtmr2: "{{ tdx_quote.json.measurements.rtmr2 | default('') }}"
+      rtmr3: "{{ tdx_quote.json.measurements.rtmr3 | default('') }}"
+      quote_base64: "{{ tdx_quote.json.quote | default('') }}"
+      timestamp: "{{ ansible_date_time.iso8601 }}"
+      vm_name: "{{ vm_name }}"
+      recording_oracle_image: "{{ recording_oracle_image }}"
+      tdx_available: "{{ tdx_status.json.available | default(false) }}"
+      tdx_device: "{{ tdx_status.json.device | default('/dev/tdx_guest') }}"
+
+- name: Display measurements
+  ansible.builtin.debug:
+    msg: |
+      TDX Measurements:
+        MRTD:  {{ tdx_measurements.mrtd }}
+        RTMR0: {{ tdx_measurements.rtmr0 }}
+        RTMR1: {{ tdx_measurements.rtmr1 }}
+        RTMR2: {{ tdx_measurements.rtmr2 }}
+        RTMR3: {{ tdx_measurements.rtmr3 }}
+
+- name: Save measurements to file
+  ansible.builtin.copy:
+    content: "{{ tdx_measurements | to_nice_json }}"
+    dest: "{{ measurements_output_file }}"
+    mode: '0644'
+  delegate_to: localhost
+  become: no
+
+- name: Display measurements file location
+  ansible.builtin.debug:
+    msg: "Measurements saved to {{ measurements_output_file }}"

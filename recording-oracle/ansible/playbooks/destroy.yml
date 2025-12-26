@@ -1,0 +1,25 @@
+---
+# Destroy TDX Recording Oracle VM
+# Usage: ansible-playbook playbooks/destroy.yml
+
+- name: Destroy TDX Recording Oracle
+  hosts: tdx_host
+  gather_facts: no
+  become: yes
+  
+  vars_files:
+    - ../group_vars/all.yml
+  
+  tasks:
+    - name: Display destroy parameters
+      ansible.builtin.debug:
+        msg: "Destroying VM: {{ vm_name }}"
+
+    - name: Include TDX VM role (destroy only)
+      ansible.builtin.include_role:
+        name: tdx_vm
+        tasks_from: destroy.yml
+
+    - name: Display destroy complete message
+      ansible.builtin.debug:
+        msg: "VM {{ vm_name }} has been destroyed"
