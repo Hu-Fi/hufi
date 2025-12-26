@@ -18,6 +18,10 @@ type FormValues = {
   fundAmount: string;
 };
 
+type FilledFormValues = FormValues & {
+  campaignType: CampaignType;
+};
+
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [step, setStep] = useState(1);
   const [formValues, setFormValues] = useState<FormValues>({
@@ -66,9 +70,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
           handleCloseModal={handleClose}
         />
       )}
-      {step === 2 && formValues.campaignType && (
+      {step === 2 && (
         <SecondStep
-          formValues={formValues as FormValues & { campaignType: CampaignType }}
+          formValues={formValues as FilledFormValues}
           handleChangeLoading={setIsLoading}
           handleChangeFormStep={setStep}
           handleCloseModal={handleClose}
