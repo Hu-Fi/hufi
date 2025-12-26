@@ -24,6 +24,7 @@ type FilledFormValues = FormValues & {
 
 const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   const [step, setStep] = useState(1);
+  const [showFinalView, setShowFinalView] = useState(false);
   const [formValues, setFormValues] = useState<FormValues>({
     campaignType: null,
     fundToken: '',
@@ -50,16 +51,13 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       onClose={handleClose}
       isLoading={isLoading}
       showCloseButton={isMobile}
-      showBackButton={isMobile && step === 2}
+      showBackButton={isMobile && step === 2 && !showFinalView}
       handleBackClick={() => setStep(1)}
       sx={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         px: { xs: 2, md: 4 },
-        '& > form': {
-          width: { xs: '100%', md: 'auto' },
-        },
       }}
     >
       {step === 1 && (
@@ -73,6 +71,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       {step === 2 && (
         <SecondStep
           formValues={formValues as FilledFormValues}
+          showFinalView={showFinalView}
+          setShowFinalView={setShowFinalView}
           handleChangeLoading={setIsLoading}
           handleChangeFormStep={setStep}
           handleCloseModal={handleClose}
