@@ -12,11 +12,12 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 
 type Props = {
   stepsCompleted: number;
-  steps: string[];
   isLoading: boolean;
 };
 
-const Steps: FC<Props> = ({ stepsCompleted, steps, isLoading }) => {
+const steps = ['Approve Tokens', 'Create Escrow', 'Completed'];
+
+const Steps: FC<Props> = ({ stepsCompleted, isLoading }) => {
   const isMobile = useIsMobile();
 
   return (
@@ -44,6 +45,9 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isLoading }) => {
                   sx: {
                     flexDirection: isMobile ? 'column' : 'row',
                     gap: 1,
+                    '& .MuiStepLabel-label': {
+                      textAlign: 'center',
+                    },
                     '& .MuiStepLabel-iconContainer': {
                       p: 0,
                     },

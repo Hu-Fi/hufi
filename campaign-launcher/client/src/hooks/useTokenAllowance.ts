@@ -48,9 +48,6 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         return null;
       }
 
-      setIsLoading(true);
-      setError(null);
-
       try {
         const tokenContract = new ethers.Contract(
           tokenAddress,
@@ -69,13 +66,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         setAllowance(_allowance);
         return _allowance;
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error('Failed to fetch allowance');
-        setError(error);
         console.error('Error fetching allowance:', err);
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
     [signer, activeAddress, appChainId, allowanceSpender]

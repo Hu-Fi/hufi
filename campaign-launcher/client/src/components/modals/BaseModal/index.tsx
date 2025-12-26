@@ -1,5 +1,6 @@
 import { type FC, type PropsWithChildren, useCallback } from 'react';
 
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   IconButton,
@@ -14,8 +15,10 @@ type Props = {
   onClose: () => void;
   elevation?: number;
   showCloseButton?: boolean;
+  showBackButton?: boolean;
   isLoading?: boolean;
   sx?: SxProps<Theme>;
+  handleBackClick?: () => void;
 };
 
 const BaseModal: FC<PropsWithChildren<Props>> = ({
@@ -23,9 +26,11 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
   onClose,
   elevation = 0,
   showCloseButton = true,
+  showBackButton = false,
   isLoading = false,
   children,
   sx,
+  handleBackClick,
 }) => {
   const handleClose = useCallback(() => {
     if (isLoading) return;
@@ -67,6 +72,24 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           ...sx,
         }}
       >
+        <IconButton
+          disabled={isLoading}
+          onClick={handleBackClick}
+          sx={{
+            display: showBackButton ? 'flex' : 'none',
+            bgcolor: 'rgba(205, 199, 255, 0.12)',
+            p: 0.5,
+            color: 'text.primary',
+            position: 'absolute',
+            top: { xs: '16px', md: '40px' },
+            left: { xs: '16px', md: '32px' },
+            '&:hover': {
+              bgcolor: 'unset',
+            },
+          }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
         <IconButton
           disabled={isLoading}
           onClick={handleClose}
