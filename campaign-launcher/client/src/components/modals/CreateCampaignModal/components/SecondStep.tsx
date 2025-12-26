@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FC } from 'react';
+import { useCallback, useEffect, type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -50,6 +50,8 @@ type FormValues = {
 
 type Props = {
   formValues: FormValues;
+  showFinalView: boolean;
+  setShowFinalView: (showFinalView: boolean) => void;
   handleChangeLoading: (isLoading: boolean) => void;
   handleChangeFormStep: (formStep: number) => void;
   handleCloseModal: () => void;
@@ -57,12 +59,12 @@ type Props = {
 
 const SecondStep: FC<Props> = ({
   formValues,
+  showFinalView,
+  setShowFinalView,
   handleChangeLoading,
   handleChangeFormStep,
   handleCloseModal,
 }) => {
-  const [showFinalView, setShowFinalView] = useState(false);
-
   const { campaignType, fundToken, fundAmount } = formValues;
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -116,10 +118,11 @@ const SecondStep: FC<Props> = ({
 
   useEffect(() => {
     if (isEscrowCreated) {
+      setShowFinalView(true);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MY_CAMPAIGNS] });
     }
-  }, [queryClient, isEscrowCreated]);
+  }, [queryClient, isEscrowCreated, setShowFinalView]);
 
   const submitForm = async (data: CampaignFormValues) => {
     const allowance = await fetchAllowance(data.fund_token);
@@ -166,10 +169,25 @@ const SecondStep: FC<Props> = ({
     navigate(`/campaign-details/${escrowAddress}?data=${encodedData}`);
     onCloseModal();
     setShowFinalView(false);
-  }, [appChainId, navigate, escrowData, getValues, onCloseModal]);
+  }, [
+    appChainId,
+    navigate,
+    escrowData,
+    getValues,
+    onCloseModal,
+    setShowFinalView,
+  ]);
 
   return (
-    <Stack alignItems="center">
+    <Stack
+      alignItems="center"
+      sx={{
+        width: '100%',
+        '& > form': {
+          width: { xs: '100%', md: 'auto' },
+        },
+      }}
+    >
       {showFinalView && (
         <FinalView
           campaignType={campaignType}
@@ -293,26 +311,15 @@ const SecondStep: FC<Props> = ({
                     Cancel
                   </Button>
                 )}
-                {!isEscrowCreated ? (
-                  <Button
-                    size="large"
-                    variant="contained"
-                    type="submit"
-                    fullWidth={isMobile}
-                    disabled={isCreatingEscrow}
-                  >
-                    Create Campaign
-                  </Button>
-                ) : (
-                  <Button
-                    size="large"
-                    variant="contained"
-                    fullWidth={isMobile}
-                    onClick={() => setShowFinalView(true)}
-                  >
-                    Finish
-                  </Button>
-                )}
+                <Button
+                  size="large"
+                  variant="contained"
+                  type="submit"
+                  fullWidth={isMobile}
+                  disabled={isCreatingEscrow}
+                >
+                  Create Campaign
+                </Button>
               </Stack>
             </Stack>
           </Stack>

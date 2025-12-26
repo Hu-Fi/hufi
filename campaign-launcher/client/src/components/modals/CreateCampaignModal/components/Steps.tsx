@@ -15,7 +15,7 @@ type Props = {
   isLoading: boolean;
 };
 
-const steps = ['Approve Tokens', 'Create Escrow', 'Completed'];
+const steps = ['Approve Tokens', 'Create Escrow'];
 
 const Steps: FC<Props> = ({ stepsCompleted, isLoading }) => {
   const isMobile = useIsMobile();
@@ -29,7 +29,7 @@ const Steps: FC<Props> = ({ stepsCompleted, isLoading }) => {
         my: 0,
         mx: 'auto',
         gap: { xs: '20px', md: 0 },
-        width: { xs: 'fit-content', md: '100%' },
+        width: { xs: 'fit-content', md: '70%' },
       }}
     >
       {steps.map((step, idx) => {
