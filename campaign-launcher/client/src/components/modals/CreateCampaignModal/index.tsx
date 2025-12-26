@@ -1,5 +1,6 @@
 import { type FC, useCallback, useState } from 'react';
 
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { type CampaignType } from '@/types';
 
 import BaseModal from '../BaseModal';
@@ -26,6 +27,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const isMobile = useIsMobile();
+
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
@@ -42,7 +45,9 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       open={open}
       onClose={handleClose}
       isLoading={isLoading}
-      showCloseButton={false}
+      showCloseButton={isMobile}
+      showBackButton={isMobile && step === 2}
+      handleBackClick={() => setStep(1)}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -56,8 +61,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       {step === 1 && (
         <FirstStep
           prepareFormValues={prepareFormValues}
-          handleChangeFormStep={setStep}
           handleChangeLoading={setIsLoading}
+          handleChangeFormStep={setStep}
           handleCloseModal={handleClose}
         />
       )}

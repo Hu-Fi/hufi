@@ -8,12 +8,6 @@ import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useStakeContext } from '@/providers/StakeProvider';
 
-type Props = {
-  variant: 'outlined' | 'contained';
-  sx?: SxProps;
-  withTooltip?: boolean;
-};
-
 type ButtonWrapperProps = {
   isDisabled: boolean;
   withTooltip: boolean;
@@ -51,7 +45,19 @@ const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({
   return children;
 };
 
-const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
+type Props = {
+  variant: 'outlined' | 'contained';
+  sx?: SxProps;
+  withTooltip?: boolean;
+  handleCallbackOnClick?: () => void;
+};
+
+const LaunchCampaign: FC<Props> = ({
+  variant,
+  sx,
+  withTooltip = false,
+  handleCallbackOnClick,
+}) => {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 
@@ -67,10 +73,11 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
     const _stakedAmount = Number(await fetchStakingData());
     if (_stakedAmount === 0) {
       setIsSetupModalOpen(true);
-      return;
     } else {
       setIsFormModalOpen(true);
     }
+
+    handleCallbackOnClick?.();
   };
 
   const handleOpenFormModal = () => {
