@@ -291,10 +291,9 @@ const FirstStep: FC<Props> = ({
               <InfoTooltipInner />
             </CustomTooltip>
           </Stack>
-          {!isMobile ||
-            (isMobile && isLoading && (
-              <Steps stepsCompleted={0} isLoading={isLoading} />
-            ))}
+          {!(isMobile || (isMobile && isLoading)) && (
+            <Steps stepsCompleted={0} isLoading={isLoading} />
+          )}
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent="space-between"
