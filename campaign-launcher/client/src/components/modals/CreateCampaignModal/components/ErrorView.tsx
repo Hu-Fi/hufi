@@ -14,7 +14,7 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
 
   return (
     <Stack alignItems="center" textAlign="center">
-      <Typography variant="h4" color="text.primary" mb={4}>
+      <Typography variant="h4" color="text.primary" mb={4} p={1}>
         Launch Campaign
       </Typography>
       <ModalError message="Something went wrong, please try again." />

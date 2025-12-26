@@ -187,19 +187,26 @@ const SecondStep: FC<Props> = ({
               justifyContent="center"
               alignItems="center"
             >
-              <IconButton
-                disableRipple
-                sx={{
-                  position: 'absolute',
-                  left: 0,
-                  bgcolor: 'rgba(205, 199, 255, 0.12)',
-                }}
-                onClick={() => handleChangeFormStep(1)}
+              {!isMobile && (
+                <IconButton
+                  disableRipple
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    bgcolor: 'rgba(205, 199, 255, 0.12)',
+                  }}
+                  onClick={() => handleChangeFormStep(1)}
+                >
+                  <ArrowBackIcon sx={{ color: 'text.primary' }} />
+                </IconButton>
+              )}
+              <Typography
+                variant="h4"
+                color="text.primary"
+                textAlign="center"
+                sx={{ whiteSpace: 'pre-line' }}
               >
-                <ArrowBackIcon sx={{ color: 'text.primary' }} />
-              </IconButton>
-              <Typography variant="h4" color="text.primary" position="relative">
-                Launch Campaign
+                {isMobile ? 'Launch\nCampaign' : 'Launch Campaign'}
               </Typography>
             </Stack>
             <Typography
@@ -221,11 +228,12 @@ const SecondStep: FC<Props> = ({
               )}
               <CampaignTypeLabel campaignType={campaignType} />
             </Box>
-            <Steps
-              steps={['Approve Tokens', 'Create Escrow', 'Completed']}
-              stepsCompleted={isEscrowCreated ? 3 : 1}
-              isLoading={isCreatingEscrow}
-            />
+            {!isMobile && (
+              <Steps
+                stepsCompleted={isEscrowCreated ? 3 : 1}
+                isLoading={isCreatingEscrow}
+              />
+            )}
             <Stack
               mt={2}
               gap={3}
@@ -237,6 +245,12 @@ const SecondStep: FC<Props> = ({
                 },
               }}
             >
+              {isMobile && isCreatingEscrow && (
+                <Steps
+                  stepsCompleted={isEscrowCreated ? 3 : 1}
+                  isLoading={isCreatingEscrow}
+                />
+              )}
               {campaignType === CampaignType.MARKET_MAKING && (
                 <MarketMakingForm
                   control={control as Control<MarketMakingFormValues>}
@@ -269,15 +283,16 @@ const SecondStep: FC<Props> = ({
                 justifyContent="space-between"
                 width="100%"
               >
-                <Button
-                  size="large"
-                  variant="outlined"
-                  fullWidth={isMobile}
-                  disabled={isCreatingEscrow}
-                  onClick={onCloseModal}
-                >
-                  Cancel
-                </Button>
+                {!isMobile && (
+                  <Button
+                    size="large"
+                    variant="outlined"
+                    disabled={isCreatingEscrow}
+                    onClick={onCloseModal}
+                  >
+                    Cancel
+                  </Button>
+                )}
                 {!isEscrowCreated ? (
                   <Button
                     size="large"

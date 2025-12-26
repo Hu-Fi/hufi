@@ -51,7 +51,7 @@ const AllowanceTooltip = ({ type }: { type: AllowanceType }) => {
   return (
     <CustomTooltip
       arrow
-      placement={isMobile ? 'left' : 'right'}
+      placement={isMobile ? 'top' : 'right'}
       title={
         <Typography component="p" variant="tooltip" color="primary.contrast">
           {allowanceTooltipText[type]}
@@ -186,7 +186,7 @@ const FirstStep: FC<Props> = ({
   };
 
   return (
-    <Stack gap={2} width="100%" px={{ xs: 0, md: 6 }}>
+    <Stack width="100%" px={{ xs: 0, md: 6 }}>
       {approvalError && <ErrorView onRetry={handleRetry} />}
       {!approvalError && (
         <form onSubmit={handleSubmit(submitForm)}>
@@ -202,7 +202,7 @@ const FirstStep: FC<Props> = ({
             <Typography
               variant="alert"
               color="text.secondary"
-              mb={1}
+              mb={{ xs: 2, md: 1 }}
               mx="auto"
               display="flex"
               alignItems="center"
@@ -219,10 +219,15 @@ const FirstStep: FC<Props> = ({
             gap={1}
             mb={4}
           >
-            <Typography variant="subtitle2" color="text.primary">
-              Campaign Type:
-            </Typography>
-            <FormControl error={!!errors.campaignType}>
+            {!isMobile && (
+              <Typography variant="subtitle2" color="text.primary">
+                Campaign Type:
+              </Typography>
+            )}
+            <FormControl
+              error={!!errors.campaignType}
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+            >
               <Controller
                 name="campaignType"
                 control={control}
@@ -286,17 +291,16 @@ const FirstStep: FC<Props> = ({
               <InfoTooltipInner />
             </CustomTooltip>
           </Stack>
-          <Steps
-            steps={['Approve Tokens', 'Create Escrow', 'Completed']}
-            stepsCompleted={0}
-            isLoading={isLoading}
-          />
+          {!isMobile ||
+            (isMobile && isLoading && (
+              <Steps stepsCompleted={0} isLoading={isLoading} />
+            ))}
           <Stack
-            direction="row"
+            direction={{ xs: 'column', md: 'row' }}
             justifyContent="space-between"
             alignItems="flex-start"
-            mt={4}
-            gap={4}
+            mt={{ xs: 5, md: 4 }}
+            gap={{ xs: 3, md: 4 }}
             sx={{
               '& .MuiFormHelperText-root': {
                 mx: 0,
@@ -304,7 +308,10 @@ const FirstStep: FC<Props> = ({
               },
             }}
           >
-            <FormControl error={!!errors.fundToken} sx={{ flex: 1 }}>
+            <FormControl
+              error={!!errors.fundToken}
+              sx={{ flex: 1, width: { xs: '100%', md: 'auto' } }}
+            >
               <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
               <Controller
                 name="fundToken"
@@ -342,7 +349,10 @@ const FirstStep: FC<Props> = ({
                 <FormHelperText>{errors.fundToken.message}</FormHelperText>
               )}
             </FormControl>
-            <FormControl error={!!errors.fundAmount} sx={{ flex: 1 }}>
+            <FormControl
+              error={!!errors.fundAmount}
+              sx={{ flex: 1, width: { xs: '100%', md: 'auto' } }}
+            >
               <Controller
                 name="fundAmount"
                 control={control}
@@ -377,7 +387,8 @@ const FirstStep: FC<Props> = ({
                   color="text.secondary"
                   display="flex"
                   alignItems="center"
-                  justifyContent="space-between"
+                  justifyContent={{ xs: 'flex-start', md: 'space-between' }}
+                  gap={{ xs: 0.5, md: 0 }}
                 >
                   <span>Current allowance:</span>
                   <span>
@@ -390,7 +401,7 @@ const FirstStep: FC<Props> = ({
             </FormControl>
           </Stack>
           <Stack
-            mt={1}
+            mt={{ xs: 3, md: 1 }}
             sx={{
               '& .MuiOutlinedInput-root.Mui-disabled': {
                 '& fieldset': {
@@ -434,7 +445,11 @@ const FirstStep: FC<Props> = ({
                       />
                       <AllowanceTooltip type={AllowanceType.UNLIMITED} />
                     </Stack>
-                    <Stack direction="row" alignItems="center" gap={2}>
+                    <Stack
+                      direction={{ xs: 'column', md: 'row' }}
+                      alignItems={{ xs: 'flex-start', md: 'center' }}
+                      gap={{ xs: 1, md: 2 }}
+                    >
                       <Stack
                         direction="row"
                         alignItems="center"
@@ -472,7 +487,16 @@ const FirstStep: FC<Props> = ({
                         disabled={
                           allowance !== AllowanceType.EXACT || isLoading
                         }
-                        sx={{ width: 220 }}
+                        sx={{
+                          width: 220,
+                          display: {
+                            xs:
+                              allowance === AllowanceType.EXACT
+                                ? 'flex'
+                                : 'none',
+                            md: 'flex',
+                          },
+                        }}
                         slotProps={{
                           htmlInput: {
                             readOnly: true,
@@ -513,7 +537,11 @@ const FirstStep: FC<Props> = ({
                         }}
                       />
                     </Stack>
-                    <Stack direction="row" alignItems="center" gap={2}>
+                    <Stack
+                      direction={{ xs: 'column', md: 'row' }}
+                      alignItems={{ xs: 'flex-start', md: 'center' }}
+                      gap={{ xs: 1, md: 2 }}
+                    >
                       <Stack
                         direction="row"
                         alignItems="center"
@@ -545,7 +573,16 @@ const FirstStep: FC<Props> = ({
                         disabled={
                           allowance !== AllowanceType.CUSTOM || isLoading
                         }
-                        sx={{ width: 220 }}
+                        sx={{
+                          width: 220,
+                          display: {
+                            xs:
+                              allowance === AllowanceType.CUSTOM
+                                ? 'flex'
+                                : 'none',
+                            md: 'flex',
+                          },
+                        }}
                         onChange={(e) =>
                           handleChangeCustomAmount(e.target.value)
                         }
@@ -593,22 +630,29 @@ const FirstStep: FC<Props> = ({
             </FormControl>
           </Stack>
           <Stack direction="row" justifyContent="space-between" mt={4}>
-            <Button
-              variant="outlined"
-              size="medium"
-              color="primary"
-              disabled={isLoading}
-              onClick={handleCancel}
+            {!isMobile && (
+              <Button
+                variant="outlined"
+                size="medium"
+                color="primary"
+                disabled={isLoading}
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+            )}
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              gap={3}
+              width={{ xs: '100%', md: 'auto' }}
             >
-              Cancel
-            </Button>
-            <Stack direction="row" gap={2.5}>
               <Button
                 variant="contained"
                 size="medium"
                 color="primary"
                 disabled={isLoading || !campaignType || !fundToken}
                 onClick={handleSkip}
+                sx={{ order: { xs: 2, md: 1 } }}
               >
                 Skip
               </Button>
@@ -617,6 +661,7 @@ const FirstStep: FC<Props> = ({
                 size="medium"
                 type="submit"
                 color="secondary"
+                sx={{ order: { xs: 1, md: 2 } }}
                 disabled={
                   isLoading ||
                   !allowance ||
