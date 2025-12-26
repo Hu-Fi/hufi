@@ -230,7 +230,7 @@ const SecondStep: FC<Props> = ({
             </Box>
             {!isMobile && (
               <Steps
-                stepsCompleted={isEscrowCreated ? 3 : 1}
+                stepsCompleted={isEscrowCreated ? 2 : 1}
                 isLoading={isCreatingEscrow}
               />
             )}
@@ -247,7 +247,7 @@ const SecondStep: FC<Props> = ({
             >
               {isMobile && isCreatingEscrow && (
                 <Steps
-                  stepsCompleted={isEscrowCreated ? 3 : 1}
+                  stepsCompleted={isEscrowCreated ? 2 : 1}
                   isLoading={isCreatingEscrow}
                 />
               )}
