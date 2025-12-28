@@ -1,10 +1,11 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import type {
-  QuoteResponseDto,
-  StatusResponseDto,
-} from './dto/quote.dto';
+import type { QuoteResponseDto, StatusResponseDto } from './dto/quote.dto';
 
 @Injectable()
 export class AttestationService {
@@ -46,7 +47,12 @@ export class AttestationService {
         const reportDataBuffer = Buffer.from(reportData, 'hex');
         // Pad to 64 bytes if needed
         const paddedData = Buffer.alloc(64);
-        reportDataBuffer.copy(paddedData, 0, 0, Math.min(64, reportDataBuffer.length));
+        reportDataBuffer.copy(
+          paddedData,
+          0,
+          0,
+          Math.min(64, reportDataBuffer.length),
+        );
         url += `?report_data=${paddedData.toString('base64')}`;
       }
 
