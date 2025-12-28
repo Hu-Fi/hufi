@@ -1,0 +1,6 @@
+---
+- name: Reload AppArmor
+  ansible.builtin.systemd:
+    name: apparmor
+    state: reloaded
+  become: true

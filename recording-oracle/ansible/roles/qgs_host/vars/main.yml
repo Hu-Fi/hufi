@@ -1,0 +1,7 @@
+---
+# QGS configuration variables
+qgs_package: tdx-qgs
+qgs_socket_path: /var/run/tdx-qgs/qgs.socket
+qgs_runtime_dir: /var/run/tdx-qgs
+qgs_user: qgsd
+qgs_group: qgsd

@@ -6,23 +6,8 @@ Deploy the Recording Oracle in a TDX (Intel Trust Domain Extensions) virtual mac
 
 ### On the TDX Host
 1. **TDX-enabled hardware** with Intel TDX support
-2. **QGS (Quote Generation Service)** installed and running:
-   ```bash
-   sudo apt install tdx-qgs
-   sudo mkdir -p /var/run/tdx-qgs
-   sudo chown qgsd:qgsd /var/run/tdx-qgs
-   sudo chmod 755 /var/run/tdx-qgs
-   sudo systemctl enable --now qgsd
-   ```
-3. **Libvirt/QEMU** with TDX support
-4. **TDX guest image** at `/var/lib/libvirt/images/tdx-guest-ubuntu-24.04-generic.qcow2`
-
-### AppArmor Configuration
-Add QGS socket access to libvirt:
-```bash
-echo '  "/var/run/tdx-qgs/**" rw,' | sudo tee -a /etc/apparmor.d/abstractions/libvirt-qemu
-sudo systemctl reload apparmor
-```
+2. **Libvirt/QEMU** with TDX support
+3. **TDX guest image** at `/var/lib/libvirt/images/tdx-guest-ubuntu-24.04-generic.qcow2`
 
 ## Quick Start
 
@@ -36,7 +21,10 @@ all:
       ansible_python_interpreter: /usr/bin/python3
 EOF
 
-# Deploy
+# Setup host (QGS, AppArmor) - run once per host
+ansible-playbook -i /tmp/localhost-inventory.yml playbooks/setup-host.yml
+
+# Deploy TDX VM
 ansible-playbook -i /tmp/localhost-inventory.yml playbooks/deploy.yml
 
 # Get measurements
@@ -47,6 +35,20 @@ ansible-playbook -i /tmp/localhost-inventory.yml playbooks/status.yml
 
 # Destroy
 ansible-playbook -i /tmp/localhost-inventory.yml playbooks/destroy.yml
+```
+
+## Host Setup
+
+The `setup-host.yml` playbook configures the TDX host for quote generation:
+
+1. **Installs QGS** (Quote Generation Service) package
+2. **Creates runtime directory** `/var/run/tdx-qgs/` with proper permissions
+3. **Configures AppArmor** to allow libvirt access to QGS socket
+4. **Enables and starts** the QGS daemon
+
+Run once per host before deploying VMs:
+```bash
+ansible-playbook -i inventory/hosts.yml playbooks/setup-host.yml
 ```
 
 ## Architecture

@@ -1,0 +1,38 @@
+---
+# QGS (Quote Generation Service) setup for TDX hosts
+
+- name: Install TDX QGS package
+  ansible.builtin.apt:
+    name: "{{ qgs_package }}"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Create QGS runtime directory
+  ansible.builtin.file:
+    path: "{{ qgs_runtime_dir }}"
+    state: directory
+    owner: "{{ qgs_user }}"
+    group: "{{ qgs_group }}"
+    mode: '0755'
+  become: true
+
+- name: Configure AppArmor for libvirt QGS access
+  ansible.builtin.lineinfile:
+    path: /etc/apparmor.d/abstractions/libvirt-qemu
+    line: '  "{{ qgs_runtime_dir }}/**" rw,'
+    insertbefore: '^\}'
+  become: true
+  notify: Reload AppArmor
+
+- name: Enable and start QGS daemon
+  ansible.builtin.systemd:
+    name: qgsd
+    enabled: true
+    state: started
+  become: true
+
+- name: Verify QGS socket exists
+  ansible.builtin.wait_for:
+    path: "{{ qgs_socket_path }}"
+    timeout: 30
