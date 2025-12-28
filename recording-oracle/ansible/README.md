@@ -4,12 +4,66 @@ Deploy the Recording Oracle in a TDX (Intel Trust Domain Extensions) virtual mac
 
 ## Prerequisites
 
+### Hardware & BIOS
+1. **TDX-capable Intel CPU** (4th Gen Xeon Scalable or newer)
+2. **BIOS configured for TDX**:
+   - Enable Memory Encryption (TME)
+   - Enable TME-MT (Total Memory Encryption Multi-Tenant)
+   - Enable Trust Domain Extension (TDX)
+   - Enable SEAM Loader
+   - Set TME-MT/TDX key split to non-zero value
+   - Enable Software Guard Extensions (SGX)
+
+### Intel PCCS API Key (Required for Attestation)
+
+TDX attestation requires an Intel API key to fetch platform certificates:
+
+1. Register at https://api.portal.trustedservices.intel.com/
+2. Subscribe to "Intel Software Guard Extensions Provisioning Certification Service"
+3. Copy your API key from the portal
+
+Set the environment variable before running ansible:
+```bash
+export INTEL_PCCS_API_KEY="your-api-key-here"
+```
+
+For GitHub Actions, add `INTEL_PCCS_API_KEY` as a repository secret.
+
 ### On the TDX Host
-1. **TDX-enabled hardware** with Intel TDX support
-2. **Libvirt/QEMU** with TDX support
-3. **TDX guest image** at `/var/lib/libvirt/images/tdx-guest-ubuntu-24.04-generic.qcow2`
+The `qgs_host` role will install everything else automatically:
+- TDX kernel (via Canonical's TDX setup)
+- Docker and docker-compose
+- libvirt/QEMU with TDX support
+- QGS (Quote Generation Service)
+- PCCS (Provisioning Certificate Caching Service)
+- Intel attestation services
 
 ## Quick Start
+
+### 1. Setup TDX Host (run once)
+
+```bash
+cd recording-oracle/ansible
+
+# Set the Intel PCCS API key (required for attestation)
+export INTEL_PCCS_API_KEY="your-api-key-here"
+
+# Run the host setup role
+ansible localhost -c local -m include_role -a name=qgs_host --become
+```
+
+**IMPORTANT**: After initial setup, you must **reboot** to boot into the TDX kernel:
+```bash
+sudo reboot
+```
+
+After reboot, verify TDX is working:
+```bash
+sudo dmesg | grep "tdx: module initialized"
+# Should show: virt/tdx: module initialized
+```
+
+### 2. Deploy TDX VM
 
 ```bash
 # Create inventory file
@@ -20,9 +74,6 @@ all:
       ansible_connection: local
       ansible_python_interpreter: /usr/bin/python3
 EOF
-
-# Setup host (QGS, AppArmor) - run once per host
-ansible-playbook -i /tmp/localhost-inventory.yml playbooks/setup-host.yml
 
 # Deploy TDX VM
 ansible-playbook -i /tmp/localhost-inventory.yml playbooks/deploy.yml
@@ -37,26 +88,26 @@ ansible-playbook -i /tmp/localhost-inventory.yml playbooks/status.yml
 ansible-playbook -i /tmp/localhost-inventory.yml playbooks/destroy.yml
 ```
 
-## Host Setup
+## What the Host Setup Does
 
-The `setup-host.yml` playbook configures the TDX host for quote generation:
+The `qgs_host` role performs a complete TDX host configuration:
 
-1. **Installs QGS** (Quote Generation Service) package
-2. **Creates runtime directory** `/var/run/tdx-qgs/` with proper permissions
-3. **Configures AppArmor** to allow libvirt access to QGS socket
-4. **Enables and starts** the QGS daemon
-
-Run once per host before deploying VMs:
-```bash
-ansible-playbook -i inventory/hosts.yml playbooks/setup-host.yml
-```
+1. **Clones Canonical TDX repo** from https://github.com/canonical/tdx
+2. **Runs setup-tdx-host.sh** which:
+   - Adds Canonical's TDX PPA
+   - Installs TDX-enabled kernel (`linux-image-intel`)
+   - Installs QGS and attestation services
+   - Configures GRUB to boot TDX kernel
+3. **Installs Docker** and docker-compose-v2
+4. **Installs libvirt/QEMU** with TDX support
+5. **Configures AppArmor** for QGS socket access
+6. **Starts QGS daemon** (after reboot into TDX kernel)
 
 ## Architecture
 
 ```
-TDX Host
-├── QGS (Quote Generation Service)
-│   └── /var/run/tdx-qgs/qgs.socket
+TDX Host (linux-image-intel kernel)
+├── QGS (Quote Generation Service) - listens on VSOCK
 │
 └── TDX VM (recording-oracle-tdx)
     ├── TDX Attestation Proxy (native, port 8081)
@@ -106,24 +157,64 @@ The proxy uses the Linux TSM (Trusted Security Module) configfs interface:
 1. Creates `/sys/kernel/config/tsm/report/<uuid>/`
 2. Writes 64-byte reportData to `inblob`
 3. Kernel sends TDX VMCALL to QEMU
-4. QEMU forwards to QGS via unix socket
+4. QEMU forwards to QGS via VSOCK
 5. Full TDX Quote (~5KB) returned in `outblob`
 
 ## Troubleshooting
 
-### Empty quotes (0 bytes)
-1. Check QGS is running: `systemctl status qgsd`
-2. Check socket permissions: `ls -la /var/run/tdx-qgs/`
-3. Check QEMU logs: `tail /var/log/libvirt/qemu/recording-oracle-tdx.log`
-4. Verify AppArmor allows access (see above)
-
-### Permission denied on QGS socket
+### TDX not initialized after reboot
 ```bash
-sudo chmod 755 /var/run/tdx-qgs
-sudo chmod 666 /var/run/tdx-qgs/qgs.socket
+# Check which kernel is running
+uname -r
+# Should be: 6.8.0-XXXX-intel
+
+# Check TDX status
+sudo dmesg | grep tdx
 ```
 
-Or disable AppArmor for the VM by adding `<seclabel type='none'/>` to the VM XML.
+If not on intel kernel, check GRUB:
+```bash
+cat /etc/default/grub.d/99-tdx-kernel.cfg
+sudo update-grub
+sudo reboot
+```
+
+### QGS not running
+```bash
+systemctl status qgsd
+journalctl -u qgsd -n 50
+```
+
+### Empty quotes (0 bytes)
+1. Check PCCS has a valid API key:
+   ```bash
+   sudo journalctl -u pccs -n 20
+   # Look for "401" errors - means API key is missing/invalid
+   ```
+2. Check QGS is running: `systemctl status qgsd`
+3. Check QEMU logs: `tail /var/log/libvirt/qemu/recording-oracle-tdx.log`
+4. Verify AppArmor allows access
+
+### PCCS API key errors
+If you see `Intel PCS server returns error(401)` in PCCS logs:
+```bash
+# Verify API key is configured
+sudo grep ApiKey /opt/intel/sgx-dcap-pccs/config/default.json
+
+# Re-run host setup with the API key
+export INTEL_PCCS_API_KEY="your-api-key"
+ansible localhost -c local -m include_role -a name=qgs_host --become
+
+# Restart PCCS
+sudo systemctl restart pccs
+```
+
+### Permission denied on QGS
+The AppArmor configuration is handled automatically. If issues persist:
+```bash
+# Check if AppArmor rule exists
+grep qgs /etc/apparmor.d/abstractions/libvirt-qemu
+```
 
 ### SSH connection issues
 ```bash

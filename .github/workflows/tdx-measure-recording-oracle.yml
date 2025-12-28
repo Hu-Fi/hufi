@@ -105,27 +105,27 @@ jobs:
           pip install ansible
           sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Setup SSH agent with key
+      - name: Setup SSH key
         run: |
-          # Start SSH agent and add key
-          eval "$(ssh-agent -s)"
-          echo "${{ secrets.TDX_HOST_SSH_KEY }}" | ssh-add -
-          
-          # Export agent socket for subsequent steps
-          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-          echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> $GITHUB_ENV
-          
-          # Add host to known_hosts
+          # Create SSH directory and key file
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Write key to file (more reliable than stdin pipe)
+          echo "${{ secrets.TDX_HOST_SSH_KEY }}" > ~/.ssh/tdx_host_key
+          chmod 600 ~/.ssh/tdx_host_key
+
+          # Add host to known_hosts
           ssh-keyscan -H ${{ env.TDX_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Check TDX host connectivity
-        run: |
-          echo "Testing SSH connection to TDX host..."
-          ssh -T -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ env.TDX_HOST_USER }}@${{ env.TDX_HOST }} "echo 'TDX host connection successful'" || {
-            echo "::error::Cannot connect to TDX host. Please ensure the host is accessible."
-            exit 1
-          }
+          # Configure SSH to use this key for the TDX host
+          cat >> ~/.ssh/config << EOF
+          Host ${{ env.TDX_HOST }}
+            IdentityFile ~/.ssh/tdx_host_key
+            StrictHostKeyChecking accept-new
+            ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Create Ansible inventory
         run: |
@@ -135,23 +135,30 @@ jobs:
               tdx_host:
                 ansible_host: ${{ env.TDX_HOST }}
                 ansible_user: ${{ env.TDX_HOST_USER }}
+                ansible_ssh_private_key_file: ~/.ssh/tdx_host_key
                 ansible_python_interpreter: /usr/bin/python3
           EOF
           cat /tmp/inventory.yml
 
       - name: Build TDX guest image (if needed)
         working-directory: ./recording-oracle/ansible
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
+        timeout-minutes: 30
         run: |
           echo "Ensuring TDX guest image is built with canonical/tdx setup..."
           ansible-playbook -i /tmp/inventory.yml playbooks/build-tdx-image.yml -v
           echo "TDX guest image ready"
 
+      - name: Generate ephemeral VM credentials
+        id: vm-creds
+        run: |
+          # Generate random password - only exists during this workflow run
+          VM_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
+          echo "::add-mask::$VM_PASSWORD"
+          echo "password=$VM_PASSWORD" >> $GITHUB_OUTPUT
+
       - name: Deploy TDX VM with Ansible
         working-directory: ./recording-oracle/ansible
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
+        timeout-minutes: 15
         run: |
           echo "Deploying fresh TDX VM with Ansible..."
           echo "Using image: ${{ needs.build-image.outputs.image_sha }}"
@@ -160,14 +167,14 @@ jobs:
             -e "vm_name=${{ env.VM_NAME }}" \
             -e "vm_ssh_port=${{ env.VM_SSH_PORT }}" \
             -e "recording_oracle_port=${{ env.RECORDING_ORACLE_PORT }}" \
+            -e "guest_password=${{ steps.vm-creds.outputs.password }}" \
             -e "vm_ready_timeout=300" \
             -v
 
       - name: Get TDX measurements with Ansible
         id: get-measurements
         working-directory: ./recording-oracle/ansible
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
+        timeout-minutes: 10
         run: |
           ansible-playbook -i /tmp/inventory.yml playbooks/measure.yml \
             -e "recording_oracle_port=${{ env.RECORDING_ORACLE_PORT }}" \
@@ -175,27 +182,41 @@ jobs:
             -v
           
           # Parse measurements for GitHub outputs
-          if [ -f "${{ github.workspace }}/measurements.json" ]; then
-            echo "=== TDX Measurements ==="
-            cat "${{ github.workspace }}/measurements.json"
-            
-            MRTD=$(jq -r '.mrtd // empty' "${{ github.workspace }}/measurements.json")
-            RTMR0=$(jq -r '.rtmr0 // empty' "${{ github.workspace }}/measurements.json")
-            RTMR1=$(jq -r '.rtmr1 // empty' "${{ github.workspace }}/measurements.json")
-            RTMR2=$(jq -r '.rtmr2 // empty' "${{ github.workspace }}/measurements.json")
-            RTMR3=$(jq -r '.rtmr3 // empty' "${{ github.workspace }}/measurements.json")
-            
-            echo "mrtd=$MRTD" >> $GITHUB_OUTPUT
-            echo "rtmr0=$RTMR0" >> $GITHUB_OUTPUT
-            echo "rtmr1=$RTMR1" >> $GITHUB_OUTPUT
-            echo "rtmr2=$RTMR2" >> $GITHUB_OUTPUT
-            echo "rtmr3=$RTMR3" >> $GITHUB_OUTPUT
+          if [ ! -f "${{ github.workspace }}/measurements.json" ]; then
+            echo "::error::measurements.json not found"
+            exit 1
           fi
+
+          echo "=== TDX Measurements ==="
+          cat "${{ github.workspace }}/measurements.json"
+
+          # Validate JSON and extract measurements
+          if ! jq empty "${{ github.workspace }}/measurements.json" 2>/dev/null; then
+            echo "::error::measurements.json is not valid JSON"
+            exit 1
+          fi
+
+          MRTD=$(jq -r '.mrtd // empty' "${{ github.workspace }}/measurements.json")
+          RTMR0=$(jq -r '.rtmr0 // empty' "${{ github.workspace }}/measurements.json")
+          RTMR1=$(jq -r '.rtmr1 // empty' "${{ github.workspace }}/measurements.json")
+          RTMR2=$(jq -r '.rtmr2 // empty' "${{ github.workspace }}/measurements.json")
+          RTMR3=$(jq -r '.rtmr3 // empty' "${{ github.workspace }}/measurements.json")
+
+          # Validate we got measurements
+          if [ -z "$MRTD" ]; then
+            echo "::error::MRTD measurement is empty - TDX quote generation may have failed"
+            exit 1
+          fi
+
+          echo "mrtd=$MRTD" >> $GITHUB_OUTPUT
+          echo "rtmr0=$RTMR0" >> $GITHUB_OUTPUT
+          echo "rtmr1=$RTMR1" >> $GITHUB_OUTPUT
+          echo "rtmr2=$RTMR2" >> $GITHUB_OUTPUT
+          echo "rtmr3=$RTMR3" >> $GITHUB_OUTPUT
 
       - name: Check TDX status with Ansible
         working-directory: ./recording-oracle/ansible
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
+        timeout-minutes: 5
         run: |
           ansible-playbook -i /tmp/inventory.yml playbooks/status.yml \
             -e "vm_name=${{ env.VM_NAME }}" \
@@ -288,7 +309,7 @@ jobs:
           retention-days: 90
 
       - name: Create release with measurements
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.publish_release == 'true'
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: recording-oracle-${{ github.sha }}
@@ -338,3 +359,10 @@ jobs:
             REPRODUCE.md
           draft: false
           prerelease: false
+
+      - name: Cleanup sensitive files
+        if: always()
+        run: |
+          rm -f ~/.ssh/tdx_host_key
+          rm -f ~/.ssh/config
+          rm -f /tmp/inventory.yml

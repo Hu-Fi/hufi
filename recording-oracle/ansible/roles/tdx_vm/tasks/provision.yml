@@ -96,6 +96,13 @@
   args:
     creates: "{{ vm_disk_path }}"
 
+- name: Set VM disk ownership for libvirt
+  ansible.builtin.file:
+    path: "{{ vm_disk_path }}"
+    owner: libvirt-qemu
+    group: kvm
+    mode: '0660'
+
 - name: Check current disk size
   ansible.builtin.shell:
     cmd: qemu-img info {{ vm_disk_path }} | grep 'virtual size' | grep -oP '\d+(?= GiB)'

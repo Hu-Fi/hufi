@@ -15,7 +15,8 @@ vm_ssh_port: 2222
 
 # Guest Configuration
 guest_user: oracle
-guest_password: oracle123
+# guest_password: Set via -e flag or generate at runtime for security
+guest_password: ""
 guest_ssh_authorized_key: ""
 
 # Recording Oracle Configuration

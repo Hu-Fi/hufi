@@ -36,7 +36,7 @@
           ansible.builtin.git:
             repo: https://github.com/canonical/tdx.git
             dest: "{{ tdx_repo_path }}"
-            version: noble-24.04
+            version: main
             depth: 1
           when: not tdx_repo.stat.exists
 
@@ -58,18 +58,18 @@
 
         - name: Check for build script
           ansible.builtin.stat:
-            path: "{{ tdx_repo_path }}/guest-tools/build-guest-image.sh"
+            path: "{{ tdx_repo_path }}/guest-tools/image/create-td-image.sh"
           register: build_script
 
         - name: Fail if build script not found
           ansible.builtin.fail:
-            msg: "TDX build script not found at {{ tdx_repo_path }}/guest-tools/build-guest-image.sh"
+            msg: "TDX build script not found at {{ tdx_repo_path }}/guest-tools/image/create-td-image.sh"
           when: not build_script.stat.exists
 
         - name: Run TDX guest image build script
           ansible.builtin.command:
-            cmd: ./build-guest-image.sh
-            chdir: "{{ tdx_repo_path }}/guest-tools"
+            cmd: ./create-td-image.sh -v 24.04
+            chdir: "{{ tdx_repo_path }}/guest-tools/image"
           environment:
             DEBIAN_FRONTEND: noninteractive
           register: build_output

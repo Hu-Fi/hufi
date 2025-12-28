@@ -4,3 +4,15 @@
     name: apparmor
     state: reloaded
   become: true
+
+- name: Restart QGS
+  ansible.builtin.systemd:
+    name: qgsd
+    state: restarted
+  become: true
+
+- name: Restart PCCS
+  ansible.builtin.systemd:
+    name: pccs
+    state: restarted
+  become: true

@@ -11,56 +11,183 @@ users:
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     lock_passwd: false
-    plain_text_passwd: {{ guest_password }}
 {% if guest_ssh_authorized_key %}
     ssh_authorized_keys:
       - {{ guest_ssh_authorized_key }}
 {% endif %}
 
-# Install Docker and docker-compose
+chpasswd:
+  expire: false
+  users:
+    - name: {{ guest_user }}
+      password: {{ guest_password }}
+      type: text
+
+# Add TDX attestation PPA for quote generation support
+apt:
+  sources:
+    tdx-attestation:
+      source: "ppa:kobuk-team/tdx-attestation-release"
+
+# Install Docker and TDX attestation libraries
 package_update: true
 packages:
   - docker.io
   - docker-compose-v2
+  - libtdx-attest
+  - libtdx-attest-dev
 
 write_files:
   - path: /opt/recording-oracle/tdx-attestation-proxy.py
     permissions: '0755'
     content: |
       #!/usr/bin/env python3
-      """TDX Attestation Proxy - HTTP API for TDX quote generation via TSM configfs."""
+      """TDX Attestation Proxy - HTTP API for TDX quote generation via libtdx-attest."""
       import http.server
       import json
       import os
       import base64
-      import uuid
+      import ctypes
+      import sys
 
       TSM_REPORT_PATH = "/sys/kernel/config/tsm/report"
+      TDX_ATTEST_LIB = "/usr/lib/x86_64-linux-gnu/libtdx_attest.so.1"
       PORT = int(os.environ.get("TDX_PROXY_PORT", "8081"))
 
-      def get_tdx_quote(report_data=None):
-          """Generate TDX Quote using TSM configfs interface."""
+      LOG_FILE = "/var/log/tdx-proxy.log"
+      def log(msg):
+          with open(LOG_FILE, "a") as f:
+              f.write(f"{msg}\n")
+          print(msg, file=sys.stderr)
+
+      def get_tdx_quote_via_lib(report_data=None):
+          """Generate TDX Quote using libtdx-attest library."""
           if report_data is None:
               report_data = bytes(64)
           elif len(report_data) < 64:
               report_data = report_data + bytes(64 - len(report_data))
           report_data = report_data[:64]
 
+          log(f"Looking for library at {TDX_ATTEST_LIB}")
+          try:
+              lib = ctypes.CDLL(TDX_ATTEST_LIB)
+              log("Library loaded successfully")
+          except OSError as e:
+              log(f"Failed to load libtdx_attest: {e}")
+              return b"", report_data
+
+          # tdx_att_get_quote(p_report_data, att_key_id_list, list_size, p_att_key_id, pp_quote, p_quote_size, flags)
+          lib.tdx_att_get_quote.argtypes = [
+              ctypes.POINTER(ctypes.c_uint8),  # p_tdx_report_data (64 bytes)
+              ctypes.c_void_p,                  # att_key_id_list (NULL = use default)
+              ctypes.c_uint32,                  # list_size (0 if NULL)
+              ctypes.c_void_p,                  # p_att_key_id (output, can be NULL)
+              ctypes.POINTER(ctypes.POINTER(ctypes.c_uint8)),  # pp_quote
+              ctypes.POINTER(ctypes.c_uint32),  # p_quote_size
+              ctypes.c_uint32                   # flags
+          ]
+          lib.tdx_att_get_quote.restype = ctypes.c_int
+
+          lib.tdx_att_free_quote.argtypes = [ctypes.POINTER(ctypes.c_uint8)]
+          lib.tdx_att_free_quote.restype = None
+
+          # Prepare report data
+          report_data_arr = (ctypes.c_uint8 * 64)(*report_data)
+          quote_ptr = ctypes.POINTER(ctypes.c_uint8)()
+          quote_size = ctypes.c_uint32(0)
+
+          log("Calling tdx_att_get_quote...")
+          ret = lib.tdx_att_get_quote(
+              report_data_arr,
+              None,  # att_key_id_list (NULL = use default)
+              0,     # list_size
+              None,  # p_att_key_id (don't need the selected key)
+              ctypes.byref(quote_ptr),
+              ctypes.byref(quote_size),
+              0      # flags
+          )
+
+          if ret != 0:
+              log(f"tdx_att_get_quote failed with error code: {ret}")
+              return b"", report_data
+
+          log(f"Got quote of {quote_size.value} bytes")
+          quote = bytes(quote_ptr[:quote_size.value])
+          lib.tdx_att_free_quote(quote_ptr)
+
+          return quote, report_data
+
+      def get_tdx_quote_via_tsm(report_data=None):
+          """Generate TDX Quote using TSM configfs."""
+          log("Trying TSM configfs approach")
+          import uuid
+          if report_data is None:
+              report_data = bytes(64)
+          report_data = (report_data + bytes(64))[:64]
           report_name = f"quote_{uuid.uuid4().hex[:8]}"
           report_path = os.path.join(TSM_REPORT_PATH, report_name)
-
           try:
+              log(f"Creating report at {report_path}")
               os.makedirs(report_path, exist_ok=True)
+
+              # List files in report directory
+              files = os.listdir(report_path)
+              log(f"Report directory contains: {files}")
+
+              log(f"Writing inblob (64 bytes)")
               with open(os.path.join(report_path, "inblob"), "wb") as f:
                   f.write(report_data)
+
+              # List files again after writing inblob
+              files = os.listdir(report_path)
+              log(f"After inblob write: {files}")
+
+              # Check for provider file
+              provider_path = os.path.join(report_path, "provider")
+              if os.path.exists(provider_path):
+                  with open(provider_path, "r") as f:
+                      provider = f.read().strip()
+                  log(f"Provider: {provider}")
+
+              # Check generation status
+              generation_path = os.path.join(report_path, "generation")
+              if os.path.exists(generation_path):
+                  with open(generation_path, "r") as f:
+                      generation = f.read().strip()
+                  log(f"Generation: {generation}")
+
+              log(f"Reading outblob")
               with open(os.path.join(report_path, "outblob"), "rb") as f:
                   quote = f.read()
-              return quote, report_data
-          finally:
+              log(f"Got quote of {len(quote)} bytes via TSM")
+              # Cleanup
               try:
                   os.rmdir(report_path)
               except:
                   pass
+              return quote, report_data
+          except Exception as e:
+              import traceback
+              log(f"TSM configfs failed: {e}")
+              log(f"Traceback: {traceback.format_exc()}")
+              try:
+                  os.rmdir(report_path)
+              except:
+                  pass
+              return b"", report_data
+
+      def get_tdx_quote(report_data=None):
+          """Generate TDX Quote - try libtdx-attest first, fall back to TSM."""
+          # Try libtdx-attest library first
+          if os.path.exists(TDX_ATTEST_LIB):
+              log("Using libtdx-attest library")
+              quote, used_report_data = get_tdx_quote_via_lib(report_data)
+              if quote:  # Success
+                  return quote, used_report_data
+              log("libtdx-attest failed, falling back to TSM")
+
+          # Fallback to TSM configfs
+          return get_tdx_quote_via_tsm(report_data)
 
       def extract_measurements(quote):
           """Extract measurements from TDX Quote v4."""
@@ -90,7 +217,20 @@ write_files:
 
           def do_GET(self):
               if self.path == "/status":
-                  self.send_json(200, {"available": os.path.exists(TSM_REPORT_PATH), "tsm_path": TSM_REPORT_PATH})
+                  tdx_guest_dev = "/dev/tdx_guest"
+                  status = {
+                      "available": os.path.exists(TSM_REPORT_PATH),
+                      "tsm_path": TSM_REPORT_PATH,
+                      "tdx_guest_device": os.path.exists(tdx_guest_dev),
+                      "device": tdx_guest_dev if os.path.exists(tdx_guest_dev) else None
+                  }
+                  # Try to list TSM report directory contents
+                  if os.path.exists(TSM_REPORT_PATH):
+                      try:
+                          status["tsm_contents"] = os.listdir(TSM_REPORT_PATH)
+                      except Exception as e:
+                          status["tsm_error"] = str(e)
+                  self.send_json(200, status)
               elif self.path == "/quote":
                   try:
                       quote, report_data = get_tdx_quote()
@@ -100,6 +240,17 @@ write_files:
                           "report_data": base64.b64encode(report_data).decode(),
                           "measurements": extract_measurements(quote)
                       })
+                  except Exception as e:
+                      log(f"Exception in /quote: {e}")
+                      self.send_json(500, {"error": str(e)})
+              elif self.path == "/logs":
+                  try:
+                      with open(LOG_FILE, "r") as f:
+                          logs = f.read()
+                      self.send_response(200)
+                      self.send_header("Content-Type", "text/plain")
+                      self.end_headers()
+                      self.wfile.write(logs.encode())
                   except Exception as e:
                       self.send_json(500, {"error": str(e)})
               else:
@@ -258,6 +409,8 @@ write_files:
       WantedBy=multi-user.target
 
 runcmd:
+  # Install linux-modules-extra for TDX configfs-tsm support
+  - apt-get install -y linux-modules-extra-$(uname -r) || true
   # Start TDX attestation proxy
   - systemctl daemon-reload
   - systemctl enable tdx-attestation-proxy

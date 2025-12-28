@@ -1,7 +1,12 @@
 ---
 # QGS configuration variables
 qgs_package: tdx-qgs
-qgs_socket_path: /var/run/tdx-qgs/qgs.socket
 qgs_runtime_dir: /var/run/tdx-qgs
 qgs_user: qgsd
 qgs_group: qgsd
+
+# PCCS configuration
+# The API key must be provided via environment variable INTEL_PCCS_API_KEY
+# Get your key from: https://api.portal.trustedservices.intel.com/
+pccs_api_key: "{{ lookup('env', 'INTEL_PCCS_API_KEY') }}"
+pccs_config_path: /opt/intel/sgx-dcap-pccs/config/default.json
