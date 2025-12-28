@@ -92,7 +92,10 @@ BnRlc3RDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIyd0000000000000000
       );
 
       // Cert data size
-      quoteBuffer.writeUInt32LE(certBytes.length, sigDataOffset + 4 + 64 + 64 + 2);
+      quoteBuffer.writeUInt32LE(
+        certBytes.length,
+        sigDataOffset + 4 + 64 + 64 + 2,
+      );
 
       // Cert chain data
       certBytes.copy(quoteBuffer, sigDataOffset + 4 + 64 + 64 + 2 + 4);
@@ -129,9 +132,9 @@ BnRlc3RDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIyd0000000000000000
       const result = service.verifyCertificateChain(['not a certificate']);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('Certificate parsing error'))).toBe(
-        true,
-      );
+      expect(
+        result.errors.some((e) => e.includes('Certificate parsing error')),
+      ).toBe(true);
     });
   });
 
@@ -176,7 +179,10 @@ BnRlc3RDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIyd0000000000000000
       const rawSignature = derToRawSignature(derSignature);
 
       // Get raw public key (x || y)
-      const pubKeyDer = keyPair.publicKey.export({ type: 'spki', format: 'der' });
+      const pubKeyDer = keyPair.publicKey.export({
+        type: 'spki',
+        format: 'der',
+      });
       const rawPubKey = extractRawPublicKey(pubKeyDer as Buffer);
 
       const result = service.verifyQuoteSignature(
@@ -218,7 +224,9 @@ BnRlc3RDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABIyd0000000000000000
       // Set cert data size (0 = no certs)
       quoteBuffer.writeUInt32LE(0, 632 + 4 + 64 + 64 + 2);
 
-      const result = await service.verifyQuoteDcap(quoteBuffer.toString('base64'));
+      const result = await service.verifyQuoteDcap(
+        quoteBuffer.toString('base64'),
+      );
 
       // Should fail signature validation but not crash
       expect(result.signatureValid).toBe(false);

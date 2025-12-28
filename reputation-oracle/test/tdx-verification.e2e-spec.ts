@@ -37,7 +37,7 @@ interface TdxQuoteResponse {
   };
 }
 
-interface VerificationResult {
+interface _VerificationResult {
   valid: boolean;
   measurements: {
     mrtd: string;

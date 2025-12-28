@@ -183,7 +183,9 @@ export class TdxVerificationService {
   /**
    * Verify TDX quote with Intel DCAP certificate chain validation
    */
-  async verifyQuoteWithDcap(quoteBase64: string): Promise<DcapVerificationResult> {
+  async verifyQuoteWithDcap(
+    quoteBase64: string,
+  ): Promise<DcapVerificationResult> {
     // First, run measurement verification
     const measurementResult = this.verifyQuote(quoteBase64);
 

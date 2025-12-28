@@ -177,7 +177,10 @@ export class IntelDcapService {
       certDataSize > 0
     ) {
       // Type 6/7: QE Report Certification Data structure
-      const certDataBuffer = quoteBuffer.subarray(offset, offset + certDataSize);
+      const certDataBuffer = quoteBuffer.subarray(
+        offset,
+        offset + certDataSize,
+      );
       certificationData.rawCertData = certDataBuffer;
       certificationData.qeReportCertData =
         this.parseQeReportCertData(certDataBuffer);
@@ -227,13 +230,24 @@ export class IntelDcapService {
       certDataSize: nestedCertDataSize,
     };
 
-    if (nestedCertDataType === CertDataType.PCK_CERT_CHAIN && nestedCertDataSize > 0) {
-      const nestedCertBuffer = buffer.subarray(offset, offset + nestedCertDataSize);
+    if (
+      nestedCertDataType === CertDataType.PCK_CERT_CHAIN &&
+      nestedCertDataSize > 0
+    ) {
+      const nestedCertBuffer = buffer.subarray(
+        offset,
+        offset + nestedCertDataSize,
+      );
       nestedCertData.pckCertChain = nestedCertBuffer.toString('utf8');
-      nestedCertData.certificates = this.parseCertChain(nestedCertData.pckCertChain);
+      nestedCertData.certificates = this.parseCertChain(
+        nestedCertData.pckCertChain,
+      );
     } else if (nestedCertDataSize > 0) {
       // Store raw data for potential PCS fetch
-      nestedCertData.rawCertData = buffer.subarray(offset, offset + nestedCertDataSize);
+      nestedCertData.rawCertData = buffer.subarray(
+        offset,
+        offset + nestedCertDataSize,
+      );
     }
 
     return {
@@ -249,7 +263,8 @@ export class IntelDcapService {
    */
   private parseCertChain(pckCertChain: string): string[] {
     const certs: string[] = [];
-    const regex = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
+    const regex =
+      /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
     let match;
     while ((match = regex.exec(pckCertChain)) !== null) {
       certs.push(match[0]);
@@ -272,8 +287,8 @@ export class IntelDcapService {
 
     try {
       // Parse each certificate
-      const x509Certs = certificates.map((pem) =>
-        new crypto.X509Certificate(pem),
+      const x509Certs = certificates.map(
+        (pem) => new crypto.X509Certificate(pem),
       );
 
       // Check if the root is Intel's Root CA
@@ -319,7 +334,10 @@ export class IntelDcapService {
       return { valid: errors.length === 0, errors };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return { valid: false, errors: [`Certificate parsing error: ${message}`] };
+      return {
+        valid: false,
+        errors: [`Certificate parsing error: ${message}`],
+      };
     }
   }
 
@@ -457,7 +475,7 @@ export class IntelDcapService {
       return {
         cpusvn,
         pcesvn: '0000', // Will be updated from actual quote
-        pceid: '0000',  // Will be updated from actual quote
+        pceid: '0000', // Will be updated from actual quote
         qeid: qeReport.subarray(320, 336).toString('hex'), // First 16 bytes of REPORTDATA as QE ID
       };
     } catch (error) {
@@ -553,7 +571,10 @@ export class IntelDcapService {
       const nestedCertData = certData.qeReportCertData.nestedCertData;
 
       // Check if nested data has certs (type 5 inside type 6/7)
-      if (nestedCertData.certificates && nestedCertData.certificates.length > 0) {
+      if (
+        nestedCertData.certificates &&
+        nestedCertData.certificates.length > 0
+      ) {
         return nestedCertData.certificates;
       }
 
@@ -567,7 +588,10 @@ export class IntelDcapService {
         platformInfo.pcesvn = this.extractPceSvnFromQuote(quoteBuffer);
 
         // Try to extract PCEID from nested cert data if available
-        if (nestedCertData.rawCertData && nestedCertData.rawCertData.length >= 2) {
+        if (
+          nestedCertData.rawCertData &&
+          nestedCertData.rawCertData.length >= 2
+        ) {
           platformInfo.pceid = nestedCertData.rawCertData
             .subarray(0, 2)
             .toString('hex');
@@ -598,7 +622,9 @@ export class IntelDcapService {
       const response = await fetch(url);
 
       if (!response.ok) {
-        this.logger.warn(`Failed to fetch TDX TCB info: HTTP ${response.status}`);
+        this.logger.warn(
+          `Failed to fetch TDX TCB info: HTTP ${response.status}`,
+        );
         return null;
       }
 
@@ -641,7 +667,8 @@ export class IntelDcapService {
       // Try alternate OID encoding if not found
       if (oidIndex === -1) {
         const altFmspcOid = Buffer.from([
-          0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf8, 0x4d, 0x01, 0x0d, 0x01, 0x04,
+          0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf8, 0x4d, 0x01, 0x0d, 0x01,
+          0x04,
         ]);
         oidIndex = certDer.indexOf(altFmspcOid);
         if (oidIndex !== -1) {
@@ -658,10 +685,17 @@ export class IntelDcapService {
         ]);
         const sgxExtIndex = certDer.indexOf(sgxExtOid);
         if (sgxExtIndex !== -1) {
-          this.logger.log(`Found SGX Extensions at offset ${sgxExtIndex}, looking for FMSPC nearby`);
+          this.logger.log(
+            `Found SGX Extensions at offset ${sgxExtIndex}, looking for FMSPC nearby`,
+          );
           // Search for FMSPC within the SGX extensions area
-          const searchArea = certDer.subarray(sgxExtIndex, Math.min(sgxExtIndex + 200, certDer.length));
-          this.logger.log(`Search area hex: ${searchArea.subarray(0, 50).toString('hex')}`);
+          const searchArea = certDer.subarray(
+            sgxExtIndex,
+            Math.min(sgxExtIndex + 200, certDer.length),
+          );
+          this.logger.log(
+            `Search area hex: ${searchArea.subarray(0, 50).toString('hex')}`,
+          );
         }
         return null;
       }

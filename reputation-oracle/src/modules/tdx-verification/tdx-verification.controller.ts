@@ -71,7 +71,8 @@ export class TdxVerificationController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Full verification result including DCAP validation and oracle URL',
+    description:
+      'Full verification result including DCAP validation and oracle URL',
   })
   @Post('/verify-oracle-dcap')
   async verifyOracleDcap(

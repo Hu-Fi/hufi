@@ -36,8 +36,10 @@ AiEA4J0lrHoMs+Xo5o/sX6O9QWxHRAvZUGOdRQ7cvqRXaqI=
  * Intel Provisioning Certification Service (PCS) API base URLs
  * For production attestation verification
  */
-export const INTEL_SGX_PCS_API_URL = 'https://api.trustedservices.intel.com/sgx/certification/v4';
-export const INTEL_TDX_PCS_API_URL = 'https://api.trustedservices.intel.com/tdx/certification/v4';
+export const INTEL_SGX_PCS_API_URL =
+  'https://api.trustedservices.intel.com/sgx/certification/v4';
+export const INTEL_TDX_PCS_API_URL =
+  'https://api.trustedservices.intel.com/tdx/certification/v4';
 
 /** @deprecated Use INTEL_SGX_PCS_API_URL or INTEL_TDX_PCS_API_URL */
 export const INTEL_PCS_API_URL = INTEL_SGX_PCS_API_URL;
@@ -45,7 +47,8 @@ export const INTEL_PCS_API_URL = INTEL_SGX_PCS_API_URL;
 /**
  * Intel Root CA fingerprint for validation
  */
-export const INTEL_SGX_ROOT_CA_FINGERPRINT = '8bd31eb1d63ce37382c0ffaa0d8200a3011ad6ff';
+export const INTEL_SGX_ROOT_CA_FINGERPRINT =
+  '8bd31eb1d63ce37382c0ffaa0d8200a3011ad6ff';
 
 /**
  * TDX Quote Header constants
@@ -57,7 +60,8 @@ export const TDX_TD_REPORT_SIZE = 584;
  * Quote signature data structure offsets
  * After Header + TD Report, the signature data begins
  */
-export const QUOTE_SIGNATURE_DATA_OFFSET = TDX_QUOTE_HEADER_SIZE + TDX_TD_REPORT_SIZE;
+export const QUOTE_SIGNATURE_DATA_OFFSET =
+  TDX_QUOTE_HEADER_SIZE + TDX_TD_REPORT_SIZE;
 
 /**
  * Certification data types
