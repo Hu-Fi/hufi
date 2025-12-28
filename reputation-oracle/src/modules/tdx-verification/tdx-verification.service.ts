@@ -3,9 +3,11 @@ import * as crypto from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 
 import type {
+  DcapVerificationResult,
   TdxMeasurements,
   VerificationResult,
 } from './dto/tdx-verification.dto';
+import { IntelDcapService } from './intel-dcap.service';
 import {
   TDX_MEASUREMENTS,
   TDX_BUILD_INFO,
@@ -33,7 +35,7 @@ interface ParsedQuote {
 export class TdxVerificationService {
   private readonly logger = new Logger(TdxVerificationService.name);
 
-  constructor() {
+  constructor(private readonly intelDcapService: IntelDcapService) {
     if (hasMeasurements()) {
       this.logger.log(`TDX measurements loaded from build`);
       this.logger.log(`  MRTD: ${TDX_MEASUREMENTS.mrtd.substring(0, 32)}...`);
@@ -176,5 +178,82 @@ export class TdxVerificationService {
 
   getBuildInfo(): typeof TDX_BUILD_INFO {
     return TDX_BUILD_INFO;
+  }
+
+  /**
+   * Verify TDX quote with Intel DCAP certificate chain validation
+   */
+  async verifyQuoteWithDcap(quoteBase64: string): Promise<DcapVerificationResult> {
+    // First, run measurement verification
+    const measurementResult = this.verifyQuote(quoteBase64);
+
+    // Then, run Intel DCAP verification
+    const dcapResult = await this.intelDcapService.verifyQuoteDcap(quoteBase64);
+
+    // Combine results
+    const combinedValid =
+      measurementResult.valid &&
+      dcapResult.signatureValid &&
+      dcapResult.certificateChainValid;
+
+    return {
+      ...measurementResult,
+      valid: combinedValid,
+      dcapResult: {
+        signatureValid: dcapResult.signatureValid,
+        certificateChainValid: dcapResult.certificateChainValid,
+        tcbStatus: dcapResult.tcbStatus,
+        advisoryIDs: dcapResult.advisoryIDs,
+        errors: dcapResult.errors,
+        warnings: dcapResult.warnings,
+      },
+    };
+  }
+
+  /**
+   * Verify recording oracle with DCAP validation
+   */
+  async verifyRecordingOracleWithDcap(
+    oracleUrl: string,
+    challengeData?: string,
+  ): Promise<DcapVerificationResult & { oracleUrl: string }> {
+    try {
+      const challenge = challengeData || crypto.randomBytes(32).toString('hex');
+
+      const response = await fetch(`${oracleUrl}/attestation/quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportData: challenge }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as { quote?: string };
+      if (!data.quote) throw new Error('No quote in response');
+
+      const result = await this.verifyQuoteWithDcap(data.quote);
+
+      const reportDataHex = Buffer.from(result.reportData, 'base64').toString(
+        'hex',
+      );
+      if (!reportDataHex.startsWith(challenge)) {
+        result.errors.push('Challenge mismatch in report_data');
+        result.valid = false;
+      }
+
+      return { ...result, oracleUrl };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        valid: false,
+        measurements: { mrtd: '', rtmr0: '', rtmr1: '', rtmr2: '', rtmr3: '' },
+        reportData: '',
+        errors: [`Failed to verify oracle: ${message}`],
+        warnings: [],
+        oracleUrl,
+      };
+    }
   }
 }

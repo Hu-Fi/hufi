@@ -33,3 +33,29 @@ export interface VerificationResult {
   errors: string[];
   warnings: string[];
 }
+
+/**
+ * Intel DCAP verification result
+ */
+export interface DcapResult {
+  /** Whether the quote signature is valid */
+  signatureValid: boolean;
+  /** Whether the certificate chain validates to Intel Root CA */
+  certificateChainValid: boolean;
+  /** TCB status from Intel (UpToDate, SWHardeningNeeded, etc.) */
+  tcbStatus: string;
+  /** Security advisories that apply to this TCB level */
+  advisoryIDs: string[];
+  /** DCAP-specific errors */
+  errors: string[];
+  /** DCAP-specific warnings */
+  warnings: string[];
+}
+
+/**
+ * Combined verification result with DCAP
+ */
+export interface DcapVerificationResult extends VerificationResult {
+  /** Intel DCAP certificate chain validation result */
+  dcapResult?: DcapResult;
+}

@@ -51,4 +51,35 @@ export class TdxVerificationController {
   getBuildInfo() {
     return this.tdxVerificationService.getBuildInfo();
   }
+
+  @ApiOperation({
+    summary: 'Verify TDX Quote with Intel DCAP Certificate Chain Validation',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Full verification result including DCAP validation',
+  })
+  @Post('/verify-quote-dcap')
+  async verifyQuoteDcap(
+    @Body() dto: TdxDto.VerifyQuoteDto,
+  ): Promise<TdxDto.DcapVerificationResult> {
+    return this.tdxVerificationService.verifyQuoteWithDcap(dto.quote);
+  }
+
+  @ApiOperation({
+    summary: 'Verify Recording Oracle with DCAP Validation',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Full verification result including DCAP validation and oracle URL',
+  })
+  @Post('/verify-oracle-dcap')
+  async verifyOracleDcap(
+    @Body() dto: TdxDto.VerifyOracleDto,
+  ): Promise<TdxDto.DcapVerificationResult & { oracleUrl: string }> {
+    return this.tdxVerificationService.verifyRecordingOracleWithDcap(
+      dto.oracleUrl,
+      dto.challengeData,
+    );
+  }
 }

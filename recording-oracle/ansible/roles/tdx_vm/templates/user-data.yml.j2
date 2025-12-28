@@ -28,115 +28,106 @@ write_files:
     permissions: '0755'
     content: |
       #!/usr/bin/env python3
-      """TDX Attestation Proxy - provides HTTP API for TDX quote generation."""
+      """TDX Attestation Proxy - HTTP API for TDX quote generation via TSM configfs."""
       import http.server
       import json
       import os
       import base64
       import uuid
 
-      TDX_DEVICE = os.environ.get('TDX_DEVICE_PATH', '/dev/tdx_guest')
-      TSM_REPORT_PATH = '/sys/kernel/config/tsm/report'
-      PORT = int(os.environ.get('TDX_PROXY_PORT', '8081'))
+      TSM_REPORT_PATH = "/sys/kernel/config/tsm/report"
+      PORT = int(os.environ.get("TDX_PROXY_PORT", "8081"))
 
-      def generate_tdx_quote(report_data=None):
-          """Generate TDX quote using configfs TSM interface."""
+      def get_tdx_quote(report_data=None):
+          """Generate TDX Quote using TSM configfs interface."""
           if report_data is None:
-              report_data = bytes(64)  # 64 zero bytes as default report data
+              report_data = bytes(64)
+          elif len(report_data) < 64:
+              report_data = report_data + bytes(64 - len(report_data))
+          report_data = report_data[:64]
 
-          # Create unique report entry
-          report_name = f'quote_{uuid.uuid4().hex[:8]}'
+          report_name = f"quote_{uuid.uuid4().hex[:8]}"
           report_path = os.path.join(TSM_REPORT_PATH, report_name)
 
           try:
               os.makedirs(report_path, exist_ok=True)
-
-              # Write report data (inblob)
-              with open(os.path.join(report_path, 'inblob'), 'wb') as f:
+              with open(os.path.join(report_path, "inblob"), "wb") as f:
                   f.write(report_data)
-
-              # Read the quote (outblob)
-              with open(os.path.join(report_path, 'outblob'), 'rb') as f:
+              with open(os.path.join(report_path, "outblob"), "rb") as f:
                   quote = f.read()
-
-              # Extract measurements from quote
-              # TDX quote structure: header + body with measurements
-              measurements = extract_measurements(quote)
-
-              return {
-                  'quote': base64.b64encode(quote).decode(),
-                  'quote_size': len(quote),
-                  'report_data': base64.b64encode(report_data).decode(),
-                  'measurements': measurements
-              }
+              return quote, report_data
           finally:
-              # Cleanup: remove the report entry
               try:
                   os.rmdir(report_path)
               except:
                   pass
 
       def extract_measurements(quote):
-          """Extract MRTD and RTMRs from TDX quote."""
-          # TDX Quote v4 structure offsets (approximate)
-          # Header is 48 bytes, then TD Report starts
-          # MRTD is at offset 528 (48 bytes)
-          # RTMRs start at offset 576 (4 x 48 bytes each)
-          try:
-              if len(quote) < 768:
-                  return {}
-
-              mrtd = quote[528:576]
-              rtmr0 = quote[576:624]
-              rtmr1 = quote[624:672]
-              rtmr2 = quote[672:720]
-              rtmr3 = quote[720:768]
-
-              return {
-                  'mrtd': mrtd.hex(),
-                  'rtmr0': rtmr0.hex(),
-                  'rtmr1': rtmr1.hex(),
-                  'rtmr2': rtmr2.hex(),
-                  'rtmr3': rtmr3.hex()
-              }
-          except Exception:
+          """Extract measurements from TDX Quote v4."""
+          # TDX Quote v4: Header (48) + Body with TD Report
+          # TD Report in quote body at offset 48, measurements at:
+          # MRTD: offset 48+128=176 (48 bytes)
+          # RTMRs: offset 48+320=368 (4x48 bytes)
+          if len(quote) < 560:
               return {}
+          return {
+              "mrtd": quote[176:224].hex(),
+              "rtmr0": quote[368:416].hex(),
+              "rtmr1": quote[416:464].hex(),
+              "rtmr2": quote[464:512].hex(),
+              "rtmr3": quote[512:560].hex(),
+          }
 
       class TDXHandler(http.server.BaseHTTPRequestHandler):
+          def log_message(self, format, *args):
+              pass
+
+          def send_json(self, code, data):
+              self.send_response(code)
+              self.send_header("Content-Type", "application/json")
+              self.end_headers()
+              self.wfile.write(json.dumps(data).encode())
+
           def do_GET(self):
-              if self.path == '/status':
-                  # Check both device and configfs availability
-                  device_available = os.path.exists(TDX_DEVICE)
-                  tsm_available = os.path.exists(TSM_REPORT_PATH)
-                  self.send_response(200)
-                  self.send_header('Content-Type', 'application/json')
-                  self.end_headers()
-                  self.wfile.write(json.dumps({
-                      'available': device_available or tsm_available,
-                      'device': TDX_DEVICE,
-                      'tsm_path': TSM_REPORT_PATH,
-                      'tsm_available': tsm_available
-                  }).encode())
-              elif self.path == '/quote':
+              if self.path == "/status":
+                  self.send_json(200, {"available": os.path.exists(TSM_REPORT_PATH), "tsm_path": TSM_REPORT_PATH})
+              elif self.path == "/quote":
                   try:
-                      result = generate_tdx_quote()
-                      self.send_response(200)
-                      self.send_header('Content-Type', 'application/json')
-                      self.end_headers()
-                      self.wfile.write(json.dumps(result).encode())
+                      quote, report_data = get_tdx_quote()
+                      self.send_json(200, {
+                          "quote": base64.b64encode(quote).decode(),
+                          "quote_size": len(quote),
+                          "report_data": base64.b64encode(report_data).decode(),
+                          "measurements": extract_measurements(quote)
+                      })
                   except Exception as e:
-                      self.send_response(500)
-                      self.send_header('Content-Type', 'application/json')
-                      self.end_headers()
-                      self.wfile.write(json.dumps({'error': str(e)}).encode())
+                      self.send_json(500, {"error": str(e)})
               else:
                   self.send_response(404)
                   self.end_headers()
 
-      if __name__ == '__main__':
-          server = http.server.HTTPServer(('0.0.0.0', PORT), TDXHandler)
-          print(f'TDX Attestation Proxy listening on port {PORT}')
-          server.serve_forever()
+          def do_POST(self):
+              if self.path == "/quote":
+                  try:
+                      length = int(self.headers.get("Content-Length", 0))
+                      body = json.loads(self.rfile.read(length)) if length else {}
+                      report_data = base64.b64decode(body.get("reportData", "")) if body.get("reportData") else None
+                      quote, used_report_data = get_tdx_quote(report_data)
+                      self.send_json(200, {
+                          "quote": base64.b64encode(quote).decode(),
+                          "quote_size": len(quote),
+                          "report_data": base64.b64encode(used_report_data).decode(),
+                          "measurements": extract_measurements(quote)
+                      })
+                  except Exception as e:
+                      self.send_json(500, {"error": str(e)})
+              else:
+                  self.send_response(404)
+                  self.end_headers()
+
+      if __name__ == "__main__":
+          print(f"TDX Attestation Proxy on port {PORT}")
+          http.server.HTTPServer(("0.0.0.0", PORT), TDXHandler).serve_forever()
 
   - path: /etc/systemd/system/tdx-attestation-proxy.service
     permissions: '0644'

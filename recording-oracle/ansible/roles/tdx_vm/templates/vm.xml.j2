@@ -25,10 +25,11 @@
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
+  <seclabel type='none'/>
   <launchSecurity type='tdx'>
     <policy>{{ tdx_policy }}</policy>
     <quoteGenerationService>
-      <SocketAddress type='vsock' cid='2' port='4050'/>
+      <SocketAddress type='unix' path='/var/run/tdx-qgs/qgs.socket'/>
     </quoteGenerationService>
   </launchSecurity>
   <devices>

@@ -13,6 +13,7 @@ import Environment from './common/utils/environment';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './database';
 import { AdminModule } from './modules/admin';
+import { AttestationModule } from './modules/attestation';
 import { AuthModule } from './modules/auth';
 import { CampaignsModule } from './modules/campaigns';
 import { ExchangesModule } from './modules/exchanges';
@@ -54,6 +55,7 @@ import { UsersModule } from './modules/users';
   imports: [
     HealthModule,
     AdminModule,
+    AttestationModule,
     ConfigModule.forRoot({
       /**
        * First value found takes precendece
