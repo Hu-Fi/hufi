@@ -2,7 +2,12 @@ name: TDX Measure Recording Oracle
 
 on:
   push:
-    branches: [main, tdx-remote-attestation-fix]
+    branches: [main]
+    paths:
+      - 'recording-oracle/**'
+      - '.github/workflows/tdx-measure-recording-oracle.yml'
+  pull_request:
+    branches: [main]
     paths:
       - 'recording-oracle/**'
       - '.github/workflows/tdx-measure-recording-oracle.yml'
@@ -56,6 +61,15 @@ jobs:
           echo "image_sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
           echo "Image will be tagged as: $IMAGE_SHA"
 
+      - name: Determine Docker tags
+        id: docker-tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository }}/recording-oracle:sha-${{ github.sha }}"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAGS="$TAGS,ghcr.io/${{ github.repository }}/recording-oracle:latest"
+          fi
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
@@ -63,9 +77,7 @@ jobs:
           context: ./recording-oracle
           file: ./recording-oracle/Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}/recording-oracle:sha-${{ github.sha }}
-            ghcr.io/${{ github.repository }}/recording-oracle:latest
+          tags: ${{ steps.docker-tags.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
