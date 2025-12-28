@@ -4,7 +4,8 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import {
   CertDataType,
-  INTEL_PCS_API_URL,
+  INTEL_SGX_PCS_API_URL,
+  INTEL_TDX_PCS_API_URL,
   INTEL_SGX_ROOT_CA_PEM,
   QUOTE_SIGNATURE_DATA_OFFSET,
   TDX_QUOTE_HEADER_SIZE,
@@ -41,6 +42,40 @@ export interface CertificationData {
   pckCertChain?: string;
   /** Individual certificates parsed from chain */
   certificates?: string[];
+  /** QE Report Certification Data (if CertType=6 or 7) */
+  qeReportCertData?: QeReportCertificationData;
+  /** Raw certification data for PCS fetch */
+  rawCertData?: Buffer;
+}
+
+/**
+ * QE Report Certification Data structure (Type 6/7)
+ */
+export interface QeReportCertificationData {
+  /** QE Report (384 bytes) */
+  qeReport: Buffer;
+  /** QE Report Signature (64 bytes) */
+  qeReportSignature: Buffer;
+  /** QE Authentication Data */
+  qeAuthData: Buffer;
+  /** Nested certification data */
+  nestedCertData: CertificationData;
+}
+
+/**
+ * Platform info for Intel PCS API
+ */
+export interface PlatformCertInfo {
+  /** CPU SVN (Security Version Number) - 16 bytes hex */
+  cpusvn: string;
+  /** PCE SVN - 2 bytes hex */
+  pcesvn: string;
+  /** PCE ID - 2 bytes hex */
+  pceid: string;
+  /** QE ID - 16 bytes hex */
+  qeid: string;
+  /** FMSPC - 6 bytes hex */
+  fmspc?: string;
 }
 
 /**
@@ -127,7 +162,7 @@ export class IntelDcapService {
     };
 
     if (certDataType === CertDataType.PCK_CERT_CHAIN && certDataSize > 0) {
-      // PCK certificate chain is PEM encoded
+      // Type 5: PCK certificate chain is PEM encoded
       const certChainBuffer = quoteBuffer.subarray(
         offset,
         offset + certDataSize,
@@ -136,6 +171,16 @@ export class IntelDcapService {
       certificationData.certificates = this.parseCertChain(
         certificationData.pckCertChain,
       );
+    } else if (
+      (certDataType === CertDataType.PLATFORM_MANIFEST ||
+        certDataType === CertDataType.QE_REPORT_CERT_DATA) &&
+      certDataSize > 0
+    ) {
+      // Type 6/7: QE Report Certification Data structure
+      const certDataBuffer = quoteBuffer.subarray(offset, offset + certDataSize);
+      certificationData.rawCertData = certDataBuffer;
+      certificationData.qeReportCertData =
+        this.parseQeReportCertData(certDataBuffer);
     }
 
     return {
@@ -143,6 +188,59 @@ export class IntelDcapService {
       signature,
       attestationPublicKey,
       certificationData,
+    };
+  }
+
+  /**
+   * Parse QE Report Certification Data structure (Type 6/7)
+   */
+  private parseQeReportCertData(buffer: Buffer): QeReportCertificationData {
+    let offset = 0;
+
+    // QE Report (384 bytes)
+    const qeReport = buffer.subarray(offset, offset + 384);
+    offset += 384;
+
+    // QE Report Signature (64 bytes)
+    const qeReportSignature = buffer.subarray(offset, offset + 64);
+    offset += 64;
+
+    // QE Auth Data Length (2 bytes)
+    const qeAuthDataLength = buffer.readUInt16LE(offset);
+    offset += 2;
+
+    // QE Auth Data (variable)
+    const qeAuthData = buffer.subarray(offset, offset + qeAuthDataLength);
+    offset += qeAuthDataLength;
+
+    // Nested Certification Data Type (2 bytes)
+    const nestedCertDataType = buffer.readUInt16LE(offset);
+    offset += 2;
+
+    // Nested Certification Data Size (4 bytes)
+    const nestedCertDataSize = buffer.readUInt32LE(offset);
+    offset += 4;
+
+    // Parse nested certification data
+    const nestedCertData: CertificationData = {
+      certDataType: nestedCertDataType,
+      certDataSize: nestedCertDataSize,
+    };
+
+    if (nestedCertDataType === CertDataType.PCK_CERT_CHAIN && nestedCertDataSize > 0) {
+      const nestedCertBuffer = buffer.subarray(offset, offset + nestedCertDataSize);
+      nestedCertData.pckCertChain = nestedCertBuffer.toString('utf8');
+      nestedCertData.certificates = this.parseCertChain(nestedCertData.pckCertChain);
+    } else if (nestedCertDataSize > 0) {
+      // Store raw data for potential PCS fetch
+      nestedCertData.rawCertData = buffer.subarray(offset, offset + nestedCertDataSize);
+    }
+
+    return {
+      qeReport,
+      qeReportSignature,
+      qeAuthData,
+      nestedCertData,
     };
   }
 
@@ -332,15 +430,175 @@ export class IntelDcapService {
   }
 
   /**
-   * Fetch TCB info from Intel PCS API
+   * Extract platform info from QE Report for PCK cert fetch
    */
-  async fetchTcbInfo(fmspc: string): Promise<TcbInfo | null> {
+  extractPlatformInfoFromQeReport(qeReport: Buffer): PlatformCertInfo | null {
     try {
-      const url = `${INTEL_PCS_API_URL}/tcb?fmspc=${fmspc}`;
+      // QE Report structure (384 bytes):
+      // Offset 0-15: CPUSVN (16 bytes)
+      // Offset 16-19: MISCSELECT (4 bytes)
+      // Offset 20-47: Reserved (28 bytes)
+      // Offset 48-63: Attributes (16 bytes)
+      // Offset 64-95: MRENCLAVE (32 bytes)
+      // Offset 96-127: Reserved (32 bytes)
+      // Offset 128-159: MRSIGNER (32 bytes)
+      // Offset 160-255: Reserved (96 bytes)
+      // Offset 256-257: ISVPRODID (2 bytes)
+      // Offset 258-259: ISVSVN (2 bytes)
+      // Offset 260-319: Reserved (60 bytes)
+      // Offset 320-383: REPORTDATA (64 bytes)
+
+      const cpusvn = qeReport.subarray(0, 16).toString('hex');
+
+      // For TDX, we also need PCEID and PCESVN which are in the certification data
+      // PCESVN is part of the quote header at offset 10-11
+      // We'll extract these from the nested cert data or use defaults
+
+      return {
+        cpusvn,
+        pcesvn: '0000', // Will be updated from actual quote
+        pceid: '0000',  // Will be updated from actual quote
+        qeid: qeReport.subarray(320, 336).toString('hex'), // First 16 bytes of REPORTDATA as QE ID
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error extracting platform info: ${message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Extract PCESVN from quote header
+   */
+  extractPceSvnFromQuote(quoteBuffer: Buffer): string {
+    // TDX Quote Header structure (48 bytes):
+    // Offset 0-1: Version (2 bytes)
+    // Offset 2-3: Attestation Key Type (2 bytes)
+    // Offset 4-7: TEE Type (4 bytes)
+    // Offset 8-9: Reserved (2 bytes)
+    // Offset 10-11: QE SVN (2 bytes)
+    // Offset 12-13: PCE SVN (2 bytes)
+    // Offset 14-29: QE Vendor ID (16 bytes)
+    // Offset 30-49: User Data (20 bytes)
+
+    const pceSvn = quoteBuffer.readUInt16LE(12);
+    return pceSvn.toString(16).padStart(4, '0');
+  }
+
+  /**
+   * Fetch PCK certificate from Intel PCS API
+   */
+  async fetchPckCertFromPcs(
+    platformInfo: PlatformCertInfo,
+  ): Promise<{ pckCert: string; certChain: string[] } | null> {
+    try {
+      // Build the query URL with platform info
+      const params = new URLSearchParams({
+        cpusvn: platformInfo.cpusvn,
+        pcesvn: platformInfo.pcesvn,
+        pceid: platformInfo.pceid,
+        qeid: platformInfo.qeid,
+      });
+
+      const url = `${INTEL_SGX_PCS_API_URL}/pckcert?${params.toString()}`;
+      this.logger.log(`Fetching PCK cert from Intel PCS: ${url}`);
+
       const response = await fetch(url);
 
       if (!response.ok) {
-        this.logger.warn(`Failed to fetch TCB info: HTTP ${response.status}`);
+        this.logger.warn(
+          `Failed to fetch PCK cert from Intel PCS: HTTP ${response.status}`,
+        );
+        return null;
+      }
+
+      // Get PCK certificate from response body
+      const pckCert = await response.text();
+
+      // Get certificate chain from response header
+      const certChainHeader = response.headers.get(
+        'SGX-PCK-Certificate-Issuer-Chain',
+      );
+      let certChain: string[] = [pckCert];
+
+      if (certChainHeader) {
+        // Header is URL-encoded
+        const decodedChain = decodeURIComponent(certChainHeader);
+        const chainCerts = this.parseCertChain(decodedChain);
+        certChain = [pckCert, ...chainCerts];
+      }
+
+      return { pckCert, certChain };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error fetching PCK cert from Intel PCS: ${message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Try to get certificates from certification data, fetching from PCS if needed
+   */
+  async getCertificatesFromCertData(
+    certData: CertificationData,
+    quoteBuffer: Buffer,
+  ): Promise<string[] | null> {
+    // Type 5: Direct embedded cert chain
+    if (certData.certificates && certData.certificates.length > 0) {
+      return certData.certificates;
+    }
+
+    // Type 6/7: QE Report Certification Data
+    if (certData.qeReportCertData) {
+      const nestedCertData = certData.qeReportCertData.nestedCertData;
+
+      // Check if nested data has certs (type 5 inside type 6/7)
+      if (nestedCertData.certificates && nestedCertData.certificates.length > 0) {
+        return nestedCertData.certificates;
+      }
+
+      // Need to fetch from Intel PCS
+      const platformInfo = this.extractPlatformInfoFromQeReport(
+        certData.qeReportCertData.qeReport,
+      );
+
+      if (platformInfo) {
+        // Update PCESVN from quote header
+        platformInfo.pcesvn = this.extractPceSvnFromQuote(quoteBuffer);
+
+        // Try to extract PCEID from nested cert data if available
+        if (nestedCertData.rawCertData && nestedCertData.rawCertData.length >= 2) {
+          platformInfo.pceid = nestedCertData.rawCertData
+            .subarray(0, 2)
+            .toString('hex');
+        }
+
+        this.logger.log(
+          `Fetching PCK cert from Intel PCS with platformInfo: ${JSON.stringify(platformInfo)}`,
+        );
+
+        const pcsResult = await this.fetchPckCertFromPcs(platformInfo);
+        if (pcsResult) {
+          return pcsResult.certChain;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Fetch TCB info from Intel PCS API (TDX endpoint)
+   */
+  async fetchTcbInfo(fmspc: string): Promise<TcbInfo | null> {
+    try {
+      // Use TDX endpoint for TDX quotes
+      const url = `${INTEL_TDX_PCS_API_URL}/tcb?fmspc=${fmspc}`;
+      this.logger.log(`Fetching TDX TCB info from: ${url}`);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        this.logger.warn(`Failed to fetch TDX TCB info: HTTP ${response.status}`);
         return null;
       }
 
@@ -359,9 +617,8 @@ export class IntelDcapService {
   extractFmspcFromPckCert(pckCertPem: string): string | null {
     try {
       const cert = new crypto.X509Certificate(pckCertPem);
-      // FMSPC is in a custom extension (OID 1.2.840.113741.1.13.1.4)
-      // For simplicity, we can try to find it in the raw certificate
-      // This is a simplified implementation - production should properly parse the extension
+      this.logger.log(`PCK Certificate Subject: ${cert.subject}`);
+      this.logger.log(`PCK Certificate Issuer: ${cert.issuer}`);
 
       // Convert to DER and search for FMSPC OID pattern
       const certDer = Buffer.from(
@@ -372,25 +629,68 @@ export class IntelDcapService {
         'base64',
       );
 
-      // FMSPC OID: 1.2.840.113741.1.13.1.4 -> 06 09 2A 86 48 86 F8 4D 01 0D 01 04
+      // FMSPC OID: 1.2.840.113741.1.13.1.4
+      // DER encoding: 06 0A 2A 86 48 86 F8 4D 01 0D 01 04
+      // The OID length is 10 bytes (0x0A), not 9
       const fmspcOid = Buffer.from([
-        0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf8, 0x4d, 0x01, 0x0d, 0x01, 0x04,
+        0x06, 0x0a, 0x2a, 0x86, 0x48, 0x86, 0xf8, 0x4d, 0x01, 0x0d, 0x01, 0x04,
       ]);
 
-      const oidIndex = certDer.indexOf(fmspcOid);
+      let oidIndex = certDer.indexOf(fmspcOid);
+
+      // Try alternate OID encoding if not found
+      if (oidIndex === -1) {
+        const altFmspcOid = Buffer.from([
+          0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf8, 0x4d, 0x01, 0x0d, 0x01, 0x04,
+        ]);
+        oidIndex = certDer.indexOf(altFmspcOid);
+        if (oidIndex !== -1) {
+          this.logger.log('Found FMSPC with alternate OID encoding');
+        }
+      }
+
       if (oidIndex === -1) {
         this.logger.warn('FMSPC OID not found in PCK certificate');
+        // Try to find SGX Extensions OID as fallback
+        // SGX Extensions OID: 1.2.840.113741.1.13.1
+        const sgxExtOid = Buffer.from([
+          0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf8, 0x4d, 0x01, 0x0d, 0x01,
+        ]);
+        const sgxExtIndex = certDer.indexOf(sgxExtOid);
+        if (sgxExtIndex !== -1) {
+          this.logger.log(`Found SGX Extensions at offset ${sgxExtIndex}, looking for FMSPC nearby`);
+          // Search for FMSPC within the SGX extensions area
+          const searchArea = certDer.subarray(sgxExtIndex, Math.min(sgxExtIndex + 200, certDer.length));
+          this.logger.log(`Search area hex: ${searchArea.subarray(0, 50).toString('hex')}`);
+        }
         return null;
       }
 
-      // FMSPC value is 6 bytes after the OID structure
-      // The structure is: OID (12 bytes) + OCTET STRING tag (1) + length (1) + value (6)
-      const fmspcOffset = oidIndex + fmspcOid.length + 2; // +2 for OCTET STRING wrapper
-      if (fmspcOffset + 6 > certDer.length) {
+      // FMSPC structure: OID + OCTET STRING (04 06 XX XX XX XX XX XX)
+      // Skip OID, find OCTET STRING tag (0x04), then length, then value
+      let offset = oidIndex + fmspcOid.length;
+
+      // Look for OCTET STRING tag (0x04)
+      while (offset < certDer.length && certDer[offset] !== 0x04) {
+        offset++;
+      }
+
+      if (offset >= certDer.length) {
+        this.logger.warn('OCTET STRING not found after FMSPC OID');
         return null;
       }
 
-      return certDer.subarray(fmspcOffset, fmspcOffset + 6).toString('hex');
+      offset++; // Skip OCTET STRING tag
+      const length = certDer[offset];
+      offset++; // Skip length byte
+
+      if (length !== 6) {
+        this.logger.warn(`Unexpected FMSPC length: ${length}, expected 6`);
+      }
+
+      const fmspc = certDer.subarray(offset, offset + 6).toString('hex');
+      this.logger.log(`Extracted FMSPC: ${fmspc}`);
+      return fmspc;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error extracting FMSPC: ${message}`);
@@ -424,18 +724,42 @@ export class IntelDcapService {
         };
       }
 
-      // Verify certificate chain
+      // Get certificates (from embedded chain or Intel PCS)
+      let certificates: string[] | null = null;
       let certificateChainValid = false;
+
+      // First try embedded certificates
       if (signatureData.certificationData.certificates) {
-        const chainResult = this.verifyCertificateChain(
-          signatureData.certificationData.certificates,
+        certificates = signatureData.certificationData.certificates;
+        this.logger.log('Using embedded certificate chain (type 5)');
+      } else {
+        // Try to get certificates from nested data or Intel PCS
+        this.logger.log(
+          `Certification data type ${signatureData.certificationData.certDataType} - attempting to fetch certificates`,
         );
+        certificates = await this.getCertificatesFromCertData(
+          signatureData.certificationData,
+          quoteBuffer,
+        );
+
+        if (certificates) {
+          this.logger.log(
+            `Fetched ${certificates.length} certificates from Intel PCS or nested data`,
+          );
+          // Store the fetched certificates back in certificationData
+          signatureData.certificationData.certificates = certificates;
+        } else {
+          warnings.push(
+            `Certification data type ${signatureData.certificationData.certDataType} - unable to fetch certificates`,
+          );
+        }
+      }
+
+      // Verify certificate chain if we have certificates
+      if (certificates && certificates.length > 0) {
+        const chainResult = this.verifyCertificateChain(certificates);
         certificateChainValid = chainResult.valid;
         errors.push(...chainResult.errors);
-      } else {
-        warnings.push(
-          `Certification data type ${signatureData.certificationData.certDataType} - no embedded cert chain`,
-        );
       }
 
       // Verify quote signature

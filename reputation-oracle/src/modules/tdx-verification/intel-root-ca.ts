@@ -33,10 +33,14 @@ AiEA4J0lrHoMs+Xo5o/sX6O9QWxHRAvZUGOdRQ7cvqRXaqI=
 -----END CERTIFICATE-----`;
 
 /**
- * Intel Provisioning Certification Service (PCS) API base URL
+ * Intel Provisioning Certification Service (PCS) API base URLs
  * For production attestation verification
  */
-export const INTEL_PCS_API_URL = 'https://api.trustedservices.intel.com/sgx/certification/v4';
+export const INTEL_SGX_PCS_API_URL = 'https://api.trustedservices.intel.com/sgx/certification/v4';
+export const INTEL_TDX_PCS_API_URL = 'https://api.trustedservices.intel.com/tdx/certification/v4';
+
+/** @deprecated Use INTEL_SGX_PCS_API_URL or INTEL_TDX_PCS_API_URL */
+export const INTEL_PCS_API_URL = INTEL_SGX_PCS_API_URL;
 
 /**
  * Intel Root CA fingerprint for validation

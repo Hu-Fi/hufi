@@ -2,7 +2,7 @@ name: TDX Measure Recording Oracle
 
 on:
   push:
-    branches: [main, tdx-remote-attestation]
+    branches: [main, tdx-remote-attestation-fix]
     paths:
       - 'recording-oracle/**'
       - '.github/workflows/tdx-measure-recording-oracle.yml'
