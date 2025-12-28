@@ -1,0 +1,65 @@
+---
+# Get SEV attestation measurements
+# Usage: ansible-playbook playbooks/measure.yml
+
+- name: Get SEV Attestation Measurements
+  hosts: sev_host
+  gather_facts: no
+  become: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars:
+        file: ../roles/sev_vm/vars/main.yml
+
+    - name: Check SEV attestation proxy status
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ sev_proxy_host_port | default(8082) }}/status"
+        method: GET
+        timeout: 10
+      register: sev_status
+
+    - name: Display SEV status
+      ansible.builtin.debug:
+        var: sev_status.json
+
+    - name: Fail if SEV not available
+      ansible.builtin.fail:
+        msg: "SEV attestation not available: {{ sev_status.json }}"
+      when: not sev_status.json.available | default(false)
+
+    - name: Get SEV attestation report
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ sev_proxy_host_port | default(8082) }}/report"
+        method: GET
+        timeout: 30
+      register: sev_report
+
+    - name: Display SEV measurements
+      ansible.builtin.debug:
+        msg: |
+          SEV Attestation Report:
+            Method: {{ sev_report.json.method | default('unknown') }}
+            Report Size: {{ sev_report.json.report_size | default('unknown') }} bytes
+
+          Measurements:
+            LAUNCH_MEASUREMENT: {{ sev_report.json.measurements.measurement | default('N/A') }}
+            Policy: {{ sev_report.json.measurements.policy | default('N/A') }}
+            Version: {{ sev_report.json.measurements.version | default('N/A') }}
+            Guest SVN: {{ sev_report.json.measurements.guest_svn | default('N/A') }}
+            VMPL: {{ sev_report.json.measurements.vmpl | default('N/A') }}
+
+    - name: Save measurements to file
+      ansible.builtin.copy:
+        content: "{{ sev_report.json | to_nice_json }}"
+        dest: "/tmp/sev-measurements-{{ vm_name }}.json"
+        mode: '0644'
+
+    - name: Fetch measurements file
+      ansible.builtin.fetch:
+        src: "/tmp/sev-measurements-{{ vm_name }}.json"
+        dest: "./sev-measurements.json"
+        flat: yes

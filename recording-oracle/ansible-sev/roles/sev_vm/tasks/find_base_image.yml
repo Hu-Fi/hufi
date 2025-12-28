@@ -1,0 +1,58 @@
+---
+# Find a suitable base image for SEV VM
+# Ubuntu cloud images work well with SEV
+
+- name: Search for Ubuntu cloud images
+  ansible.builtin.shell:
+    cmd: |
+      for img in $(find /home /root /opt /var/lib/libvirt/images /tmp -maxdepth 4 \( -name '*ubuntu*.qcow2' -o -name '*ubuntu*.img' -o -name '*noble*.qcow2' -o -name '*jammy*.qcow2' \) -type f 2>/dev/null); do
+        if ! qemu-img info "$img" 2>/dev/null | grep -q 'backing file:'; then
+          echo "$img"
+          exit 0
+        fi
+      done
+  args:
+    executable: /bin/bash
+  register: ubuntu_image
+  failed_when: false
+  changed_when: false
+
+- name: Set base image from Ubuntu image
+  ansible.builtin.set_fact:
+    base_image_path: "{{ ubuntu_image.stdout | trim }}"
+  when: ubuntu_image.stdout is defined and ubuntu_image.stdout | trim | length > 0
+
+- name: Download Ubuntu cloud image as fallback
+  ansible.builtin.get_url:
+    url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+    dest: /var/lib/libvirt/images/ubuntu-noble-base.qcow2
+    mode: '0644'
+  when: base_image_path is not defined
+  register: download_result
+
+- name: Set base image from download
+  ansible.builtin.set_fact:
+    base_image_path: /var/lib/libvirt/images/ubuntu-noble-base.qcow2
+  when: base_image_path is not defined
+
+- name: Verify base image exists
+  ansible.builtin.stat:
+    path: "{{ base_image_path }}"
+  register: base_image_stat
+
+- name: Fail if no base image found
+  ansible.builtin.fail:
+    msg: "No base image found at {{ base_image_path }}"
+  when: not base_image_stat.stat.exists
+
+- name: Check if base image has backing file
+  ansible.builtin.shell:
+    cmd: qemu-img info "{{ base_image_path }}" 2>/dev/null | grep -q 'backing file:' && echo has_backing || echo standalone
+  args:
+    executable: /bin/bash
+  register: backing_check
+  changed_when: false
+
+- name: Display base image info
+  ansible.builtin.debug:
+    msg: "Using base image: {{ base_image_path }} ({{ backing_check.stdout | trim }})"

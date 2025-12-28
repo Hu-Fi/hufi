@@ -1,0 +1,37 @@
+---
+# Get SEV attestation measurements
+
+- name: Check SEV status first
+  ansible.builtin.include_tasks: status.yml
+
+- name: Fail if SEV not available
+  ansible.builtin.fail:
+    msg: "SEV attestation not available. Method: {{ sev_method }}"
+  when: not sev_available
+
+- name: Generate SEV attestation report
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ sev_proxy_host_port }}/report"
+    method: GET
+    timeout: 30
+  register: sev_report
+
+- name: Set measurement facts
+  ansible.builtin.set_fact:
+    sev_measurement: "{{ sev_report.json.measurements.measurement | default('') }}"
+    sev_policy: "{{ sev_report.json.measurements.policy | default('') }}"
+    sev_version: "{{ sev_report.json.measurements.version | default(0) }}"
+    sev_guest_svn: "{{ sev_report.json.measurements.guest_svn | default(0) }}"
+    sev_vmpl: "{{ sev_report.json.measurements.vmpl | default(0) }}"
+    sev_report_full: "{{ sev_report.json }}"
+
+- name: Display measurements
+  ansible.builtin.debug:
+    msg: |
+      SEV-SNP Measurements:
+        LAUNCH_MEASUREMENT: {{ sev_measurement }}
+        Policy: {{ sev_policy }}
+        Version: {{ sev_version }}
+        Guest SVN: {{ sev_guest_svn }}
+        VMPL: {{ sev_vmpl }}
+        Report Size: {{ sev_report.json.report_size | default('unknown') }} bytes
