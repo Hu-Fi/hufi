@@ -4,61 +4,6 @@ Scripts for TDX attestation, VM provisioning, and measurement handling.
 
 ## Quick Start
 
-### 1. Deploy a fresh TDX VM (destroys existing, provisions new)
-
-```bash
-export TDX_GUEST_PASSWORD="your-password"
-./tdx.py deploy --name recording-oracle-tdx
-```
-
-### 2. Get TDX Measurements
-
-```bash
-./tdx.py measure
-```
-
-## Unified TDX Tool
-
-All TDX operations are handled by a single Python script: `tdx.py`
-
-```bash
-# Measurement commands
-./tdx.py measure              # Get TDX measurements from running oracle
-./tdx.py status               # Show status of TDX and recording oracle
-./tdx.py quote                # Generate a test TDX quote (raw JSON)
-./tdx.py extract-measurements # Extract measurements from base64 quote
-./tdx.py manifest             # Create measurement manifest JSON
-./tdx.py reproduce FILE       # Generate reproduction instructions
-
-# VM lifecycle commands (run on TDX host via SSH)
-./tdx.py destroy              # Destroy existing TDX VM
-./tdx.py provision            # Provision a new TDX VM using cloud-init
-./tdx.py wait-ready           # Wait for TDX VM to be ready
-./tdx.py deploy               # Full cycle: destroy + provision + wait
-```
-
-### Environment Variables
-
-```bash
-export TDX_HOST="ns3222044.ip-57-130-10.eu"
-export TDX_HOST_SSH_KEY="~/.ssh/tdx_host_key"
-export TDX_GUEST_SSH_PORT="44451"
-export TDX_GUEST_USER="tdx"
-export TDX_GUEST_PASSWORD="your-password"  # Required
-export RECORDING_ORACLE_PORT="12000"
-```
-
-### Deploy Options (Full VM Lifecycle)
-
-```bash
-./tdx.py deploy --name NAME                 # VM name (default: recording-oracle-tdx)
-./tdx.py deploy --memory 8192               # Memory in MB (default: 4096)
-./tdx.py deploy --cpus 4                    # Number of CPUs (default: 2)
-./tdx.py deploy --disk 50                   # Disk size in GB (default: 20)
-./tdx.py deploy --timeout 600               # Timeout for VM to be ready (default: 600s)
-./tdx.py deploy --recording-oracle-image IMG # Docker image for recording oracle
-```
-
 ### Provisioning Options (VM Creation Only)
 
 ```bash
@@ -78,17 +23,6 @@ The following components are deployed to the TDX VM via cloud-init (embedded in 
 - `tdx-attestation-proxy.service` - Systemd service for proxy
 - `recording-oracle.service` - Systemd service for recording oracle
 - `docker-compose.yml` - Full stack deployment (postgres, minio, oracle)
-
-## GitHub Action Usage
-
-The workflow `.github/workflows/tdx-measure-recording-oracle.yml` uses:
-
-```bash
-./tdx.py measure   # Gets TDX measurements from running oracle
-./tdx.py status    # Verifies TDX attestation is available
-./tdx.py manifest  # Creates measurements.json artifact
-./tdx.py reproduce measurements.json  # Creates REPRODUCE.md artifact
-```
 
 ## Architecture
 
