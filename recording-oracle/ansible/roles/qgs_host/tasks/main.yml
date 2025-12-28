@@ -1,6 +1,24 @@
 ---
-# QGS (Quote Generation Service) setup for TDX hosts
+# TDX Host Setup: Docker + QGS (Quote Generation Service)
 
+# Docker installation
+- name: Install Docker
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+    state: present
+    update_cache: true
+  become: true
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  become: true
+
+# QGS installation
 - name: Install TDX QGS package
   ansible.builtin.apt:
     name: "{{ qgs_package }}"
