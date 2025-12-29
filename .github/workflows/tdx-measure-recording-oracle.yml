@@ -57,16 +57,19 @@ jobs:
       - name: Compute image tag
         id: image-tag
         run: |
-          IMAGE_SHA="ghcr.io/${{ github.repository }}/recording-oracle:sha-${{ github.sha }}"
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_SHA="ghcr.io/${REPO_LOWER}/recording-oracle:sha-${{ github.sha }}"
           echo "image_sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
+          echo "repo_lower=$REPO_LOWER" >> $GITHUB_OUTPUT
           echo "Image will be tagged as: $IMAGE_SHA"
 
       - name: Determine Docker tags
         id: docker-tags
         run: |
-          TAGS="ghcr.io/${{ github.repository }}/recording-oracle:sha-${{ github.sha }}"
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          TAGS="ghcr.io/${REPO_LOWER}/recording-oracle:sha-${{ github.sha }}"
           if [ "${{ github.event_name }}" = "push" ]; then
-            TAGS="$TAGS,ghcr.io/${{ github.repository }}/recording-oracle:latest"
+            TAGS="$TAGS,ghcr.io/${REPO_LOWER}/recording-oracle:latest"
           fi
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
@@ -84,7 +87,7 @@ jobs:
       - name: Attest Docker image provenance
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ghcr.io/${{ github.repository }}/recording-oracle
+          subject-name: ghcr.io/${{ steps.image-tag.outputs.repo_lower }}/recording-oracle
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
