@@ -93,15 +93,26 @@
   become: true
   notify: Restart QGS
 
-- name: Create QGS runtime directory
-  ansible.builtin.file:
-    path: "{{ qgs_runtime_dir }}"
-    state: directory
-    owner: "{{ qgs_user }}"
-    group: "{{ qgs_group }}"
-    mode: '0755'
+- name: Create tmpfiles.d config for QGS runtime directory (persists across reboots)
+  ansible.builtin.copy:
+    content: |
+      # QGS runtime directory for TDX attestation
+      d {{ qgs_runtime_dir }} 0755 {{ qgs_user }} {{ qgs_group }} -
+    dest: /etc/tmpfiles.d/qgs.conf
+    mode: '0644'
   become: true
-  ignore_errors: true
+
+- name: Create QGS runtime directory
+  ansible.builtin.command:
+    cmd: systemd-tmpfiles --create /etc/tmpfiles.d/qgs.conf
+  become: true
+  changed_when: true
+
+- name: Remove stale QGS socket if exists
+  ansible.builtin.file:
+    path: "{{ qgs_runtime_dir }}/qgs.socket"
+    state: absent
+  become: true
 
 - name: Check if libvirt-qemu AppArmor profile exists
   ansible.builtin.stat:
@@ -175,6 +186,16 @@
     - pccs_config_stat.stat.exists
     - pccs_api_key != ""
 
+- name: Configure PCCS UserTokenHash for PCKIDRetrievalTool
+  ansible.builtin.replace:
+    path: "{{ pccs_config_path }}"
+    regexp: '"UserTokenHash"\s*:\s*"[^"]*"'
+    replace: '"UserTokenHash": "{{ pccs_user_token_hash }}"'
+  become: true
+  notify: Restart PCCS
+  when:
+    - pccs_config_stat.stat.exists
+
 - name: Enable and start PCCS
   ansible.builtin.systemd:
     name: pccs
@@ -191,7 +212,7 @@
 
 - name: Register platform with local PCCS
   ansible.builtin.command:
-    cmd: PCKIDRetrievalTool -url https://localhost:8081 -use_secure_cert false
+    cmd: PCKIDRetrievalTool -url https://localhost:8081 -use_secure_cert false -user_token {{ pccs_user_token }}
   become: true
   register: pck_registration
   changed_when: "'successfully' in pck_registration.stdout"

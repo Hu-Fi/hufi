@@ -13,6 +13,8 @@ Deploy the Recording Oracle in a TDX (Intel Trust Domain Extensions) virtual mac
    - Enable SEAM Loader
    - Set TME-MT/TDX key split to non-zero value
    - Enable Software Guard Extensions (SGX)
+   - **Enable SGX Auto MP Registration** (critical for attestation)
+   - Optionally enable SGX Factory Reset (for fresh registration)
 
 ### Intel PCCS API Key (Required for Attestation)
 
@@ -185,7 +187,29 @@ systemctl status qgsd
 journalctl -u qgsd -n 50
 ```
 
-### Empty quotes (0 bytes)
+### Empty quotes (0 bytes) / "No certificate data for this platform"
+This is the most common issue. Check the QGS logs:
+```bash
+sudo journalctl -u qgsd -n 20
+# Look for: [QPL] No certificate data for this platform.
+```
+
+**Root cause**: The platform isn't registered with Intel's Provisioning Certificate Service.
+
+**Solution**: Enable SGX Auto MP Registration in BIOS:
+1. Reboot and enter BIOS
+2. Navigate to: Socket Configuration → Processor Configuration → Software Guard Extension (SGX)
+3. Enable **SGX Auto MP Registration**
+4. Optionally enable **SGX Factory Reset** for a fresh registration
+5. Save and reboot
+
+After reboot, verify registration:
+```bash
+sudo PCKIDRetrievalTool -url https://localhost:8081 -use_secure_cert false -user_token pccsuser
+# Should show: "Registration status has been set to completed status"
+```
+
+### Other causes of empty quotes
 1. Check PCCS has a valid API key:
    ```bash
    sudo journalctl -u pccs -n 20

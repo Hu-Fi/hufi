@@ -10,3 +10,8 @@ qgs_group: qgsd
 # Get your key from: https://api.portal.trustedservices.intel.com/
 pccs_api_key: "{{ lookup('env', 'INTEL_PCCS_API_KEY') }}"
 pccs_config_path: /opt/intel/sgx-dcap-pccs/config/default.json
+
+# PCCS user token for PCKIDRetrievalTool registration
+# Default token is "pccsuser" - SHA-512 hash pre-computed
+pccs_user_token: "pccsuser"
+pccs_user_token_hash: "059032bbe02b060c552e5e22f3278882a922b81131dd3ce6cea16c7f7f46321f36e51e8f413b4f21b49c75fa58bd9727832e526da8ab5fc7365ea13b641ad4bd"
