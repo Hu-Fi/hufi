@@ -38,6 +38,32 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    container_name: hufi-redis
+    image: redis:8
+    restart: *default-restart
+    logging:
+      <<: *default-logging
+    networks:
+      - hufi
+    ports:
+      - name: instance_port
+        target: 6379
+        published: 6379
+    volumes:
+      - redis-data:/data
+    command: [
+      "redis-server",
+      # we don not expect a lot of writes on local
+      "--save", "60", "100",
+      "--appendonly", "yes",
+    ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   minio:
     container_name: hufi-minio
     image: minio/minio:RELEASE.2024-12-18T13-15-44Z
@@ -102,6 +128,7 @@ services:
 
 volumes:
   postgres-data:
+  redis-data:
   minio-data:
 
 networks:
