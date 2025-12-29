@@ -1,15 +1,17 @@
-name: TDX Measure Recording Oracle
+name: TDX Build and Measure Oracles
 
 on:
   push:
     branches: [main]
     paths:
       - 'recording-oracle/**'
+      - 'reputation-oracle/**'
       - '.github/workflows/tdx-measure-recording-oracle.yml'
   pull_request:
     branches: [main]
     paths:
       - 'recording-oracle/**'
+      - 'reputation-oracle/**'
       - '.github/workflows/tdx-measure-recording-oracle.yml'
   workflow_dispatch:
     inputs:
@@ -26,24 +28,23 @@ env:
   VM_NAME: recording-oracle-tdx
   VM_SSH_PORT: 2222
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/recording-oracle
 
 jobs:
-  build-image:
+  build-measure-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
       attestations: write
-    outputs:
-      image_sha: ${{ steps.image-tag.outputs.image_sha }}
-      image_digest: ${{ steps.build.outputs.digest }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ============================================
+      # STEP 1: Build Recording Oracle Image
+      # ============================================
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -54,55 +55,42 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compute image tag
-        id: image-tag
+      - name: Compute image tags
+        id: image-tags
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_SHA="ghcr.io/${REPO_LOWER}/recording-oracle:sha-${{ github.sha }}"
-          echo "image_sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
           echo "repo_lower=$REPO_LOWER" >> $GITHUB_OUTPUT
-          echo "Image will be tagged as: $IMAGE_SHA"
 
-      - name: Determine Docker tags
-        id: docker-tags
-        run: |
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          TAGS="ghcr.io/${REPO_LOWER}/recording-oracle:sha-${{ github.sha }}"
+          # Recording Oracle tags
+          RO_IMAGE="ghcr.io/${REPO_LOWER}/recording-oracle:sha-${{ github.sha }}"
+          RO_TAGS="$RO_IMAGE"
           if [ "${{ github.event_name }}" = "push" ]; then
-            TAGS="$TAGS,ghcr.io/${REPO_LOWER}/recording-oracle:latest"
+            RO_TAGS="$RO_TAGS,ghcr.io/${REPO_LOWER}/recording-oracle:latest"
           fi
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "ro_image=$RO_IMAGE" >> $GITHUB_OUTPUT
+          echo "ro_tags=$RO_TAGS" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
-        id: build
+      - name: Build and push Recording Oracle image
+        id: build-ro
         uses: docker/build-push-action@v5
         with:
           context: ./recording-oracle
           file: ./recording-oracle/Dockerfile
           push: true
-          tags: ${{ steps.docker-tags.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.image-tags.outputs.ro_tags }}
+          cache-from: type=gha,scope=recording-oracle
+          cache-to: type=gha,mode=max,scope=recording-oracle
 
-      - name: Attest Docker image provenance
+      - name: Attest Recording Oracle image
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ghcr.io/${{ steps.image-tag.outputs.repo_lower }}/recording-oracle
-          subject-digest: ${{ steps.build.outputs.digest }}
+          subject-name: ghcr.io/${{ steps.image-tags.outputs.repo_lower }}/recording-oracle
+          subject-digest: ${{ steps.build-ro.outputs.digest }}
           push-to-registry: true
 
-  measure-tdx:
-    runs-on: ubuntu-latest
-    needs: build-image
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      # ============================================
+      # STEP 2: Deploy to TDX and Get Measurements
+      # ============================================
       - name: Install Ansible and dependencies
         run: |
           pip install ansible
@@ -110,18 +98,11 @@ jobs:
 
       - name: Setup SSH key
         run: |
-          # Create SSH directory and key file
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-
-          # Write key to file (more reliable than stdin pipe)
           echo "${{ secrets.TDX_HOST_SSH_KEY }}" > ~/.ssh/tdx_host_key
           chmod 600 ~/.ssh/tdx_host_key
-
-          # Add host to known_hosts
           ssh-keyscan -H ${{ env.TDX_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          # Configure SSH to use this key for the TDX host
           cat >> ~/.ssh/config << EOF
           Host ${{ env.TDX_HOST }}
             IdentityFile ~/.ssh/tdx_host_key
@@ -141,32 +122,26 @@ jobs:
                 ansible_ssh_private_key_file: ~/.ssh/tdx_host_key
                 ansible_python_interpreter: /usr/bin/python3
           EOF
-          cat /tmp/inventory.yml
 
       - name: Build TDX guest image (if needed)
         working-directory: ./recording-oracle/ansible
         timeout-minutes: 30
         run: |
-          echo "Ensuring TDX guest image is built with canonical/tdx setup..."
           ansible-playbook -i /tmp/inventory.yml playbooks/build-tdx-image.yml -v
-          echo "TDX guest image ready"
 
       - name: Generate ephemeral VM credentials
         id: vm-creds
         run: |
-          # Generate random password - only exists during this workflow run
           VM_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
           echo "::add-mask::$VM_PASSWORD"
           echo "password=$VM_PASSWORD" >> $GITHUB_OUTPUT
 
-      - name: Deploy TDX VM with Ansible
+      - name: Deploy TDX VM
         working-directory: ./recording-oracle/ansible
         timeout-minutes: 15
         run: |
-          echo "Deploying fresh TDX VM with Ansible..."
-          echo "Using image: ${{ needs.build-image.outputs.image_sha }}"
           ansible-playbook -i /tmp/inventory.yml playbooks/deploy.yml \
-            -e "recording_oracle_image=${{ needs.build-image.outputs.image_sha }}" \
+            -e "recording_oracle_image=${{ steps.image-tags.outputs.ro_image }}" \
             -e "vm_name=${{ env.VM_NAME }}" \
             -e "vm_ssh_port=${{ env.VM_SSH_PORT }}" \
             -e "recording_oracle_port=${{ env.RECORDING_ORACLE_PORT }}" \
@@ -174,8 +149,8 @@ jobs:
             -e "vm_ready_timeout=300" \
             -v
 
-      - name: Get TDX measurements with Ansible
-        id: get-measurements
+      - name: Get TDX measurements
+        id: measurements
         working-directory: ./recording-oracle/ansible
         timeout-minutes: 10
         run: |
@@ -183,8 +158,7 @@ jobs:
             -e "recording_oracle_port=${{ env.RECORDING_ORACLE_PORT }}" \
             -e "measurements_output_file=${{ github.workspace }}/measurements.json" \
             -v
-          
-          # Parse measurements for GitHub outputs
+
           if [ ! -f "${{ github.workspace }}/measurements.json" ]; then
             echo "::error::measurements.json not found"
             exit 1
@@ -193,7 +167,6 @@ jobs:
           echo "=== TDX Measurements ==="
           cat "${{ github.workspace }}/measurements.json"
 
-          # Validate JSON and extract measurements
           if ! jq empty "${{ github.workspace }}/measurements.json" 2>/dev/null; then
             echo "::error::measurements.json is not valid JSON"
             exit 1
@@ -205,9 +178,8 @@ jobs:
           RTMR2=$(jq -r '.rtmr2 // empty' "${{ github.workspace }}/measurements.json")
           RTMR3=$(jq -r '.rtmr3 // empty' "${{ github.workspace }}/measurements.json")
 
-          # Validate we got measurements
           if [ -z "$MRTD" ]; then
-            echo "::error::MRTD measurement is empty - TDX quote generation may have failed"
+            echo "::error::MRTD measurement is empty"
             exit 1
           fi
 
@@ -217,7 +189,7 @@ jobs:
           echo "rtmr2=$RTMR2" >> $GITHUB_OUTPUT
           echo "rtmr3=$RTMR3" >> $GITHUB_OUTPUT
 
-      - name: Check TDX status with Ansible
+      - name: Check TDX status
         working-directory: ./recording-oracle/ansible
         timeout-minutes: 5
         run: |
@@ -226,78 +198,144 @@ jobs:
             -e "recording_oracle_port=${{ env.RECORDING_ORACLE_PORT }}" \
             -v
 
-      - name: Enrich measurements manifest
+      - name: Enrich measurements
         run: |
-          # Add build metadata to measurements
-          if [ -f measurements.json ]; then
-            jq --arg sha "${{ github.sha }}" \
-               --arg ref "${{ github.ref }}" \
-               --arg run_id "${{ github.run_id }}" \
-               --arg run_number "${{ github.run_number }}" \
-               --arg image "${{ needs.build-image.outputs.image_sha }}" \
-               '. + {
-                 git_sha: $sha,
-                 git_ref: $ref,
-                 workflow_run_id: $run_id,
-                 workflow_run_number: $run_number,
-                 docker_image: $image
-               }' measurements.json > measurements_enriched.json
-            mv measurements_enriched.json measurements.json
-            echo "=== Enriched Measurements ==="
-            cat measurements.json
+          jq --arg sha "${{ github.sha }}" \
+             --arg ref "${{ github.ref }}" \
+             --arg run_id "${{ github.run_id }}" \
+             --arg image "${{ steps.image-tags.outputs.ro_image }}" \
+             '. + {
+               git_sha: $sha,
+               git_ref: $ref,
+               workflow_run_id: $run_id,
+               docker_image: $image
+             }' measurements.json > measurements_enriched.json
+          mv measurements_enriched.json measurements.json
+
+      # ============================================
+      # STEP 3: Build Reputation Oracle with Measurements
+      # ============================================
+      - name: Compute Reputation Oracle tags
+        id: rep-tags
+        run: |
+          REPO_LOWER="${{ steps.image-tags.outputs.repo_lower }}"
+          REP_IMAGE="ghcr.io/${REPO_LOWER}/reputation-oracle:sha-${{ github.sha }}"
+          REP_TAGS="$REP_IMAGE"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            REP_TAGS="$REP_TAGS,ghcr.io/${REPO_LOWER}/reputation-oracle:latest"
+          fi
+          echo "rep_image=$REP_IMAGE" >> $GITHUB_OUTPUT
+          echo "rep_tags=$REP_TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Reputation Oracle image
+        id: build-rep
+        uses: docker/build-push-action@v5
+        with:
+          context: ./reputation-oracle
+          file: ./reputation-oracle/Dockerfile
+          push: true
+          tags: ${{ steps.rep-tags.outputs.rep_tags }}
+          build-args: |
+            TDX_EXPECTED_MRTD=${{ steps.measurements.outputs.mrtd }}
+            TDX_EXPECTED_RTMR0=${{ steps.measurements.outputs.rtmr0 }}
+            TDX_EXPECTED_RTMR1=${{ steps.measurements.outputs.rtmr1 }}
+            TDX_EXPECTED_RTMR2=${{ steps.measurements.outputs.rtmr2 }}
+            TDX_EXPECTED_RTMR3=${{ steps.measurements.outputs.rtmr3 }}
+            TDX_BUILD_GIT_SHA=${{ github.sha }}
+            TDX_BUILD_IMAGE_DIGEST=${{ steps.build-ro.outputs.digest }}
+            TDX_BUILD_TIMESTAMP=${{ github.event.head_commit.timestamp }}
+          cache-from: type=gha,scope=reputation-oracle
+          cache-to: type=gha,mode=max,scope=reputation-oracle
+
+      - name: Attest Reputation Oracle image
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ steps.image-tags.outputs.repo_lower }}/reputation-oracle
+          subject-digest: ${{ steps.build-rep.outputs.digest }}
+          push-to-registry: true
+
+      # ============================================
+      # STEP 4: Verify Recording Oracle with Reputation Oracle
+      # ============================================
+      - name: Run Reputation Oracle container
+        run: |
+          docker run -d --name reputation-oracle -p 3000:3000 \
+            ${{ steps.rep-tags.outputs.rep_image }}
+
+          # Wait for it to be ready
+          echo "Waiting for Reputation Oracle to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/tdx-verification/expected-measurements > /dev/null 2>&1; then
+              echo "Reputation Oracle is ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Verify baked-in measurements
+        run: |
+          echo "=== Checking baked-in measurements ==="
+          curl -s http://localhost:3000/tdx-verification/expected-measurements | jq .
+
+          echo "=== Checking build info ==="
+          curl -s http://localhost:3000/tdx-verification/build-info | jq .
+
+      - name: Get fresh TDX quote from Recording Oracle
+        id: fresh-quote
+        run: |
+          echo "=== Getting fresh TDX quote from Recording Oracle ==="
+
+          # Generate a random challenge
+          CHALLENGE=$(openssl rand -hex 32)
+          echo "Challenge: $CHALLENGE"
+
+          # Get quote from Recording Oracle via TDX host
+          QUOTE_RESPONSE=$(ssh -i ~/.ssh/tdx_host_key -o StrictHostKeyChecking=accept-new \
+            ${{ env.TDX_HOST_USER }}@${{ env.TDX_HOST }} \
+            "curl -s -X POST http://localhost:${{ env.RECORDING_ORACLE_PORT }}/attestation/quote \
+              -H 'Content-Type: application/json' \
+              -d '{\"report_data\": \"$CHALLENGE\"}'")
+
+          echo "Quote response received"
+          echo "$QUOTE_RESPONSE" | jq .
+
+          # Extract the base64 quote
+          QUOTE=$(echo "$QUOTE_RESPONSE" | jq -r '.quote')
+          echo "quote=$QUOTE" >> $GITHUB_OUTPUT
+
+      - name: Verify quote with Reputation Oracle
+        id: verification
+        run: |
+          echo "=== Verifying TDX quote with Reputation Oracle ==="
+
+          RESULT=$(curl -s -X POST http://localhost:3000/tdx-verification/verify-quote \
+            -H 'Content-Type: application/json' \
+            -d '{"quote": "${{ steps.fresh-quote.outputs.quote }}"}')
+
+          echo "$RESULT" | jq .
+
+          # Check if valid
+          VALID=$(echo "$RESULT" | jq -r '.valid')
+          if [ "$VALID" = "true" ]; then
+            echo "✅ TDX quote verification PASSED"
+            echo "verification_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ TDX quote verification FAILED"
+            echo "Errors: $(echo "$RESULT" | jq -r '.errors[]')"
+            echo "verification_passed=false" >> $GITHUB_OUTPUT
+            exit 1
           fi
 
-      - name: Create reproduction instructions
+      - name: Stop Reputation Oracle container
+        if: always()
         run: |
-          cat > REPRODUCE.md << 'EOF'
-          # Reproducing TDX Measurements
-          
-          ## Prerequisites
-          - Access to TDX-enabled hardware
-          - Docker installed
-          - Ansible installed
-          
-          ## Steps
-          
-          1. Pull the exact Docker image:
-          ```bash
-          docker pull ${{ needs.build-image.outputs.image_sha }}
-          ```
-          
-          2. Build TDX guest image (first time only):
-          ```bash
-          cd recording-oracle/ansible
-          ansible-playbook -i your-inventory.yml playbooks/build-tdx-image.yml
-          ```
+          docker stop reputation-oracle || true
+          docker rm reputation-oracle || true
 
-          3. Deploy on TDX hardware using Ansible:
-          ```bash
-          ansible-playbook -i your-inventory.yml playbooks/deploy.yml \
-            -e "recording_oracle_image=${{ needs.build-image.outputs.image_sha }}"
-          ```
-
-          4. Get measurements:
-          ```bash
-          ansible-playbook -i your-inventory.yml playbooks/measure.yml
-          ```
-          
-          ## Expected Measurements
-          
-          | Register | Value |
-          |----------|-------|
-          | MRTD | `${{ steps.get-measurements.outputs.mrtd }}` |
-          | RTMR[0] | `${{ steps.get-measurements.outputs.rtmr0 }}` |
-          | RTMR[1] | `${{ steps.get-measurements.outputs.rtmr1 }}` |
-          | RTMR[2] | `${{ steps.get-measurements.outputs.rtmr2 }}` |
-          | RTMR[3] | `${{ steps.get-measurements.outputs.rtmr3 }}` |
-          
-          ## Build Info
-          - Git SHA: `${{ github.sha }}`
-          - Docker Image: `${{ needs.build-image.outputs.image_sha }}`
-          - Workflow Run: `${{ github.run_id }}`
-          EOF
-
-      - name: Attest measurements provenance
+      # ============================================
+      # STEP 5: Create Release
+      # ============================================
+      - name: Attest measurements
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: measurements.json
@@ -306,66 +344,45 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tdx-measurements
-          path: |
-            measurements.json
-            REPRODUCE.md
+          path: measurements.json
           retention-days: 90
 
-      - name: Create release with measurements
+      - name: Create release
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true')
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: recording-oracle-${{ github.sha }}
-          name: Recording Oracle TDX Build - ${{ github.sha }}
+          tag_name: tdx-build-${{ github.sha }}
+          name: TDX Build - ${{ github.sha }}
           body: |
-            ## TDX Recording Oracle Measurements
+            ## TDX Oracle Build
 
-            Measurements from recording oracle running on **real TDX hardware**.
+            Both oracles built and measured on **real TDX hardware**.
 
-            ### Build Info
-            | Field | Value |
-            |-------|-------|
-            | Git SHA | `${{ github.sha }}` |
-            | Docker Image | `${{ needs.build-image.outputs.image_sha }}` |
+            ### Docker Images
+            | Oracle | Image |
+            |--------|-------|
+            | Recording Oracle | `${{ steps.image-tags.outputs.ro_image }}` |
+            | Reputation Oracle | `${{ steps.rep-tags.outputs.rep_image }}` |
 
-            ### TDX Measurements
+            ### TDX Measurements (baked into Reputation Oracle)
             | Register | Value |
             |----------|-------|
-            | MRTD | `${{ steps.get-measurements.outputs.mrtd }}` |
-            | RTMR[0] | `${{ steps.get-measurements.outputs.rtmr0 }}` |
-            | RTMR[1] | `${{ steps.get-measurements.outputs.rtmr1 }}` |
-            | RTMR[2] | `${{ steps.get-measurements.outputs.rtmr2 }}` |
-            | RTMR[3] | `${{ steps.get-measurements.outputs.rtmr3 }}` |
+            | MRTD | `${{ steps.measurements.outputs.mrtd }}` |
+            | RTMR[0] | `${{ steps.measurements.outputs.rtmr0 }}` |
+            | RTMR[1] | `${{ steps.measurements.outputs.rtmr1 }}` |
+            | RTMR[2] | `${{ steps.measurements.outputs.rtmr2 }}` |
+            | RTMR[3] | `${{ steps.measurements.outputs.rtmr3 }}` |
 
-            ### Attestation Verification
-
-            Both the Docker image and measurements.json are signed with GitHub Artifact Attestations.
-
-            Verify the Docker image:
+            ### Verify Attestations
             ```bash
-            gh attestation verify oci://ghcr.io/${{ github.repository }}/recording-oracle:sha-${{ github.sha }} --owner ${{ github.repository_owner }}
+            gh attestation verify oci://${{ steps.image-tags.outputs.ro_image }} --owner ${{ github.repository_owner }}
+            gh attestation verify oci://${{ steps.rep-tags.outputs.rep_image }} --owner ${{ github.repository_owner }}
             ```
-
-            Verify measurements.json:
-            ```bash
-            gh attestation verify measurements.json --owner ${{ github.repository_owner }}
-            ```
-
-            ### Running This Exact Build
-
-            ```bash
-            docker pull ${{ needs.build-image.outputs.image_sha }}
-            docker run -p 12000:12000 ${{ needs.build-image.outputs.image_sha }}
-            ```
-          files: |
-            measurements.json
-            REPRODUCE.md
+          files: measurements.json
           draft: false
           prerelease: false
 
-      - name: Cleanup sensitive files
+      - name: Cleanup
         if: always()
         run: |
-          rm -f ~/.ssh/tdx_host_key
-          rm -f ~/.ssh/config
-          rm -f /tmp/inventory.yml
+          rm -f ~/.ssh/tdx_host_key ~/.ssh/config /tmp/inventory.yml
