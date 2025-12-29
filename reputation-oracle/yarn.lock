@@ -2613,7 +2613,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^24.10.1":
+"@types/node@npm:*":
   version: 24.10.2
   resolution: "@types/node@npm:24.10.2"
   dependencies:
@@ -2628,6 +2628,15 @@ __metadata:
   dependencies:
     undici-types: "npm:~6.19.2"
   checksum: 10c0/cf11f74f1a26053ec58066616e3a8685b6bcd7259bc569738b8f752009f9f0f7f85a1b2d24908e5b0f752482d1e8b6babdf1fbb25758711ec7bb9500bfcd6e60
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^25.0.3":
+  version: 25.0.3
+  resolution: "@types/node@npm:25.0.3"
+  dependencies:
+    undici-types: "npm:~7.16.0"
+  checksum: 10c0/b7568f0d765d9469621615e2bb257c7fd1953d95e9acbdb58dffb6627a2c4150d405a4600aa1ad8a40182a94fe5f903cafd3c0a2f5132814debd0e3bfd61f835
   languageName: node
   linkType: hard
 
@@ -8104,7 +8113,7 @@ __metadata:
     "@nestjs/testing": "npm:^11.1.9"
     "@types/jest": "npm:^30.0.0"
     "@types/lodash": "npm:^4"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.0.3"
     decimal.js: "npm:^10.6.0"
     eslint: "npm:^9.39.1"
     eslint-config-prettier: "npm:^10.0.1"
