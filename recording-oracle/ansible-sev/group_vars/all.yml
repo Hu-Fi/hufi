@@ -1,0 +1,44 @@
+---
+# Global variables for SEV Recording Oracle deployment
+
+# VM Configuration
+vm_name: recording-oracle-sev
+vm_memory_mb: 4096
+vm_cpus: 2
+vm_disk_size_gb: 20
+
+# SEV-SNP Configuration
+# Policy bits for SEV-SNP:
+# Bit 0: SMT allowed
+# Bit 1: Reserved (must be 1)
+# Bit 2: Migrate MA (migration agent)
+# Bit 3: Debug allowed
+# Bit 16: Single socket required
+# Default: 0x30000 (SMT allowed, basic policy)
+sev_policy: "0x30000"
+sev_enabled: true
+
+# Network Configuration
+vm_ssh_port: 2222
+
+# Guest Configuration
+guest_user: oracle
+guest_password: oracle123
+guest_ssh_authorized_key: ""
+
+# Recording Oracle Configuration
+recording_oracle_image: "ghcr.io/posix4e/hufi/recording-oracle:latest"
+recording_oracle_port: 12000
+
+# Paths
+libvirt_images_dir: /var/lib/libvirt/images
+cloud_init_dir: /tmp/sev-cloud-init
+
+# SEV attestation proxy port (inside VM)
+sev_proxy_port: 8081
+# SEV attestation proxy port (host-side, forwarded)
+sev_proxy_host_port: 8082
+
+# Timeouts
+vm_ready_timeout: 300
+ssh_connect_timeout: 10

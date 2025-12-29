@@ -1,0 +1,51 @@
+---
+# Destroy existing TDX VM
+
+- name: Check if VM exists
+  ansible.builtin.command:
+    cmd: virsh domstate {{ vm_name }}
+  register: vm_state
+  failed_when: false
+  changed_when: false
+
+- name: Destroy running VM
+  ansible.builtin.command:
+    cmd: virsh destroy {{ vm_name }}
+  when: vm_state.rc == 0 and 'running' in vm_state.stdout
+  failed_when: false
+  changed_when: true
+
+- name: Undefine VM with NVRAM
+  ansible.builtin.command:
+    cmd: virsh undefine {{ vm_name }} --nvram
+  when: vm_state.rc == 0
+  failed_when: false
+  changed_when: true
+
+- name: Remove VM disk
+  ansible.builtin.file:
+    path: "{{ vm_disk_path }}"
+    state: absent
+  failed_when: false
+
+- name: Remove cloud-init ISO
+  ansible.builtin.file:
+    path: "{{ cloud_init_iso_path }}"
+    state: absent
+  failed_when: false
+
+- name: Remove VM XML
+  ansible.builtin.file:
+    path: "{{ vm_xml_path }}"
+    state: absent
+  failed_when: false
+
+- name: Show remaining VMs
+  ansible.builtin.command:
+    cmd: virsh list --all
+  register: vm_list
+  changed_when: false
+
+- name: Display VM list
+  ansible.builtin.debug:
+    var: vm_list.stdout_lines

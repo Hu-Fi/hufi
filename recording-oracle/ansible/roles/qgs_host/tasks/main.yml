@@ -1,0 +1,186 @@
+---
+# TDX Host Setup using Canonical's TDX tools
+# Installs TDX kernel, QGS, and attestation services
+
+# Check if TDX is already set up
+- name: Check if TDX is already initialized
+  ansible.builtin.shell:
+    cmd: 'dmesg | grep -q "tdx: module initialized" && echo "yes" || echo "no"'
+  register: tdx_initialized
+  changed_when: false
+  become: true
+
+- name: Check if Canonical TDX setup was run
+  ansible.builtin.stat:
+    path: /opt/canonical-tdx/setup-tdx-host.sh
+  register: canonical_tdx_script
+
+# Clone and run Canonical TDX setup
+- name: Clone Canonical TDX repository
+  ansible.builtin.git:
+    repo: https://github.com/canonical/tdx.git
+    dest: /opt/canonical-tdx
+    version: main
+    force: true
+  become: true
+  when: not canonical_tdx_script.stat.exists
+
+- name: Configure TDX setup for attestation
+  ansible.builtin.lineinfile:
+    path: /opt/canonical-tdx/setup-tdx-config
+    regexp: '^TDX_SETUP_ATTESTATION='
+    line: 'TDX_SETUP_ATTESTATION=1'
+  become: true
+  when: tdx_initialized.stdout == "no"
+
+- name: Run Canonical TDX host setup script
+  ansible.builtin.shell:
+    cmd: DEBIAN_FRONTEND=noninteractive ./setup-tdx-host.sh
+    chdir: /opt/canonical-tdx
+  become: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  register: tdx_setup
+  when: tdx_initialized.stdout == "no"
+
+- name: Notify about TDX reboot requirement
+  ansible.builtin.debug:
+    msg: "TDX host setup complete. A REBOOT is required to enable TDX. Run: sudo reboot"
+  when: tdx_initialized.stdout == "no" and tdx_setup is changed
+
+# Docker installation
+- name: Install Docker
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+    state: present
+    update_cache: true
+  become: true
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  become: true
+
+# libvirt installation for TDX VMs
+- name: Install libvirt and QEMU
+  ansible.builtin.apt:
+    name:
+      - qemu-system-x86
+      - libvirt-daemon-system
+      - libvirt-clients
+      - virtinst
+      - ovmf
+    state: present
+  become: true
+
+- name: Enable and start libvirtd
+  ansible.builtin.systemd:
+    name: libvirtd
+    enabled: true
+    state: started
+  become: true
+
+# QGS uses VSOCK port 4050 by default (package default config)
+# No configuration needed - just enable and start the daemon
+- name: Enable and start QGS daemon
+  ansible.builtin.systemd:
+    name: qgsd
+    enabled: true
+    state: started
+  become: true
+  when: tdx_initialized.stdout == "yes"
+
+- name: Verify QGS daemon is running
+  ansible.builtin.systemd:
+    name: qgsd
+  register: qgsd_status
+  failed_when: qgsd_status.status.ActiveState != "active"
+  when: tdx_initialized.stdout == "yes"
+
+# PCCS (Provisioning Certificate Caching Service) configuration
+- name: Check if PCCS config exists
+  ansible.builtin.stat:
+    path: "{{ pccs_config_path }}"
+  register: pccs_config_stat
+
+- name: Check if INTEL_PCCS_API_KEY is provided
+  ansible.builtin.fail:
+    msg: |
+
+      ============================================================
+      ERROR: Intel PCCS API Key not configured!
+      ============================================================
+
+      TDX attestation requires an Intel API key to fetch platform
+      certificates from Intel's Provisioning Certificate Service.
+
+      To fix this:
+      1. Register at: https://api.portal.trustedservices.intel.com/
+      2. Subscribe to "Intel® Software Guard Extensions Provisioning Certification Service"
+      3. Get your API key from the portal
+      4. Set the environment variable before running ansible:
+
+         export INTEL_PCCS_API_KEY="your-api-key-here"
+         ansible-playbook playbooks/setup-host.yml
+
+      For CI/GitHub Actions, add INTEL_PCCS_API_KEY as a repository secret.
+      ============================================================
+  when:
+    - pccs_config_stat.stat.exists
+    - pccs_api_key == ""
+
+- name: Configure PCCS with Intel API key
+  ansible.builtin.replace:
+    path: "{{ pccs_config_path }}"
+    regexp: '"ApiKey"\s*:\s*"[^"]*"'
+    replace: '"ApiKey": "{{ pccs_api_key }}"'
+  become: true
+  notify: Restart PCCS
+  when:
+    - pccs_config_stat.stat.exists
+    - pccs_api_key != ""
+
+- name: Configure PCCS UserTokenHash for PCKIDRetrievalTool
+  ansible.builtin.replace:
+    path: "{{ pccs_config_path }}"
+    regexp: '"UserTokenHash"\s*:\s*"[^"]*"'
+    replace: '"UserTokenHash": "{{ pccs_user_token_hash }}"'
+  become: true
+  notify: Restart PCCS
+  when:
+    - pccs_config_stat.stat.exists
+
+- name: Enable and start PCCS
+  ansible.builtin.systemd:
+    name: pccs
+    enabled: true
+    state: started
+  become: true
+  when: pccs_config_stat.stat.exists
+
+# Platform Registration with Intel
+- name: Check if PCKIDRetrievalTool exists
+  ansible.builtin.stat:
+    path: /usr/bin/PCKIDRetrievalTool
+  register: pck_tool_stat
+
+- name: Register platform with local PCCS
+  ansible.builtin.command:
+    cmd: PCKIDRetrievalTool -url https://localhost:8081 -use_secure_cert false -user_token {{ pccs_user_token }}
+  become: true
+  register: pck_registration
+  changed_when: "'successfully' in pck_registration.stdout"
+  failed_when: false
+  when:
+    - pck_tool_stat.stat.exists
+    - pccs_api_key != ""
+    - tdx_initialized.stdout == "yes"
+
+- name: Display platform registration result
+  ansible.builtin.debug:
+    msg: "{{ pck_registration.stdout | default('Platform registration skipped') }}"
+  when: pck_registration is defined

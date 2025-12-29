@@ -1,0 +1,21 @@
+---
+# Destroy SEV Recording Oracle VM
+# Usage: ansible-playbook playbooks/destroy.yml
+
+- name: Destroy SEV Recording Oracle VM
+  hosts: sev_host
+  gather_facts: no
+  become: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars:
+        file: ../roles/sev_vm/vars/main.yml
+
+    - name: Destroy VM
+      ansible.builtin.include_role:
+        name: sev_vm
+        tasks_from: destroy.yml

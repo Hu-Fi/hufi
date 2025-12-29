@@ -1,0 +1,46 @@
+---
+# Wait for TDX VM to be ready
+
+- name: Wait for VM to be in running state
+  ansible.builtin.command:
+    cmd: virsh domstate {{ vm_name }}
+  register: vm_state
+  until: vm_state.stdout | trim == 'running'
+  retries: 30
+  delay: 5
+  changed_when: false
+
+- name: Wait for VM to boot (initial delay)
+  ansible.builtin.pause:
+    seconds: 60
+  when: true
+
+- name: Check if recording oracle is running
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ recording_oracle_port }}/"
+    method: GET
+    timeout: 10
+    follow_redirects: none
+    status_code: [200, 301, 302, 308]
+  register: oracle_check
+  until: oracle_check.status in [200, 301, 302, 308]
+  retries: 60
+  delay: 5
+  failed_when: false
+
+- name: Display oracle status
+  ansible.builtin.debug:
+    msg: "Recording oracle: {{ 'Running' if oracle_check.status | default(0) in [200, 301, 302, 308] else 'Not ready yet' }}"
+
+- name: Check TDX attestation proxy status
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ tdx_proxy_port | default(8082) }}/status"
+    method: GET
+    timeout: 10
+  register: tdx_status
+  failed_when: false
+
+- name: Display TDX status
+  ansible.builtin.debug:
+    msg: "TDX Proxy: {{ tdx_status.json | default({'available': 'unknown'}) }}"
+  when: tdx_status.status | default(0) == 200

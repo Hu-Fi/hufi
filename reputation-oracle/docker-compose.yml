@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reputation
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set myminio http://minio:9000 minioadmin minioadmin;
+        mc mb --ignore-existing myminio/reputations;
+        mc anonymous set public myminio/reputations;
+      "
+
+  reputation-oracle:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: reputation
+      # S3/Minio
+      S3_ENDPOINT: minio
+      S3_PORT: 9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: reputations
+      S3_USE_SSL: "false"
+      # Web3 (dummy values for local testing)
+      WEB3_PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
+      RPC_URL_POLYGON_AMOY: "https://rpc-amoy.polygon.technology"
+      # Subgraph
+      SUBGRAPH_API_KEY: "${SUBGRAPH_API_KEY:-}"
+    command: bash -c "npm install --legacy-peer-deps && npm install @nestjs/platform-express --legacy-peer-deps && npx ts-node -r tsconfig-paths/register src/server.ts"
+
+volumes:
+  node_modules:

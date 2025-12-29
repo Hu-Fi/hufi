@@ -1,0 +1,32 @@
+---
+# Global variables for TDX Recording Oracle deployment
+
+# VM Configuration
+vm_name: recording-oracle-tdx
+vm_memory_mb: 4096
+vm_cpus: 2
+vm_disk_size_gb: 20
+
+# TDX Configuration
+tdx_policy: "0x10000000"
+
+# Network Configuration
+vm_ssh_port: 2222
+
+# Guest Configuration
+guest_user: oracle
+# guest_password: Set via -e flag or generate at runtime for security
+guest_password: ""
+guest_ssh_authorized_key: ""
+
+# Recording Oracle Configuration
+recording_oracle_image: "ghcr.io/posix4e/hufi/recording-oracle:latest"
+recording_oracle_port: 12000
+
+# Paths
+libvirt_images_dir: /var/lib/libvirt/images
+cloud_init_dir: /tmp/tdx-cloud-init
+
+# Timeouts
+vm_ready_timeout: 300
+ssh_connect_timeout: 10

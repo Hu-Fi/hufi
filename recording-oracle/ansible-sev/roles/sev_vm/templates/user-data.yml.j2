@@ -1,0 +1,423 @@
+#cloud-config
+# Cloud-init configuration for SEV Recording Oracle VM
+
+hostname: {{ vm_name }}
+
+ssh_pwauth: true
+
+users:
+  - name: {{ guest_user }}
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    lock_passwd: false
+    plain_text_passwd: {{ guest_password }}
+{% if guest_ssh_authorized_key %}
+    ssh_authorized_keys:
+      - {{ guest_ssh_authorized_key }}
+{% endif %}
+
+# Install Docker and docker-compose
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+
+write_files:
+  - path: /opt/recording-oracle/sev-attestation-proxy.py
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env python3
+      """SEV Attestation Proxy - provides HTTP API for SEV-SNP attestation report generation."""
+      import http.server
+      import json
+      import os
+      import base64
+      import struct
+      import fcntl
+
+      # SEV-SNP device path
+      SEV_GUEST_DEVICE = os.environ.get('SEV_DEVICE_PATH', '/dev/sev-guest')
+      # Alternative: configfs TSM interface (if available)
+      TSM_REPORT_PATH = '/sys/kernel/config/tsm/report'
+      PORT = int(os.environ.get('SEV_PROXY_PORT', '8081'))
+
+      # SNP_GET_REPORT ioctl number
+      # Defined in linux/sev-guest.h
+      # _IOWR('S', 0x0, struct snp_guest_request_ioctl)
+      SNP_GET_REPORT = 0xc0205300  # ioctl number for SNP_GET_REPORT
+
+      def generate_sev_report_via_tsm(report_data=None):
+          """Generate SEV-SNP report using configfs TSM interface (kernel 6.7+)."""
+          import uuid
+
+          if report_data is None:
+              report_data = bytes(64)
+
+          report_name = f'report_{uuid.uuid4().hex[:8]}'
+          report_path = os.path.join(TSM_REPORT_PATH, report_name)
+
+          try:
+              os.makedirs(report_path, exist_ok=True)
+
+              # Write report data (inblob)
+              with open(os.path.join(report_path, 'inblob'), 'wb') as f:
+                  f.write(report_data[:64].ljust(64, b'\x00'))
+
+              # Read the attestation report (outblob)
+              with open(os.path.join(report_path, 'outblob'), 'rb') as f:
+                  report = f.read()
+
+              measurements = extract_sev_measurements(report)
+
+              return {
+                  'report': base64.b64encode(report).decode(),
+                  'report_size': len(report),
+                  'report_data': base64.b64encode(report_data).decode(),
+                  'measurements': measurements,
+                  'method': 'tsm'
+              }
+          finally:
+              try:
+                  os.rmdir(report_path)
+              except:
+                  pass
+
+      def generate_sev_report_via_device(report_data=None):
+          """Generate SEV-SNP report using /dev/sev-guest device."""
+          if report_data is None:
+              report_data = bytes(64)
+
+          # Ensure report_data is exactly 64 bytes
+          report_data = report_data[:64].ljust(64, b'\x00')
+
+          # SNP attestation report request structure
+          # struct snp_report_req {
+          #     __u8 user_data[64];  // User-provided data to include in report
+          #     __u32 vmpl;          // VMPL level (0-3)
+          #     __u8 rsvd[28];       // Reserved
+          # };
+          request = report_data + struct.pack('<I', 0) + bytes(28)  # vmpl=0
+
+          # Response buffer (attestation report is ~1184 bytes for SEV-SNP)
+          response = bytearray(4096)
+
+          try:
+              with open(SEV_GUEST_DEVICE, 'rb+', buffering=0) as dev:
+                  # For SEV-SNP, we need to use ioctl to get the report
+                  # The actual implementation depends on the kernel interface
+                  # This is a simplified version - real implementation needs proper ioctl
+
+                  # Try reading attestation report
+                  # The sev-guest driver provides the report via ioctl
+                  import array
+                  buf = array.array('B', request + bytes(4096))
+
+                  try:
+                      fcntl.ioctl(dev.fileno(), SNP_GET_REPORT, buf)
+                      report = bytes(buf[96:96+1184])  # Report starts after request header
+                  except OSError as e:
+                      # Fall back to alternative method or return error
+                      raise RuntimeError(f"SEV ioctl failed: {e}")
+
+              measurements = extract_sev_measurements(report)
+
+              return {
+                  'report': base64.b64encode(report).decode(),
+                  'report_size': len(report),
+                  'report_data': base64.b64encode(report_data).decode(),
+                  'measurements': measurements,
+                  'method': 'device'
+              }
+          except Exception as e:
+              raise RuntimeError(f"Failed to generate SEV report: {e}")
+
+      def extract_sev_measurements(report):
+          """Extract measurements from SEV-SNP attestation report.
+
+          SEV-SNP Report Structure (1184 bytes):
+          - Version (4 bytes) at offset 0
+          - Guest SVN (4 bytes) at offset 4
+          - Policy (8 bytes) at offset 8
+          - Family ID (16 bytes) at offset 16
+          - Image ID (16 bytes) at offset 32
+          - VMPL (4 bytes) at offset 48
+          - Signature Algorithm (4 bytes) at offset 52
+          - Platform Version (8 bytes) at offset 56
+          - Platform Info (8 bytes) at offset 64
+          - Author Key Enable (4 bytes) at offset 72
+          - Reserved (4 bytes) at offset 76
+          - Report Data (64 bytes) at offset 80
+          - Measurement (48 bytes) at offset 144 - LAUNCH_MEASUREMENT
+          - Host Data (32 bytes) at offset 192
+          - ID Key Digest (48 bytes) at offset 224
+          - Author Key Digest (48 bytes) at offset 272
+          - Report ID (32 bytes) at offset 320
+          - Report ID MA (32 bytes) at offset 352
+          - Reported TCB (8 bytes) at offset 384
+          - Reserved (24 bytes) at offset 392
+          - Chip ID (64 bytes) at offset 416
+          - ... more fields including signature
+          """
+          try:
+              if len(report) < 480:
+                  return {}
+
+              # Extract key fields
+              version = struct.unpack('<I', report[0:4])[0]
+              guest_svn = struct.unpack('<I', report[4:8])[0]
+              policy = struct.unpack('<Q', report[8:16])[0]
+              vmpl = struct.unpack('<I', report[48:52])[0]
+              report_data = report[80:144]
+              measurement = report[144:192]  # 48 bytes, LAUNCH_MEASUREMENT
+              host_data = report[192:224]    # 32 bytes
+              report_id = report[320:352]    # 32 bytes
+
+              return {
+                  'version': version,
+                  'guest_svn': guest_svn,
+                  'policy': hex(policy),
+                  'vmpl': vmpl,
+                  'measurement': measurement.hex(),       # LAUNCH_MEASUREMENT (48 bytes / 384 bits)
+                  'host_data': host_data.hex(),
+                  'report_id': report_id.hex(),
+                  'report_data': report_data.hex()
+              }
+          except Exception:
+              return {}
+
+      def get_status():
+          """Check SEV attestation availability."""
+          device_available = os.path.exists(SEV_GUEST_DEVICE)
+          tsm_available = os.path.exists(TSM_REPORT_PATH)
+
+          # Determine preferred method
+          method = 'none'
+          if tsm_available:
+              method = 'tsm'
+          elif device_available:
+              method = 'device'
+
+          return {
+              'available': device_available or tsm_available,
+              'method': method,
+              'device': SEV_GUEST_DEVICE,
+              'device_available': device_available,
+              'tsm_path': TSM_REPORT_PATH,
+              'tsm_available': tsm_available
+          }
+
+      def generate_report(report_data=None):
+          """Generate SEV-SNP attestation report using best available method."""
+          status = get_status()
+
+          if status['method'] == 'tsm':
+              return generate_sev_report_via_tsm(report_data)
+          elif status['method'] == 'device':
+              return generate_sev_report_via_device(report_data)
+          else:
+              raise RuntimeError("No SEV attestation method available")
+
+      class SEVHandler(http.server.BaseHTTPRequestHandler):
+          def do_GET(self):
+              if self.path == '/status':
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'application/json')
+                  self.end_headers()
+                  self.wfile.write(json.dumps(get_status()).encode())
+              elif self.path == '/report':
+                  try:
+                      result = generate_report()
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'application/json')
+                      self.end_headers()
+                      self.wfile.write(json.dumps(result).encode())
+                  except Exception as e:
+                      self.send_response(500)
+                      self.send_header('Content-Type', 'application/json')
+                      self.end_headers()
+                      self.wfile.write(json.dumps({'error': str(e)}).encode())
+              else:
+                  self.send_response(404)
+                  self.end_headers()
+
+          def do_POST(self):
+              if self.path == '/report':
+                  try:
+                      content_length = int(self.headers.get('Content-Length', 0))
+                      body = self.rfile.read(content_length) if content_length > 0 else b''
+
+                      report_data = None
+                      if body:
+                          data = json.loads(body)
+                          if 'report_data' in data:
+                              report_data = bytes.fromhex(data['report_data'])
+
+                      result = generate_report(report_data)
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'application/json')
+                      self.end_headers()
+                      self.wfile.write(json.dumps(result).encode())
+                  except Exception as e:
+                      self.send_response(500)
+                      self.send_header('Content-Type', 'application/json')
+                      self.end_headers()
+                      self.wfile.write(json.dumps({'error': str(e)}).encode())
+              else:
+                  self.send_response(404)
+                  self.end_headers()
+
+      if __name__ == '__main__':
+          server = http.server.HTTPServer(('0.0.0.0', PORT), SEVHandler)
+          print(f'SEV Attestation Proxy listening on port {PORT}')
+          server.serve_forever()
+
+  - path: /etc/systemd/system/sev-attestation-proxy.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=SEV Attestation Proxy
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/python3 /opt/recording-oracle/sev-attestation-proxy.py
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /opt/recording-oracle/.env
+    permissions: '0600'
+    content: |
+      # Secrets for recording-oracle (replace in production)
+      JWT_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIO3jow3dIM2HoetSGZySj4jOaGzL3/mqPn2qo4CLRSfloAoGCCqGSM49\nAwEHoUQDQgAEjJ0hc6Q+vK/Ko5LP3C8TDGZqFZtpP/iF6ATs+5vfLZ0LLX+yqzBU\nLydATxczxyUe5vxvXV11BhPfs17J2Rf52A==\n-----END EC PRIVATE KEY-----
+      JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjJ0hc6Q+vK/Ko5LP3C8TDGZqFZtp\nP/iF6ATs+5vfLZ0LLX+yqzBULydATxczxyUe5vxvXV11BhPfs17J2Rf52A==\n-----END PUBLIC KEY-----
+      AES_ENCRYPTION_KEY=E4MyMuBHDUNQa396GL3q8AClLPkg3JmV
+      WEB3_PRIVATE_KEY=0x0000000000000000000000000000000000000000000000000000000000000001
+      RPC_URL_POLYGON_AMOY=https://rpc-amoy.polygon.technology
+      RPC_URL_LOCALHOST=http://localhost:8545
+      ALCHEMY_API_KEY=demo
+
+  - path: /opt/recording-oracle/docker-compose.yml
+    permissions: '0644'
+    content: |
+      services:
+        postgres:
+          image: postgres:15-alpine
+          environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: recording
+          volumes:
+            - postgres_data:/var/lib/postgresql/data
+          healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+        minio:
+          image: minio/minio:latest
+          command: server /data --console-address ":9001"
+          environment:
+            MINIO_ROOT_USER: minioadmin
+            MINIO_ROOT_PASSWORD: minioadmin
+          volumes:
+            - minio_data:/data
+          healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+        minio-init:
+          image: minio/mc:latest
+          depends_on:
+            minio:
+              condition: service_healthy
+          entrypoint: >
+            /bin/sh -c "
+              mc alias set myminio http://minio:9000 minioadmin minioadmin;
+              mc mb --ignore-existing myminio/recordings;
+              mc anonymous set public myminio/recordings;
+              exit 0;
+            "
+
+        recording-oracle:
+          image: {{ recording_oracle_image }}
+          depends_on:
+            postgres:
+              condition: service_healthy
+            minio:
+              condition: service_healthy
+          ports:
+            - "{{ recording_oracle_port }}:{{ recording_oracle_port }}"
+          extra_hosts:
+            - "host.docker.internal:host-gateway"
+          env_file:
+            - .env
+          environment:
+            NODE_ENV: development
+            HOST: 0.0.0.0
+            PORT: "{{ recording_oracle_port }}"
+            # Database
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: "5432"
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DATABASE: recording
+            POSTGRES_SSL: "false"
+            # S3/Minio
+            S3_ENDPOINT: minio
+            S3_PORT: "9000"
+            S3_ACCESS_KEY: minioadmin
+            S3_SECRET_KEY: minioadmin
+            S3_BUCKET: recordings
+            S3_USE_SSL: "false"
+            # SEV (attestation proxy URL - inside VM it's localhost)
+            SEV_ATTESTATION_PROXY_URL: http://host.docker.internal:8081
+
+      volumes:
+        postgres_data:
+        minio_data:
+
+  - path: /etc/systemd/system/recording-oracle.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Recording Oracle Stack
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/recording-oracle
+      ExecStart=/usr/bin/docker compose up -d
+      ExecStop=/usr/bin/docker compose down
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Start SEV attestation proxy
+  - systemctl daemon-reload
+  - systemctl enable sev-attestation-proxy
+  - systemctl start sev-attestation-proxy
+  # Ensure docker is running
+  - systemctl enable docker
+  - systemctl start docker
+  # Start recording oracle stack
+  - systemctl enable recording-oracle
+  - systemctl start recording-oracle
+
+final_message: |
+  Recording Oracle SEV VM is ready!
+
+  SEV Attestation Proxy: http://localhost:8081
+  Recording Oracle: http://localhost:{{ recording_oracle_port }}
+  Minio Console: http://localhost:9001
+
+  To check SEV status: curl http://localhost:8081/status
+  To get SEV report: curl http://localhost:8081/report

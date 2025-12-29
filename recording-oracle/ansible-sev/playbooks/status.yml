@@ -1,0 +1,73 @@
+---
+# Check SEV Recording Oracle status
+# Usage: ansible-playbook playbooks/status.yml
+
+- name: Check SEV Recording Oracle Status
+  hosts: sev_host
+  gather_facts: no
+  become: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Check VM state
+      ansible.builtin.command:
+        cmd: virsh domstate {{ vm_name }}
+      register: vm_state
+      failed_when: false
+      changed_when: false
+
+    - name: Display VM state
+      ansible.builtin.debug:
+        msg: "VM {{ vm_name }} state: {{ vm_state.stdout | default('not found') }}"
+
+    - name: Check SEV attestation proxy status
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ sev_proxy_host_port | default(8082) }}/status"
+        method: GET
+        timeout: 10
+      register: sev_status
+      failed_when: false
+
+    - name: Display SEV status
+      ansible.builtin.debug:
+        msg: "SEV Proxy: {{ sev_status.json | default({'available': 'unknown', 'error': sev_status.msg | default('connection failed')}) }}"
+
+    - name: Check recording oracle health
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ recording_oracle_port }}/"
+        method: GET
+        timeout: 10
+        follow_redirects: none
+        status_code: [200, 301, 302, 308]
+      register: oracle_check
+      failed_when: false
+
+    - name: Display recording oracle status
+      ansible.builtin.debug:
+        msg: "Recording Oracle: {{ 'Running' if oracle_check.status | default(0) in [200, 301, 302, 308] else 'Not available' }}"
+
+    - name: Check host SEV capability
+      ansible.builtin.shell:
+        cmd: |
+          echo "=== Host SEV Capability ==="
+          if [ -c /dev/sev ]; then
+            echo "SEV device: /dev/sev exists"
+          else
+            echo "SEV device: /dev/sev NOT found"
+          fi
+
+          if grep -q sev /proc/cpuinfo 2>/dev/null; then
+            echo "SEV CPU flag: present"
+          else
+            echo "SEV CPU flag: NOT present"
+          fi
+
+          dmesg | grep -i "SEV\|AMD Memory Encryption" 2>/dev/null | tail -5 || true
+      register: host_sev
+      changed_when: false
+
+    - name: Display host SEV info
+      ansible.builtin.debug:
+        var: host_sev.stdout_lines

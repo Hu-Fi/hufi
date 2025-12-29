@@ -1,0 +1,128 @@
+---
+# Provision a new SEV VM
+
+- name: Create cloud-init directory
+  ansible.builtin.file:
+    path: "{{ cloud_init_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Find base image
+  ansible.builtin.include_tasks: find_base_image.yml
+
+- name: Copy base image to VM disk (full copy, no backing file)
+  ansible.builtin.command:
+    cmd: cp {{ base_image_path }} {{ vm_disk_path }}
+  args:
+    creates: "{{ vm_disk_path }}"
+
+- name: Check current disk size
+  ansible.builtin.shell:
+    cmd: qemu-img info {{ vm_disk_path }} | grep 'virtual size' | grep -oP '\d+(?= GiB)'
+  register: current_size
+  changed_when: false
+
+- name: Resize VM disk if needed
+  ansible.builtin.command:
+    cmd: qemu-img resize {{ vm_disk_path }} {{ vm_disk_size_gb }}G
+  when: (current_size.stdout | int) < (vm_disk_size_gb | int)
+  changed_when: true
+
+- name: Generate cloud-init user-data
+  ansible.builtin.template:
+    src: user-data.yml.j2
+    dest: "{{ cloud_init_dir }}/user-data"
+    mode: '0644'
+
+- name: Generate cloud-init meta-data
+  ansible.builtin.template:
+    src: meta-data.yml.j2
+    dest: "{{ cloud_init_dir }}/meta-data"
+    mode: '0644'
+
+- name: Generate cloud-init network-config
+  ansible.builtin.template:
+    src: network-config.yml.j2
+    dest: "{{ cloud_init_dir }}/network-config"
+    mode: '0644'
+
+- name: Create cloud-init ISO
+  ansible.builtin.command:
+    cmd: >
+      genisoimage -output {{ cloud_init_iso_path }}
+      -volid cidata -joliet -rock
+      {{ cloud_init_dir }}/user-data
+      {{ cloud_init_dir }}/meta-data
+      {{ cloud_init_dir }}/network-config
+  args:
+    creates: "{{ cloud_init_iso_path }}"
+
+- name: Check for SEV capability on host
+  ansible.builtin.shell:
+    cmd: |
+      echo "=== Checking SEV capability ==="
+      if [ -c /dev/sev ]; then
+        echo "SEV device: /dev/sev exists"
+      else
+        echo "SEV device: /dev/sev NOT found"
+      fi
+
+      # Check for SEV in CPU flags
+      if grep -q sev /proc/cpuinfo; then
+        echo "SEV CPU flag: present"
+      else
+        echo "SEV CPU flag: NOT present"
+      fi
+
+      # Check for SNP support
+      if grep -q sev_snp /proc/cpuinfo 2>/dev/null || dmesg | grep -qi "SEV-SNP"; then
+        echo "SEV-SNP: likely supported"
+      else
+        echo "SEV-SNP: may not be available"
+      fi
+
+      # Check dmesg for SEV initialization
+      dmesg | grep -i "SEV\|AMD Memory Encryption" | head -10
+  register: sev_check
+  changed_when: false
+  failed_when: false
+
+- name: Display SEV capability
+  ansible.builtin.debug:
+    var: sev_check.stdout_lines
+
+- name: Generate VM XML definition
+  ansible.builtin.template:
+    src: vm.xml.j2
+    dest: "{{ vm_xml_path }}"
+    mode: '0644'
+
+- name: Define VM
+  ansible.builtin.command:
+    cmd: virsh define {{ vm_xml_path }}
+  register: define_result
+  changed_when: "'defined' in define_result.stdout"
+
+- name: Start VM
+  ansible.builtin.command:
+    cmd: virsh start {{ vm_name }}
+  register: start_result
+  changed_when: "'started' in start_result.stdout"
+
+- name: Verify VM is running
+  ansible.builtin.command:
+    cmd: virsh domstate {{ vm_name }}
+  register: vm_state
+  until: vm_state.stdout | trim == 'running'
+  retries: 5
+  delay: 2
+
+- name: Display VM info
+  ansible.builtin.command:
+    cmd: virsh dominfo {{ vm_name }}
+  register: vm_info
+  changed_when: false
+
+- name: Show VM info
+  ansible.builtin.debug:
+    var: vm_info.stdout_lines

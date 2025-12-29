@@ -1,0 +1,14 @@
+---
+# SEV VM Role Variables
+
+# VM state tracking
+vm_disk_path: "{{ libvirt_images_dir }}/{{ vm_name }}.qcow2"
+cloud_init_iso_path: "{{ cloud_init_dir }}/{{ vm_name }}-cloud-init.iso"
+vm_xml_path: "{{ cloud_init_dir }}/{{ vm_name }}.xml"
+
+# SEV-specific paths
+sev_device_path: /dev/sev-guest
+
+# OVMF paths for SEV (AMD SEV needs OVMF with SEV support)
+ovmf_code_path: /usr/share/OVMF/OVMF_CODE.fd
+ovmf_vars_template: /usr/share/OVMF/OVMF_VARS.fd

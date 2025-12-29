@@ -65,4 +65,8 @@ export const envValidator = Joi.object({
   // Campaigns
   FEATURE_LIMIT_HOLDING_JOIN: Joi.string().valid('true', 'false'),
   STORE_RESULTS_TIMEOUT: Joi.number().positive().integer(),
+  // TDX Attestation
+  TDX_ATTESTATION_PROXY_URL: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .allow(''),
 });

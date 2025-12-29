@@ -1,0 +1,6 @@
+---
+# SEV Attestation Role Variables
+
+# Default ports
+sev_proxy_port: 8081
+sev_proxy_host_port: 8082

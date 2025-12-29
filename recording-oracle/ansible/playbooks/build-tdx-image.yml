@@ -1,0 +1,100 @@
+---
+# Build TDX guest image using canonical/tdx
+# Usage: ansible-playbook playbooks/build-tdx-image.yml
+
+- name: Build TDX Guest Image
+  hosts: tdx_host
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  vars:
+    tdx_repo_path: /home/ubuntu/tdx
+    tdx_image_path: /home/ubuntu/tdx/guest-tools/image/tdx-guest-ubuntu-24.04-generic.qcow2
+
+  tasks:
+    - name: Check if TDX guest image already exists
+      ansible.builtin.stat:
+        path: "{{ tdx_image_path }}"
+      register: existing_image
+
+    - name: Display existing image status
+      ansible.builtin.debug:
+        msg: "TDX guest image {{ 'exists' if existing_image.stat.exists else 'does not exist' }} at {{ tdx_image_path }}"
+
+    - name: Build TDX image if not present
+      when: not existing_image.stat.exists
+      block:
+        - name: Check if canonical/tdx repo exists
+          ansible.builtin.stat:
+            path: "{{ tdx_repo_path }}"
+          register: tdx_repo
+
+        - name: Clone canonical/tdx repository
+          ansible.builtin.git:
+            repo: https://github.com/canonical/tdx.git
+            dest: "{{ tdx_repo_path }}"
+            version: main
+            depth: 1
+          when: not tdx_repo.stat.exists
+
+        - name: Install build dependencies
+          ansible.builtin.apt:
+            name:
+              - qemu-utils
+              - genisoimage
+              - cloud-image-utils
+              - wget
+            state: present
+            update_cache: yes
+
+        - name: Create image directory
+          ansible.builtin.file:
+            path: "{{ tdx_repo_path }}/guest-tools/image"
+            state: directory
+            mode: '0755'
+
+        - name: Check for build script
+          ansible.builtin.stat:
+            path: "{{ tdx_repo_path }}/guest-tools/image/create-td-image.sh"
+          register: build_script
+
+        - name: Fail if build script not found
+          ansible.builtin.fail:
+            msg: "TDX build script not found at {{ tdx_repo_path }}/guest-tools/image/create-td-image.sh"
+          when: not build_script.stat.exists
+
+        - name: Run TDX guest image build script
+          ansible.builtin.command:
+            cmd: ./create-td-image.sh -v 24.04
+            chdir: "{{ tdx_repo_path }}/guest-tools/image"
+          environment:
+            DEBIAN_FRONTEND: noninteractive
+          register: build_output
+          timeout: 1800
+
+        - name: Show build output
+          ansible.builtin.debug:
+            var: build_output.stdout_lines
+
+    - name: Verify TDX image exists
+      ansible.builtin.stat:
+        path: "{{ tdx_image_path }}"
+      register: final_image
+
+    - name: Fail if no image available
+      ansible.builtin.fail:
+        msg: "Failed to build TDX guest image at {{ tdx_image_path }}"
+      when: not final_image.stat.exists
+
+    - name: Display final image info
+      ansible.builtin.shell:
+        cmd: qemu-img info "{{ tdx_image_path }}"
+      register: image_info
+      changed_when: false
+
+    - name: Show image info
+      ansible.builtin.debug:
+        var: image_info.stdout_lines

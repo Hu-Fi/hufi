@@ -1,0 +1,30 @@
+version: 2
+ethernets:
+  # Primary: Match virtio network driver (QEMU user-mode networking)
+  virtio-net:
+    match:
+      driver: virtio_net
+    dhcp4: true
+    dhcp-identifier: mac
+    # Static fallback for QEMU user-mode networking if DHCP fails
+    addresses:
+      - 10.0.2.15/24
+    routes:
+      - to: default
+        via: 10.0.2.2
+    nameservers:
+      addresses:
+        - 10.0.2.3
+        - 8.8.8.8
+  # Fallback for en* interfaces
+  fallback-en:
+    match:
+      name: "en*"
+    dhcp4: true
+    dhcp-identifier: mac
+  # Fallback for eth* interfaces
+  fallback-eth:
+    match:
+      name: "eth*"
+    dhcp4: true
+    dhcp-identifier: mac

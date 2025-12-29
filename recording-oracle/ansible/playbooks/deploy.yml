@@ -1,0 +1,46 @@
+---
+# Deploy TDX Recording Oracle VM
+# Usage: ansible-playbook playbooks/deploy.yml -e "recording_oracle_image=ghcr.io/posix4e/hufi/recording-oracle:sha-abc123"
+
+- name: Deploy TDX Recording Oracle
+  hosts: tdx_host
+  gather_facts: true
+  become: true
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Generate ephemeral guest password if not provided
+      ansible.builtin.set_fact:
+        guest_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: guest_password | default('') == ''
+      no_log: true
+
+    - name: Display deployment parameters
+      ansible.builtin.debug:
+        msg: |
+          Deploying TDX Recording Oracle:
+            VM Name: {{ vm_name }}
+            Image: {{ recording_oracle_image }}
+            Memory: {{ vm_memory_mb }}MB
+            CPUs: {{ vm_cpus }}
+            SSH Port: {{ vm_ssh_port }}
+
+    # QGS uses vsock port 4050 by default (package default)
+    # No configuration changes needed
+
+    - name: Include TDX VM role
+      ansible.builtin.include_role:
+        name: tdx_vm
+      tags:
+        - deploy
+
+    - name: Display deployment complete message
+      ansible.builtin.debug:
+        msg: |
+          TDX Recording Oracle deployed successfully!
+
+          SSH Access: ssh -p {{ vm_ssh_port }} {{ guest_user }}@127.0.0.1
+          Recording Oracle: http://127.0.0.1:{{ recording_oracle_port }}
+          TDX Status: http://127.0.0.1:{{ recording_oracle_port }}/attestation/status

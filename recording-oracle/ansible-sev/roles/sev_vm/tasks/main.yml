@@ -1,0 +1,29 @@
+---
+# Main entry point for SEV VM role
+# Use tags to select specific operations:
+#   - destroy: Remove existing VM
+#   - provision: Create new VM
+#   - wait: Wait for VM to be ready
+#   - deploy: Full deployment (destroy + provision + wait)
+
+- name: Include role variables
+  ansible.builtin.include_vars:
+    file: main.yml
+
+- name: Destroy existing VM
+  ansible.builtin.include_tasks: destroy.yml
+  tags:
+    - destroy
+    - deploy
+
+- name: Provision new VM
+  ansible.builtin.include_tasks: provision.yml
+  tags:
+    - provision
+    - deploy
+
+- name: Wait for VM to be ready
+  ansible.builtin.include_tasks: wait.yml
+  tags:
+    - wait
+    - deploy

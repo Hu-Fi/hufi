@@ -1,0 +1,181 @@
+---
+# Provision a new TDX VM
+
+- name: Create cloud-init directory
+  ansible.builtin.file:
+    path: "{{ cloud_init_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Find TDX base image
+  ansible.builtin.include_tasks: find_base_image.yml
+
+- name: Check base image contents
+  ansible.builtin.shell:
+    cmd: |
+      echo "=== Checking base image for cloud-init and SSH ==="
+      # Mount the image and check for cloud-init and SSH
+      MOUNT_DIR=$(mktemp -d)
+      NBD_DEV=""
+      
+      # Try to find an available nbd device
+      for i in $(seq 0 15); do
+        if [ ! -e /dev/nbd${i}p1 ] && [ -e /dev/nbd${i} ]; then
+          NBD_DEV="/dev/nbd${i}"
+          break
+        fi
+      done
+      
+      if [ -z "$NBD_DEV" ]; then
+        echo "No available NBD device found, skipping image check"
+        exit 0
+      fi
+      
+      # Load nbd module if needed
+      modprobe nbd max_part=8 2>/dev/null || true
+      
+      # Connect the image
+      qemu-nbd --connect=$NBD_DEV "{{ base_image_path }}" 2>/dev/null
+      if [ $? -ne 0 ]; then
+        echo "Failed to connect NBD device, skipping image check"
+        exit 0
+      fi
+      
+      sleep 2
+      
+      # Try to mount the root partition
+      MOUNTED=false
+      for part in ${NBD_DEV}p1 ${NBD_DEV}p2 ${NBD_DEV}p3; do
+        if [ -e "$part" ]; then
+          mount -o ro "$part" "$MOUNT_DIR" 2>/dev/null && MOUNTED=true && break
+        fi
+      done
+      
+      if [ "$MOUNTED" = "true" ]; then
+        echo "=== Checking for cloud-init ==="
+        if [ -f "$MOUNT_DIR/usr/bin/cloud-init" ]; then
+          echo "cloud-init: FOUND"
+        else
+          echo "cloud-init: NOT FOUND"
+        fi
+        
+        echo "=== Checking for SSH ==="
+        if [ -f "$MOUNT_DIR/usr/sbin/sshd" ]; then
+          echo "sshd: FOUND"
+        else
+          echo "sshd: NOT FOUND"
+        fi
+        
+        echo "=== Checking for network tools ==="
+        ls -la "$MOUNT_DIR/usr/sbin/dhclient" 2>/dev/null && echo "dhclient: FOUND" || echo "dhclient: NOT FOUND"
+        ls -la "$MOUNT_DIR/usr/bin/networkctl" 2>/dev/null && echo "networkctl: FOUND" || echo "networkctl: NOT FOUND"
+        
+        echo "=== Checking /etc/cloud directory ==="
+        ls -la "$MOUNT_DIR/etc/cloud/" 2>/dev/null || echo "No /etc/cloud directory"
+        
+        umount "$MOUNT_DIR"
+      else
+        echo "Could not mount any partition"
+      fi
+      
+      # Disconnect NBD
+      qemu-nbd --disconnect $NBD_DEV 2>/dev/null
+      rmdir "$MOUNT_DIR"
+  register: base_image_check
+  failed_when: false
+  changed_when: false
+
+- name: Show base image contents
+  ansible.builtin.debug:
+    var: base_image_check.stdout_lines
+  when: base_image_check.stdout_lines is defined
+
+- name: Copy base image to VM disk (full copy, no backing file)
+  ansible.builtin.command:
+    cmd: cp {{ base_image_path }} {{ vm_disk_path }}
+  args:
+    creates: "{{ vm_disk_path }}"
+
+- name: Set VM disk ownership for libvirt
+  ansible.builtin.file:
+    path: "{{ vm_disk_path }}"
+    owner: libvirt-qemu
+    group: kvm
+    mode: '0660'
+
+- name: Check current disk size
+  ansible.builtin.shell:
+    cmd: qemu-img info {{ vm_disk_path }} | grep 'virtual size' | grep -oP '\d+(?= GiB)'
+  register: current_size
+  changed_when: false
+
+- name: Resize VM disk if needed
+  ansible.builtin.command:
+    cmd: qemu-img resize {{ vm_disk_path }} {{ vm_disk_size_gb }}G
+  when: (current_size.stdout | int) < (vm_disk_size_gb | int)
+  changed_when: true
+
+- name: Generate cloud-init user-data
+  ansible.builtin.template:
+    src: user-data.yml.j2
+    dest: "{{ cloud_init_dir }}/user-data"
+    mode: '0644'
+
+- name: Generate cloud-init meta-data
+  ansible.builtin.template:
+    src: meta-data.yml.j2
+    dest: "{{ cloud_init_dir }}/meta-data"
+    mode: '0644'
+
+- name: Generate cloud-init network-config
+  ansible.builtin.template:
+    src: network-config.yml.j2
+    dest: "{{ cloud_init_dir }}/network-config"
+    mode: '0644'
+
+- name: Create cloud-init ISO
+  ansible.builtin.command:
+    cmd: >
+      genisoimage -output {{ cloud_init_iso_path }}
+      -volid cidata -joliet -rock
+      {{ cloud_init_dir }}/user-data
+      {{ cloud_init_dir }}/meta-data
+      {{ cloud_init_dir }}/network-config
+  args:
+    creates: "{{ cloud_init_iso_path }}"
+
+- name: Generate VM XML definition
+  ansible.builtin.template:
+    src: vm.xml.j2
+    dest: "{{ vm_xml_path }}"
+    mode: '0644'
+
+- name: Define VM
+  ansible.builtin.command:
+    cmd: virsh define {{ vm_xml_path }}
+  register: define_result
+  changed_when: "'defined' in define_result.stdout"
+
+- name: Start VM
+  ansible.builtin.command:
+    cmd: virsh start {{ vm_name }}
+  register: start_result
+  changed_when: "'started' in start_result.stdout"
+
+- name: Verify VM is running
+  ansible.builtin.command:
+    cmd: virsh domstate {{ vm_name }}
+  register: vm_state
+  until: vm_state.stdout | trim == 'running'
+  retries: 5
+  delay: 2
+
+- name: Display VM info
+  ansible.builtin.command:
+    cmd: virsh dominfo {{ vm_name }}
+  register: vm_info
+  changed_when: false
+
+- name: Show VM info
+  ansible.builtin.debug:
+    var: vm_info.stdout_lines

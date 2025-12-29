@@ -1,0 +1,43 @@
+---
+# Get TDX measurements from running Recording Oracle VM
+# Usage: ansible-playbook playbooks/measure.yml
+
+- name: Get TDX Measurements
+  hosts: tdx_host
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Display measurement parameters
+      ansible.builtin.debug:
+        msg: |
+          Getting TDX measurements:
+            VM Name: {{ vm_name }}
+            TDX Proxy Port: {{ tdx_proxy_port | default(8082) }}
+            Output: {{ measurements_output_file | default('measurements.json') }}
+
+    - name: Include TDX attestation role
+      ansible.builtin.include_role:
+        name: tdx_attestation
+      tags:
+        - measure
+
+    - name: Display measurements summary
+      ansible.builtin.debug:
+        msg: |
+          TDX Measurements extracted successfully!
+
+          TDX Available: {{ tdx_measurements.tdx_available }}
+          TDX Device: {{ tdx_measurements.tdx_device }}
+
+          MRTD:  {{ tdx_measurements.mrtd }}
+          RTMR0: {{ tdx_measurements.rtmr0 }}
+          RTMR1: {{ tdx_measurements.rtmr1 }}
+          RTMR2: {{ tdx_measurements.rtmr2 }}
+          RTMR3: {{ tdx_measurements.rtmr3 }}
+
+          Saved to: {{ measurements_output_file | default('measurements.json') }}
+      when: tdx_measurements is defined

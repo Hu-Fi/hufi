@@ -1,0 +1,13 @@
+---
+# Setup TDX Host for Recording Oracle
+# Configures QGS (Quote Generation Service) and AppArmor for TDX quote generation
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.yml playbooks/setup-host.yml
+
+- name: Setup TDX Host for Recording Oracle
+  hosts: tdx_host
+  become: true
+
+  roles:
+    - qgs_host

@@ -1,0 +1,125 @@
+#cloud-config
+# Cloud-init configuration for TDX Recording Oracle VM
+
+hostname: {{ vm_name }}
+
+ssh_pwauth: true
+
+users:
+  - name: {{ guest_user }}
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    lock_passwd: false
+{% if guest_ssh_authorized_key %}
+    ssh_authorized_keys:
+      - {{ guest_ssh_authorized_key }}
+{% endif %}
+
+chpasswd:
+  expire: false
+  users:
+    - name: {{ guest_user }}
+      password: {{ guest_password }}
+      type: text
+
+# Add TDX attestation PPA for quote generation support
+apt:
+  sources:
+    tdx-attestation:
+      source: "ppa:kobuk-team/tdx-attestation-release"
+
+# Run apt-get update and upgrade before installing packages
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+  - docker-compose-v2
+  - libtdx-attest
+  - libtdx-attest-dev
+
+write_files:
+  - path: /opt/recording-oracle/tdx-attestation-proxy.py
+    permissions: '0755'
+    content: |
+{{ lookup('file', role_path + '/files/tdx-attestation-proxy.py') | indent(6, first=True) }}
+
+  - path: /etc/systemd/system/tdx-attestation-proxy.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=TDX Attestation Proxy
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/python3 /opt/recording-oracle/tdx-attestation-proxy.py
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /opt/recording-oracle/.env
+    permissions: '0600'
+    content: |
+      # Secrets for recording-oracle (replace in production)
+      JWT_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIO3jow3dIM2HoetSGZySj4jOaGzL3/mqPn2qo4CLRSfloAoGCCqGSM49\nAwEHoUQDQgAEjJ0hc6Q+vK/Ko5LP3C8TDGZqFZtpP/iF6ATs+5vfLZ0LLX+yqzBU\nLydATxczxyUe5vxvXV11BhPfs17J2Rf52A==\n-----END EC PRIVATE KEY-----
+      JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjJ0hc6Q+vK/Ko5LP3C8TDGZqFZtp\nP/iF6ATs+5vfLZ0LLX+yqzBULydATxczxyUe5vxvXV11BhPfs17J2Rf52A==\n-----END PUBLIC KEY-----
+      AES_ENCRYPTION_KEY=E4MyMuBHDUNQa396GL3q8AClLPkg3JmV
+      WEB3_PRIVATE_KEY=0x0000000000000000000000000000000000000000000000000000000000000001
+      RPC_URL_POLYGON_AMOY=https://rpc-amoy.polygon.technology
+      RPC_URL_LOCALHOST=http://localhost:8545
+      ALCHEMY_API_KEY=demo
+
+  - path: /opt/recording-oracle/docker-compose.yml
+    permissions: '0644'
+    content: |
+{{ lookup('template', 'docker-compose.yml.j2') | indent(6, first=True) }}
+
+  - path: /etc/systemd/system/recording-oracle.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Recording Oracle Stack
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/recording-oracle
+      ExecStart=/usr/bin/docker compose up -d
+      ExecStop=/usr/bin/docker compose down
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Install linux-modules-extra for TDX configfs-tsm support
+  - apt-get install -y linux-modules-extra-$(uname -r) || true
+  # Reload systemd to pick up new service files
+  - systemctl daemon-reload
+  # Start TDX attestation proxy
+  - systemctl enable tdx-attestation-proxy
+  - systemctl start tdx-attestation-proxy
+  # Ensure docker is running and wait for it to be ready
+  - systemctl enable docker
+  - systemctl start docker
+  - sleep 5
+  - docker info > /dev/null 2>&1 || sleep 10
+  # Pull recording oracle image (retry on failure)
+  - docker pull {{ recording_oracle_image }} || sleep 30 && docker pull {{ recording_oracle_image }} || true
+  # Start recording oracle stack
+  - systemctl enable recording-oracle
+  - systemctl start recording-oracle || sleep 10 && systemctl start recording-oracle || true
+
+final_message: |
+  Recording Oracle TDX VM is ready!
+
+  TDX Attestation Proxy: http://localhost:8081
+  Recording Oracle: http://localhost:{{ recording_oracle_port }}
+  Minio Console: http://localhost:9001
+
+  To check TDX status: curl http://localhost:8081/status
+  To get TDX quote: curl http://localhost:8081/quote

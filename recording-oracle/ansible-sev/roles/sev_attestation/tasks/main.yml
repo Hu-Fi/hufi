@@ -1,0 +1,16 @@
+---
+# Main entry point for SEV attestation role
+
+- name: Include role variables
+  ansible.builtin.include_vars:
+    file: main.yml
+
+- name: Check SEV status
+  ansible.builtin.include_tasks: status.yml
+  tags:
+    - status
+
+- name: Get SEV measurements
+  ansible.builtin.include_tasks: measure.yml
+  tags:
+    - measure

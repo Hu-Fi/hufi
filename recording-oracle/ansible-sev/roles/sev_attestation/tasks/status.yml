@@ -1,0 +1,24 @@
+---
+# Check SEV attestation status
+
+- name: Check SEV proxy status
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ sev_proxy_host_port }}/status"
+    method: GET
+    timeout: 10
+  register: sev_status
+  failed_when: false
+
+- name: Set SEV available fact
+  ansible.builtin.set_fact:
+    sev_available: "{{ sev_status.json.available | default(false) }}"
+    sev_method: "{{ sev_status.json.method | default('none') }}"
+
+- name: Display SEV status
+  ansible.builtin.debug:
+    msg: |
+      SEV Attestation Status:
+        Available: {{ sev_available }}
+        Method: {{ sev_method }}
+        Device: {{ sev_status.json.device | default('N/A') }}
+        TSM Path: {{ sev_status.json.tsm_path | default('N/A') }}

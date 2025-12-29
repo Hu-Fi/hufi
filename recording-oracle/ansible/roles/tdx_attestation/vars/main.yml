@@ -1,0 +1,10 @@
+---
+# TDX Attestation Role Variables
+
+# TDX Attestation Proxy (runs on VM host, not in container)
+tdx_proxy_port: 8082
+tdx_proxy_status_endpoint: "/status"
+tdx_proxy_quote_endpoint: "/quote"
+
+# Output paths
+measurements_output_file: "{{ playbook_dir }}/../../measurements.json"
