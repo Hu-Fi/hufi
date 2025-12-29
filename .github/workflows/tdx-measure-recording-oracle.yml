@@ -259,18 +259,43 @@ jobs:
       # ============================================
       - name: Run Reputation Oracle container
         run: |
+          # Run Reputation Oracle container
           docker run -d --name reputation-oracle -p 3000:3000 \
+            -e WEB3_PRIVATE_KEY=0x0000000000000000000000000000000000000000000000000000000000000001 \
+            -e S3_ACCESS_KEY=dummy_access_key \
+            -e S3_SECRET_KEY=dummy_secret_key \
+            -e RPC_URL_ETHEREUM=https://eth.llamarpc.com \
             ${{ steps.rep-tags.outputs.rep_image }}
 
           # Wait for it to be ready
           echo "Waiting for Reputation Oracle to start..."
+          READY=false
           for i in {1..30}; do
+            # Check if container is still running
+            if ! docker ps | grep -q reputation-oracle; then
+              echo "ERROR: Container stopped unexpectedly!"
+              echo "=== Container logs ==="
+              docker logs reputation-oracle 2>&1 || true
+              exit 1
+            fi
+
             if curl -s http://localhost:3000/tdx-verification/expected-measurements > /dev/null 2>&1; then
-              echo "Reputation Oracle is ready"
+              echo "Reputation Oracle is ready after $i attempts"
+              READY=true
               break
             fi
+            echo "Attempt $i/30: Not ready yet..."
             sleep 2
           done
+
+          if [ "$READY" != "true" ]; then
+            echo "ERROR: Reputation Oracle failed to start within 60 seconds"
+            echo "=== Container status ==="
+            docker ps -a | grep reputation-oracle || true
+            echo "=== Container logs ==="
+            docker logs reputation-oracle 2>&1 || true
+            exit 1
+          fi
 
       - name: Verify baked-in measurements
         run: |
@@ -280,47 +305,25 @@ jobs:
           echo "=== Checking build info ==="
           curl -s http://localhost:3000/tdx-verification/build-info | jq .
 
-      - name: Get fresh TDX quote from Recording Oracle
-        id: fresh-quote
-        run: |
-          echo "=== Getting fresh TDX quote from Recording Oracle ==="
-
-          # Generate a random challenge
-          CHALLENGE=$(openssl rand -hex 32)
-          echo "Challenge: $CHALLENGE"
-
-          # Get quote from Recording Oracle via TDX host
-          QUOTE_RESPONSE=$(ssh -i ~/.ssh/tdx_host_key -o StrictHostKeyChecking=accept-new \
-            ${{ env.TDX_HOST_USER }}@${{ env.TDX_HOST }} \
-            "curl -s -X POST http://localhost:${{ env.RECORDING_ORACLE_PORT }}/attestation/quote \
-              -H 'Content-Type: application/json' \
-              -d '{\"report_data\": \"$CHALLENGE\"}'")
-
-          echo "Quote response received"
-          echo "$QUOTE_RESPONSE" | jq .
-
-          # Extract the base64 quote
-          QUOTE=$(echo "$QUOTE_RESPONSE" | jq -r '.quote')
-          echo "quote=$QUOTE" >> $GITHUB_OUTPUT
-
-      - name: Verify quote with Reputation Oracle
+      - name: Verify Recording Oracle with Reputation Oracle
         id: verification
         run: |
-          echo "=== Verifying TDX quote with Reputation Oracle ==="
+          echo "=== Verifying Recording Oracle end-to-end ==="
 
-          RESULT=$(curl -s -X POST http://localhost:3000/tdx-verification/verify-quote \
+          # Use verify-oracle endpoint to connect directly to Recording Oracle on TDX host
+          RESULT=$(curl -s -X POST http://localhost:3000/tdx-verification/verify-oracle \
             -H 'Content-Type: application/json' \
-            -d '{"quote": "${{ steps.fresh-quote.outputs.quote }}"}')
+            -d '{"oracleUrl": "http://${{ env.TDX_HOST }}:${{ env.RECORDING_ORACLE_PORT }}"}')
 
           echo "$RESULT" | jq .
 
           # Check if valid
           VALID=$(echo "$RESULT" | jq -r '.valid')
           if [ "$VALID" = "true" ]; then
-            echo "✅ TDX quote verification PASSED"
+            echo "✅ TDX verification PASSED"
             echo "verification_passed=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ TDX quote verification FAILED"
+            echo "❌ TDX verification FAILED"
             echo "Errors: $(echo "$RESULT" | jq -r '.errors[]')"
             echo "verification_passed=false" >> $GITHUB_OUTPUT
             exit 1

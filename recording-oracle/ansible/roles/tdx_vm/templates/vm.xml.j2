@@ -29,7 +29,7 @@
   <launchSecurity type='tdx'>
     <policy>{{ tdx_policy }}</policy>
     <quoteGenerationService>
-      <SocketAddress type='unix' path='/var/run/tdx-qgs/qgs.socket'/>
+      <SocketAddress type='vsock' cid='2' port='{{ qgs_vsock_port | default(4050) }}'/>
     </quoteGenerationService>
   </launchSecurity>
   <devices>

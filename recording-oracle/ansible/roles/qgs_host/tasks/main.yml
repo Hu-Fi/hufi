@@ -84,50 +84,8 @@
     state: started
   become: true
 
-# QGS configuration (installed by Canonical script)
-- name: Configure QGS to use Unix socket instead of TCP port
-  ansible.builtin.replace:
-    path: /etc/qgs.conf
-    regexp: '^port = '
-    replace: '#port = '
-  become: true
-  notify: Restart QGS
-
-- name: Create tmpfiles.d config for QGS runtime directory (persists across reboots)
-  ansible.builtin.copy:
-    content: |
-      # QGS runtime directory for TDX attestation
-      d {{ qgs_runtime_dir }} 0755 {{ qgs_user }} {{ qgs_group }} -
-    dest: /etc/tmpfiles.d/qgs.conf
-    mode: '0644'
-  become: true
-
-- name: Create QGS runtime directory
-  ansible.builtin.command:
-    cmd: systemd-tmpfiles --create /etc/tmpfiles.d/qgs.conf
-  become: true
-  changed_when: true
-
-- name: Remove stale QGS socket if exists
-  ansible.builtin.file:
-    path: "{{ qgs_runtime_dir }}/qgs.socket"
-    state: absent
-  become: true
-
-- name: Check if libvirt-qemu AppArmor profile exists
-  ansible.builtin.stat:
-    path: /etc/apparmor.d/abstractions/libvirt-qemu
-  register: libvirt_apparmor
-
-- name: Configure AppArmor for libvirt QGS access
-  ansible.builtin.lineinfile:
-    path: /etc/apparmor.d/abstractions/libvirt-qemu
-    line: '  "{{ qgs_runtime_dir }}/**" rw,'
-    insertbefore: '^\}'
-  become: true
-  notify: Reload AppArmor
-  when: libvirt_apparmor.stat.exists
-
+# QGS uses VSOCK port 4050 by default (package default config)
+# No configuration needed - just enable and start the daemon
 - name: Enable and start QGS daemon
   ansible.builtin.systemd:
     name: qgsd

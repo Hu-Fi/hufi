@@ -7,12 +7,6 @@
   gather_facts: true
   become: true
 
-  handlers:
-    - name: Restart QGS
-      ansible.builtin.systemd:
-        name: qgsd
-        state: restarted
-
   vars_files:
     - ../group_vars/all.yml
 
@@ -33,22 +27,8 @@
             CPUs: {{ vm_cpus }}
             SSH Port: {{ vm_ssh_port }}
 
-    - name: Configure QGS to use Unix socket (required for TDX attestation)
-      ansible.builtin.replace:
-        path: /etc/qgs.conf
-        regexp: '^port = '
-        replace: '#port = '
-      notify: Restart QGS
-      failed_when: false
-
-    - name: Flush handlers to restart QGS if needed
-      ansible.builtin.meta: flush_handlers
-
-    - name: Fix QGS socket permissions for QEMU access
-      ansible.builtin.file:
-        path: /var/run/tdx-qgs/qgs.socket
-        mode: '0777'
-      failed_when: false
+    # QGS uses vsock port 4050 by default (package default)
+    # No configuration changes needed
 
     - name: Include TDX VM role
       ansible.builtin.include_role:
