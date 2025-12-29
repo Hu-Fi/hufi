@@ -363,6 +363,13 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Trigger Reputation Oracle build
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true')
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: recording-oracle-release
+          client-payload: '{"release_tag": "recording-oracle-${{ github.sha }}"}'
+
       - name: Cleanup sensitive files
         if: always()
         run: |

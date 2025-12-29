@@ -1,0 +1,271 @@
+name: Build Reputation Oracle with TDX Measurements
+
+on:
+  # Trigger when a recording-oracle release is created
+  release:
+    types: [published]
+
+  # Allow manual trigger with specific release tag
+  workflow_dispatch:
+    inputs:
+      recording_oracle_release_tag:
+        description: 'Recording Oracle release tag (e.g., recording-oracle-abc123)'
+        required: true
+        type: string
+
+  # Trigger from recording oracle workflow via repository_dispatch
+  repository_dispatch:
+    types: [recording-oracle-release]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/reputation-oracle
+
+jobs:
+  build-with-measurements:
+    # Only run for recording-oracle releases or dispatch events
+    if: |
+      (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'recording-oracle-')) ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'repository_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine Recording Oracle release tag
+        id: release-tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            RELEASE_TAG="${{ github.event.release.tag_name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RELEASE_TAG="${{ github.event.inputs.recording_oracle_release_tag }}"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            RELEASE_TAG="${{ github.event.client_payload.release_tag }}"
+          fi
+
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "Using Recording Oracle release: $RELEASE_TAG"
+
+          # Extract SHA from tag (recording-oracle-<sha>)
+          RO_SHA=$(echo "$RELEASE_TAG" | sed 's/recording-oracle-//')
+          echo "ro_sha=$RO_SHA" >> $GITHUB_OUTPUT
+
+      - name: Download measurements from Recording Oracle release
+        id: download-measurements
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_TAG="${{ steps.release-tag.outputs.release_tag }}"
+
+          echo "Downloading measurements.json from release: $RELEASE_TAG"
+
+          # Download the measurements.json asset from the release
+          gh release download "$RELEASE_TAG" \
+            --pattern "measurements.json" \
+            --dir .
+
+          if [ ! -f measurements.json ]; then
+            echo "::error::Failed to download measurements.json from release $RELEASE_TAG"
+            exit 1
+          fi
+
+          echo "=== Downloaded Measurements ==="
+          cat measurements.json
+
+          # Validate JSON
+          if ! jq empty measurements.json 2>/dev/null; then
+            echo "::error::measurements.json is not valid JSON"
+            exit 1
+          fi
+
+      - name: Extract measurements
+        id: measurements
+        run: |
+          # Extract TDX measurements
+          MRTD=$(jq -r '.mrtd // empty' measurements.json)
+          RTMR0=$(jq -r '.rtmr0 // empty' measurements.json)
+          RTMR1=$(jq -r '.rtmr1 // empty' measurements.json)
+          RTMR2=$(jq -r '.rtmr2 // empty' measurements.json)
+          RTMR3=$(jq -r '.rtmr3 // empty' measurements.json)
+
+          # Extract build info
+          RO_GIT_SHA=$(jq -r '.git_sha // empty' measurements.json)
+          RO_IMAGE=$(jq -r '.docker_image // empty' measurements.json)
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Validate we have measurements
+          if [ -z "$MRTD" ]; then
+            echo "::error::MRTD measurement is empty"
+            exit 1
+          fi
+
+          echo "mrtd=$MRTD" >> $GITHUB_OUTPUT
+          echo "rtmr0=$RTMR0" >> $GITHUB_OUTPUT
+          echo "rtmr1=$RTMR1" >> $GITHUB_OUTPUT
+          echo "rtmr2=$RTMR2" >> $GITHUB_OUTPUT
+          echo "rtmr3=$RTMR3" >> $GITHUB_OUTPUT
+          echo "ro_git_sha=$RO_GIT_SHA" >> $GITHUB_OUTPUT
+          echo "ro_image=$RO_IMAGE" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+          echo "=== Extracted Measurements ==="
+          echo "MRTD: $MRTD"
+          echo "RTMR0: $RTMR0"
+          echo "RTMR1: $RTMR1"
+          echo "RTMR2: $RTMR2"
+          echo "RTMR3: $RTMR3"
+          echo "Recording Oracle Git SHA: $RO_GIT_SHA"
+          echo "Recording Oracle Image: $RO_IMAGE"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tag
+        id: image-tag
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          RO_SHA="${{ steps.release-tag.outputs.ro_sha }}"
+
+          # Tag includes the recording oracle SHA for traceability
+          IMAGE_SHA="ghcr.io/${REPO_LOWER}/reputation-oracle:ro-${RO_SHA}"
+          IMAGE_LATEST="ghcr.io/${REPO_LOWER}/reputation-oracle:latest"
+
+          echo "image_sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
+          echo "image_latest=$IMAGE_LATEST" >> $GITHUB_OUTPUT
+          echo "repo_lower=$REPO_LOWER" >> $GITHUB_OUTPUT
+          echo "Image will be tagged as: $IMAGE_SHA"
+
+      - name: Determine Docker tags
+        id: docker-tags
+        run: |
+          TAGS="${{ steps.image-tag.outputs.image_sha }}"
+
+          # Add latest tag on main branch pushes
+          if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.event_name }}" = "release" ]; then
+            TAGS="$TAGS,${{ steps.image-tag.outputs.image_latest }}"
+          fi
+
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./reputation-oracle
+          file: ./reputation-oracle/Dockerfile
+          push: true
+          tags: ${{ steps.docker-tags.outputs.tags }}
+          build-args: |
+            TDX_EXPECTED_MRTD=${{ steps.measurements.outputs.mrtd }}
+            TDX_EXPECTED_RTMR0=${{ steps.measurements.outputs.rtmr0 }}
+            TDX_EXPECTED_RTMR1=${{ steps.measurements.outputs.rtmr1 }}
+            TDX_EXPECTED_RTMR2=${{ steps.measurements.outputs.rtmr2 }}
+            TDX_EXPECTED_RTMR3=${{ steps.measurements.outputs.rtmr3 }}
+            TDX_BUILD_GIT_SHA=${{ steps.measurements.outputs.ro_git_sha }}
+            TDX_BUILD_IMAGE_DIGEST=${{ steps.measurements.outputs.ro_image }}
+            TDX_BUILD_TIMESTAMP=${{ steps.measurements.outputs.timestamp }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Attest Docker image provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ steps.image-tag.outputs.repo_lower }}/reputation-oracle
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Create build info file
+        run: |
+          cat > reputation-oracle-build-info.json << EOF
+          {
+            "reputation_oracle_image": "${{ steps.image-tag.outputs.image_sha }}",
+            "reputation_oracle_digest": "${{ steps.build.outputs.digest }}",
+            "recording_oracle_release": "${{ steps.release-tag.outputs.release_tag }}",
+            "recording_oracle_image": "${{ steps.measurements.outputs.ro_image }}",
+            "recording_oracle_git_sha": "${{ steps.measurements.outputs.ro_git_sha }}",
+            "tdx_measurements": {
+              "mrtd": "${{ steps.measurements.outputs.mrtd }}",
+              "rtmr0": "${{ steps.measurements.outputs.rtmr0 }}",
+              "rtmr1": "${{ steps.measurements.outputs.rtmr1 }}",
+              "rtmr2": "${{ steps.measurements.outputs.rtmr2 }}",
+              "rtmr3": "${{ steps.measurements.outputs.rtmr3 }}"
+            },
+            "build_timestamp": "${{ steps.measurements.outputs.timestamp }}",
+            "workflow_run_id": "${{ github.run_id }}"
+          }
+          EOF
+
+          echo "=== Build Info ==="
+          cat reputation-oracle-build-info.json
+
+      - name: Create Reputation Oracle release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: reputation-oracle-${{ steps.release-tag.outputs.ro_sha }}
+          name: Reputation Oracle - Linked to ${{ steps.release-tag.outputs.release_tag }}
+          body: |
+            ## Reputation Oracle with Baked-in TDX Measurements
+
+            This Reputation Oracle build contains TDX measurements baked in at build time, enabling it to verify Recording Oracle attestations.
+
+            ### Linked Recording Oracle
+            | Field | Value |
+            |-------|-------|
+            | Release | [${{ steps.release-tag.outputs.release_tag }}](https://github.com/${{ github.repository }}/releases/tag/${{ steps.release-tag.outputs.release_tag }}) |
+            | Git SHA | `${{ steps.measurements.outputs.ro_git_sha }}` |
+            | Docker Image | `${{ steps.measurements.outputs.ro_image }}` |
+
+            ### Reputation Oracle Build
+            | Field | Value |
+            |-------|-------|
+            | Docker Image | `${{ steps.image-tag.outputs.image_sha }}` |
+            | Image Digest | `${{ steps.build.outputs.digest }}` |
+
+            ### Baked-in TDX Measurements
+            | Register | Value |
+            |----------|-------|
+            | MRTD | `${{ steps.measurements.outputs.mrtd }}` |
+            | RTMR[0] | `${{ steps.measurements.outputs.rtmr0 }}` |
+            | RTMR[1] | `${{ steps.measurements.outputs.rtmr1 }}` |
+            | RTMR[2] | `${{ steps.measurements.outputs.rtmr2 }}` |
+            | RTMR[3] | `${{ steps.measurements.outputs.rtmr3 }}` |
+
+            ### Usage
+
+            Pull and run:
+            ```bash
+            docker pull ${{ steps.image-tag.outputs.image_sha }}
+            docker run -p 3000:3000 ${{ steps.image-tag.outputs.image_sha }}
+            ```
+
+            Verify a Recording Oracle quote:
+            ```bash
+            curl -X POST http://localhost:3000/tdx-verification/verify-quote \
+              -H "Content-Type: application/json" \
+              -d '{"quote": "<base64-encoded-tdx-quote>"}'
+            ```
+
+            ### Attestation Verification
+            ```bash
+            gh attestation verify oci://ghcr.io/${{ github.repository }}/reputation-oracle:ro-${{ steps.release-tag.outputs.ro_sha }} \
+              --owner ${{ github.repository_owner }}
+            ```
+          files: |
+            reputation-oracle-build-info.json
+            measurements.json
+          draft: false
+          prerelease: false
