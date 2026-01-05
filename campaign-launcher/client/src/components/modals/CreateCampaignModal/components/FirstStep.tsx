@@ -70,6 +70,7 @@ type FormValues = {
 };
 
 type Props = {
+  formValues: FormValues;
   prepareFormValues: (newState: FormValues) => void;
   handleChangeFormStep: (formStep: number) => void;
   handleChangeLoading: (isLoading: boolean) => void;
@@ -87,6 +88,7 @@ const validationSchema = yup.object({
 });
 
 const FirstStep: FC<Props> = ({
+  formValues,
   prepareFormValues,
   handleChangeFormStep,
   handleChangeLoading,
@@ -117,9 +119,9 @@ const FirstStep: FC<Props> = ({
     mode: 'onBlur',
     resolver: yupResolver(validationSchema),
     defaultValues: {
-      campaignType: undefined,
-      fundToken: '',
-      fundAmount: '',
+      campaignType: formValues.campaignType ?? undefined,
+      fundToken: formValues.fundToken,
+      fundAmount: formValues.fundAmount,
       allowance: '',
     },
   });
@@ -129,6 +131,12 @@ const FirstStep: FC<Props> = ({
   const showExactInputValue =
     currentAllowance !== 'unlimited' &&
     Number(fundAmount) > Number(currentAllowance);
+
+  useEffect(() => {
+    if (fundToken) {
+      fetchAllowance(fundToken);
+    }
+  }, [fundToken, fetchAllowance]);
 
   useEffect(() => {
     handleChangeLoading(false);
@@ -250,7 +258,7 @@ const FirstStep: FC<Props> = ({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Campaign Type"
+                        label={campaignType ? '' : 'Campaign Type'}
                         sx={{
                           '& .MuiInputBase-root': {
                             height: 42,
@@ -329,11 +337,6 @@ const FirstStep: FC<Props> = ({
                       },
                     }}
                     {...field}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      field.onChange(value);
-                      fetchAllowance(value);
-                    }}
                     disabled={isLoading || !campaignType}
                   >
                     {FUND_TOKENS.map((token) => (
@@ -393,7 +396,7 @@ const FirstStep: FC<Props> = ({
                   <span>
                     {currentAllowance === AllowanceType.UNLIMITED
                       ? 'Unlimited'
-                      : `${currentAllowance} ${fundToken.toUpperCase()}`}
+                      : `${currentAllowance ?? 0} ${fundToken.toUpperCase()}`}
                   </span>
                 </Typography>
               )}
@@ -457,7 +460,11 @@ const FirstStep: FC<Props> = ({
                       >
                         <FormControlLabel
                           value="exact"
-                          disabled={!fundToken || isLoading}
+                          disabled={
+                            !fundToken ||
+                            +fundAmount < +(currentAllowance ?? '0') ||
+                            isLoading
+                          }
                           control={<Radio />}
                           label="Exact Amount Only"
                           sx={{
