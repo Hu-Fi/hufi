@@ -29,7 +29,7 @@ const Steps: FC<Props> = ({ stepsCompleted, isLoading }) => {
         my: 0,
         mx: 'auto',
         gap: { xs: '20px', md: 0 },
-        width: { xs: 'fit-content', md: '70%' },
+        width: { xs: 'fit-content', md: '60%' },
       }}
     >
       {steps.map((step, idx) => {

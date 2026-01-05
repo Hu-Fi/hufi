@@ -32,7 +32,11 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
 
   const fetchAllowance = useCallback(
     async (fundToken: string): Promise<string | null> => {
-      if (!signer || !activeAddress) {
+      if (!signer) {
+        return null;
+      }
+
+      if (!activeAddress) {
         setError(new Error('Wallet is not connected'));
         return null;
       }
@@ -111,15 +115,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         );
         await tx.wait();
 
-        const newAllowance = await tokenContract.allowance(
-          activeAddress,
-          allowanceSpender
-        );
-        const isUnlimited = BigInt(newAllowance) >= ethers.MaxUint256 / 2n;
-        const _allowance = isUnlimited
-          ? 'unlimited'
-          : ethers.formatUnits(newAllowance, tokenDecimals);
-        setAllowance(_allowance);
+        await fetchAllowance(fundToken);
         return true;
       } catch (err) {
         const error =
@@ -131,7 +127,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         setIsLoading(false);
       }
     },
-    [signer, activeAddress, appChainId, allowanceSpender]
+    [signer, activeAddress, appChainId, allowanceSpender, fetchAllowance]
   );
 
   const reset = useCallback(() => {

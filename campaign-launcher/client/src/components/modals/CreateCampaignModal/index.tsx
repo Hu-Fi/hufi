@@ -62,6 +62,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
     >
       {step === 1 && (
         <FirstStep
+          formValues={formValues}
           prepareFormValues={prepareFormValues}
           handleChangeLoading={setIsLoading}
           handleChangeFormStep={setStep}
