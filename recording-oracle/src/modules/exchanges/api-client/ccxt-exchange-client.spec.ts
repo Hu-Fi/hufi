@@ -434,6 +434,7 @@ describe('CcxtExchangeClient', () => {
             'mexc {"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Invalid access key"}',
+            `mexc {"code":700006,"msg":"IP [${faker.internet.ip()}] not in the ip white list"}`,
           ])(
             'should throw ExchangeApiAccessError when invalid api key [%#]',
             async (errorMessage) => {
