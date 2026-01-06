@@ -84,7 +84,20 @@ const validationSchema = yup.object({
     .oneOf([...Object.values(CampaignType)])
     .required('Campaign type is required'),
   fundToken: yup.string().trim().required('Fund token is required'),
-  fundAmount: yup.string().trim().default(''),
+  fundAmount: yup
+    .string()
+    .trim()
+    .default('')
+    .test('min-value', 'Must be a positive number', (value) => {
+      if (!value) return true;
+      const numValue = Number(value);
+      return !isNaN(numValue) && numValue > 0;
+    })
+    .test('max-value', 'The amount exceeds maximum possible value', (value) => {
+      if (!value) return true;
+      const numValue = Number(value);
+      return !isNaN(numValue) && numValue <= Number.MAX_SAFE_INTEGER;
+    }),
   allowance: yup.string().oneOf([...Object.values(AllowanceType), '']),
 });
 
@@ -117,7 +130,7 @@ const FirstStep: FC<Props> = ({
     watch,
     setValue: setFormValue,
   } = useForm({
-    mode: 'onBlur',
+    mode: 'onChange',
     resolver: yupResolver(validationSchema),
     defaultValues: {
       campaignType: formValues.campaignType ?? undefined,
@@ -375,6 +388,14 @@ const FirstStep: FC<Props> = ({
                     {...field}
                     onChange={(e) => {
                       const value = formatInputValue(e.target.value);
+                      const numValue = Number(value);
+                      if (
+                        value &&
+                        !isNaN(numValue) &&
+                        numValue > Number.MAX_SAFE_INTEGER
+                      ) {
+                        return;
+                      }
                       field.onChange(value);
                     }}
                     disabled={isLoading || !campaignType}
@@ -488,7 +509,7 @@ const FirstStep: FC<Props> = ({
                           showExactInputValue
                             ? (
                                 Number(fundAmount) - Number(currentAllowance)
-                              ).toFixed(2)
+                              ).toFixed(3)
                             : ''
                         }
                         placeholder="i.e 100.00 USDT"
