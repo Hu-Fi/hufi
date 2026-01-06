@@ -31,7 +31,11 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useTokenAllowance } from '@/hooks/useTokenAllowance';
 import { AllowanceType, CampaignType } from '@/types';
-import { convertFromSnakeCaseToTitleCase, getTokenInfo } from '@/utils';
+import {
+  convertFromSnakeCaseToTitleCase,
+  getTokenInfo,
+  isExceedingMaximumInteger,
+} from '@/utils';
 
 import { formatInputValue } from '../utils';
 
@@ -88,15 +92,9 @@ const validationSchema = yup.object({
     .string()
     .trim()
     .default('')
-    .test('min-value', 'Must be a positive number', (value) => {
-      if (!value) return true;
-      const numValue = Number(value);
-      return !isNaN(numValue) && numValue > 0;
-    })
     .test('max-value', 'The amount exceeds maximum possible value', (value) => {
       if (!value) return true;
-      const numValue = Number(value);
-      return !isNaN(numValue) && numValue <= Number.MAX_SAFE_INTEGER;
+      return !isExceedingMaximumInteger(value);
     }),
   allowance: yup.string().oneOf([...Object.values(AllowanceType), '']),
 });
@@ -388,12 +386,7 @@ const FirstStep: FC<Props> = ({
                     {...field}
                     onChange={(e) => {
                       const value = formatInputValue(e.target.value);
-                      const numValue = Number(value);
-                      if (
-                        value &&
-                        !isNaN(numValue) &&
-                        numValue > Number.MAX_SAFE_INTEGER
-                      ) {
+                      if (isExceedingMaximumInteger(value)) {
                         return;
                       }
                       field.onChange(value);

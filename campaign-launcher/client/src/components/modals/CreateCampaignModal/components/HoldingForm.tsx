@@ -31,7 +31,7 @@ import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { CampaignType, HoldingFormValues } from '@/types';
-import { getTokenInfo } from '@/utils';
+import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
@@ -263,12 +263,7 @@ const HoldingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
-                  const numValue = Number(value);
-                  if (
-                    value &&
-                    !isNaN(numValue) &&
-                    numValue > Number.MAX_SAFE_INTEGER
-                  ) {
+                  if (isExceedingMaximumInteger(value)) {
                     return;
                   }
                   field.onChange(value);
@@ -298,12 +293,7 @@ const HoldingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
-                  const numValue = Number(value);
-                  if (
-                    value &&
-                    !isNaN(numValue) &&
-                    numValue > Number.MAX_SAFE_INTEGER
-                  ) {
+                  if (isExceedingMaximumInteger(value)) {
                     return;
                   }
                   field.onChange(value);
