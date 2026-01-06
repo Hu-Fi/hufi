@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { RedisConfigService } from '@/config';
 
 import { REDIS_CACHE_CLIENT } from './constants';
+import { RedisShutdown } from './redis-shutdown';
 import RedisFactory from './redis.factory';
 
 @Module({
@@ -22,6 +23,7 @@ import RedisFactory from './redis.factory';
       },
       inject: [RedisConfigService],
     },
+    RedisShutdown,
   ],
   exports: [REDIS_CACHE_CLIENT],
 })
