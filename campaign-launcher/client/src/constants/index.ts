@@ -35,3 +35,5 @@ export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 export const MQ_MOBILE = 'screen and (max-width: 600px)';
 
 export const DEFAULT_TABLE_PAGE_SIZE = 10;
+
+export const UNLIMITED_AMOUNT = 'unlimited';

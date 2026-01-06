@@ -123,6 +123,11 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           make sure the backend won't interrupt the process and users won't lose their funds
         */
         const oracleFees = await launcherApi.getOracleFees(appChainId);
+        const formattedFees = {
+          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
+          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
+          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
+        };
 
         const manifestString = JSON.stringify(manifest);
         const manifestHash = await calculateHash(manifestString);
@@ -131,9 +136,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
           exchangeOracle: oracles.exchangeOracle,
           recordingOracle: oracles.recordingOracle,
           reputationOracle: oracles.reputationOracle,
-          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
-          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
-          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
+          ...formattedFees,
           manifest: manifestString,
           manifestHash: manifestHash,
         };
@@ -148,9 +151,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         const result = {
           escrowAddress: _escrowAddress,
           tokenDecimals,
-          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
-          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
-          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
+          ...formattedFees,
         };
 
         return result;
