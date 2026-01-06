@@ -32,7 +32,7 @@ import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useTradingPairs } from '@/hooks/useTradingPairs';
 import type { MarketMakingFormValues } from '@/types';
-import { getTokenInfo } from '@/utils';
+import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
@@ -264,12 +264,7 @@ const MarketMakingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
-                  const numValue = Number(value);
-                  if (
-                    value &&
-                    !isNaN(numValue) &&
-                    numValue > Number.MAX_SAFE_INTEGER
-                  ) {
+                  if (isExceedingMaximumInteger(value)) {
                     return;
                   }
                   field.onChange(value);
@@ -299,12 +294,7 @@ const MarketMakingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
-                  const numValue = Number(value);
-                  if (
-                    value &&
-                    !isNaN(numValue) &&
-                    numValue > Number.MAX_SAFE_INTEGER
-                  ) {
+                  if (isExceedingMaximumInteger(value)) {
                     return;
                   }
                   field.onChange(value);
