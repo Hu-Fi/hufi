@@ -65,7 +65,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
           allowanceSpender
         );
         const isUnlimited =
-          BigInt(currentAllowance) >= BigInt(Number.MAX_SAFE_INTEGER);
+          +ethers.formatUnits(currentAllowance, tokenDecimals) >=
+          Number.MAX_SAFE_INTEGER;
         const _allowance = isUnlimited
           ? UNLIMITED_AMOUNT
           : ethers.formatUnits(currentAllowance, tokenDecimals);
