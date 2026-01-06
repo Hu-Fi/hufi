@@ -52,7 +52,7 @@ export class ExchangesService {
           return !isWeirdPair;
         });
 
-        await this.exchangesCache.setTradingParis(exchangeName, tradingPairs);
+        await this.exchangesCache.setTradingPairs(exchangeName, tradingPairs);
       }
 
       return tradingPairs;

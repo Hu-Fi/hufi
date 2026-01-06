@@ -30,12 +30,12 @@ export class CampaignsStatsDto {
     name: 'n_completed_campaigns',
     description: 'Total number of completed campaigns',
   })
-  nCompletedCampaigns: number;
+  nCompletedCampaigns: number | null;
 
   @ApiProperty({
     name: 'total_rewards_distributed',
     description:
       'Total amount of funds distrubited as rewards on completed campaigns',
   })
-  paidRewardsUsd: number;
+  paidRewardsUsd: number | null;
 }
