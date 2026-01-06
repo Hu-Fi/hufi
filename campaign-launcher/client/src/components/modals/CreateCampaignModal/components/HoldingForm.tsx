@@ -260,6 +260,14 @@ const HoldingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
+                  const numValue = Number(value);
+                  if (
+                    value &&
+                    !isNaN(numValue) &&
+                    numValue > Number.MAX_SAFE_INTEGER
+                  ) {
+                    return;
+                  }
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}
@@ -287,6 +295,14 @@ const HoldingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
+                  const numValue = Number(value);
+                  if (
+                    value &&
+                    !isNaN(numValue) &&
+                    numValue > Number.MAX_SAFE_INTEGER
+                  ) {
+                    return;
+                  }
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}
