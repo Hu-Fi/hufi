@@ -39,7 +39,7 @@ export class ExchangesCache {
     return JSON.parse(tradingPairs) as string[];
   }
 
-  async setTradingParis(
+  async setTradingPairs(
     exchangeName: string,
     tradingPairs: string[],
   ): Promise<void> {
