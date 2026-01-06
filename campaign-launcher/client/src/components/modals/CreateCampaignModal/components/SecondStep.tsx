@@ -1,9 +1,8 @@
 import { useCallback, useEffect, type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/CheckCircle';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useForm,
@@ -14,6 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
+import { UNLIMITED_AMOUNT } from '@/constants';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import useCreateEscrow from '@/hooks/useCreateEscrow';
@@ -26,7 +26,6 @@ import {
   type CampaignFormValues,
   CampaignType,
   type MarketMakingFormValues,
-  AllowanceType,
 } from '@/types';
 import { constructCampaignDetails } from '@/utils';
 
@@ -53,7 +52,6 @@ type Props = {
   showFinalView: boolean;
   setShowFinalView: (showFinalView: boolean) => void;
   handleChangeLoading: (isLoading: boolean) => void;
-  handleChangeFormStep: (formStep: number) => void;
   handleCloseModal: () => void;
 };
 
@@ -62,7 +60,6 @@ const SecondStep: FC<Props> = ({
   showFinalView,
   setShowFinalView,
   handleChangeLoading,
-  handleChangeFormStep,
   handleCloseModal,
 }) => {
   const { campaignType, fundToken, fundAmount } = formValues;
@@ -111,12 +108,6 @@ const SecondStep: FC<Props> = ({
   }, [isCreatingEscrow, handleChangeLoading]);
 
   useEffect(() => {
-    if (errors.fund_amount?.type === 'min-amount') {
-      showError('Insufficient allowance, go back to the previous step');
-    }
-  }, [errors, showError]);
-
-  useEffect(() => {
     if (isEscrowCreated) {
       setShowFinalView(true);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ALL_CAMPAIGNS] });
@@ -128,7 +119,7 @@ const SecondStep: FC<Props> = ({
     const allowance = await fetchAllowance(data.fund_token);
     if (
       !allowance ||
-      (allowance !== AllowanceType.UNLIMITED &&
+      (allowance !== UNLIMITED_AMOUNT &&
         Number(allowance) < Number(data.fund_amount))
     ) {
       showError('Insufficient allowance, go back to the previous step');
@@ -198,35 +189,14 @@ const SecondStep: FC<Props> = ({
       {!isError && !showFinalView && (
         <form onSubmit={handleSubmit(submitForm)}>
           <Stack gap={2} alignItems="center">
-            <Stack
-              direction="row"
-              width="100%"
-              position="relative"
-              justifyContent="center"
-              alignItems="center"
+            <Typography
+              variant="h4"
+              color="text.primary"
+              textAlign="center"
+              sx={{ whiteSpace: 'pre-line' }}
             >
-              {!isMobile && (
-                <IconButton
-                  disableRipple
-                  sx={{
-                    position: 'absolute',
-                    left: 0,
-                    bgcolor: 'rgba(205, 199, 255, 0.12)',
-                  }}
-                  onClick={() => handleChangeFormStep(1)}
-                >
-                  <ArrowBackIcon sx={{ color: 'text.primary' }} />
-                </IconButton>
-              )}
-              <Typography
-                variant="h4"
-                color="text.primary"
-                textAlign="center"
-                sx={{ whiteSpace: 'pre-line' }}
-              >
-                {isMobile ? 'Launch\nCampaign' : 'Launch Campaign'}
-              </Typography>
-            </Stack>
+              {isMobile ? 'Launch\nCampaign' : 'Launch Campaign'}
+            </Typography>
             <Typography
               variant="alert"
               color="text.secondary"

@@ -51,8 +51,8 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
       onClose={handleClose}
       isLoading={isLoading}
       showCloseButton={isMobile}
-      showBackButton={isMobile && step === 2 && !showFinalView}
-      handleBackClick={() => setStep(1)}
+      showBackButton={step === 2 && !showFinalView}
+      handleBackClick={() => setStep((step) => step - 1)}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -75,7 +75,6 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose }) => {
           showFinalView={showFinalView}
           setShowFinalView={setShowFinalView}
           handleChangeLoading={setIsLoading}
-          handleChangeFormStep={setStep}
           handleCloseModal={handleClose}
         />
       )}

@@ -25,6 +25,7 @@ import * as yup from 'yup';
 import CryptoEntity from '@/components/CryptoEntity';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import { UNLIMITED_AMOUNT } from '@/constants';
 import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
@@ -39,7 +40,7 @@ import Steps from './Steps';
 
 const allowanceTooltipText = {
   unlimited:
-    'Approve unlimited USDT so you don’t need to approve again for future escrows.',
+    'Approve unlimited token amount so you don’t need to approve again for future escrows.',
   exact:
     'Approve exactly the missing allowance to fund this escrow. This is the difference between Fund Amount and Current Allowance.',
   custom:
@@ -84,7 +85,7 @@ const validationSchema = yup.object({
     .required('Campaign type is required'),
   fundToken: yup.string().trim().required('Fund token is required'),
   fundAmount: yup.string().trim().default(''),
-  allowance: yup.string().oneOf(['unlimited', 'exact', 'custom']),
+  allowance: yup.string().oneOf([...Object.values(AllowanceType), '']),
 });
 
 const FirstStep: FC<Props> = ({
@@ -129,7 +130,7 @@ const FirstStep: FC<Props> = ({
   const { campaignType, fundToken, fundAmount, allowance } = watch();
 
   const showExactInputValue =
-    currentAllowance !== 'unlimited' &&
+    currentAllowance !== UNLIMITED_AMOUNT &&
     Number(fundAmount) > Number(currentAllowance);
 
   useEffect(() => {
@@ -139,12 +140,8 @@ const FirstStep: FC<Props> = ({
   }, [fundToken, fetchAllowance]);
 
   useEffect(() => {
-    handleChangeLoading(false);
-  }, [handleChangeLoading]);
-
-  const handleChangeCustomAmount = (value: string) => {
-    setCustomAmount(value);
-  };
+    handleChangeLoading(isLoading);
+  }, [isLoading, handleChangeLoading]);
 
   const handlePrepareFormValues = () => {
     prepareFormValues({
@@ -159,7 +156,10 @@ const FirstStep: FC<Props> = ({
   }, [resetApproval]);
 
   const handleSkip = () => {
-    if (currentAllowance !== 'unlimited' && Number(currentAllowance) < 10) {
+    if (
+      currentAllowance !== UNLIMITED_AMOUNT &&
+      Number(currentAllowance) < 10
+    ) {
       showError(`Allowance should be at least 10 ${fundToken?.toUpperCase()}`);
       return;
     }
@@ -176,7 +176,7 @@ const FirstStep: FC<Props> = ({
     let success = false;
 
     if (allowance === AllowanceType.UNLIMITED) {
-      success = await approve(data.fundToken, 'max');
+      success = await approve(data.fundToken, UNLIMITED_AMOUNT);
     } else if (allowance === AllowanceType.EXACT) {
       success = await approve(data.fundToken, fundAmount);
     } else if (allowance === AllowanceType.CUSTOM) {
@@ -234,7 +234,7 @@ const FirstStep: FC<Props> = ({
             )}
             <FormControl
               error={!!errors.campaignType}
-              sx={{ width: { xs: '100%', md: 'auto' } }}
+              sx={{ width: { xs: '100%', md: 'auto', position: 'relative' } }}
             >
               <Controller
                 name="campaignType"
@@ -279,7 +279,9 @@ const FirstStep: FC<Props> = ({
                 )}
               />
               {errors.campaignType && (
-                <FormHelperText>{errors.campaignType.message}</FormHelperText>
+                <FormHelperText sx={{ position: 'absolute', bottom: -24 }}>
+                  {errors.campaignType.message}
+                </FormHelperText>
               )}
             </FormControl>
             <CustomTooltip
@@ -394,7 +396,7 @@ const FirstStep: FC<Props> = ({
                 >
                   <span>Current allowance:</span>
                   <span>
-                    {currentAllowance === AllowanceType.UNLIMITED
+                    {currentAllowance === UNLIMITED_AMOUNT
                       ? 'Unlimited'
                       : `${currentAllowance ?? 0} ${fundToken.toUpperCase()}`}
                   </span>
@@ -462,7 +464,7 @@ const FirstStep: FC<Props> = ({
                           value="exact"
                           disabled={
                             !fundToken ||
-                            +fundAmount < +(currentAllowance ?? '0') ||
+                            +(fundAmount ?? '0') < +(currentAllowance ?? '0') ||
                             isLoading
                           }
                           control={<Radio />}
@@ -575,7 +577,7 @@ const FirstStep: FC<Props> = ({
                         size="small"
                         type="number"
                         value={customAmount}
-                        placeholder="i.e 0.00 USDT"
+                        placeholder="i.e 0.00"
                         disabled={
                           allowance !== AllowanceType.CUSTOM || isLoading
                         }
@@ -589,11 +591,13 @@ const FirstStep: FC<Props> = ({
                             md: 'flex',
                           },
                         }}
-                        onChange={(e) =>
-                          handleChangeCustomAmount(e.target.value)
-                        }
+                        onChange={(e) => {
+                          const value = formatInputValue(e.target.value);
+                          setCustomAmount(value);
+                        }}
                         slotProps={{
                           htmlInput: {
+                            min: 0,
                             sx: {
                               fieldSizing: 'content',
                               maxWidth: '12ch',

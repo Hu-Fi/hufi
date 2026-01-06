@@ -4,6 +4,7 @@ import { type ChainId, NETWORKS } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
 
 import ERC20ABI from '@/abi/ERC20.json';
+import { UNLIMITED_AMOUNT } from '@/constants';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { getTokenAddress } from '@/utils';
@@ -63,9 +64,10 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
           activeAddress,
           allowanceSpender
         );
-        const isUnlimited = BigInt(currentAllowance) >= ethers.MaxUint256 / 2n;
+        const isUnlimited =
+          BigInt(currentAllowance) >= BigInt(Number.MAX_SAFE_INTEGER);
         const _allowance = isUnlimited
-          ? 'unlimited'
+          ? UNLIMITED_AMOUNT
           : ethers.formatUnits(currentAllowance, tokenDecimals);
         setAllowance(_allowance);
         return _allowance;
@@ -106,7 +108,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         );
         const tokenDecimals = await tokenContract.decimals();
         const parsedFundAmount =
-          fundAmount === 'max'
+          fundAmount === UNLIMITED_AMOUNT
             ? ethers.MaxUint256
             : ethers.parseUnits(fundAmount, tokenDecimals);
         const tx = await tokenContract.approve(

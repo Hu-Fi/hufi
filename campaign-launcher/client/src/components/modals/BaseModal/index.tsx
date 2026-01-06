@@ -37,6 +37,11 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
     onClose();
   }, [isLoading, onClose]);
 
+  const handleOnBackClick = useCallback(() => {
+    if (isLoading) return;
+    handleBackClick?.();
+  }, [isLoading, handleBackClick]);
+
   return (
     <Modal
       open={open}
@@ -74,7 +79,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
       >
         <IconButton
           disabled={isLoading}
-          onClick={handleBackClick}
+          onClick={handleOnBackClick}
           sx={{
             display: showBackButton ? 'flex' : 'none',
             bgcolor: 'rgba(205, 199, 255, 0.12)',
@@ -83,9 +88,6 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
             position: 'absolute',
             top: { xs: '16px', md: '40px' },
             left: { xs: '16px', md: '32px' },
-            '&:hover': {
-              bgcolor: 'unset',
-            },
           }}
         >
           <ArrowBackIcon />
