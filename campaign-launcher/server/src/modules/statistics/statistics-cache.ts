@@ -1,4 +1,5 @@
 import { Inject } from '@nestjs/common';
+import dayjs from 'dayjs';
 
 import { REDIS_CACHE_CLIENT, type RedisClient } from '@/infrastructure/redis';
 
@@ -10,19 +11,16 @@ enum StatisticsDataKey {
 
 type CompletedCampaignsStats = {
   nCompleted: number;
-  lastCheckedAt: string;
 };
 
 type TotalRewardsStats<T> = {
   paidRewardsUsd: number;
   lastCheckedBlock: T;
-  updatedAt: string;
 };
 
 export type ActiveCampaignsStats = {
   nActive: number;
   rewardsPoolUsd: number;
-  updatedAt: string;
 };
 
 export class StatisticsCache {
@@ -60,7 +58,11 @@ export class StatisticsCache {
       StatisticsDataKey.COMPLETED_CAMPAIGNS,
     );
 
-    await this.redisCacheClient.set(cacheKey, JSON.stringify(stats));
+    await this.redisCacheClient.setEx(
+      cacheKey,
+      dayjs.duration(1, 'hour').asSeconds(),
+      JSON.stringify(stats),
+    );
   }
 
   async getTotalRewardsStats(
@@ -94,8 +96,9 @@ export class StatisticsCache {
       StatisticsDataKey.TOTAL_REWARDS,
     );
 
-    await this.redisCacheClient.set(
+    await this.redisCacheClient.setEx(
       cacheKey,
+      dayjs.duration(1, 'hour').asSeconds(),
       JSON.stringify(stats, (_this, v) =>
         typeof v === 'bigint' ? v.toString() : v,
       ),

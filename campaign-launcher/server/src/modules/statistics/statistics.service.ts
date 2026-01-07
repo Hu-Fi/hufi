@@ -105,7 +105,6 @@ export class StatisticsService {
         activeCampaignsStats = {
           nActive,
           rewardsPoolUsd,
-          updatedAt: new Date().toISOString(),
         };
 
         await this.statisticsCache.setActiveCampaignsStats(
@@ -181,13 +180,8 @@ export class StatisticsService {
         // eslint-disable-next-line no-constant-condition
       } while (true);
 
-      /**
-       * Update cached values only if the whole run succeeded
-       * in order to avoid double-counting
-       */
       await this.statisticsCache.setCompletedCampaignsStats(chainId, {
         nCompleted,
-        lastCheckedAt: new Date().toISOString(),
       });
 
       this.logger.debug('Completed campaigns stats refreshed', {
@@ -298,7 +292,6 @@ export class StatisticsService {
         await this.statisticsCache.setTotalRewardsStats(chainId, {
           paidRewardsUsd: prevPaidRewardsUsd + totalPaidAmountUsd,
           lastCheckedBlock,
-          updatedAt: new Date().toISOString(),
         });
       }
 
