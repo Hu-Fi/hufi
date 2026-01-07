@@ -120,28 +120,30 @@ export class StatisticsService {
     chainId: ChainId,
   ): Promise<void> {
     try {
-      const completedCampaignsStats =
-        await this.statisticsCache.getCompletedCampaignsStats(chainId);
-
-      const checkCampaignsSince = new Date(
-        completedCampaignsStats?.lastCheckedCampaignCreatedAt || 0,
-      );
-
       this.logger.debug('Refreshing completed campaigns stats', {
         chainId,
-        checkSince: checkCampaignsSince,
       });
 
+      /**
+       * Currently SDK doesn't allow necessary stats queries,
+       * so we have to recalculate N of completed campaigns on every run.
+       *
+       * It's necessary for correct stat calculation, because there might be next case:
+       * - campaign C1 createdAt C1_T1, completed at C1_T2
+       * - campaign C2 createdAt C2_T1, completed at C2_T2
+       * - C2_T1 > C1_T1, C2_T2 < C1_T2
+       * so C2 completes earlier than C1, we remember its createdAt (because it's default
+       * orderBy prop that can't be changed) and never count C1 when it completes.
+       */
       let nCompleted = 0;
-      let lastCheckedCampaignCreatedAt = 0;
       do {
         const campaigns = await this.campaignsService.getCampaigns(
           chainId,
           {
             statuses: [CampaignStatus.COMPLETED, CampaignStatus.CANCELLED],
-            since: checkCampaignsSince,
           },
           {
+            limit: 100,
             skip: nCompleted,
           },
         );
@@ -151,7 +153,6 @@ export class StatisticsService {
         }
 
         nCompleted += campaigns.length;
-        lastCheckedCampaignCreatedAt = campaigns.at(-1)!.createdAt;
         // eslint-disable-next-line no-constant-condition
       } while (true);
 
@@ -160,12 +161,12 @@ export class StatisticsService {
        * in order to avoid double-counting
        */
       await this.statisticsCache.setCompletedCampaignsStats(chainId, {
-        nCompleted: (completedCampaignsStats?.nCompleted || 0) + nCompleted,
-        lastCheckedCampaignCreatedAt: lastCheckedCampaignCreatedAt,
+        nCompleted,
+        lastCheckedAt: new Date().toISOString(),
       });
 
       this.logger.debug('Completed campaigns stats refreshed', {
-        checkedUntil: new Date(lastCheckedCampaignCreatedAt),
+        nCompleted,
       });
     } catch (error) {
       this.logger.error('Failed to refresh completed campaigns stats', {
@@ -196,7 +197,11 @@ export class StatisticsService {
       const totalRewardsStats =
         await this.statisticsCache.getTotalRewardsStats(chainId);
 
-      const startBlock = totalRewardsStats?.lastCheckedBlock || 0n;
+      /**
+       * getTransactions query uses "gte" operator for startBlock,
+       * so add 1 to avoid double-check of last checked block
+       */
+      const startBlock = (totalRewardsStats?.lastCheckedBlock || -1n) + 1n;
 
       this.logger.debug('Refreshing total rewards stats', {
         chainId,
@@ -204,8 +209,8 @@ export class StatisticsService {
       });
 
       let totalPaidAmountUsd = 0;
-      let lastCheckedBlock = 0n;
       let nChecked = 0;
+      let lastCheckedBlock: bigint | undefined;
       do {
         const transactions = await TransactionUtils.getTransactions({
           chainId: chainId as number,
@@ -259,17 +264,21 @@ export class StatisticsService {
         // eslint-disable-next-line no-constant-condition
       } while (true);
 
-      /**
-       * Update cached values only if the whole run succeeded
-       * in order to avoid double-counting
-       */
-      await this.statisticsCache.setTotalRewardsStats(chainId, {
-        paidRewardsUsd:
-          (totalRewardsStats?.paidRewardsUsd || 0) + totalPaidAmountUsd,
-        lastCheckedBlock,
-      });
+      if (lastCheckedBlock) {
+        /**
+         * Update cached values only if new blocks got scanned
+         * in order to avoid double-counting
+         */
+        const prevPaidRewardsUsd = totalRewardsStats?.paidRewardsUsd || 0;
+        await this.statisticsCache.setTotalRewardsStats(chainId, {
+          paidRewardsUsd: prevPaidRewardsUsd + totalPaidAmountUsd,
+          lastCheckedBlock,
+          updatedAt: new Date().toISOString(),
+        });
+      }
 
       this.logger.debug('Total rewards stats refreshed', {
+        nChecked,
         lastCheckedBlock,
       });
     } catch (error) {

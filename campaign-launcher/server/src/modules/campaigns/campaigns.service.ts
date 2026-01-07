@@ -3,6 +3,7 @@ import {
   EscrowStatus,
   EscrowUtils,
   type IEscrow,
+  OrderDirection,
   TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
@@ -63,6 +64,7 @@ export class CampaignsService {
     pagination?: Partial<{
       skip: number;
       limit: number;
+      order: `${OrderDirection}`;
     }>,
   ): Promise<CampaignData[]> {
     const campaigns: CampaignData[] = [];
@@ -83,6 +85,9 @@ export class CampaignsService {
       first: pagination?.limit,
       skip: pagination?.skip,
       from: filters?.since,
+      orderDirection: pagination?.order
+        ? (pagination.order as OrderDirection)
+        : undefined,
     });
 
     for (const campaignEscrow of campaignEscrows) {

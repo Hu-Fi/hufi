@@ -9,12 +9,13 @@ enum StatisticsDataKey {
 
 type CompletedCampaignsStats = {
   nCompleted: number;
-  lastCheckedCampaignCreatedAt: number;
+  lastCheckedAt: string;
 };
 
 type TotalRewardsStats<T> = {
   paidRewardsUsd: number;
   lastCheckedBlock: T;
+  updatedAt: string;
 };
 
 export class StatisticsCache {
