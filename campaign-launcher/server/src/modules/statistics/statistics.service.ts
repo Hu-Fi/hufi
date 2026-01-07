@@ -12,7 +12,7 @@ import logger from '@/logger';
 import { CampaignsService, CampaignStatus } from '@/modules/campaigns';
 import { Web3Service } from '@/modules/web3';
 
-import { StatisticsCache } from './statistics-cache';
+import { type ActiveCampaignsStats, StatisticsCache } from './statistics-cache';
 
 @Injectable()
 export class StatisticsService {
@@ -51,54 +51,79 @@ export class StatisticsService {
     };
   }
 
-  private async getActiveCampaignsStats(chainId: ChainId): Promise<{
-    nActive: number;
-    rewardsPoolUsd: number;
-  }> {
-    let nActive = 0;
-    let rewardsPoolUsd = 0;
+  private async getActiveCampaignsStats(
+    chainId: ChainId,
+  ): Promise<ActiveCampaignsStats> {
+    try {
+      let activeCampaignsStats =
+        await this.statisticsCache.getActiveCampaignsStats(chainId);
 
-    do {
-      const campaigns = await this.campaignsService.getCampaigns(
-        chainId,
-        {
-          statuses: [CampaignStatus.ACTIVE],
-        },
-        {
-          skip: nActive,
-        },
-      );
+      if (!activeCampaignsStats) {
+        let nActive = 0;
+        let rewardsPoolUsd = 0;
 
-      if (campaigns.length === 0) {
-        break;
-      }
-
-      nActive += campaigns.length;
-
-      for (const campaign of campaigns) {
-        try {
-          const fundTokenPriceUsd = await this.web3Service.getTokenPriceUsd(
-            campaign.fundTokenSymbol,
+        do {
+          const campaigns = await this.campaignsService.getCampaigns(
+            chainId,
+            {
+              statuses: [CampaignStatus.ACTIVE],
+            },
+            {
+              skip: nActive,
+            },
           );
-          if (!fundTokenPriceUsd) {
-            continue;
+
+          if (campaigns.length === 0) {
+            break;
           }
 
-          const balance = Number(
-            ethers.formatUnits(campaign.fundAmount, campaign.fundTokenDecimals),
-          );
-          rewardsPoolUsd += balance * fundTokenPriceUsd;
-        } catch {
-          // noop
-        }
-      }
-      // eslint-disable-next-line no-constant-condition
-    } while (true);
+          nActive += campaigns.length;
 
-    return {
-      nActive,
-      rewardsPoolUsd,
-    };
+          for (const campaign of campaigns) {
+            try {
+              const fundTokenPriceUsd = await this.web3Service.getTokenPriceUsd(
+                campaign.fundTokenSymbol,
+              );
+              if (!fundTokenPriceUsd) {
+                continue;
+              }
+
+              const balance = Number(
+                ethers.formatUnits(
+                  campaign.fundAmount,
+                  campaign.fundTokenDecimals,
+                ),
+              );
+              rewardsPoolUsd += balance * fundTokenPriceUsd;
+            } catch {
+              // noop
+            }
+          }
+          // eslint-disable-next-line no-constant-condition
+        } while (true);
+
+        activeCampaignsStats = {
+          nActive,
+          rewardsPoolUsd,
+          updatedAt: new Date().toISOString(),
+        };
+
+        await this.statisticsCache.setActiveCampaignsStats(
+          chainId,
+          activeCampaignsStats,
+        );
+      }
+
+      return activeCampaignsStats;
+    } catch (error) {
+      const errorMessage = 'Failed to get active campaigns stats';
+      this.logger.error(errorMessage, {
+        chainId,
+        error,
+      });
+
+      throw new Error(errorMessage);
+    }
   }
 
   @ScheduleInterval(dayjs.duration(4, 'minutes').asMilliseconds())
