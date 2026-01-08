@@ -7,14 +7,14 @@ import { Alchemy } from 'alchemy-sdk';
 import { JsonRpcProvider } from 'ethers';
 
 import { Web3ConfigService } from '@/config';
+import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
 import logger from '@/logger';
 
-import Web3CacheMock from './__mocks__/mock-web3-cache';
 import { generateTestnetChainId, mockWeb3ConfigService } from './fixtures';
 import { Web3Cache } from './web3-cache';
 import { Web3Service } from './web3.service';
 
-const mockWeb3Cache = new Web3CacheMock();
+const mockCacheManager = new CacheManagerMock();
 
 describe('Web3Service', () => {
   let web3Service: Web3Service;
@@ -22,9 +22,10 @@ describe('Web3Service', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
+        Web3Cache,
         {
-          provide: Web3Cache,
-          useValue: mockWeb3Cache,
+          provide: CacheManager,
+          useValue: mockCacheManager,
         },
         {
           provide: Web3ConfigService,
@@ -87,7 +88,7 @@ describe('Web3Service', () => {
     afterEach(() => {
       jest.resetAllMocks();
 
-      mockWeb3Cache.clear();
+      mockCacheManager.clear();
     });
 
     it('should log a warn if alchemy operation fails and throw', async () => {

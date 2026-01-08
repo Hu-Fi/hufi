@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { RedisModule } from '@/infrastructure/redis';
+import { CacheModule } from '@/infrastructure/cache';
 import { CampaignModule } from '@/modules/campaigns';
 import { Web3Module } from '@/modules/web3';
 
@@ -9,7 +9,11 @@ import { StatisticsController } from './statistics.controller';
 import { StatisticsService } from './statistics.service';
 
 @Module({
-  imports: [CampaignModule, RedisModule, Web3Module],
+  imports: [
+    CacheModule.register({ namespace: 'statistics' }),
+    CampaignModule,
+    Web3Module,
+  ],
   providers: [StatisticsCache, StatisticsService],
   controllers: [StatisticsController],
   exports: [StatisticsService],

@@ -1,0 +1,3 @@
+export const CACHE_MODULE_OPTIONS_TOKEN = Symbol('CACHE_MODULE_OPTIONS');
+
+export const KEY_PARTS_SEPARATOR = ':';

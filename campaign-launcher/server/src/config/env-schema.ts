@@ -32,8 +32,10 @@ export const envValidator = Joi.object({
 
   ALCHEMY_API_KEY: Joi.string().required(),
 
-  // Redis
-  REDIS_CACHE_URL: Joi.string().uri({
-    scheme: ['redis', 'rediss'],
-  }),
+  // Cache
+  VALKEY_HOST: Joi.alternatives()
+    .try(Joi.string().ip({ version: ['ipv4'] }), Joi.string().hostname())
+    .required(),
+  VALKEY_PORT: Joi.number().positive().integer(),
+  VALKEY_DB: Joi.number().integer().min(0).required(),
 });

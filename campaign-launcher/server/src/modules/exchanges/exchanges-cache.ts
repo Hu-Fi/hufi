@@ -1,38 +1,26 @@
-import { Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import dayjs from 'dayjs';
 
-import { REDIS_CACHE_CLIENT, type RedisClient } from '@/infrastructure/redis';
+import { CacheManager } from '@/infrastructure/cache';
 
 enum ExchangeDataKey {
   TRADING_PAIRS = 'trading_pairs',
   CURRENCIES = 'currencies',
 }
 
-const ExchangeDataTtl: Record<ExchangeDataKey, number> = {
-  // new trading pairs do not appear often
-  [ExchangeDataKey.TRADING_PAIRS]: 60 * 60 * 24,
-
-  // new currencies do not appear often
-  [ExchangeDataKey.CURRENCIES]: 60 * 60 * 24,
-};
-
+@Injectable()
 export class ExchangesCache {
-  constructor(
-    @Inject(REDIS_CACHE_CLIENT) private readonly redisCacheClient: RedisClient,
-  ) {}
-
-  private makeCacheKey(exchangeName: string, dataKey: string): string {
-    return `exchanges:${exchangeName}:${dataKey}`;
-  }
+  constructor(private readonly cacheManager: CacheManager) {}
 
   async getTradingPairs(exchangeName: string): Promise<string[] | null> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       exchangeName,
       ExchangeDataKey.TRADING_PAIRS,
-    );
+    ]);
 
-    const tradingPairs = await this.redisCacheClient.get(cacheKey);
+    const tradingPairs = await this.cacheManager.get<string>(cacheKey);
 
-    if (!tradingPairs) {
+    if (tradingPairs === null) {
       return null;
     }
 
@@ -43,27 +31,28 @@ export class ExchangesCache {
     exchangeName: string,
     tradingPairs: string[],
   ): Promise<void> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       exchangeName,
       ExchangeDataKey.TRADING_PAIRS,
-    );
+    ]);
 
-    await this.redisCacheClient.setEx(
+    await this.cacheManager.set(
       cacheKey,
-      ExchangeDataTtl[ExchangeDataKey.TRADING_PAIRS],
       JSON.stringify(tradingPairs),
+      // new trading pairs do not appear often
+      dayjs.duration(1, 'day').asMilliseconds(),
     );
   }
 
   async getCurrencies(exchangeName: string): Promise<string[] | null> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       exchangeName,
       ExchangeDataKey.CURRENCIES,
-    );
+    ]);
 
-    const currencies = await this.redisCacheClient.get(cacheKey);
+    const currencies = await this.cacheManager.get<string>(cacheKey);
 
-    if (!currencies) {
+    if (currencies === null) {
       return null;
     }
 
@@ -74,15 +63,16 @@ export class ExchangesCache {
     exchangeName: string,
     currencies: string[],
   ): Promise<void> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       exchangeName,
       ExchangeDataKey.CURRENCIES,
-    );
+    ]);
 
-    await this.redisCacheClient.setEx(
+    await this.cacheManager.set(
       cacheKey,
-      ExchangeDataTtl[ExchangeDataKey.CURRENCIES],
       JSON.stringify(currencies),
+      // new currencies do not appear often
+      dayjs.duration(1, 'day').asMilliseconds(),
     );
   }
 }

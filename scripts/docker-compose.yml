@@ -38,9 +38,9 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    container_name: hufi-redis
-    image: redis:8
+  cache:
+    container_name: hufi-cache
+    image: valkey/valkey:8
     restart: *default-restart
     logging:
       <<: *default-logging
@@ -51,15 +51,15 @@ services:
         target: 6379
         published: 6379
     volumes:
-      - redis-data:/data
+      - valkey-data:/data
     command: [
-      "redis-server",
+      "valkey-server",
       # we don not expect a lot of writes on local
-      "--save", "60", "100",
-      "--appendonly", "yes",
+      "--save", "60", "1",
+      "--loglevel", "warning",
     ]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -128,7 +128,7 @@ services:
 
 volumes:
   postgres-data:
-  redis-data:
+  valkey-data:
   minio-data:
 
 networks:
