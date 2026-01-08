@@ -119,14 +119,13 @@ const Header: FC = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Link to={ROUTES.DASHBOARD}>
-              <img
-                src={logo}
-                alt="HuFi"
-                width={isMobile ? 60 : 87}
-                height={isMobile ? 22 : 32}
-              />
-            </Link>
+            <MuiLink
+              component={Link}
+              to={ROUTES.DASHBOARD}
+              sx={{ height: isMobile ? 23 : 32 }}
+            >
+              <img src={logo} alt="HuFi" width={isMobile ? 62 : 87} />
+            </MuiLink>
           </Box>
 
           <Box
