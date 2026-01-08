@@ -1,7 +1,7 @@
-import { Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 
-import { REDIS_CACHE_CLIENT, type RedisClient } from '@/infrastructure/redis';
+import { CacheManager } from '@/infrastructure/cache';
 
 enum StatisticsDataKey {
   COMPLETED_CAMPAIGNS = 'completed_campaigns',
@@ -23,24 +23,19 @@ export type ActiveCampaignsStats = {
   rewardsPoolUsd: number;
 };
 
+@Injectable()
 export class StatisticsCache {
-  constructor(
-    @Inject(REDIS_CACHE_CLIENT) private readonly redisCacheClient: RedisClient,
-  ) {}
-
-  private makeCacheKey(chainId: number, dataKey: string): string {
-    return `statistics:${chainId}:${dataKey}`;
-  }
+  constructor(private readonly cacheManager: CacheManager) {}
 
   async getCompletedCampaignsStats(
     chainId: number,
   ): Promise<CompletedCampaignsStats | null> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       chainId,
       StatisticsDataKey.COMPLETED_CAMPAIGNS,
-    );
+    ]);
 
-    const stats = await this.redisCacheClient.get(cacheKey);
+    const stats = await this.cacheManager.get<string>(cacheKey);
 
     if (!stats) {
       return null;
@@ -53,27 +48,27 @@ export class StatisticsCache {
     chainId: number,
     stats: CompletedCampaignsStats,
   ): Promise<void> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       chainId,
       StatisticsDataKey.COMPLETED_CAMPAIGNS,
-    );
+    ]);
 
-    await this.redisCacheClient.setEx(
+    await this.cacheManager.set(
       cacheKey,
-      dayjs.duration(1, 'hour').asSeconds(),
       JSON.stringify(stats),
+      dayjs.duration(1, 'hour').asMilliseconds(),
     );
   }
 
   async getTotalRewardsStats(
     chainId: number,
   ): Promise<TotalRewardsStats<bigint> | null> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       chainId,
       StatisticsDataKey.TOTAL_REWARDS,
-    );
+    ]);
 
-    const stats = await this.redisCacheClient.get(cacheKey);
+    const stats = await this.cacheManager.get<string>(cacheKey);
 
     if (!stats) {
       return null;
@@ -91,29 +86,29 @@ export class StatisticsCache {
     chainId: number,
     stats: TotalRewardsStats<bigint>,
   ): Promise<void> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       chainId,
       StatisticsDataKey.TOTAL_REWARDS,
-    );
+    ]);
 
-    await this.redisCacheClient.setEx(
+    await this.cacheManager.set(
       cacheKey,
-      dayjs.duration(1, 'hour').asSeconds(),
       JSON.stringify(stats, (_this, v) =>
         typeof v === 'bigint' ? v.toString() : v,
       ),
+      dayjs.duration(1, 'hour').asMilliseconds(),
     );
   }
 
   async getActiveCampaignsStats(
     chainId: number,
   ): Promise<ActiveCampaignsStats | null> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       chainId,
       StatisticsDataKey.ACTIVE_CAMPAIGNS,
-    );
+    ]);
 
-    const stats = await this.redisCacheClient.get(cacheKey);
+    const stats = await this.cacheManager.get<string>(cacheKey);
 
     if (!stats) {
       return null;
@@ -126,11 +121,15 @@ export class StatisticsCache {
     chainId: number,
     stats: ActiveCampaignsStats,
   ): Promise<void> {
-    const cacheKey = this.makeCacheKey(
+    const cacheKey = CacheManager.makeCacheKey([
       chainId,
       StatisticsDataKey.ACTIVE_CAMPAIGNS,
-    );
+    ]);
 
-    await this.redisCacheClient.setEx(cacheKey, 30, JSON.stringify(stats));
+    await this.cacheManager.set(
+      cacheKey,
+      JSON.stringify(stats),
+      dayjs.duration(30, 'seconds').asMilliseconds(),
+    );
   }
 }

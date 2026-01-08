@@ -1,31 +1,27 @@
-import { Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import dayjs from 'dayjs';
 
-import { REDIS_CACHE_CLIENT, type RedisClient } from '@/infrastructure/redis';
+import { CacheManager } from '@/infrastructure/cache';
 
 enum Web3DataKey {
   TOKEN_PRICE = 'token_price',
 }
 
+@Injectable()
 export class Web3Cache {
-  constructor(
-    @Inject(REDIS_CACHE_CLIENT) private readonly redisCacheClient: RedisClient,
-  ) {}
-
-  private makeCacheKey(dataKeyParts: string[]): string {
-    return `web3:${dataKeyParts.join(':')}`;
-  }
+  constructor(private readonly cacheManager: CacheManager) {}
 
   private normalizeTokenSymbol(symbol: string): string {
     return symbol.toUpperCase();
   }
 
   async getTokenPriceUsd(symbol: string): Promise<number | null> {
-    const cacheKey = this.makeCacheKey([
+    const cacheKey = CacheManager.makeCacheKey([
       Web3DataKey.TOKEN_PRICE,
       this.normalizeTokenSymbol(symbol),
     ]);
 
-    const tokenPriceUsd = await this.redisCacheClient.get(cacheKey);
+    const tokenPriceUsd = await this.cacheManager.get<string>(cacheKey);
 
     if (tokenPriceUsd === null) {
       return null;
@@ -35,11 +31,15 @@ export class Web3Cache {
   }
 
   async setTokenPriceUsd(symbol: string, tokenPriceUsd: number): Promise<void> {
-    const cacheKey = this.makeCacheKey([
+    const cacheKey = CacheManager.makeCacheKey([
       Web3DataKey.TOKEN_PRICE,
       this.normalizeTokenSymbol(symbol),
     ]);
 
-    await this.redisCacheClient.setEx(cacheKey, 60, tokenPriceUsd.toString());
+    await this.cacheManager.set(
+      cacheKey,
+      tokenPriceUsd.toString(),
+      dayjs.duration(1, 'minute').asMilliseconds(),
+    );
   }
 }
