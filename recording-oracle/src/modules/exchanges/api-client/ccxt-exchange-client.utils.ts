@@ -81,6 +81,14 @@ export function isExchangeApiAccessError(error: any): error is Error {
       }
 
       /**
+       * This can be returned in case when API key has IPs whitelist
+       * but our application IP address is not there
+       */
+      if (error.message.includes('700006')) {
+        return true;
+      }
+
+      /**
        * This can happen in case case deposit address not exist,
        * so user will have to create one
        */

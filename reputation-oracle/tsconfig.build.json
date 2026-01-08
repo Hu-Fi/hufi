@@ -6,6 +6,5 @@
     "test",
     "**/fixtures",
     "**/*spec.ts",
-    "jest.config.ts"
   ]
 }
