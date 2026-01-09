@@ -1,18 +1,21 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   HealthCheck,
-  HealthCheckResult,
   HealthCheckService,
-  HealthIndicatorResult,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
 
 import { Public } from '@/common/decorators';
 import Environment from '@/common/utils/environment';
 import { ServerConfigService } from '@/config';
+import {
+  VALKEY_CACHE_CLIENT,
+  type ValkeyClient,
+} from '@/infrastructure/valkey';
 
 import { PingResponseDto } from './dto/ping-response.dto';
+import { ValkeyHealthIndicator } from './indicators/valkey.health';
 
 @ApiTags('Health')
 @Public()
@@ -22,6 +25,9 @@ export class HealthController {
     private readonly serverConfigService: ServerConfigService,
     private readonly health: HealthCheckService,
     private readonly db: TypeOrmHealthIndicator,
+    private readonly valkey: ValkeyHealthIndicator,
+    @Inject(VALKEY_CACHE_CLIENT)
+    private readonly valkeyCacheClient: ValkeyClient,
   ) {}
 
   @ApiOperation({
@@ -52,12 +58,10 @@ export class HealthController {
   })
   @HealthCheck()
   @Get('/check')
-  check(): Promise<HealthCheckResult> {
+  check() {
     return this.health.check([
-      async (): Promise<HealthIndicatorResult> =>
-        this.db.pingCheck('database', {
-          timeout: 5000,
-        }),
+      async () => this.db.pingCheck('database', { timeout: 5000 }),
+      async () => this.valkey.isHealthy('cache-client', this.valkeyCacheClient),
     ]);
   }
 }

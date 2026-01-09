@@ -1,3 +1,4 @@
+import { Logger as ValkeyLogger } from '@valkey/valkey-glide';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import Decimal from 'decimal.js';
@@ -12,3 +13,5 @@ Decimal.set({
 });
 
 dayjs.extend(duration);
+
+ValkeyLogger.setLoggerConfig('off');
