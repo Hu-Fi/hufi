@@ -12,11 +12,13 @@ async function valkeyFactory({
   host,
   port,
   dbNumber,
+  useTls,
 }: {
   name: string;
   host: string;
   port?: number;
   dbNumber: number;
+  useTls?: boolean;
 }): Promise<ValkeyClient> {
   assert(name, 'Valkey client name must be provided');
   assert(host, 'Valkey host is required');
@@ -29,7 +31,7 @@ async function valkeyFactory({
     clientName: `${APP_NAME}-${name}`,
     addresses: [{ host, port }],
     databaseId: dbNumber,
-    useTLS: false,
+    useTLS: useTls === true,
     defaultDecoder: Decoder.String,
     lazyConnect: true,
   });
