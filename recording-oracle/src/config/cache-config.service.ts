@@ -16,4 +16,8 @@ export class CacheConfigService {
   get valkeyDbNumber(): number {
     return Number(this.configService.getOrThrow('VALKEY_DB'));
   }
+
+  get valkeyTls(): boolean {
+    return this.configService.get('VALKEY_TLS', 'false') === 'true';
+  }
 }

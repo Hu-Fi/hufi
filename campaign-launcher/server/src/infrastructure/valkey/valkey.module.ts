@@ -16,6 +16,7 @@ import ValkeyFactory, { type ValkeyClient } from './valkey.factory';
           host: cacheConfigService.valkeyHost,
           port: cacheConfigService.valkeyPort,
           dbNumber: cacheConfigService.valkeyDbNumber,
+          useTls: cacheConfigService.valkeyTls,
         });
 
         return cacheClient;
