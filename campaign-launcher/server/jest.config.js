@@ -13,6 +13,7 @@ const config = {
   modulePaths: [compilerOptions.baseUrl],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
   clearMocks: true,
+  setupFiles: ['<rootDir>/src/setup-libs.ts'],
 };
 
 module.exports = config;

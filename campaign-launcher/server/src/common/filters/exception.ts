@@ -5,8 +5,9 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
+import type { BaseErrorResponse } from '@/common/types';
 import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';
 import logger from '@/logger';
 
@@ -20,8 +21,11 @@ export class ExceptionFilter implements IExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    const responseBody: { message: string; [x: string]: unknown } = {
+
+    const responseBody: BaseErrorResponse & { validation_errors?: string[] } = {
       message: 'Internal server error',
+      timestamp: new Date().toISOString(),
+      path: request.url,
     };
 
     if (exception instanceof HttpException) {
@@ -47,15 +51,6 @@ export class ExceptionFilter implements IExceptionFilter {
 
     response.removeHeader('Cache-Control');
 
-    response.status(status).json(
-      Object.assign(
-        {
-          status_code: status,
-          path: request.url,
-          timestamp: new Date().toISOString(),
-        },
-        responseBody,
-      ),
-    );
+    response.status(status).json(responseBody);
   }
 }

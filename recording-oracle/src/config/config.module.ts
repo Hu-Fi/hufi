@@ -2,6 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuthConfigService } from './auth-config.service';
+import { CacheConfigService } from './cache-config.service';
 import { CampaignsConfigService } from './campaigns-config.service';
 import { DatabaseConfigService } from './database-config.service';
 import { EncryptionConfigService } from './encryption-config.service';
@@ -16,6 +17,7 @@ import { Web3ConfigService } from './web3-config.service';
   imports: [ConfigModule],
   providers: [
     AuthConfigService,
+    CacheConfigService,
     CampaignsConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
@@ -28,6 +30,7 @@ import { Web3ConfigService } from './web3-config.service';
   exports: [
     AuthConfigService,
     CampaignsConfigService,
+    CacheConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
     ExchangeConfigService,

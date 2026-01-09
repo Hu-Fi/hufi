@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-import { BaseErrorResponse } from '@/common/types';
+import type { BaseErrorResponse } from '@/common/types';
 import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';
 import logger from '@/logger';
 

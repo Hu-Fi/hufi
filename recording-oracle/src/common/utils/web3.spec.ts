@@ -144,7 +144,7 @@ describe('Web3 utilities', () => {
 
       const signer = web3Utils.recoverSignerAddress(message, invalidSignature);
 
-      expect(signer).toBe(null);
+      expect(signer).toBeNull();
     });
 
     it('should recover the correct signer if message is an object', async () => {
