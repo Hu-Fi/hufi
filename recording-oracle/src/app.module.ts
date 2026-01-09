@@ -11,7 +11,7 @@ import { TransformInterceptor } from './common/interceptors';
 import { HttpValidationPipe } from './common/pipes';
 import Environment from './common/utils/environment';
 import { EnvConfigModule, envValidator } from './config';
-import { DatabaseModule } from './database';
+import { DatabaseModule } from './infrastructure/database';
 import { AdminModule } from './modules/admin';
 import { AuthModule } from './modules/auth';
 import { CampaignsModule } from './modules/campaigns';
