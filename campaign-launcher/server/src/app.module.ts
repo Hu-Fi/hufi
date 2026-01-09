@@ -9,6 +9,7 @@ import { TransformInterceptor } from './common/interceptors';
 import { HttpValidationPipe } from './common/pipes';
 import Environment from './common/utils/environment';
 import { EnvConfigModule, envValidator } from './config';
+import { ValkeyModule } from './infrastructure/valkey';
 import { CampaignModule } from './modules/campaigns';
 import { ExchangesModule } from './modules/exchanges';
 import { HealthModule } from './modules/health';
@@ -54,6 +55,7 @@ import { StatisticsModule } from './modules/statistics';
     EnvConfigModule,
     ExchangesModule,
     StatisticsModule,
+    ValkeyModule,
   ],
   controllers: [AppController],
 })

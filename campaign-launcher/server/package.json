@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^11.1.10",
     "@nestjs/schedule": "^6.1.0",
     "@nestjs/swagger": "^11.2.3",
+    "@nestjs/terminus": "^11.0.0",
     "@valkey/valkey-glide": "^2.2.1",
     "alchemy-sdk": "^3.6.5",
     "ccxt": "^4.5.28",

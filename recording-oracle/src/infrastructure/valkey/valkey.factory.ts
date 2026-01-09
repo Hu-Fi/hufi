@@ -5,7 +5,7 @@ import { Decoder, GlideClient } from '@valkey/valkey-glide';
 import { APP_NAME } from '@/common/constants';
 import logger from '@/logger';
 
-export type ValkeyClient = GlideClient;
+export type ValkeyClient = GlideClient & { readonly clientName: string };
 
 async function valkeyFactory({
   name,
@@ -27,14 +27,18 @@ async function valkeyFactory({
     'dbNumber must be integer',
   );
 
+  const clientName = `${APP_NAME}-${name}`;
+
   const client = await GlideClient.createClient({
-    clientName: `${APP_NAME}-${name}`,
+    clientName,
     addresses: [{ host, port }],
     databaseId: dbNumber,
     useTLS: useTls === true,
     defaultDecoder: Decoder.String,
     lazyConnect: true,
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (client as any).clientName = clientName;
 
   try {
     await client.ping();
@@ -47,7 +51,7 @@ async function valkeyFactory({
     throw new Error(errorMessage);
   }
 
-  return client;
+  return client as ValkeyClient;
 }
 
 export default {
