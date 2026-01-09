@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Alchemy } from 'alchemy-sdk';
 import { Wallet, ethers } from 'ethers';
-import { LRUCache } from 'lru-cache';
 
 import {
   ChainId,
@@ -13,6 +12,7 @@ import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 
 import type { Chain, WalletWithProvider } from './types';
+import { Web3Cache } from './web3-cache';
 
 const MISSING_TOKEN_PRICE = -1;
 
@@ -28,18 +28,10 @@ export class Web3Service {
 
   private readonly alchemySdk: Alchemy;
 
-  private readonly tokenPriceCache = new LRUCache<string, number>({
-    ttl: 1000 * 60 * 1,
-    max: 4200,
-    ttlAutopurge: false,
-    allowStale: false,
-    noDeleteOnStaleGet: false,
-    noUpdateTTL: false,
-    updateAgeOnGet: false,
-    updateAgeOnHas: false,
-  });
-
-  constructor(private readonly web3ConfigService: Web3ConfigService) {
+  constructor(
+    private readonly web3Cache: Web3Cache,
+    private readonly web3ConfigService: Web3ConfigService,
+  ) {
     const privateKey = this.web3ConfigService.privateKey;
 
     for (const chain of this.supportedChains) {
@@ -182,12 +174,11 @@ export class Web3Service {
       return 1;
     }
 
-    const cacheKey = `get-token-price-usd-${uppercasedSymbol}`;
-
     try {
-      let tokenPriceUsd = this.tokenPriceCache.get(cacheKey);
+      let tokenPriceUsd =
+        await this.web3Cache.getTokenPriceUsd(uppercasedSymbol);
 
-      if (tokenPriceUsd === undefined) {
+      if (tokenPriceUsd === null) {
         const {
           data: [apiResult],
         } = await this.alchemySdk.prices.getTokenPriceBySymbol([
@@ -212,7 +203,7 @@ export class Web3Service {
           tokenPriceUsd = MISSING_TOKEN_PRICE;
         }
 
-        this.tokenPriceCache.set(cacheKey, tokenPriceUsd);
+        await this.web3Cache.setTokenPriceUsd(uppercasedSymbol, tokenPriceUsd);
       }
 
       return tokenPriceUsd === MISSING_TOKEN_PRICE ? null : tokenPriceUsd;

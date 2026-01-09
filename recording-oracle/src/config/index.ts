@@ -1,6 +1,7 @@
 export * from './env-schema';
 
 export { AuthConfigService } from './auth-config.service';
+export { CacheConfigService } from './cache-config.service';
 export { CampaignsConfigService } from './campaigns-config.service';
 export { DatabaseConfigService } from './database-config.service';
 export { EncryptionConfigService } from './encryption-config.service';

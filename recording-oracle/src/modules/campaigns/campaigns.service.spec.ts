@@ -38,6 +38,7 @@ import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
+import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
@@ -55,6 +56,7 @@ import {
 import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
 import { CampaignEntity } from './campaign.entity';
+import { CampaignsCache } from './campaigns-cache';
 import {
   CampaignAlreadyFinishedError,
   CampaignCancelledError,
@@ -110,6 +112,8 @@ import {
 import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
+const mockCacheManager = new CacheManagerMock();
+
 const mockCampaignsRepository = createMock<CampaignsRepository>();
 const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
@@ -130,11 +134,17 @@ const exchangePermissions = Object.values(ExchangePermission);
 
 describe('CampaignsService', () => {
   let campaignsService: CampaignsService;
+  let campaignsCache: CampaignsCache;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         CampaignsService,
+        {
+          provide: CacheManager,
+          useValue: mockCacheManager,
+        },
+        CampaignsCache,
         {
           provide: CampaignsConfigService,
           useValue: mockCampaignsConfigService,
@@ -179,6 +189,7 @@ describe('CampaignsService', () => {
     }).compile();
 
     campaignsService = moduleRef.get<CampaignsService>(CampaignsService);
+    campaignsCache = moduleRef.get<CampaignsCache>(CampaignsCache);
   });
 
   afterEach(() => {
@@ -1217,7 +1228,7 @@ describe('CampaignsService', () => {
       const results =
         await campaignsService['retrieveCampaignIntermediateResults'](campaign);
 
-      expect(results).toBe(null);
+      expect(results).toBeNull();
     });
 
     it('should rethrow download error', async () => {
@@ -3030,7 +3041,7 @@ describe('CampaignsService', () => {
         mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
           null,
         );
-        spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+        spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
         const result = await campaignsService.checkJoinStatus(
           userId,
@@ -3061,7 +3072,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+      spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
       const result = await campaignsService.checkJoinStatus(
         userId,
@@ -3089,7 +3100,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      spyOnCheckCampaignTargetMet.mockReturnValueOnce(true);
+      spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
       const result = await campaignsService.checkJoinStatus(
         userId,
@@ -3117,7 +3128,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      spyOnCheckCampaignTargetMet.mockReturnValueOnce(false);
+      spyOnCheckCampaignTargetMet.mockResolvedValueOnce(false);
 
       const result = await campaignsService.checkJoinStatus(
         userId,
@@ -3265,18 +3276,10 @@ describe('CampaignsService', () => {
   });
 
   describe('refreshInterimProgressCache', () => {
-    const mockInterimProgressCache = new Map();
-    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnGetActiveTimeframe: jest.SpyInstance;
 
     beforeAll(() => {
-      replacedInterimProgressCacheRef = jest.replaceProperty(
-        campaignsService as any,
-        'campaignsInterimProgressCache',
-        mockInterimProgressCache,
-      );
-
       spyOnCheckCampaignProgressForPeriod = jest.spyOn(
         campaignsService,
         'checkCampaignProgressForPeriod',
@@ -3291,8 +3294,6 @@ describe('CampaignsService', () => {
     });
 
     afterAll(() => {
-      replacedInterimProgressCacheRef.restore();
-
       spyOnCheckCampaignProgressForPeriod.mockRestore();
       spyOnGetActiveTimeframe.mockRestore();
     });
@@ -3304,7 +3305,7 @@ describe('CampaignsService', () => {
     });
 
     afterEach(() => {
-      mockInterimProgressCache.clear();
+      mockCacheManager.clear();
     });
 
     it('should run with pessimistic lock', async () => {
@@ -3363,9 +3364,9 @@ describe('CampaignsService', () => {
           mockedActiveTimeframe.start,
           mockedActiveTimeframe.end,
         );
-        expect(mockInterimProgressCache.get(campaign.id)).toEqual(
-          campaignsProgressMap.get(campaign.id),
-        );
+        await expect(
+          campaignsCache.getInterimProgress(campaign.id),
+        ).resolves.toEqual(campaignsProgressMap.get(campaign.id));
       }
     });
 
@@ -3380,7 +3381,9 @@ describe('CampaignsService', () => {
 
       expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(0);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-      expect(mockInterimProgressCache.size).toBe(0);
+      await expect(
+        campaignsCache.getInterimProgress(campaign.id),
+      ).resolves.toBeNull();
     });
 
     it('should skip campaign for refresh if no active timeframe', async () => {
@@ -3396,7 +3399,9 @@ describe('CampaignsService', () => {
       expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(1);
       expect(spyOnGetActiveTimeframe).toHaveBeenCalledWith(campaign);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
-      expect(mockInterimProgressCache.size).toBe(0);
+      await expect(
+        campaignsCache.getInterimProgress(campaign.id),
+      ).resolves.toBeNull();
     });
 
     it('should handle error for campaign and process others', async () => {
@@ -3427,9 +3432,12 @@ describe('CampaignsService', () => {
       expect(spyOnGetActiveTimeframe).toHaveBeenCalledTimes(2);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(2);
 
-      expect(mockInterimProgressCache.size).toBe(1);
-      expect(mockInterimProgressCache.get(okCampaign.id)).toBeDefined();
-      expect(mockInterimProgressCache.get(errorCampaign.id)).toBeUndefined();
+      await expect(
+        campaignsCache.getInterimProgress(okCampaign.id),
+      ).resolves.not.toBeNull();
+      await expect(
+        campaignsCache.getInterimProgress(errorCampaign.id),
+      ).resolves.toBeNull();
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -3442,8 +3450,6 @@ describe('CampaignsService', () => {
   });
 
   describe('getUserProgress', () => {
-    const mockInterimProgressCache = new Map();
-    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
     let spyOnGetActiveTimeframe: jest.SpyInstance;
 
     let userId: string;
@@ -3456,12 +3462,6 @@ describe('CampaignsService', () => {
       evmAddress = faker.finance.ethereumAddress();
       chainId = generateTestnetChainId();
 
-      replacedInterimProgressCacheRef = jest.replaceProperty(
-        campaignsService as any,
-        'campaignsInterimProgressCache',
-        mockInterimProgressCache,
-      );
-
       spyOnGetActiveTimeframe = jest.spyOn(
         campaignsService,
         'getActiveTimeframe',
@@ -3470,8 +3470,6 @@ describe('CampaignsService', () => {
     });
 
     afterAll(() => {
-      replacedInterimProgressCacheRef.restore();
-
       spyOnGetActiveTimeframe.mockRestore();
     });
 
@@ -3484,7 +3482,7 @@ describe('CampaignsService', () => {
     });
 
     afterEach(() => {
-      mockInterimProgressCache.clear();
+      mockCacheManager.clear();
     });
 
     it('should throw if campaign not found', async () => {
@@ -3701,7 +3699,7 @@ describe('CampaignsService', () => {
       };
       spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
 
-      const campaignProgress: CampaignProgress<Record<string, unknown>> = {
+      const campaignProgress: CampaignProgress<CampaignProgressMeta> = {
         from: mockedActiveTimeframe.start.toISOString(),
         to: mockedActiveTimeframe.end.toISOString(),
         participants_outcomes: [
@@ -3710,10 +3708,16 @@ describe('CampaignsService', () => {
           generateParticipantOutcome(),
         ],
         meta: {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           anything: faker.number.float(),
         },
       };
-      mockInterimProgressCache.set(campaign.id, campaignProgress);
+      await campaignsCache.setInterimProgress(
+        campaign.id,
+        campaignProgress,
+        mockedActiveTimeframe.end,
+      );
 
       const progress = await campaignsService.getUserProgress(
         userId,
@@ -3765,8 +3769,7 @@ describe('CampaignsService', () => {
       };
       spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
 
-      const campaignProgress: CampaignProgress<Record<string, unknown>> =
-        generateCampaignProgress(campaign);
+      const campaignProgress = generateCampaignProgress(campaign);
       campaignProgress.to = new Date(
         mockedActiveTimeframe.start.valueOf() - 1,
       ).toISOString();
@@ -3775,7 +3778,12 @@ describe('CampaignsService', () => {
           refDate: campaignProgress.to,
         })
         .toISOString();
-      mockInterimProgressCache.set(campaign.id, campaignProgress);
+
+      await campaignsCache.setInterimProgress(
+        campaign.id,
+        campaignProgress,
+        mockedActiveTimeframe.end,
+      );
 
       const progress = await campaignsService.getUserProgress(
         userId,
@@ -4463,19 +4471,10 @@ describe('CampaignsService', () => {
   });
 
   describe('getCurrentProgressLeaderboardEntries', () => {
-    const mockInterimProgressCache = new Map();
-    let replacedInterimProgressCacheRef: jest.ReplaceProperty<'campaignsInterimProgressCache'>;
-
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let campaign: CampaignEntity;
 
     beforeAll(() => {
-      replacedInterimProgressCacheRef = jest.replaceProperty(
-        campaignsService as any,
-        'campaignsInterimProgressCache',
-        mockInterimProgressCache,
-      );
-
       spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
         campaignsService as any,
         'retrieveCampaignIntermediateResults',
@@ -4489,12 +4488,10 @@ describe('CampaignsService', () => {
     });
 
     afterEach(() => {
-      mockInterimProgressCache.clear();
+      mockCacheManager.clear();
     });
 
     afterAll(() => {
-      replacedInterimProgressCacheRef.restore();
-
       spyOnRetrieveCampaignIntermediateResults.mockRestore();
     });
 
@@ -4561,9 +4558,13 @@ describe('CampaignsService', () => {
         campaign.status = campaignStatus;
 
         const participantOutcome = generateParticipantOutcome();
-        mockInterimProgressCache.set(campaign.id, {
-          participants_outcomes: [participantOutcome],
-        });
+        await campaignsCache.setInterimProgress(
+          campaign.id,
+          {
+            participants_outcomes: [participantOutcome],
+          } as CampaignProgress<CampaignProgressMeta>,
+          faker.date.future(),
+        );
 
         const data =
           await campaignsService['getCurrentProgressLeaderboardEntries'](
