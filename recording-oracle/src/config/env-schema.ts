@@ -4,6 +4,7 @@ export const envValidator = Joi.object({
   // General
   HOST: Joi.string(),
   PORT: Joi.number().integer(),
+
   // Database
   POSTGRES_HOST: Joi.string(),
   POSTGRES_USER: Joi.string(),
@@ -13,6 +14,7 @@ export const envValidator = Joi.object({
   POSTGRES_SSL: Joi.string().valid('true', 'false'),
   POSTGRES_LOGGING: Joi.string(),
   POSTGRES_URL: Joi.string().uri(),
+
   // Auth
   JWT_PRIVATE_KEY: Joi.string()
     .required()
@@ -20,17 +22,19 @@ export const envValidator = Joi.object({
       /^-----BEGIN EC PRIVATE KEY-----[\s\S]+-----END EC PRIVATE KEY-----$/,
     )
     .message('Invalid JWT_PRIVATE_KEY format (expecting EC PEM format)'),
-
   JWT_PUBLIC_KEY: Joi.string()
     .required()
     .pattern(/^-----BEGIN PUBLIC KEY-----[\s\S]+-----END PUBLIC KEY-----$/)
     .message('Invalid JWT_PUBLIC_KEY format (expecting PEM)'),
   JWT_ACCESS_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
   JWT_REFRESH_TOKEN_EXPIRES_IN: Joi.number().integer().min(60),
+
   // Encryption
   AES_ENCRYPTION_KEY: Joi.string().required().length(32),
+
   // Exchange
   USE_EXCHANGE_SANDBOX: Joi.string().valid('true', 'false'),
+
   // Web3
   WEB3_PRIVATE_KEY: Joi.string().required(),
   GAS_PRICE_MULTIPLIER: Joi.number().positive().integer(),
@@ -53,6 +57,7 @@ export const envValidator = Joi.object({
     .allow(''),
   RPC_URL_LOCALHOST: Joi.string(),
   ALCHEMY_API_KEY: Joi.string(),
+
   // S3
   S3_ENDPOINT: Joi.string(),
   S3_PORT: Joi.number().integer(),
@@ -60,8 +65,17 @@ export const envValidator = Joi.object({
   S3_SECRET_KEY: Joi.string().required(),
   S3_BUCKET: Joi.string(),
   S3_USE_SSL: Joi.string().valid('true', 'false'),
+
+  // Cache
+  VALKEY_HOST: Joi.alternatives()
+    .try(Joi.string().ip({ version: ['ipv4'] }), Joi.string().hostname())
+    .required(),
+  VALKEY_PORT: Joi.number().positive().integer(),
+  VALKEY_DB: Joi.number().integer().min(0).required(),
+
   // Logging
   LOG_EXCHANGE_PERMISSION_ERRORS: Joi.string().valid('true', 'false'),
+
   // Campaigns
   FEATURE_LIMIT_HOLDING_JOIN: Joi.string().valid('true', 'false'),
   STORE_RESULTS_TIMEOUT: Joi.number().positive().integer(),

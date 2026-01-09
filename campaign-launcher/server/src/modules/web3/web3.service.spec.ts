@@ -22,11 +22,11 @@ describe('Web3Service', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
-        Web3Cache,
         {
           provide: CacheManager,
           useValue: mockCacheManager,
         },
+        Web3Cache,
         {
           provide: Web3ConfigService,
           useValue: mockWeb3ConfigService,
