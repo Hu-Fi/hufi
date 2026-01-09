@@ -29,7 +29,7 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
-import { isDuplicatedError } from '@/database';
+import { isDuplicatedError } from '@/infrastructure/database';
 import logger from '@/logger';
 import {
   ExchangesService,
