@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'dist'],
+    ignores: ['eslint.config.mjs', 'dist', 'jest.config.js'],
   },
   eslint.configs.recommended,
   tseslint.configs.recommended,

@@ -20,7 +20,9 @@ async function bootstrap(): Promise<void> {
     cors: true,
     logger: nestLoggerOverride,
   });
-  app.enableShutdownHooks([ShutdownSignal.SIGINT, ShutdownSignal.SIGTERM]);
+  app.enableShutdownHooks([ShutdownSignal.SIGINT, ShutdownSignal.SIGTERM], {
+    useProcessExit: true,
+  });
 
   const server = app.getHttpServer();
   // https://nodejs.org/docs/latest/api/http.html#serverrequesttimeout
