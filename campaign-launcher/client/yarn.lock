@@ -2642,9 +2642,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wagmi/connectors@npm:7.1.1":
-  version: 7.1.1
-  resolution: "@wagmi/connectors@npm:7.1.1"
+"@wagmi/connectors@npm:7.1.2":
+  version: 7.1.2
+  resolution: "@wagmi/connectors@npm:7.1.2"
   peerDependencies:
     "@base-org/account": ^2.5.1
     "@coinbase/wallet-sdk": ^4.3.6
@@ -2652,7 +2652,7 @@ __metadata:
     "@metamask/sdk": ~0.33.1
     "@safe-global/safe-apps-provider": ~0.18.6
     "@safe-global/safe-apps-sdk": ^9.1.0
-    "@wagmi/core": 3.2.1
+    "@wagmi/core": 3.2.2
     "@walletconnect/ethereum-provider": ^2.21.1
     porto: ~0.2.35
     typescript: ">=5.7.3"
@@ -2676,13 +2676,13 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/26b4de7fc3228d347d238b1ec675f2e0a71f85737782d72705b0a4e744447286c8a922dae5a2d27b2e6d12f570578eecd959aa78916906942830e3911e7dd6dd
+  checksum: 10c0/5274db8472380eef82df19cd3543662aa9c584b2703352f4c63eeb7c93709ba6447491cc89f0c0e878337b59608c530dc9efd057e647fb46711e3344b46c86cd
   languageName: node
   linkType: hard
 
-"@wagmi/core@npm:3.2.1":
-  version: 3.2.1
-  resolution: "@wagmi/core@npm:3.2.1"
+"@wagmi/core@npm:3.2.2":
+  version: 3.2.2
+  resolution: "@wagmi/core@npm:3.2.2"
   dependencies:
     eventemitter3: "npm:5.0.1"
     mipd: "npm:0.0.7"
@@ -2699,7 +2699,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/a462ebc341a77fe40366c38f0202110f78f9f4cb41659b3d5c290454b138272e48d90e42cb0e985adf528ad8af0f6f82205e06ff8ff2c9e1b491cf46fd5eeb7e
+  checksum: 10c0/a4328728249f2ae7fdeedf7fc4c3965f0cdbf5be54c1b98638849e4cdf036067dec221b6e7552bc00826f85a53bac3dbbf302634e88e07e318b17904f22db992
   languageName: node
   linkType: hard
 
@@ -9336,11 +9336,11 @@ __metadata:
   linkType: hard
 
 "wagmi@npm:^3.1.0":
-  version: 3.3.1
-  resolution: "wagmi@npm:3.3.1"
+  version: 3.3.2
+  resolution: "wagmi@npm:3.3.2"
   dependencies:
-    "@wagmi/connectors": "npm:7.1.1"
-    "@wagmi/core": "npm:3.2.1"
+    "@wagmi/connectors": "npm:7.1.2"
+    "@wagmi/core": "npm:3.2.2"
     use-sync-external-store: "npm:1.4.0"
   peerDependencies:
     "@tanstack/react-query": ">=5.0.0"
@@ -9350,7 +9350,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/de66aedb93f9dc3f6aa2b61ba0dc2be8618aaba546110616cd63680d7840a9f5f49bfa2ee46015787891f85394ba12a540fa114452b19b71186e52c4b347745f
+  checksum: 10c0/51b629125d3a15992062eddcb07491e6f68b37e092628ed5c2d42676ba6babd94676698e2768417c284131ef10a03a7d9d291b84fe8fc97345f32b70f9972076
   languageName: node
   linkType: hard
 
