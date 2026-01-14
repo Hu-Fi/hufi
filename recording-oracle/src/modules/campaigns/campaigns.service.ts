@@ -737,6 +737,10 @@ export class CampaignsService
     endDate: Date,
     options: { logWarnings?: boolean } = {},
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
+    if (dayjs(startDate).isAfter(endDate)) {
+      throw new Error('Invalid period range provided');
+    }
+
     const logger = this.logger.child({
       action: 'checkCampaignProgressForPeriod',
       caller: debugUtils.getCaller(),

@@ -1707,6 +1707,18 @@ describe('CampaignsService', () => {
 
       expect(thrownError).toEqual(syntheticError);
     });
+
+    it('should throw if invalid period passed', async () => {
+      [periodStart, periodEnd] = [periodEnd, periodStart];
+
+      await expect(
+        campaignsService.checkCampaignProgressForPeriod(
+          campaign,
+          periodStart,
+          periodEnd,
+        ),
+      ).rejects.toThrow('Invalid period range provided');
+    });
   });
 
   describe('recordCampaignProgress', () => {
