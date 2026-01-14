@@ -1416,8 +1416,10 @@ describe('CampaignsService', () => {
           chainId: campaign.chainId,
           campaignAddress: campaign.address,
           exchangeName: campaign.exchangeName,
+          campaignType: campaign.type,
           startDate: periodStart,
           endDate: periodEnd,
+          periodDuration: dayjs(periodEnd).diff(periodStart, 'seconds'),
         });
       } finally {
         spyOnLoggerChild.mockRestore();
@@ -1477,6 +1479,12 @@ describe('CampaignsService', () => {
             mockParticipantResult[mockCampaignProgressMetaProp],
         },
       ]);
+
+      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Campaign progress checked', {
+        nParticipants: 1,
+        checkDurationMs: expect.any(Number),
+      });
     });
 
     it('should calculate results for each participant', async () => {

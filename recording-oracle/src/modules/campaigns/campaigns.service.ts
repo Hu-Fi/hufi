@@ -744,9 +744,12 @@ export class CampaignsService
       chainId: campaign.chainId,
       campaignAddress: campaign.address,
       exchangeName: campaign.exchangeName,
+      campaignType: campaign.type,
       startDate,
       endDate,
+      periodDuration: dayjs(endDate).diff(startDate, 'seconds'),
     });
+    const checkStart = performance.now();
 
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
@@ -814,6 +817,11 @@ export class CampaignsService
         throw error;
       }
     }
+
+    logger.info('Campaign progress checked', {
+      nParticipants: participants.length,
+      checkDurationMs: performance.now() - checkStart,
+    });
 
     return {
       from: startDate.toISOString(),
