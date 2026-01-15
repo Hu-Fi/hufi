@@ -1,35 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as ccxt from 'ccxt';
-import { LRUCache } from 'lru-cache';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import logger from '@/logger';
 
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { ExchangesCache } from './exchanges-cache';
 import { ExchangeDataDto } from './exchanges.dto';
 import { ExchangeType } from './types';
-
-const tradingPairsCache = new LRUCache<string, string[]>({
-  ttl: 1000 * 60 * 60 * 24, // new trading pairs do not appear often
-  max: 20, // we don't expect more than that exchanges to be actively used
-  ttlAutopurge: false,
-  allowStale: false,
-  noDeleteOnStaleGet: false,
-  noUpdateTTL: false,
-  updateAgeOnGet: false,
-  updateAgeOnHas: false,
-});
-
-const currenciesCache = new LRUCache<string, string[]>({
-  ttl: 1000 * 60 * 60 * 24, // new currencies do not appear often
-  max: 20, // we don't expect more than that exchanges to be actively used
-  ttlAutopurge: false,
-  allowStale: false,
-  noDeleteOnStaleGet: false,
-  noUpdateTTL: false,
-  updateAgeOnGet: false,
-  updateAgeOnHas: false,
-});
 
 @Injectable()
 export class ExchangesService {
@@ -37,7 +15,7 @@ export class ExchangesService {
 
   readonly supportedExchanges: readonly ExchangeDataDto[];
 
-  constructor() {
+  constructor(private readonly exchangesCache: ExchangesCache) {
     const supportedExchanges: ExchangeDataDto[] = [];
     for (const exchangeName of SUPPORTED_EXCHANGE_NAMES) {
       const exchange = new ccxt[exchangeName]();
@@ -55,11 +33,13 @@ export class ExchangesService {
 
   async getExchangeTradingPairs(exchangeName: string): Promise<string[]> {
     try {
-      if (!tradingPairsCache.has(exchangeName)) {
+      let tradingPairs =
+        await this.exchangesCache.getTradingPairs(exchangeName);
+      if (!tradingPairs) {
         const exchange = new ccxt[exchangeName](BASE_CCXT_CLIENT_OPTIONS);
         await exchange.loadMarkets();
 
-        const tradingPairs = (exchange.symbols || []).filter((symbol) => {
+        tradingPairs = (exchange.symbols || []).filter((symbol) => {
           /**
            * Filter out pairs with weird names that highly-likely
            * won't be ever maked
@@ -72,10 +52,10 @@ export class ExchangesService {
           return !isWeirdPair;
         });
 
-        tradingPairsCache.set(exchangeName, tradingPairs);
+        await this.exchangesCache.setTradingPairs(exchangeName, tradingPairs);
       }
 
-      return tradingPairsCache.get(exchangeName) as string[];
+      return tradingPairs;
     } catch (error) {
       const errorMessage = 'Failed to load trading pairs for exchange';
       this.logger.error(errorMessage, {
@@ -89,21 +69,20 @@ export class ExchangesService {
 
   async getExchangeCurrencies(exchangeName: string): Promise<string[]> {
     try {
-      if (!currenciesCache.has(exchangeName)) {
+      let currencies = await this.exchangesCache.getCurrencies(exchangeName);
+      if (!currencies) {
         const exchange = new ccxt[exchangeName](BASE_CCXT_CLIENT_OPTIONS);
         await exchange.loadMarkets();
 
-        const currencies = Object.keys(exchange.currencies || []).filter(
-          (symbol) => {
-            /**
-             * Filter out tokens with weird names that highly-likely
-             * won't be ever maked
-             */
-            const isWeirdSymbol = this.isWeirdSymbol(symbol);
+        currencies = Object.keys(exchange.currencies || []).filter((symbol) => {
+          /**
+           * Filter out tokens with weird names that highly-likely
+           * won't be ever maked
+           */
+          const isWeirdSymbol = this.isWeirdSymbol(symbol);
 
-            return !isWeirdSymbol;
-          },
-        );
+          return !isWeirdSymbol;
+        });
 
         /**
          * Adding manually some tokens in case they're not returned by the exchange
@@ -115,10 +94,10 @@ export class ExchangesService {
           }
         }
 
-        currenciesCache.set(exchangeName, currencies);
+        await this.exchangesCache.setCurrencies(exchangeName, currencies);
       }
 
-      return currenciesCache.get(exchangeName) as string[];
+      return currencies;
     } catch (error) {
       const errorMessage = 'Failed to load currencies for exchange';
       this.logger.error(errorMessage, {

@@ -37,7 +37,7 @@ export class StatisticsController {
     description: 'Total volume returned successfully',
     type: GetTotalVolumeResponseDto,
   })
-  @Header('Cache-Control', 'public, max-age=1800')
+  @Header('Cache-Control', 'public, max-age=300')
   @Get('/total-volume')
   async getTotalVolume(
     @Query() { exchangeName }: GetTotalVolumeQueryDto,

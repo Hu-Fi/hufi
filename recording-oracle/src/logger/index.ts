@@ -6,6 +6,7 @@ import {
 } from '@human-protocol/logger';
 import type { Logger } from '@human-protocol/logger';
 
+import { APP_NAME } from '@/common/constants';
 import Environment from '@/common/utils/environment';
 
 const isDevelopment = Environment.isDevelopment();
@@ -28,7 +29,7 @@ const defaultLogger = createLogger(
   },
   {
     environment: Environment.name,
-    service: 'hufi-recording-oracle',
+    service: APP_NAME,
     version: Environment.version,
   },
 );
