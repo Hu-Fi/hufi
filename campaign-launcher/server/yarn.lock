@@ -5051,7 +5051,7 @@ __metadata:
     "@types/supertest": "npm:^6.0.3"
     "@valkey/valkey-glide": "npm:^2.2.1"
     alchemy-sdk: "npm:^3.6.5"
-    ccxt: "npm:^4.5.28"
+    ccxt: "npm:^4.5.33"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.3"
     dayjs: "npm:^1.11.19"
@@ -5095,12 +5095,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ccxt@npm:^4.5.28":
-  version: 4.5.32
-  resolution: "ccxt@npm:4.5.32"
+"ccxt@npm:^4.5.33":
+  version: 4.5.33
+  resolution: "ccxt@npm:4.5.33"
   dependencies:
     ws: "npm:^8.8.1"
-  checksum: 10c0/a2c27ccd8a603da051bd6e77018df1c88e3e43402a796e5f5f88ecb5d9fbca2b90b240d2f4b4d9d0a13cd78b5bd98b6d775284c70108836ef32d178a68aa9ef7
+  checksum: 10c0/9ded20244837c8b0628260441a773caecc7649fdf2eb2aa2ce7aad002f9076bd720b83769fb7acca7ee0b95d6d76a496ada21eb4bca355ba081135baecabb7a8
   languageName: node
   linkType: hard
 

@@ -42,7 +42,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "@valkey/valkey-glide": "^2.2.1",
     "alchemy-sdk": "^3.6.5",
-    "ccxt": "^4.5.28",
+    "ccxt": "^4.5.33",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "dayjs": "^1.11.19",
