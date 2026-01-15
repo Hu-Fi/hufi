@@ -1,3 +1,5 @@
+export const APP_NAME = 'hufi-campaign-launcher';
+
 export const SUPPORTED_EXCHANGE_NAMES = [
   'bigone',
   'bitmart',

@@ -7,10 +7,14 @@ import { Alchemy } from 'alchemy-sdk';
 import { JsonRpcProvider } from 'ethers';
 
 import { Web3ConfigService } from '@/config';
+import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
 import logger from '@/logger';
 
 import { generateTestnetChainId, mockWeb3ConfigService } from './fixtures';
+import { Web3Cache } from './web3-cache';
 import { Web3Service } from './web3.service';
+
+const mockCacheManager = new CacheManagerMock();
 
 describe('Web3Service', () => {
   let web3Service: Web3Service;
@@ -18,6 +22,11 @@ describe('Web3Service', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
+        {
+          provide: CacheManager,
+          useValue: mockCacheManager,
+        },
+        Web3Cache,
         {
           provide: Web3ConfigService,
           useValue: mockWeb3ConfigService,
@@ -57,21 +66,13 @@ describe('Web3Service', () => {
   describe('getTokenPriceUsd', () => {
     const testTokenSymbol = faker.finance.currencyCode();
 
-    const mockTokenPriceCache = new Map();
     const mockAlchemySdk = {
       prices: createMock<Alchemy['prices']>(),
     };
 
-    let replacedTokenPriceCacheRef: jest.ReplaceProperty<'tokenPriceCache'>;
     let replacedAlchemySdkRef: jest.ReplaceProperty<'alchemySdk'>;
 
     beforeAll(() => {
-      replacedTokenPriceCacheRef = jest.replaceProperty(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        web3Service as any,
-        'tokenPriceCache',
-        mockTokenPriceCache,
-      );
       replacedAlchemySdkRef = jest.replaceProperty(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         web3Service as any,
@@ -81,14 +82,13 @@ describe('Web3Service', () => {
     });
 
     afterAll(() => {
-      replacedTokenPriceCacheRef.restore();
       replacedAlchemySdkRef.restore();
     });
 
     afterEach(() => {
       jest.resetAllMocks();
 
-      mockTokenPriceCache.clear();
+      mockCacheManager.clear();
     });
 
     it('should log a warn if alchemy operation fails and throw', async () => {

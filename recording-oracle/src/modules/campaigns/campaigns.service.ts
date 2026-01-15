@@ -8,11 +8,7 @@ import {
   OrderDirection,
   TransactionUtils,
 } from '@human-protocol/sdk';
-import {
-  Injectable,
-  OnApplicationBootstrap,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
   Cron,
   CronExpression,
@@ -23,7 +19,6 @@ import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
-import { LRUCache } from 'lru-cache';
 
 import { ContentType } from '@/common/enums';
 import * as controlFlow from '@/common/utils/control-flow';
@@ -34,7 +29,7 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
 import { isValidExchangeName } from '@/common/validators';
 import { CampaignsConfigService, Web3ConfigService } from '@/config';
-import { isDuplicatedError } from '@/database';
+import { isDuplicatedError } from '@/infrastructure/database';
 import logger from '@/logger';
 import {
   ExchangesService,
@@ -45,6 +40,7 @@ import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
 
 import { CampaignEntity } from './campaign.entity';
+import { CampaignsCache } from './campaigns-cache';
 import { LeaderboardEntry } from './campaigns.dto';
 import {
   CampaignAlreadyFinishedError,
@@ -97,22 +93,13 @@ import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
 @Injectable()
-export class CampaignsService
-  implements OnApplicationBootstrap, OnModuleDestroy
-{
+export class CampaignsService implements OnModuleDestroy {
   private readonly logger = logger.child({
     context: CampaignsService.name,
   });
 
-  private readonly campaignsInterimProgressCache = new LRUCache<
-    string,
-    CampaignProgress<CampaignProgressMeta>
-  >({
-    // expect not more than 100 active campaings atm
-    max: 100,
-  });
-
   constructor(
+    private readonly campaignsCache: CampaignsCache,
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangesService: ExchangesService,
@@ -124,10 +111,6 @@ export class CampaignsService
     private readonly pgAdvisoryLock: PgAdvisoryLock,
     private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
-
-  onApplicationBootstrap() {
-    void this.refreshInterimProgressCache();
-  }
 
   async onModuleDestroy(): Promise<void> {
     for (const [jobName, jobRef] of this.schedulerRegistry.getCronJobs()) {
@@ -209,7 +192,8 @@ export class CampaignsService
       );
     }
 
-    if (this.checkCampaignTargetMet(campaign)) {
+    const isCampaignTargetMet = await this.checkCampaignTargetMet(campaign);
+    if (isCampaignTargetMet) {
       throw new CampaignJoinLimitedError(
         campaign.chainId,
         campaign.address,
@@ -737,6 +721,10 @@ export class CampaignsService
     endDate: Date,
     options: { logWarnings?: boolean } = {},
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
+    if (dayjs(startDate).isAfter(endDate)) {
+      throw new Error('Invalid period range provided');
+    }
+
     const logger = this.logger.child({
       action: 'checkCampaignProgressForPeriod',
       caller: debugUtils.getCaller(),
@@ -744,9 +732,12 @@ export class CampaignsService
       chainId: campaign.chainId,
       campaignAddress: campaign.address,
       exchangeName: campaign.exchangeName,
+      campaignType: campaign.type,
       startDate,
       endDate,
+      periodDuration: dayjs(endDate).diff(startDate, 'seconds'),
     });
+    const checkStart = performance.now();
 
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
@@ -814,6 +805,11 @@ export class CampaignsService
         throw error;
       }
     }
+
+    logger.info('Campaign progress checked', {
+      nParticipants: participants.length,
+      checkDurationMs: performance.now() - checkStart,
+    });
 
     return {
       from: startDate.toISOString(),
@@ -1100,7 +1096,7 @@ export class CampaignsService
       };
     }
 
-    const isCampaignTargetMet = this.checkCampaignTargetMet(campaign);
+    const isCampaignTargetMet = await this.checkCampaignTargetMet(campaign);
     if (isCampaignTargetMet) {
       return {
         status: CampaignJoinStatus.JOIN_IS_CLOSED,
@@ -1167,7 +1163,7 @@ export class CampaignsService
       );
     }
 
-    const progress = this.campaignsInterimProgressCache.get(campaign.id);
+    const progress = await this.campaignsCache.getInterimProgress(campaign.id);
     if (progress?.from !== activeTimeframe.start.toISOString()) {
       /**
        * Either no progress cached yet or cached for previous timeframe
@@ -1355,7 +1351,11 @@ export class CampaignsService
                 timeframe.start,
                 timeframe.end,
               );
-              this.campaignsInterimProgressCache.set(campaign.id, progress);
+              await this.campaignsCache.setInterimProgress(
+                campaign.id,
+                progress,
+                campaign.endDate,
+              );
             } catch (error) {
               campaignLogger.error(
                 'Failed to get interim progress for campaign',
@@ -1431,7 +1431,7 @@ export class CampaignsService
     };
   }
 
-  checkCampaignTargetMet(campaign: CampaignEntity): boolean {
+  async checkCampaignTargetMet(campaign: CampaignEntity): Promise<boolean> {
     if (!isHoldingCampaign(campaign)) {
       return false;
     }
@@ -1440,9 +1440,8 @@ export class CampaignsService
       return false;
     }
 
-    const campaignProgress = this.campaignsInterimProgressCache.get(
-      campaign.id,
-    ) as CampaignProgress<HoldingMeta> | undefined;
+    const campaignProgress =
+      await this.campaignsCache.getInterimProgress<HoldingMeta>(campaign.id);
     if (!campaignProgress) {
       return false;
     }
@@ -1604,7 +1603,7 @@ export class CampaignsService
         resultsToInspect.push(...outcomesBatch.results);
       }
     } else {
-      const cachedInterimResults = this.campaignsInterimProgressCache.get(
+      const cachedInterimResults = await this.campaignsCache.getInterimProgress(
         campaign.id,
       );
       resultsToInspect = cachedInterimResults?.participants_outcomes || [];

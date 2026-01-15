@@ -29,5 +29,14 @@ export const envValidator = Joi.object({
   EXCHANGE_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
   RECORDING_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
   REPUTATION_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
+
   ALCHEMY_API_KEY: Joi.string().required(),
+
+  // Cache
+  VALKEY_HOST: Joi.alternatives()
+    .try(Joi.string().ip({ version: ['ipv4'] }), Joi.string().hostname())
+    .required(),
+  VALKEY_PORT: Joi.number().positive().integer(),
+  VALKEY_DB: Joi.number().integer().min(0).required(),
+  VALKEY_TLS: Joi.string().valid('true', 'false'),
 });

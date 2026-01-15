@@ -1,15 +1,27 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 
 import Environment from '@/common/utils/environment';
 import { ServerConfigService } from '@/config';
+import {
+  VALKEY_CACHE_CLIENT,
+  type ValkeyClient,
+} from '@/infrastructure/valkey';
 
 import { PingResponseDto } from './dto/ping-response.dto';
+import { ValkeyHealthIndicator } from './indicators/valkey.health';
 
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly serverConfigService: ServerConfigService) {}
+  constructor(
+    private readonly serverConfigService: ServerConfigService,
+    private readonly health: HealthCheckService,
+    private readonly valkey: ValkeyHealthIndicator,
+    @Inject(VALKEY_CACHE_CLIENT)
+    private readonly valkeyCacheClient: ValkeyClient,
+  ) {}
 
   @ApiOperation({
     summary: 'Service ping',
@@ -31,5 +43,17 @@ export class HealthController {
       nodeEnv: Environment.name,
       gitHash: this.serverConfigService.gitHash,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Health check',
+    description: 'Endpoint to perform health checks for the application.',
+  })
+  @HealthCheck()
+  @Get('/check')
+  check() {
+    return this.health.check([
+      async () => this.valkey.isHealthy('cache-client', this.valkeyCacheClient),
+    ]);
   }
 }

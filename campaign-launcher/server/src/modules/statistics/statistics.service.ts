@@ -1,5 +1,5 @@
 import { OrderDirection, TransactionUtils } from '@human-protocol/sdk';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Interval as ScheduleInterval } from '@nestjs/schedule';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
@@ -12,129 +12,117 @@ import logger from '@/logger';
 import { CampaignsService, CampaignStatus } from '@/modules/campaigns';
 import { Web3Service } from '@/modules/web3';
 
+import { type ActiveCampaignsStats, StatisticsCache } from './statistics-cache';
+
 @Injectable()
-export class StatisticsService implements OnModuleInit {
+export class StatisticsService {
   private readonly logger = logger.child({
     context: StatisticsService.name,
   });
 
-  /**
-   * Atm we don't have many campaigns and its fine to
-   * keep these stats in memory and refresh on startup.
-   *
-   * We will move it to Redis later when will be adding it.
-   */
-  private readonly completedCampaignsStats: Record<
-    number,
-    {
-      nCompleted: number;
-      lastCheckedCampaignCreatedAt: number;
-    }
-  > = {};
-  /**
-   * Same for for these stats: will be moved to Redis later
-   */
-  private readonly totalRewardsStats: Record<
-    number,
-    {
-      paidRewardsUsd: number;
-      lastCheckedBlock: bigint;
-    }
-  > = {};
-
   constructor(
     private readonly campaignsService: CampaignsService,
+    private readonly statisticsCache: StatisticsCache,
     private readonly web3ConfigService: Web3ConfigService,
     private readonly web3Service: Web3Service,
-  ) {
-    for (const chainId of this.web3Service.supportedChainIds) {
-      this.completedCampaignsStats[chainId] = {
-        nCompleted: 0,
-        lastCheckedCampaignCreatedAt: 0,
-      };
-      this.totalRewardsStats[chainId] = {
-        paidRewardsUsd: 0,
-        lastCheckedBlock: 0n,
-      };
-    }
-  }
-
-  async onModuleInit() {
-    await Promise.all([
-      this.refreshCompletedCampaignsStats(),
-      this.refreshTotalRewardsStats(),
-    ]);
-  }
+  ) {}
 
   async getCampaignsStats(chainId: ChainId): Promise<{
     nActive: number;
     rewardsPoolUsd: number;
-    nCompleted: number;
-    paidRewardsUsd: number;
+    nCompleted: number | null;
+    paidRewardsUsd: number | null;
   }> {
-    const [{ nActive, rewardsPoolUsd }, { nCompleted }, { paidRewardsUsd }] =
-      await Promise.all([
-        this.getActiveCampaignsStats(chainId),
-        this.completedCampaignsStats[chainId],
-        this.totalRewardsStats[chainId],
-      ]);
+    const [
+      { nActive, rewardsPoolUsd },
+      completedCampaignsStats,
+      totalRewardsStats,
+    ] = await Promise.all([
+      this.getActiveCampaignsStats(chainId),
+      this.statisticsCache.getCompletedCampaignsStats(chainId),
+      this.statisticsCache.getTotalRewardsStats(chainId),
+    ]);
 
     return {
       nActive,
       rewardsPoolUsd,
-      nCompleted,
-      paidRewardsUsd,
+      nCompleted: completedCampaignsStats?.nCompleted ?? null,
+      paidRewardsUsd: totalRewardsStats?.paidRewardsUsd ?? null,
     };
   }
 
-  private async getActiveCampaignsStats(chainId: ChainId): Promise<{
-    nActive: number;
-    rewardsPoolUsd: number;
-  }> {
-    let nActive = 0;
-    let rewardsPoolUsd = 0;
+  private async getActiveCampaignsStats(
+    chainId: ChainId,
+  ): Promise<ActiveCampaignsStats> {
+    try {
+      let activeCampaignsStats =
+        await this.statisticsCache.getActiveCampaignsStats(chainId);
 
-    do {
-      const campaigns = await this.campaignsService.getCampaigns(
-        chainId,
-        {
-          statuses: [CampaignStatus.ACTIVE],
-        },
-        {
-          skip: nActive,
-        },
-      );
+      if (!activeCampaignsStats) {
+        let nActive = 0;
+        let rewardsPoolUsd = 0;
 
-      if (campaigns.length === 0) {
-        break;
-      }
-
-      nActive += campaigns.length;
-
-      for (const campaign of campaigns) {
-        try {
-          const fundTokenPriceUsd = await this.web3Service.getTokenPriceUsd(
-            campaign.fundTokenSymbol,
+        do {
+          const campaigns = await this.campaignsService.getCampaigns(
+            chainId,
+            {
+              statuses: [CampaignStatus.ACTIVE],
+            },
+            {
+              skip: nActive,
+            },
           );
-          if (!fundTokenPriceUsd) {
-            continue;
+
+          if (campaigns.length === 0) {
+            break;
           }
 
-          const balance = Number(
-            ethers.formatUnits(campaign.fundAmount, campaign.fundTokenDecimals),
-          );
-          rewardsPoolUsd += balance * fundTokenPriceUsd;
-        } catch {
-          // noop
-        }
-      }
-      // eslint-disable-next-line no-constant-condition
-    } while (true);
+          nActive += campaigns.length;
 
-    return {
-      nActive,
-      rewardsPoolUsd,
-    };
+          for (const campaign of campaigns) {
+            try {
+              const fundTokenPriceUsd = await this.web3Service.getTokenPriceUsd(
+                campaign.fundTokenSymbol,
+              );
+              if (!fundTokenPriceUsd) {
+                continue;
+              }
+
+              const balance = Number(
+                ethers.formatUnits(
+                  campaign.fundAmount,
+                  campaign.fundTokenDecimals,
+                ),
+              );
+              rewardsPoolUsd += balance * fundTokenPriceUsd;
+            } catch {
+              // noop
+            }
+          }
+          // eslint-disable-next-line no-constant-condition
+        } while (true);
+
+        activeCampaignsStats = {
+          nActive,
+          rewardsPoolUsd,
+        };
+
+        await this.statisticsCache.setActiveCampaignsStats(
+          chainId,
+          activeCampaignsStats,
+        );
+      }
+
+      return activeCampaignsStats;
+    } catch (error) {
+      const errorMessage = 'Failed to get active campaigns stats';
+      this.logger.error(errorMessage, {
+        chainId,
+        error,
+      });
+
+      throw new Error(errorMessage);
+    }
   }
 
   @ScheduleInterval(dayjs.duration(4, 'minutes').asMilliseconds())
@@ -156,25 +144,30 @@ export class StatisticsService implements OnModuleInit {
     chainId: ChainId,
   ): Promise<void> {
     try {
-      const checkCampaignsSince = new Date(
-        this.completedCampaignsStats[chainId].lastCheckedCampaignCreatedAt,
-      );
-
       this.logger.debug('Refreshing completed campaigns stats', {
         chainId,
-        checkSince: checkCampaignsSince,
       });
 
+      /**
+       * Currently SDK doesn't allow necessary stats queries,
+       * so we have to recalculate N of completed campaigns on every run.
+       *
+       * It's necessary for correct stat calculation, because there might be next case:
+       * - campaign C1 createdAt C1_T1, completed at C1_T2
+       * - campaign C2 createdAt C2_T1, completed at C2_T2
+       * - C2_T1 > C1_T1, C2_T2 < C1_T2
+       * so C2 completes earlier than C1, we remember its createdAt (because it's default
+       * orderBy prop that can't be changed) and never count C1 when it completes.
+       */
       let nCompleted = 0;
-      let lastCheckedCampaignCreatedAt = 0;
       do {
         const campaigns = await this.campaignsService.getCampaigns(
           chainId,
           {
             statuses: [CampaignStatus.COMPLETED, CampaignStatus.CANCELLED],
-            since: checkCampaignsSince,
           },
           {
+            limit: 100,
             skip: nCompleted,
           },
         );
@@ -184,20 +177,15 @@ export class StatisticsService implements OnModuleInit {
         }
 
         nCompleted += campaigns.length;
-        lastCheckedCampaignCreatedAt = campaigns.at(-1)!.createdAt;
         // eslint-disable-next-line no-constant-condition
       } while (true);
 
-      /**
-       * Update cached values only if the whole run succeeded
-       * in order to avoid double-counting
-       */
-      this.completedCampaignsStats[chainId].nCompleted += nCompleted;
-      this.completedCampaignsStats[chainId].lastCheckedCampaignCreatedAt =
-        lastCheckedCampaignCreatedAt;
+      await this.statisticsCache.setCompletedCampaignsStats(chainId, {
+        nCompleted,
+      });
 
       this.logger.debug('Completed campaigns stats refreshed', {
-        checkedUntil: new Date(lastCheckedCampaignCreatedAt),
+        nCompleted,
       });
     } catch (error) {
       this.logger.error('Failed to refresh completed campaigns stats', {
@@ -225,11 +213,14 @@ export class StatisticsService implements OnModuleInit {
     chainId: ChainId,
   ): Promise<void> {
     try {
+      const totalRewardsStats =
+        await this.statisticsCache.getTotalRewardsStats(chainId);
+
       /**
-       * TODO: remove type casting when SDK is fixed
+       * getTransactions query uses "gte" operator for startBlock,
+       * so add 1 to avoid double-check of last checked block
        */
-      const startBlock = this.totalRewardsStats[chainId]
-        .lastCheckedBlock as unknown as number;
+      const startBlock = (totalRewardsStats?.lastCheckedBlock || -1n) + 1n;
 
       this.logger.debug('Refreshing total rewards stats', {
         chainId,
@@ -237,14 +228,17 @@ export class StatisticsService implements OnModuleInit {
       });
 
       let totalPaidAmountUsd = 0;
-      let lastCheckedBlock = 0n;
       let nChecked = 0;
+      let lastCheckedBlock: bigint | undefined;
       do {
         const transactions = await TransactionUtils.getTransactions({
           chainId: chainId as number,
           fromAddress: this.web3ConfigService.reputationOracle,
           method: 'bulkTransfer',
-          startBlock,
+          /**
+           * TODO: remove type casting when SDK is fixed
+           */
+          startBlock: Number(startBlock),
           orderDirection: OrderDirection.ASC,
           first: 100,
           skip: nChecked,
@@ -289,14 +283,20 @@ export class StatisticsService implements OnModuleInit {
         // eslint-disable-next-line no-constant-condition
       } while (true);
 
-      /**
-       * Update cached values only if the whole run succeeded
-       * in order to avoid double-counting
-       */
-      this.totalRewardsStats[chainId].paidRewardsUsd += totalPaidAmountUsd;
-      this.totalRewardsStats[chainId].lastCheckedBlock = lastCheckedBlock;
+      if (lastCheckedBlock) {
+        /**
+         * Update cached values only if new blocks got scanned
+         * in order to avoid double-counting
+         */
+        const prevPaidRewardsUsd = totalRewardsStats?.paidRewardsUsd || 0;
+        await this.statisticsCache.setTotalRewardsStats(chainId, {
+          paidRewardsUsd: prevPaidRewardsUsd + totalPaidAmountUsd,
+          lastCheckedBlock,
+        });
+      }
 
       this.logger.debug('Total rewards stats refreshed', {
+        nChecked,
         lastCheckedBlock,
       });
     } catch (error) {

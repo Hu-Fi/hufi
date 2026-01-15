@@ -8,10 +8,6 @@ export const BASE_CCXT_CLIENT_OPTIONS = Object.freeze({
      * (e.g. when doing `loadMarkets`)
      */
     fetchCurrencies: false,
-    fetchMarkets: {
-      // load only spot market
-      types: ['spot'],
-    },
     // use spot endpoints for methods
     defaultType: 'spot',
   },
