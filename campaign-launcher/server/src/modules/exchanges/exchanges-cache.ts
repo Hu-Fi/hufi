@@ -40,7 +40,7 @@ export class ExchangesCache {
       cacheKey,
       JSON.stringify(tradingPairs),
       // new trading pairs do not appear often
-      dayjs.duration(1, 'day').asMilliseconds(),
+      dayjs.duration(5, 'days').asMilliseconds(),
     );
   }
 
@@ -72,7 +72,7 @@ export class ExchangesCache {
       cacheKey,
       JSON.stringify(currencies),
       // new currencies do not appear often
-      dayjs.duration(1, 'day').asMilliseconds(),
+      dayjs.duration(5, 'days').asMilliseconds(),
     );
   }
 }
