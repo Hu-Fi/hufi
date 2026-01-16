@@ -27,10 +27,11 @@ export class CampaignsStatsDto {
   rewardsPoolUsd: number;
 
   @ApiProperty({
-    name: 'n_completed_campaigns',
-    description: 'Total number of completed campaigns',
+    name: 'n_finished_campaigns',
+    description:
+      'Total number of finished campaigns (i.e. discovered, then completed or cancelled)',
   })
-  nCompletedCampaigns: number | null;
+  nFinishedCampaigns: number | null;
 
   @ApiProperty({
     name: 'total_rewards_distributed',
