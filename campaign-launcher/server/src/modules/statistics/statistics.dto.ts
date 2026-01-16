@@ -30,6 +30,8 @@ export class CampaignsStatsDto {
     name: 'n_finished_campaigns',
     description:
       'Total number of finished campaigns (i.e. discovered, then completed or cancelled)',
+    type: Number,
+    nullable: true,
   })
   nFinishedCampaigns: number | null;
 
@@ -37,6 +39,8 @@ export class CampaignsStatsDto {
     name: 'total_rewards_distributed',
     description:
       'Total amount of funds distrubited as rewards on completed campaigns',
+    type: Number,
+    nullable: true,
   })
   paidRewardsUsd: number | null;
 }
