@@ -19,7 +19,11 @@ import logger from '@/logger';
 import { CampaignsService, CampaignStatus } from '@/modules/campaigns';
 import { Web3Service } from '@/modules/web3';
 
-import { type ActiveCampaignsStats, StatisticsCache } from './statistics-cache';
+import {
+  type ActiveCampaignsStats,
+  FinishedCampaignsStats,
+  StatisticsCache,
+} from './statistics-cache';
 
 @Injectable()
 export class StatisticsService {
@@ -35,24 +39,21 @@ export class StatisticsService {
   ) {}
 
   async getCampaignsStats(chainId: ChainId): Promise<{
-    nActive: number;
-    rewardsPoolUsd: number;
+    nActive: number | null;
+    rewardsPoolUsd: number | null;
     nFinished: number | null;
     paidRewardsUsd: number | null;
   }> {
-    const [
-      { nActive, rewardsPoolUsd },
-      finishedCampaignsStats,
-      totalRewardsStats,
-    ] = await Promise.all([
-      this.getActiveCampaignsStats(chainId),
-      this.getFinishedCampaignsStats(chainId),
-      this.statisticsCache.getTotalRewardsStats(chainId),
-    ]);
+    const [activeCampaignsStats, finishedCampaignsStats, totalRewardsStats] =
+      await Promise.all([
+        this.getActiveCampaignsStats(chainId),
+        this.getFinishedCampaignsStats(chainId),
+        this.statisticsCache.getTotalRewardsStats(chainId),
+      ]);
 
     return {
-      nActive,
-      rewardsPoolUsd,
+      nActive: activeCampaignsStats?.nActive ?? null,
+      rewardsPoolUsd: activeCampaignsStats?.rewardsPoolUsd ?? null,
       nFinished: finishedCampaignsStats?.nFinished ?? null,
       paidRewardsUsd: totalRewardsStats?.paidRewardsUsd ?? null,
     };
@@ -60,7 +61,7 @@ export class StatisticsService {
 
   private async getActiveCampaignsStats(
     chainId: ChainId,
-  ): Promise<ActiveCampaignsStats> {
+  ): Promise<ActiveCampaignsStats | null> {
     try {
       let activeCampaignsStats =
         await this.statisticsCache.getActiveCampaignsStats(chainId);
@@ -122,19 +123,18 @@ export class StatisticsService {
 
       return activeCampaignsStats;
     } catch (error) {
-      const errorMessage = 'Failed to get active campaigns stats';
-      this.logger.error(errorMessage, {
+      this.logger.error('Failed to get active campaigns stats', {
         chainId,
         error,
       });
 
-      throw new Error(errorMessage);
+      return null;
     }
   }
 
   private async getFinishedCampaignsStats(
     chainId: ChainId,
-  ): Promise<{ nFinished: number } | null> {
+  ): Promise<FinishedCampaignsStats | null> {
     try {
       let finishedCampaignsStats =
         await this.statisticsCache.getFinishedCampaignsStats(chainId);
@@ -208,13 +208,12 @@ export class StatisticsService {
 
       return finishedCampaignsStats;
     } catch (error) {
-      const errorMessage = 'Failed to get active campaigns stats';
-      this.logger.error(errorMessage, {
+      this.logger.error('Failed to get finished campaigns stats', {
         chainId,
         error,
       });
 
-      throw new Error(errorMessage);
+      return null;
     }
   }
 

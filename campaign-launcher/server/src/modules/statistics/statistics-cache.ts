@@ -9,7 +9,7 @@ enum StatisticsDataKey {
   TOTAL_REWARDS = 'total_rewards',
 }
 
-type FinishedCampaignsStats = {
+export type FinishedCampaignsStats = {
   nFinished: number;
 };
 
