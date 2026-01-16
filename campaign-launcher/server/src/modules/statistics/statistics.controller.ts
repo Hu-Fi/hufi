@@ -26,7 +26,7 @@ export class StatisticsController {
     return {
       nActiveCampaigns: result.nActive,
       rewardsPoolUsd: result.rewardsPoolUsd,
-      nCompletedCampaigns: result.nCompleted,
+      nFinishedCampaigns: result.nFinished,
       paidRewardsUsd: result.paidRewardsUsd,
     };
   }

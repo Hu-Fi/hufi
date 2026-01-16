@@ -4,13 +4,13 @@ import dayjs from 'dayjs';
 import { CacheManager } from '@/infrastructure/cache';
 
 enum StatisticsDataKey {
-  COMPLETED_CAMPAIGNS = 'completed_campaigns',
+  FINISHED_CAMPAIGNS = 'finished_campaigns',
   ACTIVE_CAMPAIGNS = 'active_campaigns',
   TOTAL_REWARDS = 'total_rewards',
 }
 
-type CompletedCampaignsStats = {
-  nCompleted: number;
+type FinishedCampaignsStats = {
+  nFinished: number;
 };
 
 type TotalRewardsStats<T> = {
@@ -27,12 +27,12 @@ export type ActiveCampaignsStats = {
 export class StatisticsCache {
   constructor(private readonly cacheManager: CacheManager) {}
 
-  async getCompletedCampaignsStats(
+  async getFinishedCampaignsStats(
     chainId: number,
-  ): Promise<CompletedCampaignsStats | null> {
+  ): Promise<FinishedCampaignsStats | null> {
     const cacheKey = CacheManager.makeCacheKey([
       chainId,
-      StatisticsDataKey.COMPLETED_CAMPAIGNS,
+      StatisticsDataKey.FINISHED_CAMPAIGNS,
     ]);
 
     const stats = await this.cacheManager.get<string>(cacheKey);
@@ -41,16 +41,16 @@ export class StatisticsCache {
       return null;
     }
 
-    return JSON.parse(stats) as CompletedCampaignsStats;
+    return JSON.parse(stats) as FinishedCampaignsStats;
   }
 
-  async setCompletedCampaignsStats(
+  async setFinishedCampaignsStats(
     chainId: number,
-    stats: CompletedCampaignsStats,
+    stats: FinishedCampaignsStats,
   ): Promise<void> {
     const cacheKey = CacheManager.makeCacheKey([
       chainId,
-      StatisticsDataKey.COMPLETED_CAMPAIGNS,
+      StatisticsDataKey.FINISHED_CAMPAIGNS,
     ]);
 
     await this.cacheManager.set(
