@@ -32,7 +32,7 @@ import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useTradingPairs } from '@/hooks/useTradingPairs';
 import type { MarketMakingFormValues } from '@/types';
-import { getTokenInfo } from '@/utils';
+import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
@@ -67,7 +67,7 @@ const MarketMakingForm: FC<Props> = ({
   return (
     <>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <Box display="flex" gap={2} alignItems="center" width="100%">
+        <Box display="flex" gap={1} alignItems="center" width="100%">
           <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
             <Controller
               name="exchange"
@@ -264,6 +264,9 @@ const MarketMakingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
+                  if (isExceedingMaximumInteger(value)) {
+                    return;
+                  }
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}
@@ -291,6 +294,9 @@ const MarketMakingForm: FC<Props> = ({
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
+                  if (isExceedingMaximumInteger(value)) {
+                    return;
+                  }
                   field.onChange(value);
                 }}
                 disabled={isCreatingEscrow}
