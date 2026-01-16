@@ -1422,7 +1422,8 @@ describe('CampaignsService', () => {
         expect(logger.child).toHaveBeenCalledTimes(1);
         expect(logger.child).toHaveBeenCalledWith({
           action: 'checkCampaignProgressForPeriod',
-          caller: 'Object.<anonymous>',
+          caller: 'unknown',
+          debugCaller: 'Object.<anonymous>',
           campaignId: campaign.id,
           chainId: campaign.chainId,
           campaignAddress: campaign.address,
@@ -2015,7 +2016,7 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true },
+        { logWarnings: true, caller: 'recordCampaignProgress' },
       );
     });
 
@@ -2032,7 +2033,7 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true },
+        { logWarnings: true, caller: 'recordCampaignProgress' },
       );
     });
 
@@ -2082,7 +2083,7 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true },
+        { logWarnings: true, caller: 'recordCampaignProgress' },
       );
     });
 
@@ -2116,7 +2117,7 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true },
+        { logWarnings: true, caller: 'recordCampaignProgress' },
       );
     });
 
@@ -2134,7 +2135,7 @@ describe('CampaignsService', () => {
         campaign,
         campaign.startDate,
         campaign.endDate,
-        { logWarnings: true },
+        { logWarnings: true, caller: 'recordCampaignProgress' },
       );
     });
 
@@ -2153,7 +2154,7 @@ describe('CampaignsService', () => {
         campaign,
         campaign.startDate,
         cancellationRequestedAt,
-        { logWarnings: true },
+        { logWarnings: true, caller: 'recordCampaignProgress' },
       );
     });
 
@@ -3363,6 +3364,9 @@ describe('CampaignsService', () => {
           campaign,
           mockedActiveTimeframe.start,
           mockedActiveTimeframe.end,
+          {
+            caller: 'refreshInterimProgressCache',
+          },
         );
         await expect(
           campaignsCache.getInterimProgress(campaign.id),
