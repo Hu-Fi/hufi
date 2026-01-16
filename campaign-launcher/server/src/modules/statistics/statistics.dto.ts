@@ -16,15 +16,19 @@ export class CampaignsStatsDto {
   @ApiProperty({
     name: 'n_active_campaigns',
     description: 'Total number of active campaigns',
+    type: Number,
+    nullable: true,
   })
-  nActiveCampaigns: number;
+  nActiveCampaigns: number | null;
 
   @ApiProperty({
     name: 'rewards_pool_usd',
     description:
       'Total amount of funds available for rewards on active campaigns',
+    type: Number,
+    nullable: true,
   })
-  rewardsPoolUsd: number;
+  rewardsPoolUsd: number | null;
 
   @ApiProperty({
     name: 'n_finished_campaigns',
