@@ -16,26 +16,35 @@ export class CampaignsStatsDto {
   @ApiProperty({
     name: 'n_active_campaigns',
     description: 'Total number of active campaigns',
+    type: Number,
+    nullable: true,
   })
-  nActiveCampaigns: number;
+  nActiveCampaigns: number | null;
 
   @ApiProperty({
     name: 'rewards_pool_usd',
     description:
       'Total amount of funds available for rewards on active campaigns',
+    type: Number,
+    nullable: true,
   })
-  rewardsPoolUsd: number;
+  rewardsPoolUsd: number | null;
 
   @ApiProperty({
-    name: 'n_completed_campaigns',
-    description: 'Total number of completed campaigns',
+    name: 'n_finished_campaigns',
+    description:
+      'Total number of finished campaigns (i.e. discovered, then completed or cancelled)',
+    type: Number,
+    nullable: true,
   })
-  nCompletedCampaigns: number | null;
+  nFinishedCampaigns: number | null;
 
   @ApiProperty({
     name: 'total_rewards_distributed',
     description:
       'Total amount of funds distrubited as rewards on completed campaigns',
+    type: Number,
+    nullable: true,
   })
   paidRewardsUsd: number | null;
 }
