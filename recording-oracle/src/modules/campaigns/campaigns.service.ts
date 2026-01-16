@@ -605,7 +605,7 @@ export class CampaignsService implements OnModuleDestroy {
             campaign,
             startDate,
             endDate,
-            { logWarnings: true },
+            { logWarnings: true, caller: this.recordCampaignProgress.name },
           );
 
           let progressValueTarget: number;
@@ -719,15 +719,22 @@ export class CampaignsService implements OnModuleDestroy {
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-    options: { logWarnings?: boolean } = {},
+    options: { logWarnings?: boolean; caller?: string } = {},
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
     if (dayjs(startDate).isAfter(endDate)) {
       throw new Error('Invalid period range provided');
     }
 
+    const callerMeta: {
+      caller: string;
+      debugCaller?: string;
+    } = options.caller
+      ? { caller: options.caller }
+      : { caller: 'unknown', debugCaller: debugUtils.getCaller() };
+
     const logger = this.logger.child({
       action: 'checkCampaignProgressForPeriod',
-      caller: debugUtils.getCaller(),
+      ...callerMeta,
       campaignId: campaign.id,
       chainId: campaign.chainId,
       campaignAddress: campaign.address,
@@ -1350,6 +1357,9 @@ export class CampaignsService implements OnModuleDestroy {
                 campaign,
                 timeframe.start,
                 timeframe.end,
+                {
+                  caller: this.refreshInterimProgressCache.name,
+                },
               );
               await this.campaignsCache.setInterimProgress(
                 campaign.id,
