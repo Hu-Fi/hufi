@@ -1,6 +1,7 @@
 import { type FC, useMemo, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import ErrorIcon from '@mui/icons-material/Error';
+import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
 import CustomTooltip from '@/components/CustomTooltip';
@@ -14,6 +15,35 @@ import { formatAddress } from '@/utils';
 
 type ApiKeysTableProps = {
   data: ExchangeApiKeyData[] | undefined;
+};
+
+const MissingPermissionsTooltip: FC<{ missingPermissions: string[] }> = ({
+  missingPermissions,
+}) => {
+  const isMobile = useIsMobile();
+  return (
+    <CustomTooltip
+      arrow
+      placement={isMobile ? 'right' : 'top'}
+      sx={{ height: 20 }}
+      title={
+        <Box display="flex" flexDirection="column" gap={1}>
+          <Typography variant="tooltip">Missing permissions:</Typography>
+          <List sx={{ p: 0, listStyle: 'disc' }}>
+            {missingPermissions.map((permission: string) => (
+              <ListItem key={permission} sx={{ px: 0, py: 0.5 }}>
+                <Typography variant="tooltip" fontWeight={600}>
+                  {permission}
+                </Typography>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      }
+    >
+      <ErrorIcon sx={{ color: 'error.main', fontSize: '20px' }} />
+    </CustomTooltip>
+  );
 };
 
 const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
@@ -38,12 +68,16 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     setDeletingItem('');
   };
 
-  const rows = data?.map(({ exchange_name, api_key, extras }) => ({
-    id: exchange_name,
-    exchangeName: exchange_name,
-    apiKey: api_key,
-    extras: extras,
-  }));
+  const rows = data?.map(
+    ({ exchange_name, api_key, extras, is_valid, missing_permissions }) => ({
+      id: exchange_name,
+      exchangeName: exchange_name,
+      apiKey: api_key,
+      extras: extras,
+      isValid: is_valid,
+      missingPermissions: missing_permissions,
+    })
+  );
 
   const longestApiKeyLength = useMemo(() => {
     return Math.max(...(data?.map(({ api_key }) => api_key.length) || [0]));
@@ -55,15 +89,21 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       headerName: 'Exchange',
       width: isMobile ? 130 : 160,
       renderCell: (params) => {
+        const { exchangeName, isValid, missingPermissions } = params.row;
         return (
-          <Typography
-            display="flex"
-            alignItems="center"
-            variant={isMobile ? 'body2' : 'body1'}
-            textTransform="capitalize"
-          >
-            {params.row.exchangeName}
-          </Typography>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography
+              variant={isMobile ? 'body2' : 'body1'}
+              textTransform="capitalize"
+            >
+              {exchangeName}
+            </Typography>
+            {!isValid && (
+              <MissingPermissionsTooltip
+                missingPermissions={missingPermissions}
+              />
+            )}
+          </Box>
         );
       },
     },
