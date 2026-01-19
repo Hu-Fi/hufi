@@ -8,6 +8,7 @@ import {
   ExchangeApiClientFactory,
   ExchangePermission,
   type ExchangeExtras,
+  type RequiredAccessCheckResult,
 } from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
@@ -140,15 +141,11 @@ export class ExchangeApiKeysService {
     return await Promise.all(retrievalPromises);
   }
 
-  async markAsInvalid(
+  async markValidity(
     userId: string,
     exchangeName: string,
-    missingPermissions: ExchangePermission[],
+    missingPermissions: ExchangePermission[] = [],
   ): Promise<void> {
-    if (!missingPermissions.length) {
-      throw new Error('At least one missing permission must be provided');
-    }
-
     const entity =
       await this.exchangeApiKeysRepository.findOneByUserAndExchange(
         userId,
@@ -159,12 +156,44 @@ export class ExchangeApiKeysService {
       throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
     }
 
-    entity.isValid = false;
+    entity.isValid = missingPermissions.length === 0;
     /**
      * Just a safety belt in case method is misused with duplicated values
      */
     entity.missingPermissions = Array.from(new Set(missingPermissions));
 
     await this.exchangeApiKeysRepository.save(entity);
+  }
+
+  async revalidate(
+    userId: string,
+    exchangeName: string,
+  ): Promise<RequiredAccessCheckResult> {
+    const { apiKey, secretKey, extras } = await this.retrieve(
+      userId,
+      exchangeName,
+    );
+
+    const exchangeApiClient = this.exchangeApiClientFactory.create(
+      exchangeName,
+      {
+        apiKey,
+        secret: secretKey,
+        extras,
+        userId,
+      },
+    );
+
+    const accessCheckResult = await exchangeApiClient.checkRequiredAccess(
+      Object.values(ExchangePermission),
+    );
+
+    await this.markValidity(
+      userId,
+      exchangeName,
+      accessCheckResult.success ? [] : accessCheckResult.missing,
+    );
+
+    return accessCheckResult;
   }
 }

@@ -314,30 +314,13 @@ describe('ExchangeApiKeysService', () => {
     });
   });
 
-  describe('markAsInvalid', () => {
+  describe('markValidity', () => {
     let userId: string;
     let exchangeName: string;
 
     beforeAll(() => {
       userId = faker.string.uuid();
       exchangeName = faker.lorem.slug();
-    });
-
-    it('should throw if no missing permissions', async () => {
-      let thrownError;
-
-      try {
-        await exchangeApiKeysService.markAsInvalid(userId, exchangeName, []);
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe(
-        'At least one missing permission must be provided',
-      );
-
-      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
     });
 
     it('should throw if key not found', async () => {
@@ -347,7 +330,7 @@ describe('ExchangeApiKeysService', () => {
       let thrownError;
 
       try {
-        await exchangeApiKeysService.markAsInvalid(
+        await exchangeApiKeysService.markValidity(
           userId,
           exchangeName,
           faker.helpers.arrayElements(exchangePermissions),
@@ -370,6 +353,25 @@ describe('ExchangeApiKeysService', () => {
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
     });
 
+    it('should mark existing key as valid', async () => {
+      const apiKeyEntity = generateExchangeApiKey({
+        encryptedApiKey: faker.string.hexadecimal(),
+        encryptedSecretKey: faker.string.hexadecimal(),
+      });
+      mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
+        { ...apiKeyEntity } as ExchangeApiKeyEntity,
+      );
+
+      await exchangeApiKeysService.markValidity(userId, exchangeName, []);
+
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledWith({
+        ...apiKeyEntity,
+        isValid: true,
+        missingPermissions: [],
+      });
+    });
+
     it('should mark existing key as invalid', async () => {
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
@@ -381,7 +383,7 @@ describe('ExchangeApiKeysService', () => {
 
       const missingPermissions =
         faker.helpers.arrayElements(exchangePermissions);
-      await exchangeApiKeysService.markAsInvalid(
+      await exchangeApiKeysService.markValidity(
         userId,
         exchangeName,
         missingPermissions,
@@ -413,7 +415,7 @@ describe('ExchangeApiKeysService', () => {
           max: 2,
         },
       );
-      await exchangeApiKeysService.markAsInvalid(
+      await exchangeApiKeysService.markValidity(
         userId,
         exchangeName,
         missingPermissions,
@@ -438,7 +440,7 @@ describe('ExchangeApiKeysService', () => {
 
       const missingPermissions =
         faker.helpers.arrayElements(exchangePermissions);
-      await exchangeApiKeysService.markAsInvalid(userId, exchangeName, [
+      await exchangeApiKeysService.markValidity(userId, exchangeName, [
         ...missingPermissions,
         ...missingPermissions,
       ]);

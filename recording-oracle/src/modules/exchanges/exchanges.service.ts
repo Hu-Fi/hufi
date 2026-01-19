@@ -6,6 +6,7 @@ import {
   ExchangeApiClient,
   ExchangeApiClientFactory,
   ExchangePermission,
+  RequiredAccessCheckResult,
 } from './api-client';
 import {
   ExchangeApiKeysService,
@@ -57,24 +58,12 @@ export class ExchangesService {
     }
   }
 
-  async revalidateApiKey(userId: string, exchangeName: string): Promise<void> {
+  async safeRevalidateApiKey(
+    userId: string,
+    exchangeName: string,
+  ): Promise<RequiredAccessCheckResult | undefined> {
     try {
-      const exchangeApiClient = await this.getClientForUser(
-        userId,
-        exchangeName,
-      );
-
-      const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess(
-        Object.values(ExchangePermission),
-      );
-
-      if (!hasRequiredAccess.success) {
-        await this.exchangeApiKeysService.markAsInvalid(
-          userId,
-          exchangeName,
-          hasRequiredAccess.missing,
-        );
-      }
+      return await this.exchangeApiKeysService.revalidate(userId, exchangeName);
     } catch (error) {
       this.logger.error('Failed to revalidate exchange api key', {
         userId,

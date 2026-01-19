@@ -802,7 +802,7 @@ export class CampaignsService implements OnModuleDestroy {
               error,
             });
           }
-          void this.exchangesService.revalidateApiKey(
+          void this.exchangesService.safeRevalidateApiKey(
             participant.id,
             campaign.exchangeName,
           );
