@@ -17,14 +17,14 @@ export const useGetEnrolledExchanges = () => {
   });
 };
 
-export const useGetExchangesWithApiKeys = () => {
+export const useGetExchangesWithApiKeys = ({ enabled = true } = {}) => {
   const { isAuthenticated } = useWeb3Auth();
   const { isConnected } = useConnection();
 
   return useQuery({
     queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS, AUTHED_QUERY_TAG],
     queryFn: () => recordingApi.getExchangesWithApiKeys(),
-    enabled: isAuthenticated && isConnected,
+    enabled: enabled && isAuthenticated && isConnected,
   });
 };
 

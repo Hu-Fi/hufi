@@ -49,6 +49,8 @@ export type ExchangeApiKeyData = {
   exchange_name: string;
   api_key: string;
   extras?: Record<string, string>;
+  is_valid: boolean;
+  missing_permissions: string[];
 };
 
 export type Campaign = {

@@ -15,6 +15,7 @@ import { recordingApi } from '@/api';
 import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
 import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
+import useCheckApiKeysValidity from '@/hooks/useCheckApiKeysValidity';
 import { tokenManager } from '@/utils/TokenManager';
 
 import { useActiveAccount } from './ActiveAccountProvider';
@@ -42,9 +43,10 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
   const queryClient = useQueryClient();
-  const { signMessageAsync } = useSignMessage();
+  const signMessage = useSignMessage();
   const { isConnected } = useConnection();
   const { activeAddress } = useActiveAccount();
+  const { checkApiKeysValidity } = useCheckApiKeysValidity();
 
   const setAuthenticationState = useCallback(
     (
@@ -82,7 +84,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     setIsLoading(true);
     try {
       const nonce = await recordingApi.getNonce(activeAddress);
-      const signature = await signMessageAsync({
+      const signature = await signMessage.mutateAsync({
         account: activeAddress,
         message: JSON.stringify(nonce),
       });
@@ -93,6 +95,7 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         refresh_token: authResponse.refresh_token,
       });
       setAuthenticationState(true);
+      checkApiKeysValidity();
     } catch (e) {
       setAuthenticationState(false);
       console.error('Failed to sign in', e);
@@ -100,7 +103,12 @@ export const Web3AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [activeAddress, signMessageAsync, setAuthenticationState]);
+  }, [
+    activeAddress,
+    signMessage,
+    setAuthenticationState,
+    checkApiKeysValidity,
+  ]);
 
   const bootstrapAuthState = useCallback(async () => {
     if (!tokenManager.hasTokens()) {
