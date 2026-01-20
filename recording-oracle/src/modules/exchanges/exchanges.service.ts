@@ -51,10 +51,15 @@ export class ExchangesService {
   ): Promise<void> {
     const exchangeApiClient = await this.getClientForUser(userId, exchangeName);
 
-    const hasRequiredAccess =
+    const accessCheckResult =
       await exchangeApiClient.checkRequiredAccess(permissionsToCheck);
-    if (!hasRequiredAccess.success) {
-      throw new KeyAuthorizationError(exchangeName, hasRequiredAccess.missing);
+    if (!accessCheckResult.success) {
+      await this.exchangeApiKeysService.markValidity(
+        userId,
+        exchangeName,
+        accessCheckResult.missing,
+      );
+      throw new KeyAuthorizationError(exchangeName, accessCheckResult.missing);
     }
   }
 

@@ -123,13 +123,17 @@ describe('ExchangesService', () => {
       expect(mockExchangeApiClient.checkRequiredAccess).toHaveBeenCalledWith(
         permissionsToCheck,
       );
+
+      expect(mockExchangeApiKeysService.markValidity).toHaveBeenCalledTimes(0);
     });
 
     it('should throw KeyAuthorizationError if access check fails', async () => {
-      const missingPermission = faker.helpers.arrayElement(permissionsToCheck);
+      const missingPermissions = [
+        faker.helpers.arrayElement(permissionsToCheck),
+      ];
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: false,
-        missing: [missingPermission],
+        missing: missingPermissions,
       });
 
       let thrownError;
@@ -145,7 +149,14 @@ describe('ExchangesService', () => {
 
       expect(thrownError).toBeInstanceOf(KeyAuthorizationError);
       expect(thrownError.exchangeName).toBe(exchangeName);
-      expect(thrownError.missingPermissions).toEqual([missingPermission]);
+      expect(thrownError.missingPermissions).toEqual(missingPermissions);
+
+      expect(mockExchangeApiKeysService.markValidity).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiKeysService.markValidity).toHaveBeenCalledWith(
+        userId,
+        exchangeName,
+        missingPermissions,
+      );
     });
   });
 });
