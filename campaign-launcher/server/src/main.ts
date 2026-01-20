@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { useContainer } from 'class-validator';
 import helmet from 'helmet';
 
 /**
@@ -23,6 +24,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks([ShutdownSignal.SIGINT, ShutdownSignal.SIGTERM], {
     useProcessExit: true,
   });
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const server = app.getHttpServer();
   // https://nodejs.org/docs/latest/api/http.html#serverrequesttimeout

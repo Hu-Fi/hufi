@@ -8,6 +8,7 @@ import { ExceptionFilter } from './common/filters/exception';
 import { TransformInterceptor } from './common/interceptors';
 import { HttpValidationPipe } from './common/pipes';
 import Environment from './common/utils/environment';
+import { ValidatorsModule } from './common/validators';
 import { EnvConfigModule, envValidator } from './config';
 import { ValkeyModule } from './infrastructure/valkey';
 import { CampaignModule } from './modules/campaigns';
@@ -16,6 +17,23 @@ import { HealthModule } from './modules/health';
 import { StatisticsModule } from './modules/statistics';
 
 @Module({
+  imports: [
+    HealthModule,
+    ConfigModule.forRoot({
+      /**
+       * First value found takes precendece
+       */
+      envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
+      validationSchema: envValidator,
+    }),
+    ScheduleModule.forRoot(),
+    CampaignModule,
+    EnvConfigModule,
+    ExchangesModule,
+    StatisticsModule,
+    ValkeyModule,
+    ValidatorsModule,
+  ],
   providers: [
     {
       provide: APP_PIPE,
@@ -40,22 +58,6 @@ import { StatisticsModule } from './modules/statistics';
       provide: APP_FILTER,
       useClass: ExceptionFilter,
     },
-  ],
-  imports: [
-    HealthModule,
-    ConfigModule.forRoot({
-      /**
-       * First value found takes precendece
-       */
-      envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
-      validationSchema: envValidator,
-    }),
-    ScheduleModule.forRoot(),
-    CampaignModule,
-    EnvConfigModule,
-    ExchangesModule,
-    StatisticsModule,
-    ValkeyModule,
   ],
   controllers: [AppController],
 })

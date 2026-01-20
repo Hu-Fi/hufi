@@ -1,4 +1,4 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, Injectable } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
   IsIn,
@@ -10,25 +10,30 @@ import { ethers } from 'ethers';
 
 import {
   ChainIds,
+  ExchangeName,
   SUPPORTED_EXCHANGE_NAMES,
   type SupportedExchange,
 } from '@/common/constants';
-
-const validExchangeNameSet = new Set<SupportedExchange>(
-  SUPPORTED_EXCHANGE_NAMES,
-);
-export function isValidExchangeName(input: string): input is SupportedExchange {
-  return validExchangeNameSet.has(input as SupportedExchange);
-}
+import { ExchangesConfigService } from '@/config';
 
 @ValidatorConstraint({ name: 'ExchangeName', async: false })
+@Injectable()
 export class ExchangeNameValidator implements ValidatorConstraintInterface {
+  private readonly supportedExchangesSet: Set<SupportedExchange>;
+
+  constructor(private readonly exchangesConfigService: ExchangesConfigService) {
+    this.supportedExchangesSet = new Set(SUPPORTED_EXCHANGE_NAMES);
+    if (this.exchangesConfigService.isPancakeswapEnabled) {
+      this.supportedExchangesSet.add(ExchangeName.PANCAKESWAP);
+    }
+  }
+
   validate(value: unknown): boolean {
     if (typeof value !== 'string') {
       return false;
     }
 
-    return isValidExchangeName(value);
+    return this.supportedExchangesSet.has(value as SupportedExchange);
   }
 
   defaultMessage({ property }: ValidationArguments): string {

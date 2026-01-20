@@ -28,7 +28,8 @@ export class ExchangesController {
   })
   @ApiResponse({
     status: 200,
-    type: Array<string>,
+    type: String,
+    isArray: true,
   })
   @Header('Cache-Control', 'public, max-age=300')
   @Get('/:exchange_name/trading-pairs')
@@ -46,7 +47,8 @@ export class ExchangesController {
   })
   @ApiResponse({
     status: 200,
-    type: Array<string>,
+    type: String,
+    isArray: true,
   })
   @Header('Cache-Control', 'public, max-age=300')
   @Get('/:exchange_name/currencies')

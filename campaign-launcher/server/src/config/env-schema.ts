@@ -39,4 +39,7 @@ export const envValidator = Joi.object({
   VALKEY_PORT: Joi.number().positive().integer(),
   VALKEY_DB: Joi.number().integer().min(0).required(),
   VALKEY_TLS: Joi.string().valid('true', 'false'),
+
+  // Exchanges
+  FEATURE_PANCAKESWAP: Joi.string().valid('true', 'false'),
 });
