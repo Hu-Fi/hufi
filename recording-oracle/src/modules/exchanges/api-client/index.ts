@@ -19,4 +19,5 @@ export {
   ExchangePermission,
   TakerOrMakerFlag,
   TradingSide,
+  type RequiredAccessCheckResult,
 } from './types';

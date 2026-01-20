@@ -1679,8 +1679,10 @@ describe('CampaignsService', () => {
         },
       );
 
-      expect(mockExchangesService.revalidateApiKey).toHaveBeenCalledTimes(1);
-      expect(mockExchangesService.revalidateApiKey).toHaveBeenCalledWith(
+      expect(mockExchangesService.safeRevalidateApiKey).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(mockExchangesService.safeRevalidateApiKey).toHaveBeenCalledWith(
         noAccessParticipant.id,
         campaign.exchangeName,
       );

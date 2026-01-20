@@ -107,3 +107,11 @@ export class EnrolledApiKeyDto {
   @ApiProperty({ name: 'missing_permissions' })
   missingPermissions: string[];
 }
+
+export class RevalidateApiKeyResponseDto {
+  @ApiProperty({ name: 'is_valid' })
+  isValid: boolean;
+
+  @ApiPropertyOptional({ name: 'missing_permissions' })
+  missingPermissions?: string[];
+}

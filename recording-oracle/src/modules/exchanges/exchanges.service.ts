@@ -6,6 +6,7 @@ import {
   ExchangeApiClient,
   ExchangeApiClientFactory,
   ExchangePermission,
+  RequiredAccessCheckResult,
 } from './api-client';
 import {
   ExchangeApiKeysService,
@@ -50,31 +51,24 @@ export class ExchangesService {
   ): Promise<void> {
     const exchangeApiClient = await this.getClientForUser(userId, exchangeName);
 
-    const hasRequiredAccess =
+    const accessCheckResult =
       await exchangeApiClient.checkRequiredAccess(permissionsToCheck);
-    if (!hasRequiredAccess.success) {
-      throw new KeyAuthorizationError(exchangeName, hasRequiredAccess.missing);
+    if (!accessCheckResult.success) {
+      await this.exchangeApiKeysService.markValidity(
+        userId,
+        exchangeName,
+        accessCheckResult.missing,
+      );
+      throw new KeyAuthorizationError(exchangeName, accessCheckResult.missing);
     }
   }
 
-  async revalidateApiKey(userId: string, exchangeName: string): Promise<void> {
+  async safeRevalidateApiKey(
+    userId: string,
+    exchangeName: string,
+  ): Promise<RequiredAccessCheckResult | undefined> {
     try {
-      const exchangeApiClient = await this.getClientForUser(
-        userId,
-        exchangeName,
-      );
-
-      const hasRequiredAccess = await exchangeApiClient.checkRequiredAccess(
-        Object.values(ExchangePermission),
-      );
-
-      if (!hasRequiredAccess.success) {
-        await this.exchangeApiKeysService.markAsInvalid(
-          userId,
-          exchangeName,
-          hasRequiredAccess.missing,
-        );
-      }
+      return await this.exchangeApiKeysService.revalidate(userId, exchangeName);
     } catch (error) {
       this.logger.error('Failed to revalidate exchange api key', {
         userId,

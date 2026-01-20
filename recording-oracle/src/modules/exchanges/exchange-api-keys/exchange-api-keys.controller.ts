@@ -27,6 +27,7 @@ import {
   EnrollExchangeApiKeysResponseDto,
   EnrolledApiKeyDto,
   ExchangeNameParamDto,
+  RevalidateApiKeyResponseDto,
 } from './exchange-api-keys.dto';
 import { ExchangeApiKeysControllerErrorsFilter } from './exchange-api-keys.error-filter';
 import { ExchangeApiKeysRepository } from './exchange-api-keys.repository';
@@ -160,5 +161,33 @@ export class ExchangeApiKeysController {
     const exchangeName = params.exchangeName;
 
     return this.exchangeApiKeysService.retrieve(userId, exchangeName);
+  }
+
+  @ApiOperation({
+    summary: 'Revalidate exchange API key',
+    description: 'Revalidates exchange API key and returns validity status',
+  })
+  @ApiResponse({
+    status: 200,
+    type: RevalidateApiKeyResponseDto,
+  })
+  @HttpCode(200)
+  @Post('/:exchange_name/revalidate')
+  async revalidate(
+    @Req() request: RequestWithUser,
+    @Param() params: ExchangeNameParamDto,
+  ): Promise<RevalidateApiKeyResponseDto> {
+    const userId = request.user.id;
+    const exchangeName = params.exchangeName;
+
+    const result = await this.exchangeApiKeysService.revalidate(
+      userId,
+      exchangeName,
+    );
+
+    return {
+      isValid: result.success,
+      missingPermissions: result.success ? undefined : result.missing,
+    };
   }
 }
