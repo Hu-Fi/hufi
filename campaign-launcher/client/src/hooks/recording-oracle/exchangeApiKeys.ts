@@ -91,3 +91,17 @@ export const useDeleteApiKeyByExchange = (exchangeName: string) => {
     },
   });
 };
+
+export const useRevalidateExchangeApiKey = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (exchangeName: string) =>
+      recordingApi.revalidateExchangeApiKey(exchangeName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
+      });
+    },
+  });
+};

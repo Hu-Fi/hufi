@@ -1,6 +1,7 @@
 import { type FC, useMemo, useState } from 'react';
 
 import ErrorIcon from '@mui/icons-material/Error';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
@@ -8,6 +9,7 @@ import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import DeleteApiKeyModal from '@/components/modals/DeleteApiKeyModal';
 import EditApiKeyModal from '@/components/modals/EditApiKeyModal';
+import { useRevalidateExchangeApiKey } from '@/hooks/recording-oracle/exchangeApiKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { DeleteIcon, EditIcon } from '@/icons';
 import type { ExchangeApiKeyData } from '@/types';
@@ -51,6 +53,11 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   const [deletingItem, setDeletingItem] = useState('');
 
   const isMobile = useIsMobile();
+  const { mutate: revalidateExchangeApiKey } = useRevalidateExchangeApiKey();
+
+  const handleClickOnRefresh = (exchangeName: string) => {
+    revalidateExchangeApiKey(exchangeName);
+  };
 
   const handleClickOnEdit = (exchangeName: string) => {
     setEditingItem(exchangeName);
@@ -87,7 +94,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'exchangeName',
       headerName: 'Exchange',
-      width: isMobile ? 130 : 160,
+      width: isMobile ? 120 : 160,
       renderCell: (params) => {
         const { exchangeName, isValid, missingPermissions } = params.row;
         return (
@@ -147,10 +154,17 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'actions',
       headerName: '',
-      width: isMobile ? 82 : 64,
+      width: isMobile ? 110 : 96,
       renderCell: (params) => {
         return (
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <IconButton
+              sx={{ p: 0 }}
+              disableRipple
+              onClick={() => handleClickOnRefresh(params.row.exchangeName)}
+            >
+              <RefreshIcon sx={{ color: 'text.primary' }} />
+            </IconButton>
             <IconButton
               sx={{ p: 0 }}
               disableRipple
@@ -209,7 +223,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           },
           '& .MuiDataGrid-cell': {
             borderTop: 'none',
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             overflow: 'visible !important',
             '&[data-field="actions"]': {
               px: isMobile ? 1 : 0,
@@ -225,7 +239,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             backgroundColor: 'rgba(255, 255, 255, 0.12) !important',
             fontSize: '12px',
             fontWeight: 400,
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             overflow: 'visible !important',
             textTransform: 'uppercase',
             borderBottom: 'none !important',

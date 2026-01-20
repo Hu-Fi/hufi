@@ -157,6 +157,10 @@ export class RecordingApiClient extends HttpClient {
     await this.delete(`/exchange-api-keys/${exchangeName}`);
   }
 
+  async revalidateExchangeApiKey(exchangeName: string): Promise<void> {
+    await this.post(`/exchange-api-keys/${exchangeName}/revalidate`);
+  }
+
   async getJoinedCampaigns(
     params: Record<string, string | number>
   ): Promise<CampaignsResponse> {
