@@ -53,9 +53,11 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   const [deletingItem, setDeletingItem] = useState('');
 
   const isMobile = useIsMobile();
-  const { mutate: revalidateExchangeApiKey } = useRevalidateExchangeApiKey();
+  const { mutate: revalidateExchangeApiKey, isPending: isRevalidating } =
+    useRevalidateExchangeApiKey();
 
   const handleClickOnRefresh = (exchangeName: string) => {
+    if (isRevalidating) return;
     revalidateExchangeApiKey(exchangeName);
   };
 
@@ -156,26 +158,39 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
       headerName: '',
       width: isMobile ? 110 : 96,
       renderCell: (params) => {
+        const { exchangeName, isValid } = params.row;
         return (
-          <Box display="flex" alignItems="center" gap={1.5}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="flex-end"
+            gap={1.5}
+          >
+            {!isValid && (
+              <IconButton
+                sx={{ p: 0 }}
+                disableRipple
+                disabled={isRevalidating}
+                onClick={() => handleClickOnRefresh(exchangeName)}
+              >
+                <RefreshIcon
+                  sx={{
+                    color: isRevalidating ? 'text.disabled' : 'text.primary',
+                  }}
+                />
+              </IconButton>
+            )}
             <IconButton
               sx={{ p: 0 }}
               disableRipple
-              onClick={() => handleClickOnRefresh(params.row.exchangeName)}
-            >
-              <RefreshIcon sx={{ color: 'text.primary' }} />
-            </IconButton>
-            <IconButton
-              sx={{ p: 0 }}
-              disableRipple
-              onClick={() => handleClickOnEdit(params.row.exchangeName)}
+              onClick={() => handleClickOnEdit(exchangeName)}
             >
               <EditIcon sx={{ color: 'text.primary' }} />
             </IconButton>
             <IconButton
               sx={{ p: 0 }}
               disableRipple
-              onClick={() => handleClickOnDelete(params.row.exchangeName)}
+              onClick={() => handleClickOnDelete(exchangeName)}
             >
               <DeleteIcon sx={{ color: 'text.primary' }} />
             </IconButton>
