@@ -213,6 +213,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   watch={watch as UseFormWatch<MarketMakingFormValues>}
                   trigger={trigger as UseFormTrigger<MarketMakingFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
+                  campaignType={campaignType}
                 />
               )}
               {campaignType === CampaignType.HOLDING && (
@@ -222,6 +223,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   watch={watch as UseFormWatch<HoldingFormValues>}
                   trigger={trigger as UseFormTrigger<HoldingFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
+                  campaignType={campaignType}
                 />
               )}
               {campaignType === CampaignType.THRESHOLD && (
@@ -231,6 +233,7 @@ const CreateCampaignModal: FC<Props> = ({ open, onClose, campaignType }) => {
                   watch={watch as UseFormWatch<ThresholdFormValues>}
                   trigger={trigger as UseFormTrigger<ThresholdFormValues>}
                   isCreatingEscrow={isCreatingEscrow}
+                  campaignType={campaignType}
                 />
               )}
               {stepsCompleted < steps.length ? (

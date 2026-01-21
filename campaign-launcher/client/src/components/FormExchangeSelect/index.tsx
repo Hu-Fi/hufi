@@ -1,7 +1,11 @@
+import { useMemo } from 'react';
+
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import type { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 
+import { ExchangeName } from '@/constants/exchanges';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
+import { CampaignType } from '@/types';
 
 type FormExchangeSelectProps<
   TFieldValues extends FieldValues,
@@ -9,6 +13,7 @@ type FormExchangeSelectProps<
 > = {
   field: ControllerRenderProps<TFieldValues, TName>;
   disabled?: boolean;
+  campaignType?: CampaignType;
 };
 
 const slotProps = {
@@ -26,14 +31,25 @@ const FormExchangeSelect = <
 >({
   field,
   disabled = false,
+  campaignType,
 }: FormExchangeSelectProps<TFieldValues, TName>) => {
   const { exchanges, exchangesMap } = useExchangesContext();
+
+  const supportedExchanges = useMemo(() => {
+    if (campaignType === CampaignType.MARKET_MAKING) {
+      return exchanges;
+    }
+
+    return exchanges?.filter(
+      (exchange) => exchange.name !== ExchangeName.PANCAKESWAP
+    );
+  }, [campaignType, exchanges]);
 
   return (
     <Autocomplete
       id="exchange-select"
       slotProps={slotProps}
-      options={exchanges?.map((exchange) => exchange.name) || []}
+      options={supportedExchanges?.map((exchange) => exchange.name) || []}
       getOptionLabel={(option) => {
         const exchange = exchangesMap.get(option);
         return exchange?.display_name || option || '';

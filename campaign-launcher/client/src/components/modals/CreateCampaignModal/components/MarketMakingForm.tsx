@@ -31,7 +31,7 @@ import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useTradingPairs } from '@/hooks/useTradingPairs';
-import type { MarketMakingFormValues } from '@/types';
+import type { CampaignType, MarketMakingFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
 import { formatInputValue } from '../utils';
@@ -43,6 +43,7 @@ type Props = {
   errors: FieldErrors<MarketMakingFormValues>;
   watch: UseFormWatch<MarketMakingFormValues>;
   trigger: UseFormTrigger<MarketMakingFormValues>;
+  campaignType: CampaignType;
   isCreatingEscrow: boolean;
 };
 
@@ -52,6 +53,7 @@ const MarketMakingForm: FC<Props> = ({
   watch,
   trigger,
   isCreatingEscrow,
+  campaignType,
 }) => {
   const isMobile = useIsMobile();
 
@@ -76,6 +78,7 @@ const MarketMakingForm: FC<Props> = ({
                 <FormExchangeSelect<MarketMakingFormValues, 'exchange'>
                   field={field}
                   disabled={isCreatingEscrow}
+                  campaignType={campaignType}
                 />
               )}
             />
