@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class ExchangeConfigService {
+export class ExchangesConfigService {
   constructor(private configService: ConfigService) {}
 
   get useSandbox(): boolean {

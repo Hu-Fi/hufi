@@ -6,7 +6,7 @@ import { CacheConfigService } from './cache-config.service';
 import { CampaignsConfigService } from './campaigns-config.service';
 import { DatabaseConfigService } from './database-config.service';
 import { EncryptionConfigService } from './encryption-config.service';
-import { ExchangeConfigService } from './exchange-config.service';
+import { ExchangesConfigService } from './exchanges-config.service';
 import { LoggingConfigService } from './logging-config.service';
 import { S3ConfigService } from './s3-config-service';
 import { ServerConfigService } from './server-config.service';
@@ -21,7 +21,7 @@ import { Web3ConfigService } from './web3-config.service';
     CampaignsConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
-    ExchangeConfigService,
+    ExchangesConfigService,
     LoggingConfigService,
     S3ConfigService,
     ServerConfigService,
@@ -33,7 +33,7 @@ import { Web3ConfigService } from './web3-config.service';
     CacheConfigService,
     DatabaseConfigService,
     EncryptionConfigService,
-    ExchangeConfigService,
+    ExchangesConfigService,
     LoggingConfigService,
     S3ConfigService,
     ServerConfigService,

@@ -10,7 +10,7 @@ import {
   SUPPORTED_EXCHANGE_NAMES,
   SupportedExchange,
 } from '@/common/constants';
-import { ExchangeConfigService, LoggingConfigService } from '@/config';
+import { ExchangesConfigService, LoggingConfigService } from '@/config';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
@@ -26,10 +26,12 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
 
-const mockExchangeConfigService: Omit<ExchangeConfigService, 'configService'> =
-  {
-    useSandbox: true,
-  };
+const mockExchangesConfigService: Omit<
+  ExchangesConfigService,
+  'configService'
+> = {
+  useSandbox: true,
+};
 const mockLoggerConfigService: Pick<
   LoggingConfigService,
   'logExchangePermissionErrors'
@@ -45,8 +47,8 @@ describe('ExchangeApiClientFactory', () => {
       providers: [
         ExchangeApiClientFactory,
         {
-          provide: ExchangeConfigService,
-          useValue: mockExchangeConfigService,
+          provide: ExchangesConfigService,
+          useValue: mockExchangesConfigService,
         },
         {
           provide: LoggingConfigService,
@@ -188,7 +190,7 @@ describe('ExchangeApiClientFactory', () => {
         apiKey,
         secret,
         userId,
-        sandbox: mockExchangeConfigService.useSandbox,
+        sandbox: mockExchangesConfigService.useSandbox,
         loggingConfig: {
           logPermissionErrors:
             mockLoggerConfigService.logExchangePermissionErrors,

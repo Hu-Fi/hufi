@@ -6,7 +6,7 @@ import {
   SUPPORTED_EXCHANGE_NAMES,
   SupportedExchange,
 } from '@/common/constants';
-import { ExchangeConfigService, LoggingConfigService } from '@/config';
+import { ExchangesConfigService, LoggingConfigService } from '@/config';
 import logger from '@/logger';
 
 import {
@@ -41,7 +41,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
   private preloadCcxtTimeoutId: NodeJS.Timeout;
 
   constructor(
-    private readonly exchangeConfigService: ExchangeConfigService,
+    private readonly exchangesConfigService: ExchangesConfigService,
     private readonly loggingConfigService: LoggingConfigService,
   ) {}
 
@@ -86,7 +86,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         ccxtClient = new exchangeClass({ ...BASE_CCXT_CLIENT_OPTIONS });
       }
 
-      if (this.exchangeConfigService.useSandbox) {
+      if (this.exchangesConfigService.useSandbox) {
         if (ccxtClient.has.sandbox) {
           ccxtClient.setSandboxMode(true);
         } else {
@@ -114,7 +114,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       apiKey: initOptions.apiKey,
       secret: initOptions.secret,
       userId: initOptions.userId,
-      sandbox: this.exchangeConfigService.useSandbox,
+      sandbox: this.exchangesConfigService.useSandbox,
       preloadedExchangeClient: this.preloadedCcxtClients.get(
         exchangeName as SupportedExchange,
       ),
