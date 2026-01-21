@@ -155,6 +155,7 @@ const Header: FC = () => {
           open={!!anchorEl}
           anchorEl={anchorEl}
           onClose={handleMenuClose}
+          keepMounted
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'left',
@@ -208,7 +209,10 @@ const Header: FC = () => {
               width="100%"
               sx={{ '& button': { flex: 1 } }}
             >
-              <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
+              <LaunchCampaign
+                variant={signer ? 'outlined' : 'contained'}
+                handleCallbackOnClick={handleMenuClose}
+              />
               {!signer && (
                 <CustomTooltip
                   arrow

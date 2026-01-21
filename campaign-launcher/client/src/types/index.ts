@@ -221,3 +221,9 @@ export type CheckCampaignJoinStatusResponse = {
   joined_at?: string;
   reason?: string;
 };
+
+export enum AllowanceType {
+  UNLIMITED = 'unlimited',
+  EXACT = 'exact',
+  CUSTOM = 'custom',
+}

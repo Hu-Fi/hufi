@@ -12,11 +12,12 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 
 type Props = {
   stepsCompleted: number;
-  steps: string[];
-  isCreatingEscrow: boolean;
+  isLoading: boolean;
 };
 
-const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
+const steps = ['Approve Tokens', 'Create Escrow'];
+
+const Steps: FC<Props> = ({ stepsCompleted, isLoading }) => {
   const isMobile = useIsMobile();
 
   return (
@@ -25,10 +26,10 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
       orientation={isMobile ? 'vertical' : 'horizontal'}
       connector={isMobile ? null : <StepConnector />}
       sx={{
-        mb: 2,
+        my: 0,
         mx: 'auto',
         gap: { xs: '20px', md: 0 },
-        width: { xs: 'fit-content', md: '100%' },
+        width: { xs: 'fit-content', md: '60%' },
       }}
     >
       {steps.map((step, idx) => {
@@ -44,6 +45,9 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
                   sx: {
                     flexDirection: isMobile ? 'column' : 'row',
                     gap: 1,
+                    '& .MuiStepLabel-label': {
+                      textAlign: 'center',
+                    },
                     '& .MuiStepLabel-iconContainer': {
                       p: 0,
                     },
@@ -51,7 +55,7 @@ const Steps: FC<Props> = ({ stepsCompleted, steps, isCreatingEscrow }) => {
                 },
                 stepIcon: {
                   icon:
-                    isCreatingEscrow && idx === stepsCompleted ? (
+                    isLoading && idx === stepsCompleted ? (
                       <CircularProgress size={24} />
                     ) : (
                       idx + 1
