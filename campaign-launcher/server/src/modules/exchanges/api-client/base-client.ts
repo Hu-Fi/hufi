@@ -1,5 +1,8 @@
+import logger from '@/logger';
+import type { Logger } from '@/logger';
+
 import { LOAD_MARKETS_COOLDOWN } from './constants';
-import { MarketsNotLoadedError } from './errors';
+import { LoadMarketsError, MarketsNotLoadedError } from './errors';
 import type {
   ExchangeApiClient,
   ExchangeInfo,
@@ -29,16 +32,25 @@ function AssertMarketsLoaded(
 }
 
 export abstract class BaseExchangeApiClient implements ExchangeApiClient {
+  protected logger: Logger;
+
   protected marketsLoadedAt: number = 0;
 
   protected abstract tradingPairs?: string[];
   protected abstract currencies?: string[];
 
-  constructor(readonly exchangeName: string) {}
+  constructor(readonly exchangeName: string) {
+    this.logger = logger.child({
+      context: this.constructor.name,
+      exchangeName,
+    });
+  }
 
   abstract get info(): ExchangeInfo;
 
-  abstract get marketsLoaded(): boolean;
+  get marketsLoaded(): boolean {
+    return this.marketsLoadedAt > 0;
+  }
 
   protected abstract runLoadMarkets(): Promise<void>;
 
@@ -49,7 +61,12 @@ export abstract class BaseExchangeApiClient implements ExchangeApiClient {
       return;
     }
 
-    await this.runLoadMarkets();
+    try {
+      await this.runLoadMarkets();
+    } catch (error) {
+      this.logger.error('Failed to load markets', { error, msSinceLastLoad });
+      throw new LoadMarketsError(this.exchangeName, error.message);
+    }
 
     this.marketsLoadedAt = Date.now();
   }

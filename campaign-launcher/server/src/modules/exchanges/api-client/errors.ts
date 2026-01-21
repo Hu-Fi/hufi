@@ -14,3 +14,12 @@ export class MarketsNotLoadedError extends ExchangeApiClientError {
     super('Markets not loaded for exchange', exchangeName);
   }
 }
+
+export class LoadMarketsError extends ExchangeApiClientError {
+  constructor(
+    exchangeName: string,
+    readonly reason: unknown,
+  ) {
+    super('Failed to load markets', exchangeName);
+  }
+}

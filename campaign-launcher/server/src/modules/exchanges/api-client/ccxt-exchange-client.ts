@@ -32,10 +32,6 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     };
   }
 
-  get marketsLoaded(): boolean {
-    return Object.keys(this.ccxtClient.markets || {}).length > 0;
-  }
-
   protected get tradingPairs() {
     return this.ccxtClient.symbols;
   }

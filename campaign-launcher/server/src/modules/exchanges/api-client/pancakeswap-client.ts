@@ -19,10 +19,6 @@ export class PancakeSwapClient extends BaseExchangeApiClient {
     };
   }
 
-  get marketsLoaded(): boolean {
-    return this.marketsLoadedAt > 0;
-  }
-
   protected async runLoadMarkets(): Promise<void> {
     return;
   }
