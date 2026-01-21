@@ -9,7 +9,6 @@ import { ExchangeType } from '../constants';
 
 export class CcxtExchangeClient extends BaseExchangeApiClient {
   private ccxtClient: Exchange;
-  protected marketsLoadedAt: number = 0;
 
   constructor(exchangeName: string) {
     if (!(exchangeName in ccxt)) {

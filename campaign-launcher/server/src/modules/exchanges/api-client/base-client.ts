@@ -34,7 +34,7 @@ function AssertMarketsLoaded(
 export abstract class BaseExchangeApiClient implements ExchangeApiClient {
   protected logger: Logger;
 
-  protected marketsLoadedAt: number = 0;
+  private marketsLoadedAt: number = 0;
 
   protected abstract tradingPairs?: string[];
   protected abstract currencies?: string[];
