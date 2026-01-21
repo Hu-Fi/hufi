@@ -8,7 +8,7 @@ import type {
   ExchangeApiClient,
   ExchangeInfo,
 } from './exchange-api-client.interface';
-import { ExchangeMeta } from '../constants';
+import { type ExchangeMeta, ExchangeMetaMap } from '../constants';
 
 function AssertMarketsLoaded(
   _target: unknown,
@@ -43,7 +43,7 @@ export abstract class BaseExchangeApiClient implements ExchangeApiClient {
   protected abstract currencies?: string[];
 
   constructor(readonly exchangeName: string) {
-    this.exchangeMeta = ExchangeMeta[exchangeName as ExchangeName];
+    this.exchangeMeta = ExchangeMetaMap[exchangeName as ExchangeName];
 
     this.logger = logger.child({
       context: this.constructor.name,
@@ -51,7 +51,12 @@ export abstract class BaseExchangeApiClient implements ExchangeApiClient {
     });
   }
 
-  abstract get info(): ExchangeInfo;
+  get info(): ExchangeInfo {
+    return {
+      name: this.exchangeName,
+      ...this.exchangeMeta,
+    };
+  }
 
   get marketsLoaded(): boolean {
     return this.marketsLoadedAt > 0;

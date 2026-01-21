@@ -4,7 +4,6 @@ import _ from 'lodash';
 
 import { BaseExchangeApiClient } from './base-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
-import { type ExchangeInfo } from './exchange-api-client.interface';
 
 export class CcxtExchangeClient extends BaseExchangeApiClient {
   private ccxtClient: Exchange;
@@ -18,16 +17,6 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
 
     const exchangeClass = ccxt[exchangeName];
     this.ccxtClient = new exchangeClass(_.merge({}, BASE_CCXT_CLIENT_OPTIONS));
-  }
-
-  get info(): ExchangeInfo {
-    return {
-      name: this.exchangeName,
-      displayName: this.ccxtClient.name,
-      url: this.ccxtClient.urls.www,
-      logo: this.ccxtClient.urls.logo,
-      type: this.exchangeMeta.type,
-    };
   }
 
   protected get tradingPairs() {
