@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { ExchangeNameValidator } from './web3';
+import { ExchangeNameValidator } from './exchanges';
 
 @Module({
   providers: [ExchangeNameValidator],
