@@ -1,5 +1,4 @@
 import { ShutdownSignal } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -44,8 +43,7 @@ async function bootstrap(): Promise<void> {
 
   app.use(helmet());
 
-  const configService: ConfigService = app.get(ConfigService);
-  const serverConfigService = new ServerConfigService(configService);
+  const serverConfigService = app.get(ServerConfigService);
 
   const host = serverConfigService.host;
   const port = serverConfigService.port;

@@ -8,32 +8,24 @@ import {
 } from 'class-validator';
 import { ethers } from 'ethers';
 
-import {
-  ChainIds,
-  ExchangeName,
-  SUPPORTED_EXCHANGE_NAMES,
-  type SupportedExchange,
-} from '@/common/constants';
+import { ChainIds, type SupportedExchange } from '@/common/constants';
 import { ExchangesConfigService } from '@/config';
 
 @ValidatorConstraint({ name: 'ExchangeName', async: false })
 @Injectable()
 export class ExchangeNameValidator implements ValidatorConstraintInterface {
-  private readonly supportedExchangesSet: Set<SupportedExchange>;
-
-  constructor(private readonly exchangesConfigService: ExchangesConfigService) {
-    this.supportedExchangesSet = new Set(SUPPORTED_EXCHANGE_NAMES);
-    if (this.exchangesConfigService.isPancakeswapEnabled) {
-      this.supportedExchangesSet.add(ExchangeName.PANCAKESWAP);
-    }
-  }
+  constructor(
+    private readonly exchangesConfigService: ExchangesConfigService,
+  ) {}
 
   validate(value: unknown): boolean {
     if (typeof value !== 'string') {
       return false;
     }
 
-    return this.supportedExchangesSet.has(value as SupportedExchange);
+    return this.exchangesConfigService
+      .getSupportedExchanges()
+      .has(value as SupportedExchange);
   }
 
   defaultMessage({ property }: ValidationArguments): string {

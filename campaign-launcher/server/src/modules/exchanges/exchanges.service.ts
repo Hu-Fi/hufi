@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import { ExchangeName, SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { ExchangesConfigService } from '@/config';
 import logger from '@/logger';
 
@@ -19,13 +18,8 @@ export class ExchangesService {
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
   ) {
-    const supportedExchangeNames = new Set(SUPPORTED_EXCHANGE_NAMES);
-    if (this.exchangesConfigService.isPancakeswapEnabled) {
-      supportedExchangeNames.add(ExchangeName.PANCAKESWAP);
-    }
-
     const supportedExchanges: ExchangeDataDto[] = [];
-    for (const supportedExchangeName of supportedExchangeNames) {
+    for (const supportedExchangeName of this.exchangesConfigService.getSupportedExchanges()) {
       const exchange = this.exchangeApiClientFactory.retrieve(
         supportedExchangeName,
       );

@@ -5,7 +5,6 @@ import _ from 'lodash';
 import { BaseExchangeApiClient } from './base-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { type ExchangeInfo } from './exchange-api-client.interface';
-import { ExchangeType } from '../constants';
 
 export class CcxtExchangeClient extends BaseExchangeApiClient {
   private ccxtClient: Exchange;
@@ -27,7 +26,7 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
       displayName: this.ccxtClient.name,
       url: this.ccxtClient.urls.www,
       logo: this.ccxtClient.urls.logo,
-      type: ExchangeType.CEX,
+      type: this.exchangeMeta.type,
     };
   }
 

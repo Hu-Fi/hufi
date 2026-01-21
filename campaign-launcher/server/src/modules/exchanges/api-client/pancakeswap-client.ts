@@ -1,6 +1,5 @@
 import { ExchangeName } from '@/common/constants';
 
-import { ExchangeType } from '../constants';
 import { BaseExchangeApiClient } from './base-client';
 import { type ExchangeInfo } from './exchange-api-client.interface';
 
@@ -15,7 +14,7 @@ export class PancakeSwapClient extends BaseExchangeApiClient {
       displayName: 'PancakeSwap',
       url: 'https://pancakeswap.finance/swap',
       logo: 'https://tokens.pancakeswap.finance/images/symbol/cake.png',
-      type: ExchangeType.DEX,
+      type: this.exchangeMeta.type,
     };
   }
 
