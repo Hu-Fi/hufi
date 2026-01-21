@@ -19,9 +19,9 @@ export class ExchangesService {
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
   ) {
-    const supportedExchangeNames = [...SUPPORTED_EXCHANGE_NAMES];
+    const supportedExchangeNames = new Set(SUPPORTED_EXCHANGE_NAMES);
     if (this.exchangesConfigService.isPancakeswapEnabled) {
-      supportedExchangeNames.push(ExchangeName.PANCAKESWAP);
+      supportedExchangeNames.add(ExchangeName.PANCAKESWAP);
     }
 
     const supportedExchanges: ExchangeDataDto[] = [];
