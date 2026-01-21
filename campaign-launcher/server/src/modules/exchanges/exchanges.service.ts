@@ -4,6 +4,7 @@ import { ExchangesConfigService } from '@/config';
 import logger from '@/logger';
 
 import { ExchangeApiClientFactory } from './api-client';
+import { ExchangeMetaMap } from './constants';
 import { ExchangesCache } from './exchanges-cache';
 import { ExchangeDataDto } from './exchanges.dto';
 
@@ -20,11 +21,10 @@ export class ExchangesService {
   ) {
     const supportedExchanges: ExchangeDataDto[] = [];
     for (const supportedExchangeName of this.exchangesConfigService.getSupportedExchanges()) {
-      const exchange = this.exchangeApiClientFactory.retrieve(
-        supportedExchangeName,
-      );
-
-      supportedExchanges.push(exchange.info);
+      supportedExchanges.push({
+        name: supportedExchangeName,
+        ...ExchangeMetaMap[supportedExchangeName],
+      });
     }
 
     this.supportedExchanges = Object.freeze(supportedExchanges);

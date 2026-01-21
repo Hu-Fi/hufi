@@ -1,14 +1,9 @@
-import { ExchangeName } from '@/common/constants';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
 import { LOAD_MARKETS_COOLDOWN } from './constants';
 import { LoadMarketsError, MarketsNotLoadedError } from './errors';
-import type {
-  ExchangeApiClient,
-  ExchangeInfo,
-} from './exchange-api-client.interface';
-import { type ExchangeMeta, ExchangeMetaMap } from '../constants';
+import type { ExchangeApiClient } from './exchange-api-client.interface';
 
 function AssertMarketsLoaded(
   _target: unknown,
@@ -38,24 +33,14 @@ export abstract class BaseExchangeApiClient implements ExchangeApiClient {
 
   private marketsLoadedAt: number = 0;
 
-  protected readonly exchangeMeta: ExchangeMeta;
   protected abstract tradingPairs?: string[];
   protected abstract currencies?: string[];
 
   constructor(readonly exchangeName: string) {
-    this.exchangeMeta = ExchangeMetaMap[exchangeName as ExchangeName];
-
     this.logger = logger.child({
       context: this.constructor.name,
       exchangeName,
     });
-  }
-
-  get info(): ExchangeInfo {
-    return {
-      name: this.exchangeName,
-      ...this.exchangeMeta,
-    };
   }
 
   get marketsLoaded(): boolean {
