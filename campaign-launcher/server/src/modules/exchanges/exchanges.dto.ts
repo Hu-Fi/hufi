@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, Validate } from 'class-validator';
+import { Validate } from 'class-validator';
 
 import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
 import { ExchangeNameValidator } from '@/common/validators';
 
-import { ExchangeType } from './types';
+import { ExchangeType } from './constants';
 
 export class ExchangeDataDto {
   @ApiProperty()
@@ -19,8 +19,7 @@ export class ExchangeDataDto {
   @ApiProperty()
   logo: string;
 
-  @ApiProperty()
-  @IsEnum(ExchangeType)
+  @ApiProperty({ enum: ExchangeType })
   type: ExchangeType;
 }
 

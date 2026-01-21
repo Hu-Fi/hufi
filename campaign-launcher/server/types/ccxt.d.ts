@@ -7,7 +7,8 @@
 
 declare module 'ccxt' {
   export interface Exchange {
-    loadMarkets(): Promise<Record<string, unknown>>;
+    loadMarkets(reload = false): Promise<Record<string, unknown>>;
+    markets: Record<string, unknown>;
     /**
      * 'undefined' until successfull call of 'loadMarkets'
      */
@@ -18,6 +19,7 @@ declare module 'ccxt' {
       www: string;
       logo: string;
     };
+    setMarketsFromExchange(sourceExchange: unknown): void;
   }
 
   const ccxt: {

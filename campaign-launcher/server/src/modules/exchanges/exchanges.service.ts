@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import * as ccxt from 'ccxt';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import { ExchangesConfigService } from '@/config';
 import logger from '@/logger';
 
-import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { ExchangeApiClientFactory } from './api-client';
+import { ExchangeMetaMap } from './constants';
 import { ExchangesCache } from './exchanges-cache';
 import { ExchangeDataDto } from './exchanges.dto';
-import { ExchangeType } from './types';
 
 @Injectable()
 export class ExchangesService {
@@ -15,16 +14,16 @@ export class ExchangesService {
 
   readonly supportedExchanges: readonly ExchangeDataDto[];
 
-  constructor(private readonly exchangesCache: ExchangesCache) {
+  constructor(
+    private readonly exchangesCache: ExchangesCache,
+    private readonly exchangesConfigService: ExchangesConfigService,
+    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
+  ) {
     const supportedExchanges: ExchangeDataDto[] = [];
-    for (const exchangeName of SUPPORTED_EXCHANGE_NAMES) {
-      const exchange = new ccxt[exchangeName]();
+    for (const supportedExchangeName of this.exchangesConfigService.getSupportedExchanges()) {
       supportedExchanges.push({
-        name: exchangeName,
-        displayName: exchange.name,
-        url: exchange.urls.www,
-        logo: exchange.urls.logo,
-        type: ExchangeType.CEX,
+        name: supportedExchangeName,
+        ...ExchangeMetaMap[supportedExchangeName],
       });
     }
 
@@ -36,10 +35,11 @@ export class ExchangesService {
       let tradingPairs =
         await this.exchangesCache.getTradingPairs(exchangeName);
       if (!tradingPairs) {
-        const exchange = new ccxt[exchangeName](BASE_CCXT_CLIENT_OPTIONS);
+        const exchange = this.exchangeApiClientFactory.retrieve(exchangeName);
         await exchange.loadMarkets();
 
-        tradingPairs = (exchange.symbols || []).filter((symbol) => {
+        tradingPairs = await exchange.getTradingPairs();
+        tradingPairs = tradingPairs.filter((symbol) => {
           /**
            * Filter out pairs with weird names that highly-likely
            * won't be ever maked
@@ -71,10 +71,11 @@ export class ExchangesService {
     try {
       let currencies = await this.exchangesCache.getCurrencies(exchangeName);
       if (!currencies) {
-        const exchange = new ccxt[exchangeName](BASE_CCXT_CLIENT_OPTIONS);
+        const exchange = this.exchangeApiClientFactory.retrieve(exchangeName);
         await exchange.loadMarkets();
 
-        currencies = Object.keys(exchange.currencies || []).filter((symbol) => {
+        currencies = await exchange.getCurrencies();
+        currencies = currencies.filter((symbol) => {
           /**
            * Filter out tokens with weird names that highly-likely
            * won't be ever maked

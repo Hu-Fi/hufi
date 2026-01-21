@@ -30,7 +30,7 @@ import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
-import type { HoldingFormValues } from '@/types';
+import type { CampaignType, HoldingFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
 import { formatInputValue } from '../utils';
@@ -43,6 +43,7 @@ type Props = {
   watch: UseFormWatch<HoldingFormValues>;
   trigger: UseFormTrigger<HoldingFormValues>;
   isCreatingEscrow: boolean;
+  campaignType: CampaignType;
 };
 
 const HoldingForm: FC<Props> = ({
@@ -51,6 +52,7 @@ const HoldingForm: FC<Props> = ({
   watch,
   trigger,
   isCreatingEscrow,
+  campaignType,
 }) => {
   const isMobile = useIsMobile();
 
@@ -74,6 +76,7 @@ const HoldingForm: FC<Props> = ({
                 <FormExchangeSelect<HoldingFormValues, 'exchange'>
                   field={field}
                   disabled={isCreatingEscrow}
+                  campaignType={campaignType}
                 />
               )}
             />
