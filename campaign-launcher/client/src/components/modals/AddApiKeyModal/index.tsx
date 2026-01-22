@@ -21,6 +21,7 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { ExchangeType } from '@/types';
 
 import BaseModal from '../BaseModal';
 
@@ -153,6 +154,7 @@ const AddApiKeyModal: FC<Props> = ({ open, onClose }) => {
                     render={({ field }) => (
                       <FormExchangeSelect<APIKeyFormValues, 'exchange'>
                         field={field}
+                        exchangeTypes={[ExchangeType.CEX]}
                       />
                     )}
                   />

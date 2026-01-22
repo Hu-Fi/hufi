@@ -5,7 +5,7 @@ import type { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 
 import { ExchangeName } from '@/constants/exchanges';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { CampaignType } from '@/types';
+import { CampaignType, type ExchangeType } from '@/types';
 
 type FormExchangeSelectProps<
   TFieldValues extends FieldValues,
@@ -14,6 +14,7 @@ type FormExchangeSelectProps<
   field: ControllerRenderProps<TFieldValues, TName>;
   disabled?: boolean;
   campaignType?: CampaignType;
+  exchangeTypes?: ExchangeType[];
 };
 
 const slotProps = {
@@ -32,18 +33,27 @@ const FormExchangeSelect = <
   field,
   disabled = false,
   campaignType,
+  exchangeTypes = [],
 }: FormExchangeSelectProps<TFieldValues, TName>) => {
   const { exchanges, exchangesMap } = useExchangesContext();
 
   const supportedExchanges = useMemo(() => {
-    if (campaignType === CampaignType.MARKET_MAKING) {
-      return exchanges;
+    let _exchanges = (exchanges || []).filter((exchange) => exchange.enabled);
+
+    if (exchangeTypes.length) {
+      _exchanges = _exchanges.filter((exchange) =>
+        exchangeTypes.includes(exchange.type)
+      );
     }
 
-    return exchanges?.filter(
+    if (campaignType === CampaignType.MARKET_MAKING) {
+      return _exchanges;
+    }
+
+    return _exchanges.filter(
       (exchange) => exchange.name !== ExchangeName.PANCAKESWAP
     );
-  }, [campaignType, exchanges]);
+  }, [campaignType, exchangeTypes, exchanges]);
 
   return (
     <Autocomplete

@@ -11,16 +11,7 @@ export enum ExchangeName {
   XT = 'xt',
 }
 
-export type SupportedExchange = `${ExchangeName}`;
-
-export const SUPPORTED_EXCHANGE_NAMES: ExchangeName[] = [
-  ExchangeName.BIGONE,
-  ExchangeName.BITMART,
-  ExchangeName.BYBIT,
-  ExchangeName.GATE,
-  ExchangeName.HTX,
-  ExchangeName.KRAKEN,
-  ExchangeName.MEXC,
-  ExchangeName.UPBIT,
-  ExchangeName.XT,
-] as const;
+export enum ExchangeType {
+  CEX = 'cex',
+  DEX = 'dex',
+}

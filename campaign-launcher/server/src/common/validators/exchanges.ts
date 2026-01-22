@@ -5,7 +5,6 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-import { type SupportedExchange } from '@/common/constants';
 import { ExchangesConfigService } from '@/config';
 
 @ValidatorConstraint({ name: 'ExchangeName', async: false })
@@ -20,9 +19,7 @@ export class ExchangeNameValidator implements ValidatorConstraintInterface {
       return false;
     }
 
-    return this.exchangesConfigService
-      .getSupportedExchanges()
-      .has(value as SupportedExchange);
+    return this.exchangesConfigService.isExchangeSupported(value);
   }
 
   defaultMessage({ property }: ValidationArguments): string {

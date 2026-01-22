@@ -38,11 +38,12 @@ export type CampaignsStats = {
 };
 
 export type Exchange = {
-  display_name: string;
-  logo: string;
+  enabled: boolean;
   name: string;
-  type: string;
+  display_name: string;
   url: string;
+  logo: string;
+  type: ExchangeType;
 };
 
 export type ExchangeApiKeyData = {
