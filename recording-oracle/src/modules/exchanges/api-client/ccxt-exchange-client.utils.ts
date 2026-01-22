@@ -1,7 +1,7 @@
 import * as ccxt from 'ccxt';
 import type { Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 
-import { type SupportedExchange } from '@/common/constants';
+import { ExchangeName } from '@/common/constants';
 
 import type { Order, Trade } from './types';
 
@@ -69,8 +69,8 @@ export function isExchangeApiAccessError(error: any): error is Error {
     return false;
   }
 
-  switch (error[ERROR_EXCHANGE_NAME_PROP] as SupportedExchange) {
-    case 'mexc': {
+  switch (error[ERROR_EXCHANGE_NAME_PROP]) {
+    case ExchangeName.MEXC: {
       // https://www.mexc.com/api-docs/spot-v3/general-info#error-code
       /**
        * This can be returned e.g. in case when api key is removed.
@@ -101,7 +101,7 @@ export function isExchangeApiAccessError(error: any): error is Error {
 
       return false;
     }
-    case 'gate': {
+    case ExchangeName.GATE: {
       /**
        * This can happen in case case deposit address not exist,
        * so user will have to create one

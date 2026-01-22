@@ -2,10 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as ccxt from 'ccxt';
 import type { Exchange as CcxtExchange } from 'ccxt';
 
-import {
-  SUPPORTED_EXCHANGE_NAMES,
-  SupportedExchange,
-} from '@/common/constants';
+import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangesConfigService, LoggingConfigService } from '@/config';
 import logger from '@/logger';
 
@@ -36,8 +33,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     context: ExchangeApiClientFactory.name,
   });
 
-  private preloadedCcxtClients: Map<SupportedExchange, CcxtExchange> =
-    new Map();
+  private preloadedCcxtClients: Map<string, CcxtExchange> = new Map();
   private preloadCcxtTimeoutId: NodeJS.Timeout;
 
   constructor(
@@ -56,10 +52,17 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
   protected async preloadCcxtClients(): Promise<void> {
     this.logger.debug('Started ccxt clients preloading');
 
+    const exchangesToPreload: ExchangeName[] = [];
+    for (const [exchangeName, exchangeConfig] of Object.entries(
+      this.exchangesConfigService.configByExchange,
+    )) {
+      if (exchangeConfig.enabled && exchangeConfig.type === ExchangeType.CEX) {
+        exchangesToPreload.push(exchangeName as ExchangeName);
+      }
+    }
+
     await Promise.all(
-      SUPPORTED_EXCHANGE_NAMES.map((exchange) =>
-        this.preloadCcxtClient(exchange),
-      ),
+      exchangesToPreload.map((exchange) => this.preloadCcxtClient(exchange)),
     );
 
     this.logger.debug('Finished ccxt clients preloading');
@@ -70,9 +73,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  protected async preloadCcxtClient(
-    exchangeName: SupportedExchange,
-  ): Promise<void> {
+  protected async preloadCcxtClient(exchangeName: string): Promise<void> {
     const logger = this.logger.child({ exchangeName });
     try {
       logger.debug('Preloading ccxt for exchange');
@@ -115,17 +116,15 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       secret: initOptions.secret,
       userId: initOptions.userId,
       sandbox: this.exchangesConfigService.useSandbox,
-      preloadedExchangeClient: this.preloadedCcxtClients.get(
-        exchangeName as SupportedExchange,
-      ),
+      preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
       loggingConfig: {
         logPermissionErrors:
           this.loggingConfigService.logExchangePermissionErrors,
       },
     };
 
-    switch (exchangeName as SupportedExchange) {
-      case 'bitmart':
+    switch (exchangeName) {
+      case ExchangeName.BITMART:
         clientInitOptions.extraCreds = {
           uid: initOptions.extras?.apiKeyMemo as string,
         };

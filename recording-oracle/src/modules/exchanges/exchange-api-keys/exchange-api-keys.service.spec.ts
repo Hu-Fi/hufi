@@ -2,7 +2,8 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
 
-import { EncryptionConfigService } from '@/config';
+import { ExchangeType } from '@/common/constants';
+import { EncryptionConfigService, ExchangesConfigService } from '@/config';
 import { AesEncryptionService } from '@/modules/encryption';
 import { mockEncryptionConfigService } from '@/modules/encryption/fixtures';
 import { UsersService } from '@/modules/users';
@@ -23,6 +24,7 @@ import {
   generateExchangeApiKey,
   generateExchangeApiKeysData,
 } from './fixtures';
+import { mockExchangesConfigService } from '../fixtures';
 
 const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
 const mockUsersService = createMock<UsersService>();
@@ -38,6 +40,10 @@ describe('ExchangeApiKeysService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         ExchangeApiKeysService,
+        {
+          provide: ExchangesConfigService,
+          useValue: mockExchangesConfigService,
+        },
         {
           provide: UsersService,
           useValue: mockUsersService,
@@ -72,6 +78,16 @@ describe('ExchangeApiKeysService', () => {
   });
 
   describe('enroll', () => {
+    let input: ReturnType<typeof generateExchangeApiKeysData>;
+
+    beforeEach(() => {
+      input = generateExchangeApiKeysData();
+      mockExchangesConfigService.configByExchange[input.exchangeName] = {
+        enabled: true,
+        type: ExchangeType.CEX,
+      };
+    });
+
     it.each([
       Object.assign(generateExchangeApiKeysData(), { userId: '' }),
       Object.assign(generateExchangeApiKeysData(), { apiKey: '' }),
@@ -88,10 +104,11 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Invalid arguments');
     });
 
-    it('should throw if not supported exchange name provided', async () => {
-      const input = generateExchangeApiKeysData();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      input.exchangeName = input.exchangeName.toUpperCase() as any;
+    it('should throw if not supported exchange', async () => {
+      mockExchangesConfigService.configByExchange[input.exchangeName] = {
+        enabled: false,
+        type: ExchangeType.DEX,
+      };
 
       let thrownError;
       try {
@@ -101,7 +118,7 @@ describe('ExchangeApiKeysService', () => {
       }
 
       expect(thrownError.constructor).toBe(Error);
-      expect(thrownError.message).toBe('Exchange name is not valid');
+      expect(thrownError.message).toBe('Only CEX exchanges support API keys');
     });
 
     it('should throw if provided keys do not have required access', async () => {
@@ -115,8 +132,6 @@ describe('ExchangeApiKeysService', () => {
         success: false,
         missing: missingPermissions,
       });
-
-      const input = generateExchangeApiKeysData();
 
       let thrownError;
       try {
@@ -139,8 +154,6 @@ describe('ExchangeApiKeysService', () => {
       const testError = new Error('Synthetic user not exist');
       mockUsersService.assertUserExistsById.mockRejectedValueOnce(testError);
 
-      const input = generateExchangeApiKeysData();
-
       let thrownError;
       try {
         await exchangeApiKeysService.enroll(input);
@@ -152,13 +165,12 @@ describe('ExchangeApiKeysService', () => {
     });
 
     it('should upsert encrypted keys if data is valid and extras not provided', async () => {
+      delete input.extras;
+
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
       });
-
-      const input = generateExchangeApiKeysData();
-      delete input.extras;
 
       const entity = await exchangeApiKeysService.enroll(input);
 
@@ -183,16 +195,15 @@ describe('ExchangeApiKeysService', () => {
     });
 
     it('should upsert encrypted keys if data is valid and extras provided', async () => {
-      mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
-      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
-        success: true,
-      });
-
-      const input = generateExchangeApiKeysData();
       input.extras = {
         [faker.string.alpha()]: faker.string.sample(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
+
+      mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
+      mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
+        success: true,
+      });
 
       const entity = await exchangeApiKeysService.enroll(input);
 

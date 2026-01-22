@@ -6,16 +6,14 @@ import { Test } from '@nestjs/testing';
 import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
-import {
-  SUPPORTED_EXCHANGE_NAMES,
-  SupportedExchange,
-} from '@/common/constants';
+import { ExchangeType } from '@/common/constants';
 import { ExchangesConfigService, LoggingConfigService } from '@/config';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
+import { generateExchangeName, mockExchangesConfigService } from '../fixtures';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -26,12 +24,6 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
 
-const mockExchangesConfigService: Omit<
-  ExchangesConfigService,
-  'configService'
-> = {
-  useSandbox: true,
-};
 const mockLoggerConfigService: Pick<
   LoggingConfigService,
   'logExchangePermissionErrors'
@@ -66,31 +58,76 @@ describe('ExchangeApiClientFactory', () => {
     expect(exchangeApiClientFactory).toBeDefined();
   });
 
-  it('should correctly init module', async () => {
-    const spyOnPreloadCcxtClient = jest.spyOn(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      exchangeApiClientFactory as any,
-      'preloadCcxtClient',
-    );
-    spyOnPreloadCcxtClient.mockImplementation();
+  describe('module init', () => {
+    let spyOnPreloadCcxtClient: jest.SpyInstance;
 
-    try {
+    beforeAll(() => {
+      spyOnPreloadCcxtClient = jest.spyOn(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        exchangeApiClientFactory as any,
+        'preloadCcxtClient',
+      );
+      spyOnPreloadCcxtClient.mockImplementation();
+    });
+
+    afterAll(() => {
+      spyOnPreloadCcxtClient.mockRestore();
+    });
+
+    afterEach(async () => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      mockExchangesConfigService.configByExchange = {};
+      exchangeApiClientFactory['preloadedCcxtClients'].clear();
+      await exchangeApiClientFactory.onModuleDestroy();
+    });
+
+    it('should init and preload ccxt client for enabled CEX', async () => {
+      const exchangeName = generateExchangeName();
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: true,
+          type: ExchangeType.CEX,
+        },
+      };
+
       await exchangeApiClientFactory.onModuleInit();
 
-      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(
-        SUPPORTED_EXCHANGE_NAMES.length,
-      );
-      for (const exchangeName of SUPPORTED_EXCHANGE_NAMES) {
-        expect(spyOnPreloadCcxtClient).toHaveBeenCalledWith(exchangeName);
-      }
-    } finally {
-      spyOnPreloadCcxtClient.mockRestore();
-      await exchangeApiClientFactory.onModuleDestroy();
-    }
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(1);
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledWith(exchangeName);
+    });
+
+    it('should init and skip ccxt client preloading for disabled CEX', async () => {
+      const exchangeName = generateExchangeName();
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: false,
+          type: ExchangeType.CEX,
+        },
+      };
+
+      await exchangeApiClientFactory.onModuleInit();
+
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
+    });
+
+    it('should init and skip ccxt client preloading for enabled DEX', async () => {
+      const exchangeName = generateExchangeName();
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: true,
+          type: ExchangeType.DEX,
+        },
+      };
+
+      await exchangeApiClientFactory.onModuleInit();
+
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
+    });
   });
 
   describe('preloadCcxtClient', () => {
-    const exchangeName = faker.lorem.slug() as SupportedExchange;
+    const exchangeName = faker.lorem.slug();
 
     beforeEach(() => {
       mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
@@ -233,9 +270,7 @@ describe('ExchangeApiClientFactory', () => {
     it('should use preloaded client', async () => {
       const _mockedExchange = createMock<Exchange>();
       mockedCcxt[exchangeName].mockReturnValueOnce(_mockedExchange);
-      await exchangeApiClientFactory['preloadCcxtClient'](
-        exchangeName as SupportedExchange,
-      );
+      await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
 
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         true,
