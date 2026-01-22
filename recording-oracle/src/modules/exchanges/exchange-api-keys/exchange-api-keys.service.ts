@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { isValidExchangeName } from '@/common/validators';
+import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangesConfigService } from '@/config';
 import { AesEncryptionService } from '@/modules/encryption';
 import { UsersService } from '@/modules/users';
 
@@ -22,6 +23,7 @@ import { ExchangeApiKeyData } from './types';
 @Injectable()
 export class ExchangeApiKeysService {
   constructor(
+    private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly usersService: UsersService,
     private readonly aesEncryptionService: AesEncryptionService,
@@ -30,7 +32,7 @@ export class ExchangeApiKeysService {
 
   async enroll(input: {
     userId: string;
-    exchangeName: string;
+    exchangeName: ExchangeName;
     apiKey: string;
     secretKey: string;
     extras?: ExchangeExtras;
@@ -41,8 +43,10 @@ export class ExchangeApiKeysService {
       throw new Error('Invalid arguments');
     }
 
-    if (!isValidExchangeName(exchangeName)) {
-      throw new Error('Exchange name is not valid');
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
+    if (exchangeConfig.type !== ExchangeType.CEX) {
+      throw new Error('Only CEX exchanges support API keys');
     }
 
     const exchangeApiClient = this.exchangeApiClientFactory.create(

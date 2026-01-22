@@ -32,12 +32,17 @@ import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
+import { ExchangeName, ExchangeType } from '@/common/constants';
 import { TimeoutError } from '@/common/utils/control-flow';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { isUuidV4 } from '@/common/validators';
-import { CampaignsConfigService, Web3ConfigService } from '@/config';
+import {
+  CampaignsConfigService,
+  ExchangesConfigService,
+  Web3ConfigService,
+} from '@/config';
 import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
 import logger from '@/logger';
 import {
@@ -47,6 +52,7 @@ import {
   ExchangePermission,
   ExchangesService,
 } from '@/modules/exchanges';
+import { mockExchangesConfigService } from '@/modules/exchanges/fixtures';
 import { StorageService } from '@/modules/storage';
 import { WalletWithProvider, Web3Service } from '@/modules/web3';
 import {
@@ -154,6 +160,10 @@ describe('CampaignsService', () => {
           useValue: mockCampaignsRepository,
         },
         {
+          provide: ExchangesConfigService,
+          useValue: mockExchangesConfigService,
+        },
+        {
           provide: ExchangesService,
           useValue: mockExchangesService,
         },
@@ -200,6 +210,91 @@ describe('CampaignsService', () => {
     expect(campaignsService).toBeDefined();
   });
 
+  describe('assertCorrectCampaignSetup', () => {
+    afterEach(() => {
+      mockExchangesConfigService.configByExchange = {};
+    });
+
+    it('should throw when exchange from manifest not supported', () => {
+      const manifest = generateCampaignManifest();
+
+      let thrownError;
+      try {
+        campaignsService['assertCorrectCampaignSetup'](manifest);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        `Exchange not supported: ${manifest.exchange}`,
+      );
+    });
+
+    it('should throw when exchange from manifest supported but disabled', () => {
+      const manifest = generateCampaignManifest();
+
+      mockExchangesConfigService.configByExchange = {
+        [manifest.exchange]: {
+          enabled: false,
+          type: ExchangeType.CEX,
+        },
+      };
+
+      let thrownError;
+      try {
+        campaignsService['assertCorrectCampaignSetup'](manifest);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe('Exchange integration is disabled');
+    });
+
+    it('should throw when exchange from manifest is pancakeswap and not market making type', () => {
+      const manifest = faker.helpers.arrayElement([
+        generateHoldingCampaignManifest,
+        generateThresholdampaignManifest,
+      ])();
+      manifest.exchange = ExchangeName.PANCAKESWAP;
+
+      mockExchangesConfigService.configByExchange = {
+        [manifest.exchange]: {
+          enabled: true,
+          type: ExchangeType.DEX,
+        },
+      };
+
+      let thrownError;
+      try {
+        campaignsService['assertCorrectCampaignSetup'](manifest);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Only market making campaigns supported for pancakeswap',
+      );
+    });
+
+    it('should not thrown when campaign setup is correct', () => {
+      const manifest = generateCampaignManifest();
+
+      mockExchangesConfigService.configByExchange = {
+        [manifest.exchange]: {
+          enabled: true,
+          type: ExchangeType.CEX,
+        },
+      };
+
+      expect(
+        campaignsService['assertCorrectCampaignSetup'](manifest),
+      ).toBeUndefined();
+    });
+  });
+
   describe('retrieveCampaignData', () => {
     const TEST_TOKEN_SYMBOL = faker.finance.currencyCode();
     const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
@@ -207,6 +302,7 @@ describe('CampaignsService', () => {
     const mockedGetEscrowStatus = jest.fn();
 
     let spyOnDownloadCampaignManifest: jest.SpyInstance;
+    let spyOnAssertCorrectCampaignSetup: jest.SpyInstance;
     let chainId: number;
     let campaignAddress: string;
 
@@ -216,10 +312,17 @@ describe('CampaignsService', () => {
         'downloadCampaignManifest',
       );
       spyOnDownloadCampaignManifest.mockImplementation();
+
+      spyOnAssertCorrectCampaignSetup = jest.spyOn(
+        campaignsService as any,
+        'assertCorrectCampaignSetup',
+      );
+      spyOnAssertCorrectCampaignSetup.mockImplementation();
     });
 
     afterAll(() => {
       spyOnDownloadCampaignManifest.mockRestore();
+      spyOnAssertCorrectCampaignSetup.mockRestore();
     });
 
     beforeEach(() => {
@@ -538,43 +641,6 @@ describe('CampaignsService', () => {
       expect(thrownError.details).toBe('Invalid manifest schema');
     });
 
-    it('should throw when exchange from manifest not supported', async () => {
-      const manifestUrl = faker.internet.url();
-      const manifestHash = faker.string.hexadecimal();
-      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
-        token: faker.finance.ethereumAddress(),
-        totalFundedAmount: faker.number.bigInt({ min: 1 }),
-        manifest: manifestUrl,
-        manifestHash,
-        recordingOracle: mockWeb3ConfigService.operatorAddress,
-      } as IEscrow);
-      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
-
-      const mockedManifest = generateBaseCampaignManifest();
-      mockedManifest.exchange = faker.string.sample();
-      spyOnDownloadCampaignManifest.mockResolvedValueOnce(
-        JSON.stringify(mockedManifest),
-      );
-
-      let thrownError;
-      try {
-        await campaignsService['retrieveCampaignData'](
-          chainId,
-          campaignAddress,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(InvalidCampaign);
-      expect(thrownError.chainId).toBe(chainId);
-      expect(thrownError.address).toBe(campaignAddress);
-
-      expect(thrownError.details).toBe(
-        `Exchange not supported: ${mockedManifest.exchange}`,
-      );
-    });
-
     it('should throw when campaign type from manifest not supported', async () => {
       const manifestUrl = faker.internet.url();
       const manifestHash = faker.string.hexadecimal();
@@ -653,6 +719,9 @@ describe('CampaignsService', () => {
           manifestUrl,
           manifestHash,
         );
+
+        expect(spyOnAssertCorrectCampaignSetup).toHaveBeenCalledTimes(1);
+        expect(spyOnAssertCorrectCampaignSetup).toHaveBeenCalledWith(manifest);
       },
     );
 
@@ -687,6 +756,9 @@ describe('CampaignsService', () => {
         });
 
         expect(spyOnDownloadCampaignManifest).not.toHaveBeenCalled();
+
+        expect(spyOnAssertCorrectCampaignSetup).toHaveBeenCalledTimes(1);
+        expect(spyOnAssertCorrectCampaignSetup).toHaveBeenCalledWith(manifest);
       },
     );
   });
@@ -1134,7 +1206,7 @@ describe('CampaignsService', () => {
       const checker = campaignsService['getCampaignProgressChecker'](
         campaign.type,
         {
-          exchangeName: campaign.exchangeName,
+          exchangeName: campaign.exchangeName as ExchangeName,
           symbol: campaign.symbol,
           periodStart: faker.date.recent(),
           periodEnd: faker.date.soon(),
@@ -1150,7 +1222,7 @@ describe('CampaignsService', () => {
       const checker = campaignsService['getCampaignProgressChecker'](
         campaign.type,
         {
-          exchangeName: campaign.exchangeName,
+          exchangeName: campaign.exchangeName as ExchangeName,
           symbol: campaign.symbol,
           periodStart: faker.date.recent(),
           periodEnd: faker.date.soon(),
@@ -1166,7 +1238,7 @@ describe('CampaignsService', () => {
       const checker = campaignsService['getCampaignProgressChecker'](
         campaign.type,
         {
-          exchangeName: campaign.exchangeName,
+          exchangeName: campaign.exchangeName as ExchangeName,
           symbol: campaign.symbol,
           periodStart: faker.date.recent(),
           periodEnd: faker.date.soon(),
@@ -1184,7 +1256,7 @@ describe('CampaignsService', () => {
       let thrownError;
       try {
         campaignsService['getCampaignProgressChecker'](campaign.type, {
-          exchangeName: campaign.exchangeName,
+          exchangeName: campaign.exchangeName as ExchangeName,
           symbol: campaign.symbol,
           periodStart: faker.date.recent(),
           periodEnd: faker.date.soon(),

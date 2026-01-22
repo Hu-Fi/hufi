@@ -12,10 +12,12 @@ import {
 } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
+import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import {
   CampaignJoinStatus,
   CampaignStatus,
+  ExchangeType,
   type CampaignDetails,
 } from '@/types';
 import * as errorUtils from '@/utils/error';
@@ -38,6 +40,7 @@ const JoinCampaign: FC<Props> = ({
   const { isAuthenticated } = useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
+  const { exchangesMap } = useExchangesContext();
   const { mutateAsync: joinCampaign, isPending: isJoining } = useJoinCampaign();
   const { showError } = useNotification();
 
@@ -48,13 +51,15 @@ const JoinCampaign: FC<Props> = ({
 
   const isAlreadyJoined = joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED;
   const isJoinClosed = joinStatus === CampaignJoinStatus.JOIN_IS_CLOSED;
+  const exchangeInfo = exchangesMap.get(campaign.exchange_name);
 
   const isButtonDisabled =
     !isAuthenticated ||
     isLoading ||
     !joinStatus ||
     isAlreadyJoined ||
-    isJoinClosed;
+    isJoinClosed ||
+    !exchangeInfo?.enabled;
 
   const getButtonText = () => {
     if (isJoining) return null;
@@ -75,10 +80,10 @@ const JoinCampaign: FC<Props> = ({
       return;
     }
 
-    if (
-      !enrolledExchanges ||
-      !enrolledExchanges.includes(campaign.exchange_name)
-    ) {
+    const hasEnrolledApiKey = (enrolledExchanges || []).includes(
+      campaign.exchange_name
+    );
+    if (exchangeInfo.type === ExchangeType.CEX && !hasEnrolledApiKey) {
       setModalOpen(true);
       return;
     }

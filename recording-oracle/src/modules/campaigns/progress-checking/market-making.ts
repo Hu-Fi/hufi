@@ -1,3 +1,4 @@
+import { ExchangeName } from '@/common/constants';
 import {
   ExchangesService,
   TakerOrMakerFlag,
@@ -26,7 +27,7 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
   MarketMakingResult,
   MarketMakingMeta
 > {
-  readonly exchangeName: string;
+  readonly exchangeName: ExchangeName;
   readonly tradingPair: string;
   readonly tradingPeriodStart: Date;
   readonly tradingPeriodEnd: Date;

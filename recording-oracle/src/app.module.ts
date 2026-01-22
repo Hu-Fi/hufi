@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './common/guards';
 import { TransformInterceptor } from './common/interceptors';
 import { HttpValidationPipe } from './common/pipes';
 import Environment from './common/utils/environment';
+import { ValidatorsModule } from './common/validators';
 import { EnvConfigModule, envValidator } from './config';
 import { DatabaseModule } from './infrastructure/database';
 import { ValkeyModule } from './infrastructure/valkey';
@@ -22,6 +23,27 @@ import { StatisticsModule } from './modules/statistics';
 import { UsersModule } from './modules/users';
 
 @Module({
+  imports: [
+    HealthModule,
+    AdminModule,
+    ConfigModule.forRoot({
+      /**
+       * First value found takes precendece
+       */
+      envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
+      validationSchema: envValidator,
+    }),
+    ScheduleModule.forRoot(),
+    AuthModule,
+    CampaignsModule,
+    DatabaseModule,
+    EnvConfigModule,
+    ExchangesModule,
+    UsersModule,
+    StatisticsModule,
+    ValkeyModule,
+    ValidatorsModule,
+  ],
   providers: [
     AppService,
     {
@@ -51,26 +73,6 @@ import { UsersModule } from './modules/users';
       provide: APP_FILTER,
       useClass: ExceptionFilter,
     },
-  ],
-  imports: [
-    HealthModule,
-    AdminModule,
-    ConfigModule.forRoot({
-      /**
-       * First value found takes precendece
-       */
-      envFilePath: [`.env.${Environment.name}`, '.env.local', '.env'],
-      validationSchema: envValidator,
-    }),
-    ScheduleModule.forRoot(),
-    AuthModule,
-    CampaignsModule,
-    DatabaseModule,
-    EnvConfigModule,
-    ExchangesModule,
-    UsersModule,
-    StatisticsModule,
-    ValkeyModule,
   ],
   controllers: [AppController],
 })

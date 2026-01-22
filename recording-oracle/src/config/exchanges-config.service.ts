@@ -1,29 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as ccxt from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 
-type ExchangeConfig = {
+export type ExchangeConfig = {
   enabled: boolean;
-  displayName: string;
-  url: string;
-  logo: string;
   type: ExchangeType;
 };
-
-function getExchangeMetaFromCcxt(
-  exchangeName: string,
-): Omit<ExchangeConfig, 'enabled' | 'type'> {
-  const exchangeClass = ccxt[exchangeName];
-  const ccxtClient = new exchangeClass();
-
-  return {
-    displayName: ccxtClient.name,
-    url: ccxtClient.urls.www,
-    logo: ccxtClient.urls.logo,
-  };
-}
 
 @Injectable()
 export class ExchangesConfigService {
@@ -33,57 +16,49 @@ export class ExchangesConfigService {
     this.configByExchange = Object.freeze({
       [ExchangeName.BIGONE]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.BIGONE),
         type: ExchangeType.CEX,
       },
       [ExchangeName.BITMART]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.BITMART),
         type: ExchangeType.CEX,
       },
       [ExchangeName.BYBIT]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.BYBIT),
         type: ExchangeType.CEX,
       },
       [ExchangeName.GATE]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.GATE),
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.HTX),
         type: ExchangeType.CEX,
       },
       [ExchangeName.KRAKEN]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
         type: ExchangeType.CEX,
       },
       [ExchangeName.MEXC]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.MEXC),
         type: ExchangeType.CEX,
       },
       [ExchangeName.PANCAKESWAP]: {
         enabled: this.isPancakeswapEnabled,
-        displayName: 'PancakeSwap',
-        url: 'https://pancakeswap.finance/swap',
-        logo: 'https://tokens.pancakeswap.finance/images/symbol/cake.png',
         type: ExchangeType.DEX,
       },
       [ExchangeName.UPBIT]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.UPBIT),
         type: ExchangeType.CEX,
       },
       [ExchangeName.XT]: {
         enabled: true,
-        ...getExchangeMetaFromCcxt(ExchangeName.XT),
         type: ExchangeType.CEX,
       },
     });
+  }
+
+  get useSandbox(): boolean {
+    return this.configService.get('USE_EXCHANGE_SANDBOX', '') === 'true';
   }
 
   private get isPancakeswapEnabled(): boolean {

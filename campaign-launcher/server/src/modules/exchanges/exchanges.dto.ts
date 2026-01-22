@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Validate } from 'class-validator';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNameValidator } from '@/common/validators';
 
-import { ExchangeType } from './constants';
-
 export class ExchangeDataDto {
+  @ApiProperty()
+  enabled: boolean;
+
   @ApiProperty()
   name: string;
 
@@ -26,8 +27,8 @@ export class ExchangeDataDto {
 export class ExchangeNameParamDto {
   @ApiProperty({
     name: 'exchange_name',
-    enum: SUPPORTED_EXCHANGE_NAMES,
+    enum: ExchangeName,
   })
   @Validate(ExchangeNameValidator)
-  exchangeName: string;
+  exchangeName: ExchangeName;
 }

@@ -1,3 +1,5 @@
+import { ExchangeName } from '@/common/constants';
+
 import {
   AccountBalance,
   ExchangePermission,
@@ -20,7 +22,7 @@ export type ExchangeApiClientInitOptions = {
 };
 
 export interface ExchangeApiClient {
-  readonly exchangeName: string;
+  readonly exchangeName: ExchangeName;
 
   checkRequiredCredentials(): boolean;
 

@@ -1,4 +1,4 @@
-import { ETH_TOKEN_SYMBOL } from '@/common/constants';
+import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
 import { ExchangesService } from '@/modules/exchanges';
 
 import type {
@@ -20,7 +20,7 @@ export class HoldingProgressChecker implements CampaignProgressChecker<
   HoldingResult,
   HoldingMeta
 > {
-  readonly exchangeName: string;
+  readonly exchangeName: ExchangeName;
   readonly holdingTokenSymbol: string;
 
   private totalBalanceMeta: number = 0;
