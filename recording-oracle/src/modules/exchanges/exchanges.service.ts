@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangesConfigService } from '@/config';
 import logger from '@/logger';
 
 import {
@@ -20,6 +22,7 @@ export class ExchangesService {
   });
 
   constructor(
+    private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
   ) {}
@@ -44,11 +47,17 @@ export class ExchangesService {
     return exchangeApiClient;
   }
 
-  async assertUserHasAuthorizedKeys(
+  async assertUserHasRequiredAccess(
     userId: string,
-    exchangeName: string,
+    exchangeName: ExchangeName,
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<void> {
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
+    if (exchangeConfig.type === ExchangeType.DEX) {
+      return;
+    }
+
     const exchangeApiClient = await this.getClientForUser(userId, exchangeName);
 
     const accessCheckResult =

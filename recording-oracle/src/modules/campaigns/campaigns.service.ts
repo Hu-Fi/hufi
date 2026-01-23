@@ -206,9 +206,9 @@ export class CampaignsService implements OnModuleDestroy {
       );
     }
 
-    await this.exchangesService.assertUserHasAuthorizedKeys(
+    await this.exchangesService.assertUserHasRequiredAccess(
       userId,
-      campaign.exchangeName,
+      campaign.exchangeName as ExchangeName,
       CAMPAIGN_PERMISSIONS_MAP[campaign.type],
     );
 
