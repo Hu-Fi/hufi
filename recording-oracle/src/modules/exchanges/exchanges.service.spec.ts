@@ -5,7 +5,10 @@ import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import { ExchangesConfigService } from '@/config';
+import { UsersRepository } from '@/modules/users';
+import { generateUserEntity } from '@/modules/users/fixtures';
 
 import {
   ExchangeApiClientFactory,
@@ -18,10 +21,11 @@ import {
 } from './exchange-api-keys';
 import { generateExchangeApiKeysData } from './exchange-api-keys/fixtures';
 import { ExchangesService } from './exchanges.service';
-import { mockExchangesConfigService } from './fixtures';
+import { generateExchangeName, mockExchangesConfigService } from './fixtures';
 
 const mockExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
+const mockUsersRepository = createMock<UsersRepository>();
 
 const exchangePermissions = Object.values(ExchangePermission);
 
@@ -44,6 +48,10 @@ describe('ExchangesService', () => {
           provide: ExchangeApiKeysService,
           useValue: mockExchangeApiKeysService,
         },
+        {
+          provide: UsersRepository,
+          useValue: mockUsersRepository,
+        },
       ],
     }).compile();
 
@@ -55,10 +63,34 @@ describe('ExchangesService', () => {
   });
 
   describe('getClientForUser', () => {
-    const { userId, exchangeName, apiKey, secretKey, extras } =
-      generateExchangeApiKeysData();
+    afterEach(() => {
+      mockExchangesConfigService.configByExchange = {};
+    });
 
-    it('should get client via factory with correct params', async () => {
+    it('should throw if exchange is not supported', async () => {
+      const userId = faker.string.uuid();
+      const exchangeName = generateExchangeName();
+
+      let thrownError;
+      try {
+        await exchangesService.getClientForUser(userId, exchangeName);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(ExchangeNotSupportedError);
+    });
+
+    it('should get client via factory for CEX', async () => {
+      const { userId, exchangeName, apiKey, secretKey, extras } =
+        generateExchangeApiKeysData();
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: true,
+          type: ExchangeType.CEX,
+        },
+      };
+
       mockExchangeApiKeysService.retrieve.mockResolvedValueOnce({
         id: faker.string.uuid(),
         apiKey,
@@ -68,7 +100,7 @@ describe('ExchangesService', () => {
         missingPermissions: [],
       });
       const mockClient = {} as ExchangeApiClient;
-      mockExchangeApiClientFactory.create.mockReturnValue(mockClient);
+      mockExchangeApiClientFactory.createCex.mockReturnValue(mockClient);
 
       const client = await exchangesService.getClientForUser(
         userId,
@@ -77,14 +109,48 @@ describe('ExchangesService', () => {
 
       expect(client).toBe(mockClient);
 
-      expect(mockExchangeApiClientFactory.create).toHaveBeenCalledTimes(1);
-      expect(mockExchangeApiClientFactory.create).toHaveBeenCalledWith(
+      expect(mockExchangeApiClientFactory.createCex).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiClientFactory.createCex).toHaveBeenCalledWith(
         exchangeName,
         {
           apiKey,
           secret: secretKey,
           extras,
           userId,
+        },
+      );
+    });
+
+    it('should get client via factory for DEX', async () => {
+      const exchangeName = generateExchangeName();
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: true,
+          type: ExchangeType.DEX,
+        },
+      };
+      const user = generateUserEntity();
+
+      mockUsersRepository.findOneById.mockResolvedValueOnce(user);
+      const mockClient = {} as ExchangeApiClient;
+      mockExchangeApiClientFactory.createDex.mockReturnValue(mockClient);
+
+      const client = await exchangesService.getClientForUser(
+        user.id,
+        exchangeName,
+      );
+
+      expect(client).toBe(mockClient);
+
+      expect(mockUsersRepository.findOneById).toHaveBeenCalledTimes(1);
+      expect(mockUsersRepository.findOneById).toHaveBeenCalledWith(user.id);
+
+      expect(mockExchangeApiClientFactory.createDex).toHaveBeenCalledTimes(1);
+      expect(mockExchangeApiClientFactory.createDex).toHaveBeenCalledWith(
+        exchangeName,
+        {
+          userId: user.id,
+          userEvmAddress: user.evmAddress,
         },
       );
     });

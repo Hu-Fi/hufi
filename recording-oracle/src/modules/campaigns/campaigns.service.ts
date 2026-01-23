@@ -22,6 +22,7 @@ import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as controlFlow from '@/common/utils/control-flow';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
@@ -282,7 +283,7 @@ export class CampaignsService implements OnModuleDestroy {
 
   private assertCorrectCampaignSetup(manifest: CampaignManifest): void {
     if (!this.exchangesConfigService.isExchangeSupported(manifest.exchange)) {
-      throw new Error(`Exchange not supported: ${manifest.exchange}`);
+      throw new ExchangeNotSupportedError(manifest.exchange);
     }
 
     const exchangeConfig =
