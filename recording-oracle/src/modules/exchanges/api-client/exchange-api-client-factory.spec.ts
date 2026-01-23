@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing';
 import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
-import { ExchangeType } from '@/common/constants';
+import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangesConfigService, LoggingConfigService } from '@/config';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
@@ -75,8 +75,6 @@ describe('ExchangeApiClientFactory', () => {
     });
 
     afterEach(async () => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       mockExchangesConfigService.configByExchange = {};
       exchangeApiClientFactory['preloadedCcxtClients'].clear();
       await exchangeApiClientFactory.onModuleDestroy();
@@ -161,14 +159,32 @@ describe('ExchangeApiClientFactory', () => {
     });
   });
 
-  describe('create', () => {
-    let exchangeName: string;
+  describe('createCex', () => {
+    let exchangeName: ExchangeName;
     let userId: string;
     let apiKey: string;
     let secret: string;
 
+    beforeAll(() => {
+      mockExchangesConfigService.configByExchange = new Proxy(
+        {},
+        {
+          get() {
+            return {
+              enabled: true,
+              type: ExchangeType.CEX,
+            };
+          },
+        },
+      );
+    });
+
+    afterAll(() => {
+      mockExchangesConfigService.configByExchange = {};
+    });
+
     beforeEach(() => {
-      exchangeName = faker.lorem.slug();
+      exchangeName = faker.lorem.slug() as ExchangeName;
       apiKey = faker.string.sample();
       secret = faker.string.sample();
       userId = faker.string.uuid();
@@ -181,7 +197,7 @@ describe('ExchangeApiClientFactory', () => {
 
       let thrownError;
       try {
-        exchangeApiClientFactory.create(exchangeName, {
+        exchangeApiClientFactory.createCex(exchangeName, {
           apiKey,
           secret,
           userId,
@@ -199,7 +215,7 @@ describe('ExchangeApiClientFactory', () => {
         true,
       );
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -214,7 +230,7 @@ describe('ExchangeApiClientFactory', () => {
         true,
       );
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -239,10 +255,10 @@ describe('ExchangeApiClientFactory', () => {
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         true,
       );
-      exchangeName = 'bitmart';
+      exchangeName = ExchangeName.BITMART;
       const apiKeyMemo = faker.lorem.word();
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -276,7 +292,7 @@ describe('ExchangeApiClientFactory', () => {
         true,
       );
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,

@@ -8,8 +8,7 @@ export { ExchangeApiClientModule } from './exchange-api-client.module';
 export { ExchangeApiClientFactory } from './exchange-api-client-factory';
 export type {
   ExchangeApiClient,
-  ExchangeApiClientInitOptions,
-  ExchangeApiClientLoggingConfig,
+  CexApiClientInitOptions,
 } from './exchange-api-client.interface';
 
 export {

@@ -3,6 +3,7 @@ import * as ccxt from 'ccxt';
 import type { Exchange as CcxtExchange } from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import { ExchangesConfigService, LoggingConfigService } from '@/config';
 import logger from '@/logger';
 
@@ -14,18 +15,25 @@ import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { IncompleteKeySuppliedError } from './errors';
 import type {
   ExchangeApiClient,
-  ExchangeApiClientInitOptions,
+  CexApiClientInitOptions,
+  DexApiClientInitOptions,
 } from './exchange-api-client.interface';
+import { PancakeswapClient } from './pancakeswap-client';
 import { ExchangeExtras } from './types';
 
 const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
 
-type CreateExchangeApiClientInitOptions = Omit<
-  ExchangeApiClientInitOptions,
+type CreateCexApiClientInitOptions = Omit<
+  CexApiClientInitOptions,
   'extraCreds' | 'loggingConfig'
 > & {
   extras?: ExchangeExtras;
 };
+
+type CreateDexApiClientInitOptions = Omit<
+  DexApiClientInitOptions,
+  'extraCreds' | 'loggingConfig'
+> & {};
 
 @Injectable()
 export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
@@ -107,10 +115,16 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  create(
-    exchangeName: string,
-    initOptions: CreateExchangeApiClientInitOptions,
+  createCex(
+    exchangeName: ExchangeName,
+    initOptions: CreateCexApiClientInitOptions,
   ): ExchangeApiClient {
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
+    if (exchangeConfig.type !== ExchangeType.CEX) {
+      throw new Error('Provided exchange is not CEX');
+    }
+
     const clientInitOptions: CcxtExchangeClientInitOptions = {
       apiKey: initOptions.apiKey,
       secret: initOptions.secret,
@@ -139,6 +153,30 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       return ccxtExchangeClient;
     } else {
       throw new IncompleteKeySuppliedError(exchangeName);
+    }
+  }
+
+  createDex(
+    exchangeName: ExchangeName,
+    initOptions: CreateDexApiClientInitOptions,
+  ): ExchangeApiClient {
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
+    if (exchangeConfig.type !== ExchangeType.DEX) {
+      throw new Error('Provided exchange is not DEX');
+    }
+
+    const clientInitOptions: DexApiClientInitOptions = {
+      userId: initOptions.userId,
+      userEvmAddress: initOptions.userEvmAddress,
+    };
+
+    switch (exchangeName) {
+      case ExchangeName.PANCAKESWAP: {
+        return new PancakeswapClient(clientInitOptions);
+      }
+      default:
+        throw new ExchangeNotSupportedError(exchangeName);
     }
   }
 }
