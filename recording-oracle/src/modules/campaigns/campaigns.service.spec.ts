@@ -1029,7 +1029,7 @@ describe('CampaignsService', () => {
         null,
       );
       const testError = new Error(faker.lorem.sentence());
-      mockExchangesService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+      mockExchangesService.assertUserHasRequiredAccess.mockRejectedValueOnce(
         testError,
       );
 
@@ -1071,7 +1071,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce();
+      mockExchangesService.assertUserHasRequiredAccess.mockResolvedValueOnce();
 
       const now = new Date();
       jest.useFakeTimers({ now });

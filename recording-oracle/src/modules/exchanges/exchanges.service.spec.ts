@@ -4,6 +4,9 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
 
+import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangesConfigService } from '@/config';
+
 import {
   ExchangeApiClientFactory,
   ExchangeApiClient,
@@ -15,6 +18,7 @@ import {
 } from './exchange-api-keys';
 import { generateExchangeApiKeysData } from './exchange-api-keys/fixtures';
 import { ExchangesService } from './exchanges.service';
+import { mockExchangesConfigService } from './fixtures';
 
 const mockExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
@@ -28,6 +32,10 @@ describe('ExchangesService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         ExchangesService,
+        {
+          provide: ExchangesConfigService,
+          useValue: mockExchangesConfigService,
+        },
         {
           provide: ExchangeApiClientFactory,
           useValue: mockExchangeApiClientFactory,
@@ -82,11 +90,11 @@ describe('ExchangesService', () => {
     });
   });
 
-  describe('assertUserHasAuthorizedKeys', () => {
+  describe('assertUserHasRequiredAccess', () => {
     const mockExchangeApiClient = createMock<ExchangeApiClient>();
 
     let userId: string;
-    let exchangeName: string;
+    let exchangeName: ExchangeName;
     let permissionsToCheck: ExchangePermission[];
 
     let spyOnGetClientForUser: jest.SpyInstance;
@@ -103,12 +111,32 @@ describe('ExchangesService', () => {
       spyOnGetClientForUser.mockRestore();
     });
 
+    beforeEach(() => {
+      mockExchangesConfigService.configByExchange[exchangeName] = {
+        enabled: true,
+        type: ExchangeType.CEX,
+      };
+    });
+
+    it('should not check access for DEX', async () => {
+      mockExchangesConfigService.configByExchange[exchangeName].type =
+        ExchangeType.DEX;
+
+      await exchangesService.assertUserHasRequiredAccess(
+        userId,
+        exchangeName,
+        permissionsToCheck,
+      );
+
+      expect(spyOnGetClientForUser).toHaveBeenCalledTimes(0);
+    });
+
     it('should not throw if access check succeeded', async () => {
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
       });
 
-      await exchangesService.assertUserHasAuthorizedKeys(
+      await exchangesService.assertUserHasRequiredAccess(
         userId,
         exchangeName,
         permissionsToCheck,
@@ -138,7 +166,7 @@ describe('ExchangesService', () => {
 
       let thrownError;
       try {
-        await exchangesService.assertUserHasAuthorizedKeys(
+        await exchangesService.assertUserHasRequiredAccess(
           userId,
           exchangeName,
           permissionsToCheck,
