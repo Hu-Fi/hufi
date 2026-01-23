@@ -295,7 +295,10 @@ export class CampaignsService implements OnModuleDestroy {
     /**
      * TODO: have different campaign configuration per exchange via campaign config service
      */
-    if (manifest.exchange === ExchangeName.PANCAKESWAP) {
+    if (
+      manifest.exchange === ExchangeName.PANCAKESWAP &&
+      manifest.type !== CampaignType.MARKET_MAKING
+    ) {
       throw new Error('Only market making campaigns supported for pancakeswap');
     }
   }
