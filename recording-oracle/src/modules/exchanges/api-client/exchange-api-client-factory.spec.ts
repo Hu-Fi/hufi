@@ -255,10 +255,9 @@ describe('ExchangeApiClientFactory', () => {
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         true,
       );
-      exchangeName = ExchangeName.BITMART;
       const apiKeyMemo = faker.lorem.word();
 
-      const client = exchangeApiClientFactory.createCex(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(ExchangeName.BITMART, {
         apiKey,
         secret,
         userId,
@@ -271,7 +270,7 @@ describe('ExchangeApiClientFactory', () => {
 
       expect(mockedCcxtExchangeClient).toHaveBeenCalledTimes(1);
       expect(mockedCcxtExchangeClient).toHaveBeenCalledWith(
-        exchangeName,
+        ExchangeName.BITMART,
         expect.objectContaining({
           apiKey,
           secret,
