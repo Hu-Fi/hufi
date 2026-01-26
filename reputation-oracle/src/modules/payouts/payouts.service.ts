@@ -418,57 +418,63 @@ export class PayoutsService {
   private async getCampaignsForPayouts(
     chainId: ChainId,
   ): Promise<CampaignWithResults[]> {
-    const escrows = await EscrowUtils.getEscrows({
-      chainId: chainId as number,
-      reputationOracle: this.web3ConfigService.operatorAddress,
-      status: [
-        EscrowStatus.Pending,
-        EscrowStatus.Partial,
-        EscrowStatus.ToCancel,
-      ],
-      /**
-       * We do not expect more than this active campaigns atm
-       */
-      first: 100,
-    });
-
-    const campaignsWithResults: CampaignWithResults[] = [];
-    for (const escrow of escrows) {
-      if (escrow.status !== EscrowStatus[EscrowStatus.ToCancel]) {
-        const hasIntermediateResults =
-          escrow.intermediateResultsUrl && escrow.intermediateResultsHash;
-        if (!hasIntermediateResults) {
-          continue;
-        }
-      }
-      const fundTokenDecimals = await this.web3Service.getTokenDecimals(
-        escrow.chainId,
-        escrow.token,
-      );
-
-      campaignsWithResults.push({
-        chainId: escrow.chainId,
-        address: escrow.address,
-        launcher: escrow.launcher,
-        status: escrow.status,
+    try {
+      const escrows = await EscrowUtils.getEscrows({
+        chainId: chainId as number,
+        reputationOracle: this.web3ConfigService.operatorAddress,
+        status: [
+          EscrowStatus.Pending,
+          EscrowStatus.Partial,
+          EscrowStatus.ToCancel,
+        ],
         /**
-         * It's expected that escrow can be in "ToCancel" status
-         * only if it properly set up, so it should always have
-         * manifest and its hash
+         * We do not expect more than this active campaigns atm
          */
-        manifest: escrow.manifest as string,
-        manifestHash: escrow.manifestHash as string,
-        intermediateResultsUrl: escrow.intermediateResultsUrl,
-        intermediateResultsHash: escrow.intermediateResultsHash,
-        fundTokenAddress: escrow.token,
-        fundTokenDecimals,
-        fundAmount: Number(
-          ethers.formatUnits(escrow.totalFundedAmount, fundTokenDecimals),
-        ),
+        first: 100,
       });
-    }
 
-    return campaignsWithResults;
+      const campaignsWithResults: CampaignWithResults[] = [];
+      for (const escrow of escrows) {
+        if (escrow.status !== EscrowStatus[EscrowStatus.ToCancel]) {
+          const hasIntermediateResults =
+            escrow.intermediateResultsUrl && escrow.intermediateResultsHash;
+          if (!hasIntermediateResults) {
+            continue;
+          }
+        }
+        const fundTokenDecimals = await this.web3Service.getTokenDecimals(
+          escrow.chainId,
+          escrow.token,
+        );
+
+        campaignsWithResults.push({
+          chainId: escrow.chainId,
+          address: escrow.address,
+          launcher: escrow.launcher,
+          status: escrow.status,
+          /**
+           * It's expected that escrow can be in "ToCancel" status
+           * only if it properly set up, so it should always have
+           * manifest and its hash
+           */
+          manifest: escrow.manifest as string,
+          manifestHash: escrow.manifestHash as string,
+          intermediateResultsUrl: escrow.intermediateResultsUrl,
+          intermediateResultsHash: escrow.intermediateResultsHash,
+          fundTokenAddress: escrow.token,
+          fundTokenDecimals,
+          fundAmount: Number(
+            ethers.formatUnits(escrow.totalFundedAmount, fundTokenDecimals),
+          ),
+        });
+      }
+
+      return campaignsWithResults;
+    } catch (error) {
+      const message = 'Failed to get campaigns for payouts';
+      this.logger.error(message, { chainId, error });
+      throw new Error(message);
+    }
   }
 
   private async getBulkPayoutsCount(
