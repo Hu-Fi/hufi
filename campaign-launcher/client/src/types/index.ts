@@ -38,17 +38,20 @@ export type CampaignsStats = {
 };
 
 export type Exchange = {
-  display_name: string;
-  logo: string;
+  enabled: boolean;
   name: string;
-  type: string;
+  display_name: string;
   url: string;
+  logo: string;
+  type: ExchangeType;
 };
 
 export type ExchangeApiKeyData = {
   exchange_name: string;
   api_key: string;
   extras?: Record<string, string>;
+  is_valid: boolean;
+  missing_permissions: string[];
 };
 
 export type Campaign = {

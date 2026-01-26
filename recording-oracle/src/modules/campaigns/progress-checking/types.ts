@@ -1,7 +1,9 @@
+import { ExchangeName } from '@/common/constants';
+
 import type { CampaignParticipant } from '../types';
 
 export type CampaignProgressCheckerSetup = {
-  exchangeName: string;
+  exchangeName: ExchangeName;
   symbol: string;
   periodStart: Date;
   periodEnd: Date;

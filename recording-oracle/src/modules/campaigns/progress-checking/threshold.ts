@@ -1,4 +1,4 @@
-import { ETH_TOKEN_SYMBOL } from '@/common/constants';
+import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
 import { ExchangesService } from '@/modules/exchanges';
 
 import type {
@@ -21,7 +21,7 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
   ThresholdResult,
   ThresholdMeta
 > {
-  readonly exchangeName: string;
+  readonly exchangeName: ExchangeName;
   readonly thresholdTokenSymbol: string;
   readonly minimumBalanceTarget: number;
 

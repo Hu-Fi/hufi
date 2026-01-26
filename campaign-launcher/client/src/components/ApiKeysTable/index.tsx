@@ -1,12 +1,15 @@
 import { type FC, useMemo, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import ErrorIcon from '@mui/icons-material/Error';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import DeleteApiKeyModal from '@/components/modals/DeleteApiKeyModal';
 import EditApiKeyModal from '@/components/modals/EditApiKeyModal';
+import { useRevalidateExchangeApiKey } from '@/hooks/recording-oracle/exchangeApiKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { DeleteIcon, EditIcon } from '@/icons';
 import type { ExchangeApiKeyData } from '@/types';
@@ -16,11 +19,47 @@ type ApiKeysTableProps = {
   data: ExchangeApiKeyData[] | undefined;
 };
 
+const MissingPermissionsTooltip: FC<{ missingPermissions: string[] }> = ({
+  missingPermissions,
+}) => {
+  const isMobile = useIsMobile();
+  return (
+    <CustomTooltip
+      arrow
+      placement={isMobile ? 'right' : 'top'}
+      sx={{ height: 20 }}
+      title={
+        <Box display="flex" flexDirection="column" gap={1}>
+          <Typography variant="tooltip">Missing permissions:</Typography>
+          <List sx={{ p: 0, listStyle: 'disc' }}>
+            {missingPermissions.map((permission: string) => (
+              <ListItem key={permission} sx={{ px: 0, py: 0.5 }}>
+                <Typography variant="tooltip" fontWeight={600}>
+                  {permission}
+                </Typography>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      }
+    >
+      <ErrorIcon sx={{ color: 'error.main', fontSize: '20px' }} />
+    </CustomTooltip>
+  );
+};
+
 const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   const [editingItem, setEditingItem] = useState('');
   const [deletingItem, setDeletingItem] = useState('');
 
   const isMobile = useIsMobile();
+  const { mutate: revalidateExchangeApiKey, isPending: isRevalidating } =
+    useRevalidateExchangeApiKey();
+
+  const handleClickOnRefresh = (exchangeName: string) => {
+    if (isRevalidating) return;
+    revalidateExchangeApiKey(exchangeName);
+  };
 
   const handleClickOnEdit = (exchangeName: string) => {
     setEditingItem(exchangeName);
@@ -38,12 +77,16 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     setDeletingItem('');
   };
 
-  const rows = data?.map(({ exchange_name, api_key, extras }) => ({
-    id: exchange_name,
-    exchangeName: exchange_name,
-    apiKey: api_key,
-    extras: extras,
-  }));
+  const rows = data?.map(
+    ({ exchange_name, api_key, extras, is_valid, missing_permissions }) => ({
+      id: exchange_name,
+      exchangeName: exchange_name,
+      apiKey: api_key,
+      extras: extras,
+      isValid: is_valid,
+      missingPermissions: missing_permissions,
+    })
+  );
 
   const longestApiKeyLength = useMemo(() => {
     return Math.max(...(data?.map(({ api_key }) => api_key.length) || [0]));
@@ -53,17 +96,23 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'exchangeName',
       headerName: 'Exchange',
-      width: isMobile ? 130 : 160,
+      width: isMobile ? 120 : 160,
       renderCell: (params) => {
+        const { exchangeName, isValid, missingPermissions } = params.row;
         return (
-          <Typography
-            display="flex"
-            alignItems="center"
-            variant={isMobile ? 'body2' : 'body1'}
-            textTransform="capitalize"
-          >
-            {params.row.exchangeName}
-          </Typography>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography
+              variant={isMobile ? 'body2' : 'body1'}
+              textTransform="capitalize"
+            >
+              {exchangeName}
+            </Typography>
+            {!isValid && (
+              <MissingPermissionsTooltip
+                missingPermissions={missingPermissions}
+              />
+            )}
+          </Box>
         );
       },
     },
@@ -107,21 +156,41 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'actions',
       headerName: '',
-      width: isMobile ? 82 : 64,
+      width: isMobile ? 110 : 96,
       renderCell: (params) => {
+        const { exchangeName, isValid } = params.row;
         return (
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="flex-end"
+            gap={1.5}
+          >
+            {!isValid && (
+              <IconButton
+                sx={{ p: 0 }}
+                disableRipple
+                disabled={isRevalidating}
+                onClick={() => handleClickOnRefresh(exchangeName)}
+              >
+                <RefreshIcon
+                  sx={{
+                    color: isRevalidating ? 'text.disabled' : 'text.primary',
+                  }}
+                />
+              </IconButton>
+            )}
             <IconButton
               sx={{ p: 0 }}
               disableRipple
-              onClick={() => handleClickOnEdit(params.row.exchangeName)}
+              onClick={() => handleClickOnEdit(exchangeName)}
             >
               <EditIcon sx={{ color: 'text.primary' }} />
             </IconButton>
             <IconButton
               sx={{ p: 0 }}
               disableRipple
-              onClick={() => handleClickOnDelete(params.row.exchangeName)}
+              onClick={() => handleClickOnDelete(exchangeName)}
             >
               <DeleteIcon sx={{ color: 'text.primary' }} />
             </IconButton>
@@ -169,7 +238,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           },
           '& .MuiDataGrid-cell': {
             borderTop: 'none',
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             overflow: 'visible !important',
             '&[data-field="actions"]': {
               px: isMobile ? 1 : 0,
@@ -185,7 +254,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             backgroundColor: 'rgba(255, 255, 255, 0.12) !important',
             fontSize: '12px',
             fontWeight: 400,
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             overflow: 'visible !important',
             textTransform: 'uppercase',
             borderBottom: 'none !important',

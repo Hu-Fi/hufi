@@ -1,20 +1,29 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, Validate } from 'class-validator';
 
-import { SUPPORTED_EXCHANGE_NAMES } from '@/common/constants';
+import { ExchangeName } from '@/common/constants';
 import { ExchangeNameValidator } from '@/common/validators';
 
-export class GetTotalVolumeQueryDto {
+export class ExchangeQueryDto {
   @ApiPropertyOptional({
     name: 'exchange_name',
-    enum: SUPPORTED_EXCHANGE_NAMES,
+    enum: ExchangeName,
   })
   @IsOptional()
   @Validate(ExchangeNameValidator)
-  exchangeName?: string;
+  exchangeName?: ExchangeName;
 }
 
 export class GetTotalVolumeResponseDto {
   @ApiProperty({ name: 'total_volume' })
   totalVolume: number;
+}
+
+export class CampaignsStatsDto {
+  @ApiProperty({ name: 'n_finished' })
+  nFinished: number;
+  @ApiProperty({ name: 'n_completed' })
+  nCompleted: number;
+  @ApiProperty({ name: 'n_cancelled' })
+  nCancelled: number;
 }

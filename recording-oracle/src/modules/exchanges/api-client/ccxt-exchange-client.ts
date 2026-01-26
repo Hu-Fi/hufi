@@ -5,7 +5,7 @@ import _ from 'lodash';
 import {
   ETH_TOKEN_SYMBOL,
   ETH_USDT_PAIR,
-  SupportedExchange,
+  ExchangeName,
 } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
 import Environment from '@/common/utils/environment';
@@ -94,7 +94,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   private ccxtClient: Exchange;
   readonly sandbox: boolean;
   readonly userId: string;
-  readonly exchangeName: SupportedExchange;
+  readonly exchangeName: ExchangeName;
 
   protected logger: Logger;
   protected loggingConfig: ExchangeApiClientLoggingConfig = {
@@ -120,7 +120,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       throw new Error('userId is missing');
     }
 
-    this.exchangeName = exchangeName as SupportedExchange;
+    this.exchangeName = exchangeName as ExchangeName;
     this.userId = userId;
 
     const exchangeClass = ccxt[exchangeName];
@@ -280,15 +280,15 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     const fetchParams: Record<string, unknown> = {};
 
     switch (this.exchangeName) {
-      case 'gate': {
+      case ExchangeName.GATE: {
         fetchParams.network = 'ERC20';
         break;
       }
-      case 'xt': {
+      case ExchangeName.XT: {
         fetchParams.network = 'ETH';
         break;
       }
-      case 'bybit': {
+      case ExchangeName.BYBIT: {
         if (this.sandbox) {
           const currencies = await this.ccxtClient.fetchCurrencies();
           const networks = currencies[symbol]?.networks;

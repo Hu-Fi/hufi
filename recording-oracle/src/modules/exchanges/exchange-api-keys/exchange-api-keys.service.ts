@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { isValidExchangeName } from '@/common/validators';
+import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangesConfigService } from '@/config';
 import { AesEncryptionService } from '@/modules/encryption';
 import { UsersService } from '@/modules/users';
 
@@ -8,6 +9,7 @@ import {
   ExchangeApiClientFactory,
   ExchangePermission,
   type ExchangeExtras,
+  type RequiredAccessCheckResult,
 } from '../api-client';
 import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import { EnrolledApiKeyDto } from './exchange-api-keys.dto';
@@ -21,6 +23,7 @@ import { ExchangeApiKeyData } from './types';
 @Injectable()
 export class ExchangeApiKeysService {
   constructor(
+    private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
     private readonly usersService: UsersService,
     private readonly aesEncryptionService: AesEncryptionService,
@@ -29,7 +32,7 @@ export class ExchangeApiKeysService {
 
   async enroll(input: {
     userId: string;
-    exchangeName: string;
+    exchangeName: ExchangeName;
     apiKey: string;
     secretKey: string;
     extras?: ExchangeExtras;
@@ -40,8 +43,10 @@ export class ExchangeApiKeysService {
       throw new Error('Invalid arguments');
     }
 
-    if (!isValidExchangeName(exchangeName)) {
-      throw new Error('Exchange name is not valid');
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
+    if (exchangeConfig.type !== ExchangeType.CEX) {
+      throw new Error('Only CEX exchanges support API keys');
     }
 
     const exchangeApiClient = this.exchangeApiClientFactory.create(
@@ -140,15 +145,11 @@ export class ExchangeApiKeysService {
     return await Promise.all(retrievalPromises);
   }
 
-  async markAsInvalid(
+  async markValidity(
     userId: string,
     exchangeName: string,
-    missingPermissions: ExchangePermission[],
+    missingPermissions: ExchangePermission[] = [],
   ): Promise<void> {
-    if (!missingPermissions.length) {
-      throw new Error('At least one missing permission must be provided');
-    }
-
     const entity =
       await this.exchangeApiKeysRepository.findOneByUserAndExchange(
         userId,
@@ -159,12 +160,44 @@ export class ExchangeApiKeysService {
       throw new ExchangeApiKeyNotFoundError(userId, exchangeName);
     }
 
-    entity.isValid = false;
+    entity.isValid = missingPermissions.length === 0;
     /**
      * Just a safety belt in case method is misused with duplicated values
      */
     entity.missingPermissions = Array.from(new Set(missingPermissions));
 
     await this.exchangeApiKeysRepository.save(entity);
+  }
+
+  async revalidate(
+    userId: string,
+    exchangeName: string,
+  ): Promise<RequiredAccessCheckResult> {
+    const { apiKey, secretKey, extras } = await this.retrieve(
+      userId,
+      exchangeName,
+    );
+
+    const exchangeApiClient = this.exchangeApiClientFactory.create(
+      exchangeName,
+      {
+        apiKey,
+        secret: secretKey,
+        extras,
+        userId,
+      },
+    );
+
+    const accessCheckResult = await exchangeApiClient.checkRequiredAccess(
+      Object.values(ExchangePermission),
+    );
+
+    await this.markValidity(
+      userId,
+      exchangeName,
+      accessCheckResult.success ? [] : accessCheckResult.missing,
+    );
+
+    return accessCheckResult;
   }
 }

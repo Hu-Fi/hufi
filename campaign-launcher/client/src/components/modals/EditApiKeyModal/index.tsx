@@ -20,6 +20,7 @@ import {
 } from '@/components/ModalState';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { ExchangeType } from '@/types';
 
 import BaseModal from '../BaseModal';
 
@@ -165,6 +166,7 @@ const EditApiKeyModal: FC<Props> = ({ open, onClose, exchangeName }) => {
                       <FormExchangeSelect<APIKeyFormValues, 'exchange'>
                         field={field}
                         disabled
+                        exchangeTypes={[ExchangeType.CEX]}
                       />
                     )}
                   />

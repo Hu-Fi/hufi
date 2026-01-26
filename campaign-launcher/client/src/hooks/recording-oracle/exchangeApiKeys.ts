@@ -17,14 +17,14 @@ export const useGetEnrolledExchanges = () => {
   });
 };
 
-export const useGetExchangesWithApiKeys = () => {
+export const useGetExchangesWithApiKeys = ({ enabled = true } = {}) => {
   const { isAuthenticated } = useWeb3Auth();
   const { isConnected } = useConnection();
 
   return useQuery({
     queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS, AUTHED_QUERY_TAG],
     queryFn: () => recordingApi.getExchangesWithApiKeys(),
-    enabled: isAuthenticated && isConnected,
+    enabled: enabled && isAuthenticated && isConnected,
   });
 };
 
@@ -87,6 +87,20 @@ export const useDeleteApiKeyByExchange = (exchangeName: string) => {
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES],
+      });
+    },
+  });
+};
+
+export const useRevalidateExchangeApiKey = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (exchangeName: string) =>
+      recordingApi.revalidateExchangeApiKey(exchangeName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.EXCHANGES_WITH_API_KEYS],
       });
     },
   });

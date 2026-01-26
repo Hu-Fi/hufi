@@ -30,7 +30,7 @@ import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
-import type { ThresholdFormValues } from '@/types';
+import type { CampaignType, ThresholdFormValues } from '@/types';
 import { getTokenInfo } from '@/utils';
 
 import { formatInputValue } from '../utils';
@@ -43,6 +43,7 @@ type Props = {
   watch: UseFormWatch<ThresholdFormValues>;
   trigger: UseFormTrigger<ThresholdFormValues>;
   isCreatingEscrow: boolean;
+  campaignType: CampaignType;
 };
 
 const ThresholdForm: FC<Props> = ({
@@ -51,6 +52,7 @@ const ThresholdForm: FC<Props> = ({
   watch,
   trigger,
   isCreatingEscrow,
+  campaignType,
 }) => {
   const isMobile = useIsMobile();
 
@@ -74,6 +76,7 @@ const ThresholdForm: FC<Props> = ({
                 <FormExchangeSelect<ThresholdFormValues, 'exchange'>
                   field={field}
                   disabled={isCreatingEscrow}
+                  campaignType={campaignType}
                 />
               )}
             />

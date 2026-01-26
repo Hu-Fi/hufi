@@ -2,12 +2,16 @@ import { Module } from '@nestjs/common';
 
 import { CacheModule } from '@/infrastructure/cache';
 
+import { ExchangeApiClientModule } from './api-client';
 import { ExchangesCache } from './exchanges-cache';
 import { ExchangesController } from './exchanges.controller';
 import { ExchangesService } from './exchanges.service';
 
 @Module({
-  imports: [CacheModule.register({ namespace: 'exchanges' })],
+  imports: [
+    CacheModule.register({ namespace: 'exchanges' }),
+    ExchangeApiClientModule,
+  ],
   providers: [ExchangesCache, ExchangesService],
   controllers: [ExchangesController],
 })

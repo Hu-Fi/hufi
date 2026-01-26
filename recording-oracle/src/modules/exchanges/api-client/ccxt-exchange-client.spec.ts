@@ -5,6 +5,7 @@ import { createMock } from '@golevelup/ts-jest';
 import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
+import { ExchangeName } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
 import logger from '@/logger';
 import {
@@ -46,7 +47,7 @@ describe('CcxtExchangeClient', () => {
   });
 
   describe('constructor', () => {
-    let exchangeName: string;
+    let exchangeName: ExchangeName;
 
     beforeEach(() => {
       exchangeName = generateExchangeName();

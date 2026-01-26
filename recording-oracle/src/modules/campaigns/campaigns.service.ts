@@ -20,6 +20,7 @@ import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
+import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import * as controlFlow from '@/common/utils/control-flow';
 import * as debugUtils from '@/common/utils/debug';
@@ -27,8 +28,11 @@ import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import * as web3Utils from '@/common/utils/web3';
-import { isValidExchangeName } from '@/common/validators';
-import { CampaignsConfigService, Web3ConfigService } from '@/config';
+import {
+  CampaignsConfigService,
+  ExchangesConfigService,
+  Web3ConfigService,
+} from '@/config';
 import { isDuplicatedError } from '@/infrastructure/database';
 import logger from '@/logger';
 import {
@@ -78,7 +82,6 @@ import {
 import {
   CampaignEscrowInfo,
   CampaignManifest,
-  CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -87,6 +90,7 @@ import {
   IntermediateResultsData,
   ParticipantOutcome,
   LeaderboardRanking,
+  CampaignManifestBase,
 } from './types';
 import { UserCampaignEntity } from './user-campaign.entity';
 import { UserCampaignsRepository } from './user-campaigns.repository';
@@ -102,6 +106,7 @@ export class CampaignsService implements OnModuleDestroy {
     private readonly campaignsCache: CampaignsCache,
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
+    private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangesService: ExchangesService,
     private readonly userCampaignsRepository: UserCampaignsRepository,
     private readonly storageService: StorageService,
@@ -275,6 +280,26 @@ export class CampaignsService implements OnModuleDestroy {
     return userCampaigns;
   }
 
+  private assertCorrectCampaignSetup(manifest: CampaignManifest): void {
+    if (!this.exchangesConfigService.isExchangeSupported(manifest.exchange)) {
+      throw new Error(`Exchange not supported: ${manifest.exchange}`);
+    }
+
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[manifest.exchange];
+
+    if (!exchangeConfig.enabled) {
+      throw new Error('Exchange integration is disabled');
+    }
+
+    /**
+     * TODO: have different campaign configuration per exchange via campaign config service
+     */
+    if (manifest.exchange === ExchangeName.PANCAKESWAP) {
+      throw new Error('Only market making campaigns supported for pancakeswap');
+    }
+  }
+
   private async retrieveCampaignData(
     chainId: number,
     campaignAddress: string,
@@ -363,26 +388,7 @@ export class CampaignsService implements OnModuleDestroy {
     let manifest: CampaignManifestBase;
     try {
       manifest = manifestUtils.validateBaseSchema(manifestString);
-    } catch (error) {
-      throw new InvalidCampaign(
-        chainId,
-        campaignAddress,
-        error.message as string,
-      );
-    }
 
-    /*
-     * Not including this into Joi schema to send meaningful errors
-     */
-    if (!isValidExchangeName(manifest.exchange)) {
-      throw new InvalidCampaign(
-        chainId,
-        campaignAddress,
-        `Exchange not supported: ${manifest.exchange}`,
-      );
-    }
-
-    try {
       switch (manifest.type) {
         case CampaignType.MARKET_MAKING:
           manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
@@ -396,6 +402,8 @@ export class CampaignsService implements OnModuleDestroy {
         default:
           throw new Error(`Campaign type not supported: ${manifest.type}`);
       }
+
+      this.assertCorrectCampaignSetup(manifest);
     } catch (error) {
       throw new InvalidCampaign(
         chainId,
@@ -749,7 +757,7 @@ export class CampaignsService implements OnModuleDestroy {
     const campaignProgressChecker = this.getCampaignProgressChecker(
       campaign.type,
       {
-        exchangeName: campaign.exchangeName,
+        exchangeName: campaign.exchangeName as ExchangeName,
         symbol: campaign.symbol,
         periodStart: startDate,
         periodEnd: endDate,
@@ -802,7 +810,7 @@ export class CampaignsService implements OnModuleDestroy {
               error,
             });
           }
-          void this.exchangesService.revalidateApiKey(
+          void this.exchangesService.safeRevalidateApiKey(
             participant.id,
             campaign.exchangeName,
           );

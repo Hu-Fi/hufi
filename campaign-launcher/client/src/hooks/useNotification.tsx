@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { type ReactNode, useCallback } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton } from '@mui/material';
@@ -18,7 +18,11 @@ export const useNotification = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const showNotification = useCallback(
-    (message: string, variant: VariantType, options?: NotificationOptions) => {
+    (
+      message: string | ReactNode,
+      variant: VariantType,
+      options?: NotificationOptions
+    ) => {
       const { duration, position } = options || {};
       const { vertical, horizontal } = position || {
         vertical: 'top',
@@ -44,28 +48,28 @@ export const useNotification = () => {
   );
 
   const showSuccess = useCallback(
-    (message: string, options?: NotificationOptions) => {
+    (message: string | ReactNode, options?: NotificationOptions) => {
       showNotification(message, 'success', options);
     },
     [showNotification]
   );
 
   const showError = useCallback(
-    (message: string, options?: NotificationOptions) => {
+    (message: string | ReactNode, options?: NotificationOptions) => {
       showNotification(message, 'error', options);
     },
     [showNotification]
   );
 
   const showWarning = useCallback(
-    (message: string, options?: NotificationOptions) => {
+    (message: string | ReactNode, options?: NotificationOptions) => {
       showNotification(message, 'warning', options);
     },
     [showNotification]
   );
 
   const showInfo = useCallback(
-    (message: string, options?: NotificationOptions) => {
+    (message: string | ReactNode, options?: NotificationOptions) => {
       showNotification(message, 'info', options);
     },
     [showNotification]

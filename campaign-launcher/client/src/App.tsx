@@ -25,17 +25,17 @@ const App: FC = () => {
     <WagmiProvider>
       <QueryClientProvider>
         <ThemeProvider>
-          <NotificationProvider>
-            <NetworkProvider>
-              <ActiveAccountProvider>
-                <Web3AuthProvider>
-                  <ExchangesProvider>
-                    <StakeProvider>
-                      <LocalizationProvider
-                        dateAdapter={AdapterDayjs}
-                        adapterLocale="en"
-                      >
-                        <BrowserRouter>
+          <BrowserRouter>
+            <NotificationProvider>
+              <NetworkProvider>
+                <ActiveAccountProvider>
+                  <Web3AuthProvider>
+                    <ExchangesProvider>
+                      <StakeProvider>
+                        <LocalizationProvider
+                          dateAdapter={AdapterDayjs}
+                          adapterLocale="en"
+                        >
                           <Layout>
                             <Routes>
                               <Route
@@ -56,14 +56,14 @@ const App: FC = () => {
                               />
                             </Routes>
                           </Layout>
-                        </BrowserRouter>
-                      </LocalizationProvider>
-                    </StakeProvider>
-                  </ExchangesProvider>
-                </Web3AuthProvider>
-              </ActiveAccountProvider>
-            </NetworkProvider>
-          </NotificationProvider>
+                        </LocalizationProvider>
+                      </StakeProvider>
+                    </ExchangesProvider>
+                  </Web3AuthProvider>
+                </ActiveAccountProvider>
+              </NetworkProvider>
+            </NotificationProvider>
+          </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>

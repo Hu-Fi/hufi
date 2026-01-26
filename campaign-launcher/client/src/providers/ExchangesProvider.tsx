@@ -9,9 +9,11 @@ import {
 import { useExchanges } from '@/hooks/useExchanges';
 import type { Exchange } from '@/types';
 
+type ExchangeInfo = Omit<Exchange, 'name'>;
+
 type ExchangesContextType = {
   exchanges: Exchange[] | undefined;
-  exchangesMap: Map<string, Omit<Exchange, 'name'>>;
+  exchangesMap: Map<string, ExchangeInfo>;
   isLoading: boolean;
   error: Error | null;
 };
@@ -34,7 +36,7 @@ const ExchangesProvider: FC<PropsWithChildren> = ({ children }) => {
   const { data: exchanges, isLoading, error } = useExchanges();
 
   const exchangesMap = useMemo(() => {
-    const map = new Map<string, Omit<Exchange, 'name'>>();
+    const map = new Map<string, ExchangeInfo>();
     if (exchanges) {
       exchanges.forEach(({ name, ...exchange }) => {
         map.set(name, exchange);

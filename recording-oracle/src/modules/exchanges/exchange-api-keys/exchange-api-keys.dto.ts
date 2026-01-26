@@ -15,20 +15,19 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import {
-  SUPPORTED_EXCHANGE_NAMES,
-  type SupportedExchange,
-} from '@/common/constants';
+import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ClassConstructor } from '@/common/types';
 import { ExchangeNameValidator } from '@/common/validators';
 
 export class ExchangeNameParamDto {
   @ApiProperty({
     name: 'exchange_name',
-    enum: SUPPORTED_EXCHANGE_NAMES,
+    enum: ExchangeName,
   })
-  @Validate(ExchangeNameValidator)
-  exchangeName: SupportedExchange;
+  @Validate(ExchangeNameValidator, [ExchangeType.CEX], {
+    message: 'exchangeName must be supported CEX name',
+  })
+  exchangeName: ExchangeName;
 }
 
 export class BitmartExtras {
@@ -58,14 +57,14 @@ export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
     oneOf: [{ $ref: getSchemaPath(BitmartExtras) }],
   })
   @ValidateIf((o: EnrollExchangeApiKeysDto) =>
-    ['bitmart'].includes(o.exchangeName),
+    [ExchangeName.BITMART].includes(o.exchangeName),
   )
   @ValidateNested()
   @Transform((params: { obj: EnrollExchangeApiKeysDto; value: unknown }) => {
     let exchangeExtrasDtoClass: ClassConstructor<BitmartExtras> | undefined;
 
     switch (params.obj.exchangeName) {
-      case 'bitmart': {
+      case ExchangeName.BITMART: {
         exchangeExtrasDtoClass = BitmartExtras;
         break;
       }
@@ -106,4 +105,12 @@ export class EnrolledApiKeyDto {
 
   @ApiProperty({ name: 'missing_permissions' })
   missingPermissions: string[];
+}
+
+export class RevalidateApiKeyResponseDto {
+  @ApiProperty({ name: 'is_valid' })
+  isValid: boolean;
+
+  @ApiPropertyOptional({ name: 'missing_permissions' })
+  missingPermissions?: string[];
 }
