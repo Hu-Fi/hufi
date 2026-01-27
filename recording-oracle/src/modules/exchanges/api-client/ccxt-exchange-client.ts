@@ -320,6 +320,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         }
         break;
       }
+      case ExchangeName.BIGONE: {
+        fetchParams.network = 'Ethereum';
+        break;
+      }
     }
 
     const response = await this.ccxtClient.fetchDepositAddress(
