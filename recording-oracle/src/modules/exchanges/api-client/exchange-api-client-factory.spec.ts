@@ -7,7 +7,12 @@ import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
-import { ExchangesConfigService, LoggingConfigService } from '@/config';
+import {
+  ExchangesConfigService,
+  LoggingConfigService,
+  Web3ConfigService,
+} from '@/config';
+import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
@@ -45,6 +50,10 @@ describe('ExchangeApiClientFactory', () => {
         {
           provide: LoggingConfigService,
           useValue: mockLoggerConfigService,
+        },
+        {
+          provide: Web3ConfigService,
+          useValue: mockWeb3ConfigService,
         },
       ],
     }).compile();
