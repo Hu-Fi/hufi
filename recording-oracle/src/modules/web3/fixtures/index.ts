@@ -20,4 +20,5 @@ export const mockWeb3ConfigService: Omit<Web3ConfigService, 'configService'> = {
   gasPriceMultiplier: faker.number.int({ min: 1, max: 42 }),
   getRpcUrlByChainId: () => faker.internet.url(),
   alchemyApiKey: faker.string.sample(),
+  subgraphApiKey: faker.string.sample(),
 };

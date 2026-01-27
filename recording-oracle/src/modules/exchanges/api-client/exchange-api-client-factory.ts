@@ -4,7 +4,11 @@ import type { Exchange as CcxtExchange } from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
-import { ExchangesConfigService, LoggingConfigService } from '@/config';
+import {
+  ExchangesConfigService,
+  LoggingConfigService,
+  Web3ConfigService,
+} from '@/config';
 import logger from '@/logger';
 
 import {
@@ -18,7 +22,7 @@ import type {
   CexApiClientInitOptions,
   DexApiClientInitOptions,
 } from './exchange-api-client.interface';
-import { PancakeswapClient } from './pancakeswap-client';
+import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
 
 const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
@@ -47,6 +51,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly loggingConfigService: LoggingConfigService,
+    private readonly web3ConfigService: Web3ConfigService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -173,7 +178,10 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
 
     switch (exchangeName) {
       case ExchangeName.PANCAKESWAP: {
-        return new PancakeswapClient(clientInitOptions);
+        return new PancakeswapClient({
+          ...clientInitOptions,
+          subgraphApiKey: this.web3ConfigService.subgraphApiKey,
+        });
       }
       default:
         throw new ExchangeNotSupportedError(exchangeName);

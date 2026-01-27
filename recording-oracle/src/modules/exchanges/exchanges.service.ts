@@ -17,6 +17,9 @@ import {
   KeyAuthorizationError,
 } from './exchange-api-keys';
 
+const LOCAL_PARTICIPANT = '0xb05276521F4bb6A52Cd8E5b999Ca43438971976E';
+const FZ_MAINNET = '0xd249CaC7a145e1dc90dBC4849dE222ba5F7B645C';
+
 @Injectable()
 export class ExchangesService {
   private readonly logger = logger.child({
@@ -60,7 +63,10 @@ export class ExchangesService {
 
         return this.exchangeApiClientFactory.createDex(exchangeName, {
           userId,
-          userEvmAddress: user.evmAddress,
+          userEvmAddress:
+            user.evmAddress === LOCAL_PARTICIPANT
+              ? FZ_MAINNET
+              : user.evmAddress,
         });
       }
       default:

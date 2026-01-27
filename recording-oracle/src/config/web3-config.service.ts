@@ -48,4 +48,8 @@ export class Web3ConfigService {
   get alchemyApiKey(): string {
     return this.configService.getOrThrow('ALCHEMY_API_KEY');
   }
+
+  get subgraphApiKey(): string {
+    return this.configService.getOrThrow('SUBGRAPH_API_KEY');
+  }
 }

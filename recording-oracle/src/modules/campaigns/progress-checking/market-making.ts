@@ -93,6 +93,16 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
         score += this.calculateTradeScore(trade);
       }
 
+      /**
+       * TODO
+       *
+       * Relying on time-based pagination can lead to one of two:
+       * 1) since = timestamp + 1: missing trades if they share same timestamp
+       * 2) since = timestamp; can return duplicates if they share same timestamp (esp. on DEX where it's in seconds)
+       *
+       * We don't want to miss data, so will have to handle duplicates here
+       * when going through pages.
+       */
       since = trades[trades.length - 1].timestamp + 1;
     }
 
