@@ -3126,12 +3126,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-is@npm:^18":
-  version: 18.3.1
-  resolution: "@types/react-is@npm:18.3.1"
+"@types/react-is@npm:^19":
+  version: 19.2.0
+  resolution: "@types/react-is@npm:19.2.0"
   dependencies:
-    "@types/react": "npm:^18"
-  checksum: 10c0/c2a13c940c8dabc5fe38554f0b78560411a0618cc9b733c06d884b35f631b5c89eb88a016593df3b5bfd923517a337fd4a2f32598094f8924ac8e22b5f874c99
+    "@types/react": "npm:*"
+  checksum: 10c0/ff49ac8b8d439c3377e11d2f9f491ed4f8c8ee800225a40093c7941715ca8ccbde1b3833c5435354a8e39305fd0a163019d97f033c9402bc4b46f515851d2290
   languageName: node
   linkType: hard
 
@@ -3144,7 +3144,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18, @types/react@npm:^18.2.66":
+"@types/react@npm:*":
+  version: 19.2.10
+  resolution: "@types/react@npm:19.2.10"
+  dependencies:
+    csstype: "npm:^3.2.2"
+  checksum: 10c0/17b96203a79ad3fa3cee8f1f1f324b93f005bc125755e29ac149402807275feaf3f00a4e65b8405f633923ac993da5737fd9800d27ee49911f3ed51dc27478f9
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^18.2.66":
   version: 18.3.27
   resolution: "@types/react@npm:18.3.27"
   dependencies:
@@ -4789,7 +4798,7 @@ __metadata:
     "@tanstack/react-query": "npm:^5.90.12"
     "@types/react": "npm:^18.2.66"
     "@types/react-dom": "npm:^18.2.22"
-    "@types/react-is": "npm:^18"
+    "@types/react-is": "npm:^19"
     "@typescript-eslint/eslint-plugin": "npm:^8.48.1"
     "@typescript-eslint/parser": "npm:^8.48.1"
     "@vitejs/plugin-react": "npm:^5.1.1"
@@ -4813,7 +4822,7 @@ __metadata:
     react-chartjs-2: "npm:^5.3.1"
     react-dom: "npm:^18.2.0"
     react-hook-form: "npm:^7.68.0"
-    react-is: "npm:18.3.1"
+    react-is: "npm:19.2.4"
     react-number-format: "npm:^5.4.4"
     react-router-dom: "npm:^6.22.3"
     typescript: "npm:^5.9.3"
@@ -8679,10 +8688,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:18.3.1":
-  version: 18.3.1
-  resolution: "react-is@npm:18.3.1"
-  checksum: 10c0/f2f1e60010c683479e74c63f96b09fb41603527cd131a9959e2aee1e5a8b0caf270b365e5ca77d4a6b18aae659b60a86150bb3979073528877029b35aecd2072
+"react-is@npm:19.2.4":
+  version: 19.2.4
+  resolution: "react-is@npm:19.2.4"
+  checksum: 10c0/477a7cfc900f24194606e315fa353856a3a13487ea8eca841678817cad4daef64339ea0d1e84e58459fc75dbe0d9ba00bb0cc626db3d07e0cf31edc64cb4fa37
   languageName: node
   linkType: hard
 
