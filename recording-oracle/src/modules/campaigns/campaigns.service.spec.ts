@@ -279,8 +279,14 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should not thrown when campaign setup is correct', () => {
-      const manifest = generateCampaignManifest();
+    it('should not throw when campaign setup is correct', () => {
+      /**
+       * Use random exchange name to avoid falkiness
+       * that might appear due to exchange-specific params
+       */
+      const exchangeName = faker.lorem.slug();
+      const manifest = generateMarketMakingCampaignManifest();
+      manifest.exchange = exchangeName;
 
       mockExchangesConfigService.configByExchange = {
         [manifest.exchange]: {
@@ -1029,7 +1035,7 @@ describe('CampaignsService', () => {
         null,
       );
       const testError = new Error(faker.lorem.sentence());
-      mockExchangesService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+      mockExchangesService.assertUserHasRequiredAccess.mockRejectedValueOnce(
         testError,
       );
 
@@ -1071,7 +1077,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce();
+      mockExchangesService.assertUserHasRequiredAccess.mockResolvedValueOnce();
 
       const now = new Date();
       jest.useFakeTimers({ now });

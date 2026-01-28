@@ -49,7 +49,7 @@ export class ExchangeApiKeysService {
       throw new Error('Only CEX exchanges support API keys');
     }
 
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
+    const exchangeApiClient = this.exchangeApiClientFactory.createCex(
       exchangeName,
       {
         apiKey,
@@ -178,8 +178,8 @@ export class ExchangeApiKeysService {
       exchangeName,
     );
 
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
-      exchangeName,
+    const exchangeApiClient = this.exchangeApiClientFactory.createCex(
+      exchangeName as ExchangeName,
       {
         apiKey,
         secret: secretKey,

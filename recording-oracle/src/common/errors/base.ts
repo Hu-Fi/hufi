@@ -9,3 +9,9 @@ export class BaseError extends Error {
     this.name = this.constructor.name;
   }
 }
+
+export class MethodNotImplementedError extends Error {
+  constructor() {
+    super('Method not implemented');
+  }
+}

@@ -178,6 +178,28 @@ describe('PayoutsService', () => {
         ]),
       );
     });
+
+    it('should log subgraph error and throw meaningful one', async () => {
+      const syntheticError = new Error(faker.lorem.sentence());
+      mockedEscrowUtils.getEscrows.mockRejectedValueOnce(syntheticError);
+
+      let thrownError;
+      try {
+        await payoutsService['getCampaignsForPayouts'](chainId);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      const expectedMessage = 'Failed to get campaigns for payouts';
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(expectedMessage);
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(expectedMessage, {
+        chainId,
+        error: syntheticError,
+      });
+    });
   });
 
   describe('uploadFinalResults', () => {

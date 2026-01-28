@@ -421,10 +421,9 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            const exchangeName = 'mexc';
-            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
 
-            mexcClient = new CcxtExchangeClient(exchangeName, {
+            mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
               userId: faker.string.uuid(),
@@ -566,10 +565,9 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            const exchangeName = 'mexc';
-            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
 
-            mexcClient = new CcxtExchangeClient(exchangeName, {
+            mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
               userId: faker.string.uuid(),
@@ -678,10 +676,9 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            const exchangeName = 'mexc';
-            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
 
-            mexcClient = new CcxtExchangeClient(exchangeName, {
+            mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
               userId: faker.string.uuid(),
@@ -793,10 +790,9 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            const exchangeName = 'mexc';
-            mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
 
-            mexcClient = new CcxtExchangeClient(exchangeName, {
+            mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
               secret: faker.string.sample(),
               userId: faker.string.uuid(),
@@ -864,15 +860,14 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should fetch deposit address info for ERC20 network on gate', async () => {
-        const GATE_EXCHANGE_NAME = 'gate';
-        mockedCcxt[GATE_EXCHANGE_NAME].mockReturnValueOnce(mockedExchange);
+        mockedCcxt[ExchangeName.GATE].mockReturnValueOnce(mockedExchange);
 
         const mockedAddressStructure = generateDepositAddressStructure();
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
           mockedAddressStructure,
         );
 
-        ccxtExchangeApiClient = new CcxtExchangeClient(GATE_EXCHANGE_NAME, {
+        ccxtExchangeApiClient = new CcxtExchangeClient(ExchangeName.GATE, {
           apiKey: faker.string.sample(),
           secret: faker.string.sample(),
           userId: faker.string.uuid(),
@@ -894,15 +889,14 @@ describe('CcxtExchangeClient', () => {
       });
 
       it('should fetch deposit address info for ETH network on xt', async () => {
-        const XT_EXCHANGE_NAME = 'xt';
-        mockedCcxt[XT_EXCHANGE_NAME].mockReturnValueOnce(mockedExchange);
+        mockedCcxt[ExchangeName.XT].mockReturnValueOnce(mockedExchange);
 
         const mockedAddressStructure = generateDepositAddressStructure();
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
           mockedAddressStructure,
         );
 
-        ccxtExchangeApiClient = new CcxtExchangeClient(XT_EXCHANGE_NAME, {
+        ccxtExchangeApiClient = new CcxtExchangeClient(ExchangeName.XT, {
           apiKey: faker.string.sample(),
           secret: faker.string.sample(),
           userId: faker.string.uuid(),

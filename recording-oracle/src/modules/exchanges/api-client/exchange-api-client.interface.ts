@@ -9,16 +9,19 @@ import {
   Trade,
 } from './types';
 
-export type ExchangeApiClientLoggingConfig = {
-  logPermissionErrors: boolean;
-};
-
-export type ExchangeApiClientInitOptions = {
+export type CexApiClientInitOptions = {
   userId: string;
   apiKey: string;
   secret: string;
   extraCreds?: ExtraCreds;
-  loggingConfig?: Partial<ExchangeApiClientLoggingConfig>;
+  loggingConfig?: Partial<{
+    logPermissionErrors: boolean;
+  }>;
+};
+
+export type DexApiClientInitOptions = {
+  userId: string;
+  userEvmAddress: string;
 };
 
 export interface ExchangeApiClient {
