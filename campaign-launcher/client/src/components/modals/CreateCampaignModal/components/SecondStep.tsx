@@ -241,6 +241,7 @@ const SecondStep: FC<Props> = ({
               )}
               {campaignType === CampaignType.MARKET_MAKING && (
                 <MarketMakingForm
+                  campaignType={CampaignType.MARKET_MAKING}
                   control={control as Control<MarketMakingFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<MarketMakingFormValues>}
@@ -250,6 +251,7 @@ const SecondStep: FC<Props> = ({
               )}
               {campaignType === CampaignType.HOLDING && (
                 <HoldingForm
+                  campaignType={CampaignType.HOLDING}
                   control={control as Control<HoldingFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<HoldingFormValues>}
@@ -259,6 +261,7 @@ const SecondStep: FC<Props> = ({
               )}
               {campaignType === CampaignType.THRESHOLD && (
                 <ThresholdForm
+                  campaignType={CampaignType.THRESHOLD}
                   control={control as Control<ThresholdFormValues>}
                   errors={errors}
                   watch={watch as UseFormWatch<ThresholdFormValues>}
