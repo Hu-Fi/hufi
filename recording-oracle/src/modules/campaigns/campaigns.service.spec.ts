@@ -281,7 +281,7 @@ describe('CampaignsService', () => {
 
     it('should not throw when campaign setup is correct', () => {
       /**
-       * Use random exchange name to avoid falkiness
+       * Use random exchange name to avoid flakiness
        * that might appear due to exchange-specific params
        */
       const exchangeName = faker.lorem.slug();

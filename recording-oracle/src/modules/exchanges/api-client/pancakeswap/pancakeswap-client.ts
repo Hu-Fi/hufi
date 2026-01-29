@@ -118,7 +118,6 @@ export class PancakeswapClient implements ExchangeApiClient {
       const timestamp = Number(swap.timestamp);
 
       return {
-        id: swap.id,
         hash: swap.hash,
         timestamp,
         amountIn: Number(

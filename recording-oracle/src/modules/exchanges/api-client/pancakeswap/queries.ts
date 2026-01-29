@@ -60,7 +60,7 @@ type SubgraphSwap = {
   tokenOut: SubgraphToken;
 };
 
-export type MakerSwap = Exclude<SubgraphSwap, 'id' | 'nonce'>;
+export type MakerSwap = Omit<SubgraphSwap, 'id' | 'nonce'>;
 
 export type LatestSwap = Pick<SubgraphSwap, 'hash' | 'timestamp'>;
 
