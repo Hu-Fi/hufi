@@ -85,7 +85,11 @@ declare module 'ccxt' {
     checkRequiredCredentials(throwError?: boolean): boolean;
     fetchBalance(): Promise<AccountBalance>;
     fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
-    fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
+    fetchMyTrades(
+      symbol: string,
+      since: number,
+      limit?: number,
+    ): Promise<Trade[]>;
     fetchDepositAddress(
       symbol: string,
       params?: Record<string, unknown>,

@@ -259,11 +259,18 @@ export class CcxtExchangeClient implements ExchangeApiClient {
    */
   @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
   async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
+    let limit: number | undefined;
     /**
      * Use default value for "limit" because it varies
      * from exchange to exchange.
      */
-    const trades = await this.ccxtClient.fetchMyTrades(symbol, since);
+    switch (this.exchangeName) {
+      case ExchangeName.BIGONE:
+        limit = 200;
+        break;
+    }
+
+    const trades = await this.ccxtClient.fetchMyTrades(symbol, since, limit);
 
     return trades.map(ccxtClientUtils.mapCcxtTrade);
   }
