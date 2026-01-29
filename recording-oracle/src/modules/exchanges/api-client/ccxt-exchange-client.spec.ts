@@ -266,6 +266,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
           'ETH/USDT',
           now,
+          undefined,
         );
       });
 
@@ -388,6 +389,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
           tradingPair,
           tradesSince.valueOf(),
+          undefined,
         );
       });
 
