@@ -29,7 +29,7 @@ export const GET_MAKER_SWAPS_QUERY = gql`
         timestamp_gte: $since
       }
       first: ${MAX_PAGE_SIZE}
-      orderBy: nonce
+      orderBy: timestamp
       orderDirection: asc
     ) {
       id
