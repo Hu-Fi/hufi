@@ -33,6 +33,7 @@ import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import { TimeoutError } from '@/common/utils/control-flow';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -225,10 +226,8 @@ describe('CampaignsService', () => {
         thrownError = error;
       }
 
-      expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe(
-        `Exchange not supported: ${manifest.exchange}`,
-      );
+      expect(thrownError).toBeInstanceOf(ExchangeNotSupportedError);
+      expect(thrownError.exchangeName).toBe(manifest.exchange);
     });
 
     it('should throw when exchange from manifest supported but disabled', () => {

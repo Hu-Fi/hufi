@@ -100,11 +100,7 @@ export class PancakeswapClient implements ExchangeApiClient {
     }
   }
 
-  private async fetchMakerSwaps(
-    tokenIn: string,
-    tokenOut: string,
-    since: number,
-  ) {
+  private async fetchSwaps(tokenIn: string, tokenOut: string, since: number) {
     const { swaps } = await this.graphClient.request<{
       swaps: MakerSwap[];
     }>(GET_MAKER_SWAPS_QUERY, {
@@ -161,8 +157,8 @@ export class PancakeswapClient implements ExchangeApiClient {
 
       const sinceSeconds = Math.ceil(since / 1000);
       const [buySwaps, sellSwaps] = await Promise.all([
-        this.fetchMakerSwaps(quoteTokenAddress, baseTokenAddress, sinceSeconds),
-        this.fetchMakerSwaps(baseTokenAddress, quoteTokenAddress, sinceSeconds),
+        this.fetchSwaps(quoteTokenAddress, baseTokenAddress, sinceSeconds),
+        this.fetchSwaps(baseTokenAddress, quoteTokenAddress, sinceSeconds),
       ]);
 
       const allSwaps = _.orderBy(
