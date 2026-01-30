@@ -93,6 +93,9 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
         score += this.calculateTradeScore(trade);
       }
 
+      /**
+       * TODO: https://github.com/Hu-Fi/hufi/issues/702
+       */
       since = trades[trades.length - 1].timestamp + 1;
     }
 

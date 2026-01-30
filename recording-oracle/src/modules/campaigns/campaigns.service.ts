@@ -22,6 +22,7 @@ import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as controlFlow from '@/common/utils/control-flow';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
@@ -206,9 +207,9 @@ export class CampaignsService implements OnModuleDestroy {
       );
     }
 
-    await this.exchangesService.assertUserHasAuthorizedKeys(
+    await this.exchangesService.assertUserHasRequiredAccess(
       userId,
-      campaign.exchangeName,
+      campaign.exchangeName as ExchangeName,
       CAMPAIGN_PERMISSIONS_MAP[campaign.type],
     );
 
@@ -282,7 +283,7 @@ export class CampaignsService implements OnModuleDestroy {
 
   private assertCorrectCampaignSetup(manifest: CampaignManifest): void {
     if (!this.exchangesConfigService.isExchangeSupported(manifest.exchange)) {
-      throw new Error(`Exchange not supported: ${manifest.exchange}`);
+      throw new ExchangeNotSupportedError(manifest.exchange);
     }
 
     const exchangeConfig =
@@ -295,7 +296,10 @@ export class CampaignsService implements OnModuleDestroy {
     /**
      * TODO: have different campaign configuration per exchange via campaign config service
      */
-    if (manifest.exchange === ExchangeName.PANCAKESWAP) {
+    if (
+      manifest.exchange === ExchangeName.PANCAKESWAP &&
+      manifest.type !== CampaignType.MARKET_MAKING
+    ) {
       throw new Error('Only market making campaigns supported for pancakeswap');
     }
   }

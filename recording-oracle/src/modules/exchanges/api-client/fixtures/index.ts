@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import type { AccountBalance, AddressStructure, Order, Trade } from 'ccxt';
 
+import { ExchangeConfig } from '@/config';
 import { generateTradingPair } from '@/modules/exchanges/fixtures';
 
 import { TakerOrMakerFlag, TradingSide } from '../types';
@@ -104,4 +105,15 @@ export function generateDepositAddressStructure(
     address: faker.finance.ethereumAddress(),
     network: faker.helpers.arrayElement([null, undefined, 'ERC20']),
   };
+}
+
+export function generateConfigByExchangeStub(config: ExchangeConfig) {
+  return new Proxy(
+    {},
+    {
+      get() {
+        return config;
+      },
+    },
+  );
 }

@@ -1,4 +1,7 @@
 jest.mock('./ccxt-exchange-client');
+jest.mock('./pancakeswap', () => ({
+  PancakeswapClient: jest.fn(),
+}));
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
@@ -6,14 +9,22 @@ import { Test } from '@nestjs/testing';
 import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 
-import { ExchangeType } from '@/common/constants';
-import { ExchangesConfigService, LoggingConfigService } from '@/config';
+import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import {
+  ExchangesConfigService,
+  LoggingConfigService,
+  Web3ConfigService,
+} from '@/config';
+import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
 import { generateExchangeName, mockExchangesConfigService } from '../fixtures';
+import { generateConfigByExchangeStub } from './fixtures';
+import { PancakeswapClient } from './pancakeswap';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -23,6 +34,7 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 });
 
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
+const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
 
 const mockLoggerConfigService: Pick<
   LoggingConfigService,
@@ -45,6 +57,10 @@ describe('ExchangeApiClientFactory', () => {
         {
           provide: LoggingConfigService,
           useValue: mockLoggerConfigService,
+        },
+        {
+          provide: Web3ConfigService,
+          useValue: mockWeb3ConfigService,
         },
       ],
     }).compile();
@@ -75,8 +91,6 @@ describe('ExchangeApiClientFactory', () => {
     });
 
     afterEach(async () => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       mockExchangesConfigService.configByExchange = {};
       exchangeApiClientFactory['preloadedCcxtClients'].clear();
       await exchangeApiClientFactory.onModuleDestroy();
@@ -161,14 +175,23 @@ describe('ExchangeApiClientFactory', () => {
     });
   });
 
-  describe('create', () => {
-    let exchangeName: string;
+  describe('createCex', () => {
+    let exchangeName: ExchangeName;
     let userId: string;
     let apiKey: string;
     let secret: string;
 
+    beforeAll(() => {
+      mockExchangesConfigService.configByExchange =
+        generateConfigByExchangeStub({ enabled: true, type: ExchangeType.CEX });
+    });
+
+    afterAll(() => {
+      mockExchangesConfigService.configByExchange = {};
+    });
+
     beforeEach(() => {
-      exchangeName = faker.lorem.slug();
+      exchangeName = faker.lorem.slug() as ExchangeName;
       apiKey = faker.string.sample();
       secret = faker.string.sample();
       userId = faker.string.uuid();
@@ -181,7 +204,7 @@ describe('ExchangeApiClientFactory', () => {
 
       let thrownError;
       try {
-        exchangeApiClientFactory.create(exchangeName, {
+        exchangeApiClientFactory.createCex(exchangeName, {
           apiKey,
           secret,
           userId,
@@ -199,7 +222,7 @@ describe('ExchangeApiClientFactory', () => {
         true,
       );
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -214,7 +237,7 @@ describe('ExchangeApiClientFactory', () => {
         true,
       );
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -236,13 +259,14 @@ describe('ExchangeApiClientFactory', () => {
     });
 
     it('should correctly init client for bitmart', () => {
+      exchangeName = ExchangeName.BITMART;
+
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         true,
       );
-      exchangeName = 'bitmart';
       const apiKeyMemo = faker.lorem.word();
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -276,7 +300,7 @@ describe('ExchangeApiClientFactory', () => {
         true,
       );
 
-      const client = exchangeApiClientFactory.create(exchangeName, {
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
         apiKey,
         secret,
         userId,
@@ -293,6 +317,63 @@ describe('ExchangeApiClientFactory', () => {
       expect(optionsParam.preloadedExchangeClient).toBe(_mockedExchange);
 
       exchangeApiClientFactory['preloadedCcxtClients'].clear();
+    });
+  });
+
+  describe('createDex', () => {
+    let userId: string;
+    let userEvmAddress: string;
+
+    beforeAll(() => {
+      mockExchangesConfigService.configByExchange =
+        generateConfigByExchangeStub({ enabled: true, type: ExchangeType.DEX });
+    });
+
+    afterAll(() => {
+      mockExchangesConfigService.configByExchange = {};
+    });
+
+    beforeEach(() => {
+      userId = faker.string.uuid();
+      userEvmAddress = faker.finance.ethereumAddress();
+    });
+
+    it('should throw ExchangeNotSupportedError if no exchange client defined for exchange', () => {
+      const exchangeName = faker.lorem.slug() as ExchangeName;
+
+      let thrownError;
+      try {
+        exchangeApiClientFactory.createDex(exchangeName, {
+          userId,
+          userEvmAddress,
+        });
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(ExchangeNotSupportedError);
+      expect(thrownError.exchangeName).toBe(exchangeName);
+    });
+
+    it('should correctly init client for pancakeswap', () => {
+      const client = exchangeApiClientFactory.createDex(
+        ExchangeName.PANCAKESWAP,
+        {
+          userId,
+          userEvmAddress,
+        },
+      );
+
+      expect(client).toBeDefined();
+
+      expect(mockedPancakeswapClient).toHaveBeenCalledTimes(1);
+      expect(mockedPancakeswapClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId,
+          userEvmAddress,
+          subgraphApiKey: mockWeb3ConfigService.subgraphApiKey,
+        }),
+      );
     });
   });
 });

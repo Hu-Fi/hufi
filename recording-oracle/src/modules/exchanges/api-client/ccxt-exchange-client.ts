@@ -17,8 +17,7 @@ import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
 import type {
   ExchangeApiClient,
-  ExchangeApiClientInitOptions,
-  ExchangeApiClientLoggingConfig,
+  CexApiClientInitOptions,
 } from './exchange-api-client.interface';
 import {
   AccountBalance,
@@ -28,7 +27,7 @@ import {
   Trade,
 } from './types';
 
-export interface CcxtExchangeClientInitOptions extends ExchangeApiClientInitOptions {
+export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
   sandbox?: boolean;
   preloadedExchangeClient?: Exchange;
 }
@@ -97,7 +96,9 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   readonly exchangeName: ExchangeName;
 
   protected logger: Logger;
-  protected loggingConfig: ExchangeApiClientLoggingConfig = {
+  protected loggingConfig: NonNullable<
+    CexApiClientInitOptions['loggingConfig']
+  > = {
     logPermissionErrors: false,
   };
 

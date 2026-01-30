@@ -60,7 +60,7 @@ describe('ExchangeApiKeysService', () => {
         {
           provide: ExchangeApiClientFactory,
           useValue: {
-            create: () => mockExchangeApiClient,
+            createCex: () => mockExchangeApiClient,
           },
         },
       ],
