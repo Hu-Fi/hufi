@@ -122,8 +122,8 @@ export class PancakeswapClient implements ExchangeApiClient {
         amountOut: Number(
           ethers.formatUnits(swap.amountOut, swap.tokenOut.decimals),
         ),
-        tokenIn: ethers.getAddress(swap.tokenIn.id),
-        tokenOut: ethers.getAddress(swap.tokenOut.id),
+        tokenIn: swap.tokenIn.id,
+        tokenOut: swap.tokenOut.id,
       };
     });
   }
