@@ -122,8 +122,8 @@ export class PancakeswapClient implements ExchangeApiClient {
         amountOut: Number(
           ethers.formatUnits(swap.amountOut, swap.tokenOut.decimals),
         ),
-        tokenIn: swap.tokenIn.id,
-        tokenOut: swap.tokenOut.id,
+        tokenIn: ethers.getAddress(swap.tokenIn.id),
+        tokenOut: ethers.getAddress(swap.tokenOut.id),
       };
     });
   }
@@ -173,7 +173,7 @@ export class PancakeswapClient implements ExchangeApiClient {
           timestamp: swap.timestamp * 1000,
           symbol,
           side:
-            swap.tokenIn === quoteTokenAddress
+            swap.tokenIn.toLowerCase() === quoteTokenAddress.toLowerCase()
               ? TradingSide.BUY
               : TradingSide.SELL,
           takerOrMaker: TakerOrMakerFlag.TAKER,

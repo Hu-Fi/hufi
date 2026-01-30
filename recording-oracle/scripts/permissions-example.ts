@@ -1,3 +1,5 @@
+import '@/setup-libs';
+
 import logger from '@/logger';
 import { ExchangePermission } from '@/modules/exchanges';
 import { CcxtExchangeClient } from '@/modules/exchanges/api-client/ccxt-exchange-client';
