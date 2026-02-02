@@ -28,21 +28,19 @@ import {
 import CryptoEntity from '@/components/CryptoEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { CampaignType, HoldingFormValues } from '@/types';
 import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
-import ExchangeInfoTooltip from './ExchangeInfoTooltip';
+import { ExchangeInfoTooltip } from './';
 
 type Props = {
   control: Control<HoldingFormValues>;
   errors: FieldErrors<HoldingFormValues>;
   watch: UseFormWatch<HoldingFormValues>;
   trigger: UseFormTrigger<HoldingFormValues>;
-  isCreatingEscrow: boolean;
   campaignType: CampaignType;
 };
 
@@ -51,18 +49,17 @@ const HoldingForm: FC<Props> = ({
   errors,
   watch,
   trigger,
-  isCreatingEscrow,
   campaignType,
 }) => {
-  const isMobile = useIsMobile();
-
   const exchange = watch('exchange');
   const symbol = watch('symbol');
 
+  const isDurationError =
+    errors?.start_date?.type === 'duration' ||
+    errors?.end_date?.type === 'duration';
+
   const { data: currencies, isLoading: isLoadingCurrencies } =
     useExchangeCurrencies(exchange);
-
-  if (isMobile && isCreatingEscrow) return null;
 
   return (
     <>
@@ -75,8 +72,8 @@ const HoldingForm: FC<Props> = ({
               render={({ field }) => (
                 <FormExchangeSelect<HoldingFormValues, 'exchange'>
                   field={field}
-                  disabled={isCreatingEscrow}
                   campaignType={campaignType}
+                  error={!!errors.exchange}
                 />
               )}
             />
@@ -113,7 +110,7 @@ const HoldingForm: FC<Props> = ({
                     <TextField
                       {...params}
                       label="Symbol"
-                      disabled={isCreatingEscrow}
+                      error={!!errors.symbol}
                       slotProps={{
                         input: {
                           ...params.InputProps,
@@ -153,7 +150,15 @@ const HoldingForm: FC<Props> = ({
         </FormControl>
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
+        <FormControl
+          error={!!errors.start_date}
+          sx={{
+            width: '100%',
+            '& .MuiFormHelperText-root': {
+              mb: isDurationError ? '-40px' : '-20px',
+            },
+          }}
+        >
           <Controller
             name="start_date"
             control={control}
@@ -169,7 +174,6 @@ const HoldingForm: FC<Props> = ({
                   trigger('start_date');
                   trigger('end_date');
                 }}
-                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 slotProps={{
                   textField: {
@@ -183,7 +187,15 @@ const HoldingForm: FC<Props> = ({
             <FormHelperText>{errors.start_date.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
+        <FormControl
+          error={!!errors.end_date}
+          sx={{
+            width: '100%',
+            '& .MuiFormHelperText-root': {
+              mb: isDurationError ? '-40px' : '-20px',
+            },
+          }}
+        >
           <Controller
             name="end_date"
             control={control}
@@ -199,7 +211,6 @@ const HoldingForm: FC<Props> = ({
                   trigger('start_date');
                   trigger('end_date');
                 }}
-                disabled={isCreatingEscrow}
                 minDateTime={dayjs(watch('start_date')).add(6, 'hour')}
                 value={dayjs(field.value)}
                 slotProps={{
@@ -235,7 +246,6 @@ const HoldingForm: FC<Props> = ({
                   },
                 }}
                 {...field}
-                disabled={isCreatingEscrow}
               >
                 {FUND_TOKENS.map((token) => (
                   <MenuItem key={token} value={token}>
@@ -247,33 +257,6 @@ const HoldingForm: FC<Props> = ({
           />
           {errors.fund_token && (
             <FormHelperText>{errors.fund_token.message}</FormHelperText>
-          )}
-        </FormControl>
-        <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
-          <Controller
-            name="fund_amount"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                id="fund-amount-input"
-                label="Fund Amount"
-                placeholder="1"
-                error={!!errors.fund_amount}
-                type="number"
-                {...field}
-                onChange={(e) => {
-                  const value = formatInputValue(e.target.value);
-                  if (isExceedingMaximumInteger(value)) {
-                    return;
-                  }
-                  field.onChange(value);
-                }}
-                disabled={isCreatingEscrow}
-              />
-            )}
-          />
-          {errors.fund_amount && (
-            <FormHelperText>{errors.fund_amount.message}</FormHelperText>
           )}
         </FormControl>
         <FormControl
@@ -298,7 +281,6 @@ const HoldingForm: FC<Props> = ({
                   }
                   field.onChange(value);
                 }}
-                disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
                     sx: {
@@ -322,7 +304,7 @@ const HoldingForm: FC<Props> = ({
                           pointerEvents: 'none',
                           [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
                             {
-                              opacity: isCreatingEscrow ? 0.5 : 1,
+                              opacity: 1,
                             },
                         }}
                       >

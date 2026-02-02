@@ -17,7 +17,6 @@ const baseFormValues = {
   start_date: new Date(),
   end_date: new Date(Date.now() + 6 * 60 * 60 * 1000), // 6 hours after start date
   fund_token: 'usdt',
-  fund_amount: '',
 };
 
 const defaultFormValuesMap = {

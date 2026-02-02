@@ -1,9 +1,10 @@
 import { type FC, type PropsWithChildren, useState } from 'react';
 
 import { Box, Button, Tooltip, Typography, type SxProps } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 import CampaignSetupModal from '@/components/modals/CampaignSetupModal';
-import CreateCampaignModal from '@/components/modals/CreateCampaignModal';
+import { ROUTES } from '@/constants';
 import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useStakeContext } from '@/providers/StakeProvider';
@@ -59,8 +60,8 @@ const LaunchCampaign: FC<Props> = ({
   handleCallbackOnClick,
 }) => {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 
+  const navigate = useNavigate();
   const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
   const { fetchStakingData, isClientInitializing } = useStakeContext();
@@ -74,18 +75,10 @@ const LaunchCampaign: FC<Props> = ({
     if (_stakedAmount === 0) {
       setIsSetupModalOpen(true);
     } else {
-      setIsFormModalOpen(true);
+      navigate(ROUTES.CREATE_CAMPAIGN);
     }
 
     handleCallbackOnClick?.();
-  };
-
-  const handleOpenFormModal = () => {
-    setIsFormModalOpen(true);
-  };
-
-  const handleCloseFormModal = () => {
-    setIsFormModalOpen(false);
   };
 
   return (
@@ -109,13 +102,6 @@ const LaunchCampaign: FC<Props> = ({
         <CampaignSetupModal
           open={isSetupModalOpen}
           onClose={() => setIsSetupModalOpen(false)}
-          handleOpenFormModal={handleOpenFormModal}
-        />
-      )}
-      {isFormModalOpen && (
-        <CreateCampaignModal
-          open={isFormModalOpen}
-          onClose={handleCloseFormModal}
         />
       )}
     </>

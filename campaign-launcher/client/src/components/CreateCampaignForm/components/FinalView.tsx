@@ -16,7 +16,7 @@ const FinalView: FC<Props> = ({ campaignType, onViewDetails }) => {
   const isMobile = useIsMobile();
 
   return (
-    <Stack gap={2} alignItems="center" textAlign="center">
+    <Stack gap={2} alignItems="center" textAlign="center" p={2}>
       <ModalSuccess />
       <Typography variant="h4" color="text.primary" mt={1}>
         Congratulations!

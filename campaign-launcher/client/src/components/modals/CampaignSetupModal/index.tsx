@@ -8,7 +8,9 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
+import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useStakeContext } from '@/providers/StakeProvider';
 
@@ -17,7 +19,6 @@ import BaseModal from '../BaseModal';
 type Props = {
   open: boolean;
   onClose: () => void;
-  handleOpenFormModal: () => void;
 };
 
 type WarningViewProps = {
@@ -123,13 +124,10 @@ const LoadingView: FC = () => {
   );
 };
 
-const CampaignSetupModal: FC<Props> = ({
-  open,
-  onClose,
-  handleOpenFormModal,
-}) => {
+const CampaignSetupModal: FC<Props> = ({ open, onClose }) => {
   const [showWarning, setShowWarning] = useState(false);
 
+  const navigate = useNavigate();
   const { fetchStakingData, isFetching } = useStakeContext();
   const isMobile = useIsMobile();
 
@@ -149,7 +147,7 @@ const CampaignSetupModal: FC<Props> = ({
       return;
     } else {
       handleClose();
-      handleOpenFormModal();
+      navigate(ROUTES.CREATE_CAMPAIGN);
     }
   };
 

@@ -15,6 +15,7 @@ type FormExchangeSelectProps<
   disabled?: boolean;
   campaignType?: CampaignType;
   exchangeTypes?: ExchangeType[];
+  error?: boolean;
 };
 
 const slotProps = {
@@ -34,6 +35,7 @@ const FormExchangeSelect = <
   disabled = false,
   campaignType,
   exchangeTypes = [],
+  error = false,
 }: FormExchangeSelectProps<TFieldValues, TName>) => {
   const { exchanges, exchangesMap } = useExchangesContext();
 
@@ -64,7 +66,9 @@ const FormExchangeSelect = <
         const exchange = exchangesMap.get(option);
         return exchange?.display_name || option || '';
       }}
-      renderInput={(params) => <TextField {...params} label="Exchange" />}
+      renderInput={(params) => (
+        <TextField {...params} label="Exchange" error={error} />
+      )}
       renderOption={(props, option) => {
         const exchange = exchangesMap.get(option);
         return (
