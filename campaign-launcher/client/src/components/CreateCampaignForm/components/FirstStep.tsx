@@ -54,7 +54,7 @@ const FirstStep: FC<Props> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                height: { xs: '130px', md: '160px' },
+                height: 160,
                 py: 2,
                 px: 3,
                 borderRadius: 2,
