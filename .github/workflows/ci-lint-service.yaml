@@ -1,0 +1,42 @@
+name: ci-lint-service
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "Relative path to the service root"
+        required: true
+        type: string
+
+jobs:
+  lint:
+    name: Run lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ${{ inputs.working-directory }}/.nvmrc
+          cache: yarn
+          cache-dependency-path: ${{ inputs.working-directory }}/yarn.lock
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run lint
+        run: yarn lint
+
+      - name: Run typecheck
+        run: yarn typecheck

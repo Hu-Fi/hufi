@@ -1,0 +1,131 @@
+name: Service CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  changes:
+    name: Detect affected services
+    runs-on: ubuntu-latest
+    outputs:
+      common: ${{ steps.filter.outputs.common }}
+      campaign_launcher_client: ${{ steps.filter.outputs.campaign_launcher_client }}
+      campaign_launcher_server: ${{ steps.filter.outputs.campaign_launcher_server }}
+      recording_oracle: ${{ steps.filter.outputs.recording_oracle }}
+      reputation_oracle: ${{ steps.filter.outputs.reputation_oracle }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        name: Evaluate path filters
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            common:
+              - .nvmrc
+              - package.json
+              - .github/workflows/ci-services.yaml
+              - .github/workflows/ci-lint-service.yaml
+              - .github/workflows/ci-test-service.yaml
+            campaign_launcher_client:
+              - campaign-launcher/client/**
+            campaign_launcher_server:
+              - campaign-launcher/server/**
+            recording_oracle:
+              - recording-oracle/**
+            reputation_oracle:
+              - reputation-oracle/**
+
+  campaign-launcher-client-lint:
+    name: Campaign Launcher Client Lint
+    needs: changes
+    if: needs.changes.outputs.campaign_launcher_client == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: campaign-launcher/client
+
+  campaign-launcher-server-lint:
+    name: Campaign Launcher Server Lint
+    needs: changes
+    if: needs.changes.outputs.campaign_launcher_server == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: campaign-launcher/server
+
+  campaign-launcher-server-test:
+    name: Campaign Launcher Server Tests
+    needs: changes
+    if: needs.changes.outputs.campaign_launcher_server == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-test-service.yaml
+    with:
+      working-directory: campaign-launcher/server
+
+  recording-oracle-lint:
+    name: Recording Oracle Lint
+    needs: changes
+    if: needs.changes.outputs.recording_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: recording-oracle
+
+  recording-oracle-test:
+    name: Recording Oracle Tests
+    needs: changes
+    if: needs.changes.outputs.recording_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-test-service.yaml
+    with:
+      working-directory: recording-oracle
+
+  reputation-oracle-lint:
+    name: Reputation Oracle Lint
+    needs: changes
+    if: needs.changes.outputs.reputation_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: reputation-oracle
+
+  reputation-oracle-test:
+    name: Reputation Oracle Tests
+    needs: changes
+    if: needs.changes.outputs.reputation_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-test-service.yaml
+    with:
+      working-directory: reputation-oracle
+
+  checks-summary:
+    name: Checks summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - campaign-launcher-client-lint
+      - campaign-launcher-server-lint
+      - campaign-launcher-server-test
+      - recording-oracle-lint
+      - recording-oracle-test
+      - reputation-oracle-lint
+      - reputation-oracle-test
+    steps:
+      - name: Evaluate job results
+        run: |
+          set -euo pipefail
+
+          for r in \
+            "${{ needs.campaign-launcher-client-lint.result }}" \
+            "${{ needs.campaign-launcher-server-lint.result }}" \
+            "${{ needs.campaign-launcher-server-test.result }}" \
+            "${{ needs.recording-oracle-lint.result }}" \
+            "${{ needs.recording-oracle-test.result }}" \
+            "${{ needs.reputation-oracle-lint.result }}" \
+            "${{ needs.reputation-oracle-test.result }}"; do
+            [[ "$r" == "success" || "$r" == "skipped" ]] || exit 1
+          done
