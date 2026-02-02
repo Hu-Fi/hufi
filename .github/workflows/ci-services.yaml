@@ -100,3 +100,59 @@ jobs:
     uses: ./.github/workflows/ci-test-service.yaml
     with:
       working-directory: reputation-oracle
+
+  checks-summary:
+    name: Checks summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - campaign-launcher-client-lint
+      - campaign-launcher-server-lint
+      - campaign-launcher-server-test
+      - recording-oracle-lint
+      - recording-oracle-test
+      - reputation-oracle-lint
+      - reputation-oracle-test
+    steps:
+      - name: Evaluate job results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const needs = ${{ toJson(needs) }};
+
+            const common = needs.changes.outputs.common === 'true';
+            const shouldRun = {
+              campaignLauncherClient: common || needs.changes.outputs.campaign_launcher_client === 'true',
+              campaignLauncherServer: common || needs.changes.outputs.campaign_launcher_server === 'true',
+              recordingOracle: common || needs.changes.outputs.recording_oracle === 'true',
+              reputationOracle: common || needs.changes.outputs.reputation_oracle === 'true',
+            };
+
+            const checks = [
+              { name: 'campaign-launcher-client-lint', run: shouldRun.campaignLauncherClient, result: needs['campaign-launcher-client-lint'].result },
+              { name: 'campaign-launcher-server-lint', run: shouldRun.campaignLauncherServer, result: needs['campaign-launcher-server-lint'].result },
+              { name: 'campaign-launcher-server-test', run: shouldRun.campaignLauncherServer, result: needs['campaign-launcher-server-test'].result },
+              { name: 'recording-oracle-lint', run: shouldRun.recordingOracle, result: needs['recording-oracle-lint'].result },
+              { name: 'recording-oracle-test', run: shouldRun.recordingOracle, result: needs['recording-oracle-test'].result },
+              { name: 'reputation-oracle-lint', run: shouldRun.reputationOracle, result: needs['reputation-oracle-lint'].result },
+              { name: 'reputation-oracle-test', run: shouldRun.reputationOracle, result: needs['reputation-oracle-test'].result },
+            ];
+
+            const failures = [];
+            for (const check of checks) {
+              if (check.run) {
+                if (check.result !== 'success') {
+                  failures.push(`${check.name} expected success but got ${check.result}`);
+                }
+              } else {
+                core.info(`${check.name} not required (result=${check.result})`);
+              }
+            }
+
+            if (failures.length) {
+              for (const message of failures) {
+                core.error(message);
+              }
+              core.setFailed('One or more required jobs did not succeed.');
+            }
