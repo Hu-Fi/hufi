@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 
 import StarIcon from '@mui/icons-material/Star';
-import { Box, Paper, Stack, Typography } from '@mui/material';
+import { Box, Grid, Paper, Typography } from '@mui/material';
 
 import {
   type CampaignFormValues,
@@ -44,52 +44,49 @@ const FirstStep: FC<Props> = ({
 
   return (
     <>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        alignItems="center"
-        flexWrap="wrap"
-        gap={3}
-        mt={{ xs: 0, md: 4 }}
-      >
+      <Grid container spacing={3} mt={{ xs: 0, md: 4 }}>
         {Object.values(CampaignType).map((type) => (
-          <Paper
-            key={type}
-            elevation={24}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              height: { xs: '130px', md: '160px' },
-              width: { xs: '100%', md: 'calc((100% - 48px) / 3)' },
-              py: 2,
-              px: 3,
-              borderRadius: 2,
-              bgcolor: 'background.default',
-              boxShadow: 'none',
-              border: '1px solid',
-              borderColor:
-                formValues?.type === type ? 'primary.main' : 'transparent',
-              cursor: 'pointer',
-            }}
-            onClick={() => handleChangeCampaignType(type)}
-          >
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={2}
-              mb={{ xs: 2, md: 1, lg: 4 }}
+          <Grid size={{ xs: 12, md: 4 }} key={type}>
+            <Paper
+              key={type}
+              elevation={24}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: { xs: '130px', md: '160px' },
+                py: 2,
+                px: 3,
+                borderRadius: 2,
+                bgcolor: 'background.default',
+                boxShadow: 'none',
+                border: '1px solid',
+                borderColor:
+                  formValues?.type === type ? 'primary.main' : 'transparent',
+                cursor: 'pointer',
+              }}
+              onClick={() => handleChangeCampaignType(type)}
             >
-              <StarIcon sx={{ color: 'primary.main', width: 24, height: 24 }} />
-              <Typography variant="h6" fontWeight={600}>
-                {CampaignTypeNames[type]}
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={2}
+                mb={{ xs: 2, md: 1, lg: 4 }}
+              >
+                <StarIcon
+                  sx={{ color: 'primary.main', width: 24, height: 24 }}
+                />
+                <Typography variant="h6" fontWeight={600}>
+                  {CampaignTypeNames[type]}
+                </Typography>
+              </Box>
+              <Typography variant="body1" color="text.secondary">
+                {CAMPAIGN_TYPE_DESCRIPTIONS[type]}
               </Typography>
-            </Box>
-            <Typography variant="body1" color="text.secondary">
-              {CAMPAIGN_TYPE_DESCRIPTIONS[type]}
-            </Typography>
-          </Paper>
+            </Paper>
+          </Grid>
         ))}
-      </Stack>
+      </Grid>
       <BottomNavigation
         step={1}
         handleNextClick={() => handleChangeStep(2)}
