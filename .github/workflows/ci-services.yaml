@@ -48,7 +48,6 @@ jobs:
   lint:
     name: Lint (${{ matrix.name }})
     needs: changes
-    if: needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -68,11 +67,11 @@ jobs:
     uses: ./.github/workflows/ci-lint-service.yaml
     with:
       working-directory: ${{ matrix.working-directory }}
+      enabled: ${{ needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true' }}
 
   test:
     name: Tests (${{ matrix.name }})
     needs: changes
-    if: needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -89,3 +88,4 @@ jobs:
     uses: ./.github/workflows/ci-test-service.yaml
     with:
       working-directory: ${{ matrix.working-directory }}
+      enabled: ${{ needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true' }}

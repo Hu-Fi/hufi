@@ -10,11 +10,17 @@ on:
         description: "Relative path to the service root"
         required: true
         type: string
+      enabled:
+        description: "Whether to run this workflow"
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   test:
     name: Run unit tests
     runs-on: ubuntu-latest
+    if: inputs.enabled
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
