@@ -27,6 +27,16 @@ const BottomNavigation: FC<Props> = ({
 }) => {
   const isMobile = useIsMobile();
 
+  const onBackClick = () => {
+    if (disableBackButton) return;
+    handleBackClick?.();
+  };
+
+  const onNextClick = () => {
+    if (disableNextButton) return;
+    handleNextClick?.();
+  };
+
   return (
     <Stack
       direction="row"
@@ -49,7 +59,7 @@ const BottomNavigation: FC<Props> = ({
             fullWidth={isMobile}
             disabled={disableBackButton}
             sx={{ minWidth: 150 }}
-            onClick={handleBackClick}
+            onClick={onBackClick}
           >
             Back
           </Button>
@@ -60,7 +70,7 @@ const BottomNavigation: FC<Props> = ({
           type={nextButtonType}
           disabled={disableNextButton}
           sx={{ minWidth: 150 }}
-          onClick={nextButtonType === 'submit' ? undefined : handleNextClick}
+          onClick={nextButtonType === 'submit' ? undefined : onNextClick}
         >
           {nextButtonText}
         </Button>
