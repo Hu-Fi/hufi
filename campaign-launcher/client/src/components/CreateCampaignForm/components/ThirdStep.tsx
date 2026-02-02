@@ -2,6 +2,8 @@ import { useEffect, type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
+  Box,
+  CircularProgress,
   Divider,
   FormControl,
   FormControlLabel,
@@ -191,6 +193,7 @@ const ThirdStep: FC<Props> = ({
                       label="Fund Amount"
                       placeholder="Enter amount"
                       error={!!errors.fund_amount}
+                      disabled={isLoading}
                       type="number"
                       {...field}
                       onChange={(e) => {
@@ -235,9 +238,12 @@ const ThirdStep: FC<Props> = ({
             </Stack>
             <Divider sx={{ my: 4 }} />
             <Stack gap={3}>
-              <Typography variant="h6" component="h3">
-                Token Approval
-              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="h6" component="h3">
+                  Token Approval
+                </Typography>
+                {isLoading && <CircularProgress size={24} />}
+              </Box>
               <FormControl>
                 <Controller
                   name="selected_allowance"

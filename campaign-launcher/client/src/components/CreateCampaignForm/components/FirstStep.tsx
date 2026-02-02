@@ -75,7 +75,7 @@ const FirstStep: FC<Props> = ({
               display="flex"
               alignItems="center"
               gap={2}
-              mb={{ xs: 2, md: 6 }}
+              mb={{ xs: 2, md: 4, lg: 6 }}
             >
               <StarIcon sx={{ color: 'primary.main', width: 24, height: 24 }} />
               <Typography variant="h6" fontWeight={600}>

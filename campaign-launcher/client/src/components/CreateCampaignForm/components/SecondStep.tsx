@@ -81,7 +81,7 @@ const SecondStep: FC<Props> = ({
     <>
       <Stack width="100%" mt={0}>
         <form onSubmit={handleSubmit(submitForm)}>
-          <Stack direction="row" justifyContent="space-between">
+          <Stack direction="row" justifyContent="space-between" gap={2}>
             <Stack
               gap={{ xs: 6, md: 7 }}
               maxWidth="600px"

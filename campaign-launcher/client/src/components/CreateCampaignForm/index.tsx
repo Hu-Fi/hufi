@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 
 import { Stack } from '@mui/material';
 
@@ -16,6 +16,10 @@ const CreateCampaignForm: FC = () => {
   const [step, setStep] = useState(1);
   const [fundAmount, setFundAmount] = useState<string>('');
   const [formValues, setFormValues] = useState<CampaignFormValues | null>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   return (
     <Stack

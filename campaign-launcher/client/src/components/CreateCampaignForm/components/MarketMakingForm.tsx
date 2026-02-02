@@ -65,7 +65,7 @@ const MarketMakingForm: FC<Props> = ({
 
   return (
     <>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={{ xs: 6, md: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
         <Box display="flex" gap={1} alignItems="center" width="100%">
           <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
             <Controller
@@ -153,7 +153,7 @@ const MarketMakingForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={{ xs: 6, md: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
         <FormControl
           error={!!errors.start_date}
           sx={{
@@ -230,7 +230,7 @@ const MarketMakingForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={{ xs: 6, md: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
           <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
           <Controller
