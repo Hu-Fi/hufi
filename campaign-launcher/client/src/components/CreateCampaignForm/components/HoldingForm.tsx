@@ -54,9 +54,7 @@ const HoldingForm: FC<Props> = ({
   const exchange = watch('exchange');
   const symbol = watch('symbol');
 
-  const isDurationError =
-    errors?.start_date?.type === 'duration' ||
-    errors?.end_date?.type === 'duration';
+  const isDurationError = errors?.start_date?.type === 'duration';
 
   const { data: currencies, isLoading: isLoadingCurrencies } =
     useExchangeCurrencies(exchange);

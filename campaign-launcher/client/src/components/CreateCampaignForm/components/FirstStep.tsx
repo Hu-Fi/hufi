@@ -20,10 +20,12 @@ type Props = {
 };
 
 const CAMPAIGN_TYPE_DESCRIPTIONS = {
-  [CampaignType.MARKET_MAKING]: 'Allows you to make markets on a pair.',
+  [CampaignType.MARKET_MAKING]:
+    'Allows you to generate trading activity on a pair.',
   [CampaignType.HOLDING]:
-    'Allows you to hold a token for a certain period of time.',
-  [CampaignType.THRESHOLD]: 'Allows you to reach a threshold of a token.',
+    'Requires market makers to collectively maintain a specified amount of a particular token.',
+  [CampaignType.THRESHOLD]:
+    'Requires market makers to maintain a minimum balance of a specified token.',
 };
 
 const FirstStep: FC<Props> = ({
@@ -36,7 +38,7 @@ const FirstStep: FC<Props> = ({
 
     setFormValues({
       ...defaultValues,
-      type: type,
+      type,
     } as CampaignFormValues);
   };
 
@@ -75,7 +77,7 @@ const FirstStep: FC<Props> = ({
               display="flex"
               alignItems="center"
               gap={2}
-              mb={{ xs: 2, md: 4, lg: 6 }}
+              mb={{ xs: 2, md: 1, lg: 4 }}
             >
               <StarIcon sx={{ color: 'primary.main', width: 24, height: 24 }} />
               <Typography variant="h6" fontWeight={600}>

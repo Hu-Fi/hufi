@@ -54,16 +54,14 @@ const ThresholdForm: FC<Props> = ({
   const exchange = watch('exchange');
   const symbol = watch('symbol');
 
-  const isDurationError =
-    errors?.start_date?.type === 'duration' ||
-    errors?.end_date?.type === 'duration';
+  const isDurationError = errors?.start_date?.type === 'duration';
 
   const { data: currencies, isLoading: isLoadingCurrencies } =
     useExchangeCurrencies(exchange);
 
   return (
     <>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={{ xs: 6, md: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
         <Box display="flex" gap={1} alignItems="center" width="100%">
           <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
             <Controller

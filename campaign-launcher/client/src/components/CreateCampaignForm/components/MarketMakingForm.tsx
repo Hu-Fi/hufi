@@ -56,9 +56,7 @@ const MarketMakingForm: FC<Props> = ({
   const pair = watch('pair');
   const volumeToken = pair?.split('/')[1] || '';
 
-  const isDurationError =
-    errors?.start_date?.type === 'duration' ||
-    errors?.end_date?.type === 'duration';
+  const isDurationError = errors?.start_date?.type === 'duration';
 
   const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
     useTradingPairs(exchange);

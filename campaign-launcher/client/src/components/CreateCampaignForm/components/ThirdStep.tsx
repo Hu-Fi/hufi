@@ -171,7 +171,11 @@ const ThirdStep: FC<Props> = ({
   return (
     <Stack width="100%" mt={{ xs: 0, md: 4 }}>
       <form onSubmit={handleSubmit(submitForm)}>
-        <Stack direction="row" justifyContent="space-between">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          gap={{ sm: 3, md: 2 }}
+        >
           <Stack maxWidth="600px" width="100%">
             <Stack gap={3}>
               <Typography variant="h6" component="h3">

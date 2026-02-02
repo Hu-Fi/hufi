@@ -137,7 +137,7 @@ const ProgressBar: FC<Props> = ({ step, formValues, fundAmount }) => {
           {CampaignTypeNames[campaignType]}
         </Typography>
       </Row>
-      {step > 3 && !!fundAmount && (
+      {!!fundAmount && (
         <Row>
           <Typography variant="subtitle2" component="p" color="text.secondary">
             Fund Amount
