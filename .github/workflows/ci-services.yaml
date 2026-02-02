@@ -45,47 +45,58 @@ jobs:
             reputation_oracle:
               - reputation-oracle/**
 
-  lint:
-    name: Lint (${{ matrix.name }})
+  campaign-launcher-client-lint:
+    name: Campaign Launcher Client Lint
     needs: changes
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Campaign Launcher Client
-            working-directory: campaign-launcher/client
-            filter: campaign_launcher_client
-          - name: Campaign Launcher Server
-            working-directory: campaign-launcher/server
-            filter: campaign_launcher_server
-          - name: Recording Oracle
-            working-directory: recording-oracle
-            filter: recording_oracle
-          - name: Reputation Oracle
-            working-directory: reputation-oracle
-            filter: reputation_oracle
+    if: needs.changes.outputs.campaign_launcher_client == 'true' || needs.changes.outputs.common == 'true'
     uses: ./.github/workflows/ci-lint-service.yaml
     with:
-      working-directory: ${{ matrix.working-directory }}
-      enabled: ${{ needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true' }}
+      working-directory: campaign-launcher/client
 
-  test:
-    name: Tests (${{ matrix.name }})
+  campaign-launcher-server-lint:
+    name: Campaign Launcher Server Lint
     needs: changes
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Campaign Launcher Server
-            working-directory: campaign-launcher/server
-            filter: campaign_launcher_server
-          - name: Recording Oracle
-            working-directory: recording-oracle
-            filter: recording_oracle
-          - name: Reputation Oracle
-            working-directory: reputation-oracle
-            filter: reputation_oracle
+    if: needs.changes.outputs.campaign_launcher_server == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: campaign-launcher/server
+
+  campaign-launcher-server-test:
+    name: Campaign Launcher Server Tests
+    needs: changes
+    if: needs.changes.outputs.campaign_launcher_server == 'true' || needs.changes.outputs.common == 'true'
     uses: ./.github/workflows/ci-test-service.yaml
     with:
-      working-directory: ${{ matrix.working-directory }}
-      enabled: ${{ needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true' }}
+      working-directory: campaign-launcher/server
+
+  recording-oracle-lint:
+    name: Recording Oracle Lint
+    needs: changes
+    if: needs.changes.outputs.recording_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: recording-oracle
+
+  recording-oracle-test:
+    name: Recording Oracle Tests
+    needs: changes
+    if: needs.changes.outputs.recording_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-test-service.yaml
+    with:
+      working-directory: recording-oracle
+
+  reputation-oracle-lint:
+    name: Reputation Oracle Lint
+    needs: changes
+    if: needs.changes.outputs.reputation_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-lint-service.yaml
+    with:
+      working-directory: reputation-oracle
+
+  reputation-oracle-test:
+    name: Reputation Oracle Tests
+    needs: changes
+    if: needs.changes.outputs.reputation_oracle == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-test-service.yaml
+    with:
+      working-directory: reputation-oracle
