@@ -19,13 +19,15 @@ const TopNavigation: FC<Props> = ({ step, handleBackClick }) => {
 
   return (
     <Stack direction="row" alignItems="center">
-      <IconButton
-        disableRipple
-        sx={{ p: 0.5, color: 'text.primary', mr: 2 }}
-        onClick={handleBackClick}
-      >
-        <ArrowBackIcon />
-      </IconButton>
+      {step > 1 && (
+        <IconButton
+          disableRipple
+          sx={{ p: 0.5, color: 'text.primary', mr: 2 }}
+          onClick={handleBackClick}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+      )}
       <Typography variant="h6" component="h6">
         {step}. {stepNames[step - 1]}
       </Typography>
