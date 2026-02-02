@@ -10,7 +10,7 @@ export const MAX_PAGE_SIZE = 20;
  */
 export const MAX_ALLOWED_DELAY = dayjs.duration(1, 'minute').asSeconds();
 
-export const tokenAddressBySymbol: Record<string, string> = {
+export const tokenAddressBySymbol: Record<string, string | undefined> = {
   USDT: '0x55d398326f99059fF775485246999027B3197955',
   HMT: NETWORKS[ChainId.BSC_MAINNET]!.hmtAddress,
 };

@@ -173,7 +173,7 @@ export class PancakeswapClient implements ExchangeApiClient {
           timestamp: swap.timestamp * 1000,
           symbol,
           side:
-            swap.tokenIn === quoteTokenAddress
+            swap.tokenIn.toLowerCase() === quoteTokenAddress.toLowerCase()
               ? TradingSide.BUY
               : TradingSide.SELL,
           takerOrMaker: TakerOrMakerFlag.TAKER,
