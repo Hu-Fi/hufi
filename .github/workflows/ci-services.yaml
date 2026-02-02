@@ -32,6 +32,7 @@ jobs:
           filters: |
             common:
               - .nvmrc
+              - package.json
               - .github/workflows/ci-services.yaml
               - .github/workflows/ci-lint-service.yaml
               - .github/workflows/ci-test-service.yaml
