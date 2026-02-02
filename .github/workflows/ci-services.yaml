@@ -8,28 +8,6 @@ on:
     branches:
       - main
   pull_request:
-  workflow_dispatch:
-    inputs:
-      service:
-        description: "Service to run (all, campaign-launcher-client, campaign-launcher-server, recording-oracle, reputation-oracle)"
-        required: false
-        default: all
-        type: choice
-        options:
-          - all
-          - campaign-launcher-client
-          - campaign-launcher-server
-          - recording-oracle
-          - reputation-oracle
-      job:
-        description: "Job to run (lint, test, both)"
-        required: false
-        default: both
-        type: choice
-        options:
-          - both
-          - lint
-          - test
 
 jobs:
   changes:
@@ -53,10 +31,7 @@ jobs:
         with:
           filters: |
             common:
-              - package.json
-              - yarn.lock
-              - .yarnrc.yml
-              - scripts/**
+              - .nvmrc
               - .github/workflows/ci-services.yaml
               - .github/workflows/ci-lint-service.yaml
               - .github/workflows/ci-test-service.yaml
@@ -69,72 +44,47 @@ jobs:
             reputation_oracle:
               - reputation-oracle/**
 
-  campaign-launcher-client-lint:
-    name: Campaign Launcher Client Lint
+  lint:
+    name: Lint (${{ matrix.name }})
     needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'campaign-launcher-client') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'lint')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.campaign_launcher_client == 'true' || needs.changes.outputs.common == 'true'))
+    if: needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Campaign Launcher Client
+            working-directory: campaign-launcher/client
+            filter: campaign_launcher_client
+          - name: Campaign Launcher Server
+            working-directory: campaign-launcher/server
+            filter: campaign_launcher_server
+          - name: Recording Oracle
+            working-directory: recording-oracle
+            filter: recording_oracle
+          - name: Reputation Oracle
+            working-directory: reputation-oracle
+            filter: reputation_oracle
     uses: ./.github/workflows/ci-lint-service.yaml
     with:
-      working-directory: campaign-launcher/client
+      working-directory: ${{ matrix.working-directory }}
 
-  campaign-launcher-server-lint:
-    name: Campaign Launcher Server Lint
+  test:
+    name: Tests (${{ matrix.name }})
     needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'campaign-launcher-server') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'lint')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.campaign_launcher_server == 'true' || needs.changes.outputs.common == 'true'))
-    uses: ./.github/workflows/ci-lint-service.yaml
-    with:
-      working-directory: campaign-launcher/server
-
-  campaign-launcher-server-test:
-    name: Campaign Launcher Server Tests
-    needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'campaign-launcher-server') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'test')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.campaign_launcher_server == 'true' || needs.changes.outputs.common == 'true'))
+    if: needs.changes.outputs.common == 'true' || needs.changes.outputs[matrix.filter] == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Campaign Launcher Server
+            working-directory: campaign-launcher/server
+            filter: campaign_launcher_server
+          - name: Recording Oracle
+            working-directory: recording-oracle
+            filter: recording_oracle
+          - name: Reputation Oracle
+            working-directory: reputation-oracle
+            filter: reputation_oracle
     uses: ./.github/workflows/ci-test-service.yaml
     with:
-      working-directory: campaign-launcher/server
-
-  recording-oracle-lint:
-    name: Recording Oracle Lint
-    needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'recording-oracle') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'lint')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.recording_oracle == 'true' || needs.changes.outputs.common == 'true'))
-    uses: ./.github/workflows/ci-lint-service.yaml
-    with:
-      working-directory: recording-oracle
-
-  recording-oracle-test:
-    name: Recording Oracle Tests
-    needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'recording-oracle') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'test')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.recording_oracle == 'true' || needs.changes.outputs.common == 'true'))
-    uses: ./.github/workflows/ci-test-service.yaml
-    with:
-      working-directory: recording-oracle
-
-  reputation-oracle-lint:
-    name: Reputation Oracle Lint
-    needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'reputation-oracle') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'lint')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.reputation_oracle == 'true' || needs.changes.outputs.common == 'true'))
-    uses: ./.github/workflows/ci-lint-service.yaml
-    with:
-      working-directory: reputation-oracle
-
-  reputation-oracle-test:
-    name: Reputation Oracle Tests
-    needs: changes
-    if: |
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == '' || github.event.inputs.service == 'all' || github.event.inputs.service == 'reputation-oracle') && (github.event.inputs.job == '' || github.event.inputs.job == 'both' || github.event.inputs.job == 'test')) ||
-      (github.event_name != 'workflow_dispatch' && (needs.changes.outputs.reputation_oracle == 'true' || needs.changes.outputs.common == 'true'))
-    uses: ./.github/workflows/ci-test-service.yaml
-    with:
-      working-directory: reputation-oracle
+      working-directory: ${{ matrix.working-directory }}
