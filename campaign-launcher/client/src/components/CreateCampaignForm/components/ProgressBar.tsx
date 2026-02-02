@@ -73,6 +73,17 @@ const getDailyTargetToken = (
   }
 };
 
+const getSymbolOrPairLabel = (campaignType: CampaignType) => {
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      return 'Pair';
+    case CampaignType.HOLDING:
+      return 'Symbol';
+    case CampaignType.THRESHOLD:
+      return 'Symbol';
+  }
+};
+
 const getSymbolOrPair = (
   campaignType: CampaignType,
   formValues: CampaignFormValues
@@ -96,6 +107,8 @@ const ProgressBar: FC<Props> = ({ step, formValues, fundAmount }) => {
   )?.display_name;
 
   const { type: campaignType } = formValues;
+
+  const symbolOrPairLabel = getSymbolOrPairLabel(campaignType);
 
   const symbolOrPair = getSymbolOrPair(
     campaignType,
@@ -167,7 +180,7 @@ const ProgressBar: FC<Props> = ({ step, formValues, fundAmount }) => {
               component="p"
               color="text.secondary"
             >
-              {campaignType === CampaignType.MARKET_MAKING ? 'Pair' : 'Symbol'}
+              {symbolOrPairLabel}
             </Typography>
             <Typography variant="subtitle2" component="p" color="text.primary">
               {symbolOrPair}
