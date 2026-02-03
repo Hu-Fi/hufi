@@ -54,16 +54,25 @@ const HoldingForm: FC<Props> = ({
   const exchange = watch('exchange');
   const symbol = watch('symbol');
 
-  const isDurationError = errors?.start_date?.type === 'duration';
-
   const { data: currencies, isLoading: isLoadingCurrencies } =
     useExchangeCurrencies(exchange);
 
   return (
     <>
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
-        <Box display="flex" gap={1} alignItems="center" width="100%">
-          <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+        <Box display="flex" gap={1} width="100%">
+          <FormControl
+            error={!!errors.exchange}
+            sx={{
+              width: '100%',
+              mb: errors.exchange ? 2 : 0,
+              '& .MuiFormHelperText-root': {
+                position: 'absolute',
+                bottom: 0,
+                mb: { xs: -3, md: -2 },
+              },
+            }}
+          >
             <Controller
               name="exchange"
               control={control}
@@ -147,14 +156,11 @@ const HoldingForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl
           error={!!errors.start_date}
           sx={{
             width: '100%',
-            '& .MuiFormHelperText-root': {
-              mb: isDurationError ? '-40px' : '-20px',
-            },
           }}
         >
           <Controller
@@ -189,9 +195,6 @@ const HoldingForm: FC<Props> = ({
           error={!!errors.end_date}
           sx={{
             width: '100%',
-            '& .MuiFormHelperText-root': {
-              mb: isDurationError ? '-40px' : '-20px',
-            },
           }}
         >
           <Controller
@@ -224,7 +227,7 @@ const HoldingForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 6, md: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
           <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
           <Controller

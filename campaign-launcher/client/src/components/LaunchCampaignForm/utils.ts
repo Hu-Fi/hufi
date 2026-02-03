@@ -50,10 +50,8 @@ export const getFormDefaultValues = <T extends CampaignType>(campaignType: T) =>
 This function removes leading zeros, eliminates negative sign and limits the number of digits after decimal point to 3
 */
 export const formatInputValue = (value: string) => {
-  return Number(
-    value
-      .replace(/-/g, '')
-      .replace(/^0+(?=\d)/, '')
-      .replace(/(\.\d{3})\d+$/, '$1')
-  ).toString();
+  return value
+    .replace(/-/g, '')
+    .replace(/^0+(?=\d)/, '')
+    .replace(/(\.\d{3})\d+$/, '$1');
 };

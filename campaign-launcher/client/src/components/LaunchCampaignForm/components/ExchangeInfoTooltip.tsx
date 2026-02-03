@@ -12,6 +12,7 @@ const ExchangeInfoTooltip = () => {
     <CustomTooltip
       arrow
       placement={isMobile ? 'left' : 'right'}
+      sx={{ mt: '12px' }}
       title={
         <Typography component="p" variant="tooltip" color="primary.contrast">
           Can&apos;t find the exchange? <br />

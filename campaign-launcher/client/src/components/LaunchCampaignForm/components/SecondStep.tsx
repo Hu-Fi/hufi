@@ -87,20 +87,13 @@ const SecondStep: FC<Props> = ({
             gap={{ sm: 3, md: 2 }}
           >
             <Stack
-              gap={{ xs: 6, md: 7 }}
+              gap={{ xs: 4, md: 3 }}
               maxWidth="600px"
               width={{ xs: '100%', md: 'auto' }}
               sx={{
-                '& .MuiFormControl-root': {
-                  position: 'relative',
-                },
                 '& .MuiFormHelperText-root': {
-                  position: 'absolute',
-                  bottom: 0,
-                  mb: '-20px',
-                  mt: 0,
-                  mx: 1,
-                  whiteSpace: 'pre-line',
+                  mt: 0.5,
+                  mx: 0,
                 },
               }}
             >
