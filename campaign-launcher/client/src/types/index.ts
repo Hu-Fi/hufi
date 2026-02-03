@@ -13,6 +13,12 @@ export enum CampaignType {
   THRESHOLD = 'THRESHOLD',
 }
 
+export enum CampaignTypeNames {
+  MARKET_MAKING = 'Market Making',
+  HOLDING = 'Holding',
+  THRESHOLD = 'Threshold',
+}
+
 export enum CampaignsView {
   ALL = 'all',
   JOINED = 'joined',
@@ -222,3 +228,8 @@ export type CheckCampaignJoinStatusResponse = {
   joined_at?: string;
   reason?: string;
 };
+
+export enum AllowanceType {
+  UNLIMITED = 'unlimited',
+  CUSTOM = 'custom',
+}

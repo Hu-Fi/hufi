@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import StakeProtectedRoute from '@/components/StakeProtectedRoute';
 import { ROUTES } from '@/constants';
 import Campaign from '@/pages/Campaign';
 import Dashboard from '@/pages/Dashboard';
+import LaunchCampaignPage from '@/pages/LaunchCampaign';
 import ManageApiKeysPage from '@/pages/ManageApiKeys';
 import ActiveAccountProvider from '@/providers/ActiveAccountProvider';
 import ExchangesProvider from '@/providers/ExchangesProvider';
@@ -52,6 +54,14 @@ const App: FC = () => {
                                   <ProtectedRoute>
                                     <ManageApiKeysPage />
                                   </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path={ROUTES.LAUNCH_CAMPAIGN}
+                                element={
+                                  <StakeProtectedRoute>
+                                    <LaunchCampaignPage />
+                                  </StakeProtectedRoute>
                                 }
                               />
                             </Routes>

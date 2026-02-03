@@ -26,57 +26,63 @@ import {
 } from 'react-hook-form';
 
 import CryptoEntity from '@/components/CryptoEntity';
+import CryptoPairEntity from '@/components/CryptoPairEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
-import { useIsMobile } from '@/hooks/useBreakpoints';
-import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
-import type { CampaignType, ThresholdFormValues } from '@/types';
-import { getTokenInfo } from '@/utils';
+import { useTradingPairs } from '@/hooks/useTradingPairs';
+import type { CampaignType, MarketMakingFormValues } from '@/types';
+import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
-import ExchangeInfoTooltip from './ExchangeInfoTooltip';
+import { ExchangeInfoTooltip } from './';
 
 type Props = {
-  control: Control<ThresholdFormValues>;
-  errors: FieldErrors<ThresholdFormValues>;
-  watch: UseFormWatch<ThresholdFormValues>;
-  trigger: UseFormTrigger<ThresholdFormValues>;
-  isCreatingEscrow: boolean;
+  control: Control<MarketMakingFormValues>;
+  errors: FieldErrors<MarketMakingFormValues>;
+  watch: UseFormWatch<MarketMakingFormValues>;
+  trigger: UseFormTrigger<MarketMakingFormValues>;
   campaignType: CampaignType;
 };
 
-const ThresholdForm: FC<Props> = ({
+const MarketMakingForm: FC<Props> = ({
   control,
   errors,
   watch,
   trigger,
-  isCreatingEscrow,
   campaignType,
 }) => {
-  const isMobile = useIsMobile();
-
   const exchange = watch('exchange');
-  const symbol = watch('symbol');
+  const pair = watch('pair');
+  const volumeToken = pair?.split('/')[1] || '';
 
-  const { data: currencies, isLoading: isLoadingCurrencies } =
-    useExchangeCurrencies(exchange);
-
-  if (isMobile && isCreatingEscrow) return null;
+  const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
+    useTradingPairs(exchange);
 
   return (
     <>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <Box display="flex" gap={2} alignItems="center" width="100%">
-          <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+        <Box display="flex" gap={1} width="100%">
+          <FormControl
+            error={!!errors.exchange}
+            sx={{
+              width: '100%',
+              mb: errors.exchange ? 2 : 0,
+              '& .MuiFormHelperText-root': {
+                position: 'absolute',
+                bottom: 0,
+                mb: { xs: -3, md: -2 },
+              },
+            }}
+          >
             <Controller
               name="exchange"
               control={control}
               render={({ field }) => (
-                <FormExchangeSelect<ThresholdFormValues, 'exchange'>
+                <FormExchangeSelect<MarketMakingFormValues, 'exchange'>
                   field={field}
-                  disabled={isCreatingEscrow}
                   campaignType={campaignType}
+                  error={!!errors.exchange}
                 />
               )}
             />
@@ -86,20 +92,22 @@ const ThresholdForm: FC<Props> = ({
           </FormControl>
           <ExchangeInfoTooltip />
         </Box>
-        <FormControl error={!!errors.symbol} sx={{ width: '100%' }}>
+        <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
           <Controller
-            name="symbol"
+            name="pair"
             control={control}
             render={({ field }) => {
               return (
                 <Autocomplete
-                  id="symbol-select"
-                  options={currencies || []}
-                  loading={isLoadingCurrencies}
+                  id="trading-pair-select"
+                  options={tradingPairs || []}
+                  loading={isLoadingTradingPairs}
                   getOptionLabel={(option) => {
                     if (!option) return '';
-                    const { label } = getTokenInfo(option);
-                    return label || '';
+                    const [base, quote] = option.split('/');
+                    const { label: baseToken } = getTokenInfo(base);
+                    const { label: quoteToken } = getTokenInfo(quote);
+                    return `${baseToken}/${quoteToken}`;
                   }}
                   slotProps={{
                     paper: {
@@ -112,14 +120,14 @@ const ThresholdForm: FC<Props> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Symbol"
-                      disabled={isCreatingEscrow}
+                      label="Trading Pair"
+                      error={!!errors.pair}
                       slotProps={{
                         input: {
                           ...params.InputProps,
                           endAdornment: (
                             <>
-                              {isLoadingCurrencies ? (
+                              {isLoadingTradingPairs ? (
                                 <CircularProgress size={20} />
                               ) : null}
                               {params.InputProps.endAdornment}
@@ -137,7 +145,7 @@ const ThresholdForm: FC<Props> = ({
                         component="li"
                         sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
                       >
-                        <CryptoEntity symbol={option} />
+                        <CryptoPairEntity symbol={option} />
                       </Box>
                     );
                   }}
@@ -147,13 +155,18 @@ const ThresholdForm: FC<Props> = ({
               );
             }}
           />
-          {errors.symbol && (
-            <FormHelperText>{errors.symbol.message}</FormHelperText>
+          {errors.pair && (
+            <FormHelperText>{errors.pair.message}</FormHelperText>
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+        <FormControl
+          error={!!errors.start_date}
+          sx={{
+            width: '100%',
+          }}
+        >
           <Controller
             name="start_date"
             control={control}
@@ -169,7 +182,6 @@ const ThresholdForm: FC<Props> = ({
                   trigger('start_date');
                   trigger('end_date');
                 }}
-                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 slotProps={{
                   textField: {
@@ -183,7 +195,12 @@ const ThresholdForm: FC<Props> = ({
             <FormHelperText>{errors.start_date.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
+        <FormControl
+          error={!!errors.end_date}
+          sx={{
+            width: '100%',
+          }}
+        >
           <Controller
             name="end_date"
             control={control}
@@ -199,7 +216,6 @@ const ThresholdForm: FC<Props> = ({
                   trigger('start_date');
                   trigger('end_date');
                 }}
-                disabled={isCreatingEscrow}
                 minDateTime={dayjs(watch('start_date')).add(6, 'hour')}
                 value={dayjs(field.value)}
                 slotProps={{
@@ -215,7 +231,7 @@ const ThresholdForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
           <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
           <Controller
@@ -235,7 +251,6 @@ const ThresholdForm: FC<Props> = ({
                   },
                 }}
                 {...field}
-                disabled={isCreatingEscrow}
               >
                 {FUND_TOKENS.map((token) => (
                   <MenuItem key={token} value={token}>
@@ -249,50 +264,28 @@ const ThresholdForm: FC<Props> = ({
             <FormHelperText>{errors.fund_token.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
-          <Controller
-            name="fund_amount"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                id="fund-amount-input"
-                label="Fund Amount"
-                placeholder="1"
-                error={!!errors.fund_amount}
-                type="number"
-                {...field}
-                onChange={(e) => {
-                  const value = formatInputValue(e.target.value);
-                  field.onChange(value);
-                }}
-                disabled={isCreatingEscrow}
-              />
-            )}
-          />
-          {errors.fund_amount && (
-            <FormHelperText>{errors.fund_amount.message}</FormHelperText>
-          )}
-        </FormControl>
         <FormControl
-          error={!!errors.minimum_balance_target}
+          error={!!errors.daily_volume_target}
           sx={{ width: '100%' }}
         >
           <Controller
-            name="minimum_balance_target"
+            name="daily_volume_target"
             control={control}
             render={({ field }) => (
               <TextField
-                id="minimum-balance-target-input"
-                label="Minimum Balance Target"
+                id="daily-volume-target-input"
+                label="Daily Volume Target"
                 placeholder="1"
                 type="number"
-                error={!!errors.minimum_balance_target}
+                error={!!errors.daily_volume_target}
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
+                  if (isExceedingMaximumInteger(value)) {
+                    return;
+                  }
                   field.onChange(value);
                 }}
-                disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
                     sx: {
@@ -316,12 +309,12 @@ const ThresholdForm: FC<Props> = ({
                           pointerEvents: 'none',
                           [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
                             {
-                              opacity: isCreatingEscrow ? 0.5 : 1,
+                              opacity: 1,
                             },
                         }}
                       >
                         <Typography variant="body1" color="text.primary">
-                          {symbol ? getTokenInfo(symbol).label || '' : ''}
+                          {getTokenInfo(volumeToken).label || ''}
                         </Typography>
                       </InputAdornment>
                     ),
@@ -330,9 +323,9 @@ const ThresholdForm: FC<Props> = ({
               />
             )}
           />
-          {errors.minimum_balance_target && (
+          {errors.daily_volume_target && (
             <FormHelperText>
-              {errors.minimum_balance_target.message}
+              {errors.daily_volume_target.message}
             </FormHelperText>
           )}
         </FormControl>
@@ -341,4 +334,4 @@ const ThresholdForm: FC<Props> = ({
   );
 };
 
-export default ThresholdForm;
+export default MarketMakingForm;

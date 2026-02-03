@@ -292,3 +292,10 @@ export const convertFromSnakeCaseToTitleCase = (str: string) => {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
+
+export const isExceedingMaximumInteger = (value: string | number): boolean => {
+  const numValue = Number(value);
+  return Boolean(
+    value && !isNaN(numValue) && numValue > Number.MAX_SAFE_INTEGER
+  );
+};

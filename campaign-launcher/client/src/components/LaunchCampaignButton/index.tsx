@@ -1,19 +1,13 @@
 import { type FC, type PropsWithChildren, useState } from 'react';
 
 import { Box, Button, Tooltip, Typography, type SxProps } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
-import CampaignSetupModal from '@/components/modals/CampaignSetupModal';
-import CreateCampaignModal from '@/components/modals/CreateCampaignModal';
+import StakingRequirementModal from '@/components/modals/StakingRequirementModal';
+import { ROUTES } from '@/constants';
 import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useStakeContext } from '@/providers/StakeProvider';
-import type { CampaignType } from '@/types';
-
-type Props = {
-  variant: 'outlined' | 'contained';
-  sx?: SxProps;
-  withTooltip?: boolean;
-};
 
 type ButtonWrapperProps = {
   isDisabled: boolean;
@@ -52,34 +46,39 @@ const ButtonWrapper: FC<PropsWithChildren<ButtonWrapperProps>> = ({
   return children;
 };
 
-const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
-  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [campaignType, setCampaignType] = useState<CampaignType | null>(null);
+type Props = {
+  variant: 'outlined' | 'contained';
+  sx?: SxProps;
+  withTooltip?: boolean;
+  handleCallbackOnClick?: () => void;
+};
 
+const LaunchCampaignButton: FC<Props> = ({
+  variant,
+  sx,
+  withTooltip = false,
+  handleCallbackOnClick,
+}) => {
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+
+  const navigate = useNavigate();
   const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
-  const { isClientInitializing } = useStakeContext();
+  const { fetchStakingData, isClientInitializing } = useStakeContext();
 
   const isDisabled = !signer || isClientInitializing;
 
   const handleLaunchCampaignClick = async () => {
     if (isDisabled) return null;
 
-    setIsSetupModalOpen(true);
-  };
+    const _stakedAmount = Number(await fetchStakingData());
+    if (_stakedAmount === 0) {
+      setIsSetupModalOpen(true);
+    } else {
+      navigate(ROUTES.LAUNCH_CAMPAIGN);
+    }
 
-  const handleChangeCampaignType = (type: CampaignType) => {
-    setCampaignType(type);
-  };
-
-  const handleOpenFormModal = () => {
-    setIsFormModalOpen(true);
-  };
-
-  const handleCloseFormModal = () => {
-    setIsFormModalOpen(false);
-    setCampaignType(null);
+    handleCallbackOnClick?.();
   };
 
   return (
@@ -100,23 +99,13 @@ const LaunchCampaign: FC<Props> = ({ variant, sx, withTooltip = false }) => {
         </Button>
       </ButtonWrapper>
       {isSetupModalOpen && (
-        <CampaignSetupModal
+        <StakingRequirementModal
           open={isSetupModalOpen}
           onClose={() => setIsSetupModalOpen(false)}
-          campaignType={campaignType}
-          handleChangeCampaignType={handleChangeCampaignType}
-          handleOpenFormModal={handleOpenFormModal}
-        />
-      )}
-      {campaignType && isFormModalOpen && (
-        <CreateCampaignModal
-          open={isFormModalOpen}
-          onClose={handleCloseFormModal}
-          campaignType={campaignType}
         />
       )}
     </>
   );
 };
 
-export default LaunchCampaign;
+export default LaunchCampaignButton;

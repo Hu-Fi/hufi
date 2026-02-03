@@ -13,7 +13,7 @@ export const useStake = () => {
     null
   );
   const [isClientInitializing, setIsClientInitializing] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const { activeAddress } = useActiveAccount();
   const { isSwitching, appChainId } = useNetwork();
@@ -31,8 +31,8 @@ export const useStake = () => {
 
   useEffect(() => {
     const initStakingClient = async () => {
-      setIsClientInitializing(true);
       if (signer && activeAddress && !isSwitching && !isCreatingSigner) {
+        setIsClientInitializing(true);
         try {
           checkSupportedChain();
           const client = await StakingClient.build(signer);
@@ -74,7 +74,8 @@ export const useStake = () => {
 
   return {
     fetchStakingData,
-    isClientInitializing,
     isFetching,
+    isClientInitializing,
+    isStakingClientReady: !!stakingClient,
   };
 };

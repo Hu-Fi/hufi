@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Button, Stack, Typography } from '@mui/material';
+import { Button, Stack } from '@mui/material';
 
 import { ModalError } from '@/components/ModalState';
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -13,11 +13,8 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
   const isMobile = useIsMobile();
 
   return (
-    <Stack alignItems="center" textAlign="center">
-      <Typography variant="h4" color="text.primary" mb={4}>
-        Create Campaign
-      </Typography>
-      <ModalError />
+    <Stack alignItems="center" textAlign="center" p={2}>
+      <ModalError message="Something went wrong, please try again." />
       <Button
         size="large"
         variant="contained"

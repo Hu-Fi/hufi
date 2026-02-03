@@ -26,59 +26,61 @@ import {
 } from 'react-hook-form';
 
 import CryptoEntity from '@/components/CryptoEntity';
-import CryptoPairEntity from '@/components/CryptoPairEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
 import { FUND_TOKENS } from '@/constants/tokens';
-import { useIsMobile } from '@/hooks/useBreakpoints';
-import { useTradingPairs } from '@/hooks/useTradingPairs';
-import type { CampaignType, MarketMakingFormValues } from '@/types';
-import { getTokenInfo } from '@/utils';
+import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
+import type { CampaignType, HoldingFormValues } from '@/types';
+import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
-import ExchangeInfoTooltip from './ExchangeInfoTooltip';
+import { ExchangeInfoTooltip } from './';
 
 type Props = {
-  control: Control<MarketMakingFormValues>;
-  errors: FieldErrors<MarketMakingFormValues>;
-  watch: UseFormWatch<MarketMakingFormValues>;
-  trigger: UseFormTrigger<MarketMakingFormValues>;
+  control: Control<HoldingFormValues>;
+  errors: FieldErrors<HoldingFormValues>;
+  watch: UseFormWatch<HoldingFormValues>;
+  trigger: UseFormTrigger<HoldingFormValues>;
   campaignType: CampaignType;
-  isCreatingEscrow: boolean;
 };
 
-const MarketMakingForm: FC<Props> = ({
+const HoldingForm: FC<Props> = ({
   control,
   errors,
   watch,
   trigger,
-  isCreatingEscrow,
   campaignType,
 }) => {
-  const isMobile = useIsMobile();
-
   const exchange = watch('exchange');
-  const pair = watch('pair');
-  const volumeToken = pair?.split('/')[1] || '';
+  const symbol = watch('symbol');
 
-  const { data: tradingPairs, isLoading: isLoadingTradingPairs } =
-    useTradingPairs(exchange);
-
-  if (isMobile && isCreatingEscrow) return null;
+  const { data: currencies, isLoading: isLoadingCurrencies } =
+    useExchangeCurrencies(exchange);
 
   return (
     <>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <Box display="flex" gap={2} alignItems="center" width="100%">
-          <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+        <Box display="flex" gap={1} width="100%">
+          <FormControl
+            error={!!errors.exchange}
+            sx={{
+              width: '100%',
+              mb: errors.exchange ? 2 : 0,
+              '& .MuiFormHelperText-root': {
+                position: 'absolute',
+                bottom: 0,
+                mb: { xs: -3, md: -2 },
+              },
+            }}
+          >
             <Controller
               name="exchange"
               control={control}
               render={({ field }) => (
-                <FormExchangeSelect<MarketMakingFormValues, 'exchange'>
+                <FormExchangeSelect<HoldingFormValues, 'exchange'>
                   field={field}
-                  disabled={isCreatingEscrow}
                   campaignType={campaignType}
+                  error={!!errors.exchange}
                 />
               )}
             />
@@ -88,22 +90,20 @@ const MarketMakingForm: FC<Props> = ({
           </FormControl>
           <ExchangeInfoTooltip />
         </Box>
-        <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
+        <FormControl error={!!errors.symbol} sx={{ width: '100%' }}>
           <Controller
-            name="pair"
+            name="symbol"
             control={control}
             render={({ field }) => {
               return (
                 <Autocomplete
-                  id="trading-pair-select"
-                  options={tradingPairs || []}
-                  loading={isLoadingTradingPairs}
+                  id="symbol-select"
+                  options={currencies || []}
+                  loading={isLoadingCurrencies}
                   getOptionLabel={(option) => {
                     if (!option) return '';
-                    const [base, quote] = option.split('/');
-                    const { label: baseToken } = getTokenInfo(base);
-                    const { label: quoteToken } = getTokenInfo(quote);
-                    return `${baseToken}/${quoteToken}`;
+                    const { label } = getTokenInfo(option);
+                    return label || '';
                   }}
                   slotProps={{
                     paper: {
@@ -116,14 +116,14 @@ const MarketMakingForm: FC<Props> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Trading Pair"
-                      disabled={isCreatingEscrow}
+                      label="Symbol"
+                      error={!!errors.symbol}
                       slotProps={{
                         input: {
                           ...params.InputProps,
                           endAdornment: (
                             <>
-                              {isLoadingTradingPairs ? (
+                              {isLoadingCurrencies ? (
                                 <CircularProgress size={20} />
                               ) : null}
                               {params.InputProps.endAdornment}
@@ -141,7 +141,7 @@ const MarketMakingForm: FC<Props> = ({
                         component="li"
                         sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
                       >
-                        <CryptoPairEntity symbol={option} />
+                        <CryptoEntity symbol={option} />
                       </Box>
                     );
                   }}
@@ -151,13 +151,18 @@ const MarketMakingForm: FC<Props> = ({
               );
             }}
           />
-          {errors.pair && (
-            <FormHelperText>{errors.pair.message}</FormHelperText>
+          {errors.symbol && (
+            <FormHelperText>{errors.symbol.message}</FormHelperText>
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
-        <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+        <FormControl
+          error={!!errors.start_date}
+          sx={{
+            width: '100%',
+          }}
+        >
           <Controller
             name="start_date"
             control={control}
@@ -173,7 +178,6 @@ const MarketMakingForm: FC<Props> = ({
                   trigger('start_date');
                   trigger('end_date');
                 }}
-                disabled={isCreatingEscrow}
                 value={dayjs(field.value)}
                 slotProps={{
                   textField: {
@@ -187,7 +191,12 @@ const MarketMakingForm: FC<Props> = ({
             <FormHelperText>{errors.start_date.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
+        <FormControl
+          error={!!errors.end_date}
+          sx={{
+            width: '100%',
+          }}
+        >
           <Controller
             name="end_date"
             control={control}
@@ -203,7 +212,6 @@ const MarketMakingForm: FC<Props> = ({
                   trigger('start_date');
                   trigger('end_date');
                 }}
-                disabled={isCreatingEscrow}
                 minDateTime={dayjs(watch('start_date')).add(6, 'hour')}
                 value={dayjs(field.value)}
                 slotProps={{
@@ -219,7 +227,7 @@ const MarketMakingForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
           <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
           <Controller
@@ -239,7 +247,6 @@ const MarketMakingForm: FC<Props> = ({
                   },
                 }}
                 {...field}
-                disabled={isCreatingEscrow}
               >
                 {FUND_TOKENS.map((token) => (
                   <MenuItem key={token} value={token}>
@@ -253,50 +260,28 @@ const MarketMakingForm: FC<Props> = ({
             <FormHelperText>{errors.fund_token.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl error={!!errors.fund_amount} sx={{ width: '100%' }}>
-          <Controller
-            name="fund_amount"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                id="fund-amount-input"
-                label="Fund Amount"
-                placeholder="1"
-                error={!!errors.fund_amount}
-                type="number"
-                {...field}
-                onChange={(e) => {
-                  const value = formatInputValue(e.target.value);
-                  field.onChange(value);
-                }}
-                disabled={isCreatingEscrow}
-              />
-            )}
-          />
-          {errors.fund_amount && (
-            <FormHelperText>{errors.fund_amount.message}</FormHelperText>
-          )}
-        </FormControl>
         <FormControl
-          error={!!errors.daily_volume_target}
+          error={!!errors.daily_balance_target}
           sx={{ width: '100%' }}
         >
           <Controller
-            name="daily_volume_target"
+            name="daily_balance_target"
             control={control}
             render={({ field }) => (
               <TextField
-                id="daily-volume-target-input"
-                label="Daily Volume Target"
+                id="daily-balance-target-input"
+                label="Daily Balance Target"
                 placeholder="1"
                 type="number"
-                error={!!errors.daily_volume_target}
+                error={!!errors.daily_balance_target}
                 {...field}
                 onChange={(e) => {
                   const value = formatInputValue(e.target.value);
+                  if (isExceedingMaximumInteger(value)) {
+                    return;
+                  }
                   field.onChange(value);
                 }}
-                disabled={isCreatingEscrow}
                 slotProps={{
                   htmlInput: {
                     sx: {
@@ -320,12 +305,12 @@ const MarketMakingForm: FC<Props> = ({
                           pointerEvents: 'none',
                           [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
                             {
-                              opacity: isCreatingEscrow ? 0.5 : 1,
+                              opacity: 1,
                             },
                         }}
                       >
                         <Typography variant="body1" color="text.primary">
-                          {getTokenInfo(volumeToken).label || ''}
+                          {symbol ? getTokenInfo(symbol).label || '' : ''}
                         </Typography>
                       </InputAdornment>
                     ),
@@ -334,9 +319,9 @@ const MarketMakingForm: FC<Props> = ({
               />
             )}
           />
-          {errors.daily_volume_target && (
+          {errors.daily_balance_target && (
             <FormHelperText>
-              {errors.daily_volume_target.message}
+              {errors.daily_balance_target.message}
             </FormHelperText>
           )}
         </FormControl>
@@ -345,4 +330,4 @@ const MarketMakingForm: FC<Props> = ({
   );
 };
 
-export default MarketMakingForm;
+export default HoldingForm;

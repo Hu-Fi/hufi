@@ -1,31 +1,24 @@
-import { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useState } from 'react';
 
 import CancelIcon from '@mui/icons-material/Cancel';
-import CheckIcon from '@mui/icons-material/CheckCircle';
 import {
-  Autocomplete,
   Box,
   Button,
   CircularProgress,
-  Link,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
+import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useStakeContext } from '@/providers/StakeProvider';
-import { CampaignType } from '@/types';
-import { convertFromSnakeCaseToTitleCase } from '@/utils';
 
 import BaseModal from '../BaseModal';
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  campaignType: CampaignType | null;
-  handleChangeCampaignType: (type: CampaignType) => void;
-  handleOpenFormModal: () => void;
 };
 
 type WarningViewProps = {
@@ -131,28 +124,12 @@ const LoadingView: FC = () => {
   );
 };
 
-const CampaignSetupModal: FC<Props> = ({
-  open,
-  onClose,
-  campaignType,
-  handleChangeCampaignType,
-  handleOpenFormModal,
-}) => {
+const StakingRequirementModal: FC<Props> = ({ open, onClose }) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [stakedAmount, setStakedAmount] = useState(0);
 
+  const navigate = useNavigate();
   const { fetchStakingData, isFetching } = useStakeContext();
   const isMobile = useIsMobile();
-
-  const getStakedAmount = useCallback(async () => {
-    const _stakedAmount = Number(await fetchStakingData());
-    setStakedAmount(_stakedAmount);
-    return _stakedAmount;
-  }, [fetchStakingData]);
-
-  useEffect(() => {
-    getStakedAmount();
-  }, [getStakedAmount]);
 
   const handleClose = () => {
     setShowWarning(false);
@@ -164,18 +141,14 @@ const CampaignSetupModal: FC<Props> = ({
   };
 
   const handleUpdateStakedAmount = async () => {
-    const _updatedStakedAmount = await getStakedAmount();
-    setShowWarning(_updatedStakedAmount === 0);
-  };
-
-  const showFirstStep = !isFetching && !showWarning && stakedAmount === 0;
-  const showSecondStep = !isFetching && !showWarning && stakedAmount > 0;
-
-  const handleClickOnContinue = async () => {
-    if (!campaignType) return;
-
-    handleClose();
-    handleOpenFormModal();
+    const _updatedStakedAmount = Number(await fetchStakingData());
+    if (_updatedStakedAmount === 0) {
+      setShowWarning(true);
+      return;
+    } else {
+      handleClose();
+      navigate(ROUTES.LAUNCH_CAMPAIGN);
+    }
   };
 
   return (
@@ -209,7 +182,7 @@ const CampaignSetupModal: FC<Props> = ({
             handleClickOnUpdate={handleUpdateStakedAmount}
           />
         )}
-        {showFirstStep && (
+        {!isFetching && !showWarning && (
           <>
             <Typography
               variant="alert"
@@ -258,94 +231,9 @@ const CampaignSetupModal: FC<Props> = ({
             </Box>
           </>
         )}
-        {showSecondStep && (
-          <>
-            <Typography
-              variant="alert"
-              color="text.secondary"
-              mb={{ xs: 3, md: 5 }}
-              mx="auto"
-              display="flex"
-              alignItems="center"
-              gap={1}
-            >
-              Staked HMT
-              <CheckIcon sx={{ color: 'success.main' }} />
-            </Typography>
-            <Typography variant="alert" mb={2} textAlign="center">
-              Please select your campaign type to begin creating your campaign
-              on HuFi.
-            </Typography>
-            <Link
-              href={import.meta.env.VITE_APP_DOCS_URL}
-              target="_blank"
-              sx={{
-                width: 'fit-content',
-                mb: { xs: 3, md: 5 },
-                mx: 'auto',
-              }}
-            >
-              <Typography variant="body2" fontWeight={700}>
-                What are the campaign types?
-              </Typography>
-            </Link>
-            <Stack
-              gap={1}
-              direction={{ xs: 'column', md: 'row' }}
-              mx={{ xs: 0, md: 'auto' }}
-            >
-              <Autocomplete
-                size="small"
-                value={campaignType}
-                onChange={(_, value) =>
-                  handleChangeCampaignType(value as CampaignType)
-                }
-                options={[...Object.values(CampaignType), null]}
-                getOptionLabel={(option) => {
-                  if (option === null) return 'Coming soon...';
-                  return convertFromSnakeCaseToTitleCase(option);
-                }}
-                getOptionDisabled={(option) => option === null}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Campaign Type"
-                    sx={{
-                      '& .MuiInputBase-root': {
-                        height: 42,
-                      },
-                    }}
-                  />
-                )}
-                sx={{ width: { xs: '100%', sm: 220 } }}
-                slotProps={{
-                  paper: {
-                    elevation: 4,
-                    sx: {
-                      bgcolor: 'background.default',
-                    },
-                  },
-                }}
-              />
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth={isMobile}
-                sx={{
-                  color: 'primary.contrast',
-                  width: { xs: '100%', md: 93 },
-                }}
-                disabled={!campaignType}
-                onClick={handleClickOnContinue}
-              >
-                Continue
-              </Button>
-            </Stack>
-          </>
-        )}
       </Stack>
     </BaseModal>
   );
 };
 
-export default CampaignSetupModal;
+export default StakingRequirementModal;
