@@ -53,7 +53,6 @@ const FirstStep: FC<Props> = ({
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
                 height: 160,
                 py: 2,
                 px: 3,

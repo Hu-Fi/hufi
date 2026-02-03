@@ -176,7 +176,7 @@ const ThirdStep: FC<Props> = ({
           justifyContent="space-between"
           gap={{ sm: 3, md: 2 }}
         >
-          <Stack maxWidth="600px" width="100%">
+          <Stack maxWidth="500px" width="100%">
             <Stack gap={3}>
               <Typography variant="h6" component="h3">
                 Campaign Fund Amount

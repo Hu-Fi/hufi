@@ -6,7 +6,6 @@ import { Navigate } from 'react-router-dom';
 import { useConnection } from 'wagmi';
 
 import { ROUTES } from '@/constants';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useStakeContext } from '@/providers/StakeProvider';
 
 interface StakeProtectedRouteProps {
@@ -21,13 +20,12 @@ enum StakeStatus {
 }
 
 const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
-  const { signer, isCreatingSigner } = useRetrieveSigner();
-  const { isConnected, isConnecting } = useConnection();
-  const { fetchStakingData, isClientInitializing } = useStakeContext();
-
   const [stakeStatus, setStakeStatus] = useState<StakeStatus>(
     StakeStatus.CHECKING
   );
+
+  const { isConnected, isConnecting } = useConnection();
+  const { fetchStakingData, isStakingClientReady } = useStakeContext();
 
   useEffect(() => {
     const checkStake = async () => {
@@ -36,7 +34,7 @@ const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
         return;
       }
 
-      if (signer && !isClientInitializing) {
+      if (isStakingClientReady) {
         try {
           const amount = Number(await fetchStakingData());
           setStakeStatus(
@@ -49,20 +47,9 @@ const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
     };
 
     checkStake();
-  }, [
-    signer,
-    fetchStakingData,
-    isClientInitializing,
-    isCreatingSigner,
-    isConnected,
-    isConnecting,
-  ]);
+  }, [isConnected, isConnecting, fetchStakingData, isStakingClientReady]);
 
-  if (
-    stakeStatus === StakeStatus.CHECKING ||
-    isClientInitializing ||
-    isCreatingSigner
-  ) {
+  if (stakeStatus === StakeStatus.CHECKING) {
     return (
       <Box
         display="flex"
