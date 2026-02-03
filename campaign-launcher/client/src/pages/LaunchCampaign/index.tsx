@@ -1,16 +1,16 @@
 import { type FC } from 'react';
 
-import CreateCampaignForm from '@/components/CreateCampaignForm';
+import LaunchCampaignForm from '@/components/LaunchCampaignForm';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
 
-const CreateCampaignPage: FC = () => {
+const LaunchCampaignPage: FC = () => {
   return (
     <PageWrapper>
       <PageTitle title="Create Campaign" />
-      <CreateCampaignForm />
+      <LaunchCampaignForm />
     </PageWrapper>
   );
 };
 
-export default CreateCampaignPage;
+export default LaunchCampaignPage;

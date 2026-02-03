@@ -9,8 +9,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import StakeProtectedRoute from '@/components/StakeProtectedRoute';
 import { ROUTES } from '@/constants';
 import Campaign from '@/pages/Campaign';
-import CreateCampaignPage from '@/pages/CreateCampaign';
 import Dashboard from '@/pages/Dashboard';
+import LaunchCampaignPage from '@/pages/LaunchCampaign';
 import ManageApiKeysPage from '@/pages/ManageApiKeys';
 import ActiveAccountProvider from '@/providers/ActiveAccountProvider';
 import ExchangesProvider from '@/providers/ExchangesProvider';
@@ -57,10 +57,10 @@ const App: FC = () => {
                                 }
                               />
                               <Route
-                                path={ROUTES.CREATE_CAMPAIGN}
+                                path={ROUTES.LAUNCH_CAMPAIGN}
                                 element={
                                   <StakeProtectedRoute>
-                                    <CreateCampaignPage />
+                                    <LaunchCampaignPage />
                                   </StakeProtectedRoute>
                                 }
                               />

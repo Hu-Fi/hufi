@@ -12,7 +12,7 @@ import {
   LaunchStep,
 } from './components';
 
-const CreateCampaignForm: FC = () => {
+const LaunchCampaignForm: FC = () => {
   const [step, setStep] = useState(1);
   const [fundAmount, setFundAmount] = useState<string>('');
   const [formValues, setFormValues] = useState<CampaignFormValues | null>(null);
@@ -63,4 +63,4 @@ const CreateCampaignForm: FC = () => {
   );
 };
 
-export default CreateCampaignForm;
+export default LaunchCampaignForm;

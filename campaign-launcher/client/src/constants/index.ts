@@ -6,7 +6,7 @@ export const ROUTES = {
   DASHBOARD: '/',
   CAMPAIGN_DETAILS: '/campaign-details/:address',
   MANAGE_API_KEYS: '/manage-api-keys',
-  CREATE_CAMPAIGN: '/create-campaign',
+  LAUNCH_CAMPAIGN: '/launch-campaign',
 };
 
 export const oracles = {

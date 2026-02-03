@@ -53,7 +53,7 @@ type Props = {
   handleCallbackOnClick?: () => void;
 };
 
-const LaunchCampaign: FC<Props> = ({
+const LaunchCampaignButton: FC<Props> = ({
   variant,
   sx,
   withTooltip = false,
@@ -75,7 +75,7 @@ const LaunchCampaign: FC<Props> = ({
     if (_stakedAmount === 0) {
       setIsSetupModalOpen(true);
     } else {
-      navigate(ROUTES.CREATE_CAMPAIGN);
+      navigate(ROUTES.LAUNCH_CAMPAIGN);
     }
 
     handleCallbackOnClick?.();
@@ -108,4 +108,4 @@ const LaunchCampaign: FC<Props> = ({
   );
 };
 
-export default LaunchCampaign;
+export default LaunchCampaignButton;

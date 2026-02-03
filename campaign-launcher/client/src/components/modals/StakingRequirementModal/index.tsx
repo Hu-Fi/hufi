@@ -147,7 +147,7 @@ const StakingRequirementModal: FC<Props> = ({ open, onClose }) => {
       return;
     } else {
       handleClose();
-      navigate(ROUTES.CREATE_CAMPAIGN);
+      navigate(ROUTES.LAUNCH_CAMPAIGN);
     }
   };
 

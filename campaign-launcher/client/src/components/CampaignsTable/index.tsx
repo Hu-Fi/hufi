@@ -8,7 +8,7 @@ import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
-import LaunchCampaign from '@/components/LaunchCampaign';
+import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import StretchedLink from '@/components/StretchedLink';
 import {
   useIsXlDesktop,
@@ -73,7 +73,7 @@ const MyCampaignsNoRows: FC = () => {
       <Typography variant="subtitle2" component="p">
         At the moment you are not running any campaign.
       </Typography>
-      <LaunchCampaign variant="contained" />
+      <LaunchCampaignButton variant="contained" />
     </>
   );
 };
