@@ -133,7 +133,6 @@ const ThirdStep: FC<Props> = ({
     custom_allowance_amount: string;
   }) => {
     const { fund_amount, selected_allowance, custom_allowance_amount } = data;
-    let isApproved = false;
 
     const canSkipApproval =
       (selected_allowance === AllowanceType.UNLIMITED &&
@@ -153,7 +152,7 @@ const ThirdStep: FC<Props> = ({
         ? UNLIMITED_AMOUNT
         : custom_allowance_amount || fund_amount;
 
-    isApproved = await approve(fundToken, amountToApprove);
+    const isApproved = await approve(fundToken, amountToApprove);
 
     if (isApproved) {
       setFundAmount(fund_amount);

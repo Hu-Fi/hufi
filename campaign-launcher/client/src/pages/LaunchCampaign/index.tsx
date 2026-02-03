@@ -7,7 +7,7 @@ import PageWrapper from '@/components/PageWrapper';
 const LaunchCampaignPage: FC = () => {
   return (
     <PageWrapper>
-      <PageTitle title="Create Campaign" />
+      <PageTitle title="Launch Campaign" />
       <LaunchCampaignForm />
     </PageWrapper>
   );
