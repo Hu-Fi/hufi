@@ -29,7 +29,7 @@ import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 import { formatInputValue } from '../utils';
 import { createFundAmountValidationSchema } from '../validation';
 
-import { ProgressBar, BottomNavigation } from './';
+import { SummaryCard, BottomNavigation } from './';
 
 const allowanceTooltipText = {
   unlimited:
@@ -127,13 +127,13 @@ const ThirdStep: FC<Props> = ({
     }
   }, [isMobile, errors]);
 
-  const submitForm = async (data: {
+  const onSubmit = async (data: {
     fund_amount: string;
     selected_allowance: AllowanceType;
     custom_allowance_amount: string;
   }) => {
     const { fund_amount, selected_allowance, custom_allowance_amount } = data;
-    let success = false;
+    let isApproved = false;
 
     const canSkipApproval =
       (selected_allowance === AllowanceType.UNLIMITED &&
@@ -153,9 +153,9 @@ const ThirdStep: FC<Props> = ({
         ? UNLIMITED_AMOUNT
         : custom_allowance_amount || fund_amount;
 
-    success = await approve(fundToken, amountToApprove);
+    isApproved = await approve(fundToken, amountToApprove);
 
-    if (success) {
+    if (isApproved) {
       setFundAmount(fund_amount);
       handleChangeStep(4);
       return;
@@ -170,7 +170,7 @@ const ThirdStep: FC<Props> = ({
 
   return (
     <Stack width="100%" mt={{ xs: 0, md: 4 }}>
-      <form onSubmit={handleSubmit(submitForm)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -412,7 +412,7 @@ const ThirdStep: FC<Props> = ({
               </FormControl>
             </Stack>
           </Stack>
-          {!isMobile && <ProgressBar step={3} formValues={formValues} />}
+          {!isMobile && <SummaryCard step={3} formValues={formValues} />}
         </Stack>
         <BottomNavigation
           step={3}

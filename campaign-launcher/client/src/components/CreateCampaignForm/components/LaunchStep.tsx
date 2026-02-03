@@ -9,7 +9,7 @@ import { useNetwork } from '@/providers/NetworkProvider';
 import { type CampaignFormValues } from '@/types';
 import { constructCampaignDetails } from '@/utils';
 
-import { ProgressBar, ErrorView, FinalView } from '.';
+import { SummaryCard, ErrorView, FinalView } from '.';
 
 type Props = {
   fundAmount: string;
@@ -136,7 +136,7 @@ const LaunchStep: FC<Props> = ({
       )}
       {!isError && !isEscrowCreated && (
         <>
-          <ProgressBar
+          <SummaryCard
             step={4}
             fundAmount={fundAmount}
             formValues={formValues}

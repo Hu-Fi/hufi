@@ -3,7 +3,7 @@ import { type FC, type PropsWithChildren, useState } from 'react';
 import { Box, Button, Tooltip, Typography, type SxProps } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import CampaignSetupModal from '@/components/modals/CampaignSetupModal';
+import StakingRequirementModal from '@/components/modals/StakingRequirementModal';
 import { ROUTES } from '@/constants';
 import { useIsXlDesktop } from '@/hooks/useBreakpoints';
 import useRetrieveSigner from '@/hooks/useRetrieveSigner';
@@ -99,7 +99,7 @@ const LaunchCampaign: FC<Props> = ({
         </Button>
       </ButtonWrapper>
       {isSetupModalOpen && (
-        <CampaignSetupModal
+        <StakingRequirementModal
           open={isSetupModalOpen}
           onClose={() => setIsSetupModalOpen(false)}
         />

@@ -25,7 +25,7 @@ import {
   ThresholdForm,
   HoldingForm,
   BottomNavigation,
-  ProgressBar,
+  SummaryCard,
 } from '.';
 
 type Props = {
@@ -72,7 +72,7 @@ const SecondStep: FC<Props> = ({
 
   const campaignType = formValues.type as CampaignType;
 
-  const submitForm = async (data: CampaignFormValues) => {
+  const onSubmit = async (data: CampaignFormValues) => {
     setFormValues(data);
     handleChangeStep(3);
   };
@@ -80,7 +80,7 @@ const SecondStep: FC<Props> = ({
   return (
     <>
       <Stack width="100%" mt={0}>
-        <form onSubmit={handleSubmit(submitForm)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -132,7 +132,7 @@ const SecondStep: FC<Props> = ({
                 />
               )}
             </Stack>
-            {!isMobile && <ProgressBar step={2} formValues={formValues} />}
+            {!isMobile && <SummaryCard step={2} formValues={formValues} />}
           </Stack>
           <BottomNavigation
             step={2}

@@ -124,7 +124,7 @@ const LoadingView: FC = () => {
   );
 };
 
-const CampaignSetupModal: FC<Props> = ({ open, onClose }) => {
+const StakingRequirementModal: FC<Props> = ({ open, onClose }) => {
   const [showWarning, setShowWarning] = useState(false);
 
   const navigate = useNavigate();
@@ -236,4 +236,4 @@ const CampaignSetupModal: FC<Props> = ({ open, onClose }) => {
   );
 };
 
-export default CampaignSetupModal;
+export default StakingRequirementModal;

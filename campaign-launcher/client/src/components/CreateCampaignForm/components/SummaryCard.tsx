@@ -100,7 +100,7 @@ const getSymbolOrPair = (
   }
 };
 
-const ProgressBar: FC<Props> = ({ step, formValues, fundAmount }) => {
+const SummaryCard: FC<Props> = ({ step, formValues, fundAmount }) => {
   const { exchangesMap } = useExchangesContext();
   const exchangeName = exchangesMap.get(
     formValues?.exchange || ''
@@ -228,4 +228,4 @@ const ProgressBar: FC<Props> = ({ step, formValues, fundAmount }) => {
   );
 };
 
-export default ProgressBar;
+export default SummaryCard;
