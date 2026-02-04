@@ -1,8 +1,18 @@
 import * as crypto from 'crypto';
 
+import { type AxiosError } from 'axios';
 import _ from 'lodash';
 
 import { BaseError } from '@/common/errors/base';
+
+export function formatAxiosError(error: AxiosError) {
+  return {
+    name: error.name,
+    stack: error.stack,
+    cause: error.cause,
+    message: error.message,
+  };
+}
 
 class FileDownloadError extends BaseError {
   constructor(
