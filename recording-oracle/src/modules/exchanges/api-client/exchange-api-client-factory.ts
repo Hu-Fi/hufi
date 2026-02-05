@@ -11,6 +11,7 @@ import {
 } from '@/config';
 import logger from '@/logger';
 
+import { BigoneClient } from './bigone';
 import {
   BASE_CCXT_CLIENT_OPTIONS,
   CcxtExchangeClient,
@@ -69,6 +70,10 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     for (const [exchangeName, exchangeConfig] of Object.entries(
       this.exchangesConfigService.configByExchange,
     )) {
+      if (exchangeConfig.skipCcxtPreload) {
+        continue;
+      }
+
       if (exchangeConfig.enabled && exchangeConfig.type === ExchangeType.CEX) {
         exchangesToPreload.push(exchangeName as ExchangeName);
       }
@@ -130,32 +135,40 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       throw new Error('Provided exchange is not CEX');
     }
 
+    let cexApiClient: ExchangeApiClient;
+
     const clientInitOptions: CcxtExchangeClientInitOptions = {
       apiKey: initOptions.apiKey,
       secret: initOptions.secret,
       userId: initOptions.userId,
-      sandbox: this.exchangesConfigService.useSandbox,
-      preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
       loggingConfig: {
         logPermissionErrors:
           this.loggingConfigService.logExchangePermissionErrors,
       },
+      sandbox: this.exchangesConfigService.useSandbox,
+      preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
     };
 
-    switch (exchangeName) {
-      case ExchangeName.BITMART:
-        clientInitOptions.extraCreds = {
-          uid: initOptions.extras?.apiKeyMemo as string,
-        };
-        break;
+    if (exchangeName === ExchangeName.BIGONE) {
+      cexApiClient = new BigoneClient(clientInitOptions);
+    } else {
+      /**
+       * Add extra options per exchange if needed
+       */
+      switch (exchangeName) {
+        case ExchangeName.BITMART: {
+          clientInitOptions.extraCreds = {
+            uid: initOptions.extras?.apiKeyMemo as string,
+          };
+          break;
+        }
+      }
+
+      cexApiClient = new CcxtExchangeClient(exchangeName, clientInitOptions);
     }
 
-    const ccxtExchangeClient = new CcxtExchangeClient(
-      exchangeName,
-      clientInitOptions,
-    );
-    if (ccxtExchangeClient.checkRequiredCredentials()) {
-      return ccxtExchangeClient;
+    if (cexApiClient.checkRequiredCredentials()) {
+      return cexApiClient;
     } else {
       throw new IncompleteKeySuppliedError(exchangeName);
     }

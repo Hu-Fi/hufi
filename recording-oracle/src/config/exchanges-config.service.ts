@@ -6,6 +6,7 @@ import { ExchangeName, ExchangeType } from '@/common/constants';
 export type ExchangeConfig = {
   enabled: boolean;
   type: ExchangeType;
+  skipCcxtPreload?: true;
 };
 
 @Injectable()
@@ -17,6 +18,7 @@ export class ExchangesConfigService {
       [ExchangeName.BIGONE]: {
         enabled: true,
         type: ExchangeType.CEX,
+        skipCcxtPreload: true,
       },
       [ExchangeName.BITMART]: {
         enabled: true,
