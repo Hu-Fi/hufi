@@ -13,5 +13,3 @@ export const DEPOSIT_ADDRESS_NETWORK = 'Ethereum';
  * Time in milliseconds that is allowed for historical data lookback
  */
 export const MAX_LOOKBACK_MS = ms('5 days');
-
-export const N_TRADES_THRESHOLD = 1000;

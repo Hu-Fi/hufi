@@ -19,11 +19,12 @@ import {
   type Trade,
   type AccountBalance,
 } from '../types';
+import * as apiClientUtils from '../utils';
 import {
   API_TIMEOUT,
   BASE_API_URL,
   DEPOSIT_ADDRESS_NETWORK,
-  N_TRADES_THRESHOLD,
+  MAX_LOOKBACK_MS,
 } from './constants';
 import { BigoneAccessError, BigoneClientError } from './error';
 import {
@@ -152,16 +153,16 @@ export class BigoneClient implements ExchangeApiClient {
     throw new MethodNotImplementedError();
   }
 
-  async fetchMyTrades(
+  async *fetchMyTrades(
     symbol: string,
     since: number,
     until: number,
-  ): Promise<Trade[]> {
-    if (!bigoneUtils.isAcceptableTimestamp(since)) {
+  ): AsyncGenerator<Trade[]> {
+    if (!apiClientUtils.isAcceptableTimestamp(since, MAX_LOOKBACK_MS)) {
       throw new Error('"since" must be a ms timestamp in acceptable range');
     }
 
-    if (!bigoneUtils.isAcceptableTimestamp(until)) {
+    if (!apiClientUtils.isAcceptableTimestamp(until, MAX_LOOKBACK_MS)) {
       throw new Error('"until" must be a ms timestamp in acceptable range');
     }
 
@@ -169,10 +170,10 @@ export class BigoneClient implements ExchangeApiClient {
     const sinceIso = new Date(since).toISOString();
     const untilIso = new Date(until).toISOString();
 
-    const trades: Trade[] = [];
     let nextPageToken: string | undefined;
+    let apiTrades: ApiTrade[];
     do {
-      const result = await this.makeRequest<{
+      ({ data: apiTrades, page_token: nextPageToken } = await this.makeRequest<{
         data: ApiTrade[];
         page_token?: string;
       }>('GET', 'viewer/trades', {
@@ -181,28 +182,26 @@ export class BigoneClient implements ExchangeApiClient {
           page_token: nextPageToken,
           limit: 200, // max page size
         },
-      });
+      }));
 
-      for (const apiTrade of result.data) {
-        if (
-          apiTrade.created_at >= sinceIso &&
-          apiTrade.created_at <= untilIso
-        ) {
-          trades.push(bigoneUtils.mapTrade(apiTrade));
+      const mappedTrades = [];
+      for (const apiTrade of apiTrades) {
+        if (apiTrade.created_at >= sinceIso && apiTrade.created_at < untilIso) {
+          mappedTrades.push(bigoneUtils.mapTrade(apiTrade));
         }
       }
+      if (mappedTrades.length) {
+        yield mappedTrades;
+      }
 
-      nextPageToken = result.page_token;
+      const oldestApiTrade = apiTrades.at(-1);
+      if (oldestApiTrade && oldestApiTrade.created_at < sinceIso) {
+        /**
+         * To avoid useless pagination after we return all trades in range
+         */
+        break;
+      }
     } while (nextPageToken);
-
-    if (trades.length > N_TRADES_THRESHOLD) {
-      this.logger.warn('Exceeded total trades theshold', {
-        nTrades: trades.length,
-        threshold: N_TRADES_THRESHOLD,
-      });
-    }
-
-    return trades.reverse();
   }
 
   async fetchBalance(): Promise<AccountBalance> {

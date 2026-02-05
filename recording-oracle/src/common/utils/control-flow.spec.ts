@@ -2,7 +2,7 @@ import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';
 
-import { TimeoutError, withTimeout } from './control-flow';
+import { TimeoutError, withTimeout, consumeIteratorOnce } from './control-flow';
 
 describe('Control Flow utilities', () => {
   describe('withTimeout', () => {
@@ -61,6 +61,53 @@ describe('Control Flow utilities', () => {
 
       const elapsed = Date.now() - startTs;
       expect(elapsed).toBeLessThan(timeoutMs);
+    });
+  });
+
+  describe('consumeIteratorOnce', () => {
+    it('should support sync iterable', async () => {
+      const randomValues = Array.from({ length: 3 }, () => Math.random());
+
+      const result = await consumeIteratorOnce(randomValues);
+
+      expect(result).toBe(randomValues[0]);
+    });
+
+    it('should support async iterable', async () => {
+      const randomValue = Math.random();
+
+      async function* testGenerator() {
+        yield randomValue;
+      }
+
+      const result = await consumeIteratorOnce(testGenerator());
+
+      expect(result).toBe(randomValue);
+    });
+
+    it('should yield once and cleanup', async () => {
+      const randomValue = Math.random();
+      const secondYieldSpy = jest.fn();
+      const catchBlockSpy = jest.fn();
+      const cleanupSpy = jest.fn();
+
+      async function* testGenerator() {
+        try {
+          yield randomValue;
+          yield secondYieldSpy();
+        } catch (error) {
+          catchBlockSpy(error);
+        } finally {
+          cleanupSpy();
+        }
+      }
+
+      const result = await consumeIteratorOnce(testGenerator());
+
+      expect(result).toBe(randomValue);
+      expect(secondYieldSpy).toHaveBeenCalledTimes(0);
+      expect(catchBlockSpy).toHaveBeenCalledTimes(0);
+      expect(cleanupSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

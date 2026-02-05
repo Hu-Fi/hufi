@@ -50,7 +50,7 @@ void (async () => {
     await run();
     process.exit(0);
   } catch (error) {
-    console.log('Failed', error);
+    logger.error('Permissions example failed', { error });
     process.exit(1);
   }
 })();

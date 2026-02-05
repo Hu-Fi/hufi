@@ -1,22 +1,5 @@
 import { TakerOrMakerFlag, TradingSide, type Trade } from '../types';
-import { MAX_LOOKBACK_MS } from './constants';
 import type { ApiTrade } from './types';
-
-export function isAcceptableTimestamp(timestamp: unknown): boolean {
-  if (typeof timestamp !== 'number') {
-    return false;
-  }
-
-  if (timestamp > Date.now()) {
-    return false;
-  }
-
-  if (timestamp < Date.now() - MAX_LOOKBACK_MS) {
-    return false;
-  }
-
-  return true;
-}
 
 export function mapSymbolToAssetPair(symbol: string): string {
   return symbol.replace('/', '-');

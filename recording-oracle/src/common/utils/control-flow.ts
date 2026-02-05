@@ -28,3 +28,15 @@ export async function withTimeout<T>(
     }
   }
 }
+
+export async function consumeIteratorOnce<T>(
+  iterable: Iterable<T> | AsyncIterable<T>,
+) {
+  for await (const item of iterable) {
+    /**
+     * Breaking the loop will correctly creanup the iterator
+     * (e.g. by calling 'return' if it has one)
+     */
+    return item;
+  }
+}

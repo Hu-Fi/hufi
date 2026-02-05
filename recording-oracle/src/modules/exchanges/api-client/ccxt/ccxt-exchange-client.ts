@@ -7,6 +7,7 @@ import {
   ETH_USDT_PAIR,
   ExchangeName,
 } from '@/common/constants';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
 import Environment from '@/common/utils/environment';
 import logger from '@/logger';
@@ -201,10 +202,13 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       if (
         _permissionsToCheck.has(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
       ) {
+        const now = Date.now();
         checkHandlersMap.set(
           ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
           permissionCheckHandler(
-            this.fetchMyTrades(ETH_USDT_PAIR, Date.now(), Date.now()),
+            controlFlow.consumeIteratorOnce(
+              this.fetchMyTrades(ETH_USDT_PAIR, now - 1, now),
+            ),
           ),
         );
       }
@@ -245,31 +249,41 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   }
 
   /**
-   * Returns all historical trades, both for fully and partially filled orders,
-   * i.e. returns historical data for actual buy/sell that happened.
+   * Just a wrapper to corretly apply class decorators
+   * w/o necessity to handle "Promise or Generator" cases
+   * in decorator itself
    */
   @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-  async fetchMyTrades(
-    symbol: string,
-    since: number,
-    until: number,
-  ): Promise<Trade[]> {
-    let limit: number | undefined;
+  private async _fetchMyTrades(symbol: string, since: number) {
     /**
      * Use default value for "limit" because it varies
      * from exchange to exchange.
      */
-    switch (this.exchangeName) {
-      case ExchangeName.BIGONE:
-        limit = 200;
+
+    return await this.ccxtClient.fetchMyTrades(symbol, since);
+  }
+
+  /**
+   * Returns all historical trades, both for fully and partially filled orders,
+   * i.e. returns historical data for actual buy/sell that happened.
+   */
+  async *fetchMyTrades(
+    symbol: string,
+    since: number,
+    until: number,
+  ): AsyncGenerator<Trade[]> {
+    let fetchTradesSince = since;
+    while (since < until) {
+      let trades = await this._fetchMyTrades(symbol, fetchTradesSince);
+      trades = trades.filter((trade) => trade.timestamp < until);
+
+      if (trades.length) {
+        yield trades.map(ccxtClientUtils.mapCcxtTrade);
+        fetchTradesSince = trades.at(-1)!.timestamp;
+      } else {
         break;
+      }
     }
-
-    const trades = await this.ccxtClient.fetchMyTrades(symbol, since, limit);
-
-    return trades
-      .map(ccxtClientUtils.mapCcxtTrade)
-      .filter((trade) => trade.timestamp <= until);
   }
 
   @CatchApiAccessErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)

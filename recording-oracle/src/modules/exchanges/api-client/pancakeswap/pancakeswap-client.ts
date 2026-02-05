@@ -1,6 +1,5 @@
-import dayjs from 'dayjs';
 import { ethers } from 'ethers';
-import { GraphQLClient, ClientError } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
@@ -9,24 +8,24 @@ import logger from '@/logger';
 import type { Logger } from '@/logger';
 
 import {
-  MAX_ALLOWED_DELAY,
-  MAX_PAGE_SIZE,
+  MAX_LOOKBACK_MS,
   PANCAKESWAP_BSC_SUBGRAPH,
   tokenAddressBySymbol,
 } from './constants';
-import { GET_LATEST_SWAP_QUERY, GET_MAKER_SWAPS_QUERY } from './queries';
-import type { LatestSwap, MakerSwap } from './queries';
+import {
+  GET_LATEST_SWAP_QUERY,
+  GET_ACCOUNT_SWAPS_QUERY,
+  type SubgraphSwapData,
+} from './queries';
+import { type Swap } from './types';
+import * as pancakeswapUtils from './utils';
 import { ExchangeApiClientError } from '../errors';
 import {
   type DexApiClientInitOptions,
   ExchangeApiClient,
 } from '../exchange-api-client.interface';
-import {
-  TakerOrMakerFlag,
-  TradingSide,
-  type RequiredAccessCheckResult,
-  type Trade,
-} from '../types';
+import { type RequiredAccessCheckResult, type Trade } from '../types';
+import * as apiClientUtils from '../utils';
 
 type PancakeswapClientInitOptions = DexApiClientInitOptions & {
   subgraphApiKey: string;
@@ -36,22 +35,6 @@ class PancakeswapClientError extends ExchangeApiClientError {
   constructor(message: string) {
     super(message, ExchangeName.PANCAKESWAP);
   }
-}
-
-function formatGraphqlRequestError(error: Error) {
-  const formattedError: Record<string, unknown> = {
-    name: error.name,
-    message: error.message,
-    stack: error.stack,
-  };
-
-  if (error instanceof ClientError) {
-    formattedError.stack = 'omit';
-    formattedError.message = 'Graph client error';
-    formattedError.response = error.response;
-  }
-
-  return formattedError;
 }
 
 export class PancakeswapClient implements ExchangeApiClient {
@@ -83,38 +66,55 @@ export class PancakeswapClient implements ExchangeApiClient {
     });
   }
 
-  private async assertSubgraphNotStale(): Promise<void> {
-    const {
-      swaps: [latestSwap],
-    } = await this.graphClient.request<{ swaps: [LatestSwap?] }>(
-      GET_LATEST_SWAP_QUERY,
-    );
+  private async assertSubgraphNotStale(timestamp: number): Promise<void> {
+    let latestSwap: SubgraphSwapData | undefined;
 
-    if (!latestSwap) {
-      throw new PancakeswapClientError('No swaps data on subgraph');
+    try {
+      const { swaps } = await this.graphClient.request<{
+        swaps: [SubgraphSwapData?];
+      }>(GET_LATEST_SWAP_QUERY, {
+        timestamp,
+      });
+
+      latestSwap = swaps[0];
+    } catch (error) {
+      const message = 'Failed to fetch latest swap';
+      this.logger.error(message, {
+        error: pancakeswapUtils.formatGraphqlRequestError(error as Error),
+      });
+      throw new PancakeswapClientError(message);
     }
 
-    const latestSwapTs = Number(latestSwap.timestamp) * 1000;
-    if (dayjs().diff(latestSwapTs, 'seconds') > MAX_ALLOWED_DELAY) {
+    if (!latestSwap) {
       throw new PancakeswapClientError('Subgraph is stale');
     }
   }
 
-  private async fetchSwaps(tokenIn: string, tokenOut: string, since: number) {
+  private async fetchSwaps(
+    tokenIn: string,
+    tokenOut: string,
+    since: number,
+    until: number,
+    skip: number = 0,
+  ): Promise<Swap[]> {
     const { swaps } = await this.graphClient.request<{
-      swaps: MakerSwap[];
-    }>(GET_MAKER_SWAPS_QUERY, {
-      maker: this.userEvmAddress.toLowerCase(),
+      swaps: SubgraphSwapData[];
+    }>(GET_ACCOUNT_SWAPS_QUERY, {
+      account: this.userEvmAddress.toLowerCase(),
       tokenIn: tokenIn.toLowerCase(),
       tokenOut: tokenOut.toLowerCase(),
       since,
+      until,
+      skip,
     });
 
     return swaps.map((swap) => {
       const timestamp = Number(swap.timestamp);
 
       return {
+        id: swap.id,
         hash: swap.hash,
+        nonce: swap.nonce,
         timestamp,
         amountIn: Number(
           ethers.formatUnits(swap.amountIn, swap.tokenIn.decimals),
@@ -136,8 +136,23 @@ export class PancakeswapClient implements ExchangeApiClient {
     return Promise.resolve({ success: true });
   }
 
-  async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
-    await this.assertSubgraphNotStale();
+  async *fetchMyTrades(
+    symbol: string,
+    since: number,
+    until: number,
+  ): AsyncGenerator<Trade[]> {
+    if (!apiClientUtils.isAcceptableTimestamp(since, MAX_LOOKBACK_MS)) {
+      throw new Error('"since" must be a ms timestamp in acceptable range');
+    }
+
+    if (!apiClientUtils.isAcceptableTimestamp(until, MAX_LOOKBACK_MS)) {
+      throw new Error('"until" must be a ms timestamp in acceptable range');
+    }
+
+    const sinceSeconds = Math.floor(since / 1000);
+    const untilSeconds = Math.ceil(until / 1000);
+
+    await this.assertSubgraphNotStale(untilSeconds);
 
     try {
       const [baseTokenSymbol, quoteTokenSymbol] = symbol.split('/');
@@ -155,49 +170,69 @@ export class PancakeswapClient implements ExchangeApiClient {
         );
       }
 
-      const sinceSeconds = Math.ceil(since / 1000);
-      const [buySwaps, sellSwaps] = await Promise.all([
-        this.fetchSwaps(quoteTokenAddress, baseTokenAddress, sinceSeconds),
-        this.fetchSwaps(baseTokenAddress, quoteTokenAddress, sinceSeconds),
-      ]);
-
-      const allSwaps = _.orderBy(
-        [...buySwaps, ...sellSwaps],
-        'timestamp',
-        'asc',
-      );
-
-      return allSwaps.slice(0, MAX_PAGE_SIZE).map((swap) => {
-        const trade: Trade = {
-          id: swap.hash,
-          timestamp: swap.timestamp * 1000,
-          symbol,
-          side:
-            swap.tokenIn.toLowerCase() === quoteTokenAddress.toLowerCase()
-              ? TradingSide.BUY
-              : TradingSide.SELL,
-          takerOrMaker: TakerOrMakerFlag.TAKER,
-          amount: -1,
-          cost: -1,
-          price: -1,
-        };
-
-        if (trade.side === TradingSide.BUY) {
-          trade.amount = swap.amountOut;
-          trade.cost = swap.amountIn;
+      let nBuySwaps = 0;
+      let nSellSwaps = 0;
+      do {
+        let fetchBuySwapsPromise: Promise<Swap[]>;
+        if (nBuySwaps === -1) {
+          fetchBuySwapsPromise = Promise.resolve([]);
         } else {
-          trade.amount = swap.amountIn;
-          trade.cost = swap.amountOut;
+          fetchBuySwapsPromise = this.fetchSwaps(
+            quoteTokenAddress,
+            baseTokenAddress,
+            sinceSeconds,
+            untilSeconds,
+            nBuySwaps,
+          );
         }
 
-        trade.price = trade.cost / trade.amount;
+        let fetchSellSwapsPromise: Promise<Swap[]>;
+        if (nSellSwaps === -1) {
+          fetchSellSwapsPromise = Promise.resolve([]);
+        } else {
+          fetchSellSwapsPromise = this.fetchSwaps(
+            baseTokenAddress,
+            quoteTokenAddress,
+            sinceSeconds,
+            untilSeconds,
+            nSellSwaps,
+          );
+        }
 
-        return trade;
-      });
+        const [buySwaps, sellSwaps] = await Promise.all([
+          fetchBuySwapsPromise,
+          fetchSellSwapsPromise,
+        ]);
+        if (buySwaps.length === 0) {
+          nBuySwaps = -1;
+        } else {
+          nBuySwaps += buySwaps.length;
+        }
+        if (sellSwaps.length === 0) {
+          nSellSwaps = -1;
+        } else {
+          nSellSwaps += sellSwaps.length;
+        }
+
+        const allSwaps = _.orderBy(
+          [...buySwaps, ...sellSwaps],
+          'timestamp',
+          'asc',
+        );
+
+        const mappedSwaps = allSwaps.map((swap) =>
+          pancakeswapUtils.mapSwap(swap, symbol, quoteTokenAddress),
+        );
+        if (mappedSwaps.length > 0) {
+          yield mappedSwaps;
+        } else {
+          break;
+        }
+      } while (true);
     } catch (error) {
       const message = 'Failed to fetch trades';
       this.logger.error(message, {
-        error: formatGraphqlRequestError(error as Error),
+        error: pancakeswapUtils.formatGraphqlRequestError(error as Error),
         symbol,
         since,
       });
