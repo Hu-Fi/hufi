@@ -1,13 +1,17 @@
-import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 import jwt from 'jsonwebtoken';
 
-import { ExchangeName } from '@/common/constants';
-import { MethodNotImplementedError } from '@/common/errors/base';
+import {
+  ETH_TOKEN_SYMBOL,
+  ETH_USDT_PAIR,
+  ExchangeName,
+} from '@/common/constants';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
 import * as httpUtils from '@/common/utils/http';
-import logger from '@/logger';
 import type { Logger } from '@/logger';
+import logger from '@/logger';
 
 import {
   CexApiClientInitOptions,
@@ -16,8 +20,8 @@ import {
 import {
   ExchangePermission,
   RequiredAccessCheckResult,
-  type Trade,
   type AccountBalance,
+  type Trade,
 } from '../types';
 import * as apiClientUtils from '../utils';
 import {
@@ -26,15 +30,53 @@ import {
   DEPOSIT_ADDRESS_NETWORK,
   MAX_LOOKBACK_MS,
 } from './constants';
-import { BigoneAccessError, BigoneClientError } from './error';
 import {
+  ApiPermissionError,
+  BigoneApiAccessError,
+  BigoneClientError,
+} from './error';
+import {
+  type ApiDepositAddress,
   type ApiSpotAccountBalance,
   type ApiTrade,
-  type ApiDepositAddress,
 } from './types';
 import * as bigoneUtils from './utils';
 
 type BigoneClientInitOptions = Omit<CexApiClientInitOptions, 'extraCreds'>;
+
+function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
+  return function (
+    _target: unknown,
+    propertyKey: string,
+    descriptor: TypedPropertyDescriptor<
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this: BigoneClient, ...args: unknown[]) => any
+    >,
+  ) {
+    const original = descriptor.value!;
+
+    descriptor.value = async function (this: BigoneClient, ...args: unknown[]) {
+      try {
+        return await original.apply(this, args);
+      } catch (error) {
+        if (error instanceof ApiPermissionError) {
+          if (this.loggingConfig.logPermissionErrors) {
+            this.logger.info('Failed to access exchange API', {
+              method: propertyKey,
+              errorDetails: httpUtils.formatAxiosError(error.originalError),
+            });
+          }
+
+          throw new BigoneApiAccessError(expectedPermission, error.message);
+        }
+
+        throw error;
+      }
+    };
+
+    return descriptor;
+  };
+}
 
 export class BigoneClient implements ExchangeApiClient {
   readonly exchangeName = ExchangeName.BIGONE;
@@ -121,7 +163,12 @@ export class BigoneClient implements ExchangeApiClient {
       return response.data;
     } catch (error) {
       let formattedError = error;
+
       if (error instanceof AxiosError) {
+        if ([401, 403].includes(error.response?.status as number)) {
+          throw new ApiPermissionError(error);
+        }
+
         formattedError = httpUtils.formatAxiosError(error);
       }
 
@@ -143,14 +190,53 @@ export class BigoneClient implements ExchangeApiClient {
     return true;
   }
 
-  checkRequiredAccess(
-    _permissionsToCheck: Array<ExchangePermission>,
+  async checkRequiredAccess(
+    permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult> {
-    throw new Error('Method not implemented.');
+    const permissionCheckHandlers: Record<
+      ExchangePermission,
+      () => Promise<boolean>
+    > = {
+      [ExchangePermission.VIEW_ACCOUNT_BALANCE]: () =>
+        apiClientUtils.permissionCheckHandler(this.fetchBalance()),
+      [ExchangePermission.VIEW_DEPOSIT_ADDRESS]: () =>
+        apiClientUtils.permissionCheckHandler(
+          this.fetchDepositAddress(ETH_TOKEN_SYMBOL),
+        ),
+      [ExchangePermission.VIEW_SPOT_TRADING_HISTORY]: () => {
+        const now = Date.now();
+
+        return apiClientUtils.permissionCheckHandler(
+          controlFlow.consumeIteratorOnce(
+            this.fetchMyTrades(ETH_USDT_PAIR, now - 1, now),
+          ),
+        );
+      },
+    };
+
+    return await apiClientUtils.checkRequiredAccess(
+      permissionsToCheck,
+      permissionCheckHandlers,
+    );
   }
 
-  fetchOpenOrders(): never {
-    throw new MethodNotImplementedError();
+  /**
+   * Just a wrapper to corretly apply class decorators
+   * w/o necessity to handle "Promise or Generator" cases
+   * in decorator itself
+   */
+  @CatchApiPermissionErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
+  private async _fetchMyTrades(assetPairName: string, nextPageToken?: string) {
+    return await this.makeRequest<{
+      data: ApiTrade[];
+      page_token?: string;
+    }>('GET', 'viewer/trades', {
+      params: {
+        asset_pair_name: assetPairName,
+        page_token: nextPageToken,
+        limit: 200, // max page size
+      },
+    });
   }
 
   async *fetchMyTrades(
@@ -173,16 +259,8 @@ export class BigoneClient implements ExchangeApiClient {
     let nextPageToken: string | undefined;
     let apiTrades: ApiTrade[];
     do {
-      ({ data: apiTrades, page_token: nextPageToken } = await this.makeRequest<{
-        data: ApiTrade[];
-        page_token?: string;
-      }>('GET', 'viewer/trades', {
-        params: {
-          asset_pair_name: assetPairName,
-          page_token: nextPageToken,
-          limit: 200, // max page size
-        },
-      }));
+      ({ data: apiTrades, page_token: nextPageToken } =
+        await this._fetchMyTrades(assetPairName, nextPageToken));
 
       const mappedTrades = [];
       for (const apiTrade of apiTrades) {
@@ -204,6 +282,7 @@ export class BigoneClient implements ExchangeApiClient {
     } while (nextPageToken);
   }
 
+  @CatchApiPermissionErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)
   async fetchBalance(): Promise<AccountBalance> {
     const { data } = await this.makeRequest<{
       data: ApiSpotAccountBalance[];
@@ -225,6 +304,7 @@ export class BigoneClient implements ExchangeApiClient {
     return accountBalance;
   }
 
+  @CatchApiPermissionErrors(ExchangePermission.VIEW_DEPOSIT_ADDRESS)
   async fetchDepositAddress(symbol: string): Promise<string> {
     const { data } = await this.makeRequest<{
       data: ApiDepositAddress[];
@@ -237,7 +317,7 @@ export class BigoneClient implements ExchangeApiClient {
       /**
        * If no deposit address for symbol - it returns empty array
        */
-      throw new BigoneAccessError(
+      throw new BigoneApiAccessError(
         ExchangePermission.VIEW_DEPOSIT_ADDRESS,
         `No deposit address for ${symbol} on ${DEPOSIT_ADDRESS_NETWORK}`,
       );

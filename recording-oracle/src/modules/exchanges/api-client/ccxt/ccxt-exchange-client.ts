@@ -1,5 +1,5 @@
-import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
+import * as ccxt from 'ccxt';
 import _ from 'lodash';
 
 import {
@@ -10,22 +10,23 @@ import {
 import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
 import Environment from '@/common/utils/environment';
-import logger from '@/logger';
 import type { Logger } from '@/logger';
+import logger from '@/logger';
 
 import { ExchangeApiAccessError, ExchangeApiClientError } from '../errors';
+import type {
+  CexApiClientInitOptions,
+  ExchangeApiClient,
+} from '../exchange-api-client.interface';
 import {
   AccountBalance,
   ExchangePermission,
   RequiredAccessCheckResult,
   Trade,
 } from '../types';
+import * as apiClientUtils from '../utils';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import * as ccxtClientUtils from './utils';
-import type {
-  ExchangeApiClient,
-  CexApiClientInitOptions,
-} from '../exchange-api-client.interface';
 
 export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
   sandbox?: boolean;
@@ -72,21 +73,6 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
 
     return descriptor;
   };
-}
-
-async function permissionCheckHandler(
-  checkPromise: Promise<unknown>,
-): Promise<boolean> {
-  try {
-    await checkPromise;
-    return true;
-  } catch (error) {
-    if (error instanceof ExchangeApiAccessError) {
-      return false;
-    }
-
-    throw error;
-  }
 }
 
 export class CcxtExchangeClient implements ExchangeApiClient {
@@ -172,71 +158,32 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   async checkRequiredAccess(
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult> {
-    const _permissionsToCheck = new Set(permissionsToCheck);
-    if (_permissionsToCheck.size === 0) {
-      throw new Error(
-        'At least one exchange permission must be provided for check',
-      );
-    }
-
     try {
-      const checkHandlersMap = new Map<
+      const permissionCheckHandlers: Record<
         ExchangePermission,
-        ReturnType<typeof permissionCheckHandler>
-      >();
+        () => Promise<boolean>
+      > = {
+        [ExchangePermission.VIEW_ACCOUNT_BALANCE]: () =>
+          apiClientUtils.permissionCheckHandler(this.fetchBalance()),
+        [ExchangePermission.VIEW_DEPOSIT_ADDRESS]: () =>
+          apiClientUtils.permissionCheckHandler(
+            this.fetchDepositAddress(ETH_TOKEN_SYMBOL),
+          ),
+        [ExchangePermission.VIEW_SPOT_TRADING_HISTORY]: () => {
+          const now = Date.now();
 
-      if (_permissionsToCheck.has(ExchangePermission.VIEW_ACCOUNT_BALANCE)) {
-        checkHandlersMap.set(
-          ExchangePermission.VIEW_ACCOUNT_BALANCE,
-          permissionCheckHandler(this.fetchBalance()),
-        );
-      }
-
-      if (_permissionsToCheck.has(ExchangePermission.VIEW_DEPOSIT_ADDRESS)) {
-        checkHandlersMap.set(
-          ExchangePermission.VIEW_DEPOSIT_ADDRESS,
-          permissionCheckHandler(this.fetchDepositAddress(ETH_TOKEN_SYMBOL)),
-        );
-      }
-
-      if (
-        _permissionsToCheck.has(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-      ) {
-        const now = Date.now();
-        checkHandlersMap.set(
-          ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
-          permissionCheckHandler(
+          return apiClientUtils.permissionCheckHandler(
             controlFlow.consumeIteratorOnce(
               this.fetchMyTrades(ETH_USDT_PAIR, now - 1, now),
             ),
-          ),
-        );
-      }
-
-      /**
-       * To ensure try/catch handlers error in any promise
-       * and pre-resolve them
-       */
-      await Promise.all(Array.from(checkHandlersMap.values()));
-
-      const missingPermissions: Array<ExchangePermission> = [];
-      for (const [permission, checkResultPromise] of checkHandlersMap) {
-        const hasPermission = await checkResultPromise;
-        if (!hasPermission) {
-          missingPermissions.push(permission);
-        }
-      }
-
-      if (missingPermissions.length === 0) {
-        return {
-          success: true,
-        };
-      }
-
-      return {
-        success: false,
-        missing: missingPermissions,
+          );
+        },
       };
+
+      return await apiClientUtils.checkRequiredAccess(
+        permissionsToCheck,
+        permissionCheckHandlers,
+      );
     } catch (error) {
       if (error instanceof ccxt.NetworkError) {
         const message = 'Error while checking exchange access';

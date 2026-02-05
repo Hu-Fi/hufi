@@ -4,21 +4,9 @@ import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
 import { MethodNotImplementedError } from '@/common/errors/base';
-import logger from '@/logger';
 import type { Logger } from '@/logger';
+import logger from '@/logger';
 
-import {
-  MAX_LOOKBACK_MS,
-  PANCAKESWAP_BSC_SUBGRAPH,
-  tokenAddressBySymbol,
-} from './constants';
-import {
-  GET_LATEST_SWAP_QUERY,
-  GET_ACCOUNT_SWAPS_QUERY,
-  type SubgraphSwapData,
-} from './queries';
-import { type Swap } from './types';
-import * as pancakeswapUtils from './utils';
 import { ExchangeApiClientError } from '../errors';
 import {
   type DexApiClientInitOptions,
@@ -26,6 +14,18 @@ import {
 } from '../exchange-api-client.interface';
 import { type RequiredAccessCheckResult, type Trade } from '../types';
 import * as apiClientUtils from '../utils';
+import {
+  MAX_LOOKBACK_MS,
+  PANCAKESWAP_BSC_SUBGRAPH,
+  tokenAddressBySymbol,
+} from './constants';
+import {
+  GET_ACCOUNT_SWAPS_QUERY,
+  GET_LATEST_SWAP_QUERY,
+  type SubgraphSwapData,
+} from './queries';
+import { type Swap } from './types';
+import * as pancakeswapUtils from './utils';
 
 type PancakeswapClientInitOptions = DexApiClientInitOptions & {
   subgraphApiKey: string;
@@ -238,10 +238,6 @@ export class PancakeswapClient implements ExchangeApiClient {
       });
       throw new PancakeswapClientError(message);
     }
-  }
-
-  fetchOpenOrders(): never {
-    throw new MethodNotImplementedError();
   }
 
   fetchBalance(): never {
