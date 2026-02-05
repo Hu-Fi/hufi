@@ -1,7 +1,5 @@
-jest.mock('./ccxt-exchange-client');
-jest.mock('./pancakeswap', () => ({
-  PancakeswapClient: jest.fn(),
-}));
+jest.mock('./ccxt');
+jest.mock('./pancakeswap');
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
@@ -18,8 +16,7 @@ import {
 } from '@/config';
 import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
-import { CcxtExchangeClient } from './ccxt-exchange-client';
-import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { BASE_CCXT_CLIENT_OPTIONS, CcxtExchangeClient } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
 import { generateExchangeName, mockExchangesConfigService } from '../fixtures';

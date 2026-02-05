@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import dayjs from 'dayjs';
+import ms from 'ms';
 
 import { CacheManager } from '@/infrastructure/cache';
 
@@ -39,7 +39,7 @@ export class Web3Cache {
     await this.cacheManager.set(
       cacheKey,
       tokenPriceUsd.toString(),
-      dayjs.duration(1, 'minute').asMilliseconds(),
+      ms('1 minute'),
     );
   }
 }

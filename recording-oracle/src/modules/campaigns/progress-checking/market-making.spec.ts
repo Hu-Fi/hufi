@@ -166,16 +166,19 @@ describe('MarketMakingProgressChecker', () => {
         1,
         progressCheckerSetup.symbol,
         progressCheckerSetup.periodStart.valueOf(),
+        progressCheckerSetup.periodEnd.valueOf(),
       );
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         2,
         progressCheckerSetup.symbol,
         pages[0].at(-1)!.timestamp + 1,
+        progressCheckerSetup.periodEnd.valueOf(),
       );
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
         3,
         progressCheckerSetup.symbol,
         pages[1].at(-1)!.timestamp + 1,
+        progressCheckerSetup.periodEnd.valueOf(),
       );
     });
 
@@ -192,46 +195,8 @@ describe('MarketMakingProgressChecker', () => {
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledWith(
         progressCheckerSetup.symbol,
         participantInfo.joinedAt.valueOf(),
+        progressCheckerSetup.periodEnd.valueOf(),
       );
-    });
-
-    it('should count volume for trades up to exclusive end date', async () => {
-      const tradesInRange = Array.from({ length: 3 }, () =>
-        generateTrade({
-          timestamp: faker.date
-            .recent({ refDate: progressCheckerSetup.periodEnd })
-            .valueOf(),
-        }),
-      );
-      const tradesOutOfRange = [
-        generateTrade({
-          timestamp: progressCheckerSetup.periodEnd.valueOf(),
-        }),
-        generateTrade({
-          timestamp: faker.date
-            .soon({ refDate: progressCheckerSetup.periodEnd })
-            .valueOf(),
-        }),
-      ];
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
-        ...tradesInRange,
-        ...tradesOutOfRange,
-      ]);
-
-      const result = await resultsChecker.checkForParticipant(participantInfo);
-
-      const expectedTotalVolume = tradesInRange.reduce(
-        (acc, curr) => acc + curr.cost,
-        0,
-      );
-      const expectedScore = tradesInRange.reduce(
-        (acc, curr) => acc + resultsChecker.calculateTradeScore(curr),
-        0,
-      );
-
-      expect(result.abuseDetected).toBe(false);
-      expect(result.total_volume).toBe(expectedTotalVolume);
-      expect(result.score).toBe(expectedScore);
     });
   });
 

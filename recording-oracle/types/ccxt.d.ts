@@ -34,14 +34,17 @@ declare module 'ccxt' {
     [x: string]: unknown;
   };
 
-  export type TokenBalances = {
-    [token: string]: number;
+  type TokenBalances = {
+    free: number;
+    used: number;
+    total: number;
   };
 
   export type AccountBalance = {
-    free: TokenBalances;
-    used: TokenBalances;
-    total: TokenBalances;
+    [x: string]: TokenBalances | undefined;
+    info?: unknown;
+    timestamp?: unknown;
+    datetime?: unknown;
   };
 
   export type AddressStructure = {

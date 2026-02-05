@@ -15,11 +15,7 @@ const run = async () => {
   logger.info('Deposit address', { depositAddress });
 
   const balance = await client.fetchBalance();
-  logger.info('Balance', {
-    total: balance.total[SYMBOL],
-    free: balance.free[SYMBOL],
-    used: balance.used[SYMBOL],
-  });
+  logger.info('Balance', balance[SYMBOL]);
 
   const since = new Date('2026-02-01T02:00:00.000Z');
   const until = new Date('2026-02-03T15:00:00.000Z');

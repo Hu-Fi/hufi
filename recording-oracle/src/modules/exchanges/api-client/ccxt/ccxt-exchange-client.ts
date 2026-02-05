@@ -12,20 +12,19 @@ import Environment from '@/common/utils/environment';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
-import * as ccxtClientUtils from './ccxt-exchange-client.utils';
-import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
-import { ExchangeApiAccessError, ExchangeApiClientError } from './errors';
-import type {
-  ExchangeApiClient,
-  CexApiClientInitOptions,
-} from './exchange-api-client.interface';
+import { ExchangeApiAccessError, ExchangeApiClientError } from '../errors';
 import {
   AccountBalance,
   ExchangePermission,
-  Order,
   RequiredAccessCheckResult,
   Trade,
-} from './types';
+} from '../types';
+import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import * as ccxtClientUtils from './utils';
+import type {
+  ExchangeApiClient,
+  CexApiClientInitOptions,
+} from '../exchange-api-client.interface';
 
 export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
   sandbox?: boolean;
@@ -204,7 +203,9 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       ) {
         checkHandlersMap.set(
           ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
-          permissionCheckHandler(this.fetchMyTrades(ETH_USDT_PAIR, Date.now())),
+          permissionCheckHandler(
+            this.fetchMyTrades(ETH_USDT_PAIR, Date.now(), Date.now()),
+          ),
         );
       }
 
@@ -243,23 +244,16 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     }
   }
 
-  @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-  async fetchOpenOrders(symbol: string, since: number): Promise<Order[]> {
-    /**
-     * Use default value for "limit" because it varies
-     * from exchange to exchange.
-     */
-    const orders = await this.ccxtClient.fetchOpenOrders(symbol, since);
-
-    return orders.map(ccxtClientUtils.mapCcxtOrder);
-  }
-
   /**
    * Returns all historical trades, both for fully and partially filled orders,
    * i.e. returns historical data for actual buy/sell that happened.
    */
   @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-  async fetchMyTrades(symbol: string, since: number): Promise<Trade[]> {
+  async fetchMyTrades(
+    symbol: string,
+    since: number,
+    until: number,
+  ): Promise<Trade[]> {
     let limit: number | undefined;
     /**
      * Use default value for "limit" because it varies
@@ -273,7 +267,9 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
     const trades = await this.ccxtClient.fetchMyTrades(symbol, since, limit);
 
-    return trades.map(ccxtClientUtils.mapCcxtTrade);
+    return trades
+      .map(ccxtClientUtils.mapCcxtTrade)
+      .filter((trade) => trade.timestamp <= until);
   }
 
   @CatchApiAccessErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)

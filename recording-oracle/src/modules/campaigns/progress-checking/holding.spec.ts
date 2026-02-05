@@ -96,7 +96,7 @@ describe('HoldingProgressChecker', () => {
       const result = await resultsChecker.checkForParticipant(participantInfo);
 
       const expectedValue =
-        mockedAccountBalance.total[progressCheckerSetup.symbol];
+        mockedAccountBalance[progressCheckerSetup.symbol]?.total;
       expect(result.abuseDetected).toBe(false);
       expect(result.score).toBe(expectedValue);
       expect(result.token_balance).toBe(expectedValue);
@@ -163,7 +163,7 @@ describe('HoldingProgressChecker', () => {
           accountBalance,
         );
         expectedTotalBalance +=
-          accountBalance.total[progressCheckerSetup.symbol];
+          accountBalance[progressCheckerSetup.symbol]!.total;
 
         await resultsChecker.checkForParticipant(generateParticipantInfo());
       }

@@ -1,11 +1,17 @@
-import dayjs from 'dayjs';
+import ms from 'ms';
 
 export const BASE_API_URL = 'https://api.big.one/api/v3/';
 
-export const API_TIMEOUT = dayjs.duration(10, 'seconds').asMilliseconds();
+/**
+ * The number in milliseconds before requests time out
+ */
+export const API_TIMEOUT = ms('10 seconds');
 
 export const DEPOSIT_ADDRESS_NETWORK = 'Ethereum';
 
-export const MAX_LOOKBACK_MS = dayjs.duration(5, 'days').asMilliseconds();
+/**
+ * Time in milliseconds that is allowed for historical data lookback
+ */
+export const MAX_LOOKBACK_MS = ms('5 days');
 
 export const N_TRADES_THRESHOLD = 1000;

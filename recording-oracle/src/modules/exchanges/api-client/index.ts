@@ -10,7 +10,6 @@ export type { ExchangeApiClient } from './exchange-api-client.interface';
 
 export {
   type ExchangeExtras,
-  type Order,
   type Trade,
   ExchangePermission,
   TakerOrMakerFlag,

@@ -2,7 +2,7 @@ import '@/setup-libs';
 
 import logger from '@/logger';
 import { ExchangePermission } from '@/modules/exchanges';
-import { CcxtExchangeClient } from '@/modules/exchanges/api-client/ccxt-exchange-client';
+import { CcxtExchangeClient } from '@/modules/exchanges/api-client/ccxt';
 
 const EXCHANGE_NAME = 'replace_me';
 const SANDBOX = false;

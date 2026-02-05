@@ -64,20 +64,18 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
       this.tradingPeriodStart.valueOf(),
       participant.joinedAt.valueOf(),
     );
-    while (since < this.tradingPeriodEnd.valueOf() && !abuseDetected) {
+    const until = this.tradingPeriodEnd.valueOf();
+    while (since < until && !abuseDetected) {
       const trades = await exchangeApiClient.fetchMyTrades(
         this.tradingPair,
         since,
+        until,
       );
       if (trades.length === 0) {
         break;
       }
 
       for (const trade of trades) {
-        if (trade.timestamp >= this.tradingPeriodEnd.valueOf()) {
-          break;
-        }
-
         const tradeFingerprint = this.getTradeFingerprint(trade);
         if (this.tradeSamples.has(tradeFingerprint)) {
           abuseDetected = true;

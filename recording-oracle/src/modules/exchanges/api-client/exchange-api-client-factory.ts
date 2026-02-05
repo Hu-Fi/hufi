@@ -12,10 +12,10 @@ import {
 import logger from '@/logger';
 
 import {
+  BASE_CCXT_CLIENT_OPTIONS,
   CcxtExchangeClient,
   CcxtExchangeClientInitOptions,
-} from './ccxt-exchange-client';
-import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+} from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import type {
   ExchangeApiClient,

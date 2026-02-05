@@ -4,7 +4,6 @@ import {
   AccountBalance,
   ExchangePermission,
   ExtraCreds,
-  Order,
   RequiredAccessCheckResult,
   Trade,
 } from './types';
@@ -32,8 +31,6 @@ export interface ExchangeApiClient {
   checkRequiredAccess(
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult>;
-
-  fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
 
   fetchMyTrades(symbol: string, since: number, until: number): Promise<Trade[]>;
 

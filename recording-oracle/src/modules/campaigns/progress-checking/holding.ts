@@ -48,7 +48,7 @@ export class HoldingProgressChecker implements CampaignProgressChecker<
       exchangeApiClient.fetchBalance(),
     ]);
 
-    let tokenBalance = accountBalance.total[this.holdingTokenSymbol] || 0;
+    let tokenBalance = accountBalance[this.holdingTokenSymbol]?.total || 0;
     let score = tokenBalance;
 
     let abuseDetected = false;

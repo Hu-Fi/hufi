@@ -210,19 +210,17 @@ export class BigoneClient implements ExchangeApiClient {
       data: ApiSpotAccountBalance[];
     }>('GET', 'viewer/accounts');
 
-    const accountBalance: AccountBalance = {
-      free: {},
-      used: {},
-      total: {},
-    };
+    const accountBalance: AccountBalance = {};
 
     for (const assetBalance of data) {
       const total = Number(assetBalance.balance);
       const used = Number(assetBalance.locked_balance);
 
-      accountBalance.total[assetBalance.asset_symbol] = total;
-      accountBalance.used[assetBalance.asset_symbol] = used;
-      accountBalance.free[assetBalance.asset_symbol] = total - used;
+      accountBalance[assetBalance.asset_symbol] = {
+        free: total - used,
+        used,
+        total,
+      };
     }
 
     return accountBalance;
