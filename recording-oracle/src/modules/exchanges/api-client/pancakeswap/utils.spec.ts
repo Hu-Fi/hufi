@@ -1,11 +1,41 @@
 import { faker } from '@faker-js/faker';
+import { ethers } from 'ethers';
 
 import { generateTradingPair } from '../../fixtures';
 import { TakerOrMakerFlag, TradingSide } from '../types';
-import { generatePancakeswapSwap } from './fixtures';
-import { mapSwap } from './utils';
+import { generatePancakeswapSwap, generateSubgraphSwapData } from './fixtures';
+import { mapSubgraphDataToSwap, mapSwap } from './utils';
 
 describe('BigONE client utils', () => {
+  describe('mapSubgraphDataToSwap', () => {
+    it('should correctly map data', () => {
+      const subgraphSwapData = generateSubgraphSwapData();
+
+      const mapped = mapSubgraphDataToSwap(subgraphSwapData);
+
+      expect(mapped).toEqual({
+        id: subgraphSwapData.id,
+        hash: subgraphSwapData.hash,
+        nonce: subgraphSwapData.nonce,
+        timestamp: Number(subgraphSwapData.timestamp),
+        amountIn: Number(
+          ethers.formatUnits(
+            subgraphSwapData.amountIn,
+            subgraphSwapData.tokenIn.decimals,
+          ),
+        ),
+        amountOut: Number(
+          ethers.formatUnits(
+            subgraphSwapData.amountOut,
+            subgraphSwapData.tokenOut.decimals,
+          ),
+        ),
+        tokenIn: subgraphSwapData.tokenIn.id,
+        tokenOut: subgraphSwapData.tokenOut.id,
+      });
+    });
+  });
+
   describe('mapSwap', () => {
     let tradingPair: string;
     let quoteTokenAddress: string;

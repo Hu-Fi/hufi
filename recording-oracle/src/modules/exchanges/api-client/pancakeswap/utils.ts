@@ -1,7 +1,24 @@
+import { ethers } from 'ethers';
 import { ClientError } from 'graphql-request';
 
 import { TakerOrMakerFlag, TradingSide, type Trade } from '../types';
+import { SubgraphSwapData } from './queries';
 import { Swap } from './types';
+
+export function mapSubgraphDataToSwap(data: SubgraphSwapData): Swap {
+  return {
+    id: data.id,
+    hash: data.hash,
+    nonce: data.nonce,
+    timestamp: Number(data.timestamp),
+    amountIn: Number(ethers.formatUnits(data.amountIn, data.tokenIn.decimals)),
+    amountOut: Number(
+      ethers.formatUnits(data.amountOut, data.tokenOut.decimals),
+    ),
+    tokenIn: data.tokenIn.id,
+    tokenOut: data.tokenOut.id,
+  };
+}
 
 export function mapSwap(
   swap: Swap,

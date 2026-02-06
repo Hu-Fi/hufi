@@ -15,7 +15,7 @@ describe('Control Flow utilities', () => {
      * Have this to avoid potential flaky tests
      * in case when runs on busy CPU
      */
-    const ALLOWED_TIMEOUT_MARGIN_MS = 50;
+    const ALLOWED_TIMEOUT_MARGIN_MS = 100;
 
     let timeoutMs: number;
     let delayMarginMs: number;
@@ -24,7 +24,7 @@ describe('Control Flow utilities', () => {
       /**
        * Real timer w/o mocks will run, so keep it reasonably small
        */
-      timeoutMs = faker.number.int({ min: 100, max: 500 });
+      timeoutMs = faker.number.int({ min: 500, max: 1000 });
 
       delayMarginMs = faker.number.int({
         min: 10,

@@ -5,8 +5,8 @@ jest.mock('./pancakeswap');
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
-import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
+import * as ccxt from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -17,11 +17,11 @@ import {
 } from '@/config';
 import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
+import { generateExchangeName, mockExchangesConfigService } from '../fixtures';
 import { BigoneClient } from './bigone';
 import { BASE_CCXT_CLIENT_OPTIONS, CcxtExchangeClient } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
-import { generateExchangeName, mockExchangesConfigService } from '../fixtures';
 import { generateConfigByExchangeStub } from './fixtures';
 import { PancakeswapClient } from './pancakeswap';
 

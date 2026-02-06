@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { GraphQLClient } from 'graphql-request';
 import _ from 'lodash';
 
@@ -108,24 +107,7 @@ export class PancakeswapClient implements ExchangeApiClient {
       skip,
     });
 
-    return swaps.map((swap) => {
-      const timestamp = Number(swap.timestamp);
-
-      return {
-        id: swap.id,
-        hash: swap.hash,
-        nonce: swap.nonce,
-        timestamp,
-        amountIn: Number(
-          ethers.formatUnits(swap.amountIn, swap.tokenIn.decimals),
-        ),
-        amountOut: Number(
-          ethers.formatUnits(swap.amountOut, swap.tokenOut.decimals),
-        ),
-        tokenIn: swap.tokenIn.id,
-        tokenOut: swap.tokenOut.id,
-      };
-    });
+    return swaps.map(pancakeswapUtils.mapSubgraphDataToSwap);
   }
 
   checkRequiredCredentials(): boolean {

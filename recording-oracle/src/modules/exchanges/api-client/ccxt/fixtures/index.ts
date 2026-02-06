@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
 import type {
-  Trade,
-  AccountBalance as CcxtAccountBalance,
   AddressStructure,
+  AccountBalance as CcxtAccountBalance,
+  Trade,
 } from 'ccxt';
 
-import { generateTradingSide, generateTakerOrMakerFlag } from '../../fixtures';
+import { generateTakerOrMakerFlag, generateTradingSide } from '../../fixtures';
 import { AccountBalance } from '../../types';
 
 function generateCcxtTradingPair(): string {

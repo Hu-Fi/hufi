@@ -34,7 +34,7 @@ export async function consumeIteratorOnce<T>(
 ) {
   for await (const item of iterable) {
     /**
-     * Breaking the loop will correctly creanup the iterator
+     * Breaking the loop will correctly cleanup the iterator
      * (e.g. by calling 'return' if it has one)
      */
     return item;

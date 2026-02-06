@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import * as ccxt from 'ccxt';
 import type { Exchange as CcxtExchange } from 'ccxt';
+import * as ccxt from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -19,9 +19,9 @@ import {
 } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import type {
-  ExchangeApiClient,
   CexApiClientInitOptions,
   DexApiClientInitOptions,
+  ExchangeApiClient,
 } from './exchange-api-client.interface';
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
