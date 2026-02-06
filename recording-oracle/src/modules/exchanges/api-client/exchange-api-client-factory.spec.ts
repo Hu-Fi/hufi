@@ -243,7 +243,7 @@ describe('ExchangeApiClientFactory', () => {
         userId,
       });
 
-      expect(client).toBeDefined();
+      expect(client).toBeInstanceOf(CcxtExchangeClient);
 
       expect(mockedCcxtExchangeClient).toHaveBeenCalledTimes(1);
       expect(mockedCcxtExchangeClient).toHaveBeenCalledWith(exchangeName, {
@@ -271,7 +271,7 @@ describe('ExchangeApiClientFactory', () => {
         userId,
       });
 
-      expect(client).toBeDefined();
+      expect(client).toBeInstanceOf(BigoneClient);
 
       expect(mockedBigoneClient).toHaveBeenCalledTimes(1);
       expect(mockedBigoneClient).toHaveBeenCalledWith(
@@ -389,7 +389,7 @@ describe('ExchangeApiClientFactory', () => {
         },
       );
 
-      expect(client).toBeDefined();
+      expect(client).toBeInstanceOf(PancakeswapClient);
 
       expect(mockedPancakeswapClient).toHaveBeenCalledTimes(1);
       expect(mockedPancakeswapClient).toHaveBeenCalledWith(
