@@ -1,3 +1,4 @@
+jest.mock('./bigone');
 jest.mock('./ccxt');
 jest.mock('./pancakeswap');
 
@@ -16,6 +17,7 @@ import {
 } from '@/config';
 import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
+import { BigoneClient } from './bigone';
 import { BASE_CCXT_CLIENT_OPTIONS, CcxtExchangeClient } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
@@ -30,6 +32,7 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
   ...BASE_CCXT_CLIENT_OPTIONS,
 });
 
+const mockedBigoneClient = jest.mocked(BigoneClient);
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
 const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
 
@@ -253,6 +256,31 @@ describe('ExchangeApiClientFactory', () => {
             mockLoggerConfigService.logExchangePermissionErrors,
         },
       });
+    });
+
+    it('should correctly init client for bigone', () => {
+      exchangeName = ExchangeName.BIGONE;
+
+      mockedBigoneClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
+        true,
+      );
+
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
+        apiKey,
+        secret,
+        userId,
+      });
+
+      expect(client).toBeDefined();
+
+      expect(mockedBigoneClient).toHaveBeenCalledTimes(1);
+      expect(mockedBigoneClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apiKey,
+          secret,
+          userId,
+        }),
+      );
     });
 
     it('should correctly init client for bitmart', () => {
