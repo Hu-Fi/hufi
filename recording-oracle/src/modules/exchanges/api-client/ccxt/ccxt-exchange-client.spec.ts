@@ -408,7 +408,7 @@ describe('CcxtExchangeClient', () => {
           expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
             index + 2,
             tradingPair,
-            tradesPage.at(-1)?.timestamp,
+            tradesPage.at(-1)!.timestamp + 1,
           );
         }
       });

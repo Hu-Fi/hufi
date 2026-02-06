@@ -15,7 +15,7 @@ type SubgraphToken = {
 };
 
 export const GET_ACCOUNT_SWAPS_QUERY = gql`
-  query getMakerSwaps(
+  query getAccountSwaps(
     $account: Bytes!
     $tokenIn: Bytes!
     $tokenOut: Bytes!

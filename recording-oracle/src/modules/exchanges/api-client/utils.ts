@@ -15,7 +15,7 @@ export function isAcceptableTimestamp(
   /**
    * Safety-belt
    */
-  if (typeof timestamp !== 'number') {
+  if (!Number.isFinite(timestamp)) {
     return false;
   }
 

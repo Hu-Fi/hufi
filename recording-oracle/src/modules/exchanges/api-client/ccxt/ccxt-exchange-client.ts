@@ -196,7 +196,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   }
 
   /**
-   * Just a wrapper to corretly apply class decorators
+   * Just a wrapper to correctly apply class decorators
    * w/o necessity to handle "Promise or Generator" cases
    * in decorator itself
    */
@@ -226,7 +226,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       if (tradesInRange.length) {
         yield tradesInRange.map(ccxtClientUtils.mapCcxtTrade);
 
-        fetchTradesSince = trades.at(-1)!.timestamp;
+        fetchTradesSince = trades.at(-1)!.timestamp + 1;
       } else {
         break;
       }

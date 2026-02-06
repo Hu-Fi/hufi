@@ -8,7 +8,7 @@ import type {
 import { generateTradingSide, generateTakerOrMakerFlag } from '../../fixtures';
 import { AccountBalance } from '../../types';
 
-function generateCcxTradingPair(): string {
+function generateCcxtTradingPair(): string {
   return `${faker.finance.currencyCode()}/${faker.finance.currencyCode()}`;
 }
 
@@ -23,7 +23,7 @@ export function generateCcxtTrade(overrides?: Partial<Trade>): Trade {
     id: faker.string.ulid(),
     order: faker.string.ulid(),
     timestamp: faker.date.recent().valueOf(),
-    symbol: generateCcxTradingPair(),
+    symbol: generateCcxtTradingPair(),
     side: generateTradingSide(),
     takerOrMaker: generateTakerOrMakerFlag(),
     price,

@@ -221,7 +221,7 @@ export class BigoneClient implements ExchangeApiClient {
   }
 
   /**
-   * Just a wrapper to corretly apply class decorators
+   * Just a wrapper to correctly apply class decorators
    * w/o necessity to handle "Promise or Generator" cases
    * in decorator itself
    */
