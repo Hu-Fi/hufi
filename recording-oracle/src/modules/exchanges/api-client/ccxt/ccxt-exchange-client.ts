@@ -206,7 +206,6 @@ export class CcxtExchangeClient implements ExchangeApiClient {
      * Use default value for "limit" because it varies
      * from exchange to exchange.
      */
-
     return await this.ccxtClient.fetchMyTrades(symbol, since);
   }
 
@@ -220,12 +219,13 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     until: number,
   ): AsyncGenerator<Trade[]> {
     let fetchTradesSince = since;
-    while (since < until) {
-      let trades = await this._fetchMyTrades(symbol, fetchTradesSince);
-      trades = trades.filter((trade) => trade.timestamp < until);
+    while (fetchTradesSince < until) {
+      const trades = await this._fetchMyTrades(symbol, fetchTradesSince);
 
-      if (trades.length) {
-        yield trades.map(ccxtClientUtils.mapCcxtTrade);
+      const tradesInRange = trades.filter((trade) => trade.timestamp < until);
+      if (tradesInRange.length) {
+        yield tradesInRange.map(ccxtClientUtils.mapCcxtTrade);
+
         fetchTradesSince = trades.at(-1)!.timestamp;
       } else {
         break;

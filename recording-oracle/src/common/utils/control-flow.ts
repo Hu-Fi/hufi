@@ -40,3 +40,15 @@ export async function consumeIteratorOnce<T>(
     return item;
   }
 }
+
+export async function consumeIterator<T>(
+  iterable: Iterable<T> | AsyncIterable<T>,
+) {
+  const items: T[] = [];
+
+  for await (const item of iterable) {
+    items.push(item);
+  }
+
+  return items;
+}

@@ -2,10 +2,12 @@ jest.mock('@/logger');
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
-import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
+import * as ccxt from 'ccxt';
+import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
 import logger from '@/logger';
 import {
@@ -14,6 +16,7 @@ import {
 } from '@/modules/exchanges/fixtures';
 
 import { ExchangeApiAccessError, ExchangeApiClientError } from '../errors';
+import { ExchangePermission } from '../types';
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import {
@@ -21,7 +24,6 @@ import {
   generateCcxtDepositAddressStructure,
   generateCcxtTrade,
 } from './fixtures';
-import { ExchangePermission } from '../types';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -264,8 +266,7 @@ describe('CcxtExchangeClient', () => {
 
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
           'ETH/USDT',
-          now,
-          undefined,
+          now - 1,
         );
       });
 
@@ -357,42 +358,59 @@ describe('CcxtExchangeClient', () => {
         tradingPair = generateTradingPair();
         tradesSince = faker.date.past();
         tradesUntil = faker.date.future();
+
+        mockedExchange.fetchMyTrades.mockResolvedValue([]);
       });
 
-      it('should fetch trades with default limit and return mapped data', async () => {
-        const nMockedResults = faker.number.int({ min: 2, max: 5 });
-        const mockedTrade = generateCcxtTrade({ symbol: tradingPair });
-
-        mockedExchange.fetchMyTrades.mockResolvedValueOnce(
-          Array.from({ length: nMockedResults }, (_e, index) => ({
-            ...mockedTrade,
-            id: index.toString(),
-          })),
+      it('should fetch all trades with default limit and return mapped data', async () => {
+        const mockedTrades = Array.from(
+          { length: faker.number.int({ min: 3, max: 5 }) },
+          () => generateCcxtTrade({ symbol: tradingPair }),
         );
+        const tradesPages = _.chunk(mockedTrades, 2);
 
-        const trades = await ccxtExchangeApiClient.fetchMyTrades(
-          tradingPair,
-          tradesSince.valueOf(),
-          tradesUntil.valueOf(),
-        );
+        for (const tradesPage of tradesPages) {
+          mockedExchange.fetchMyTrades.mockResolvedValueOnce(tradesPage);
+        }
 
-        expect(trades.length).toBe(nMockedResults);
+        const trades = (
+          await controlFlow.consumeIterator(
+            ccxtExchangeApiClient.fetchMyTrades(
+              tradingPair,
+              tradesSince.valueOf(),
+              tradesUntil.valueOf(),
+            ),
+          )
+        ).flat();
+
+        expect(trades.length).toBe(mockedTrades.length);
         for (const [index, trade] of trades.entries()) {
           expect(trade).toEqual({
-            ...mockedTrade,
-            id: index.toString(),
+            ...mockedTrades[index],
             order: undefined,
             info: undefined,
             etc: undefined,
           });
         }
 
-        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(1);
-        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
+        /**
+         * Extra page call to make sure no more trades there
+         */
+        expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(
+          tradesPages.length + 1,
+        );
+        expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
+          1,
           tradingPair,
           tradesSince.valueOf(),
-          undefined,
         );
+        for (const [index, tradesPage] of tradesPages.entries()) {
+          expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
+            index + 2,
+            tradingPair,
+            tradesPage.at(-1)?.timestamp,
+          );
+        }
       });
 
       it('should fetch trades and filter out by "until" timestamp', async () => {
@@ -401,16 +419,24 @@ describe('CcxtExchangeClient', () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([
           mockedTrade,
           {
-            ...mockedTrade,
+            ...generateCcxtTrade({ symbol: tradingPair }),
+            timestamp: tradesUntil.valueOf(),
+          },
+          {
+            ...generateCcxtTrade({ symbol: tradingPair }),
             timestamp: tradesUntil.valueOf() + 1,
           },
         ]);
 
-        const trades = await ccxtExchangeApiClient.fetchMyTrades(
-          tradingPair,
-          tradesSince.valueOf(),
-          tradesUntil.valueOf(),
-        );
+        const trades = (
+          await controlFlow.consumeIterator(
+            ccxtExchangeApiClient.fetchMyTrades(
+              tradingPair,
+              tradesSince.valueOf(),
+              tradesUntil.valueOf(),
+            ),
+          )
+        ).flat();
 
         expect(trades.length).toBe(1);
         expect(trades).toEqual([
@@ -421,7 +447,6 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
           tradingPair,
           tradesSince.valueOf(),
-          undefined,
         );
       });
 
@@ -434,10 +459,12 @@ describe('CcxtExchangeClient', () => {
 
         let thrownError;
         try {
-          await ccxtExchangeApiClient.fetchMyTrades(
-            tradingPair,
-            tradesSince.valueOf(),
-            tradesUntil.valueOf(),
+          await controlFlow.consumeIteratorOnce(
+            ccxtExchangeApiClient.fetchMyTrades(
+              tradingPair,
+              tradesSince.valueOf(),
+              tradesUntil.valueOf(),
+            ),
           );
         } catch (error) {
           thrownError = error;
@@ -479,10 +506,12 @@ describe('CcxtExchangeClient', () => {
 
               let thrownError;
               try {
-                await mexcClient.fetchMyTrades(
-                  tradingPair,
-                  tradesSince.valueOf(),
-                  tradesUntil.valueOf(),
+                await controlFlow.consumeIteratorOnce(
+                  mexcClient.fetchMyTrades(
+                    tradingPair,
+                    tradesSince.valueOf(),
+                    tradesUntil.valueOf(),
+                  ),
                 );
               } catch (error) {
                 thrownError = error;
@@ -514,10 +543,12 @@ describe('CcxtExchangeClient', () => {
 
             let thrownError;
             try {
-              await exchangeClient.fetchMyTrades(
-                tradingPair,
-                tradesSince.valueOf(),
-                tradesUntil.valueOf(),
+              await controlFlow.consumeIteratorOnce(
+                exchangeClient.fetchMyTrades(
+                  tradingPair,
+                  tradesSince.valueOf(),
+                  tradesUntil.valueOf(),
+                ),
               );
             } catch (error) {
               thrownError = error;

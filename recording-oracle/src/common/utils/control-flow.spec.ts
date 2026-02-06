@@ -2,7 +2,12 @@ import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';
 
-import { TimeoutError, withTimeout, consumeIteratorOnce } from './control-flow';
+import {
+  TimeoutError,
+  withTimeout,
+  consumeIteratorOnce,
+  consumeIterator,
+} from './control-flow';
 
 describe('Control Flow utilities', () => {
   describe('withTimeout', () => {
@@ -108,6 +113,30 @@ describe('Control Flow utilities', () => {
       expect(secondYieldSpy).toHaveBeenCalledTimes(0);
       expect(catchBlockSpy).toHaveBeenCalledTimes(0);
       expect(cleanupSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('consumeIterator', () => {
+    it('should consume sync iterable', async () => {
+      const randomValues = Array.from({ length: 3 }, () => Math.random());
+
+      const result = await consumeIterator(randomValues);
+
+      expect(result).toEqual(randomValues);
+    });
+
+    it('should consume async iterable', async () => {
+      const randomValues = Array.from({ length: 3 }, () => Math.random());
+
+      async function* testGenerator() {
+        for (const randomValue of randomValues) {
+          yield randomValue;
+        }
+      }
+
+      const result = await consumeIterator(testGenerator());
+
+      expect(result).toEqual(randomValues);
     });
   });
 });
