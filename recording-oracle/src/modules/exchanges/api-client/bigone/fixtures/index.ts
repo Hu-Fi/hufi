@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-import { ApiTrade } from '../types';
+import { type ApiTrade } from '../types';
 
 export function generateBigoneTrade(overrides?: Partial<ApiTrade>): ApiTrade {
   const price = faker.number.float({ min: 0.01, max: 100_000 });

@@ -58,3 +58,7 @@ export function generateInvalidEvmAddress(): string {
     return checksummedAddress.toUpperCase();
   }
 }
+
+export function generateTxHash(): string {
+  return faker.string.hexadecimal({ length: 64, casing: 'lower' });
+}
