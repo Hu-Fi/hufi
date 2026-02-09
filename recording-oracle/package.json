@@ -43,7 +43,7 @@
     "@valkey/valkey-glide": "^2.2.1",
     "alchemy-sdk": "^3.6.5",
     "axios": "^1.13.4",
-    "ccxt": "^4.5.33",
+    "ccxt": "^4.5.36",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "dayjs": "^1.11.19",
