@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import type { Exchange as CcxtExchange } from 'ccxt';
 import * as ccxt from 'ccxt';
+import ms from 'ms';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -26,7 +27,7 @@ import type {
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
 
-const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
+const PRELOAD_CCXT_CLIENTS_INTERVAL = ms('6 hours'); // ms after previous load
 
 type CreateCexApiClientInitOptions = Omit<
   CexApiClientInitOptions,
@@ -114,7 +115,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      await ccxtClient.loadMarkets();
+      await ccxtClient.loadMarkets(true);
 
       this.preloadedCcxtClients.set(exchangeName, ccxtClient);
       logger.debug('Preloaded ccxt for exchange');
