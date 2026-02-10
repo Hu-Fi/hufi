@@ -120,7 +120,10 @@ export class CampaignsService {
       return null;
     }
 
-    const campaignData = await this.retrieveCampaignData(campaignEscrow);
+    const [campaignData, reservedFunds] = await Promise.all([
+      this.retrieveCampaignData(campaignEscrow),
+      this.getReservedFunds(campaignEscrow),
+    ]);
 
     const amountsPerDay: Record<string, bigint> = {};
     let nTxsChecked = 0;
@@ -156,8 +159,6 @@ export class CampaignsService {
       nTxsChecked += transactions.length;
       // eslint-disable-next-line no-constant-condition
     } while (true);
-
-    const reservedFunds = await this.getReservedFunds(campaignEscrow);
 
     return {
       ...campaignData,
