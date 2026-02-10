@@ -56,7 +56,8 @@ export const envValidator = Joi.object({
     .uri({ scheme: ['http', 'https'] })
     .allow(''),
   RPC_URL_LOCALHOST: Joi.string(),
-  ALCHEMY_API_KEY: Joi.string(),
+  ALCHEMY_API_KEY: Joi.string().required(),
+  SUBGRAPH_API_KEY: Joi.string().required(),
 
   // S3
   S3_ENDPOINT: Joi.string(),

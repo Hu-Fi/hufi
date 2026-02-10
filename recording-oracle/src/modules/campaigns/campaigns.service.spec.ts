@@ -33,6 +33,7 @@ import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import { TimeoutError } from '@/common/utils/control-flow';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -225,10 +226,8 @@ describe('CampaignsService', () => {
         thrownError = error;
       }
 
-      expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe(
-        `Exchange not supported: ${manifest.exchange}`,
-      );
+      expect(thrownError).toBeInstanceOf(ExchangeNotSupportedError);
+      expect(thrownError.exchangeName).toBe(manifest.exchange);
     });
 
     it('should throw when exchange from manifest supported but disabled', () => {
@@ -279,8 +278,14 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should not thrown when campaign setup is correct', () => {
-      const manifest = generateCampaignManifest();
+    it('should not throw when campaign setup is correct', () => {
+      /**
+       * Use random exchange name to avoid flakiness
+       * that might appear due to exchange-specific params
+       */
+      const exchangeName = faker.lorem.slug();
+      const manifest = generateMarketMakingCampaignManifest();
+      manifest.exchange = exchangeName;
 
       mockExchangesConfigService.configByExchange = {
         [manifest.exchange]: {
@@ -1029,7 +1034,7 @@ describe('CampaignsService', () => {
         null,
       );
       const testError = new Error(faker.lorem.sentence());
-      mockExchangesService.assertUserHasAuthorizedKeys.mockRejectedValueOnce(
+      mockExchangesService.assertUserHasRequiredAccess.mockRejectedValueOnce(
         testError,
       );
 
@@ -1071,7 +1076,7 @@ describe('CampaignsService', () => {
       mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      mockExchangesService.assertUserHasAuthorizedKeys.mockResolvedValueOnce();
+      mockExchangesService.assertUserHasRequiredAccess.mockResolvedValueOnce();
 
       const now = new Date();
       jest.useFakeTimers({ now });

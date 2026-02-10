@@ -21,7 +21,7 @@ import ConnectWallet from '@/components/ConnectWallet';
 import Container from '@/components/Container';
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
-import LaunchCampaign from '@/components/LaunchCampaign';
+import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -142,7 +142,7 @@ const Header: FC = () => {
               target="_blank"
             />
             <NetworkSwitcher />
-            <LaunchCampaign variant="outlined" withTooltip />
+            <LaunchCampaignButton variant="outlined" withTooltip />
             {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
 
@@ -155,6 +155,7 @@ const Header: FC = () => {
           open={!!anchorEl}
           anchorEl={anchorEl}
           onClose={handleMenuClose}
+          keepMounted
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'left',
@@ -208,7 +209,10 @@ const Header: FC = () => {
               width="100%"
               sx={{ '& button': { flex: 1 } }}
             >
-              <LaunchCampaign variant={signer ? 'outlined' : 'contained'} />
+              <LaunchCampaignButton
+                variant={signer ? 'outlined' : 'contained'}
+                handleCallbackOnClick={handleMenuClose}
+              />
               {!signer && (
                 <CustomTooltip
                   arrow

@@ -1,9 +1,3 @@
-import type {
-  Order as CcxtOrder,
-  Trade as CcxtTrade,
-  AccountBalance as CcxtAccountBalance,
-} from 'ccxt';
-
 export enum TradingSide {
   SELL = 'sell',
   BUY = 'buy',
@@ -14,32 +8,23 @@ export enum TakerOrMakerFlag {
   MAKER = 'maker',
 }
 
-export type Order = Pick<
-  CcxtOrder,
-  | 'id'
-  | 'status'
-  | 'timestamp'
-  | 'symbol'
-  | 'side'
-  | 'type'
-  | 'amount'
-  | 'filled'
-  | 'cost'
->;
+export type Trade = {
+  id: string;
+  timestamp: number;
+  symbol: string;
+  side: `${TradingSide}`;
+  takerOrMaker: `${TakerOrMakerFlag}`;
+  price: number;
+  amount: number;
+  cost: number;
+};
 
-export type Trade = Pick<
-  CcxtTrade,
-  | 'id'
-  | 'timestamp'
-  | 'symbol'
-  | 'side'
-  | 'takerOrMaker'
-  | 'price'
-  | 'amount'
-  | 'cost'
->;
-
-export type AccountBalance = CcxtAccountBalance;
+export type TokenBalance = {
+  free: number;
+  used: number;
+  total: number;
+};
+export type AccountBalance = Record<string, TokenBalance | undefined>;
 
 export enum ExchangePermission {
   VIEW_ACCOUNT_BALANCE = 'VIEW_ACCOUNT_BALANCE',

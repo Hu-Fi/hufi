@@ -6,6 +6,7 @@ export const ROUTES = {
   DASHBOARD: '/',
   CAMPAIGN_DETAILS: '/campaign-details/:address',
   MANAGE_API_KEYS: '/manage-api-keys',
+  LAUNCH_CAMPAIGN: '/launch-campaign',
 };
 
 export const oracles = {
@@ -35,3 +36,5 @@ export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 export const MQ_MOBILE = 'screen and (max-width: 600px)';
 
 export const DEFAULT_TABLE_PAGE_SIZE = 10;
+
+export const UNLIMITED_AMOUNT = 'unlimited';

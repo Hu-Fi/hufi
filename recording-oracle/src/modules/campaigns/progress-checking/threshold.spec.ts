@@ -96,10 +96,9 @@ describe('ThresholdProgressChecker', () => {
       const result = await resultsChecker.checkForParticipant(participantInfo);
 
       const expectedBalance =
-        mockedAccountBalance.total[progressCheckerSetup.symbol];
+        mockedAccountBalance[progressCheckerSetup.symbol]!.total;
       const expectedScore =
-        mockedAccountBalance.total[progressCheckerSetup.symbol] >=
-        (progressCheckerSetup.minimumBalanceTarget as number)
+        expectedBalance >= (progressCheckerSetup.minimumBalanceTarget as number)
           ? 1
           : 0;
       expect(result.abuseDetected).toBe(false);
@@ -168,11 +167,12 @@ describe('ThresholdProgressChecker', () => {
         mockedExchangeApiClient.fetchBalance.mockResolvedValueOnce(
           accountBalance,
         );
-        expectedTotalBalance +=
-          accountBalance.total[progressCheckerSetup.symbol];
+        const expectedBalance =
+          accountBalance[progressCheckerSetup.symbol]!.total;
+        expectedTotalBalance += expectedBalance;
 
         const expectedScore =
-          accountBalance.total[progressCheckerSetup.symbol] >=
+          expectedBalance >=
           (progressCheckerSetup.minimumBalanceTarget as number)
             ? 1
             : 0;

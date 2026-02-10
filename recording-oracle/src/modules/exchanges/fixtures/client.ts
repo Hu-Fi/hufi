@@ -1,9 +1,9 @@
-import { Trade } from '../api-client';
-import { mapCcxtTrade } from '../api-client/ccxt-exchange-client.utils';
+import { type Trade } from '../api-client';
 import {
   generateCcxtTrade,
-  generateAccountBalance,
-} from '../api-client/fixtures';
+  generateCcxtBalance,
+} from '../api-client/ccxt/fixtures';
+import { mapCcxtTrade } from '../api-client/ccxt/utils';
 
 export function generateTrade(overrides?: Partial<Trade>): Trade {
   const trade: Trade = mapCcxtTrade(generateCcxtTrade());
@@ -13,4 +13,4 @@ export function generateTrade(overrides?: Partial<Trade>): Trade {
   return trade;
 }
 
-export { generateAccountBalance };
+export { generateCcxtBalance as generateAccountBalance };

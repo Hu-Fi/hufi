@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+import { ExchangeName, ExchangeType } from '@/common/constants';
+import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import { ExchangesConfigService } from '@/config';
 import logger from '@/logger';
+import { UserNotFoundError, UsersRepository } from '@/modules/users';
 
 import {
   ExchangeApiClient,
@@ -20,35 +24,61 @@ export class ExchangesService {
   });
 
   constructor(
+    private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   async getClientForUser(
     userId: string,
     exchangeName: string,
   ): Promise<ExchangeApiClient> {
-    const { apiKey, secretKey, extras } =
-      await this.exchangeApiKeysService.retrieve(userId, exchangeName);
+    if (!this.exchangesConfigService.isExchangeSupported(exchangeName)) {
+      throw new ExchangeNotSupportedError(exchangeName);
+    }
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
 
-    const exchangeApiClient = this.exchangeApiClientFactory.create(
-      exchangeName,
-      {
-        apiKey,
-        secret: secretKey,
-        extras,
-        userId,
-      },
-    );
+    switch (exchangeConfig.type) {
+      case ExchangeType.CEX: {
+        const { apiKey, secretKey, extras } =
+          await this.exchangeApiKeysService.retrieve(userId, exchangeName);
 
-    return exchangeApiClient;
+        return this.exchangeApiClientFactory.createCex(exchangeName, {
+          apiKey,
+          secret: secretKey,
+          extras,
+          userId,
+        });
+      }
+      case ExchangeType.DEX: {
+        const user = await this.usersRepository.findOneById(userId);
+        if (!user) {
+          throw new UserNotFoundError(userId);
+        }
+
+        return this.exchangeApiClientFactory.createDex(exchangeName, {
+          userId,
+          userEvmAddress: user.evmAddress,
+        });
+      }
+      default:
+        throw new Error(`Exchange type not supported: ${exchangeConfig.type}`);
+    }
   }
 
-  async assertUserHasAuthorizedKeys(
+  async assertUserHasRequiredAccess(
     userId: string,
-    exchangeName: string,
+    exchangeName: ExchangeName,
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<void> {
+    const exchangeConfig =
+      this.exchangesConfigService.configByExchange[exchangeName];
+    if (exchangeConfig.type === ExchangeType.DEX) {
+      return;
+    }
+
     const exchangeApiClient = await this.getClientForUser(userId, exchangeName);
 
     const accessCheckResult =

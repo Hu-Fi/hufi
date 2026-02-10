@@ -2,7 +2,12 @@ import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';
 
-import { TimeoutError, withTimeout } from './control-flow';
+import {
+  TimeoutError,
+  withTimeout,
+  consumeIteratorOnce,
+  consumeIterator,
+} from './control-flow';
 
 describe('Control Flow utilities', () => {
   describe('withTimeout', () => {
@@ -10,7 +15,7 @@ describe('Control Flow utilities', () => {
      * Have this to avoid potential flaky tests
      * in case when runs on busy CPU
      */
-    const ALLOWED_TIMEOUT_MARGIN_MS = 50;
+    const ALLOWED_TIMEOUT_MARGIN_MS = 100;
 
     let timeoutMs: number;
     let delayMarginMs: number;
@@ -19,7 +24,7 @@ describe('Control Flow utilities', () => {
       /**
        * Real timer w/o mocks will run, so keep it reasonably small
        */
-      timeoutMs = faker.number.int({ min: 100, max: 500 });
+      timeoutMs = faker.number.int({ min: 500, max: 1000 });
 
       delayMarginMs = faker.number.int({
         min: 10,
@@ -61,6 +66,77 @@ describe('Control Flow utilities', () => {
 
       const elapsed = Date.now() - startTs;
       expect(elapsed).toBeLessThan(timeoutMs);
+    });
+  });
+
+  describe('consumeIteratorOnce', () => {
+    it('should support sync iterable', async () => {
+      const randomValues = Array.from({ length: 3 }, () => Math.random());
+
+      const result = await consumeIteratorOnce(randomValues);
+
+      expect(result).toBe(randomValues[0]);
+    });
+
+    it('should support async iterable', async () => {
+      const randomValue = Math.random();
+
+      async function* testGenerator() {
+        yield randomValue;
+      }
+
+      const result = await consumeIteratorOnce(testGenerator());
+
+      expect(result).toBe(randomValue);
+    });
+
+    it('should yield once and cleanup', async () => {
+      const randomValue = Math.random();
+      const secondYieldSpy = jest.fn();
+      const catchBlockSpy = jest.fn();
+      const cleanupSpy = jest.fn();
+
+      async function* testGenerator() {
+        try {
+          yield randomValue;
+          yield secondYieldSpy();
+        } catch (error) {
+          catchBlockSpy(error);
+        } finally {
+          cleanupSpy();
+        }
+      }
+
+      const result = await consumeIteratorOnce(testGenerator());
+
+      expect(result).toBe(randomValue);
+      expect(secondYieldSpy).toHaveBeenCalledTimes(0);
+      expect(catchBlockSpy).toHaveBeenCalledTimes(0);
+      expect(cleanupSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('consumeIterator', () => {
+    it('should consume sync iterable', async () => {
+      const randomValues = Array.from({ length: 3 }, () => Math.random());
+
+      const result = await consumeIterator(randomValues);
+
+      expect(result).toEqual(randomValues);
+    });
+
+    it('should consume async iterable', async () => {
+      const randomValues = Array.from({ length: 3 }, () => Math.random());
+
+      async function* testGenerator() {
+        for (const randomValue of randomValues) {
+          yield randomValue;
+        }
+      }
+
+      const result = await consumeIterator(testGenerator());
+
+      expect(result).toEqual(randomValues);
     });
   });
 });

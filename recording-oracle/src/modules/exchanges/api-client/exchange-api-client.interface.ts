@@ -4,21 +4,23 @@ import {
   AccountBalance,
   ExchangePermission,
   ExtraCreds,
-  Order,
   RequiredAccessCheckResult,
   Trade,
 } from './types';
 
-export type ExchangeApiClientLoggingConfig = {
-  logPermissionErrors: boolean;
-};
-
-export type ExchangeApiClientInitOptions = {
+export type CexApiClientInitOptions = {
   userId: string;
   apiKey: string;
   secret: string;
   extraCreds?: ExtraCreds;
-  loggingConfig?: Partial<ExchangeApiClientLoggingConfig>;
+  loggingConfig?: Partial<{
+    logPermissionErrors: boolean;
+  }>;
+};
+
+export type DexApiClientInitOptions = {
+  userId: string;
+  userEvmAddress: string;
 };
 
 export interface ExchangeApiClient {
@@ -30,9 +32,11 @@ export interface ExchangeApiClient {
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult>;
 
-  fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
-
-  fetchMyTrades(symbol: string, since: number): Promise<Trade[]>;
+  fetchMyTrades(
+    symbol: string,
+    since: number,
+    until: number,
+  ): AsyncGenerator<Trade[]>;
 
   fetchBalance(): Promise<AccountBalance>;
 
