@@ -60,24 +60,17 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
     let totalVolume = 0;
     let nTradesSampled = 0;
 
-    let since = Math.max(
+    const since = Math.max(
       this.tradingPeriodStart.valueOf(),
       participant.joinedAt.valueOf(),
     );
-    while (since < this.tradingPeriodEnd.valueOf() && !abuseDetected) {
-      const trades = await exchangeApiClient.fetchMyTrades(
-        this.tradingPair,
-        since,
-      );
-      if (trades.length === 0) {
-        break;
-      }
-
+    const tradesIterator = exchangeApiClient.fetchMyTrades(
+      this.tradingPair,
+      since,
+      this.tradingPeriodEnd.valueOf(),
+    );
+    for await (const trades of tradesIterator) {
       for (const trade of trades) {
-        if (trade.timestamp >= this.tradingPeriodEnd.valueOf()) {
-          break;
-        }
-
         const tradeFingerprint = this.getTradeFingerprint(trade);
         if (this.tradeSamples.has(tradeFingerprint)) {
           abuseDetected = true;
@@ -93,15 +86,11 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
         score += this.calculateTradeScore(trade);
       }
 
-      /**
-       * TODO: https://github.com/Hu-Fi/hufi/issues/702
-       */
-      since = trades[trades.length - 1].timestamp + 1;
-    }
-
-    if (abuseDetected) {
-      score = 0;
-      totalVolume = 0;
+      if (abuseDetected) {
+        score = 0;
+        totalVolume = 0;
+        break;
+      }
     }
 
     /**

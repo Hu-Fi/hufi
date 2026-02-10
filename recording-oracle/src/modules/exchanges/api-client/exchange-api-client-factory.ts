@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import * as ccxt from 'ccxt';
 import type { Exchange as CcxtExchange } from 'ccxt';
+import * as ccxt from 'ccxt';
+import ms from 'ms';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -11,21 +12,22 @@ import {
 } from '@/config';
 import logger from '@/logger';
 
+import { BigoneClient } from './bigone';
 import {
+  BASE_CCXT_CLIENT_OPTIONS,
   CcxtExchangeClient,
   CcxtExchangeClientInitOptions,
-} from './ccxt-exchange-client';
-import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+} from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import type {
-  ExchangeApiClient,
   CexApiClientInitOptions,
   DexApiClientInitOptions,
+  ExchangeApiClient,
 } from './exchange-api-client.interface';
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
 
-const PRELOAD_CCXT_CLIENTS_INTERVAL = 1000 * 60 * 25; // 25m after previous load
+const PRELOAD_CCXT_CLIENTS_INTERVAL = ms('6 hours'); // ms after previous load
 
 type CreateCexApiClientInitOptions = Omit<
   CexApiClientInitOptions,
@@ -69,6 +71,10 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     for (const [exchangeName, exchangeConfig] of Object.entries(
       this.exchangesConfigService.configByExchange,
     )) {
+      if (exchangeConfig.skipCcxtPreload) {
+        continue;
+      }
+
       if (exchangeConfig.enabled && exchangeConfig.type === ExchangeType.CEX) {
         exchangesToPreload.push(exchangeName as ExchangeName);
       }
@@ -109,7 +115,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      await ccxtClient.loadMarkets();
+      await ccxtClient.loadMarkets(true);
 
       this.preloadedCcxtClients.set(exchangeName, ccxtClient);
       logger.debug('Preloaded ccxt for exchange');
@@ -130,32 +136,40 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       throw new Error('Provided exchange is not CEX');
     }
 
+    let cexApiClient: ExchangeApiClient;
+
     const clientInitOptions: CcxtExchangeClientInitOptions = {
       apiKey: initOptions.apiKey,
       secret: initOptions.secret,
       userId: initOptions.userId,
-      sandbox: this.exchangesConfigService.useSandbox,
-      preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
       loggingConfig: {
         logPermissionErrors:
           this.loggingConfigService.logExchangePermissionErrors,
       },
+      sandbox: this.exchangesConfigService.useSandbox,
+      preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
     };
 
-    switch (exchangeName) {
-      case ExchangeName.BITMART:
-        clientInitOptions.extraCreds = {
-          uid: initOptions.extras?.apiKeyMemo as string,
-        };
-        break;
+    if (exchangeName === ExchangeName.BIGONE) {
+      cexApiClient = new BigoneClient(clientInitOptions);
+    } else {
+      /**
+       * Add extra options per exchange if needed
+       */
+      switch (exchangeName) {
+        case ExchangeName.BITMART: {
+          clientInitOptions.extraCreds = {
+            uid: initOptions.extras?.apiKeyMemo as string,
+          };
+          break;
+        }
+      }
+
+      cexApiClient = new CcxtExchangeClient(exchangeName, clientInitOptions);
     }
 
-    const ccxtExchangeClient = new CcxtExchangeClient(
-      exchangeName,
-      clientInitOptions,
-    );
-    if (ccxtExchangeClient.checkRequiredCredentials()) {
-      return ccxtExchangeClient;
+    if (cexApiClient.checkRequiredCredentials()) {
+      return cexApiClient;
     } else {
       throw new IncompleteKeySuppliedError(exchangeName);
     }

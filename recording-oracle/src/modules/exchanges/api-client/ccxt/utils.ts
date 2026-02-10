@@ -1,23 +1,9 @@
+import type { Trade as CcxtTrade } from 'ccxt';
 import * as ccxt from 'ccxt';
-import type { Order as CcxtOrder, Trade as CcxtTrade } from 'ccxt';
 
 import { ExchangeName } from '@/common/constants';
 
-import type { Order, Trade } from './types';
-
-export function mapCcxtOrder(order: CcxtOrder): Order {
-  return {
-    id: order.id,
-    status: order.status,
-    timestamp: order.timestamp,
-    symbol: order.symbol,
-    side: order.side,
-    type: order.type,
-    amount: order.amount,
-    filled: order.filled,
-    cost: order.cost,
-  };
-}
+import type { Trade } from '../types';
 
 export function mapCcxtTrade(trade: CcxtTrade): Trade {
   return {

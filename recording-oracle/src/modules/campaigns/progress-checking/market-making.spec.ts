@@ -17,9 +17,6 @@ import {
 import { MarketMakingProgressChecker } from './market-making';
 import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
 
-const mockedExchangeApiClient = createMock<ExchangeApiClient>();
-const mockedExchangesService = createMock<ExchangesService>();
-
 class TestCampaignProgressChecker extends MarketMakingProgressChecker {
   override tradeSamples = new Set<string>();
 
@@ -28,12 +25,30 @@ class TestCampaignProgressChecker extends MarketMakingProgressChecker {
   }
 }
 
+const mockedExchangesService = createMock<ExchangesService>();
+const mockedExchangeApiClient = createMock<ExchangeApiClient>();
+
+const fetchMyTrades = jest.fn();
+async function* fetchMyTradesGenerator() {
+  do {
+    const result = await fetchMyTrades();
+
+    if (result === undefined || result.length === 0) {
+      break;
+    } else {
+      yield result;
+    }
+  } while (true);
+}
+
 describe('MarketMakingProgressChecker', () => {
   beforeEach(() => {
     mockedExchangesService.getClientForUser.mockResolvedValue(
       mockedExchangeApiClient,
     );
-    mockedExchangeApiClient.fetchMyTrades.mockResolvedValue([]);
+    mockedExchangeApiClient.fetchMyTrades.mockImplementation(
+      fetchMyTradesGenerator,
+    );
   });
 
   afterEach(() => {
@@ -109,7 +124,7 @@ describe('MarketMakingProgressChecker', () => {
       );
     });
 
-    it('should properly init api client and return zeros for same date range', async () => {
+    it('should properly init api client and iterator for trades', async () => {
       const anytime = faker.date.anytime();
 
       const setup = generateMarketMakingCheckerSetup({
@@ -135,10 +150,20 @@ describe('MarketMakingProgressChecker', () => {
         participantInfo.id,
         setup.exchangeName,
       );
+
+      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(1);
+      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledWith(
+        setup.symbol,
+        Math.max(
+          setup.periodStart.valueOf(),
+          participantInfo.joinedAt.valueOf(),
+        ),
+        setup.periodEnd.valueOf(),
+      );
     });
 
     it('should return zeros when no trades found', async () => {
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([]);
+      fetchMyTrades.mockResolvedValueOnce([]);
 
       const result = await resultsChecker.checkForParticipant(participantInfo);
 
@@ -149,34 +174,24 @@ describe('MarketMakingProgressChecker', () => {
       });
     });
 
-    it('should paginate through all trades', async () => {
+    it('should iterate through all trades', async () => {
       const nTradesPerPage = faker.number.int({ min: 2, max: 4 });
 
       const pages = Array.from({ length: 2 }, () =>
         Array.from({ length: nTradesPerPage }, () => generateTrade()),
       );
       for (const page of pages) {
-        mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(page);
+        fetchMyTrades.mockResolvedValueOnce(page);
       }
 
       await resultsChecker.checkForParticipant(participantInfo);
 
-      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(3);
-      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
-        1,
-        progressCheckerSetup.symbol,
-        progressCheckerSetup.periodStart.valueOf(),
-      );
-      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
-        2,
-        progressCheckerSetup.symbol,
-        pages[0].at(-1)!.timestamp + 1,
-      );
-      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenNthCalledWith(
-        3,
-        progressCheckerSetup.symbol,
-        pages[1].at(-1)!.timestamp + 1,
-      );
+      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(1);
+
+      /**
+       * Extra call under the hood to check if more trades on next page
+       */
+      expect(fetchMyTrades).toHaveBeenCalledTimes(pages.length + 1);
     });
 
     it('should paginate through trades starting from join date not setup start', async () => {
@@ -184,7 +199,7 @@ describe('MarketMakingProgressChecker', () => {
         from: progressCheckerSetup.periodStart.valueOf() + 1,
         to: progressCheckerSetup.periodEnd.valueOf() - 1,
       });
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([]);
+      fetchMyTrades.mockResolvedValueOnce([]);
 
       await resultsChecker.checkForParticipant(participantInfo);
 
@@ -192,46 +207,8 @@ describe('MarketMakingProgressChecker', () => {
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledWith(
         progressCheckerSetup.symbol,
         participantInfo.joinedAt.valueOf(),
+        progressCheckerSetup.periodEnd.valueOf(),
       );
-    });
-
-    it('should count volume for trades up to exclusive end date', async () => {
-      const tradesInRange = Array.from({ length: 3 }, () =>
-        generateTrade({
-          timestamp: faker.date
-            .recent({ refDate: progressCheckerSetup.periodEnd })
-            .valueOf(),
-        }),
-      );
-      const tradesOutOfRange = [
-        generateTrade({
-          timestamp: progressCheckerSetup.periodEnd.valueOf(),
-        }),
-        generateTrade({
-          timestamp: faker.date
-            .soon({ refDate: progressCheckerSetup.periodEnd })
-            .valueOf(),
-        }),
-      ];
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
-        ...tradesInRange,
-        ...tradesOutOfRange,
-      ]);
-
-      const result = await resultsChecker.checkForParticipant(participantInfo);
-
-      const expectedTotalVolume = tradesInRange.reduce(
-        (acc, curr) => acc + curr.cost,
-        0,
-      );
-      const expectedScore = tradesInRange.reduce(
-        (acc, curr) => acc + resultsChecker.calculateTradeScore(curr),
-        0,
-      );
-
-      expect(result.abuseDetected).toBe(false);
-      expect(result.total_volume).toBe(expectedTotalVolume);
-      expect(result.score).toBe(expectedScore);
     });
   });
 
@@ -268,22 +245,14 @@ describe('MarketMakingProgressChecker', () => {
 
     it('should return zeros when abuse detected', async () => {
       const sameTrade = generateTrade();
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
+      fetchMyTrades.mockResolvedValueOnce([
         generateTrade(),
         sameTrade,
         generateTrade(),
-        generateTrade({
-          /**
-           * Last trade is out of configured period,
-           * so no more pages fetched for the first participant
-           */
-          timestamp: progressCheckerSetup.periodEnd.valueOf(),
-        }),
       ]);
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
-        generateTrade(),
-        sameTrade,
-      ]);
+      fetchMyTrades.mockResolvedValueOnce([]); // no more trades for this participant
+
+      fetchMyTrades.mockResolvedValueOnce([generateTrade(), sameTrade]);
 
       const normalResult = await resultsChecker.checkForParticipant(
         generateParticipantInfo({
@@ -304,15 +273,15 @@ describe('MarketMakingProgressChecker', () => {
       expect(abuseResult.total_volume).toBe(0);
     });
 
-    it('should avoid extra trades fetch if abuse detected', async () => {
+    it('should avoid extra fetch iterations if abuse detected', async () => {
       const sameTrade = generateTrade();
 
-      const pages = Array.from({ length: 4 }, () => [
+      const pages = Array.from({ length: 3 }, () => [
         generateTrade(),
         sameTrade,
       ]);
       for (const page of pages) {
-        mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(page);
+        fetchMyTrades.mockResolvedValueOnce(page);
       }
 
       const result = await resultsChecker.checkForParticipant(
@@ -322,12 +291,12 @@ describe('MarketMakingProgressChecker', () => {
       );
       expect(result.abuseDetected).toBe(true);
 
-      expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(2);
+      expect(fetchMyTrades).toHaveBeenCalledTimes(2);
     });
 
     it('should sample only 5 trades per participant', async () => {
       const trades = Array.from({ length: 6 }, () => generateTrade());
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(trades);
+      fetchMyTrades.mockResolvedValueOnce(trades);
       await resultsChecker.checkForParticipant(
         generateParticipantInfo({
           joinedAt: progressCheckerSetup.periodStart,
@@ -339,7 +308,7 @@ describe('MarketMakingProgressChecker', () => {
 
     it('should not detect self-trade as abuse', async () => {
       const baseTrade = generateTrade();
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
+      fetchMyTrades.mockResolvedValueOnce([
         {
           ...baseTrade,
           side: 'buy',
@@ -382,7 +351,7 @@ describe('MarketMakingProgressChecker', () => {
       let expectedTotalVolume = 0;
       for (let i = 0; i < nParticipants; i += 1) {
         const trade = generateTrade();
-        mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([trade]);
+        fetchMyTrades.mockResolvedValueOnce([trade]);
         expectedTotalVolume += trade.cost;
 
         await resultsChecker.checkForParticipant(
@@ -411,12 +380,9 @@ describe('MarketMakingProgressChecker', () => {
           timestamp: progressCheckerSetup.periodEnd.valueOf(),
         }),
       ];
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce(normalTrades);
+      fetchMyTrades.mockResolvedValueOnce(normalTrades);
       // mock abuse trades
-      mockedExchangeApiClient.fetchMyTrades.mockResolvedValueOnce([
-        generateTrade(),
-        sameTrade,
-      ]);
+      fetchMyTrades.mockResolvedValueOnce([generateTrade(), sameTrade]);
 
       const normalResult = await resultsChecker.checkForParticipant(
         generateParticipantInfo({

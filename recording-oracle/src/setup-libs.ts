@@ -1,6 +1,5 @@
 import { Logger as ValkeyLogger } from '@valkey/valkey-glide';
 import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import Decimal from 'decimal.js';
 
@@ -13,7 +12,6 @@ Decimal.set({
   toExpPos: 60,
 });
 
-dayjs.extend(duration);
 dayjs.extend(isSameOrAfter);
 
 ValkeyLogger.setLoggerConfig('off');

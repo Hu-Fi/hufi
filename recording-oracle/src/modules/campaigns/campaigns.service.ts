@@ -19,6 +19,7 @@ import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import ms from 'ms';
 
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
@@ -1009,10 +1010,7 @@ export class CampaignsService implements OnModuleDestroy {
     }
   }
 
-  @ScheduleInterval(
-    CampaignServiceJob.SYNC_CAMPAIGN_STATUSES,
-    dayjs.duration(3, 'minutes').asMilliseconds(),
-  )
+  @ScheduleInterval(CampaignServiceJob.SYNC_CAMPAIGN_STATUSES, ms('3 minutes'))
   async syncCampaignStatuses(): Promise<void> {
     this.logger.debug('Campaign statuses sync job started');
 
@@ -1209,10 +1207,7 @@ export class CampaignsService implements OnModuleDestroy {
     };
   }
 
-  @ScheduleInterval(
-    CampaignServiceJob.DISCOVER_NEW_CAMPAIGNS,
-    dayjs.duration(10, 'minutes').asMilliseconds(),
-  )
+  @ScheduleInterval(CampaignServiceJob.DISCOVER_NEW_CAMPAIGNS, ms('10 minutes'))
   async discoverNewCampaigns(): Promise<void> {
     this.logger.debug('New campaigns discovery job started');
 

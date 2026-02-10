@@ -57,7 +57,7 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
       exchangeApiClient.fetchBalance(),
     ]);
 
-    let tokenBalance = accountBalance.total[this.thresholdTokenSymbol] || 0;
+    let tokenBalance = accountBalance[this.thresholdTokenSymbol]?.total || 0;
     let score = tokenBalance >= this.minimumBalanceTarget ? 1 : 0;
 
     let abuseDetected = false;

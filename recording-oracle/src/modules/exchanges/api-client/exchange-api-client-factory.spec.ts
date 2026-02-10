@@ -1,13 +1,12 @@
-jest.mock('./ccxt-exchange-client');
-jest.mock('./pancakeswap', () => ({
-  PancakeswapClient: jest.fn(),
-}));
+jest.mock('./bigone');
+jest.mock('./ccxt');
+jest.mock('./pancakeswap');
 
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
-import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
+import * as ccxt from 'ccxt';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -18,11 +17,11 @@ import {
 } from '@/config';
 import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
-import { CcxtExchangeClient } from './ccxt-exchange-client';
-import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { generateExchangeName, mockExchangesConfigService } from '../fixtures';
+import { BigoneClient } from './bigone';
+import { BASE_CCXT_CLIENT_OPTIONS, CcxtExchangeClient } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
-import { generateExchangeName, mockExchangesConfigService } from '../fixtures';
 import { generateConfigByExchangeStub } from './fixtures';
 import { PancakeswapClient } from './pancakeswap';
 
@@ -33,6 +32,7 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
   ...BASE_CCXT_CLIENT_OPTIONS,
 });
 
+const mockedBigoneClient = jest.mocked(BigoneClient);
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
 const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
 
@@ -243,7 +243,7 @@ describe('ExchangeApiClientFactory', () => {
         userId,
       });
 
-      expect(client).toBeDefined();
+      expect(client).toBeInstanceOf(CcxtExchangeClient);
 
       expect(mockedCcxtExchangeClient).toHaveBeenCalledTimes(1);
       expect(mockedCcxtExchangeClient).toHaveBeenCalledWith(exchangeName, {
@@ -256,6 +256,31 @@ describe('ExchangeApiClientFactory', () => {
             mockLoggerConfigService.logExchangePermissionErrors,
         },
       });
+    });
+
+    it('should correctly init client for bigone', () => {
+      exchangeName = ExchangeName.BIGONE;
+
+      mockedBigoneClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
+        true,
+      );
+
+      const client = exchangeApiClientFactory.createCex(exchangeName, {
+        apiKey,
+        secret,
+        userId,
+      });
+
+      expect(client).toBeInstanceOf(BigoneClient);
+
+      expect(mockedBigoneClient).toHaveBeenCalledTimes(1);
+      expect(mockedBigoneClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apiKey,
+          secret,
+          userId,
+        }),
+      );
     });
 
     it('should correctly init client for bitmart', () => {
@@ -364,7 +389,7 @@ describe('ExchangeApiClientFactory', () => {
         },
       );
 
-      expect(client).toBeDefined();
+      expect(client).toBeInstanceOf(PancakeswapClient);
 
       expect(mockedPancakeswapClient).toHaveBeenCalledTimes(1);
       expect(mockedPancakeswapClient).toHaveBeenCalledWith(

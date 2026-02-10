@@ -14,7 +14,7 @@ void (async () => {
     await run();
     process.exit(0);
   } catch (error) {
-    console.log('Failed', error);
+    logger.error('Sample script failed', { error });
     process.exit(1);
   }
 })();
