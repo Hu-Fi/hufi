@@ -14,11 +14,21 @@ export function mapTrade(trade: ApiTrade): Trade {
     id: `${trade.id}`,
     symbol: mapAssetPairToSymbol(trade.asset_pair_name),
     timestamp: new Date(trade.created_at).valueOf(),
+    /**
+     * If taker_fee is null - then the order wasn't filled instantly
+     * and it's considered a "market maker" behavior.
+     */
     takerOrMaker:
       trade.taker_fee === null
         ? TakerOrMakerFlag.MAKER
         : TakerOrMakerFlag.TAKER,
-    side: trade.taker_side === 'ASK' ? TradingSide.BUY : TradingSide.SELL,
+    /**
+     * If user placed a BID - they wanted to buy.
+     * If user placed an ASK - they wanted to sell.
+     * If it was a SELF_TRADING - always consider it as a "sell"
+     * to reflect the maker/taker behavior and have correct score later.
+     */
+    side: trade.side === 'BID' ? TradingSide.BUY : TradingSide.SELL,
     price: Number(trade.price),
     amount: Number(trade.amount),
     cost: -1,

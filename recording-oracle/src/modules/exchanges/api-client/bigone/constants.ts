@@ -10,6 +10,10 @@ export const API_TIMEOUT = ms('10 seconds');
 export const DEPOSIT_ADDRESS_NETWORK = 'Ethereum';
 
 /**
- * Time in milliseconds that is allowed for historical data lookback
+ * Time in milliseconds that is allowed for historical data lookback.
+ *
+ * There are no performance restrictions with the API and normally
+ * we should not lookback for more than 2 days, but have some
+ * reasonable limit in order to get notified about anomalies.
  */
 export const MAX_LOOKBACK_MS = ms('5 days');

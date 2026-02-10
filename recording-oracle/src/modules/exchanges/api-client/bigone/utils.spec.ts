@@ -44,6 +44,7 @@ describe('BigONE client utils', () => {
       const apiTrade = generateBigoneTrade({
         taker_fee: null,
         taker_side: 'ASK',
+        side: 'BID',
       });
 
       const mappedTrade = mapTrade(apiTrade);
@@ -56,6 +57,7 @@ describe('BigONE client utils', () => {
       const apiTrade = generateBigoneTrade({
         taker_fee: null,
         taker_side: 'BID',
+        side: 'ASK',
       });
 
       const mappedTrade = mapTrade(apiTrade);
@@ -65,7 +67,11 @@ describe('BigONE client utils', () => {
     });
 
     it('should correctly map taker buy', () => {
-      const apiTrade = generateBigoneTrade({ taker_side: 'ASK' });
+      const apiTrade = generateBigoneTrade({
+        taker_fee: Math.random().toString(),
+        taker_side: 'BID',
+        side: 'BID',
+      });
 
       const mappedTrade = mapTrade(apiTrade);
 
@@ -74,7 +80,23 @@ describe('BigONE client utils', () => {
     });
 
     it('should correctly map taker sell', () => {
-      const apiTrade = generateBigoneTrade({ taker_side: 'BID' });
+      const apiTrade = generateBigoneTrade({
+        taker_fee: Math.random().toString(),
+        taker_side: 'ASK',
+        side: 'ASK',
+      });
+
+      const mappedTrade = mapTrade(apiTrade);
+
+      expect(mappedTrade.takerOrMaker).toEqual(TakerOrMakerFlag.TAKER);
+      expect(mappedTrade.side).toEqual(TradingSide.SELL);
+    });
+
+    it('should correctly map self trades', () => {
+      const apiTrade = generateBigoneTrade({
+        taker_side: 'ASK',
+        side: 'SELF_TRADING',
+      });
 
       const mappedTrade = mapTrade(apiTrade);
 
