@@ -31,6 +31,7 @@ export const createFundAmountValidationSchema = (
     custom_allowance_amount: yup
       .string()
       .default('')
+      .trim()
       .test('is-number', 'Allowance must be a valid number', (value) => {
         if (!value) return true;
         const num = Number(value);

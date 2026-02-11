@@ -76,6 +76,7 @@ const ThirdStep: FC<Props> = ({
     formState: { errors },
     handleSubmit,
     watch,
+    setValue,
   } = useForm<{
     fund_amount: string;
     selected_allowance: AllowanceType;
@@ -133,13 +134,13 @@ const ThirdStep: FC<Props> = ({
     custom_allowance_amount: string;
   }) => {
     const { fund_amount, selected_allowance, custom_allowance_amount } = data;
+    let canSkipApproval = false;
 
-    const canSkipApproval =
-      (selected_allowance === AllowanceType.UNLIMITED &&
-        currentAllowance === UNLIMITED_AMOUNT) ||
-      (selected_allowance === AllowanceType.CUSTOM &&
-        !custom_allowance_amount &&
-        Number(currentAllowance) >= Number(fund_amount));
+    if (!custom_allowance_amount) {
+      canSkipApproval =
+        currentAllowance === UNLIMITED_AMOUNT ||
+        Number(currentAllowance) >= Number(fund_amount);
+    }
 
     if (canSkipApproval) {
       setFundAmount(fund_amount);
@@ -255,7 +256,12 @@ const ThirdStep: FC<Props> = ({
                     <RadioGroup
                       name="allowance"
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        if (e.target.value === AllowanceType.UNLIMITED) {
+                          setValue('custom_allowance_amount', '');
+                        }
+                      }}
                       sx={{
                         display: 'flex',
                         flexDirection: { xs: 'column', md: 'row' },
