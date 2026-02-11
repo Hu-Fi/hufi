@@ -3643,9 +3643,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wagmi/connectors@npm:7.1.6":
-  version: 7.1.6
-  resolution: "@wagmi/connectors@npm:7.1.6"
+"@wagmi/connectors@npm:7.1.7":
+  version: 7.1.7
+  resolution: "@wagmi/connectors@npm:7.1.7"
   peerDependencies:
     "@base-org/account": ^2.5.1
     "@coinbase/wallet-sdk": ^4.3.6
@@ -3653,7 +3653,7 @@ __metadata:
     "@metamask/sdk": ~0.33.1
     "@safe-global/safe-apps-provider": ~0.18.6
     "@safe-global/safe-apps-sdk": ^9.1.0
-    "@wagmi/core": 3.3.2
+    "@wagmi/core": 3.3.3
     "@walletconnect/ethereum-provider": ^2.21.1
     porto: ~0.2.35
     typescript: ">=5.7.3"
@@ -3677,13 +3677,13 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/e8aa2fd9242b4d8242c546828443af1b2bf71b3cedd935026049e620f2038e57f5c148eee543ecedd3da2b9c45f36857a68b18c2d8a7ddc920fa94af5bc52678
+  checksum: 10c0/dfe7ceed808ba430ac4a43510e9c2de57faa2af81b49d150f1d6a48b79ea731980ef2827ea790a25778f68d7619e39593dcd4d81a40ff8e609420fa54970ad7f
   languageName: node
   linkType: hard
 
-"@wagmi/core@npm:3.3.2":
-  version: 3.3.2
-  resolution: "@wagmi/core@npm:3.3.2"
+"@wagmi/core@npm:3.3.3":
+  version: 3.3.3
+  resolution: "@wagmi/core@npm:3.3.3"
   dependencies:
     eventemitter3: "npm:5.0.1"
     mipd: "npm:0.0.7"
@@ -3700,7 +3700,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/40e3c38bcdece3b7633f310184dcb0e909375092282c668a913f8712aceaab4f86008ed4d0a2f2b954190ee88420c04f99ce99b71e42b145165f4871d20b40fd
+  checksum: 10c0/dbf591096b106d5b4bfad937198b3740441eeb236ce1075969e736b5bdcde44ae8a8dcc6b72afb7158b3f2c962cddc1e70a26f65562eeda89f412b41b7ce1c28
   languageName: node
   linkType: hard
 
@@ -8170,9 +8170,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ox@npm:0.11.3":
-  version: 0.11.3
-  resolution: "ox@npm:0.11.3"
+"ox@npm:0.12.1":
+  version: 0.12.1
+  resolution: "ox@npm:0.12.1"
   dependencies:
     "@adraffy/ens-normalize": "npm:^1.11.0"
     "@noble/ciphers": "npm:^1.3.0"
@@ -8187,7 +8187,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/aab488bb5ff2e9c9d688f4044ebceb5efc4f62e71c19c2813d1ba93509dfcf618c7c97dd06ed867843340ac9744911ef3f3a4504850711a67f220f94aa9d8feb
+  checksum: 10c0/c4218e369d963893412b54cf4ad780b492d9eb6c7b72958c761548924b55be63e20212a0ca491f4438b8f9faf72a31ff93c3f025819255789bd91a0334e835b2
   languageName: node
   linkType: hard
 
@@ -10326,8 +10326,8 @@ __metadata:
   linkType: hard
 
 "viem@npm:2.x, viem@npm:>=2.37.9, viem@npm:^2.1.1, viem@npm:^2.21.26, viem@npm:^2.27.2, viem@npm:^2.31.7":
-  version: 2.45.2
-  resolution: "viem@npm:2.45.2"
+  version: 2.45.3
+  resolution: "viem@npm:2.45.3"
   dependencies:
     "@noble/curves": "npm:1.9.1"
     "@noble/hashes": "npm:1.8.0"
@@ -10335,14 +10335,14 @@ __metadata:
     "@scure/bip39": "npm:1.6.0"
     abitype: "npm:1.2.3"
     isows: "npm:1.0.7"
-    ox: "npm:0.11.3"
+    ox: "npm:0.12.1"
     ws: "npm:8.18.3"
   peerDependencies:
     typescript: ">=5.0.4"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/3823a121140a041dee335a4dd72d649086b2e0de3a7a35a06edfeb58d0bd8665f0b07fa8b070915d25383fe69ca6cbe2e3dec62d174308681f58881b1a09b302
+  checksum: 10c0/5550a491e74d68b8eeaa97315f67867aad17b89a1b271202b23b37b4151a6109401a219a6824db74b33c3982676c182f11153189d811ee6431bb61b0e94f116d
   languageName: node
   linkType: hard
 
@@ -10492,11 +10492,11 @@ __metadata:
   linkType: hard
 
 "wagmi@npm:^3.1.0":
-  version: 3.4.2
-  resolution: "wagmi@npm:3.4.2"
+  version: 3.4.3
+  resolution: "wagmi@npm:3.4.3"
   dependencies:
-    "@wagmi/connectors": "npm:7.1.6"
-    "@wagmi/core": "npm:3.3.2"
+    "@wagmi/connectors": "npm:7.1.7"
+    "@wagmi/core": "npm:3.3.3"
     use-sync-external-store: "npm:1.4.0"
   peerDependencies:
     "@tanstack/react-query": ">=5.0.0"
@@ -10506,7 +10506,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/318a6322223da1cc738294aa0c8429e3a5e6bb18e6b8f27a1b96c5458cc8ed3af8a8850b920ab45cc23aa664411c215c91c8fa8209b1c023bee37c2b33c22384
+  checksum: 10c0/bf4278929a5fa7b01d3fb006568689218cee8e7e6236fd935126e25058c308a66aa739a4a1bd4c0fca52f5f5203d8258aa969415e91c8e6dbecc988f0632d721
   languageName: node
   linkType: hard
 
