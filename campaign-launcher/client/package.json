@@ -25,8 +25,8 @@
     "@mui/material": "^7.3.6",
     "@mui/x-data-grid": "^8.21.0",
     "@mui/x-date-pickers": "^8.21.0",
-    "@tanstack/react-query": "^5.90.12",
-    "@walletconnect/ethereum-provider": "~2.23.0",
+    "@tanstack/react-query": "^5.90.21",
+    "@walletconnect/ethereum-provider": "^2.23.5",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "chartjs-plugin-annotation": "^3.1.0",
@@ -41,8 +41,8 @@
     "react-is": "18.3.1",
     "react-number-format": "^5.4.4",
     "react-router-dom": "^6.22.3",
-    "viem": "2.x",
-    "wagmi": "^3.1.0",
+    "viem": "^2.45.3",
+    "wagmi": "^3.4.3",
     "yup": "^1.4.0"
   },
   "devDependencies": {
