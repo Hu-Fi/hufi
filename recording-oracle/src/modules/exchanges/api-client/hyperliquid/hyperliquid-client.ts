@@ -89,7 +89,9 @@ export class HyperliquidClient implements ExchangeApiClient {
       let fetchTradesSince = since;
 
       while (fetchTradesSince < until) {
-        const fetchMyTradesWithParams = this.ccxtClient.fetchMyTrades as (
+        const fetchMyTradesWithParams = this.ccxtClient.fetchMyTrades.bind(
+          this.ccxtClient,
+        ) as (
           symbol: string,
           since?: number,
           limit?: number,
