@@ -1,11 +1,12 @@
 export {
-  ExchangeApiClientError,
   ExchangeApiAccessError,
+  ExchangeApiClientError,
   ExchangePermission,
-  type Trade,
-  type ExchangeApiClient,
+  PancakeswapClient,
   TakerOrMakerFlag,
   TradingSide,
+  type ExchangeApiClient,
+  type Trade,
 } from './api-client';
 
 export {
