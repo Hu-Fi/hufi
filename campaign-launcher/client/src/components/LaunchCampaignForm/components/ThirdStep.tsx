@@ -113,14 +113,19 @@ const ThirdStep: FC<Props> = ({
   const { showError } = useNotification();
 
   useEffect(() => {
-    if (!dirtyFields.selected_allowance) {
+    if (!dirtyFields.selected_allowance && !isFetchingAllowance) {
       if (currentAllowance === UNLIMITED_AMOUNT) {
         setValue('selected_allowance', AllowanceType.UNLIMITED);
       } else {
         setValue('selected_allowance', AllowanceType.CUSTOM);
       }
     }
-  }, [currentAllowance, dirtyFields.selected_allowance, setValue]);
+  }, [
+    currentAllowance,
+    dirtyFields.selected_allowance,
+    setValue,
+    isFetchingAllowance,
+  ]);
 
   useEffect(() => {
     if (fundToken) {

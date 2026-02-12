@@ -58,7 +58,6 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         const _allowance = isUnlimited
           ? UNLIMITED_AMOUNT
           : ethers.formatUnits(currentAllowance, tokenDecimals);
-        setAllowance(_allowance);
         return _allowance;
       } catch (err) {
         console.error('Error fetching allowance:', err);
@@ -88,7 +87,9 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
       setError(null);
 
       try {
-        return await getAllowance(fundToken);
+        const _allowance = await getAllowance(fundToken);
+        setAllowance(_allowance);
+        return _allowance;
       } finally {
         setIsLoading(false);
       }
@@ -134,7 +135,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         );
         await tx.wait();
 
-        await getAllowance(fundToken);
+        const newAllowance = await getAllowance(fundToken);
+        setAllowance(newAllowance);
         return true;
       } catch (err) {
         const error =
