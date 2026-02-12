@@ -73,7 +73,7 @@ const ThirdStep: FC<Props> = ({
 
   const {
     control,
-    formState: { errors },
+    formState: { errors, dirtyFields },
     handleSubmit,
     watch,
     setValue,
@@ -104,16 +104,25 @@ const ThirdStep: FC<Props> = ({
     approve,
     fetchAllowance,
     allowance: currentAllowance,
+    isApproving,
     isLoading,
-    reset: resetApproval,
+    resetApproval,
   } = useTokenAllowance();
 
   const { showError } = useNotification();
 
   useEffect(() => {
-    if (fundToken) {
-      fetchAllowance(fundToken);
+    if (
+      !dirtyFields.selected_allowance &&
+      !isLoading &&
+      currentAllowance === UNLIMITED_AMOUNT
+    ) {
+      setValue('selected_allowance', AllowanceType.UNLIMITED);
     }
+  }, [currentAllowance, dirtyFields.selected_allowance, setValue, isLoading]);
+
+  useEffect(() => {
+    fetchAllowance(fundToken);
   }, [fundToken, fetchAllowance]);
 
   useEffect(() => {
@@ -138,8 +147,11 @@ const ThirdStep: FC<Props> = ({
 
     if (!custom_allowance_amount) {
       canSkipApproval =
-        currentAllowance === UNLIMITED_AMOUNT ||
-        Number(currentAllowance) >= Number(fund_amount);
+        (selected_allowance === AllowanceType.UNLIMITED &&
+          currentAllowance === UNLIMITED_AMOUNT) ||
+        (selected_allowance === AllowanceType.CUSTOM &&
+          (currentAllowance === UNLIMITED_AMOUNT ||
+            Number(currentAllowance) >= Number(fund_amount)));
     }
 
     if (canSkipApproval) {
@@ -197,7 +209,7 @@ const ThirdStep: FC<Props> = ({
                       label="Fund Amount"
                       placeholder="Enter amount"
                       error={!!errors.fund_amount}
-                      disabled={isLoading}
+                      disabled={isApproving}
                       type="number"
                       {...field}
                       onChange={(e) => {
@@ -246,9 +258,13 @@ const ThirdStep: FC<Props> = ({
                 <Typography variant="h6" component="h3">
                   Token Approval
                 </Typography>
-                {isLoading && <CircularProgress size={24} />}
+                {(isLoading || isApproving) && <CircularProgress size={24} />}
               </Box>
-              <FormControl>
+              <FormControl
+                sx={{
+                  display: isLoading ? 'none' : 'flex',
+                }}
+              >
                 <Controller
                   name="selected_allowance"
                   control={control}
@@ -278,7 +294,7 @@ const ThirdStep: FC<Props> = ({
                         >
                           <FormControlLabel
                             value={AllowanceType.CUSTOM}
-                            disabled={isLoading}
+                            disabled={isApproving}
                             control={<Radio />}
                             label="Limited Allowance"
                             sx={{
@@ -286,7 +302,7 @@ const ThirdStep: FC<Props> = ({
                               '& .MuiRadio-root, & .MuiTypography-root': {
                                 color:
                                   selected_allowance === AllowanceType.CUSTOM &&
-                                  !isLoading
+                                  !isApproving
                                     ? 'text.primary'
                                     : 'text.disabled',
                               },
@@ -316,7 +332,7 @@ const ThirdStep: FC<Props> = ({
                                 placeholder="i.e 0.00"
                                 disabled={
                                   selected_allowance !== AllowanceType.CUSTOM ||
-                                  isLoading
+                                  isApproving
                                 }
                                 sx={{
                                   width: 220,
@@ -358,7 +374,7 @@ const ThirdStep: FC<Props> = ({
                                           ml: 0.5,
                                           height: '23px',
                                           opacity:
-                                            isLoading ||
+                                            isApproving ||
                                             selected_allowance !==
                                               AllowanceType.CUSTOM
                                               ? 0.5
@@ -395,7 +411,7 @@ const ThirdStep: FC<Props> = ({
                       >
                         <FormControlLabel
                           value={AllowanceType.UNLIMITED}
-                          disabled={isLoading}
+                          disabled={isApproving}
                           control={<Radio />}
                           label="Unlimited Approval"
                           sx={{
@@ -403,7 +419,7 @@ const ThirdStep: FC<Props> = ({
                             '& .MuiRadio-root, & .MuiTypography-root': {
                               color:
                                 selected_allowance ===
-                                  AllowanceType.UNLIMITED && !isLoading
+                                  AllowanceType.UNLIMITED && !isApproving
                                   ? 'text.primary'
                                   : 'text.disabled',
                             },
@@ -423,8 +439,8 @@ const ThirdStep: FC<Props> = ({
           step={3}
           nextButtonType="submit"
           nextButtonText="Confirm & Preview"
-          disableNextButton={isLoading}
-          disableBackButton={isLoading}
+          disableNextButton={isLoading || isApproving}
+          disableBackButton={isLoading || isApproving}
           handleNextClick={() => {}}
           handleBackClick={() => handleChangeStep(2)}
         />
