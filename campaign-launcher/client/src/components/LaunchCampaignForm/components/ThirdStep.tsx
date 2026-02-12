@@ -128,11 +128,9 @@ const ThirdStep: FC<Props> = ({
   ]);
 
   useEffect(() => {
-    if (fundToken) {
-      fetchAllowance(fundToken).finally(() => {
-        setIsFetchingAllowance(false);
-      });
-    }
+    fetchAllowance(fundToken).finally(() => {
+      setIsFetchingAllowance(false);
+    });
   }, [fundToken, fetchAllowance]);
 
   useEffect(() => {
