@@ -14,6 +14,7 @@ import useRetrieveSigner from './useRetrieveSigner';
 type UseTokenAllowanceReturn = {
   allowance: string | null;
   isLoading: boolean;
+  isApproving: boolean;
   error: Error | null;
   fetchAllowance: (tokenSymbol: string) => Promise<string | null>;
   approve: (tokenSymbol: string, amount: string) => Promise<boolean>;
@@ -22,7 +23,8 @@ type UseTokenAllowanceReturn = {
 
 export const useTokenAllowance = (): UseTokenAllowanceReturn => {
   const [allowance, setAllowance] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const { activeAddress } = useActiveAccount();
@@ -75,6 +77,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
       } catch (err) {
         console.error('Error fetching allowance:', err);
         return null;
+      } finally {
+        setIsLoading(false);
       }
     },
     [signer, activeAddress, appChainId, allowanceSpender]
@@ -98,7 +102,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         return false;
       }
 
-      setIsLoading(true);
+      setIsApproving(true);
       setError(null);
 
       try {
@@ -127,7 +131,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         console.error('Error approving tokens:', err);
         return false;
       } finally {
-        setIsLoading(false);
+        setIsApproving(false);
       }
     },
     [signer, activeAddress, appChainId, allowanceSpender, fetchAllowance]
@@ -135,12 +139,13 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
 
   const reset = useCallback(() => {
     setError(null);
-    setIsLoading(false);
+    setIsApproving(false);
   }, []);
 
   return {
     allowance,
     isLoading,
+    isApproving,
     error,
     fetchAllowance,
     approve,
