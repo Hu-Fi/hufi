@@ -73,7 +73,7 @@ const ThirdStep: FC<Props> = ({
 
   const {
     control,
-    formState: { errors },
+    formState: { errors, dirtyFields },
     handleSubmit,
     watch,
     setValue,
@@ -106,16 +106,19 @@ const ThirdStep: FC<Props> = ({
     allowance: currentAllowance,
     isLoading,
     isApproving,
-    reset: resetApproval,
+    resetApproval,
   } = useTokenAllowance();
 
   const { showError } = useNotification();
 
   useEffect(() => {
-    if (!isLoading && currentAllowance === UNLIMITED_AMOUNT) {
+    if (
+      currentAllowance === UNLIMITED_AMOUNT &&
+      !dirtyFields.selected_allowance
+    ) {
       setValue('selected_allowance', AllowanceType.UNLIMITED);
     }
-  }, [isLoading, currentAllowance, setValue]);
+  }, [currentAllowance, dirtyFields.selected_allowance, setValue]);
 
   useEffect(() => {
     if (fundToken) {
@@ -257,7 +260,11 @@ const ThirdStep: FC<Props> = ({
                 </Typography>
                 {(isLoading || isApproving) && <CircularProgress size={24} />}
               </Box>
-              <FormControl sx={{ display: isLoading ? 'none' : 'flex' }}>
+              <FormControl
+                sx={{
+                  display: currentAllowance === null ? 'none' : 'flex',
+                }}
+              >
                 <Controller
                   name="selected_allowance"
                   control={control}

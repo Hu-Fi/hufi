@@ -18,7 +18,7 @@ type UseTokenAllowanceReturn = {
   error: Error | null;
   fetchAllowance: (tokenSymbol: string) => Promise<string | null>;
   approve: (tokenSymbol: string, amount: string) => Promise<boolean>;
-  reset: () => void;
+  resetApproval: () => void;
 };
 
 export const useTokenAllowance = (): UseTokenAllowanceReturn => {
@@ -147,7 +147,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
     [signer, activeAddress, appChainId, allowanceSpender, getAllowance]
   );
 
-  const reset = useCallback(() => {
+  const resetApproval = useCallback(() => {
     setError(null);
     setIsApproving(false);
   }, []);
@@ -159,6 +159,6 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
     error,
     fetchAllowance,
     approve,
-    reset,
+    resetApproval,
   };
 };
