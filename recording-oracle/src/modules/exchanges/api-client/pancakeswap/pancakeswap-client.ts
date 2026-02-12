@@ -20,8 +20,9 @@ import {
 } from './constants';
 import {
   GET_ACCOUNT_SWAPS_QUERY,
-  GET_LATEST_SWAP_QUERY,
+  GET_SUBGRAPH_META_QUERY,
   type SubgraphSwapData,
+  type SubgraphMeta,
 } from './queries';
 import { type Swap } from './types';
 import * as pancakeswapUtils from './utils';
@@ -65,26 +66,32 @@ export class PancakeswapClient implements ExchangeApiClient {
     });
   }
 
-  private async assertSubgraphNotStale(timestamp: number): Promise<void> {
-    let latestSwap: SubgraphSwapData | undefined;
-
+  async fetchSubgraphMeta(): Promise<SubgraphMeta> {
     try {
-      const { swaps } = await this.graphClient.request<{
-        swaps: [SubgraphSwapData?];
-      }>(GET_LATEST_SWAP_QUERY, {
-        timestamp,
-      });
+      const { _meta } = await this.graphClient.request<{
+        _meta: SubgraphMeta;
+      }>(GET_SUBGRAPH_META_QUERY);
 
-      latestSwap = swaps[0];
+      return _meta;
     } catch (error) {
-      const message = 'Failed to fetch latest swap';
+      const message = 'Failed to fetch subgraph meta';
       this.logger.error(message, {
         error: pancakeswapUtils.formatGraphqlRequestError(error as Error),
       });
       throw new PancakeswapClientError(message);
     }
+  }
+  /**
+   * @param timestamp value in seconds
+   */
+  private async assertSubgraphNotStale(timestamp: number): Promise<void> {
+    const subgraphMeta = await this.fetchSubgraphMeta();
 
-    if (!latestSwap) {
+    if (subgraphMeta.hasIndexingErrors) {
+      throw new PancakeswapClientError('Subgraph has indexing errors');
+    }
+
+    if (subgraphMeta.block.timestamp < timestamp) {
       throw new PancakeswapClientError('Subgraph is stale');
     }
   }

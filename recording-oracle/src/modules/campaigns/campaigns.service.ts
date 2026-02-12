@@ -40,6 +40,7 @@ import {
   ExchangesService,
   ExchangeApiAccessError,
   ExchangeApiKeyNotFoundError,
+  PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -1387,6 +1388,9 @@ export class CampaignsService implements OnModuleDestroy {
     );
   }
 
+  /**
+   * Should be used only to get active timeframe for interim progress
+   */
   async getActiveTimeframe(campaign: CampaignEntity): Promise<{
     start: Date;
     end: Date;
@@ -1431,6 +1435,14 @@ export class CampaignsService implements OnModuleDestroy {
         return null;
       }
       timeframeEnd = cancellationRequestedAt;
+    } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
+      const client = new PancakeswapClient({
+        userId: 'system',
+        userEvmAddress: 'n/a',
+        subgraphApiKey: this.web3ConfigService.subgraphApiKey,
+      });
+      const subgraphMeta = await client.fetchSubgraphMeta();
+      timeframeEnd = new Date(subgraphMeta.block.timestamp * 1000);
     } else {
       timeframeEnd = now;
     }
