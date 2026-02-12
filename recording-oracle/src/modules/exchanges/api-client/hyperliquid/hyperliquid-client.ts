@@ -18,6 +18,10 @@ import { type RequiredAccessCheckResult, type Trade } from '../types';
 import * as apiClientUtils from '../utils';
 import { HYPERLIQUID_TRADES_PAGE_LIMIT } from './constants';
 
+export interface HyperliquidClientInitOptions extends DexApiClientInitOptions {
+  sandbox?: boolean;
+}
+
 class HyperliquidClientError extends ExchangeApiClientError {
   constructor(message: string) {
     super(message, ExchangeName.HYPERLIQUID);
@@ -28,11 +32,16 @@ export class HyperliquidClient implements ExchangeApiClient {
   readonly exchangeName = ExchangeName.HYPERLIQUID;
   readonly userId: string;
   readonly userEvmAddress: string;
+  readonly sandbox: boolean;
 
   private readonly logger: Logger;
   private readonly ccxtClient: Exchange;
 
-  constructor({ userId, userEvmAddress }: DexApiClientInitOptions) {
+  constructor({
+    userId,
+    userEvmAddress,
+    sandbox,
+  }: HyperliquidClientInitOptions) {
     if (!userId) {
       throw new Error('userId is missing');
     }
@@ -42,6 +51,7 @@ export class HyperliquidClient implements ExchangeApiClient {
 
     this.userId = userId;
     this.userEvmAddress = userEvmAddress;
+    this.sandbox = Boolean(sandbox);
 
     this.ccxtClient = new ccxt.hyperliquid(
       _.merge({}, BASE_CCXT_CLIENT_OPTIONS, {
@@ -50,11 +60,15 @@ export class HyperliquidClient implements ExchangeApiClient {
         },
       }),
     );
+    if (this.sandbox) {
+      this.ccxtClient.setSandboxMode(true);
+    }
 
     this.logger = logger.child({
       context: HyperliquidClient.name,
       exchangeName: this.exchangeName,
       userId,
+      sandbox: this.sandbox,
     });
   }
 

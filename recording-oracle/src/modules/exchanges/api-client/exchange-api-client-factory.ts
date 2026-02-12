@@ -199,7 +199,10 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         });
       }
       case ExchangeName.HYPERLIQUID: {
-        return new HyperliquidClient(clientInitOptions);
+        return new HyperliquidClient({
+          ...clientInitOptions,
+          sandbox: this.exchangesConfigService.useSandbox,
+        });
       }
       default:
         throw new ExchangeNotSupportedError(exchangeName);

@@ -60,6 +60,26 @@ describe('HyperliquidClient', () => {
     expect(client.checkRequiredCredentials()).toBe(true);
   });
 
+  it.each([true, false, undefined])(
+    'should create instance with sandbox mode [%#]',
+    (sandboxParam) => {
+      const client = new HyperliquidClient({
+        userId: faker.string.uuid(),
+        userEvmAddress: generateHyperliquidWalletAddress(),
+        sandbox: sandboxParam,
+      });
+
+      const expectedSandbox = Boolean(sandboxParam);
+      expect(client.sandbox).toBe(expectedSandbox);
+      if (expectedSandbox) {
+        expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.setSandboxMode).toHaveBeenCalledWith(true);
+      } else {
+        expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(0);
+      }
+    },
+  );
+
   it('should fetch and paginate trades using ccxt with wallet params', async () => {
     const userId = faker.string.uuid();
     const userEvmAddress = generateHyperliquidWalletAddress();

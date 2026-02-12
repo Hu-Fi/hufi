@@ -420,6 +420,7 @@ describe('ExchangeApiClientFactory', () => {
         expect.objectContaining({
           userId,
           userEvmAddress,
+          sandbox: mockExchangesConfigService.useSandbox,
         }),
       );
     });
