@@ -3504,12 +3504,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^24.10.1":
-  version: 24.10.12
-  resolution: "@types/node@npm:24.10.12"
+"@types/node@npm:^25.2.3":
+  version: 25.2.3
+  resolution: "@types/node@npm:25.2.3"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/fa39b88c8d82a2cec41544bee3426c4b78a13cc3c5ccf6fcb6c9528a68466ffcc73772833c612c7bb7e5fe1bc8e38002d1d543152e43b20b0600096cf6f210d1
+  checksum: 10c0/925833029ce0bb4a72c36f90b93287184d3511aeb0fa60a994ae94b5430c22f9be6693d67d210df79267cb54c6f6978caaefb149d99ab5f83af5827ba7cb9822
   languageName: node
   linkType: hard
 
@@ -5173,12 +5173,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ccxt@npm:^4.5.36":
-  version: 4.5.36
-  resolution: "ccxt@npm:4.5.36"
+"ccxt@npm:^4.5.37":
+  version: 4.5.37
+  resolution: "ccxt@npm:4.5.37"
   dependencies:
     ws: "npm:^8.8.1"
-  checksum: 10c0/f44d32f9b23d7db801a41b54c3bb96cc853d10310c159720a02542604070b3ce0681f0694f81097e6560d525cf4e086a6b11f7a887b600bfa2e511c8b4a1a30c
+  checksum: 10c0/716d4a658164120db83deeef0c438ec6c669355e0aca722a27d2eafa84a0e4bf4141ba9a4f00f4784fd5d867efe26bbcaaf0f0c80a6c6e7e7001caaf50727e66
   languageName: node
   linkType: hard
 
@@ -8954,10 +8954,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^11.0.0, lru-cache@npm:^11.2.4":
+"lru-cache@npm:^11.0.0":
   version: 11.2.5
   resolution: "lru-cache@npm:11.2.5"
   checksum: 10c0/cc98958d25dddf1c8a8cbdc49588bd3b24450e8dfa78f32168fd188a20d4a0331c7406d0f3250c86a46619ee288056fd7a1195e8df56dc8a9592397f4fbd8e1d
+  languageName: node
+  linkType: hard
+
+"lru-cache@npm:^11.2.6":
+  version: 11.2.6
+  resolution: "lru-cache@npm:11.2.6"
+  checksum: 10c0/73bbffb298760e71b2bfe8ebc16a311c6a60ceddbba919cfedfd8635c2d125fbfb5a39b71818200e67973b11f8d59c5a9e31d6f90722e340e90393663a66e5cd
   languageName: node
   linkType: hard
 
@@ -10396,7 +10403,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:^9.0.10"
     "@types/lodash": "npm:^4.17.21"
     "@types/ms": "npm:^2"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.2.3"
     "@types/passport": "npm:^1.0.17"
     "@types/passport-jwt": "npm:^4.0.1"
     "@types/pg": "npm:^8.16.0"
@@ -10404,7 +10411,7 @@ __metadata:
     "@valkey/valkey-glide": "npm:^2.2.1"
     alchemy-sdk: "npm:^3.6.5"
     axios: "npm:^1.13.4"
-    ccxt: "npm:^4.5.36"
+    ccxt: "npm:^4.5.37"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.3"
     dayjs: "npm:^1.11.19"
@@ -10424,7 +10431,7 @@ __metadata:
     joi: "npm:^18.0.2"
     jsonwebtoken: "npm:^9.0.3"
     lodash: "npm:^4.17.21"
-    lru-cache: "npm:^11.2.4"
+    lru-cache: "npm:^11.2.6"
     minio: "npm:^8.0.6"
     ms: "npm:^2.1.3"
     nock: "npm:^14.0.5"
