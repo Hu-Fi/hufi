@@ -70,16 +70,19 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
   const fetchAllowance = useCallback(
     async (fundToken: string): Promise<string | null> => {
       if (!signer) {
+        setIsLoading(false);
         return null;
       }
 
       if (!activeAddress) {
         setError(new Error('Wallet is not connected'));
+        setIsLoading(false);
         return null;
       }
 
       if (!allowanceSpender) {
         setError(new Error('Chain is not supported'));
+        setIsLoading(false);
         return null;
       }
 
