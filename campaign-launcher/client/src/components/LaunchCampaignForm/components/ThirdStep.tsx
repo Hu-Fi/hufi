@@ -68,7 +68,7 @@ const ThirdStep: FC<Props> = ({
   formValues,
   handleChangeStep,
 }) => {
-  const [isFetchingAllowance, setIsFetchingAllowance] = useState(false);
+  const [isFetchingAllowance, setIsFetchingAllowance] = useState(true);
 
   const { fund_token: fundToken } = formValues;
   const isMobile = useIsMobile();
@@ -113,11 +113,12 @@ const ThirdStep: FC<Props> = ({
   const { showError } = useNotification();
 
   useEffect(() => {
-    if (
-      currentAllowance === UNLIMITED_AMOUNT &&
-      !dirtyFields.selected_allowance
-    ) {
-      setValue('selected_allowance', AllowanceType.UNLIMITED);
+    if (!dirtyFields.selected_allowance) {
+      if (currentAllowance === UNLIMITED_AMOUNT) {
+        setValue('selected_allowance', AllowanceType.UNLIMITED);
+      } else {
+        setValue('selected_allowance', AllowanceType.CUSTOM);
+      }
     }
   }, [currentAllowance, dirtyFields.selected_allowance, setValue]);
 
