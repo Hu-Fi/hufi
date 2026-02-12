@@ -257,10 +257,7 @@ export class StatisticsService {
           chainId: chainId as number,
           fromAddress: this.web3ConfigService.reputationOracle,
           method: 'bulkTransfer',
-          /**
-           * TODO: remove type casting when SDK is fixed
-           */
-          startBlock: Number(startBlock),
+          startBlock,
           orderDirection: OrderDirection.ASC,
           first: 100,
           skip: nChecked,
