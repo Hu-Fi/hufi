@@ -3434,12 +3434,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^24.10.1":
-  version: 24.10.12
-  resolution: "@types/node@npm:24.10.12"
+"@types/node@npm:^25.2.3":
+  version: 25.2.3
+  resolution: "@types/node@npm:25.2.3"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/fa39b88c8d82a2cec41544bee3426c4b78a13cc3c5ccf6fcb6c9528a68466ffcc73772833c612c7bb7e5fe1bc8e38002d1d543152e43b20b0600096cf6f210d1
+  checksum: 10c0/925833029ce0bb4a72c36f90b93287184d3511aeb0fa60a994ae94b5430c22f9be6693d67d210df79267cb54c6f6978caaefb149d99ab5f83af5827ba7cb9822
   languageName: node
   linkType: hard
 
@@ -5009,11 +5009,11 @@ __metadata:
     "@types/express": "npm:^5.0.6"
     "@types/jest": "npm:^30.0.0"
     "@types/lodash": "npm:^4.17.21"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.2.3"
     "@types/supertest": "npm:^6.0.3"
     "@valkey/valkey-glide": "npm:^2.2.1"
     alchemy-sdk: "npm:^3.6.5"
-    ccxt: "npm:^4.5.36"
+    ccxt: "npm:^4.5.37"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.3"
     dayjs: "npm:^1.11.19"
@@ -5057,12 +5057,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ccxt@npm:^4.5.36":
-  version: 4.5.36
-  resolution: "ccxt@npm:4.5.36"
+"ccxt@npm:^4.5.37":
+  version: 4.5.37
+  resolution: "ccxt@npm:4.5.37"
   dependencies:
     ws: "npm:^8.8.1"
-  checksum: 10c0/f44d32f9b23d7db801a41b54c3bb96cc853d10310c159720a02542604070b3ce0681f0694f81097e6560d525cf4e086a6b11f7a887b600bfa2e511c8b4a1a30c
+  checksum: 10c0/716d4a658164120db83deeef0c438ec6c669355e0aca722a27d2eafa84a0e4bf4141ba9a4f00f4784fd5d867efe26bbcaaf0f0c80a6c6e7e7001caaf50727e66
   languageName: node
   linkType: hard
 
