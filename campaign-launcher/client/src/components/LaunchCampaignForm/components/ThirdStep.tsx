@@ -151,6 +151,7 @@ const ThirdStep: FC<Props> = ({
         (selected_allowance === AllowanceType.UNLIMITED &&
           currentAllowance === UNLIMITED_AMOUNT) ||
         (selected_allowance === AllowanceType.CUSTOM &&
+          currentAllowance !== UNLIMITED_AMOUNT &&
           Number(currentAllowance) >= Number(fund_amount));
     }
 
