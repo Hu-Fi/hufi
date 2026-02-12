@@ -85,6 +85,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
       }
 
       setIsLoading(true);
+      setError(null);
+
       try {
         return await getAllowance(fundToken);
       } finally {
