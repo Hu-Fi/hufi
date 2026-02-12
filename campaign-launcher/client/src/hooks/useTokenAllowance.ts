@@ -23,7 +23,7 @@ type UseTokenAllowanceReturn = {
 
 export const useTokenAllowance = (): UseTokenAllowanceReturn => {
   const [allowance, setAllowance] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -33,22 +33,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
 
   const allowanceSpender = NETWORKS[appChainId as ChainId]?.factoryAddress;
 
-  const fetchAllowance = useCallback(
+  const getAllowance = useCallback(
     async (fundToken: string): Promise<string | null> => {
-      if (!signer) {
-        return null;
-      }
-
-      if (!activeAddress) {
-        setError(new Error('Wallet is not connected'));
-        return null;
-      }
-
-      if (!allowanceSpender) {
-        setError(new Error('Chain is not supported'));
-        return null;
-      }
-
       const tokenAddress = getTokenAddress(appChainId, fundToken);
       if (!tokenAddress) {
         setError(new Error('Token is not supported on this chain'));
@@ -77,11 +63,35 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
       } catch (err) {
         console.error('Error fetching allowance:', err);
         return null;
+      }
+    },
+    [signer, activeAddress, appChainId, allowanceSpender]
+  );
+
+  const fetchAllowance = useCallback(
+    async (fundToken: string): Promise<string | null> => {
+      if (!signer) {
+        return null;
+      }
+
+      if (!activeAddress) {
+        setError(new Error('Wallet is not connected'));
+        return null;
+      }
+
+      if (!allowanceSpender) {
+        setError(new Error('Chain is not supported'));
+        return null;
+      }
+
+      setIsLoading(true);
+      try {
+        return await getAllowance(fundToken);
       } finally {
         setIsLoading(false);
       }
     },
-    [signer, activeAddress, appChainId, allowanceSpender]
+    [getAllowance, signer, activeAddress, allowanceSpender]
   );
 
   const approve = useCallback(
@@ -122,7 +132,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         );
         await tx.wait();
 
-        await fetchAllowance(fundToken);
+        await getAllowance(fundToken);
         return true;
       } catch (err) {
         const error =
@@ -134,7 +144,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         setIsApproving(false);
       }
     },
-    [signer, activeAddress, appChainId, allowanceSpender, fetchAllowance]
+    [signer, activeAddress, appChainId, allowanceSpender, getAllowance]
   );
 
   const reset = useCallback(() => {
