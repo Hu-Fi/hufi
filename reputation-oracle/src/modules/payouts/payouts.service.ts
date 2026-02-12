@@ -103,7 +103,9 @@ export class PayoutsService {
           logger.info(
             'Campaign cancellation requested before campaign started, cancelling',
           );
-          await escrowClient.cancel(campaign.address);
+          await escrowClient.cancel(campaign.address, {
+            timeoutMs: this.web3ConfigService.escrowTxTimeout,
+          });
           return;
         }
 
@@ -248,6 +250,7 @@ export class PayoutsService {
           {
             gasPrice,
             nonce: latestNonce,
+            timeoutMs: this.web3ConfigService.escrowTxTimeout,
           },
         );
 
@@ -305,7 +308,10 @@ export class PayoutsService {
         const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
-        await escrowClient.cancel(campaign.address, { gasPrice });
+        await escrowClient.cancel(campaign.address, {
+          gasPrice,
+          timeoutMs: this.web3ConfigService.escrowTxTimeout,
+        });
       } else if (
         [
           // pending expected when no payouts needed (aka results w/ 0)
@@ -325,7 +331,10 @@ export class PayoutsService {
         const gasPrice = await this.web3Service.calculateGasPrice(
           campaign.chainId,
         );
-        await escrowClient.complete(campaign.address, { gasPrice });
+        await escrowClient.complete(campaign.address, {
+          gasPrice,
+          timeoutMs: this.web3ConfigService.escrowTxTimeout,
+        });
       } else {
         logger.warn('Unexpected campaign escrow status', {
           escrowStatus,

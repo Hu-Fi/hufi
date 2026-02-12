@@ -22,6 +22,7 @@ export const envValidator = Joi.object({
     .uri({ scheme: ['http', 'https'] })
     .allow(''),
   RPC_URL_LOCALHOST: Joi.string(),
+  ESCROW_TX_TIMEOUT: Joi.number().integer().min(30),
   // S3
   S3_ENDPOINT: Joi.string(),
   S3_PORT: Joi.number().integer(),
