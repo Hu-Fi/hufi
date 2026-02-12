@@ -44,4 +44,15 @@ export class Web3ConfigService {
 
     return rpcUrlsByChainId[chainId];
   }
+
+  /**
+   * It might be that by some reason escrow tx is stuck on RPC.
+   * This timeout value controls the wait time before tx on RepO is dropped for later retry
+   * Default: 120000 (120 seconds)
+   */
+  get escrowTxTimeout(): number {
+    const configValueSeconds =
+      Number(this.configService.get('ESCROW_TX_TIMEOUT')) || 120;
+    return configValueSeconds * 1000;
+  }
 }

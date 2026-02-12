@@ -64,19 +64,24 @@ export type SubgraphSwapData = {
   tokenOut: SubgraphToken;
 };
 
-export const GET_LATEST_SWAP_QUERY = gql`
-  query getLatestSwap($timestamp: BigInt!) {
-    swaps(
-      where: { timestamp_gte: $timestamp }
-      first: 1
-      orderBy: timestamp
-      orderDirection: desc
-    ) {
-      id
-      blockNumber
-      hash
-      timestamp
-      nonce
+export type SubgraphMeta = {
+  hasIndexingErrors: boolean;
+  block: {
+    hash: string;
+    number: number;
+    timestamp: number;
+  };
+};
+
+export const GET_SUBGRAPH_META_QUERY = gql`
+  query getSubgraphMeta {
+    _meta {
+      hasIndexingErrors
+      block {
+        hash
+        timestamp
+        number
+      }
     }
   }
 `;

@@ -14,15 +14,17 @@ import useRetrieveSigner from './useRetrieveSigner';
 type UseTokenAllowanceReturn = {
   allowance: string | null;
   isLoading: boolean;
+  isApproving: boolean;
   error: Error | null;
   fetchAllowance: (tokenSymbol: string) => Promise<string | null>;
   approve: (tokenSymbol: string, amount: string) => Promise<boolean>;
-  reset: () => void;
+  resetApproval: () => void;
 };
 
 export const useTokenAllowance = (): UseTokenAllowanceReturn => {
   const [allowance, setAllowance] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const { activeAddress } = useActiveAccount();
@@ -31,22 +33,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
 
   const allowanceSpender = NETWORKS[appChainId as ChainId]?.factoryAddress;
 
-  const fetchAllowance = useCallback(
+  const getAllowance = useCallback(
     async (fundToken: string): Promise<string | null> => {
-      if (!signer) {
-        return null;
-      }
-
-      if (!activeAddress) {
-        setError(new Error('Wallet is not connected'));
-        return null;
-      }
-
-      if (!allowanceSpender) {
-        setError(new Error('Chain is not supported'));
-        return null;
-      }
-
       const tokenAddress = getTokenAddress(appChainId, fundToken);
       if (!tokenAddress) {
         setError(new Error('Token is not supported on this chain'));
@@ -70,7 +58,6 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         const _allowance = isUnlimited
           ? UNLIMITED_AMOUNT
           : ethers.formatUnits(currentAllowance, tokenDecimals);
-        setAllowance(_allowance);
         return _allowance;
       } catch (err) {
         console.error('Error fetching allowance:', err);
@@ -78,6 +65,39 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
       }
     },
     [signer, activeAddress, appChainId, allowanceSpender]
+  );
+
+  const fetchAllowance = useCallback(
+    async (fundToken: string): Promise<string | null> => {
+      if (!signer) {
+        setIsLoading(false);
+        return null;
+      }
+
+      if (!activeAddress) {
+        setError(new Error('Wallet is not connected'));
+        setIsLoading(false);
+        return null;
+      }
+
+      if (!allowanceSpender) {
+        setError(new Error('Chain is not supported'));
+        setIsLoading(false);
+        return null;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const _allowance = await getAllowance(fundToken);
+        setAllowance(_allowance);
+        return _allowance;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [getAllowance, signer, activeAddress, allowanceSpender]
   );
 
   const approve = useCallback(
@@ -98,7 +118,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         return false;
       }
 
-      setIsLoading(true);
+      setIsApproving(true);
       setError(null);
 
       try {
@@ -118,7 +138,8 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         );
         await tx.wait();
 
-        await fetchAllowance(fundToken);
+        const newAllowance = await getAllowance(fundToken);
+        setAllowance(newAllowance);
         return true;
       } catch (err) {
         const error =
@@ -127,23 +148,24 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
         console.error('Error approving tokens:', err);
         return false;
       } finally {
-        setIsLoading(false);
+        setIsApproving(false);
       }
     },
-    [signer, activeAddress, appChainId, allowanceSpender, fetchAllowance]
+    [signer, activeAddress, appChainId, allowanceSpender, getAllowance]
   );
 
-  const reset = useCallback(() => {
+  const resetApproval = useCallback(() => {
     setError(null);
-    setIsLoading(false);
+    setIsApproving(false);
   }, []);
 
   return {
     allowance,
     isLoading,
+    isApproving,
     error,
     fetchAllowance,
     approve,
-    reset,
+    resetApproval,
   };
 };

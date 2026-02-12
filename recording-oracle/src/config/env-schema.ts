@@ -80,5 +80,5 @@ export const envValidator = Joi.object({
 
   // Campaigns
   FEATURE_LIMIT_HOLDING_JOIN: Joi.string().valid('true', 'false'),
-  STORE_RESULTS_TIMEOUT: Joi.number().positive().integer(),
+  STORE_RESULTS_TIMEOUT: Joi.number().integer().min(30),
 });

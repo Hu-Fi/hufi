@@ -645,6 +645,9 @@ describe('PayoutsService', () => {
       expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       expect(mockedCancelEscrow).toHaveBeenCalledTimes(1);
+      expect(mockedCancelEscrow).toHaveBeenCalledWith(mockedCampaign.address, {
+        timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
+      });
     });
 
     it('should not cancel if cancellation not requested and campaign not started yet', async () => {
@@ -733,6 +736,7 @@ describe('PayoutsService', () => {
         {
           gasPrice: mockedGasPrice,
           nonce: latestNonce,
+          timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
         },
       );
 
@@ -847,6 +851,13 @@ describe('PayoutsService', () => {
 
           expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
           expect(mockedCompleteEscrow).toHaveBeenCalledTimes(1);
+          expect(mockedCompleteEscrow).toHaveBeenCalledWith(
+            mockedCampaign.address,
+            {
+              gasPrice: mockedGasPrice,
+              timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
+            },
+          );
           expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
         },
       );
@@ -903,6 +914,13 @@ describe('PayoutsService', () => {
 
         expect(mockedBulkPayOut).toHaveBeenCalledTimes(0);
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(1);
+        expect(mockedCompleteEscrow).toHaveBeenCalledWith(
+          mockedCampaign.address,
+          {
+            gasPrice: mockedGasPrice,
+            timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
+          },
+        );
         expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       });
 
@@ -928,6 +946,13 @@ describe('PayoutsService', () => {
 
         expect(mockedBulkPayOut).toHaveBeenCalledTimes(1);
         expect(mockedCancelEscrow).toHaveBeenCalledTimes(1);
+        expect(mockedCancelEscrow).toHaveBeenCalledWith(
+          mockedCampaign.address,
+          {
+            gasPrice: mockedGasPrice,
+            timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
+          },
+        );
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 

@@ -24,7 +24,6 @@ import ms from 'ms';
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
-import * as controlFlow from '@/common/utils/control-flow';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -41,6 +40,7 @@ import {
   ExchangesService,
   ExchangeApiAccessError,
   ExchangeApiKeyNotFoundError,
+  PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -945,23 +945,17 @@ export class CampaignsService implements OnModuleDestroy {
 
     const latestNonce = await signer.getNonce('latest');
 
-    /**
-     * TODO: replace with `timeout` option once implemented in SDK
-     */
     try {
-      await controlFlow.withTimeout(
-        escrowClient.storeResults(
-          campaignAddress,
-          resultsUrl,
-          resultsHash,
-          fundsToReserve,
-          {
-            gasPrice,
-            nonce: latestNonce,
-          },
-        ),
-        this.campaignsConfigService.storeResultsTimeout,
-        'storeResults transaction timed out',
+      await escrowClient.storeResults(
+        campaignAddress,
+        resultsUrl,
+        resultsHash,
+        fundsToReserve,
+        {
+          gasPrice,
+          nonce: latestNonce,
+          timeoutMs: this.campaignsConfigService.storeResultsTimeout,
+        },
       );
     } catch (error) {
       this.logger.error('Failed storeResults call', {
@@ -1394,6 +1388,9 @@ export class CampaignsService implements OnModuleDestroy {
     );
   }
 
+  /**
+   * Should be used only to get active timeframe for interim progress
+   */
   async getActiveTimeframe(campaign: CampaignEntity): Promise<{
     start: Date;
     end: Date;
@@ -1438,6 +1435,14 @@ export class CampaignsService implements OnModuleDestroy {
         return null;
       }
       timeframeEnd = cancellationRequestedAt;
+    } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
+      const client = new PancakeswapClient({
+        userId: 'system',
+        userEvmAddress: 'n/a',
+        subgraphApiKey: this.web3ConfigService.subgraphApiKey,
+      });
+      const subgraphMeta = await client.fetchSubgraphMeta();
+      timeframeEnd = new Date(subgraphMeta.block.timestamp * 1000);
     } else {
       timeframeEnd = now;
     }
