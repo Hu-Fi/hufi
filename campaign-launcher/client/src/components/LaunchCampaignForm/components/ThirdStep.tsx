@@ -1,4 +1,4 @@
-import { useEffect, useState, type FC } from 'react';
+import { useEffect, type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -68,8 +68,6 @@ const ThirdStep: FC<Props> = ({
   formValues,
   handleChangeStep,
 }) => {
-  const [isFetchingAllowance, setIsFetchingAllowance] = useState(true);
-
   const { fund_token: fundToken } = formValues;
   const isMobile = useIsMobile();
 
@@ -107,6 +105,7 @@ const ThirdStep: FC<Props> = ({
     fetchAllowance,
     allowance: currentAllowance,
     isApproving,
+    isLoading,
     resetApproval,
   } = useTokenAllowance();
 
@@ -115,22 +114,15 @@ const ThirdStep: FC<Props> = ({
   useEffect(() => {
     if (
       !dirtyFields.selected_allowance &&
-      !isFetchingAllowance &&
+      !isLoading &&
       currentAllowance === UNLIMITED_AMOUNT
     ) {
       setValue('selected_allowance', AllowanceType.UNLIMITED);
     }
-  }, [
-    currentAllowance,
-    dirtyFields.selected_allowance,
-    setValue,
-    isFetchingAllowance,
-  ]);
+  }, [currentAllowance, dirtyFields.selected_allowance, setValue, isLoading]);
 
   useEffect(() => {
-    fetchAllowance(fundToken).finally(() => {
-      setIsFetchingAllowance(false);
-    });
+    fetchAllowance(fundToken);
   }, [fundToken, fetchAllowance]);
 
   useEffect(() => {
@@ -266,13 +258,11 @@ const ThirdStep: FC<Props> = ({
                 <Typography variant="h6" component="h3">
                   Token Approval
                 </Typography>
-                {(isFetchingAllowance || isApproving) && (
-                  <CircularProgress size={24} />
-                )}
+                {(isLoading || isApproving) && <CircularProgress size={24} />}
               </Box>
               <FormControl
                 sx={{
-                  display: isFetchingAllowance ? 'none' : 'flex',
+                  display: isLoading ? 'none' : 'flex',
                 }}
               >
                 <Controller
@@ -449,8 +439,8 @@ const ThirdStep: FC<Props> = ({
           step={3}
           nextButtonType="submit"
           nextButtonText="Confirm & Preview"
-          disableNextButton={isFetchingAllowance || isApproving}
-          disableBackButton={isFetchingAllowance || isApproving}
+          disableNextButton={isLoading || isApproving}
+          disableBackButton={isLoading || isApproving}
           handleNextClick={() => {}}
           handleBackClick={() => handleChangeStep(2)}
         />

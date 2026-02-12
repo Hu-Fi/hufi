@@ -23,7 +23,7 @@ type UseTokenAllowanceReturn = {
 
 export const useTokenAllowance = (): UseTokenAllowanceReturn => {
   const [allowance, setAllowance] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
