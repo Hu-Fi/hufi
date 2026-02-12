@@ -1,0 +1,1 @@
+export const HYPERLIQUID_TRADES_PAGE_LIMIT = 500;

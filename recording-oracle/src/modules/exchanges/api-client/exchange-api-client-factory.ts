@@ -24,6 +24,7 @@ import type {
   DexApiClientInitOptions,
   ExchangeApiClient,
 } from './exchange-api-client.interface';
+import { HyperliquidClient } from './hyperliquid';
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
 
@@ -196,6 +197,9 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
           ...clientInitOptions,
           subgraphApiKey: this.web3ConfigService.subgraphApiKey,
         });
+      }
+      case ExchangeName.HYPERLIQUID: {
+        return new HyperliquidClient(clientInitOptions);
       }
       default:
         throw new ExchangeNotSupportedError(exchangeName);

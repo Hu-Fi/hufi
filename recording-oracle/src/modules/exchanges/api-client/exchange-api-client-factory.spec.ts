@@ -1,5 +1,6 @@
 jest.mock('./bigone');
 jest.mock('./ccxt');
+jest.mock('./hyperliquid');
 jest.mock('./pancakeswap');
 
 import { faker } from '@faker-js/faker';
@@ -23,6 +24,7 @@ import { BASE_CCXT_CLIENT_OPTIONS, CcxtExchangeClient } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
 import { generateConfigByExchangeStub } from './fixtures';
+import { HyperliquidClient } from './hyperliquid';
 import { PancakeswapClient } from './pancakeswap';
 
 const mockedCcxt = jest.mocked(ccxt);
@@ -34,6 +36,7 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 
 const mockedBigoneClient = jest.mocked(BigoneClient);
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
+const mockedHyperliquidClient = jest.mocked(HyperliquidClient);
 const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
 
 const mockLoggerConfigService: Pick<
@@ -397,6 +400,26 @@ describe('ExchangeApiClientFactory', () => {
           userId,
           userEvmAddress,
           subgraphApiKey: mockWeb3ConfigService.subgraphApiKey,
+        }),
+      );
+    });
+
+    it('should correctly init client for hyperliquid', () => {
+      const client = exchangeApiClientFactory.createDex(
+        ExchangeName.HYPERLIQUID,
+        {
+          userId,
+          userEvmAddress,
+        },
+      );
+
+      expect(client).toBeInstanceOf(HyperliquidClient);
+
+      expect(mockedHyperliquidClient).toHaveBeenCalledTimes(1);
+      expect(mockedHyperliquidClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId,
+          userEvmAddress,
         }),
       );
     });
