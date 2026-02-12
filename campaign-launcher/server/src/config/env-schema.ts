@@ -42,4 +42,5 @@ export const envValidator = Joi.object({
 
   // Exchanges
   FEATURE_PANCAKESWAP: Joi.string().valid('true', 'false'),
+  FEATURE_HYPERLIQUID: Joi.string().valid('true', 'false'),
 });
