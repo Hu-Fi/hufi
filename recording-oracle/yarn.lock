@@ -6308,7 +6308,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^10.0.1":
+"eslint-config-prettier@npm:^10.1.8":
   version: 10.1.8
   resolution: "eslint-config-prettier@npm:10.1.8"
   peerDependencies:
@@ -6345,7 +6345,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-import-resolver-typescript@npm:^4.4.2":
+"eslint-import-resolver-typescript@npm:^4.4.4":
   version: 4.4.4
   resolution: "eslint-import-resolver-typescript@npm:4.4.4"
   dependencies:
@@ -6381,7 +6381,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.31.0":
+"eslint-plugin-import@npm:^2.32.0":
   version: 2.32.0
   resolution: "eslint-plugin-import@npm:2.32.0"
   dependencies:
@@ -6410,7 +6410,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^5.2.2":
+"eslint-plugin-prettier@npm:^5.5.5":
   version: 5.5.5
   resolution: "eslint-plugin-prettier@npm:5.5.5"
   dependencies:
@@ -7260,7 +7260,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globals@npm:^17.0.0":
+"globals@npm:^17.3.0":
   version: 17.3.0
   resolution: "globals@npm:17.3.0"
   checksum: 10c0/7f21443ecaa60c6e9ff56d9fb6f10a9b5f9514e7f22e5392f715472bb220ce31c865ebf414a32695150e733fb3e1013e6322dbce70fddd1e066f372b8d55a4b8
@@ -10167,7 +10167,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.7.4":
+"prettier@npm:^3.8.1":
   version: 3.8.1
   resolution: "prettier@npm:3.8.1"
   bin:
@@ -10417,13 +10417,13 @@ __metadata:
     dayjs: "npm:^1.11.19"
     decimal.js: "npm:^10.6.0"
     eslint: "npm:^9.39.1"
-    eslint-config-prettier: "npm:^10.0.1"
-    eslint-import-resolver-typescript: "npm:^4.4.2"
-    eslint-plugin-import: "npm:^2.31.0"
-    eslint-plugin-prettier: "npm:^5.2.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-import-resolver-typescript: "npm:^4.4.4"
+    eslint-plugin-import: "npm:^2.32.0"
+    eslint-plugin-prettier: "npm:^5.5.5"
     ethers: "npm:~6.15.0"
     express: "npm:^5.2.1"
-    globals: "npm:^17.0.0"
+    globals: "npm:^17.3.0"
     graphql: "npm:^16.12.0"
     graphql-request: "npm:^7.4.0"
     helmet: "npm:^8.1.0"
@@ -10438,7 +10438,7 @@ __metadata:
     passport: "npm:^0.7.0"
     passport-jwt: "npm:^4.0.1"
     pg: "npm:^8.16.0"
-    prettier: "npm:^3.7.4"
+    prettier: "npm:^3.8.1"
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.1"
     supertest: "npm:^7.0.0"
@@ -10448,7 +10448,7 @@ __metadata:
     typeorm: "npm:^0.3.28"
     typeorm-naming-strategies: "npm:^4.1.0"
     typescript: "npm:^5.9.3"
-    typescript-eslint: "npm:^8.48.1"
+    typescript-eslint: "npm:^8.55.0"
   languageName: unknown
   linkType: soft
 
@@ -12077,7 +12077,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript-eslint@npm:^8.48.1":
+"typescript-eslint@npm:^8.55.0":
   version: 8.55.0
   resolution: "typescript-eslint@npm:8.55.0"
   dependencies:

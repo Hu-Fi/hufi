@@ -4761,7 +4761,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^10.0.1":
+"eslint-config-prettier@npm:^10.1.8":
   version: 10.1.8
   resolution: "eslint-config-prettier@npm:10.1.8"
   peerDependencies:
@@ -4798,7 +4798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-import-resolver-typescript@npm:^4.4.2":
+"eslint-import-resolver-typescript@npm:^4.4.4":
   version: 4.4.4
   resolution: "eslint-import-resolver-typescript@npm:4.4.4"
   dependencies:
@@ -4834,7 +4834,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.31.0":
+"eslint-plugin-import@npm:^2.32.0":
   version: 2.32.0
   resolution: "eslint-plugin-import@npm:2.32.0"
   dependencies:
@@ -4863,7 +4863,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^5.2.2":
+"eslint-plugin-prettier@npm:^5.5.5":
   version: 5.5.5
   resolution: "eslint-plugin-prettier@npm:5.5.5"
   dependencies:
@@ -5573,7 +5573,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globals@npm:^17.0.0":
+"globals@npm:^17.3.0":
   version: 17.3.0
   resolution: "globals@npm:17.3.0"
   checksum: 10c0/7f21443ecaa60c6e9ff56d9fb6f10a9b5f9514e7f22e5392f715472bb220ce31c865ebf414a32695150e733fb3e1013e6322dbce70fddd1e066f372b8d55a4b8
@@ -7905,7 +7905,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.7.4":
+"prettier@npm:^3.8.1":
   version: 3.8.1
   resolution: "prettier@npm:3.8.1"
   bin:
@@ -8112,25 +8112,25 @@ __metadata:
     "@types/node": "npm:^25.2.3"
     decimal.js: "npm:^10.6.0"
     eslint: "npm:^9.39.1"
-    eslint-config-prettier: "npm:^10.0.1"
-    eslint-import-resolver-typescript: "npm:^4.4.2"
-    eslint-plugin-import: "npm:^2.31.0"
-    eslint-plugin-prettier: "npm:^5.2.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-import-resolver-typescript: "npm:^4.4.4"
+    eslint-plugin-import: "npm:^2.32.0"
+    eslint-plugin-prettier: "npm:^5.5.5"
     ethers: "npm:~6.15.0"
-    globals: "npm:^17.0.0"
+    globals: "npm:^17.3.0"
     jest: "npm:^30.2.0"
     joi: "npm:^18.0.2"
     lodash: "npm:^4.17.21"
     minio: "npm:^8.0.6"
     nock: "npm:^14.0.5"
-    prettier: "npm:^3.7.4"
+    prettier: "npm:^3.8.1"
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.2"
     ts-jest: "npm:^29.4.6"
     ts-node: "npm:^10.9.2"
     tsconfig-paths: "npm:^4.2.0"
     typescript: "npm:^5.9.3"
-    typescript-eslint: "npm:^8.48.1"
+    typescript-eslint: "npm:^8.55.0"
   languageName: unknown
   linkType: soft
 
@@ -9374,7 +9374,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript-eslint@npm:^8.48.1":
+"typescript-eslint@npm:^8.55.0":
   version: 8.55.0
   resolution: "typescript-eslint@npm:8.55.0"
   dependencies:

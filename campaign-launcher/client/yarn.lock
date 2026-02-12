@@ -4865,13 +4865,14 @@ __metadata:
     eslint: "npm:^9.39.1"
     eslint-import-resolver-typescript: "npm:^4.4.4"
     eslint-plugin-import: "npm:^2.32.0"
-    eslint-plugin-prettier: "npm:^5.5.4"
+    eslint-plugin-prettier: "npm:^5.5.5"
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-hooks: "npm:^7.0.1"
     ethers: "npm:~6.15.0"
+    globals: "npm:^17.3.0"
     jwt-decode: "npm:^4.0.0"
     notistack: "npm:^3.0.2"
-    prettier: "npm:^3.7.4"
+    prettier: "npm:^3.8.1"
     react: "npm:^18.2.0"
     react-chartjs-2: "npm:^5.3.1"
     react-dom: "npm:^18.2.0"
@@ -4880,7 +4881,7 @@ __metadata:
     react-number-format: "npm:^5.4.4"
     react-router-dom: "npm:^6.22.3"
     typescript: "npm:^5.9.3"
-    typescript-eslint: "npm:^8.48.1"
+    typescript-eslint: "npm:^8.55.0"
     viem: "npm:^2.45.3"
     vite: "npm:^7.2.7"
     vite-plugin-node-polyfills: "npm:^0.25.0"
@@ -5984,7 +5985,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^5.5.4":
+"eslint-plugin-prettier@npm:^5.5.5":
   version: 5.5.5
   resolution: "eslint-plugin-prettier@npm:5.5.5"
   dependencies:
@@ -6581,6 +6582,13 @@ __metadata:
   version: 14.0.0
   resolution: "globals@npm:14.0.0"
   checksum: 10c0/b96ff42620c9231ad468d4c58ff42afee7777ee1c963013ff8aabe095a451d0ceeb8dcd8ef4cbd64d2538cef45f787a78ba3a9574f4a634438963e334471302d
+  languageName: node
+  linkType: hard
+
+"globals@npm:^17.3.0":
+  version: 17.3.0
+  resolution: "globals@npm:17.3.0"
+  checksum: 10c0/7f21443ecaa60c6e9ff56d9fb6f10a9b5f9514e7f22e5392f715472bb220ce31c865ebf414a32695150e733fb3e1013e6322dbce70fddd1e066f372b8d55a4b8
   languageName: node
   linkType: hard
 
@@ -8552,7 +8560,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.7.4":
+"prettier@npm:^3.8.1":
   version: 3.8.1
   resolution: "prettier@npm:3.8.1"
   bin:
@@ -9971,7 +9979,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript-eslint@npm:^8.48.1":
+"typescript-eslint@npm:^8.55.0":
   version: 8.55.0
   resolution: "typescript-eslint@npm:8.55.0"
   dependencies:
