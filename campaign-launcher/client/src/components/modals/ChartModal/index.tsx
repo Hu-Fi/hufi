@@ -1,11 +1,11 @@
-import { type FC, useEffect } from 'react';
+import { type FC } from 'react';
 
 import { CircularProgress, Typography } from '@mui/material';
 
 import DailyAmountPaidChart from '@/components/DailyAmountPaidChart';
+import ModalError from '@/components/ModalState/Error';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDailyPaidAmounts } from '@/hooks/useCampaigns';
-import { useNotification } from '@/hooks/useNotification';
 import type { CampaignDetails } from '@/types';
 
 import BaseModal from '../BaseModal';
@@ -18,16 +18,9 @@ type Props = {
 
 const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
   const isMobile = useIsMobile();
-  const { showError } = useNotification();
-  const { data, isLoading, isError } = useCampaignDailyPaidAmounts(
+  const { data, isLoading, isError, isSuccess } = useCampaignDailyPaidAmounts(
     campaign.address
   );
-
-  useEffect(() => {
-    if (isError) {
-      showError('Failed to load daily paid amounts.');
-    }
-  }, [isError, showError]);
 
   return (
     <BaseModal
@@ -48,11 +41,11 @@ const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
       >
         {isMobile ? 'Amount Paid' : 'Paid Amount Chart'}
       </Typography>
-      {isLoading ? (
-        <CircularProgress size={100} sx={{ my: 'auto' }} />
-      ) : (
+      {isLoading && <CircularProgress size={100} sx={{ my: 'auto' }} />}
+      {isError && <ModalError message="Failed to load daily paid amounts." />}
+      {isSuccess && (
         <DailyAmountPaidChart
-          data={data?.daily_paid_amounts ?? []}
+          data={data?.results ?? []}
           endDate={campaign.end_date}
           tokenSymbol={campaign.fund_token_symbol}
           tokenDecimals={campaign.fund_token_decimals}

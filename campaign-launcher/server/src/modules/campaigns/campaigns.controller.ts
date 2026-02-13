@@ -14,7 +14,7 @@ import {
   CampaignDataWithDetails,
   GetCampaignsQueryDto,
   SpecificCampaignParamsDto,
-  CampaignDailyPaidAmounts,
+  CampaignDailyPaidAmountsResponseDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
@@ -93,13 +93,13 @@ export class CampaignsController {
   })
   @ApiResponse({
     status: 200,
-    type: CampaignDailyPaidAmounts,
+    type: CampaignDailyPaidAmountsResponseDto,
   })
-  @Header('Cache-Control', 'public, max-age=60')
+  @Header('Cache-Control', 'public, max-age=600')
   @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/daily-paid-amounts`)
   async getCampaignDailyPaidAmounts(
     @Param() params: SpecificCampaignParamsDto,
-  ): Promise<CampaignDailyPaidAmounts> {
+  ): Promise<CampaignDailyPaidAmountsResponseDto> {
     const { chainId, campaignAddress } = params;
 
     const dailyPaidAmounts =
@@ -108,6 +108,8 @@ export class CampaignsController {
         campaignAddress,
       );
 
-    return dailyPaidAmounts;
+    return {
+      results: dailyPaidAmounts,
+    };
   }
 }

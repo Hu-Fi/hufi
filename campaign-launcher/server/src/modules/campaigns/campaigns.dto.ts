@@ -202,7 +202,7 @@ export class SpecificCampaignParamsDto {
   campaignAddress: string;
 }
 
-class DailyPaidAmount {
+export class DailyPaidAmount {
   @ApiProperty({
     example: '2025-01-01',
   })
@@ -227,11 +227,10 @@ export class CampaignDataWithDetails extends CampaignData {
   reservedFunds: string;
 }
 
-export class CampaignDailyPaidAmounts {
+export class CampaignDailyPaidAmountsResponseDto {
   @ApiProperty({
-    name: 'daily_paid_amounts',
     type: DailyPaidAmount,
     isArray: true,
   })
-  dailyPaidAmounts: DailyPaidAmount[];
+  results: DailyPaidAmount[];
 }

@@ -98,7 +98,7 @@ export type CampaignDetails = Campaign & {
 };
 
 export type CampaignDailyPaidAmounts = {
-  daily_paid_amounts: {
+  results: {
     date: string;
     amount: string;
   }[];

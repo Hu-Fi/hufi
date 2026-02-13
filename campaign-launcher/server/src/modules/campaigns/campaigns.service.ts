@@ -17,10 +17,10 @@ import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
 import {
-  CampaignDailyPaidAmounts,
   CampaignData,
   CampaignDataWithDetails,
   CampaignDetails,
+  DailyPaidAmount,
 } from './campaigns.dto';
 import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
@@ -139,7 +139,7 @@ export class CampaignsService {
   async getCampaignDailyPaidAmounts(
     chainId: ChainId,
     campaignAddress: string,
-  ): Promise<CampaignDailyPaidAmounts> {
+  ): Promise<Array<DailyPaidAmount>> {
     const amountsPerDay: Record<string, bigint> = {};
     let nTxsChecked = 0;
     do {
@@ -175,12 +175,10 @@ export class CampaignsService {
       // eslint-disable-next-line no-constant-condition
     } while (true);
 
-    return {
-      dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
-        date,
-        amount: amount.toString(),
-      })),
-    };
+    return Object.entries(amountsPerDay).map(([date, amount]) => ({
+      date,
+      amount: amount.toString(),
+    }));
   }
 
   private async retrieveCampaignManifset(
