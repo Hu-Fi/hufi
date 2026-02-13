@@ -136,13 +136,10 @@ export class CampaignsService {
     };
   }
 
-  delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
   async getCampaignDailyPaidAmounts(
     chainId: ChainId,
     campaignAddress: string,
   ): Promise<CampaignDailyPaidAmounts> {
-    await this.delay(5000);
     const amountsPerDay: Record<string, bigint> = {};
     let nTxsChecked = 0;
     do {
