@@ -14,6 +14,7 @@ import {
   CampaignDataWithDetails,
   GetCampaignsQueryDto,
   SpecificCampaignParamsDto,
+  CampaignDailyPaidAmountsResponseDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignsService } from './campaigns.service';
@@ -84,5 +85,31 @@ export class CampaignsController {
     }
 
     return campaign;
+  }
+
+  @ApiOperation({
+    summary: 'Get campaign daily paid amounts',
+    description: 'Returns daily paid amounts for specific campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CampaignDailyPaidAmountsResponseDto,
+  })
+  @Header('Cache-Control', 'public, max-age=600')
+  @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/daily-paid-amounts`)
+  async getCampaignDailyPaidAmounts(
+    @Param() params: SpecificCampaignParamsDto,
+  ): Promise<CampaignDailyPaidAmountsResponseDto> {
+    const { chainId, campaignAddress } = params;
+
+    const dailyPaidAmounts =
+      await this.campaignsService.getCampaignDailyPaidAmounts(
+        chainId,
+        campaignAddress,
+      );
+
+    return {
+      results: dailyPaidAmounts,
+    };
   }
 }

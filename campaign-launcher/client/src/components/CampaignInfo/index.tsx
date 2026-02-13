@@ -38,7 +38,7 @@ const CampaignInfo: FC<Props> = ({
   joinedAt,
   isJoinStatusLoading,
 }) => {
-  const [openChartModal, setOpenChartModal] = useState(false);
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
 
   const isMobile = useIsMobile();
 
@@ -132,13 +132,13 @@ const CampaignInfo: FC<Props> = ({
           <Button
             variant="outlined"
             size="medium"
-            onClick={() => setOpenChartModal(true)}
+            onClick={() => setIsChartModalOpen(true)}
           >
             Paid Amount Chart
           </Button>
           <ChartModal
-            open={openChartModal}
-            onClose={() => setOpenChartModal(false)}
+            open={isChartModalOpen}
+            onClose={() => setIsChartModalOpen(false)}
             campaign={campaign}
           />
         </Box>
