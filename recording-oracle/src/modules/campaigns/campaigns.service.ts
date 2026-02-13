@@ -941,7 +941,7 @@ export class CampaignsService implements OnModuleDestroy {
     const signer = this.web3Service.getSigner(chainId);
     const escrowClient = await EscrowClient.build(signer);
 
-    const gasPrice = await this.web3Service.calculateGasPrice(chainId);
+    const feeParams = await this.web3Service.calculateTxFees(chainId);
 
     const latestNonce = await signer.getNonce('latest');
 
@@ -952,7 +952,7 @@ export class CampaignsService implements OnModuleDestroy {
         resultsHash,
         fundsToReserve,
         {
-          gasPrice,
+          ...feeParams,
           nonce: latestNonce,
           timeoutMs: this.campaignsConfigService.storeResultsTimeout,
         },
@@ -963,7 +963,7 @@ export class CampaignsService implements OnModuleDestroy {
         chainId,
         campaignAddress,
         nonce: latestNonce,
-        gasPrice,
+        feeParams,
       });
       throw error;
     }

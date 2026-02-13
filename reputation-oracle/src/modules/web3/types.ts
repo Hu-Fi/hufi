@@ -8,3 +8,8 @@ export type Chain = {
 };
 
 export type WalletWithProvider = Wallet & { provider: Provider };
+
+export type TransactionFeeParams = {
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
+};

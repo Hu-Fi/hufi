@@ -234,7 +234,7 @@ export class PayoutsService {
           );
         }
 
-        const gasPrice = await this.web3Service.calculateGasPrice(
+        const feeParams = await this.web3Service.calculateTxFees(
           campaign.chainId,
         );
         const latestNonce = await signer.getNonce('latest');
@@ -248,7 +248,7 @@ export class PayoutsService {
           rewardsBatchToPay.id,
           false,
           {
-            gasPrice,
+            ...feeParams,
             nonce: latestNonce,
             timeoutMs: this.web3ConfigService.escrowTxTimeout,
           },
@@ -305,11 +305,11 @@ export class PayoutsService {
 
       if (escrowStatus === EscrowStatus.ToCancel) {
         logger.info('Campaign ended with cancellation request, cancelling it');
-        const gasPrice = await this.web3Service.calculateGasPrice(
+        const feeParams = await this.web3Service.calculateTxFees(
           campaign.chainId,
         );
         await escrowClient.cancel(campaign.address, {
-          gasPrice,
+          ...feeParams,
           timeoutMs: this.web3ConfigService.escrowTxTimeout,
         });
       } else if (
@@ -328,11 +328,11 @@ export class PayoutsService {
           escrowStatusString,
         });
 
-        const gasPrice = await this.web3Service.calculateGasPrice(
+        const feeParams = await this.web3Service.calculateTxFees(
           campaign.chainId,
         );
         await escrowClient.complete(campaign.address, {
-          gasPrice,
+          ...feeParams,
           timeoutMs: this.web3ConfigService.escrowTxTimeout,
         });
       } else {
