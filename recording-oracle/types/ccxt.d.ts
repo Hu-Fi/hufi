@@ -90,8 +90,15 @@ declare module 'ccxt' {
     fetchOpenOrders(symbol: string, since: number): Promise<Order[]>;
     fetchMyTrades(
       symbol: string,
-      since: number,
+      since?: number,
       limit?: number,
+      params?: {
+        user?: string;
+        address?: string;
+        subAccountAddress?: string;
+        until?: number;
+        [x: string]: unknown;
+      },
     ): Promise<Trade[]>;
     fetchDepositAddress(
       symbol: string,

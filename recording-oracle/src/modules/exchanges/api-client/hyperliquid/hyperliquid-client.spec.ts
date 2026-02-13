@@ -5,22 +5,17 @@ import { createMock } from '@golevelup/ts-jest';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
 
+import * as controlFlow from '@/common/utils/control-flow';
+
 import { HYPERLIQUID_TRADES_PAGE_LIMIT } from './constants';
-import { generateHyperliquidWalletAddress } from './fixtures';
+import {
+  generateHyperliquidCcxtTrade,
+  generateHyperliquidWalletAddress,
+} from './fixtures';
 import { HyperliquidClient } from './hyperliquid-client';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
-
-async function collectBatches<T>(
-  generator: AsyncGenerator<T[]>,
-): Promise<T[][]> {
-  const batches: T[][] = [];
-  for await (const batch of generator) {
-    batches.push(batch);
-  }
-  return batches;
-}
 
 describe('HyperliquidClient', () => {
   beforeEach(() => {
@@ -92,66 +87,67 @@ describe('HyperliquidClient', () => {
     const since = now - 15_000;
     const until = now - 5_000;
 
-    const t1 = {
+    const symbol = 'HYPE/USDC';
+    const t1 = generateHyperliquidCcxtTrade({
       id: 't1',
       timestamp: since + 1000,
-      symbol: 'HYPE/USDC',
+      symbol,
       side: 'buy',
       takerOrMaker: 'maker',
       price: 2,
       amount: 100,
       cost: 200,
-    };
-    const t2 = {
+    });
+    const t2 = generateHyperliquidCcxtTrade({
       id: 't2',
       timestamp: since + 2000,
-      symbol: 'HYPE/USDC',
+      symbol,
       side: 'sell',
       takerOrMaker: 'taker',
       price: 3,
       amount: 50,
       cost: 150,
-    };
-    const t3 = {
+    });
+    const t3 = generateHyperliquidCcxtTrade({
       id: 't3',
       timestamp: since + 3000,
-      symbol: 'HYPE/USDC',
+      symbol,
       side: 'buy',
       takerOrMaker: 'maker',
       price: 4,
       amount: 25,
       cost: 100,
-    };
+    });
 
     mockedExchange.fetchMyTrades
       .mockResolvedValueOnce([t1, t2] as never)
       .mockResolvedValueOnce([t3] as never)
       .mockResolvedValueOnce([] as never);
 
-    const batches = await collectBatches(
-      client.fetchMyTrades('HYPE/USDC', since, until),
+    const batches = await controlFlow.consumeIterator(
+      client.fetchMyTrades(symbol, since, until),
     );
 
-    expect(mockedExchange.loadMarkets).toHaveBeenCalledTimes(1);
+    expect(mockedExchange.loadMarkets).toHaveBeenCalledTimes(0);
 
     expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
       1,
-      'HYPE/USDC',
+      symbol,
       since,
       HYPERLIQUID_TRADES_PAGE_LIMIT,
       {
-        address: userEvmAddress,
         user: userEvmAddress,
+        until,
       },
     );
     expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
       2,
-      'HYPE/USDC',
+      symbol,
       t2.timestamp + 1,
       HYPERLIQUID_TRADES_PAGE_LIMIT,
       {
-        address: userEvmAddress,
         user: userEvmAddress,
+        until,
       },
     );
 

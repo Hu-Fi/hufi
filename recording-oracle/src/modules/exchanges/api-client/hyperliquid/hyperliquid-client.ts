@@ -20,6 +20,7 @@ import { HYPERLIQUID_TRADES_PAGE_LIMIT } from './constants';
 
 export interface HyperliquidClientInitOptions extends DexApiClientInitOptions {
   sandbox?: boolean;
+  preloadedExchangeClient?: Exchange;
 }
 
 class HyperliquidClientError extends ExchangeApiClientError {
@@ -41,6 +42,7 @@ export class HyperliquidClient implements ExchangeApiClient {
     userId,
     userEvmAddress,
     sandbox,
+    preloadedExchangeClient,
   }: HyperliquidClientInitOptions) {
     if (!userId) {
       throw new Error('userId is missing');
@@ -60,6 +62,9 @@ export class HyperliquidClient implements ExchangeApiClient {
         },
       }),
     );
+    if (preloadedExchangeClient) {
+      this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
+    }
     if (this.sandbox) {
       this.ccxtClient.setSandboxMode(true);
     }
@@ -97,40 +102,24 @@ export class HyperliquidClient implements ExchangeApiClient {
       throw new Error('"until" must be greater than or equal to "since"');
     }
 
-    await this.ccxtClient.loadMarkets();
-
     try {
       let fetchTradesSince = since;
 
       while (fetchTradesSince < until) {
-        const fetchMyTradesWithParams = this.ccxtClient.fetchMyTrades.bind(
-          this.ccxtClient,
-        ) as (
-          symbol: string,
-          since?: number,
-          limit?: number,
-          params?: Record<string, unknown>,
-        ) => Promise<CcxtTrade[]>;
-
-        const trades = await fetchMyTradesWithParams(
+        const trades = await this.ccxtClient.fetchMyTrades(
           symbol,
           fetchTradesSince,
           HYPERLIQUID_TRADES_PAGE_LIMIT,
           {
-            address: this.userEvmAddress,
             user: this.userEvmAddress,
+            until,
           },
         );
         if (trades.length === 0) {
           break;
         }
 
-        const tradesInRange = trades.filter((trade) => trade.timestamp < until);
-        if (tradesInRange.length > 0) {
-          yield tradesInRange.map(ccxtClientUtils.mapCcxtTrade);
-        } else {
-          break;
-        }
+        yield trades.map(ccxtClientUtils.mapCcxtTrade);
 
         const lastTradeTimestamp = trades.at(-1)!.timestamp;
         if (!Number.isFinite(lastTradeTimestamp)) {

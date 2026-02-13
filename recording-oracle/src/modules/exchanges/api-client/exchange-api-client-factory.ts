@@ -76,9 +76,11 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      if (exchangeConfig.enabled && exchangeConfig.type === ExchangeType.CEX) {
-        exchangesToPreload.push(exchangeName as ExchangeName);
+      if (!exchangeConfig.enabled) {
+        continue;
       }
+
+      exchangesToPreload.push(exchangeName as ExchangeName);
     }
 
     await Promise.all(
@@ -202,6 +204,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         return new HyperliquidClient({
           ...clientInitOptions,
           sandbox: this.exchangesConfigService.useSandbox,
+          preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
         });
       }
       default:

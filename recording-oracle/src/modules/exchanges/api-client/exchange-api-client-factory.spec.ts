@@ -128,8 +128,23 @@ describe('ExchangeApiClientFactory', () => {
       expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
     });
 
-    it('should init and skip ccxt client preloading for enabled DEX', async () => {
-      const exchangeName = generateExchangeName();
+    it('should init and skip ccxt client preloading for enabled non-ccxt DEX', async () => {
+      const exchangeName = ExchangeName.PANCAKESWAP;
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: true,
+          type: ExchangeType.DEX,
+          skipCcxtPreload: true,
+        },
+      };
+
+      await exchangeApiClientFactory.onModuleInit();
+
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
+    });
+
+    it('should init and preload ccxt client for enabled hyperliquid DEX', async () => {
+      const exchangeName = ExchangeName.HYPERLIQUID;
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
           enabled: true,
@@ -139,7 +154,8 @@ describe('ExchangeApiClientFactory', () => {
 
       await exchangeApiClientFactory.onModuleInit();
 
-      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(1);
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledWith(exchangeName);
     });
   });
 
@@ -423,6 +439,27 @@ describe('ExchangeApiClientFactory', () => {
           sandbox: mockExchangesConfigService.useSandbox,
         }),
       );
+    });
+
+    it('should use preloaded ccxt client for hyperliquid', async () => {
+      const exchangeName = ExchangeName.HYPERLIQUID;
+      const preloadedExchange = createMock<Exchange>();
+      mockedCcxt[exchangeName].mockReturnValueOnce(preloadedExchange);
+      await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
+
+      exchangeApiClientFactory.createDex(exchangeName, {
+        userId,
+        userEvmAddress,
+      });
+
+      expect(mockedHyperliquidClient).toHaveBeenCalledTimes(1);
+      expect(mockedHyperliquidClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          preloadedExchangeClient: preloadedExchange,
+        }),
+      );
+
+      exchangeApiClientFactory['preloadedCcxtClients'].clear();
     });
   });
 });

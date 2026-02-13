@@ -51,6 +51,7 @@ export class ExchangesConfigService {
       [ExchangeName.PANCAKESWAP]: {
         enabled: this.isPancakeswapEnabled,
         type: ExchangeType.DEX,
+        skipCcxtPreload: true,
       },
       [ExchangeName.UPBIT]: {
         enabled: true,

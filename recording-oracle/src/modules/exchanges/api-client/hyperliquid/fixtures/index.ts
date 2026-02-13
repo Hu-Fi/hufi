@@ -10,9 +10,7 @@ export function generateHyperliquidWalletAddress(): string {
 export function generateHyperliquidCcxtTrade(
   overrides?: Partial<CcxtTrade>,
 ): CcxtTrade {
-  const trade = generateCcxtTrade({
-    symbol: 'HYPE/USDC',
-  });
+  const trade = generateCcxtTrade();
 
   return {
     ...trade,
