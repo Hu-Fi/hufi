@@ -377,13 +377,11 @@ const CampaignStats: FC<Props> = ({
           >
             Paid Amount Chart
           </Button>
-          {isChartModalOpen && (
-            <ChartModal
-              open={isChartModalOpen}
-              onClose={() => setIsChartModalOpen(false)}
-              campaign={campaign}
-            />
-          )}
+          <ChartModal
+            open={isChartModalOpen}
+            onClose={() => setIsChartModalOpen(false)}
+            campaign={campaign}
+          />
         </>
       )}
     </>

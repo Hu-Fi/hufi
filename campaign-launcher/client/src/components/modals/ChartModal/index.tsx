@@ -19,7 +19,8 @@ type Props = {
 const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
   const isMobile = useIsMobile();
   const { data, isLoading, isError, isSuccess } = useCampaignDailyPaidAmounts(
-    campaign.address
+    campaign.address,
+    { enabled: open }
   );
 
   return (
