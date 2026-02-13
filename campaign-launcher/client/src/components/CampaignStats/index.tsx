@@ -178,7 +178,7 @@ const CampaignStats: FC<Props> = ({
   isJoined,
   isCampaignLoading,
 }) => {
-  const [openChartModal, setOpenChartModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { exchangesMap } = useExchangesContext();
   const isXl = useIsXlDesktop();
@@ -372,16 +372,18 @@ const CampaignStats: FC<Props> = ({
             variant="outlined"
             size="medium"
             sx={{ mt: -1 }}
-            onClick={() => setOpenChartModal(true)}
+            onClick={() => setIsModalOpen(true)}
             endIcon={<ChartIcon />}
           >
             Paid Amount Chart
           </Button>
-          <ChartModal
-            open={openChartModal}
-            onClose={() => setOpenChartModal(false)}
-            campaign={campaign}
-          />
+          {isModalOpen && (
+            <ChartModal
+              open={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              campaign={campaign}
+            />
+          )}
         </>
       )}
     </>

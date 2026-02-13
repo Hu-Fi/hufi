@@ -212,13 +212,6 @@ class DailyPaidAmount {
 }
 
 export class CampaignDataWithDetails extends CampaignData {
-  @ApiProperty({
-    name: 'daily_paid_amounts',
-    type: DailyPaidAmount,
-    isArray: true,
-  })
-  dailyPaidAmounts: DailyPaidAmount[];
-
   @ApiProperty({ name: 'exchange_oracle_fee_percent' })
   exchangeOracleFeePercent: number;
 
@@ -232,4 +225,13 @@ export class CampaignDataWithDetails extends CampaignData {
     name: 'reserved_funds',
   })
   reservedFunds: string;
+}
+
+export class CampaignDailyPaidAmounts {
+  @ApiProperty({
+    name: 'daily_paid_amounts',
+    type: DailyPaidAmount,
+    isArray: true,
+  })
+  dailyPaidAmounts: DailyPaidAmount[];
 }

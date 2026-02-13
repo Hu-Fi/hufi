@@ -86,19 +86,22 @@ export type Campaign = {
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
-  reserved_funds: string;
+  amount_paid: string;
   balance: string;
 };
 
 export type CampaignDetails = Campaign & {
-  amount_paid: string;
+  exchange_oracle_fee_percent: number;
+  recording_oracle_fee_percent: number;
+  reputation_oracle_fee_percent: number;
+  reserved_funds: string;
+};
+
+export type CampaignDailyPaidAmounts = {
   daily_paid_amounts: {
     date: string;
     amount: string;
   }[];
-  exchange_oracle_fee_percent: number;
-  recording_oracle_fee_percent: number;
-  reputation_oracle_fee_percent: number;
 };
 
 export type CampaignsResponse = {

@@ -17,6 +17,7 @@ import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
 
 import {
+  CampaignDailyPaidAmounts,
   CampaignData,
   CampaignDataWithDetails,
   CampaignDetails,
@@ -125,6 +126,23 @@ export class CampaignsService {
       this.getReservedFunds(campaignEscrow),
     ]);
 
+    return {
+      ...campaignData,
+      // details
+      exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
+      recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
+      reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
+      reservedFunds: reservedFunds.toString(),
+    };
+  }
+
+  delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  async getCampaignDailyPaidAmounts(
+    chainId: ChainId,
+    campaignAddress: string,
+  ): Promise<CampaignDailyPaidAmounts> {
+    await this.delay(5000);
     const amountsPerDay: Record<string, bigint> = {};
     let nTxsChecked = 0;
     do {
@@ -161,16 +179,10 @@ export class CampaignsService {
     } while (true);
 
     return {
-      ...campaignData,
-      // details
       dailyPaidAmounts: Object.entries(amountsPerDay).map(([date, amount]) => ({
         date,
         amount: amount.toString(),
       })),
-      exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
-      recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
-      reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
-      reservedFunds: reservedFunds.toString(),
     };
   }
 

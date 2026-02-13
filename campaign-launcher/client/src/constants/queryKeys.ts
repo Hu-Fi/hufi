@@ -14,4 +14,5 @@ export const QUERY_KEYS = {
   EXCHANGE_CURRENCIES: 'exchange-currencies',
   USER_PROGRESS: 'user-progress',
   CHECK_CAMPAIGN_JOIN_STATUS: 'check-campaign-join-status',
+  CAMPAIGN_DAILY_PAID_AMOUNTS: 'campaign-daily-paid-amounts',
 };
