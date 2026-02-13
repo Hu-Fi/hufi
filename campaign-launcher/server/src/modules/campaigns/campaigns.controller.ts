@@ -95,6 +95,7 @@ export class CampaignsController {
     status: 200,
     type: CampaignDailyPaidAmounts,
   })
+  @Header('Cache-Control', 'public, max-age=60')
   @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/daily-paid-amounts`)
   async getCampaignDailyPaidAmounts(
     @Param() params: SpecificCampaignParamsDto,

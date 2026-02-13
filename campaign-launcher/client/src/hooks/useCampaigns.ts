@@ -76,5 +76,6 @@ export const useCampaignDailyPaidAmounts = (address: string) => {
     queryKey: [QUERY_KEYS.CAMPAIGN_DAILY_PAID_AMOUNTS, appChainId, address],
     queryFn: () => launcherApi.getCampaignDailyPaidAmounts(appChainId, address),
     enabled: !!appChainId && !!address,
+    retry: false,
   });
 };

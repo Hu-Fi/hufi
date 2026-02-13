@@ -1,10 +1,11 @@
-import type { FC } from 'react';
+import { type FC, useEffect } from 'react';
 
 import { CircularProgress, Typography } from '@mui/material';
 
 import DailyAmountPaidChart from '@/components/DailyAmountPaidChart';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDailyPaidAmounts } from '@/hooks/useCampaigns';
+import { useNotification } from '@/hooks/useNotification';
 import type { CampaignDetails } from '@/types';
 
 import BaseModal from '../BaseModal';
@@ -17,7 +18,16 @@ type Props = {
 
 const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
   const isMobile = useIsMobile();
-  const { data, isLoading } = useCampaignDailyPaidAmounts(campaign.address);
+  const { showError } = useNotification();
+  const { data, isLoading, isError } = useCampaignDailyPaidAmounts(
+    campaign.address
+  );
+
+  useEffect(() => {
+    if (isError) {
+      showError('Failed to load daily paid amounts.');
+    }
+  }, [isError, showError]);
 
   return (
     <BaseModal
