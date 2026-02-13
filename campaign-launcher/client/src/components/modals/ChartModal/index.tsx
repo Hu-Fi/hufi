@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import { CircularProgress, Typography } from '@mui/material';
 
 import DailyAmountPaidChart from '@/components/DailyAmountPaidChart';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDailyPaidAmounts } from '@/hooks/useCampaigns';
 import type { CampaignDetails } from '@/types';
 
@@ -15,6 +16,7 @@ type Props = {
 };
 
 const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
+  const isMobile = useIsMobile();
   const { data, isLoading } = useCampaignDailyPaidAmounts(campaign.address);
 
   return (
@@ -34,7 +36,7 @@ const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
         color="text.primary"
         mb={isLoading ? 0 : { xs: 3, md: 7 }}
       >
-        Paid Amount Chart
+        {isMobile ? 'Amount Paid' : 'Paid Amount Chart'}
       </Typography>
       {isLoading ? (
         <CircularProgress size={100} sx={{ my: 'auto' }} />
