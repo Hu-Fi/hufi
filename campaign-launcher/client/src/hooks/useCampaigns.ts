@@ -69,3 +69,16 @@ export const useGetCampaignsStats = () => {
     enabled: !!appChainId,
   });
 };
+
+export const useCampaignDailyPaidAmounts = (
+  address: string,
+  options?: { enabled?: boolean }
+) => {
+  const { appChainId } = useNetwork();
+  return useQuery({
+    queryKey: [QUERY_KEYS.CAMPAIGN_DAILY_PAID_AMOUNTS, appChainId, address],
+    queryFn: () => launcherApi.getCampaignDailyPaidAmounts(appChainId, address),
+    enabled: (options?.enabled ?? true) && !!appChainId && !!address,
+    retry: false,
+  });
+};

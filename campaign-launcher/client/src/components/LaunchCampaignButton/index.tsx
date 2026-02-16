@@ -98,12 +98,10 @@ const LaunchCampaignButton: FC<Props> = ({
           Launch Campaign
         </Button>
       </ButtonWrapper>
-      {isSetupModalOpen && (
-        <StakingRequirementModal
-          open={isSetupModalOpen}
-          onClose={() => setIsSetupModalOpen(false)}
-        />
-      )}
+      <StakingRequirementModal
+        open={isSetupModalOpen}
+        onClose={() => setIsSetupModalOpen(false)}
+      />
     </>
   );
 };
