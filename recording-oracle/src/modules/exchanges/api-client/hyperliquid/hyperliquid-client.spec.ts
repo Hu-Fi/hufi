@@ -6,12 +6,9 @@ import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
 
 import * as controlFlow from '@/common/utils/control-flow';
+import { generateCcxtTrade } from '@/modules/exchanges/api-client/ccxt/fixtures';
 
 import { HYPERLIQUID_TRADES_PAGE_LIMIT } from './constants';
-import {
-  generateHyperliquidCcxtTrade,
-  generateHyperliquidWalletAddress,
-} from './fixtures';
 import { HyperliquidClient } from './hyperliquid-client';
 
 const mockedCcxt = jest.mocked(ccxt);
@@ -31,7 +28,7 @@ describe('HyperliquidClient', () => {
       () =>
         new HyperliquidClient({
           userId: '',
-          userEvmAddress: generateHyperliquidWalletAddress(),
+          userEvmAddress: faker.finance.ethereumAddress(),
         }),
     ).toThrow('userId is missing');
   });
@@ -49,7 +46,7 @@ describe('HyperliquidClient', () => {
   it('should return true on checkRequiredCredentials for valid init', () => {
     const client = new HyperliquidClient({
       userId: faker.string.uuid(),
-      userEvmAddress: generateHyperliquidWalletAddress(),
+      userEvmAddress: faker.finance.ethereumAddress(),
     });
 
     expect(client.checkRequiredCredentials()).toBe(true);
@@ -60,7 +57,7 @@ describe('HyperliquidClient', () => {
     (sandboxParam) => {
       const client = new HyperliquidClient({
         userId: faker.string.uuid(),
-        userEvmAddress: generateHyperliquidWalletAddress(),
+        userEvmAddress: faker.finance.ethereumAddress(),
         sandbox: sandboxParam,
       });
 
@@ -77,7 +74,7 @@ describe('HyperliquidClient', () => {
 
   it('should fetch and paginate trades using ccxt with wallet params', async () => {
     const userId = faker.string.uuid();
-    const userEvmAddress = generateHyperliquidWalletAddress();
+    const userEvmAddress = faker.finance.ethereumAddress();
     const client = new HyperliquidClient({
       userId,
       userEvmAddress,
@@ -88,36 +85,21 @@ describe('HyperliquidClient', () => {
     const until = now - 5_000;
 
     const symbol = 'HYPE/USDC';
-    const t1 = generateHyperliquidCcxtTrade({
-      id: 't1',
-      timestamp: since + 1000,
-      symbol,
-      side: 'buy',
-      takerOrMaker: 'maker',
-      price: 2,
-      amount: 100,
-      cost: 200,
-    });
-    const t2 = generateHyperliquidCcxtTrade({
-      id: 't2',
-      timestamp: since + 2000,
-      symbol,
-      side: 'sell',
-      takerOrMaker: 'taker',
-      price: 3,
-      amount: 50,
-      cost: 150,
-    });
-    const t3 = generateHyperliquidCcxtTrade({
-      id: 't3',
-      timestamp: since + 3000,
-      symbol,
-      side: 'buy',
-      takerOrMaker: 'maker',
-      price: 4,
-      amount: 25,
-      cost: 100,
-    });
+    const tradeSeed = [
+      { id: 't1', timestampOffset: 1000, side: 'buy', takerOrMaker: 'maker' },
+      { id: 't2', timestampOffset: 2000, side: 'sell', takerOrMaker: 'taker' },
+      { id: 't3', timestampOffset: 3000, side: 'buy', takerOrMaker: 'maker' },
+    ] as const;
+    const [t1, t2, t3] = tradeSeed.map(
+      ({ id, timestampOffset, side, takerOrMaker }) =>
+        generateCcxtTrade({
+          id,
+          timestamp: since + timestampOffset,
+          symbol,
+          side,
+          takerOrMaker,
+        }),
+    );
 
     mockedExchange.fetchMyTrades
       .mockResolvedValueOnce([t1, t2] as never)

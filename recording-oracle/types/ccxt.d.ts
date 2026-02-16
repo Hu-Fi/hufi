@@ -92,13 +92,7 @@ declare module 'ccxt' {
       symbol: string,
       since?: number,
       limit?: number,
-      params?: {
-        user?: string;
-        address?: string;
-        subAccountAddress?: string;
-        until?: number;
-        [x: string]: unknown;
-      },
+      params?: Record<string, unknown>,
     ): Promise<Trade[]>;
     fetchDepositAddress(
       symbol: string,

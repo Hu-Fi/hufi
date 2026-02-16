@@ -122,13 +122,6 @@ export class HyperliquidClient implements ExchangeApiClient {
         yield trades.map(ccxtClientUtils.mapCcxtTrade);
 
         const lastTradeTimestamp = trades.at(-1)!.timestamp;
-        if (!Number.isFinite(lastTradeTimestamp)) {
-          break;
-        }
-
-        if (lastTradeTimestamp < fetchTradesSince) {
-          break;
-        }
 
         fetchTradesSince = lastTradeTimestamp + 1;
       }

@@ -420,14 +420,16 @@ describe('ExchangeApiClientFactory', () => {
       );
     });
 
-    it('should correctly init client for hyperliquid', () => {
-      const client = exchangeApiClientFactory.createDex(
-        ExchangeName.HYPERLIQUID,
-        {
-          userId,
-          userEvmAddress,
-        },
-      );
+    it('should correctly init client for hyperliquid with preloaded ccxt client', async () => {
+      const exchangeName = ExchangeName.HYPERLIQUID;
+      const preloadedExchange = createMock<Exchange>();
+      mockedCcxt[exchangeName].mockReturnValueOnce(preloadedExchange);
+      await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
+
+      const client = exchangeApiClientFactory.createDex(exchangeName, {
+        userId,
+        userEvmAddress,
+      });
 
       expect(client).toBeInstanceOf(HyperliquidClient);
 
@@ -437,24 +439,6 @@ describe('ExchangeApiClientFactory', () => {
           userId,
           userEvmAddress,
           sandbox: mockExchangesConfigService.useSandbox,
-        }),
-      );
-    });
-
-    it('should use preloaded ccxt client for hyperliquid', async () => {
-      const exchangeName = ExchangeName.HYPERLIQUID;
-      const preloadedExchange = createMock<Exchange>();
-      mockedCcxt[exchangeName].mockReturnValueOnce(preloadedExchange);
-      await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
-
-      exchangeApiClientFactory.createDex(exchangeName, {
-        userId,
-        userEvmAddress,
-      });
-
-      expect(mockedHyperliquidClient).toHaveBeenCalledTimes(1);
-      expect(mockedHyperliquidClient).toHaveBeenCalledWith(
-        expect.objectContaining({
           preloadedExchangeClient: preloadedExchange,
         }),
       );
