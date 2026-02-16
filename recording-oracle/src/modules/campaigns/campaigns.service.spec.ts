@@ -1345,7 +1345,10 @@ describe('CampaignsService', () => {
 
   describe('recordCampaignIntermediateResults', () => {
     const mockStoreResults = jest.fn();
-    let mockGasPrice: bigint;
+    let mockFeeParams: {
+      maxFeePerGas: bigint;
+      maxPriorityFeePerGas: bigint;
+    };
     let mockLatestNonce: number;
 
     beforeEach(() => {
@@ -1354,8 +1357,11 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
       mockWeb3Service.getSigner.mockReturnValueOnce(mockedSigner);
 
-      mockGasPrice = faker.number.bigInt({ min: 1 });
-      mockWeb3Service.calculateGasPrice.mockResolvedValueOnce(mockGasPrice);
+      mockFeeParams = {
+        maxFeePerGas: faker.number.bigInt({ min: 1 }),
+        maxPriorityFeePerGas: faker.number.bigInt({ min: 1 }),
+      };
+      mockWeb3Service.calculateTxFees.mockResolvedValueOnce(mockFeeParams);
 
       mockLatestNonce = faker.number.int();
       mockedSigner.getNonce.mockResolvedValueOnce(mockLatestNonce);
@@ -1397,7 +1403,7 @@ describe('CampaignsService', () => {
         resultsHash,
         fundsToReserve,
         {
-          gasPrice: mockGasPrice,
+          ...mockFeeParams,
           nonce: mockLatestNonce,
           timeoutMs: mockCampaignsConfigService.storeResultsTimeout,
         },

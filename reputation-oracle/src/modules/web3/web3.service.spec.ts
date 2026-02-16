@@ -54,7 +54,7 @@ describe('Web3Service', () => {
     });
   });
 
-  describe('calculateGasPrice', () => {
+  describe('calculateTxFees', () => {
     const mockProvider = createMock<Provider>();
     let spyOnGetSigner: jest.SpyInstance;
 
@@ -75,32 +75,57 @@ describe('Web3Service', () => {
       mockProvider.getFeeData.mockReset();
     });
 
-    it('should use multiplier for gas price', async () => {
+    it('should use multiplier for transaction fee params', async () => {
       const testChainId = generateTestnetChainId();
 
-      const randomGasPrice = faker.number.bigInt({ min: 1 });
+      const randomMaxFeePerGas = faker.number.bigInt({ min: 1 });
+      const randomMaxPriorityFeePerGas = faker.number.bigInt({ min: 1 });
+
+      mockProvider.getFeeData.mockResolvedValueOnce({
+        maxFeePerGas: randomMaxFeePerGas,
+        maxPriorityFeePerGas: randomMaxPriorityFeePerGas,
+      } as FeeData);
+
+      const feeParams = await web3Service.calculateTxFees(testChainId);
+
+      const feeMultiplier = BigInt(mockWeb3ConfigService.gasPriceMultiplier);
+      expect(feeParams).toEqual({
+        maxFeePerGas: randomMaxFeePerGas * feeMultiplier,
+        maxPriorityFeePerGas: randomMaxPriorityFeePerGas * feeMultiplier,
+      });
+    });
+
+    it('should throw if no transaction fee data from provider', async () => {
+      const testChainId = generateTestnetChainId();
+
+      mockProvider.getFeeData.mockResolvedValueOnce({
+        maxFeePerGas: null,
+        maxPriorityFeePerGas: null,
+      } as FeeData);
+
+      await expect(web3Service.calculateTxFees(testChainId)).rejects.toThrow(
+        `No transaction fee data for chain id: ${testChainId}`,
+      );
+    });
+
+    it('should fallback to legacy gasPrice data', async () => {
+      const testChainId = generateTestnetChainId();
+      const randomGasPrice = faker.number.bigInt();
 
       mockProvider.getFeeData.mockResolvedValueOnce({
         gasPrice: randomGasPrice,
+        maxFeePerGas: null,
+        maxPriorityFeePerGas: null,
       } as FeeData);
 
-      const gasPrice = await web3Service.calculateGasPrice(testChainId);
-
-      const expectedGasPrice =
+      const fees = await web3Service.calculateTxFees(testChainId);
+      const expectedFee =
         randomGasPrice * BigInt(mockWeb3ConfigService.gasPriceMultiplier);
-      expect(gasPrice).toEqual(expectedGasPrice);
-    });
 
-    it('should throw if no gas price from provider', async () => {
-      const testChainId = generateTestnetChainId();
-
-      mockProvider.getFeeData.mockResolvedValueOnce({
-        gasPrice: null,
-      } as FeeData);
-
-      await expect(web3Service.calculateGasPrice(testChainId)).rejects.toThrow(
-        `No gas price data for chain id: ${testChainId}`,
-      );
+      expect(fees).toEqual({
+        maxFeePerGas: expectedFee,
+        maxPriorityFeePerGas: expectedFee,
+      });
     });
   });
 });
