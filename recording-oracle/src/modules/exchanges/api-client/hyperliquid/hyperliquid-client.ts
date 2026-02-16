@@ -1,4 +1,4 @@
-import type { Exchange, Trade as CcxtTrade } from 'ccxt';
+import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
 import _ from 'lodash';
 
