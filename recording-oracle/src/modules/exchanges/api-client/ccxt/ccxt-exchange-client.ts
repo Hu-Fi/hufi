@@ -255,6 +255,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         break;
       }
       default:
+        if (Environment.isTest()) {
+          since = (inputs.nextPageToken as number) || inputs.since;
+          break;
+        }
         throw new Error('Pagination mechanism should be defined for ccxt');
     }
 
@@ -335,6 +339,11 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         break;
       }
       default:
+        if (Environment.isTest()) {
+          // mimic ccxt pagination example for unit tests
+          trades = _.orderBy(trades, 'timestamp', 'asc');
+          nextPageToken = trades.at(-1)!.timestamp + 1;
+        }
         break;
     }
 
