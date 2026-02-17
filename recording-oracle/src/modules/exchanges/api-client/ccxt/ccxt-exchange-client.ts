@@ -334,7 +334,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
           movingDedupIds: [
             ...prevPageToken.movingDedupIds,
             ..._.map(newTrades, 'id'),
-          ].slice(-1 * limit * 2),
+          ].slice(-1 * limit! * 2),
         };
         break;
       }
