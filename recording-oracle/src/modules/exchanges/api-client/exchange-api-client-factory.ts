@@ -24,6 +24,7 @@ import type {
   DexApiClientInitOptions,
   ExchangeApiClient,
 } from './exchange-api-client.interface';
+import { HyperliquidClient } from './hyperliquid';
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
 
@@ -75,9 +76,11 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      if (exchangeConfig.enabled && exchangeConfig.type === ExchangeType.CEX) {
-        exchangesToPreload.push(exchangeName as ExchangeName);
+      if (!exchangeConfig.enabled) {
+        continue;
       }
+
+      exchangesToPreload.push(exchangeName as ExchangeName);
     }
 
     await Promise.all(
@@ -195,6 +198,13 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         return new PancakeswapClient({
           ...clientInitOptions,
           subgraphApiKey: this.web3ConfigService.subgraphApiKey,
+        });
+      }
+      case ExchangeName.HYPERLIQUID: {
+        return new HyperliquidClient({
+          ...clientInitOptions,
+          sandbox: this.exchangesConfigService.useSandbox,
+          preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
         });
       }
       default:

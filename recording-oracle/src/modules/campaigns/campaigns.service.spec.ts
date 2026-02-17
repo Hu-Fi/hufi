@@ -249,32 +249,35 @@ describe('CampaignsService', () => {
       expect(thrownError.message).toBe('Exchange integration is disabled');
     });
 
-    it('should throw when exchange from manifest is pancakeswap and not market making type', () => {
-      const manifest = faker.helpers.arrayElement([
-        generateHoldingCampaignManifest,
-        generateThresholdampaignManifest,
-      ])();
-      manifest.exchange = ExchangeName.PANCAKESWAP;
+    it.each([ExchangeName.PANCAKESWAP, ExchangeName.HYPERLIQUID])(
+      'should throw when exchange from manifest is %s and not market making type',
+      (exchangeName) => {
+        const manifest = faker.helpers.arrayElement([
+          generateHoldingCampaignManifest,
+          generateThresholdampaignManifest,
+        ])();
+        manifest.exchange = exchangeName;
 
-      mockExchangesConfigService.configByExchange = {
-        [manifest.exchange]: {
-          enabled: true,
-          type: ExchangeType.DEX,
-        },
-      };
+        mockExchangesConfigService.configByExchange = {
+          [manifest.exchange]: {
+            enabled: true,
+            type: ExchangeType.DEX,
+          },
+        };
 
-      let thrownError;
-      try {
-        campaignsService['assertCorrectCampaignSetup'](manifest);
-      } catch (error) {
-        thrownError = error;
-      }
+        let thrownError;
+        try {
+          campaignsService['assertCorrectCampaignSetup'](manifest);
+        } catch (error) {
+          thrownError = error;
+        }
 
-      expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe(
-        'Only market making campaigns supported for pancakeswap',
-      );
-    });
+        expect(thrownError).toBeInstanceOf(Error);
+        expect(thrownError.message).toBe(
+          `Only market making campaigns supported for ${exchangeName}`,
+        );
+      },
+    );
 
     it('should not throw when campaign setup is correct', () => {
       /**

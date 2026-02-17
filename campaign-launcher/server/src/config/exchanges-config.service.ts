@@ -56,6 +56,11 @@ export class ExchangesConfigService {
         ...getExchangeMetaFromCcxt(ExchangeName.HTX),
         type: ExchangeType.CEX,
       },
+      [ExchangeName.HYPERLIQUID]: {
+        enabled: this.isHyperliquidEnabled,
+        ...getExchangeMetaFromCcxt(ExchangeName.HYPERLIQUID),
+        type: ExchangeType.DEX,
+      },
       [ExchangeName.KRAKEN]: {
         enabled: true,
         ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
@@ -88,6 +93,10 @@ export class ExchangesConfigService {
 
   private get isPancakeswapEnabled(): boolean {
     return this.configService.get('FEATURE_PANCAKESWAP', '') === 'true';
+  }
+
+  private get isHyperliquidEnabled(): boolean {
+    return this.configService.get('FEATURE_HYPERLIQUID', '') === 'true';
   }
 
   isExchangeSupported(exchangeName: string): exchangeName is ExchangeName {
