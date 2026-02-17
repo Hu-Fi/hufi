@@ -26,6 +26,7 @@ import {
 } from '../types';
 import * as apiClientUtils from '../utils';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { type MexcNextPageToken } from './types';
 import * as ccxtClientUtils from './utils';
 
 export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
@@ -226,7 +227,6 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       case ExchangeName.GATE: {
         // max is 1000
         limit = 500;
-
         since = inputs.since;
         /**
          * Origin API has it as 'to', but it's in seconds,
@@ -240,6 +240,18 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       case ExchangeName.MEXC: {
         // max is 100
         limit = 100;
+        since = inputs.since;
+
+        if (!inputs.nextPageToken) {
+          (inputs.nextPageToken as MexcNextPageToken) = {
+            nextPageUntil: inputs.until,
+            movingDedupIds: [],
+          };
+        }
+
+        params.until = (
+          inputs.nextPageToken as MexcNextPageToken
+        ).nextPageUntil;
         break;
       }
       default:
@@ -252,15 +264,15 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       limit,
       params,
     );
+    if (trades.length === 0) {
+      return { trades: [] };
+    }
+
     /**
      * APIs usually return it in desc order, but
      * ccxt under the hood reverses it.
      */
     trades = _.orderBy(trades, 'timestamp', 'desc');
-
-    if (trades.length === 0) {
-      return { trades };
-    }
 
     let nextPageToken: unknown;
     switch (this.exchangeName) {
@@ -278,6 +290,48 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         if (lastPage < 100) {
           nextPageToken = lastPage + 1;
         }
+        break;
+      }
+      case ExchangeName.MEXC: {
+        const prevPageToken = inputs.nextPageToken as MexcNextPageToken;
+        const movingDedupIds = new Set(prevPageToken.movingDedupIds);
+
+        /**
+         * There might be same-second trades that are cut by limit param,
+         * so in order to retrieve all trades we need to query next page
+         * using same timestamp as a boundary object and filter entries
+         * with same timestamp from previous pages.
+         *
+         * We have to keep all trades ids to avoid infinite fetches when
+         * the whole page consists of same-seconds trades.
+         */
+        const newTrades: CcxtTrade[] = [];
+        for (const trade of trades) {
+          if (movingDedupIds.has(trade.id)) {
+            continue;
+          }
+
+          newTrades.push(trade);
+        }
+
+        if (newTrades.length === 0) {
+          return { trades: [] };
+        }
+
+        trades = newTrades;
+
+        (nextPageToken as MexcNextPageToken) = {
+          nextPageUntil: trades.at(-1)!.timestamp,
+          /**
+           * Keep ids from up to two last full pages in order to dedup,
+           * because we only need two pages to detect if we stuck in situation
+           * where there are more trades withing same-seconds than trades page limit.
+           */
+          movingDedupIds: [
+            ...prevPageToken.movingDedupIds,
+            ..._.map(newTrades, 'id'),
+          ].slice(-1 * limit * 2),
+        };
         break;
       }
       default:
