@@ -1,6 +1,7 @@
 import { type FC, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 
 import ActiveCampaignsFilter from '@/components/ActiveCampaignsFilter';
@@ -8,6 +9,7 @@ import AllCampaigns from '@/components/AllCampaigns';
 import CampaignsViewDropdown from '@/components/CampaignsViewDropdown';
 import JoinedCampaigns from '@/components/JoinedCampaigns';
 import MyCampaigns from '@/components/MyCampaigns';
+import { QUERY_KEYS } from '@/constants/queryKeys';
 import { CampaignsView } from '@/types';
 
 const Campaigns: FC = () => {
@@ -26,6 +28,8 @@ const Campaigns: FC = () => {
     return CampaignsView.ALL;
   });
 
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const viewFromUrl = searchParams.get('view');
     if (viewFromUrl) {
@@ -37,10 +41,22 @@ const Campaigns: FC = () => {
 
   const handleCampaignsViewChange = (view: CampaignsView) => {
     setCampaignsView(view);
+
+    if (showActiveCampaigns) {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.CAMPAIGNS_STATS],
+      });
+    }
   };
 
   const handleActiveCampaignsChange = (checked: boolean) => {
     setShowActiveCampaigns(checked);
+
+    if (checked) {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.CAMPAIGNS_STATS],
+      });
+    }
   };
 
   return (

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import CampaignsTable from '@/components/CampaignsTable';
 import CampaignsTablePagination from '@/components/CampaignsTablePagination';
 import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
+import useIsDevFirstRender from '@/hooks/useIsDevFirstRender';
 import usePagination from '@/hooks/usePagination';
 import { CampaignStatus } from '@/types';
 import { filterFalsyQueryParams } from '@/utils';
@@ -22,6 +23,7 @@ const JoinedCampaigns: FC<Props> = ({
   showViewAll = false,
 }) => {
   const navigate = useNavigate();
+  const isDevFirstRender = useIsDevFirstRender();
   const { params, pagination, setPageSize, setNextPage, setPrevPage } =
     usePagination();
   const { limit, skip } = params;
@@ -33,7 +35,10 @@ const JoinedCampaigns: FC<Props> = ({
     skip,
   });
 
-  const { data, isLoading } = useGetJoinedCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useGetJoinedCampaigns(
+    queryParams,
+    isDevFirstRender
+  );
 
   const onViewAllClick = () => {
     navigate('/?view=joined');
@@ -46,7 +51,11 @@ const JoinedCampaigns: FC<Props> = ({
       )}
       {!isLoading && (
         <>
-          <CampaignsTable data={data?.results || []} isJoinedCampaigns={true} />
+          <CampaignsTable
+            data={data?.results || []}
+            isJoinedCampaigns={true}
+            isFetching={isFetching}
+          />
           {showPagination && (
             <CampaignsTablePagination
               page={page}

@@ -5,6 +5,7 @@ import { CircularProgress } from '@mui/material';
 import CampaignsTable from '@/components/CampaignsTable';
 import CampaignsTablePagination from '@/components/CampaignsTablePagination';
 import { useMyCampaigns } from '@/hooks/useCampaigns';
+import useIsDevFirstRender from '@/hooks/useIsDevFirstRender';
 import usePagination from '@/hooks/usePagination';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
@@ -18,6 +19,7 @@ type Props = {
 const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
   const { activeAddress } = useActiveAccount();
   const { appChainId } = useNetwork();
+  const isDevFirstRender = useIsDevFirstRender();
   const { params, pagination, setPageSize, setNextPage, setPrevPage } =
     usePagination();
   const { limit, skip } = params;
@@ -31,7 +33,10 @@ const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
     skip,
   }) as CampaignsQueryParams;
 
-  const { data, isLoading } = useMyCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useMyCampaigns(
+    queryParams,
+    isDevFirstRender
+  );
 
   return (
     <>
@@ -40,7 +45,11 @@ const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
       )}
       {!isLoading && (
         <>
-          <CampaignsTable data={data?.results || []} isMyCampaigns={true} />
+          <CampaignsTable
+            data={data?.results || []}
+            isFetching={isFetching}
+            isMyCampaigns={true}
+          />
           <CampaignsTablePagination
             page={page}
             resultsLength={data?.results?.length || 0}

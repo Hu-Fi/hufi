@@ -17,7 +17,7 @@ import { useExchangesContext } from '@/providers/ExchangesProvider';
 const TotalVolume = () => {
   const [exchange, setExchange] = useState('');
   const { exchanges, isLoading: isExchangesLoading } = useExchangesContext();
-  const { data: totalVolume, isLoading } = useGetTotalVolume(exchange || '');
+  const { data: totalVolume, isFetching } = useGetTotalVolume(exchange || '');
 
   return (
     <StatsCard>
@@ -68,7 +68,7 @@ const TotalVolume = () => {
         </FormControl>
       </Box>
       <Value>
-        {isLoading ? (
+        {isFetching ? (
           <Skeleton variant="text" sx={{ fontSize: '40px' }} />
         ) : (
           <FormattedNumber value={totalVolume} prefix="$" />

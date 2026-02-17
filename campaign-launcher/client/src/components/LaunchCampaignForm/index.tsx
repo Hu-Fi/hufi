@@ -17,6 +17,12 @@ const LaunchCampaignForm: FC = () => {
   const [fundAmount, setFundAmount] = useState<string>('');
   const [formValues, setFormValues] = useState<CampaignFormValues | null>(null);
 
+  const handleStartOver = () => {
+    setStep(1);
+    setFundAmount('');
+    setFormValues(null);
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
@@ -57,6 +63,7 @@ const LaunchCampaignForm: FC = () => {
           fundAmount={fundAmount}
           formValues={formValues as CampaignFormValues}
           handleChangeStep={setStep}
+          handleStartOver={handleStartOver}
         />
       )}
     </Stack>

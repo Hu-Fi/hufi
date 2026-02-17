@@ -29,6 +29,7 @@ import {
 
 type Props = {
   data: Campaign[] | undefined;
+  isFetching?: boolean;
   isJoinedCampaigns?: boolean;
   isMyCampaigns?: boolean;
 };
@@ -179,6 +180,7 @@ const StatusTooltip = () => {
 
 const CampaignsTable: FC<Props> = ({
   data,
+  isFetching = false,
   isJoinedCampaigns = false,
   isMyCampaigns = false,
 }) => {
@@ -495,6 +497,8 @@ const CampaignsTable: FC<Props> = ({
       sx={{
         border: isMobile ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
         borderRadius: '16px',
+        opacity: isFetching ? 0.5 : 1,
+        pointerEvents: isFetching ? 'none' : 'auto',
         bgcolor: 'inherit',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',

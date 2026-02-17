@@ -29,10 +29,12 @@ export class LauncherApiClient extends HttpClient {
   }
 
   async getCampaigns(
-    params: Record<string, string | number>
+    params: Record<string, string | number>,
+    signal?: AbortSignal
   ): Promise<CampaignsResponse> {
     const response = await this.get<CampaignsResponse>('/campaigns', {
       params,
+      signal,
     });
     return response;
   }

@@ -5,7 +5,10 @@ import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import type { CampaignsQueryParams } from '@/types';
 
-export const useCampaigns = (params: CampaignsQueryParams) => {
+export const useCampaigns = (
+  params: CampaignsQueryParams,
+  isDevFirstRender: boolean
+) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [
@@ -16,7 +19,7 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
       limit,
       skip,
     ],
-    queryFn: () => launcherApi.getCampaigns(params),
+    queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -24,11 +27,14 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id,
+    enabled: !isDevFirstRender && !!chain_id,
   });
 };
 
-export const useMyCampaigns = (params: CampaignsQueryParams) => {
+export const useMyCampaigns = (
+  params: CampaignsQueryParams,
+  isDevFirstRender: boolean
+) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
   return useQuery({
     queryKey: [
@@ -39,7 +45,7 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
       limit,
       skip,
     ],
-    queryFn: () => launcherApi.getCampaigns(params),
+    queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -47,7 +53,7 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id && !!launcher,
+    enabled: !isDevFirstRender && !!chain_id && !!launcher,
   });
 };
 
