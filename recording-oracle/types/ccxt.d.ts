@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Due to the project configuration and ccxt library internals
  * it resolves to commonjs module version (ccxt/dist/ccxt.cjs)
@@ -101,6 +103,8 @@ declare module 'ccxt' {
     fetchCurrencies(): Promise<{
       [currencyCode: string]: CurrencyStructure | undefined;
     }>;
+    last_http_response?: string;
+    parseJson(jsonString: any): any;
   }
 
   const ccxt: {
