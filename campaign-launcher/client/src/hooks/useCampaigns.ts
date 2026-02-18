@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { launcherApi } from '@/api';
 import { QUERY_KEYS } from '@/constants/queryKeys';
@@ -55,6 +55,12 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
 
 export const useCampaignDetails = (address: string) => {
   const { appChainId } = useNetwork();
+  const queryClient = useQueryClient();
+
+  queryClient.removeQueries({
+    queryKey: [QUERY_KEYS.CAMPAIGN_DAILY_PAID_AMOUNTS, appChainId, address],
+  });
+
   return useQuery({
     queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, appChainId, address],
     queryFn: () => launcherApi.getCampaignDetails(appChainId, address),
@@ -82,5 +88,6 @@ export const useCampaignDailyPaidAmounts = (
     queryFn: () => launcherApi.getCampaignDailyPaidAmounts(appChainId, address),
     enabled: (options?.enabled ?? true) && !!appChainId && !!address,
     retry: false,
+    staleTime: Infinity,
   });
 };
