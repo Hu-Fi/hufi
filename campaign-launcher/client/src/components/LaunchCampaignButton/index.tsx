@@ -1,7 +1,7 @@
 import { type FC, type PropsWithChildren, useState } from 'react';
 
 import { Box, Button, Tooltip, Typography, type SxProps } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import StakingRequirementModal from '@/components/modals/StakingRequirementModal';
 import { ROUTES } from '@/constants';

@@ -1,7 +1,7 @@
 import { useState, useEffect, type FC } from 'react';
 
 import { Box, Button, CircularProgress, Paper, Stack } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import useCreateEscrow from '@/hooks/useCreateEscrow';

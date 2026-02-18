@@ -2,7 +2,7 @@ import { type FC, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 
 import ActiveCampaignsFilter from '@/components/ActiveCampaignsFilter';
 import AllCampaigns from '@/components/AllCampaigns';

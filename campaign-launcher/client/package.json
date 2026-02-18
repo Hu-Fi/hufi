@@ -40,7 +40,7 @@
     "react-hook-form": "^7.68.0",
     "react-is": "18.3.1",
     "react-number-format": "^5.4.4",
-    "react-router-dom": "^6.22.3",
+    "react-router": "^7.13.0",
     "viem": "^2.45.3",
     "wagmi": "^3.4.3",
     "yup": "^1.4.0"
