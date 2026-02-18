@@ -214,19 +214,18 @@ export class CcxtExchangeClient implements ExchangeApiClient {
       case ExchangeName.BYBIT: {
         // max is 100
         limit = 100;
+        since = inputs.since;
+        params.endTime = inputs.until;
 
         if (inputs.nextPageToken) {
           params.cursor = inputs.nextPageToken;
-        } else {
-          since = inputs.since;
-          params.endTime = inputs.until;
         }
 
         break;
       }
       case ExchangeName.GATE: {
         // max is 1000
-        limit = 500;
+        limit = 250;
         since = inputs.since;
         /**
          * Origin API has it as 'to', but it's in seconds,
@@ -242,16 +241,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         limit = 100;
         since = inputs.since;
 
-        if (!inputs.nextPageToken) {
-          (inputs.nextPageToken as MexcNextPageToken) = {
-            nextPageUntil: inputs.until,
-            movingDedupIds: [],
-          };
-        }
-
-        params.until = (
-          inputs.nextPageToken as MexcNextPageToken
-        ).nextPageUntil;
+        const nextPageToken = inputs.nextPageToken as
+          | MexcNextPageToken
+          | undefined;
+        params.until = nextPageToken?.nextPageUntil || inputs.until;
         break;
       }
       default:
@@ -297,8 +290,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         break;
       }
       case ExchangeName.MEXC: {
-        const prevPageToken = inputs.nextPageToken as MexcNextPageToken;
-        const movingDedupIds = new Set(prevPageToken.movingDedupIds);
+        const currentPageToken = inputs.nextPageToken as
+          | MexcNextPageToken
+          | undefined;
+        const movingDedupIds = new Set(currentPageToken?.movingDedupIds || []);
 
         /**
          * There might be same-second trades that are cut by limit param,
@@ -331,10 +326,9 @@ export class CcxtExchangeClient implements ExchangeApiClient {
            * because we only need two pages to detect if we stuck in situation
            * where there are more trades withing same-seconds than trades page limit.
            */
-          movingDedupIds: [
-            ...prevPageToken.movingDedupIds,
-            ..._.map(newTrades, 'id'),
-          ].slice(-1 * limit! * 2),
+          movingDedupIds: [...movingDedupIds, ..._.map(newTrades, 'id')].slice(
+            -1 * limit! * 2,
+          ),
         };
         break;
       }
@@ -371,13 +365,10 @@ export class CcxtExchangeClient implements ExchangeApiClient {
 
       if (trades.length === 0) {
         break;
-      } else if (!nextPageToken) {
-        // safety-belt
-        break;
       } else {
         yield trades.map(ccxtClientUtils.mapCcxtTrade);
       }
-    } while (true);
+    } while (nextPageToken);
   }
 
   @CatchApiAccessErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)

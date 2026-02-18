@@ -24,6 +24,7 @@ import {
   generateCcxtDepositAddressStructure,
   generateCcxtTrade,
 } from './fixtures';
+import { SEQUENCE_ID_SYMBOL } from './utils';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -398,6 +399,7 @@ describe('CcxtExchangeClient', () => {
             order: undefined,
             info: undefined,
             etc: undefined,
+            [SEQUENCE_ID_SYMBOL]: expect.any(String),
           });
         }
 
