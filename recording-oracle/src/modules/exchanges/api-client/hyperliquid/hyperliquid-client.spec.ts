@@ -4,7 +4,6 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
-import _ from 'lodash';
 
 import * as controlFlow from '@/common/utils/control-flow';
 import { generateCcxtTrade } from '@/modules/exchanges/api-client/ccxt/fixtures';

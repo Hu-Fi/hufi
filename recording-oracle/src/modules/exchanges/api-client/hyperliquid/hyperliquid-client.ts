@@ -141,7 +141,7 @@ export class HyperliquidClient implements ExchangeApiClient {
         yield newTrades;
 
         fetchTradesSince = newTrades.at(-1)!.timestamp;
-      } while (dedupTradeIds.size > 0); // safety-belt
+      } while (dedupTradeIds.size > 0); // safety-belt if adding accidentally removed
     } catch (error) {
       const message = 'Failed to fetch trades';
       this.logger.error(message, {

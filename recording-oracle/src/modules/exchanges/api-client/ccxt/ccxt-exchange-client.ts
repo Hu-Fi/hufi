@@ -324,7 +324,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
           /**
            * Keep ids from up to two last full pages in order to dedup,
            * because we only need two pages to detect if we stuck in situation
-           * where there are more trades withing same-seconds than trades page limit.
+           * where there are more trades within same-second than trades page limit.
            */
           movingDedupIds: [...movingDedupIds, ..._.map(newTrades, 'id')].slice(
             -1 * limit! * 2,
