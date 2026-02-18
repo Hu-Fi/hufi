@@ -5,11 +5,8 @@ import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import type { CampaignsQueryParams } from '@/types';
 
-import useIsDevFirstRender from './useIsDevFirstRender';
-
 export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
-  const isDevFirstRender = useIsDevFirstRender();
 
   return useQuery({
     queryKey: [
@@ -28,13 +25,12 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !isDevFirstRender && !!chain_id,
+    enabled: !!chain_id,
   });
 };
 
 export const useMyCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
-  const isDevFirstRender = useIsDevFirstRender();
 
   return useQuery({
     queryKey: [
@@ -53,7 +49,7 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !isDevFirstRender && !!chain_id && !!launcher,
+    enabled: !!chain_id && !!launcher,
   });
 };
 
