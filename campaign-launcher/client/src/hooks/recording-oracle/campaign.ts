@@ -8,17 +8,17 @@ import { useNetwork } from '@/providers/NetworkProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { EvmAddress, CampaignsQueryParams } from '@/types';
 
+import useIsDevFirstRender from '../useIsDevFirstRender';
+
 type JoinedCampaignsParams = Pick<
   CampaignsQueryParams,
   'status' | 'limit' | 'skip'
 >;
 
-export const useGetJoinedCampaigns = (
-  params: JoinedCampaignsParams = {},
-  isDevFirstRender: boolean
-) => {
+export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
   const { signer } = useRetrieveSigner();
   const { isAuthenticated } = useWeb3Auth();
+  const isDevFirstRender = useIsDevFirstRender();
   const { status, limit, skip } = params;
 
   return useQuery({

@@ -5,11 +5,12 @@ import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import type { CampaignsQueryParams } from '@/types';
 
-export const useCampaigns = (
-  params: CampaignsQueryParams,
-  isDevFirstRender: boolean
-) => {
+import useIsDevFirstRender from './useIsDevFirstRender';
+
+export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
+  const isDevFirstRender = useIsDevFirstRender();
+
   return useQuery({
     queryKey: [
       QUERY_KEYS.ALL_CAMPAIGNS,
@@ -31,11 +32,10 @@ export const useCampaigns = (
   });
 };
 
-export const useMyCampaigns = (
-  params: CampaignsQueryParams,
-  isDevFirstRender: boolean
-) => {
+export const useMyCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
+  const isDevFirstRender = useIsDevFirstRender();
+
   return useQuery({
     queryKey: [
       QUERY_KEYS.MY_CAMPAIGNS,

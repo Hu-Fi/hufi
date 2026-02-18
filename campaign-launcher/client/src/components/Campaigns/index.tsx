@@ -10,6 +10,7 @@ import CampaignsViewDropdown from '@/components/CampaignsViewDropdown';
 import JoinedCampaigns from '@/components/JoinedCampaigns';
 import MyCampaigns from '@/components/MyCampaigns';
 import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useNetwork } from '@/providers/NetworkProvider';
 import { CampaignsView } from '@/types';
 
 const Campaigns: FC = () => {
@@ -29,6 +30,7 @@ const Campaigns: FC = () => {
   });
 
   const queryClient = useQueryClient();
+  const { appChainId } = useNetwork();
 
   useEffect(() => {
     const viewFromUrl = searchParams.get('view');
@@ -44,7 +46,7 @@ const Campaigns: FC = () => {
 
     if (showActiveCampaigns) {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.CAMPAIGNS_STATS],
+        queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, appChainId],
       });
     }
   };
@@ -54,7 +56,7 @@ const Campaigns: FC = () => {
 
     if (checked) {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.CAMPAIGNS_STATS],
+        queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, appChainId],
       });
     }
   };

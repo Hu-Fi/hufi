@@ -5,7 +5,6 @@ import { CircularProgress } from '@mui/material';
 import CampaignsTable from '@/components/CampaignsTable';
 import CampaignsTablePagination from '@/components/CampaignsTablePagination';
 import { useMyCampaigns } from '@/hooks/useCampaigns';
-import useIsDevFirstRender from '@/hooks/useIsDevFirstRender';
 import usePagination from '@/hooks/usePagination';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
@@ -19,7 +18,7 @@ type Props = {
 const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
   const { activeAddress } = useActiveAccount();
   const { appChainId } = useNetwork();
-  const isDevFirstRender = useIsDevFirstRender();
+
   const { params, pagination, setPageSize, setNextPage, setPrevPage } =
     usePagination();
   const { limit, skip } = params;
@@ -33,10 +32,7 @@ const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
     skip,
   }) as CampaignsQueryParams;
 
-  const { data, isLoading, isFetching } = useMyCampaigns(
-    queryParams,
-    isDevFirstRender
-  );
+  const { data, isLoading, isFetching } = useMyCampaigns(queryParams);
 
   return (
     <>
