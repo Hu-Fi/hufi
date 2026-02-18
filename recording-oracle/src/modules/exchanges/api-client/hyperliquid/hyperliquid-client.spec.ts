@@ -4,12 +4,15 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
+import _ from 'lodash';
 
 import * as controlFlow from '@/common/utils/control-flow';
 import { generateCcxtTrade } from '@/modules/exchanges/api-client/ccxt/fixtures';
 
 import { HYPERLIQUID_TRADES_PAGE_LIMIT } from './constants';
 import { HyperliquidClient } from './hyperliquid-client';
+import { generateTradingPair } from '../../fixtures';
+import * as ccxtClientUtils from '../ccxt/utils';
 
 const mockedCcxt = jest.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
@@ -73,74 +76,80 @@ describe('HyperliquidClient', () => {
   );
 
   it('should fetch and paginate trades using ccxt with wallet params', async () => {
-    const userId = faker.string.uuid();
+    const symbol = generateTradingPair();
+    const since = faker.date.recent().valueOf();
+
+    const mockedTrades = Array.from({ length: 6 }, (_el, index) =>
+      generateCcxtTrade({ symbol, timestamp: since + index }),
+    );
+    /**
+     * To simulate same-ms trades overlap on pages of size 3
+     */
+    mockedTrades[2].timestamp = mockedTrades[3].timestamp;
+
+    mockedExchange.fetchMyTrades.mockImplementation(
+      async (_symbol, since: number, _limit, _params: { until: number }) => {
+        return mockedTrades
+          .filter((t) => t.timestamp >= since && t.timestamp <= _params.until)
+          .slice(0, 3);
+      },
+    );
+
+    const until = mockedTrades.at(-1)!.timestamp + 1;
     const userEvmAddress = faker.finance.ethereumAddress();
+
     const client = new HyperliquidClient({
-      userId,
+      userId: faker.string.uuid(),
       userEvmAddress,
     });
 
-    const now = Date.now();
-    const since = now - 15_000;
-    const until = now - 5_000;
-
-    const symbol = 'HYPE/USDC';
-    const tradeSeed = [
-      { id: 't1', timestampOffset: 1000, side: 'buy', takerOrMaker: 'maker' },
-      { id: 't2', timestampOffset: 2000, side: 'sell', takerOrMaker: 'taker' },
-      { id: 't3', timestampOffset: 3000, side: 'buy', takerOrMaker: 'maker' },
-    ] as const;
-    const [t1, t2, t3] = tradeSeed.map(
-      ({ id, timestampOffset, side, takerOrMaker }) =>
-        generateCcxtTrade({
-          id,
-          timestamp: since + timestampOffset,
-          symbol,
-          side,
-          takerOrMaker,
-        }),
-    );
-
-    mockedExchange.fetchMyTrades
-      .mockResolvedValueOnce([t1, t2] as never)
-      .mockResolvedValueOnce([t3] as never)
-      .mockResolvedValueOnce([] as never);
-
-    const batches = await controlFlow.consumeIterator(
+    const pages = await controlFlow.consumeIterator(
       client.fetchMyTrades(symbol, since, until),
     );
 
     expect(mockedExchange.loadMarkets).toHaveBeenCalledTimes(0);
 
+    const expectedParams = {
+      user: userEvmAddress,
+      until: until - 1,
+    };
+    expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(4);
     expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
       1,
       symbol,
       since,
       HYPERLIQUID_TRADES_PAGE_LIMIT,
-      {
-        user: userEvmAddress,
-        until,
-      },
+      expectedParams,
     );
     expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
       2,
       symbol,
-      t2.timestamp + 1,
+      mockedTrades[2].timestamp,
       HYPERLIQUID_TRADES_PAGE_LIMIT,
-      {
-        user: userEvmAddress,
-        until,
-      },
+      expectedParams,
+    );
+    expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
+      3,
+      symbol,
+      mockedTrades[4].timestamp,
+      HYPERLIQUID_TRADES_PAGE_LIMIT,
+      expectedParams,
+    );
+    expect(mockedExchange.fetchMyTrades).toHaveBeenNthCalledWith(
+      4,
+      symbol,
+      mockedTrades[5].timestamp,
+      HYPERLIQUID_TRADES_PAGE_LIMIT,
+      expectedParams,
     );
 
-    expect(batches).toHaveLength(2);
-    expect(batches[0][0]).toEqual(
-      expect.objectContaining({
-        id: t1.id,
-        symbol: t1.symbol,
-        side: t1.side,
-        takerOrMaker: t1.takerOrMaker,
-      }),
+    expect(pages.length).toBe(3);
+    expect(pages[0]).toEqual(
+      mockedTrades.slice(0, 3).map(ccxtClientUtils.mapCcxtTrade),
     );
+    expect(pages[1]).toEqual(
+      mockedTrades.slice(3, 5).map(ccxtClientUtils.mapCcxtTrade),
+    );
+    expect(pages[2]).toEqual([ccxtClientUtils.mapCcxtTrade(mockedTrades[5])]);
   });
 });
