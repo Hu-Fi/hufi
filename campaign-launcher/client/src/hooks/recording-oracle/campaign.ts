@@ -28,7 +28,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
       skip,
       AUTHED_QUERY_TAG,
     ],
-    queryFn: () => recordingApi.getJoinedCampaigns(params),
+    queryFn: ({ signal }) => recordingApi.getJoinedCampaigns(params, signal),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({

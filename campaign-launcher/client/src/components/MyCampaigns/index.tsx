@@ -18,6 +18,7 @@ type Props = {
 const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
   const { activeAddress } = useActiveAccount();
   const { appChainId } = useNetwork();
+
   const { params, pagination, setPageSize, setNextPage, setPrevPage } =
     usePagination();
   const { limit, skip } = params;
@@ -31,7 +32,7 @@ const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
     skip,
   }) as CampaignsQueryParams;
 
-  const { data, isLoading } = useMyCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useMyCampaigns(queryParams);
 
   return (
     <>
@@ -40,7 +41,11 @@ const MyCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
       )}
       {!isLoading && (
         <>
-          <CampaignsTable data={data?.results || []} isMyCampaigns={true} />
+          <CampaignsTable
+            data={data?.results || []}
+            isFetching={isFetching}
+            isMyCampaigns={true}
+          />
           <CampaignsTablePagination
             page={page}
             resultsLength={data?.results?.length || 0}

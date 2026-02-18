@@ -15,12 +15,14 @@ type Props = {
   fundAmount: string;
   formValues: CampaignFormValues;
   handleChangeStep: (step: number) => void;
+  handleStartOver: () => void;
 };
 
 const LaunchStep: FC<Props> = ({
   fundAmount,
   formValues,
   handleChangeStep,
+  handleStartOver,
 }) => {
   const [showFinalView, setShowFinalView] = useState(false);
 
@@ -110,6 +112,7 @@ const LaunchStep: FC<Props> = ({
         <FinalView
           campaignType={formValues.type}
           onViewDetails={onViewCampaignDetailsClick}
+          handleStartOver={handleStartOver}
         />
       )}
       {isError && <ErrorView onRetry={handleTryAgainClick} />}

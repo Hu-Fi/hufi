@@ -30,7 +30,7 @@ export const Value = styled(Typography)(({ theme }) => ({
 }));
 
 const DashboardStats: FC = () => {
-  const { data: campaignsStats, isLoading } = useGetCampaignsStats();
+  const { data: campaignsStats, isFetching } = useGetCampaignsStats();
 
   return (
     <Box
@@ -50,7 +50,7 @@ const DashboardStats: FC = () => {
           <StatsCard>
             <Typography variant="subtitle2">Rewards Pool</Typography>
             <Value>
-              {isLoading ? (
+              {isFetching ? (
                 <Skeleton variant="text" sx={{ fontSize: '40px' }} />
               ) : (
                 <FormattedNumber
@@ -70,7 +70,7 @@ const DashboardStats: FC = () => {
               Number of Active Campaigns
             </Typography>
             <Value>
-              {isLoading ? (
+              {isFetching ? (
                 <Skeleton variant="text" sx={{ fontSize: '40px' }} />
               ) : (
                 <FormattedNumber value={campaignsStats?.n_active_campaigns} />

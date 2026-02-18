@@ -33,7 +33,7 @@ const JoinedCampaigns: FC<Props> = ({
     skip,
   });
 
-  const { data, isLoading } = useGetJoinedCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useGetJoinedCampaigns(queryParams);
 
   const onViewAllClick = () => {
     navigate('/?view=joined');
@@ -46,7 +46,11 @@ const JoinedCampaigns: FC<Props> = ({
       )}
       {!isLoading && (
         <>
-          <CampaignsTable data={data?.results || []} isJoinedCampaigns={true} />
+          <CampaignsTable
+            data={data?.results || []}
+            isJoinedCampaigns={true}
+            isFetching={isFetching}
+          />
           {showPagination && (
             <CampaignsTablePagination
               page={page}

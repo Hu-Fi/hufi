@@ -18,7 +18,7 @@ type Props = {
 
 const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
   const isMobile = useIsMobile();
-  const { data, isFetching, isError, isSuccess } = useCampaignDailyPaidAmounts(
+  const { data, isLoading, isError, isSuccess } = useCampaignDailyPaidAmounts(
     campaign.address,
     { enabled: open }
   );
@@ -38,15 +38,13 @@ const ChartModal: FC<Props> = ({ open, onClose, campaign }) => {
       <Typography
         variant="h4"
         color="text.primary"
-        mb={isFetching ? 0 : { xs: 3, md: 7 }}
+        mb={isLoading ? 0 : { xs: 3, md: 7 }}
       >
         {isMobile ? 'Amount Paid' : 'Paid Amount Chart'}
       </Typography>
-      {isFetching && <CircularProgress size={100} sx={{ my: 'auto' }} />}
-      {!isFetching && isError && (
-        <ModalError message="Failed to load daily paid amounts." />
-      )}
-      {!isFetching && isSuccess && (
+      {isLoading && <CircularProgress size={100} sx={{ my: 'auto' }} />}
+      {isError && <ModalError message="Failed to load daily paid amounts." />}
+      {isSuccess && (
         <DailyAmountPaidChart
           data={data?.results ?? []}
           endDate={campaign.end_date}
