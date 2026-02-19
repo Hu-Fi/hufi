@@ -224,11 +224,11 @@ describe('MarketMakingProgressChecker', () => {
     });
 
     it('should return zeros when abuse detected', async () => {
-      const abuseAddrress = faker.finance.ethereumAddress();
+      const abuseAddress = faker.finance.ethereumAddress();
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
-        abuseAddrress,
+        abuseAddress,
       );
-      resultsChecker.ethDepositAddresses.add(abuseAddrress);
+      resultsChecker.ethDepositAddresses.add(abuseAddress);
 
       fetchMyTrades.mockResolvedValueOnce([generateTrade()]);
 
