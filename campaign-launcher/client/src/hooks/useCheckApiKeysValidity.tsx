@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import { Box, Link } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 
 import { ROUTES } from '@/constants';
 

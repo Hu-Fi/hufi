@@ -2,7 +2,7 @@ import type { FC, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Box, CircularProgress } from '@mui/material';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import { ROUTES } from '@/constants';

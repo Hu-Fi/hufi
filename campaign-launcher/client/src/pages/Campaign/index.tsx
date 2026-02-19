@@ -1,7 +1,7 @@
 import { type FC, useMemo } from 'react';
 
 import { Skeleton, Typography } from '@mui/material';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';

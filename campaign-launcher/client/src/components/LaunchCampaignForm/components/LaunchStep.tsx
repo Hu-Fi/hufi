@@ -1,7 +1,7 @@
-import { useState, useEffect, type FC } from 'react';
+import { type FC } from 'react';
 
 import { Box, Button, CircularProgress, Paper, Stack } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import useCreateEscrow from '@/hooks/useCreateEscrow';
@@ -24,8 +24,6 @@ const LaunchStep: FC<Props> = ({
   handleChangeStep,
   handleStartOver,
 }) => {
-  const [showFinalView, setShowFinalView] = useState(false);
-
   const {
     data: escrowData,
     mutate: createEscrow,
@@ -38,12 +36,6 @@ const LaunchStep: FC<Props> = ({
   const navigate = useNavigate();
   const { appChainId } = useNetwork();
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (isEscrowCreated) {
-      setShowFinalView(true);
-    }
-  }, [isEscrowCreated]);
 
   const handleBackToEdit = () => {
     handleChangeStep(3);
@@ -59,6 +51,11 @@ const LaunchStep: FC<Props> = ({
 
   const handleTryAgainClick = () => {
     resetCreateEscrow();
+  };
+
+  const onStartOverClick = () => {
+    resetCreateEscrow(); // just a safety-belt in case something is cached
+    handleStartOver();
   };
 
   const onViewCampaignDetailsClick = () => {
@@ -108,11 +105,11 @@ const LaunchStep: FC<Props> = ({
         position: 'relative',
       }}
     >
-      {showFinalView && (
+      {isEscrowCreated && (
         <FinalView
           campaignType={formValues.type}
           onViewDetails={onViewCampaignDetailsClick}
-          handleStartOver={handleStartOver}
+          handleStartOver={onStartOverClick}
         />
       )}
       {isError && <ErrorView onRetry={handleTryAgainClick} />}
