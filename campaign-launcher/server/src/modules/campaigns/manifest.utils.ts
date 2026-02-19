@@ -4,6 +4,7 @@ import * as httpUtils from '@/common/utils/http';
 
 import type {
   CampaignManifest,
+  CompetitiveMarketMakingCampaignManifest,
   HoldingCampaignManifest,
   ThresholdCampaignManifest,
   MarketMakingCampaignManifest,
@@ -20,6 +21,12 @@ export function isHoldingManifest(
   manifest: CampaignManifest,
 ): manifest is HoldingCampaignManifest {
   return manifest.type === CampaignType.HOLDING;
+}
+
+export function isCompetitiveMarketMakingManifest(
+  manifest: CampaignManifest,
+): manifest is CompetitiveMarketMakingCampaignManifest {
+  return manifest.type === CampaignType.COMPETITIVE_MARKET_MAKING;
 }
 
 export function isThresholdManifest(
@@ -45,6 +52,20 @@ const holdingManifestSchema = Joi.object({
   daily_balance_target: Joi.number().strict().greater(0).required(),
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
+    .required(),
+  start_date: Joi.date().iso().required(),
+  end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
+}).options({ allowUnknown: true, stripUnknown: true });
+
+const competitiveMarketMakingManifestSchema = Joi.object({
+  type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING).required(),
+  exchange: Joi.string().required(),
+  rewards_distribution: Joi.array()
+    .items(Joi.number().strict().greater(0))
+    .min(1)
+    .required(),
+  pair: Joi.string()
+    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
@@ -84,6 +105,9 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
         break;
       case CampaignType.HOLDING:
         manifestSchema = holdingManifestSchema;
+        break;
+      case CampaignType.COMPETITIVE_MARKET_MAKING:
+        manifestSchema = competitiveMarketMakingManifestSchema;
         break;
       case CampaignType.THRESHOLD:
         manifestSchema = thresholdManifestSchema;
