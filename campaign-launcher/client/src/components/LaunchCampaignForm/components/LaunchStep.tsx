@@ -54,7 +54,7 @@ const LaunchStep: FC<Props> = ({
   };
 
   const onStartOverClick = () => {
-    resetCreateEscrow();
+    resetCreateEscrow(); // just a safety-belt in case something is cached
     handleStartOver();
   };
 
