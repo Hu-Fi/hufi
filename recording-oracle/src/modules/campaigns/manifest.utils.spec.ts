@@ -335,7 +335,7 @@ describe('manifest utils', () => {
         type: CampaignType.COMPETITIVE_MARKET_MAKING.toLowerCase(),
       }),
       Object.assign({}, validManifest, {
-        pair: generateTradingPair(),
+        pair: generateTradingPair().replace('/', ''),
       }),
       Object.assign({}, validManifest, {
         pair: faker.finance.currencyCode(),
