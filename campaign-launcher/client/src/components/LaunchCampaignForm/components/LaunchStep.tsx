@@ -53,6 +53,11 @@ const LaunchStep: FC<Props> = ({
     resetCreateEscrow();
   };
 
+  const onStartOverClick = () => {
+    resetCreateEscrow();
+    handleStartOver();
+  };
+
   const onViewCampaignDetailsClick = () => {
     if (!escrowData) return;
 
@@ -104,7 +109,7 @@ const LaunchStep: FC<Props> = ({
         <FinalView
           campaignType={formValues.type}
           onViewDetails={onViewCampaignDetailsClick}
-          handleStartOver={handleStartOver}
+          handleStartOver={onStartOverClick}
         />
       )}
       {isError && <ErrorView onRetry={handleTryAgainClick} />}
