@@ -10,6 +10,7 @@ jest.mock('@human-protocol/sdk', () => {
   };
 });
 jest.mock('@/logger');
+jest.mock('@/modules/exchanges/api-client/pancakeswap');
 
 import crypto from 'crypto';
 
@@ -50,6 +51,7 @@ import {
   ExchangeApiKeyNotFoundError,
   ExchangePermission,
   ExchangesService,
+  PancakeswapClient,
 } from '@/modules/exchanges';
 import { mockExchangesConfigService } from '@/modules/exchanges/fixtures';
 import { StorageService } from '@/modules/storage';
@@ -134,6 +136,8 @@ const mockedSigner = createMock<WalletWithProvider>();
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
 const mockedTransactionUtils = jest.mocked(TransactionUtils);
+
+const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
 
 const exchangePermissions = Object.values(ExchangePermission);
 
@@ -3264,25 +3268,6 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should return correct timeframe for active campaign', async () => {
-      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
-      campaign.startDate = dayjs()
-        .subtract(campaignDaysPassed, 'days')
-        .toDate();
-
-      const expectedTimeframeStart = dayjs(campaign.startDate)
-        .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
-        .toDate();
-
-      const result = await campaignsService.getActiveTimeframe(campaign);
-
-      expect(result).toEqual({
-        start: expectedTimeframeStart,
-        end: mockedNow,
-      });
-    });
-
     it('should return correct timeframe when cancellation requested within that', async () => {
       campaign.status = CampaignStatus.TO_CANCEL;
 
@@ -3308,6 +3293,61 @@ describe('CampaignsService', () => {
       expect(result).toEqual({
         start: expectedTimeframeStart,
         end: cancellationRequestedAt,
+      });
+    });
+
+    it('should return correct timeframe for active pancakeswap campaign', async () => {
+      campaign.exchangeName = ExchangeName.PANCAKESWAP;
+      const mockedLastBlockTs = Math.round(
+        faker.date.recent().valueOf() / 1000,
+      );
+      mockedPancakeswapClient.prototype.fetchSubgraphMeta.mockResolvedValueOnce(
+        {
+          block: {
+            timestamp: mockedLastBlockTs,
+            hash: faker.string.hexadecimal(),
+            number: faker.number.int(),
+          },
+          hasIndexingErrors: false,
+        },
+      );
+
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
+
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(campaignDaysPassed, 'days')
+        .add(1, 'millisecond')
+        .toDate();
+
+      const result = await campaignsService.getActiveTimeframe(campaign);
+
+      expect(result).toEqual({
+        start: expectedTimeframeStart,
+        end: new Date(mockedLastBlockTs * 1000),
+      });
+    });
+
+    it('should return correct timeframe for active campaign', async () => {
+      campaign.exchangeName = faker.lorem.slug(); // any exchange w/o specific logic
+
+      const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
+      campaign.startDate = dayjs()
+        .subtract(campaignDaysPassed, 'days')
+        .toDate();
+
+      const expectedTimeframeStart = dayjs(campaign.startDate)
+        .add(campaignDaysPassed, 'days')
+        .add(1, 'millisecond')
+        .toDate();
+
+      const result = await campaignsService.getActiveTimeframe(campaign);
+
+      expect(result).toEqual({
+        start: expectedTimeframeStart,
+        end: mockedNow,
       });
     });
 
