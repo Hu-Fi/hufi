@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { launcherApi } from '@/api';
 import { QUERY_KEYS } from '@/constants/queryKeys';
@@ -7,6 +7,7 @@ import type { CampaignsQueryParams } from '@/types';
 
 export const useCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
+
   return useQuery({
     queryKey: [
       QUERY_KEYS.ALL_CAMPAIGNS,
@@ -16,7 +17,7 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
       limit,
       skip,
     ],
-    queryFn: () => launcherApi.getCampaigns(params),
+    queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -30,6 +31,7 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
 
 export const useMyCampaigns = (params: CampaignsQueryParams) => {
   const { chain_id, status, launcher, limit = 10, skip } = params;
+
   return useQuery({
     queryKey: [
       QUERY_KEYS.MY_CAMPAIGNS,
@@ -39,7 +41,7 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
       limit,
       skip,
     ],
-    queryFn: () => launcherApi.getCampaigns(params),
+    queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
     select: (data) => ({
       ...data,
       results: data.results.map((campaign) => ({
@@ -53,6 +55,12 @@ export const useMyCampaigns = (params: CampaignsQueryParams) => {
 
 export const useCampaignDetails = (address: string) => {
   const { appChainId } = useNetwork();
+  const queryClient = useQueryClient();
+
+  queryClient.removeQueries({
+    queryKey: [QUERY_KEYS.CAMPAIGN_DAILY_PAID_AMOUNTS, appChainId, address],
+  });
+
   return useQuery({
     queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, appChainId, address],
     queryFn: () => launcherApi.getCampaignDetails(appChainId, address),
@@ -67,5 +75,19 @@ export const useGetCampaignsStats = () => {
     queryKey: [QUERY_KEYS.CAMPAIGNS_STATS, appChainId],
     queryFn: () => launcherApi.getCampaignsStats(appChainId),
     enabled: !!appChainId,
+  });
+};
+
+export const useCampaignDailyPaidAmounts = (
+  address: string,
+  options?: { enabled?: boolean }
+) => {
+  const { appChainId } = useNetwork();
+  return useQuery({
+    queryKey: [QUERY_KEYS.CAMPAIGN_DAILY_PAID_AMOUNTS, appChainId, address],
+    queryFn: () => launcherApi.getCampaignDailyPaidAmounts(appChainId, address),
+    enabled: (options?.enabled ?? true) && !!appChainId && !!address,
+    retry: false,
+    staleTime: Infinity,
   });
 };

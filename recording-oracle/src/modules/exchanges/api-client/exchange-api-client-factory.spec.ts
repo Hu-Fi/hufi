@@ -1,5 +1,6 @@
 jest.mock('./bigone');
 jest.mock('./ccxt');
+jest.mock('./hyperliquid');
 jest.mock('./pancakeswap');
 
 import { faker } from '@faker-js/faker';
@@ -23,6 +24,7 @@ import { BASE_CCXT_CLIENT_OPTIONS, CcxtExchangeClient } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
 import { generateConfigByExchangeStub } from './fixtures';
+import { HyperliquidClient } from './hyperliquid';
 import { PancakeswapClient } from './pancakeswap';
 
 const mockedCcxt = jest.mocked(ccxt);
@@ -34,6 +36,7 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 
 const mockedBigoneClient = jest.mocked(BigoneClient);
 const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
+const mockedHyperliquidClient = jest.mocked(HyperliquidClient);
 const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
 
 const mockLoggerConfigService: Pick<
@@ -125,8 +128,23 @@ describe('ExchangeApiClientFactory', () => {
       expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
     });
 
-    it('should init and skip ccxt client preloading for enabled DEX', async () => {
-      const exchangeName = generateExchangeName();
+    it('should init and skip ccxt client preloading for enabled non-ccxt DEX', async () => {
+      const exchangeName = ExchangeName.PANCAKESWAP;
+      mockExchangesConfigService.configByExchange = {
+        [exchangeName]: {
+          enabled: true,
+          type: ExchangeType.DEX,
+          skipCcxtPreload: true,
+        },
+      };
+
+      await exchangeApiClientFactory.onModuleInit();
+
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
+    });
+
+    it('should init and preload ccxt client for enabled hyperliquid DEX', async () => {
+      const exchangeName = ExchangeName.HYPERLIQUID;
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
           enabled: true,
@@ -136,7 +154,8 @@ describe('ExchangeApiClientFactory', () => {
 
       await exchangeApiClientFactory.onModuleInit();
 
-      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(1);
+      expect(spyOnPreloadCcxtClient).toHaveBeenCalledWith(exchangeName);
     });
   });
 
@@ -399,6 +418,32 @@ describe('ExchangeApiClientFactory', () => {
           subgraphApiKey: mockWeb3ConfigService.subgraphApiKey,
         }),
       );
+    });
+
+    it('should correctly init client for hyperliquid with preloaded ccxt client', async () => {
+      const exchangeName = ExchangeName.HYPERLIQUID;
+      const preloadedExchange = createMock<Exchange>();
+      mockedCcxt[exchangeName].mockReturnValueOnce(preloadedExchange);
+      await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
+
+      const client = exchangeApiClientFactory.createDex(exchangeName, {
+        userId,
+        userEvmAddress,
+      });
+
+      expect(client).toBeInstanceOf(HyperliquidClient);
+
+      expect(mockedHyperliquidClient).toHaveBeenCalledTimes(1);
+      expect(mockedHyperliquidClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId,
+          userEvmAddress,
+          sandbox: mockExchangesConfigService.useSandbox,
+          preloadedExchangeClient: preloadedExchange,
+        }),
+      );
+
+      exchangeApiClientFactory['preloadedCcxtClients'].clear();
     });
   });
 });

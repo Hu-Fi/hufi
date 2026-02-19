@@ -5,7 +5,11 @@ import { ExchangeName } from '@/common/constants';
 
 import type { Trade } from '../types';
 
-export function mapCcxtTrade(trade: CcxtTrade): Trade {
+export const SEQUENCE_ID_SYMBOL = Symbol('dev purpose prop to test pagination');
+
+export function mapCcxtTrade(
+  trade: CcxtTrade,
+): Trade & { [SEQUENCE_ID_SYMBOL]: string } {
   return {
     id: trade.id,
     timestamp: trade.timestamp,
@@ -15,6 +19,7 @@ export function mapCcxtTrade(trade: CcxtTrade): Trade {
     price: trade.price,
     amount: trade.amount,
     cost: trade.cost,
+    [SEQUENCE_ID_SYMBOL]: `${trade.timestamp}:${trade.id}:${trade.side}`,
   };
 }
 

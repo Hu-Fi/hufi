@@ -1,4 +1,4 @@
-import { type FC, useCallback, useState } from 'react';
+import { type FC, type MouseEvent, useCallback, useState } from 'react';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import {
@@ -12,7 +12,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useConnection } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
@@ -65,6 +65,7 @@ const LAUNCH_CAMPAIGN_TOOLTIP =
 const Header: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
+  const { pathname } = useLocation();
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useConnection();
   const { signer } = useRetrieveSigner();
@@ -80,6 +81,18 @@ const Header: FC = () => {
   const handleMenuClose = useCallback(() => {
     setAnchorEl(null);
   }, []);
+
+  const handleLogoClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (pathname !== ROUTES.DASHBOARD) {
+        return;
+      }
+
+      event.preventDefault();
+      window.location.reload();
+    },
+    [pathname]
+  );
 
   return (
     <AppBar
@@ -123,6 +136,7 @@ const Header: FC = () => {
               component={Link}
               to={ROUTES.DASHBOARD}
               sx={{ height: isMobile ? 23 : 32 }}
+              onClick={handleLogoClick}
             >
               <img src={logo} alt="HuFi" width={isMobile ? 62 : 87} />
             </MuiLink>

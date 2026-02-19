@@ -1,6 +1,7 @@
 import type { ChainId } from '@human-protocol/sdk';
 
 import type {
+  CampaignDailyPaidAmounts,
   CampaignDetails,
   CampaignsResponse,
   CampaignsStats,
@@ -28,10 +29,12 @@ export class LauncherApiClient extends HttpClient {
   }
 
   async getCampaigns(
-    params: Record<string, string | number>
+    params: Record<string, string | number>,
+    signal?: AbortSignal
   ): Promise<CampaignsResponse> {
     const response = await this.get<CampaignsResponse>('/campaigns', {
       params,
+      signal,
     });
     return response;
   }
@@ -64,6 +67,16 @@ export class LauncherApiClient extends HttpClient {
     const response = await this.get<OracleFees>('/web3/oracle-fees', {
       params: { chain_id },
     });
+    return response;
+  }
+
+  async getCampaignDailyPaidAmounts(
+    chainId: ChainId,
+    campaignAddress: string
+  ): Promise<CampaignDailyPaidAmounts> {
+    const response = await this.get<CampaignDailyPaidAmounts>(
+      `/campaigns/${chainId}-${campaignAddress}/daily-paid-amounts`
+    );
     return response;
   }
 }

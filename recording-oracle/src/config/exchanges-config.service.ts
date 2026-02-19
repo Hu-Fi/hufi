@@ -21,7 +21,7 @@ export class ExchangesConfigService {
         skipCcxtPreload: true,
       },
       [ExchangeName.BITMART]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.BYBIT]: {
@@ -33,11 +33,15 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
+      [ExchangeName.HYPERLIQUID]: {
+        enabled: this.isHyperliquidEnabled,
+        type: ExchangeType.DEX,
+      },
       [ExchangeName.KRAKEN]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.MEXC]: {
@@ -47,13 +51,14 @@ export class ExchangesConfigService {
       [ExchangeName.PANCAKESWAP]: {
         enabled: this.isPancakeswapEnabled,
         type: ExchangeType.DEX,
+        skipCcxtPreload: true,
       },
       [ExchangeName.UPBIT]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.XT]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
     });
@@ -65,6 +70,10 @@ export class ExchangesConfigService {
 
   private get isPancakeswapEnabled(): boolean {
     return this.configService.get('FEATURE_PANCAKESWAP', '') === 'true';
+  }
+
+  private get isHyperliquidEnabled(): boolean {
+    return this.configService.get('FEATURE_HYPERLIQUID', '') === 'true';
   }
 
   isExchangeSupported(exchangeName: string): exchangeName is ExchangeName {

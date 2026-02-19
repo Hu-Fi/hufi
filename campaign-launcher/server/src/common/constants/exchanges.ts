@@ -4,6 +4,7 @@ export enum ExchangeName {
   BYBIT = 'bybit',
   GATE = 'gate',
   HTX = 'htx',
+  HYPERLIQUID = 'hyperliquid',
   KRAKEN = 'kraken',
   MEXC = 'mexc',
   PANCAKESWAP = 'pancakeswap',

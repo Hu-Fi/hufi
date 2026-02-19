@@ -28,7 +28,7 @@ const AllCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
     skip,
   }) as CampaignsQueryParams;
 
-  const { data, isLoading } = useCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useCampaigns(queryParams);
 
   return (
     <>
@@ -37,7 +37,7 @@ const AllCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
       )}
       {!isLoading && (
         <>
-          <CampaignsTable data={data?.results || []} />
+          <CampaignsTable data={data?.results || []} isFetching={isFetching} />
           <CampaignsTablePagination
             page={page}
             resultsLength={data?.results?.length || 0}

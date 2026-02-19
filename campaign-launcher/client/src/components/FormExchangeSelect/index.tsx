@@ -53,7 +53,9 @@ const FormExchangeSelect = <
     }
 
     return _exchanges.filter(
-      (exchange) => exchange.name !== ExchangeName.PANCAKESWAP
+      (exchange) =>
+        exchange.name !== ExchangeName.PANCAKESWAP &&
+        exchange.name !== ExchangeName.HYPERLIQUID
     );
   }, [campaignType, exchangeTypes, exchanges]);
 

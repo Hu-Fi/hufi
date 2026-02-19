@@ -19,7 +19,7 @@ import { isCampaignDetails } from '@/utils';
 const Campaign: FC = () => {
   const { address } = useParams() as { address: EvmAddress };
   const [searchParams] = useSearchParams();
-  const { data: campaign, isLoading: isCampaignLoading } =
+  const { data: campaign, isFetching: isCampaignLoading } =
     useCampaignDetails(address);
   const { data: joinStatusInfo, isLoading: isJoinStatusLoading } =
     useCheckCampaignJoinStatus(address);

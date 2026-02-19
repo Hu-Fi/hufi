@@ -463,7 +463,10 @@ describe('PayoutsService', () => {
 
   describe('runPayoutsCycleForCampaign', () => {
     const mockedCampaign = generateCampaign();
-    const mockedGasPrice = faker.number.bigInt({ min: 1 });
+    const mockedFeeParams = {
+      maxFeePerGas: faker.number.bigInt({ min: 1 }),
+      maxPriorityFeePerGas: faker.number.bigInt({ min: 1 }),
+    };
     const mockedParticipantAddress = faker.finance.ethereumAddress();
     const mockedParticipantsOutcomesBatch = {
       id: faker.string.uuid(),
@@ -553,7 +556,7 @@ describe('PayoutsService', () => {
         cancel: mockedCancelEscrow,
       } as unknown as EscrowClient);
 
-      mockWeb3Service.calculateGasPrice.mockResolvedValue(mockedGasPrice);
+      mockWeb3Service.calculateTxFees.mockResolvedValue(mockedFeeParams);
 
       mockedGetEscrowStatus.mockResolvedValueOnce(
         EscrowStatus[mockedCampaign.status as unknown as EscrowStatus],
@@ -734,7 +737,7 @@ describe('PayoutsService', () => {
         mockedParticipantsOutcomesBatch.id,
         false,
         {
-          gasPrice: mockedGasPrice,
+          ...mockedFeeParams,
           nonce: latestNonce,
           timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
         },
@@ -854,7 +857,7 @@ describe('PayoutsService', () => {
           expect(mockedCompleteEscrow).toHaveBeenCalledWith(
             mockedCampaign.address,
             {
-              gasPrice: mockedGasPrice,
+              ...mockedFeeParams,
               timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
             },
           );
@@ -917,7 +920,7 @@ describe('PayoutsService', () => {
         expect(mockedCompleteEscrow).toHaveBeenCalledWith(
           mockedCampaign.address,
           {
-            gasPrice: mockedGasPrice,
+            ...mockedFeeParams,
             timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
           },
         );
@@ -949,7 +952,7 @@ describe('PayoutsService', () => {
         expect(mockedCancelEscrow).toHaveBeenCalledWith(
           mockedCampaign.address,
           {
-            gasPrice: mockedGasPrice,
+            ...mockedFeeParams,
             timeoutMs: mockWeb3ConfigService.escrowTxTimeout,
           },
         );
