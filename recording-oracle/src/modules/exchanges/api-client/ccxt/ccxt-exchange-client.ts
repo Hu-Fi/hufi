@@ -1,4 +1,4 @@
-import type { Exchange } from 'ccxt';
+import type { Exchange, Trade as CcxtTrade } from 'ccxt';
 import * as ccxt from 'ccxt';
 import _ from 'lodash';
 
@@ -26,6 +26,7 @@ import {
 } from '../types';
 import * as apiClientUtils from '../utils';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
+import { type MexcNextPageToken } from './types';
 import * as ccxtClientUtils from './utils';
 
 export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
@@ -201,12 +202,146 @@ export class CcxtExchangeClient implements ExchangeApiClient {
    * in decorator itself
    */
   @CatchApiAccessErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-  private async _fetchMyTrades(symbol: string, since: number) {
+  private async _fetchMyTrades(
+    symbol: string,
+    inputs: { since: number; until: number; nextPageToken?: unknown },
+  ): Promise<{ trades: CcxtTrade[]; nextPageToken?: unknown }> {
+    let since: number | undefined;
+    let limit: number | undefined;
+    const params: Record<string, unknown> = {};
+
+    switch (this.exchangeName) {
+      case ExchangeName.BYBIT: {
+        // max is 100
+        limit = 100;
+        since = inputs.since;
+        params.endTime = inputs.until;
+
+        if (inputs.nextPageToken) {
+          params.cursor = inputs.nextPageToken;
+        }
+
+        break;
+      }
+      case ExchangeName.GATE: {
+        // max is 1000
+        limit = 250;
+        since = inputs.since;
+        /**
+         * Origin API has it as 'to', but it's in seconds,
+         * so pass it as 'until' for ccxt to convert it.
+         */
+        params.until = inputs.until;
+        params.page = inputs.nextPageToken || 1;
+
+        break;
+      }
+      case ExchangeName.MEXC: {
+        // max is 100
+        limit = 100;
+        since = inputs.since;
+
+        const nextPageToken = inputs.nextPageToken as
+          | MexcNextPageToken
+          | undefined;
+        params.until = nextPageToken?.nextPageUntil || inputs.until;
+        break;
+      }
+      default:
+        if (Environment.isTest()) {
+          since = (inputs.nextPageToken as number) || inputs.since;
+          break;
+        }
+        throw new Error('Pagination mechanism should be defined for ccxt');
+    }
+
+    let trades = await this.ccxtClient.fetchMyTrades(
+      symbol,
+      since,
+      limit,
+      params,
+    );
+    if (trades.length === 0) {
+      return { trades: [] };
+    }
+
     /**
-     * Use default value for "limit" because it varies
-     * from exchange to exchange.
+     * APIs usually return it in desc order, but
+     * ccxt under the hood reverses it.
      */
-    return await this.ccxtClient.fetchMyTrades(symbol, since);
+    trades = _.orderBy(trades, 'timestamp', 'desc');
+
+    let nextPageToken: unknown;
+    switch (this.exchangeName) {
+      case ExchangeName.BYBIT: {
+        const lastResponse = this.ccxtClient.parseJson(
+          this.ccxtClient.last_http_response,
+        );
+        nextPageToken = lastResponse.result.nextPageCursor;
+        break;
+      }
+      case ExchangeName.GATE: {
+        const lastPage = params.page as number;
+
+        // there is a hard limit on number of pages
+        if (lastPage < 100) {
+          nextPageToken = lastPage + 1;
+        }
+        break;
+      }
+      case ExchangeName.MEXC: {
+        const currentPageToken = inputs.nextPageToken as
+          | MexcNextPageToken
+          | undefined;
+        const movingDedupIds = new Set(currentPageToken?.movingDedupIds || []);
+
+        /**
+         * There might be same-second trades that are cut by limit param,
+         * so in order to retrieve all trades we need to query next page
+         * using same timestamp as a boundary object and filter entries
+         * with same timestamp from previous pages.
+         *
+         * We have to keep all trades ids to avoid infinite fetches when
+         * the whole page consists of same-seconds trades.
+         */
+        const newTrades: CcxtTrade[] = [];
+        for (const trade of trades) {
+          if (movingDedupIds.has(trade.id)) {
+            continue;
+          }
+
+          newTrades.push(trade);
+        }
+
+        if (newTrades.length === 0) {
+          return { trades: [] };
+        }
+
+        trades = newTrades;
+
+        (nextPageToken as MexcNextPageToken) = {
+          nextPageUntil: trades.at(-1)!.timestamp,
+          /**
+           * Keep ids from up to two last full pages in order to dedup,
+           * because we only need two pages to detect if we stuck in situation
+           * where there are more trades within same-second than trades page limit.
+           */
+          movingDedupIds: [...movingDedupIds, ..._.map(newTrades, 'id')].slice(
+            -1 * limit! * 2,
+          ),
+        };
+        break;
+      }
+      default:
+        if (Environment.isTest()) {
+          // mimic ccxt pagination example for unit tests
+          trades = _.orderBy(trades, 'timestamp', 'asc');
+          nextPageToken = trades.at(-1)!.timestamp + 1;
+        }
+        break;
+    }
+
+    return { trades, nextPageToken };
   }
 
   /**
@@ -218,19 +353,22 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     since: number,
     until: number,
   ): AsyncGenerator<Trade[]> {
-    let fetchTradesSince = since;
-    while (fetchTradesSince < until) {
-      const trades = await this._fetchMyTrades(symbol, fetchTradesSince);
+    let trades: CcxtTrade[];
+    let nextPageToken: unknown;
 
-      const tradesInRange = trades.filter((trade) => trade.timestamp < until);
-      if (tradesInRange.length) {
-        yield tradesInRange.map(ccxtClientUtils.mapCcxtTrade);
+    do {
+      ({ trades, nextPageToken } = await this._fetchMyTrades(symbol, {
+        since,
+        until,
+        nextPageToken,
+      }));
 
-        fetchTradesSince = trades.at(-1)!.timestamp + 1;
-      } else {
+      if (trades.length === 0) {
         break;
+      } else {
+        yield trades.map(ccxtClientUtils.mapCcxtTrade);
       }
-    }
+    } while (nextPageToken);
   }
 
   @CatchApiAccessErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)
