@@ -40,6 +40,14 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
         dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      details = {
+        rewardsDistribution: Array.from(
+          { length: faker.number.int({ min: 1, max: 5 }) },
+          () => faker.number.float({ min: 0.01, max: 100 }),
+        ),
+      };
+      break;
     case CampaignType.HOLDING:
       details = {
         dailyBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
@@ -101,6 +109,11 @@ export function generateCampaignProgress(
   let meta: CampaignProgressMeta;
   switch (campaign.type) {
     case CampaignType.MARKET_MAKING:
+      meta = {
+        total_volume: 0,
+      };
+      break;
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
       meta = {
         total_volume: 0,
       };

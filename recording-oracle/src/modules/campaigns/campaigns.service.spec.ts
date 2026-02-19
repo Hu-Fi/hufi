@@ -77,6 +77,7 @@ import {
   generateCampaignEntity,
   generateCampaignManifest,
   generateCampaignProgress,
+  generateCompetitiveMarketMakingCampaignManifest,
   generateHoldingCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
@@ -108,6 +109,7 @@ import {
   CampaignProgress,
   CampaignStatus,
   CampaignType,
+  CompetitiveMarketMakingCampaignDetails,
   HoldingCampaignDetails,
   IntermediateResultsData,
   LeaderboardRanking,
@@ -866,6 +868,54 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should create competitive market making campaign with proper data', async () => {
+      const chainId = generateTestnetChainId();
+      const campaignAddress = faker.finance.ethereumAddress();
+      const manifest = generateCompetitiveMarketMakingCampaignManifest();
+      const fundAmount = faker.number.float();
+      const fundTokenSymbol = faker.finance.currencyCode();
+      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundTokenSymbol,
+          fundTokenDecimals,
+        },
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        id: expect.any(String),
+        chainId,
+        address: ethers.getAddress(campaignAddress),
+        type: manifest.type,
+        exchangeName: manifest.exchange,
+        symbol: manifest.pair,
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        fundAmount: fundAmount.toString(),
+        fundToken: fundTokenSymbol,
+        fundTokenDecimals,
+        details: {
+          rewardsDistribution: manifest.rewards_distribution,
+        },
+        status: 'active',
+        lastResultsAt: null,
+        resultsCutoffAt: null,
+      };
+      expect(campaign).toEqual(expectedCampaignData);
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expectedCampaignData,
+      );
+    });
+
     it('should create threshold campaign with proper data', async () => {
       const chainId = generateTestnetChainId();
       const campaignAddress = faker.finance.ethereumAddress();
@@ -923,7 +973,7 @@ describe('CampaignsService', () => {
     const mockedGetEscrowStatus = jest.fn();
 
     beforeEach(() => {
-      campaign = generateCampaignEntity();
+      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
 
@@ -1238,6 +1288,24 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(HoldingProgressChecker);
     });
 
+    it('should return market making checker for competitive market making type', () => {
+      const campaign = generateCampaignEntity(
+        CampaignType.COMPETITIVE_MARKET_MAKING,
+      );
+
+      const checker = campaignsService['getCampaignProgressChecker'](
+        campaign.type,
+        {
+          exchangeName: campaign.exchangeName as ExchangeName,
+          symbol: campaign.symbol,
+          periodStart: faker.date.recent(),
+          periodEnd: faker.date.soon(),
+        },
+      );
+
+      expect(checker).toBeInstanceOf(MarketMakingProgressChecker);
+    });
+
     it('should return threshold checker for its type', () => {
       const campaign = generateCampaignEntity(CampaignType.THRESHOLD);
 
@@ -1494,6 +1562,7 @@ describe('CampaignsService', () => {
 
     it.each([
       CampaignType.MARKET_MAKING,
+      CampaignType.COMPETITIVE_MARKET_MAKING,
       CampaignType.HOLDING,
       CampaignType.THRESHOLD,
     ])(
@@ -2054,6 +2123,29 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
+    it('should check progress for completed daily period of ongoing COMPETITIVE_MARKET_MAKING campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+      campaign.startDate = dayjs().subtract(2, 'day').toDate();
+      campaign.endDate = dayjs().add(2, 'day').toDate();
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+
+      const [intermediateResultsData, fundsToReserve] =
+        spyOnRecordCampaignIntermediateResults.mock.calls[0];
+      const lastResult = (
+        intermediateResultsData as IntermediateResultsData
+      ).results.at(-1)!;
+      expect(lastResult.reserved_funds).toBe('0');
+      expect(fundsToReserve).toBe(0n);
+    });
+
     it('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2371,6 +2463,50 @@ describe('CampaignsService', () => {
               from: campaignProgress.from,
               to: campaignProgress.to,
               total_balance: totalBalance,
+              reserved_funds: expectedRewardPool,
+              participants_outcomes_batches: [],
+            },
+          ],
+        }),
+        ethers.parseUnits(
+          expectedRewardPool.toString(),
+          campaign.fundTokenDecimals,
+        ),
+      );
+    });
+
+    it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+      campaign.endDate = new Date(Date.now() - 1);
+      const rewardsDistribution = (
+        campaign.details as CompetitiveMarketMakingCampaignDetails
+      ).rewardsDistribution;
+      expect(rewardsDistribution.length).toBeGreaterThan(0);
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const campaignProgress = generateCampaignProgress(campaign);
+      (campaignProgress.meta as MarketMakingMeta).total_volume =
+        faker.number.float({ min: 0.1, max: 100_000 });
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedRewardPool = new Decimal(campaign.fundAmount)
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString();
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_volume: (campaignProgress.meta as MarketMakingMeta)
+                .total_volume,
               reserved_funds: expectedRewardPool,
               participants_outcomes_batches: [],
             },
@@ -2714,6 +2850,35 @@ describe('CampaignsService', () => {
         to: campaignProgress.to,
         total_volume: 0,
         reserved_funds: '0',
+        participants_outcomes_batches: [],
+      });
+    });
+
+    it('should record generated volume stat for COMPETITIVE_MARKET_MAKING campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+      campaign.endDate = new Date(Date.now() - 1);
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const campaignProgress = generateCampaignProgress(campaign);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+        generateStoredResultsMeta(),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
+        from: campaignProgress.from,
+        to: campaignProgress.to,
+        total_volume: 0,
+        reserved_funds: new Decimal(campaign.fundAmount)
+          .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+          .toString(),
         participants_outcomes_batches: [],
       });
     });

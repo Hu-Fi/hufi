@@ -6,6 +6,7 @@ import nock from 'nock';
 import { generateTradingPair } from '@/modules/exchanges/fixtures';
 
 import {
+  generateCompetitiveMarketMakingCampaignManifest,
   generateManifestResponse,
   generateMarketMakingCampaignManifest,
   generateHoldingCampaignManifest,
@@ -303,6 +304,70 @@ describe('manifest utils', () => {
       expect(thrownError).toBeInstanceOf(Error);
       expect(thrownError.message).toBe(
         'Invalid holding campaign manifest schema',
+      );
+    });
+  });
+
+  describe('assertValidCompetitiveMarketMakingCampaignManifest', () => {
+    const validManifest = generateCompetitiveMarketMakingCampaignManifest();
+
+    it.each([
+      { ...validManifest },
+      Object.assign({}, validManifest, {
+        pair: `1${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}2/3${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}4`,
+      }),
+    ])('should not throw for valid manifest [%#]', (testManifest) => {
+      expect(
+        manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest(
+          testManifest,
+        ),
+      ).toBeUndefined();
+    });
+
+    it.each([
+      Object.assign({}, validManifest, {
+        type: CampaignType.COMPETITIVE_MARKET_MAKING.toLowerCase(),
+      }),
+      Object.assign({}, validManifest, {
+        pair: generateTradingPair(),
+      }),
+      Object.assign({}, validManifest, {
+        pair: faker.finance.currencyCode(),
+      }),
+      Object.assign({}, validManifest, {
+        pair: generateTradingPair().toLowerCase(),
+      }),
+      Object.assign({}, validManifest, {
+        rewards_distribution: [],
+      }),
+      Object.assign({}, validManifest, {
+        rewards_distribution: [faker.number.int({ min: -42, max: 0 })],
+      }),
+      Object.assign({}, validManifest, {
+        rewards_distribution: undefined,
+      }),
+      Object.assign({}, validManifest, {
+        rewards_distribution: [faker.number.int({ min: 1 }).toString()],
+      }),
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError;
+      try {
+        manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest(
+          manifest,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid competitive market making campaign manifest schema',
       );
     });
   });

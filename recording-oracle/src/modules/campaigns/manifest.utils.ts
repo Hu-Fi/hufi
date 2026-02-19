@@ -6,10 +6,12 @@ import {
   CampaignDetails,
   CampaignManifestBase,
   CampaignType,
+  CompetitiveMarketMakingCampaignDetails,
   HoldingCampaignDetails,
   MarketMakingCampaignDetails,
   ThresholdCampaignDetails,
   type CampaignManifest,
+  type CompetitiveMarketMakingCampaignManifest,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
   type ThresholdCampaignManifest,
@@ -63,6 +65,28 @@ export function assertValidMarketMakingCampaignManifest(
   }
 }
 
+const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING),
+  pair: Joi.string()
+    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
+    .required(),
+  rewards_distribution: Joi.array()
+    .items(Joi.number().strict().greater(0))
+    .min(1)
+    .required(),
+});
+export function assertValidCompetitiveMarketMakingCampaignManifest(
+  manifest: CampaignManifestBase,
+): asserts manifest is CompetitiveMarketMakingCampaignManifest {
+  try {
+    Joi.assert(manifest, competitiveMarketMakingManifestSchema);
+  } catch {
+    throw new Error(
+      'Invalid competitive market making campaign manifest schema',
+    );
+  }
+}
+
 const holdingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.HOLDING),
   symbol: Joi.string()
@@ -106,6 +130,16 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as MarketMakingCampaignManifest;
       const details: MarketMakingCampaignDetails = {
         dailyVolumeTarget: _manifest.daily_volume_target,
+      };
+      return {
+        symbol: _manifest.pair,
+        details,
+      };
+    }
+    case CampaignType.COMPETITIVE_MARKET_MAKING: {
+      const _manifest = manifest as CompetitiveMarketMakingCampaignManifest;
+      const details: CompetitiveMarketMakingCampaignDetails = {
+        rewardsDistribution: _manifest.rewards_distribution,
       };
       return {
         symbol: _manifest.pair,
