@@ -1,5 +1,6 @@
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
+import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
@@ -158,7 +159,7 @@ export class HyperliquidClient implements ExchangeApiClient {
     throw new MethodNotImplementedError();
   }
 
-  fetchDepositAddress(): never {
-    throw new MethodNotImplementedError();
+  async fetchDepositAddress(): Promise<string> {
+    return ethers.getAddress(this.userEvmAddress);
   }
 }

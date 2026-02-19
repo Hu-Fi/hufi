@@ -232,14 +232,14 @@ describe('MarketMakingProgressChecker', () => {
 
       fetchMyTrades.mockResolvedValueOnce([generateTrade()]);
 
-      const normalResult = await resultsChecker.checkForParticipant(
+      const result = await resultsChecker.checkForParticipant(
         generateParticipantInfo({
           joinedAt: progressCheckerSetup.periodStart,
         }),
       );
-      expect(normalResult.abuseDetected).toBe(true);
-      expect(normalResult.score).toBe(0);
-      expect(normalResult.total_volume).toBe(0);
+      expect(result.abuseDetected).toBe(true);
+      expect(result.score).toBe(0);
+      expect(result.total_volume).toBe(0);
       expect(fetchMyTrades).toHaveBeenCalledTimes(0);
     });
   });

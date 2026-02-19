@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { GraphQLClient } from 'graphql-request';
 import _ from 'lodash';
 
@@ -233,7 +234,7 @@ export class PancakeswapClient implements ExchangeApiClient {
     throw new MethodNotImplementedError();
   }
 
-  fetchDepositAddress(): never {
-    throw new MethodNotImplementedError();
+  async fetchDepositAddress(): Promise<string> {
+    return ethers.getAddress(this.userEvmAddress);
   }
 }
