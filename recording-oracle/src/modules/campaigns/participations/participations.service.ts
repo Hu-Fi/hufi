@@ -32,15 +32,11 @@ export class ParticipationsService {
     userId: string,
     campaignId: string,
   ): Promise<string | null> {
-    const participation = await this.participationsRepository.findOne({
-      where: {
+    const participation =
+      await this.participationsRepository.findByUserAndCampaign(
         userId,
         campaignId,
-      },
-      select: {
-        createdAt: true,
-      },
-    });
+      );
 
     if (!participation) {
       return null;

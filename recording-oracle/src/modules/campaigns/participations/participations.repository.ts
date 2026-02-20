@@ -14,6 +14,18 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
     super(ParticipationEntity, dataSource.createEntityManager());
   }
 
+  async findByUserAndCampaign(
+    userId: string,
+    campaignId: string,
+  ): Promise<ParticipationEntity | null> {
+    return this.findOne({
+      where: {
+        userId,
+        campaignId,
+      },
+    });
+  }
+
   async findByUserId(
     userId: string,
     options: {
