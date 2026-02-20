@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 
 import * as web3Utils from '@/common/utils/web3';
 
-import { UserEntity } from '../user.entity';
+import { type UserEntity } from '../user.entity';
 
 export function generateUserEntity(
   overrides?: Partial<UserEntity>,

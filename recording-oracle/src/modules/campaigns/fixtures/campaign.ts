@@ -10,7 +10,7 @@ import { generateUserEntity } from '@/modules/users/fixtures';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
-import { CampaignEntity } from '../campaign.entity';
+import { type CampaignEntity } from '../campaign.entity';
 import type {
   BaseProgressCheckResult,
   CampaignProgressChecker,

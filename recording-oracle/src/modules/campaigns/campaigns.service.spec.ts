@@ -62,7 +62,7 @@ import {
 } from '@/modules/web3/fixtures';
 import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
-import { CampaignEntity } from './campaign.entity';
+import { type CampaignEntity } from './campaign.entity';
 import { CampaignsCache } from './campaigns-cache';
 import {
   CampaignAlreadyFinishedError,
