@@ -54,13 +54,21 @@ export function generateCompetitiveMarketMakingCampaignManifest(): CompetitiveMa
   const manifestBase = generateBaseCampaignManifest();
 
   const nRewards = faker.number.int({ min: 1, max: 5 });
+  const rewardsDistribution: number[] = [];
+  let remaining = 100;
+  for (let i = 0; i < nRewards; i += 1) {
+    const slotsLeft = nRewards - i;
+    const maxForCurrent = remaining - (slotsLeft - 1);
+    const current = faker.number.int({ min: 1, max: maxForCurrent });
+    rewardsDistribution.push(current);
+    remaining -= current;
+  }
+
   const manifest: CompetitiveMarketMakingCampaignManifest = {
     ...manifestBase,
     type: CampaignType.COMPETITIVE_MARKET_MAKING,
     pair: generateTradingPair(),
-    rewards_distribution: Array.from({ length: nRewards }, () =>
-      faker.number.float({ min: 0.01, max: 100 }),
-    ),
+    rewards_distribution: rewardsDistribution,
   };
 
   return manifest;

@@ -355,6 +355,9 @@ describe('manifest utils', () => {
       Object.assign({}, validManifest, {
         rewards_distribution: [faker.number.int({ min: 1 }).toString()],
       }),
+      Object.assign({}, validManifest, {
+        rewards_distribution: [60, 41],
+      }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
       let thrownError;
       try {
@@ -369,6 +372,22 @@ describe('manifest utils', () => {
       expect(thrownError.message).toBe(
         'Invalid competitive market making campaign manifest schema',
       );
+    });
+
+    it('should not throw when rewards distribution sum is less or equal to 100', () => {
+      expect(
+        manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest({
+          ...validManifest,
+          rewards_distribution: [50, 30, 20],
+        }),
+      ).toBeUndefined();
+
+      expect(
+        manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest({
+          ...validManifest,
+          rewards_distribution: [50, 30],
+        }),
+      ).toBeUndefined();
     });
   });
 
