@@ -241,6 +241,11 @@ export class CampaignsService {
       details = {
         dailyVolumeTarget: manifest.daily_volume_target,
       };
+    } else if (manifestUtils.isCompetitiveMarketMakingManifest(manifest)) {
+      symbol = manifest.pair;
+      details = {
+        rewardsDistribution: manifest.rewards_distribution,
+      };
     } else if (manifestUtils.isHoldingManifest(manifest)) {
       symbol = manifest.symbol;
       details = {
