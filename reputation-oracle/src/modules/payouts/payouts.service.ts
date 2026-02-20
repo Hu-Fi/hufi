@@ -21,13 +21,26 @@ import { WalletWithProvider, Web3Service } from '@/modules/web3';
 
 import * as payoutsUtils from './payouts.utils';
 import {
+  CampaignManifest,
   CalculatedRewardsBatch,
   CampaignWithResults,
+  CompetitiveCampaignManifest,
   FinalResultsMeta,
   IntermediateResult,
   IntermediateResultsData,
 } from './types';
 import { StorageService } from '../storage';
+
+function isCompetitiveCampaignManifest(
+  manifest: CampaignManifest,
+): manifest is CompetitiveCampaignManifest {
+  return (
+    manifest.type === 'COMPETITIVE_MARKET_MAKING' &&
+    Array.isArray(
+      (manifest as CompetitiveCampaignManifest).rewards_distribution,
+    )
+  );
+}
 
 @Injectable()
 export class PayoutsService {
@@ -139,66 +152,90 @@ export class PayoutsService {
         totalReservedFunds = totalReservedFunds.plus(
           intermediateResult.reserved_funds,
         );
+      }
 
-        const rewardsBatches = this.calculateRewardsForIntermediateResult(
-          intermediateResult,
-          campaign.fundTokenDecimals,
-        );
+      let rewardsBatches: CalculatedRewardsBatch[] = [];
+      if (isCompetitiveCampaignManifest(manifest)) {
+        const isCampaignEnded =
+          new Date(manifest.end_date).valueOf() <= Date.now();
+        const shouldCalculateCompetitivePayouts =
+          escrowStatus === EscrowStatus.ToCancel || isCampaignEnded;
 
-        logger.debug('Rewards calculated for intermediate result', {
-          periodFrom: intermediateResult.from,
-          periodTo: intermediateResult.to,
-        });
-
-        for (const rewardsBatch of rewardsBatches) {
-          /**
-           * All participants in batch got zero reward -> nothing to pay
-           */
-          if (rewardsBatch.rewards.length === 0) {
-            logger.debug('Skipped zero rewards batch', {
-              batchId: rewardsBatch.id,
-            });
-            continue;
-          }
-          /**
-           * Temp hack to avoid double-payouts until payoutId is added to escrow.
-           *
-           * Rationale: payout batches are run sequentially and in case
-           * some payouts batch fails - the next one won't be processed,
-           * so as a temp fix we are counting the number of bulkPayout events
-           * happened for the escrow and skipping first X items.
-           */
-          if (bulkPayoutsCount > 0) {
-            bulkPayoutsCount -= 1;
-
-            /**
-             * Also subtract amount of this paid batch
-             * from total reserved value for check
-             */
-            let batchTotalReward = new Decimal(0);
-            for (const reward of rewardsBatch.rewards) {
-              batchTotalReward = batchTotalReward.plus(reward.amount);
-            }
-
-            totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
-
-            logger.debug('Skipped rewards batch as per bulkPayoutsCount', {
-              batchId: rewardsBatch.id,
-              batchTotalReward: batchTotalReward.toString(),
-            });
-            continue;
-          }
-
-          const rewardsFileName =
-            await this.writeRewardsBatchToFile(rewardsBatch);
-          logger.info('Got new rewards batch to pay', {
-            batchId: rewardsBatch.id,
-            rewardsFileName,
-            githubRunId: process.env.GITHUB_RUN_ID,
-            githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT,
-          });
-          rewardsBatchesToPay.push(rewardsBatch);
+        if (shouldCalculateCompetitivePayouts) {
+          rewardsBatches = this.calculateRewardsForCompetitiveCampaign(
+            intermediateResultsData,
+            manifest,
+            campaign.fundAmount,
+            campaign.fundTokenDecimals,
+          );
         }
+      } else {
+        rewardsBatches = intermediateResultsData.results.flatMap(
+          (intermediateResult) => {
+            const calculatedRewards =
+              this.calculateRewardsForIntermediateResult(
+                intermediateResult,
+                campaign.fundTokenDecimals,
+              );
+
+            logger.debug('Rewards calculated for intermediate result', {
+              periodFrom: intermediateResult.from,
+              periodTo: intermediateResult.to,
+            });
+
+            return calculatedRewards;
+          },
+        );
+      }
+
+      for (const rewardsBatch of rewardsBatches) {
+        /**
+         * All participants in batch got zero reward -> nothing to pay
+         */
+        if (rewardsBatch.rewards.length === 0) {
+          logger.debug('Skipped zero rewards batch', {
+            batchId: rewardsBatch.id,
+          });
+          continue;
+        }
+        /**
+         * Temp hack to avoid double-payouts until payoutId is added to escrow.
+         *
+         * Rationale: payout batches are run sequentially and in case
+         * some payouts batch fails - the next one won't be processed,
+         * so as a temp fix we are counting the number of bulkPayout events
+         * happened for the escrow and skipping first X items.
+         */
+        if (bulkPayoutsCount > 0) {
+          bulkPayoutsCount -= 1;
+
+          /**
+           * Also subtract amount of this paid batch
+           * from total reserved value for check
+           */
+          let batchTotalReward = new Decimal(0);
+          for (const reward of rewardsBatch.rewards) {
+            batchTotalReward = batchTotalReward.plus(reward.amount);
+          }
+
+          totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
+
+          logger.debug('Skipped rewards batch as per bulkPayoutsCount', {
+            batchId: rewardsBatch.id,
+            batchTotalReward: batchTotalReward.toString(),
+          });
+          continue;
+        }
+
+        const rewardsFileName =
+          await this.writeRewardsBatchToFile(rewardsBatch);
+        logger.info('Got new rewards batch to pay', {
+          batchId: rewardsBatch.id,
+          rewardsFileName,
+          githubRunId: process.env.GITHUB_RUN_ID,
+          githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT,
+        });
+        rewardsBatchesToPay.push(rewardsBatch);
       }
 
       if (rewardsBatchesToPay.length === 0) {
@@ -398,6 +435,64 @@ export class PayoutsService {
     }
 
     return rewardsBatches;
+  }
+
+  private calculateRewardsForCompetitiveCampaign(
+    intermediateResultsData: IntermediateResultsData,
+    manifest: CompetitiveCampaignManifest,
+    fundAmount: number,
+    tokenDecimals: number,
+  ): CalculatedRewardsBatch[] {
+    const participantsScores = new Map<string, Decimal>();
+    for (const intermediateResult of intermediateResultsData.results) {
+      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
+        for (const outcome of outcomesBatch.results) {
+          const currentScore = participantsScores.get(outcome.address);
+          participantsScores.set(
+            outcome.address,
+            (currentScore || new Decimal(0)).plus(outcome.score),
+          );
+        }
+      }
+    }
+
+    const sortedParticipants = Array.from(participantsScores.entries())
+      .filter(([_address, score]) => score.greaterThan(0))
+      .sort(([addressA, scoreA], [addressB, scoreB]) => {
+        const scoreComparison = scoreB.comparedTo(scoreA);
+        return scoreComparison || addressA.localeCompare(addressB);
+      });
+
+    const sortedRewardsDistribution = [...manifest.rewards_distribution].sort(
+      (valueA, valueB) => valueB - valueA,
+    );
+    const rewardPool = new Decimal(fundAmount);
+
+    const rewardsBatch: CalculatedRewardsBatch = {
+      id: intermediateResultsData.results
+        .at(-1)!
+        .participants_outcomes_batches.at(-1)!.id,
+      rewards: [],
+    };
+    const nRewards = Math.min(
+      sortedParticipants.length,
+      sortedRewardsDistribution.length,
+    );
+    for (let i = 0; i < nRewards; i += 1) {
+      const [address] = sortedParticipants[i];
+      const reward = rewardPool
+        .mul(sortedRewardsDistribution[i])
+        .div(100)
+        .toDecimalPlaces(tokenDecimals, Decimal.ROUND_DOWN);
+      if (reward.greaterThan(0)) {
+        rewardsBatch.rewards.push({
+          address,
+          amount: reward.toString(),
+        });
+      }
+    }
+
+    return [rewardsBatch];
   }
 
   private async uploadFinalResults(

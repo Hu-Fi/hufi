@@ -5,22 +5,79 @@ import { ethers } from 'ethers';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import {
-  BaseCampaignManifest,
+  CampaignManifest,
   CampaignWithResults,
+  CompetitiveCampaignManifest,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
 } from '../types';
 
-export function generateManifest(): BaseCampaignManifest {
-  const manifest = {
-    type: faker.helpers.arrayElement(['MARKET_MAKING', 'HOLDING', 'ANY']),
+function generateValidSymbol(): string {
+  return faker.string.alphanumeric({
+    casing: 'upper',
+    length: faker.number.int({ min: 3, max: 10 }),
+  });
+}
+
+function generateValidPair(): string {
+  return `${generateValidSymbol()}/${generateValidSymbol()}`;
+}
+
+export function generateManifest(
+  type: string = faker.helpers.arrayElement([
+    'MARKET_MAKING',
+    'COMPETITIVE_MARKET_MAKING',
+    'HOLDING',
+    'THRESHOLD',
+  ]),
+): CampaignManifest {
+  const baseManifest = {
+    type,
     exchange: faker.lorem.slug(),
     start_date: faker.date.past().toISOString(),
     end_date: faker.date.soon().toISOString(),
   };
 
-  return manifest;
+  switch (type) {
+    case 'COMPETITIVE_MARKET_MAKING': {
+      const manifest: CompetitiveCampaignManifest = {
+        ...baseManifest,
+        type: 'COMPETITIVE_MARKET_MAKING',
+        pair: generateValidPair(),
+        rewards_distribution: [50, 30, 20],
+      };
+      return manifest;
+    }
+    case 'HOLDING': {
+      const manifest = {
+        ...baseManifest,
+        type,
+        symbol: generateValidSymbol(),
+        daily_balance_target: faker.number.float({ min: 1 }),
+      };
+      return manifest;
+    }
+    case 'THRESHOLD': {
+      const manifest = {
+        ...baseManifest,
+        type,
+        symbol: generateValidSymbol(),
+        minimum_balance_target: faker.number.float({ min: 1 }),
+      };
+      return manifest;
+    }
+    case 'MARKET_MAKING':
+    default: {
+      const manifest = {
+        ...baseManifest,
+        type: 'MARKET_MAKING',
+        pair: generateValidPair(),
+        daily_volume_target: faker.number.float({ min: 1 }),
+      };
+      return manifest;
+    }
+  }
 }
 
 export function generateEscrow(): IEscrow {

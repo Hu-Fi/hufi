@@ -25,7 +25,7 @@ describe('payouts utils', () => {
   describe('retrieveCampaignManifest', () => {
     describe('manifest string', () => {
       it('should return parsed manifest if it is a string', async () => {
-        const manifest = generateManifest();
+        const manifest = generateManifest('MARKET_MAKING');
 
         const result = await payoutsUtils.retrieveCampaignManifest(
           JSON.stringify(manifest),
@@ -67,7 +67,7 @@ describe('payouts utils', () => {
       });
 
       it('should throw when invalid manfest hash', async () => {
-        const mockedManifest = generateManifest();
+        const mockedManifest = generateManifest('MARKET_MAKING');
         const invalidHash = faker.string.hexadecimal();
         const scope = nock(manfestUrl).get('/').reply(200, mockedManifest);
 
@@ -85,7 +85,7 @@ describe('payouts utils', () => {
       });
 
       it('should download manifest and return when hash is valid', async () => {
-        const mockedManifest = generateManifest();
+        const mockedManifest = generateManifest('MARKET_MAKING');
 
         const mockedManifestHash = crypto
           .createHash('sha1')

@@ -7,6 +7,14 @@ export type BaseCampaignManifest = {
   end_date: string;
 };
 
+export type CompetitiveCampaignManifest = BaseCampaignManifest & {
+  type: 'COMPETITIVE_MARKET_MAKING';
+  pair: string;
+  rewards_distribution: number[];
+};
+
+export type CampaignManifest = BaseCampaignManifest & Record<string, unknown>;
+
 export type CampaignWithResults = Pick<
   IEscrow,
   | 'chainId'
