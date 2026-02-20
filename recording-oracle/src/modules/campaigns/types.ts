@@ -21,12 +21,17 @@ export enum ReturnedCampaignStatus {
 
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
+  COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',
   HOLDING = 'HOLDING',
   THRESHOLD = 'THRESHOLD',
 }
 
 export type MarketMakingCampaignDetails = {
   dailyVolumeTarget: number;
+};
+
+export type CompetitiveMarketMakingCampaignDetails = {
+  rewardsDistribution: number[];
 };
 
 export type HoldingCampaignDetails = {
@@ -39,6 +44,7 @@ export type ThresholdCampaignDetails = {
 
 export type CampaignDetails =
   | MarketMakingCampaignDetails
+  | CompetitiveMarketMakingCampaignDetails
   | HoldingCampaignDetails
   | ThresholdCampaignDetails;
 
@@ -55,6 +61,12 @@ export type MarketMakingCampaignManifest = CampaignManifestBase & {
   daily_volume_target: number;
 };
 
+export type CompetitiveMarketMakingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.COMPETITIVE_MARKET_MAKING;
+  pair: string;
+  rewards_distribution: number[];
+};
+
 export type HoldingCampaignManifest = CampaignManifestBase & {
   type: CampaignType.HOLDING;
   symbol: string;
@@ -69,6 +81,7 @@ export type ThresholdCampaignManifest = CampaignManifestBase & {
 
 export type CampaignManifest =
   | MarketMakingCampaignManifest
+  | CompetitiveMarketMakingCampaignManifest
   | HoldingCampaignManifest
   | ThresholdCampaignManifest;
 

@@ -9,6 +9,7 @@ import {
   CampaignManifest,
   CampaignType,
   type CampaignManifestBase,
+  type CompetitiveMarketMakingCampaignManifest,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
   type ThresholdCampaignManifest,
@@ -49,6 +50,30 @@ export function generateHoldingCampaignManifest(): HoldingCampaignManifest {
   return manifest;
 }
 
+export function generateCompetitiveMarketMakingCampaignManifest(): CompetitiveMarketMakingCampaignManifest {
+  const manifestBase = generateBaseCampaignManifest();
+
+  const nRewards = faker.number.int({ min: 1, max: 5 });
+  const rewardsDistribution: number[] = [];
+  let remaining = 100;
+  for (let i = 0; i < nRewards; i += 1) {
+    const slotsLeft = nRewards - i;
+    const maxForCurrent = remaining - (slotsLeft - 1);
+    const current = faker.number.int({ min: 1, max: maxForCurrent });
+    rewardsDistribution.push(current);
+    remaining -= current;
+  }
+
+  const manifest: CompetitiveMarketMakingCampaignManifest = {
+    ...manifestBase,
+    type: CampaignType.COMPETITIVE_MARKET_MAKING,
+    pair: generateTradingPair(),
+    rewards_distribution: rewardsDistribution,
+  };
+
+  return manifest;
+}
+
 export function generateThresholdampaignManifest(): ThresholdCampaignManifest {
   const manifestBase = generateBaseCampaignManifest();
 
@@ -74,6 +99,7 @@ export function generateManifestResponse() {
 export function generateCampaignManifest(): CampaignManifest {
   const generatorFn = faker.helpers.arrayElement([
     generateMarketMakingCampaignManifest,
+    generateCompetitiveMarketMakingCampaignManifest,
     generateHoldingCampaignManifest,
     generateThresholdampaignManifest,
   ]);
