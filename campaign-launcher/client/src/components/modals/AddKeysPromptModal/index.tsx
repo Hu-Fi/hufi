@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Button, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';

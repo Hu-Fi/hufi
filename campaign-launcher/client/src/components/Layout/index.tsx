@@ -1,7 +1,7 @@
 import { type FC, type PropsWithChildren, useEffect } from 'react';
 
 import { Box } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 import Container from '@/components/Container';
 import Footer from '@/components/Footer';

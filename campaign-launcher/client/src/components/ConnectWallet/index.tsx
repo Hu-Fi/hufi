@@ -26,23 +26,23 @@ const WALLET_ICONS: Record<string, string> = {
 const ConnectWallet: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  const { connectAsync } = useConnect();
+  const connect = useConnect();
   const connectors = useConnectors();
   const { isConnecting } = useActiveAccount();
   const { setShowSignInPrompt } = useWeb3Auth();
-  const { disconnectAsync } = useDisconnect();
+  const disconnect = useDisconnect();
   const isMobile = useIsMobile();
 
   const handleConnect = async (connector: Connector) => {
     try {
-      await connectAsync({ connector });
+      await connect.mutateAsync({ connector });
       if (isMobile) {
         setShowSignInPrompt(true);
       }
     } catch (e) {
       const err = e as { message?: string; code?: number | string };
       if (err.message?.includes('Connector already connected')) {
-        await disconnectAsync();
+        await disconnect.mutateAsync();
         await handleConnect(connector);
       }
     } finally {
