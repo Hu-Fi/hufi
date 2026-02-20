@@ -63,7 +63,17 @@ const competitiveMarketMakingManifestSchema = Joi.object({
   rewards_distribution: Joi.array()
     .items(Joi.number().strict().greater(0))
     .min(1)
-    .required(),
+    .required()
+    .custom((values, helpers) => {
+      const distributionSum = values.reduce(
+        (acc: number, value: number) => acc + value,
+        0,
+      );
+      if (distributionSum > 100) {
+        return helpers.error('any.invalid');
+      }
+      return values;
+    }),
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
