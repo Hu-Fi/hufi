@@ -3,14 +3,15 @@ import { DataSource, Repository } from 'typeorm';
 
 import type { UserEntity } from '@/modules/users';
 
-import { CampaignEntity } from './campaign.entity';
-import { CampaignParticipant, CampaignStatus } from './types';
-import { UserCampaignEntity } from './user-campaign.entity';
+import { CampaignEntity } from '../campaign.entity';
+import { CampaignStatus } from '../types';
+import { ParticipationEntity } from './participation.entity';
+import { type CampaignParticipant } from './types';
 
 @Injectable()
-export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
+export class ParticipationsRepository extends Repository<ParticipationEntity> {
   constructor(dataSource: DataSource) {
-    super(UserCampaignEntity, dataSource.createEntityManager());
+    super(ParticipationEntity, dataSource.createEntityManager());
   }
 
   async findByUserId(
@@ -21,9 +22,9 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
       skip?: number;
     } = {},
   ): Promise<CampaignEntity[]> {
-    const query = this.createQueryBuilder('userCampaign')
-      .leftJoinAndSelect('userCampaign.campaign', 'campaign')
-      .where('userCampaign.userId = :userId', { userId });
+    const query = this.createQueryBuilder('participation')
+      .leftJoinAndSelect('participation.campaign', 'campaign')
+      .where('participation.userId = :userId', { userId });
 
     if (options.statuses?.length) {
       query.andWhere('campaign.status IN (:...statuses)', {
@@ -33,43 +34,22 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
 
     query.orderBy('campaign.startDate').skip(options.skip).limit(options.limit);
 
-    const userCampaigns = await query.getMany();
+    const participations = await query.getMany();
 
-    return userCampaigns.map((uc) => uc.campaign as CampaignEntity);
-  }
-
-  async checkUserJoinedCampaign(
-    userId: string,
-    campaignId: string,
-  ): Promise<string | null> {
-    const joinRecord = await this.findOne({
-      where: {
-        userId,
-        campaignId,
-      },
-      select: {
-        createdAt: true,
-      },
-    });
-
-    if (!joinRecord) {
-      return null;
-    }
-
-    return joinRecord.createdAt.toISOString();
+    return participations.map((uc) => uc.campaign as CampaignEntity);
   }
 
   async findCampaignParticipants(
     campaignId: string,
-  ): Promise<Array<CampaignParticipant>> {
-    const userCampaigns = await this.find({
+  ): Promise<CampaignParticipant[]> {
+    const participations = await this.find({
       where: { campaignId },
       relations: {
         user: true,
       },
     });
 
-    return userCampaigns.map((e) => ({
+    return participations.map((e) => ({
       ...(e.user as UserEntity),
       campaignId,
       joinedAt: e.createdAt,
@@ -92,7 +72,7 @@ export class UserCampaignsRepository extends Repository<UserCampaignEntity> {
       );
     }
 
-    const removalOp = this.createQueryBuilder('userCampaign')
+    const removalOp = this.createQueryBuilder('participations')
       .delete()
       .where('userId = :userId', { userId })
       .andWhere(`campaignId IN (${activeCampaignIdsQuery.getQuery()})`)

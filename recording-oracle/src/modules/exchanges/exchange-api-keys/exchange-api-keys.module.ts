@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UserCampaignsRepository } from '@/modules/campaigns/user-campaigns.repository';
+import { ParticipationsModule } from '@/modules/campaigns/participations';
 import { EncryptionModule } from '@/modules/encryption';
 import { UsersModule } from '@/modules/users';
 
@@ -15,14 +15,11 @@ import { ExchangeApiKeysService } from './exchange-api-keys.service';
   imports: [
     ExchangeApiClientModule,
     EncryptionModule,
+    ParticipationsModule,
     TypeOrmModule.forFeature([ExchangeApiKeyEntity]),
     UsersModule,
   ],
-  providers: [
-    ExchangeApiKeysRepository,
-    ExchangeApiKeysService,
-    UserCampaignsRepository,
-  ],
+  providers: [ExchangeApiKeysRepository, ExchangeApiKeysService],
   controllers: [ExchangeApiKeysController],
   exports: [ExchangeApiKeysService],
 })

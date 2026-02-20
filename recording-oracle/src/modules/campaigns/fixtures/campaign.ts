@@ -11,20 +11,20 @@ import { generateTestnetChainId } from '@/modules/web3/fixtures';
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
 import { type CampaignEntity } from '../campaign.entity';
+import { type CampaignParticipant } from '../participations';
 import type {
   BaseProgressCheckResult,
   CampaignProgressChecker,
   CampaignProgressMeta,
 } from '../progress-checking';
 import {
-  CampaignDetails,
-  CampaignParticipant,
-  CampaignProgress,
+  type CampaignDetails,
+  type CampaignProgress,
   CampaignStatus,
   CampaignType,
-  IntermediateResult,
-  IntermediateResultsData,
-  ParticipantOutcome,
+  type IntermediateResult,
+  type IntermediateResultsData,
+  type ParticipantOutcome,
 } from '../types';
 
 export function generateCampaignEntity(type?: CampaignType): CampaignEntity {

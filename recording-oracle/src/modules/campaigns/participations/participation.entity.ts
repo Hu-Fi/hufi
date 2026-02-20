@@ -10,10 +10,10 @@ import {
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 import type { UserEntity } from '@/modules/users';
 
-import type { CampaignEntity } from './campaign.entity';
+import type { CampaignEntity } from '../campaign.entity';
 
-@Entity({ schema: DATABASE_SCHEMA_NAME, name: 'user_campaigns' })
-export class UserCampaignEntity {
+@Entity({ schema: DATABASE_SCHEMA_NAME, name: 'participations' })
+export class ParticipationEntity {
   @ManyToOne('UserEntity', {
     onDelete: 'CASCADE',
     persistence: false,
