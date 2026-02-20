@@ -5,14 +5,6 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import Environment from '@/common/utils/environment';
 import { DatabaseConfigService } from '@/config';
-import { RefreshTokenEntity } from '@/modules/auth';
-import {
-  CampaignEntity,
-  UserCampaignEntity,
-  VolumeStatEntity,
-} from '@/modules/campaigns';
-import { ExchangeApiKeyEntity } from '@/modules/exchanges';
-import { UserEntity } from '@/modules/users';
 
 @Module({
   imports: [
@@ -26,6 +18,7 @@ import { UserEntity } from '@/modules/users';
         return {
           type: 'postgres',
           useUTC: true,
+          autoLoadEntities: true,
 
           ...(databaseConfigService.url
             ? {
@@ -48,14 +41,6 @@ import { UserEntity } from '@/modules/users';
            */
           synchronize: false,
           migrationsRun: false,
-          entities: [
-            CampaignEntity,
-            ExchangeApiKeyEntity,
-            RefreshTokenEntity,
-            UserCampaignEntity,
-            UserEntity,
-            VolumeStatEntity,
-          ],
 
           logging: shouldEnableLogging
             ? (databaseConfigService.logLevels as LogLevel[])

@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 
 import { generateExchangeName } from '@/modules/exchanges/fixtures';
 
-import { ExchangeApiKeyEntity } from '../exchange-api-key.entity';
+import { type ExchangeApiKeyEntity } from '../exchange-api-key.entity';
 
 export function generateExchangeApiKeysData() {
   return {

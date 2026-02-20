@@ -1,6 +1,6 @@
 import { ExchangeName } from '@/common/constants';
 
-import type { CampaignParticipant } from '../types';
+import type { CampaignParticipant } from '../participations/types';
 
 export type CampaignProgressCheckerSetup = {
   exchangeName: ExchangeName;
