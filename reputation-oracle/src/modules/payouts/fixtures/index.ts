@@ -5,22 +5,80 @@ import { ethers } from 'ethers';
 import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import {
-  BaseCampaignManifest,
+  CampaignManifest,
+  CampaignType,
   CampaignWithResults,
+  CompetitiveCampaignManifest,
+  HoldingCampaignManifest,
   IntermediateResult,
   IntermediateResultsData,
+  MarketMakingCampaignManifest,
   ParticipantOutcome,
+  ThresholdCampaignManifest,
 } from '../types';
 
-export function generateManifest(): BaseCampaignManifest {
-  const manifest = {
-    type: faker.helpers.arrayElement(['MARKET_MAKING', 'HOLDING', 'ANY']),
+function generateValidSymbol(): string {
+  return faker.string.alphanumeric({
+    casing: 'upper',
+    length: faker.number.int({ min: 3, max: 10 }),
+  });
+}
+
+function generateValidPair(): string {
+  return `${generateValidSymbol()}/${generateValidSymbol()}`;
+}
+
+export function generateManifest(
+  type: CampaignType = faker.helpers.arrayElement(
+    Object.values(CampaignType),
+  ) as CampaignType,
+): CampaignManifest {
+  const baseManifest = {
+    type,
     exchange: faker.lorem.slug(),
     start_date: faker.date.past().toISOString(),
     end_date: faker.date.soon().toISOString(),
   };
 
-  return manifest;
+  switch (type) {
+    case CampaignType.COMPETITIVE_MARKET_MAKING: {
+      const manifest: CompetitiveCampaignManifest = {
+        ...baseManifest,
+        type,
+        pair: generateValidPair(),
+        rewards_distribution: [50, 30, 20],
+      };
+      return manifest;
+    }
+    case CampaignType.HOLDING: {
+      const manifest: HoldingCampaignManifest = {
+        ...baseManifest,
+        type,
+        symbol: generateValidSymbol(),
+        daily_balance_target: faker.number.float({ min: 1 }),
+      };
+      return manifest;
+    }
+    case CampaignType.THRESHOLD: {
+      const manifest: ThresholdCampaignManifest = {
+        ...baseManifest,
+        type,
+        symbol: generateValidSymbol(),
+        minimum_balance_target: faker.number.float({ min: 1 }),
+      };
+      return manifest;
+    }
+    case CampaignType.MARKET_MAKING:
+    default: {
+      const manifest: MarketMakingCampaignManifest = {
+        ...baseManifest,
+        type: CampaignType.MARKET_MAKING,
+        pair: generateValidPair(),
+        daily_volume_target: faker.number.float({ min: 1 }),
+      };
+      return manifest;
+    }
+  }
 }
 
 export function generateEscrow(): IEscrow {

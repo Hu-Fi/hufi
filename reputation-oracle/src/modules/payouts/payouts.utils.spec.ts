@@ -12,6 +12,7 @@ import {
   generateParticipantOutcome,
 } from './fixtures';
 import * as payoutsUtils from './payouts.utils';
+import { CampaignType } from './types';
 
 function calculateIntermediateResultsHash(data: unknown): string {
   return crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
@@ -25,7 +26,7 @@ describe('payouts utils', () => {
   describe('retrieveCampaignManifest', () => {
     describe('manifest string', () => {
       it('should return parsed manifest if it is a string', async () => {
-        const manifest = generateManifest();
+        const manifest = generateManifest(CampaignType.MARKET_MAKING);
 
         const result = await payoutsUtils.retrieveCampaignManifest(
           JSON.stringify(manifest),
@@ -67,7 +68,7 @@ describe('payouts utils', () => {
       });
 
       it('should throw when invalid manfest hash', async () => {
-        const mockedManifest = generateManifest();
+        const mockedManifest = generateManifest(CampaignType.MARKET_MAKING);
         const invalidHash = faker.string.hexadecimal();
         const scope = nock(manfestUrl).get('/').reply(200, mockedManifest);
 
@@ -85,7 +86,7 @@ describe('payouts utils', () => {
       });
 
       it('should download manifest and return when hash is valid', async () => {
-        const mockedManifest = generateManifest();
+        const mockedManifest = generateManifest(CampaignType.MARKET_MAKING);
 
         const mockedManifestHash = crypto
           .createHash('sha1')
@@ -101,6 +102,64 @@ describe('payouts utils', () => {
         scope.done();
 
         expect(manifest).toEqual(mockedManifest);
+      });
+
+      it('should throw for competitive manifest when rewards distribution sum is greater than 100', async () => {
+        const mockedManifest = {
+          ...generateManifest(CampaignType.COMPETITIVE_MARKET_MAKING),
+          type: CampaignType.COMPETITIVE_MARKET_MAKING,
+          pair: 'BTC/USDT',
+          rewards_distribution: [60, 41],
+        };
+
+        const mockedManifestHash = crypto
+          .createHash('sha1')
+          .update(JSON.stringify(mockedManifest))
+          .digest('hex');
+        const scope = nock(manfestUrl).get('/').reply(200, mockedManifest);
+
+        let thrownError;
+        try {
+          await payoutsUtils.retrieveCampaignManifest(
+            manfestUrl,
+            mockedManifestHash,
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+
+        scope.done();
+
+        expect(thrownError).toBeInstanceOf(Error);
+        expect(thrownError.message).toBe('Invalid campaign manifest');
+      });
+
+      it('should accept competitive manifest when rewards distribution sum is less or equal to 100', async () => {
+        const mockedManifest = {
+          ...generateManifest(CampaignType.COMPETITIVE_MARKET_MAKING),
+          type: CampaignType.COMPETITIVE_MARKET_MAKING,
+          pair: 'BTC/USDT',
+          rewards_distribution: [60, 40],
+        };
+
+        const mockedManifestHash = crypto
+          .createHash('sha1')
+          .update(JSON.stringify(mockedManifest))
+          .digest('hex');
+        const scope = nock(manfestUrl).get('/').reply(200, mockedManifest);
+
+        const manifest = await payoutsUtils.retrieveCampaignManifest(
+          manfestUrl,
+          mockedManifestHash,
+        );
+
+        scope.done();
+
+        expect(manifest).toEqual({
+          ...mockedManifest,
+          start_date: new Date(mockedManifest.start_date),
+          end_date: new Date(mockedManifest.end_date),
+        });
       });
     });
   });

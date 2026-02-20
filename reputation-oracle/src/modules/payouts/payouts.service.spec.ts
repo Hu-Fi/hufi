@@ -42,6 +42,7 @@ import { PayoutsService } from './payouts.service';
 import * as payoutsUtils from './payouts.utils';
 import {
   BaseCampaignManifest,
+  CampaignType,
   CampaignWithResults,
   IntermediateResult,
 } from './types';
@@ -461,6 +462,82 @@ describe('PayoutsService', () => {
     });
   });
 
+  describe('calculateRewardsForCompetitiveCampaign', () => {
+    it('should distribute rewards by manifest percentages to top cumulative score', () => {
+      const firstAddress = ethers.getAddress(faker.finance.ethereumAddress());
+      const secondAddress = ethers.getAddress(faker.finance.ethereumAddress());
+      const thirdAddress = ethers.getAddress(faker.finance.ethereumAddress());
+
+      const firstPeriodScoreA = faker.number.int({ min: 8, max: 12 });
+      const secondPeriodScoreA = faker.number.int({ min: 8, max: 12 });
+      const totalScoreA = firstPeriodScoreA + secondPeriodScoreA;
+      const totalScoreB = totalScoreA + faker.number.int({ min: 1, max: 5 });
+      const totalScoreC = faker.number.int({ min: 4, max: 8 });
+
+      const intermediateResultsData = generateIntermediateResultsData();
+      intermediateResultsData.results = [
+        {
+          ...generateIntermediateResult(),
+          reserved_funds: '0',
+          participants_outcomes_batches: [
+            {
+              id: faker.string.uuid(),
+              results: [
+                generateParticipantOutcome({
+                  address: firstAddress,
+                  score: firstPeriodScoreA,
+                }),
+                generateParticipantOutcome({
+                  address: secondAddress,
+                  score: totalScoreB,
+                }),
+              ],
+            },
+          ],
+        },
+        {
+          ...generateIntermediateResult(),
+          reserved_funds: '100',
+          participants_outcomes_batches: [
+            {
+              id: faker.string.uuid(),
+              results: [
+                generateParticipantOutcome({
+                  address: firstAddress,
+                  score: secondPeriodScoreA,
+                }),
+                generateParticipantOutcome({
+                  address: thirdAddress,
+                  score: totalScoreC,
+                }),
+              ],
+            },
+          ],
+        },
+      ];
+
+      const rewardsBatches = payoutsService[
+        'calculateRewardsForCompetitiveCampaign'
+      ](
+        intermediateResultsData,
+        {
+          ...generateManifest(CampaignType.COMPETITIVE_MARKET_MAKING),
+          type: CampaignType.COMPETITIVE_MARKET_MAKING,
+          pair: 'BTC/USDT',
+          rewards_distribution: [50, 30, 20],
+        },
+        18,
+      );
+
+      expect(rewardsBatches).toHaveLength(1);
+      expect(rewardsBatches[0].rewards).toEqual([
+        { address: secondAddress, amount: '50' },
+        { address: firstAddress, amount: '30' },
+        { address: thirdAddress, amount: '20' },
+      ]);
+    });
+  });
+
   describe('runPayoutsCycleForCampaign', () => {
     const mockedCampaign = generateCampaign();
     const mockedFeeParams = {
@@ -480,7 +557,7 @@ describe('PayoutsService', () => {
     const mockedReservedFunds = faker.number.int({ min: 1, max: 10 });
     const mockedFinalResultsUrl = faker.internet.url();
     const mockedFinalResultsHash = faker.string.hexadecimal();
-    const mockedManifest = generateManifest();
+    const mockedManifest = generateManifest(CampaignType.MARKET_MAKING);
 
     let spyOnRetrieveCampaignManifest: jest.SpyInstance;
     let spyOnDownloadIntermediateResults: jest.SpyInstance;
@@ -624,7 +701,7 @@ describe('PayoutsService', () => {
 
       const now = Date.now();
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
-        Object.assign(generateManifest(), {
+        Object.assign(generateManifest(CampaignType.MARKET_MAKING), {
           start_date: new Date(now + 1).toISOString(),
         }),
       );
@@ -656,7 +733,7 @@ describe('PayoutsService', () => {
     it('should not cancel if cancellation not requested and campaign not started yet', async () => {
       const now = Date.now();
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
-        Object.assign(generateManifest(), {
+        Object.assign(generateManifest(CampaignType.MARKET_MAKING), {
           start_date: new Date(now + 1).toISOString(),
         }),
       );
@@ -790,7 +867,7 @@ describe('PayoutsService', () => {
       let manifest: BaseCampaignManifest;
 
       beforeEach(() => {
-        manifest = generateManifest();
+        manifest = generateManifest(CampaignType.MARKET_MAKING);
         manifest.end_date = mockedIntermediateResult.to.toISOString();
         spyOnRetrieveCampaignManifest
           .mockReset()
