@@ -3,12 +3,7 @@ import Joi from 'joi';
 import { ChainIds } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 
-import {
-  CampaignManifest,
-  CampaignType,
-  CompetitiveCampaignManifest,
-  IntermediateResultsData,
-} from './types';
+import { CampaignManifest, IntermediateResultsData } from './types';
 
 const participantOutcome = Joi.object({
   address: Joi.string().required(),
@@ -43,20 +38,6 @@ const intermedateResultsSchema = Joi.object({
   address: Joi.string().required(),
   exchange: Joi.string().required(),
   results: Joi.array().items(intermediateResultSchema).required(),
-}).options({ allowUnknown: true, stripUnknown: false });
-
-const competitiveManifestSchema = Joi.object({
-  type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING).required(),
-  exchange: Joi.string().required(),
-  start_date: Joi.date().iso().required(),
-  end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
-  pair: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
-    .required(),
-  rewards_distribution: Joi.array()
-    .items(Joi.number().strict().greater(0))
-    .min(1)
-    .required(),
 }).options({ allowUnknown: true, stripUnknown: false });
 
 export async function downloadIntermediateResults(
@@ -95,27 +76,8 @@ export async function retrieveCampaignManifest(
     manifestData = manifestOrUrl;
   }
 
-  const manifest = JSON.parse(manifestData) as CampaignManifest;
-  if (manifest.type !== CampaignType.COMPETITIVE_MARKET_MAKING) {
-    return manifest as CampaignManifest;
-  }
-
   try {
-    const validatedManifest = Joi.attempt(
-      manifest,
-      competitiveManifestSchema,
-    ) as CompetitiveCampaignManifest;
-
-    const rewardsDistributionSum =
-      validatedManifest.rewards_distribution.reduce(
-        (acc, value) => acc + value,
-        0,
-      );
-    if (rewardsDistributionSum > 100) {
-      throw new Error('Invalid campaign manifest');
-    }
-
-    return validatedManifest;
+    return JSON.parse(manifestData) as CampaignManifest;
   } catch {
     throw new Error('Invalid campaign manifest');
   }

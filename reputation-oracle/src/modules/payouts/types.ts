@@ -1,48 +1,19 @@
 import type { IEscrow } from '@human-protocol/sdk';
 
-export enum CampaignType {
-  MARKET_MAKING = 'MARKET_MAKING',
-  COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',
-  HOLDING = 'HOLDING',
-  THRESHOLD = 'THRESHOLD',
-}
-
 export type BaseCampaignManifest = {
-  type: CampaignType;
+  type: string;
   exchange: string;
   start_date: string;
   end_date: string;
 };
 
 export type CompetitiveCampaignManifest = BaseCampaignManifest & {
-  type: CampaignType.COMPETITIVE_MARKET_MAKING;
+  type: 'COMPETITIVE_MARKET_MAKING';
   pair: string;
   rewards_distribution: number[];
 };
 
-export type MarketMakingCampaignManifest = BaseCampaignManifest & {
-  type: CampaignType.MARKET_MAKING;
-  pair: string;
-  daily_volume_target: number;
-};
-
-export type HoldingCampaignManifest = BaseCampaignManifest & {
-  type: CampaignType.HOLDING;
-  symbol: string;
-  daily_balance_target: number;
-};
-
-export type ThresholdCampaignManifest = BaseCampaignManifest & {
-  type: CampaignType.THRESHOLD;
-  symbol: string;
-  minimum_balance_target: number;
-};
-
-export type CampaignManifest =
-  | MarketMakingCampaignManifest
-  | CompetitiveCampaignManifest
-  | HoldingCampaignManifest
-  | ThresholdCampaignManifest;
+export type CampaignManifest = BaseCampaignManifest & Record<string, unknown>;
 
 export type CampaignWithResults = Pick<
   IEscrow,
@@ -63,7 +34,6 @@ export type CampaignWithResults = Pick<
 export type ParticipantOutcome = {
   address: string;
   score: number;
-  total_volume?: number;
 };
 
 export type ParticipantsOutcomesBatch = {

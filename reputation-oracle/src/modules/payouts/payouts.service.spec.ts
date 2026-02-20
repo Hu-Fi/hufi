@@ -42,8 +42,8 @@ import { PayoutsService } from './payouts.service';
 import * as payoutsUtils from './payouts.utils';
 import {
   BaseCampaignManifest,
-  CampaignType,
   CampaignWithResults,
+  CompetitiveCampaignManifest,
   IntermediateResult,
 } from './types';
 
@@ -521,11 +521,11 @@ describe('PayoutsService', () => {
       ](
         intermediateResultsData,
         {
-          ...generateManifest(CampaignType.COMPETITIVE_MARKET_MAKING),
-          type: CampaignType.COMPETITIVE_MARKET_MAKING,
+          ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          rewards_distribution: [50, 30, 20],
-        },
+          rewards_distribution: [20, 50, 30],
+        } as CompetitiveCampaignManifest,
+        100,
         18,
       );
 
@@ -557,7 +557,7 @@ describe('PayoutsService', () => {
     const mockedReservedFunds = faker.number.int({ min: 1, max: 10 });
     const mockedFinalResultsUrl = faker.internet.url();
     const mockedFinalResultsHash = faker.string.hexadecimal();
-    const mockedManifest = generateManifest(CampaignType.MARKET_MAKING);
+    const mockedManifest = generateManifest('MARKET_MAKING');
 
     let spyOnRetrieveCampaignManifest: jest.SpyInstance;
     let spyOnDownloadIntermediateResults: jest.SpyInstance;
@@ -701,7 +701,7 @@ describe('PayoutsService', () => {
 
       const now = Date.now();
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
-        Object.assign(generateManifest(CampaignType.MARKET_MAKING), {
+        Object.assign(generateManifest('MARKET_MAKING'), {
           start_date: new Date(now + 1).toISOString(),
         }),
       );
@@ -733,7 +733,7 @@ describe('PayoutsService', () => {
     it('should not cancel if cancellation not requested and campaign not started yet', async () => {
       const now = Date.now();
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
-        Object.assign(generateManifest(CampaignType.MARKET_MAKING), {
+        Object.assign(generateManifest('MARKET_MAKING'), {
           start_date: new Date(now + 1).toISOString(),
         }),
       );
@@ -867,7 +867,7 @@ describe('PayoutsService', () => {
       let manifest: BaseCampaignManifest;
 
       beforeEach(() => {
-        manifest = generateManifest(CampaignType.MARKET_MAKING);
+        manifest = generateManifest('MARKET_MAKING');
         manifest.end_date = mockedIntermediateResult.to.toISOString();
         spyOnRetrieveCampaignManifest
           .mockReset()

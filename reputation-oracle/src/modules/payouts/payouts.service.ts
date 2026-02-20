@@ -21,7 +21,7 @@ import { WalletWithProvider, Web3Service } from '@/modules/web3';
 
 import * as payoutsUtils from './payouts.utils';
 import {
-  CampaignType,
+  CampaignManifest,
   CalculatedRewardsBatch,
   CampaignWithResults,
   CompetitiveCampaignManifest,
@@ -30,6 +30,17 @@ import {
   IntermediateResultsData,
 } from './types';
 import { StorageService } from '../storage';
+
+function isCompetitiveCampaignManifest(
+  manifest: CampaignManifest,
+): manifest is CompetitiveCampaignManifest {
+  return (
+    manifest.type === 'COMPETITIVE_MARKET_MAKING' &&
+    Array.isArray(
+      (manifest as CompetitiveCampaignManifest).rewards_distribution,
+    )
+  );
+}
 
 @Injectable()
 export class PayoutsService {
@@ -143,27 +154,39 @@ export class PayoutsService {
         );
       }
 
-      const rewardsBatches =
-        manifest.type === CampaignType.COMPETITIVE_MARKET_MAKING
-          ? this.calculateRewardsForCompetitiveCampaign(
-              intermediateResultsData,
-              manifest as CompetitiveCampaignManifest,
-              campaign.fundTokenDecimals,
-            )
-          : intermediateResultsData.results.flatMap((intermediateResult) => {
-              const calculatedRewards =
-                this.calculateRewardsForIntermediateResult(
-                  intermediateResult,
-                  campaign.fundTokenDecimals,
-                );
+      let rewardsBatches: CalculatedRewardsBatch[] = [];
+      if (isCompetitiveCampaignManifest(manifest)) {
+        const isCampaignEnded =
+          new Date(manifest.end_date).valueOf() <= Date.now();
+        const shouldCalculateCompetitivePayouts =
+          escrowStatus === EscrowStatus.ToCancel || isCampaignEnded;
 
-              logger.debug('Rewards calculated for intermediate result', {
-                periodFrom: intermediateResult.from,
-                periodTo: intermediateResult.to,
-              });
+        if (shouldCalculateCompetitivePayouts) {
+          rewardsBatches = this.calculateRewardsForCompetitiveCampaign(
+            intermediateResultsData,
+            manifest,
+            campaign.fundAmount,
+            campaign.fundTokenDecimals,
+          );
+        }
+      } else {
+        rewardsBatches = intermediateResultsData.results.flatMap(
+          (intermediateResult) => {
+            const calculatedRewards =
+              this.calculateRewardsForIntermediateResult(
+                intermediateResult,
+                campaign.fundTokenDecimals,
+              );
 
-              return calculatedRewards;
+            logger.debug('Rewards calculated for intermediate result', {
+              periodFrom: intermediateResult.from,
+              periodTo: intermediateResult.to,
             });
+
+            return calculatedRewards;
+          },
+        );
+      }
 
       for (const rewardsBatch of rewardsBatches) {
         /**
@@ -417,12 +440,11 @@ export class PayoutsService {
   private calculateRewardsForCompetitiveCampaign(
     intermediateResultsData: IntermediateResultsData,
     manifest: CompetitiveCampaignManifest,
+    fundAmount: number,
     tokenDecimals: number,
   ): CalculatedRewardsBatch[] {
     const participantsScores = new Map<string, Decimal>();
-    let rewardPool = new Decimal(0);
     for (const intermediateResult of intermediateResultsData.results) {
-      rewardPool = rewardPool.plus(intermediateResult.reserved_funds);
       for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
         for (const outcome of outcomesBatch.results) {
           const currentScore = participantsScores.get(outcome.address);
@@ -441,6 +463,11 @@ export class PayoutsService {
         return scoreComparison || addressA.localeCompare(addressB);
       });
 
+    const sortedRewardsDistribution = [...manifest.rewards_distribution].sort(
+      (valueA, valueB) => valueB - valueA,
+    );
+    const rewardPool = new Decimal(fundAmount);
+
     const rewardsBatch: CalculatedRewardsBatch = {
       id: intermediateResultsData.results
         .at(-1)!
@@ -449,12 +476,12 @@ export class PayoutsService {
     };
     const nRewards = Math.min(
       sortedParticipants.length,
-      manifest.rewards_distribution.length,
+      sortedRewardsDistribution.length,
     );
     for (let i = 0; i < nRewards; i += 1) {
       const [address] = sortedParticipants[i];
       const reward = rewardPool
-        .mul(manifest.rewards_distribution[i])
+        .mul(sortedRewardsDistribution[i])
         .div(100)
         .toDecimalPlaces(tokenDecimals, Decimal.ROUND_DOWN);
       if (reward.greaterThan(0)) {

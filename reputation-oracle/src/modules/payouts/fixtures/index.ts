@@ -6,15 +6,11 @@ import { generateTestnetChainId } from '@/modules/web3/fixtures';
 
 import {
   CampaignManifest,
-  CampaignType,
   CampaignWithResults,
   CompetitiveCampaignManifest,
-  HoldingCampaignManifest,
   IntermediateResult,
   IntermediateResultsData,
-  MarketMakingCampaignManifest,
   ParticipantOutcome,
-  ThresholdCampaignManifest,
 } from '../types';
 
 function generateValidSymbol(): string {
@@ -29,9 +25,12 @@ function generateValidPair(): string {
 }
 
 export function generateManifest(
-  type: CampaignType = faker.helpers.arrayElement(
-    Object.values(CampaignType),
-  ) as CampaignType,
+  type: string = faker.helpers.arrayElement([
+    'MARKET_MAKING',
+    'COMPETITIVE_MARKET_MAKING',
+    'HOLDING',
+    'THRESHOLD',
+  ]),
 ): CampaignManifest {
   const baseManifest = {
     type,
@@ -41,17 +40,17 @@ export function generateManifest(
   };
 
   switch (type) {
-    case CampaignType.COMPETITIVE_MARKET_MAKING: {
+    case 'COMPETITIVE_MARKET_MAKING': {
       const manifest: CompetitiveCampaignManifest = {
         ...baseManifest,
-        type,
+        type: 'COMPETITIVE_MARKET_MAKING',
         pair: generateValidPair(),
         rewards_distribution: [50, 30, 20],
       };
       return manifest;
     }
-    case CampaignType.HOLDING: {
-      const manifest: HoldingCampaignManifest = {
+    case 'HOLDING': {
+      const manifest = {
         ...baseManifest,
         type,
         symbol: generateValidSymbol(),
@@ -59,8 +58,8 @@ export function generateManifest(
       };
       return manifest;
     }
-    case CampaignType.THRESHOLD: {
-      const manifest: ThresholdCampaignManifest = {
+    case 'THRESHOLD': {
+      const manifest = {
         ...baseManifest,
         type,
         symbol: generateValidSymbol(),
@@ -68,11 +67,11 @@ export function generateManifest(
       };
       return manifest;
     }
-    case CampaignType.MARKET_MAKING:
+    case 'MARKET_MAKING':
     default: {
-      const manifest: MarketMakingCampaignManifest = {
+      const manifest = {
         ...baseManifest,
-        type: CampaignType.MARKET_MAKING,
+        type: 'MARKET_MAKING',
         pair: generateValidPair(),
         daily_volume_target: faker.number.float({ min: 1 }),
       };
