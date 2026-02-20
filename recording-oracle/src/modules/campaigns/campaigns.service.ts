@@ -639,20 +639,14 @@ export class CampaignsService implements OnModuleDestroy {
             const shouldReserveFunds =
               escrowStatus === EscrowStatus.ToCancel ||
               endDate.valueOf() === campaign.endDate.valueOf();
-            if (shouldReserveFunds) {
-              const totalReserved = intermediateResults.results.reduce(
-                (acc, result) => acc.add(result.reserved_funds),
-                new Decimal(0),
-              );
-              const remainingRewardPool = new Decimal(campaign.fundAmount).sub(
-                totalReserved,
-              );
-              rewardPool = Decimal.max(remainingRewardPool, 0)
-                .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-                .toString();
-            } else {
-              rewardPool = '0';
-            }
+            rewardPool = shouldReserveFunds
+              ? new Decimal(campaign.fundAmount)
+                  .toDecimalPlaces(
+                    campaign.fundTokenDecimals,
+                    Decimal.ROUND_DOWN,
+                  )
+                  .toString()
+              : '0';
           } else {
             let periodDurationDays = PROGRESS_PERIOD_DAYS;
             if (escrowStatus === EscrowStatus.ToCancel) {

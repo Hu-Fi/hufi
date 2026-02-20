@@ -109,7 +109,6 @@ import {
   CampaignProgress,
   CampaignStatus,
   CampaignType,
-  CompetitiveMarketMakingCampaignDetails,
   HoldingCampaignDetails,
   IntermediateResultsData,
   LeaderboardRanking,
@@ -973,7 +972,7 @@ describe('CampaignsService', () => {
     const mockedGetEscrowStatus = jest.fn();
 
     beforeEach(() => {
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+      campaign = generateCampaignEntity();
       userId = faker.string.uuid();
       chainId = generateTestnetChainId();
 
@@ -2478,10 +2477,6 @@ describe('CampaignsService', () => {
     it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
       campaign.endDate = new Date(Date.now() - 1);
-      const rewardsDistribution = (
-        campaign.details as CompetitiveMarketMakingCampaignDetails
-      ).rewardsDistribution;
-      expect(rewardsDistribution.length).toBeGreaterThan(0);
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
