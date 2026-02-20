@@ -102,7 +102,6 @@ describe('payouts utils', () => {
 
         expect(manifest).toEqual(mockedManifest);
       });
-
     });
   });
 
