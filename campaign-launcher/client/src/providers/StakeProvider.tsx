@@ -11,35 +11,45 @@ import {
 
 import { StakingClient } from '@human-protocol/sdk';
 
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { formatTokenAmount, getSupportedChainIds } from '@/utils';
 
+import { useSignerContext } from './SignerProvider';
+
 type StakeContextType = {
-  fetchStakingData: () => Promise<string | number | null>;
+  fetchStakingData: () => Promise<string | null>;
   isFetching: boolean;
-  isClientInitializing: boolean;
-  isStakingClientReady: boolean;
+  status: ClientStatus;
+  isClientPending: boolean;
+  isClientReady: boolean;
+  isClientMissing: boolean;
 };
 
 const StakeContext = createContext<StakeContextType | undefined>(undefined);
 
+enum ClientStatus {
+  IDLE = 'idle',
+  CREATING = 'creating',
+  READY = 'ready',
+  ERROR = 'error',
+  DISCONNECTED = 'disconnected',
+  UNAVAILABLE = 'unavailable',
+}
+
 const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [stakingClient, setStakingClient] = useState<StakingClient | null>(
-    null
-  );
-  const [isClientInitializing, setIsClientInitializing] = useState(false);
+  const [client, setClient] = useState<StakingClient | null>(null);
+  const [status, setStatus] = useState<ClientStatus>(ClientStatus.IDLE);
   const [isFetching, setIsFetching] = useState(false);
 
   const { activeAddress } = useActiveAccount();
-  const { isSwitching, appChainId } = useNetwork();
-  const { signer, isCreatingSigner } = useRetrieveSigner();
+  const { appChainId } = useNetwork();
+  const { signer, isSignerPending, isSignerMissing } = useSignerContext();
 
   const checkSupportedChain = useCallback(() => {
     const isSupportedChain = getSupportedChainIds().includes(appChainId);
     if (!isSupportedChain) {
-      setStakingClient(null);
+      setClient(null);
       throw new Error(
         'Unsupported chain. Please switch to a supported network.'
       );
@@ -48,50 +58,70 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const initStakingClient = async () => {
-      if (signer && !isSwitching && !isCreatingSigner) {
-        setIsClientInitializing(true);
+      if (isSignerPending) {
+        setStatus(ClientStatus.UNAVAILABLE);
+        setClient(null);
+        return;
+      }
+
+      if (isSignerMissing) {
+        setStatus(ClientStatus.DISCONNECTED);
+        setClient(null);
+        return;
+      }
+
+      if (signer) {
+        setStatus(ClientStatus.CREATING);
+        setClient(null);
         try {
           checkSupportedChain();
           const client = await StakingClient.build(signer);
-          setStakingClient(client);
+          setClient(client);
+          setStatus(ClientStatus.READY);
         } catch (error) {
           console.error('Failed to init staking client', error);
-          setStakingClient(null);
-        } finally {
-          setIsClientInitializing(false);
+          setClient(null);
+          setStatus(ClientStatus.ERROR);
         }
       }
     };
 
     initStakingClient();
-  }, [signer, isSwitching, isCreatingSigner, checkSupportedChain]);
+  }, [signer, isSignerPending, isSignerMissing, checkSupportedChain]);
 
   const fetchStakingData = useCallback(async () => {
     checkSupportedChain();
-    if (stakingClient && activeAddress) {
+
+    if (client && activeAddress) {
       setIsFetching(true);
       try {
-        const stakingInfo = await stakingClient.getStakerInfo(activeAddress);
-        return formatTokenAmount(Number(stakingInfo?.stakedAmount) || 0);
+        const stakingInfo = await client.getStakerInfo(activeAddress);
+        return formatTokenAmount(stakingInfo?.stakedAmount);
       } catch (error) {
         console.error('Error fetching staking data', error);
-        return null;
+        throw error;
       } finally {
         setIsFetching(false);
       }
     }
 
-    return 0;
-  }, [stakingClient, activeAddress, checkSupportedChain]);
+    return null;
+  }, [client, activeAddress, checkSupportedChain]);
 
   const value = useMemo(
     () => ({
       fetchStakingData,
       isFetching,
-      isClientInitializing,
-      isStakingClientReady: !!stakingClient,
+      status,
+      isClientPending:
+        status === ClientStatus.IDLE ||
+        status === ClientStatus.CREATING ||
+        status === ClientStatus.UNAVAILABLE,
+      isClientReady: status === ClientStatus.READY,
+      isClientMissing:
+        status === ClientStatus.DISCONNECTED || status === ClientStatus.ERROR,
     }),
-    [fetchStakingData, isFetching, isClientInitializing, stakingClient]
+    [fetchStakingData, isFetching, status]
   );
 
   return (

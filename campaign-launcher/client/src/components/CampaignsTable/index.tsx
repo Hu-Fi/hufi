@@ -15,8 +15,8 @@ import {
   useIsLgDesktop,
   useIsMobile,
 } from '@/hooks/useBreakpoints';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { Campaign } from '@/types';
 import {
@@ -57,7 +57,7 @@ const formatDate = (dateString: string) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
-  const { signer } = useRetrieveSigner();
+  const { signer } = useSignerContext();
 
   if (!signer) {
     return (

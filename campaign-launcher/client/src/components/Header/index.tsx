@@ -25,8 +25,8 @@ import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 
 type StyledLinkProps = {
   to: string;
@@ -68,7 +68,7 @@ const Header: FC = () => {
   const { pathname } = useLocation();
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useConnection();
-  const { signer } = useRetrieveSigner();
+  const { signer } = useSignerContext();
   const isMobile = useIsMobile();
 
   const handleMenuOpen = useCallback(

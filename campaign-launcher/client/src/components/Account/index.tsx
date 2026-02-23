@@ -18,9 +18,9 @@ import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 
@@ -48,9 +48,9 @@ const Account: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { activeAddress } = useActiveAccount();
-  const { disconnect } = useDisconnect();
+  const disconnect = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
-  const { signer } = useRetrieveSigner();
+  const { signer } = useSignerContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { showError } = useNotification();
@@ -72,7 +72,7 @@ const Account: FC = () => {
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    disconnect.mutate();
   };
 
   const handleLogout = () => {

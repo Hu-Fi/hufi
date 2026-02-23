@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router';
 import StakingRequirementModal from '@/components/modals/StakingRequirementModal';
 import { ROUTES } from '@/constants';
 import { useIsXlDesktop } from '@/hooks/useBreakpoints';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useStakeContext } from '@/providers/StakeProvider';
 
 type ButtonWrapperProps = {
@@ -62,11 +61,10 @@ const LaunchCampaignButton: FC<Props> = ({
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
 
   const navigate = useNavigate();
-  const { signer } = useRetrieveSigner();
   const isXl = useIsXlDesktop();
-  const { fetchStakingData, isClientInitializing } = useStakeContext();
+  const { fetchStakingData, isClientReady } = useStakeContext();
 
-  const isDisabled = !signer || isClientInitializing;
+  const isDisabled = !isClientReady;
 
   const handleLaunchCampaignClick = async () => {
     if (isDisabled) return null;
