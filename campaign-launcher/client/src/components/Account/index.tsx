@@ -50,7 +50,7 @@ const Account: FC = () => {
   const { activeAddress } = useActiveAccount();
   const disconnect = useDisconnect();
   const { signIn, logout, isAuthenticated } = useWeb3Auth();
-  const { signer } = useSignerContext();
+  const { isSignerReady } = useSignerContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { showError } = useNotification();
@@ -182,7 +182,7 @@ const Account: FC = () => {
               </CustomTooltip>
             </ListItemButton>
           )}
-          {!isAuthenticated && signer && (
+          {!isAuthenticated && isSignerReady && (
             <ListItemButton sx={buttonSx} onClick={handleDisconnect}>
               <PowerIcon />
               Disconnect wallet

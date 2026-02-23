@@ -57,9 +57,9 @@ const formatDate = (dateString: string) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
-  const { signer } = useSignerContext();
+  const { isSignerReady } = useSignerContext();
 
-  if (!signer) {
+  if (!isSignerReady) {
     return (
       <>
         <Typography variant="subtitle2" component="p">

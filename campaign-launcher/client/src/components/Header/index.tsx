@@ -68,7 +68,7 @@ const Header: FC = () => {
   const { pathname } = useLocation();
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useConnection();
-  const { signer } = useSignerContext();
+  const { isSignerReady } = useSignerContext();
   const isMobile = useIsMobile();
 
   const handleMenuOpen = useCallback(
@@ -224,10 +224,10 @@ const Header: FC = () => {
               sx={{ '& button': { flex: 1 } }}
             >
               <LaunchCampaignButton
-                variant={signer ? 'outlined' : 'contained'}
+                variant={isSignerReady ? 'outlined' : 'contained'}
                 handleCallbackOnClick={handleMenuClose}
               />
-              {!signer && (
+              {!isSignerReady && (
                 <CustomTooltip
                   arrow
                   placement="left"
