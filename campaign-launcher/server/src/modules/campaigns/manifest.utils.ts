@@ -70,9 +70,13 @@ const competitiveMarketMakingManifestSchema = Joi.object({
         0,
       );
       if (distributionSum > 100) {
-        return helpers.error('any.invalid');
+        return helpers.error('any.custom');
       }
       return values;
+    })
+    .messages({
+      'any.custom':
+        '"rewards_distribution" sum must be less than or equal to 100',
     }),
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
@@ -128,7 +132,10 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
     return validatedManifest;
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Invalid manifest schema: ${error.message}`);
+    }
     throw new Error('Invalid manifest schema');
   }
 }
