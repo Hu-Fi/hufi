@@ -96,7 +96,7 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
       setIsFetching(true);
       try {
         const stakingInfo = await client.getStakerInfo(activeAddress);
-        return formatTokenAmount(stakingInfo?.stakedAmount);
+        return formatTokenAmount(stakingInfo?.stakedAmount ?? '0n');
       } catch (error) {
         console.error('Error fetching staking data', error);
         throw error;

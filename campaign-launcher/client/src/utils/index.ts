@@ -67,7 +67,7 @@ export const getExplorerUrl = (chainId: ChainId, address: string): string => {
 };
 
 export const formatTokenAmount = (
-  amount: string | number | bigint,
+  amount: string | bigint,
   decimals = 18
 ): string => {
   const bigIntAmount = BigInt(amount);
