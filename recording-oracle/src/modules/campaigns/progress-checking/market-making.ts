@@ -1,4 +1,4 @@
-import { ExchangeName } from '@/common/constants';
+import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
 import {
   ExchangesService,
   TakerOrMakerFlag,
@@ -12,8 +12,6 @@ import type {
   BaseProgressCheckResult,
   ParticipantInfo,
 } from './types';
-
-const N_TRADES_FOR_ABUSE_CHECK = 5;
 
 export type MarketMakingResult = BaseProgressCheckResult & {
   total_volume: number;
@@ -32,9 +30,9 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
   readonly tradingPeriodStart: Date;
   readonly tradingPeriodEnd: Date;
 
-  protected readonly tradeSamples = new Set<string>();
-
   private totalVolumeMeta: number = 0;
+
+  protected readonly ethDepositAddresses = new Set<string>();
 
   constructor(
     private readonly exchangesService: ExchangesService,
@@ -49,16 +47,22 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
   async checkForParticipant(
     participant: ParticipantInfo,
   ): Promise<MarketMakingResult> {
-    let abuseDetected = false;
-
     const exchangeApiClient = await this.exchangesService.getClientForUser(
       participant.id,
       this.exchangeName,
     );
 
+    const ethDepositAddress =
+      await exchangeApiClient.fetchDepositAddress(ETH_TOKEN_SYMBOL);
+
+    if (this.ethDepositAddresses.has(ethDepositAddress)) {
+      return { abuseDetected: true, score: 0, total_volume: 0 };
+    } else {
+      this.ethDepositAddresses.add(ethDepositAddress);
+    }
+
     let score = 0;
     let totalVolume = 0;
-    let nTradesSampled = 0;
 
     const since = Math.max(
       this.tradingPeriodStart.valueOf(),
@@ -71,25 +75,8 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
     );
     for await (const trades of tradesIterator) {
       for (const trade of trades) {
-        const tradeFingerprint = this.getTradeFingerprint(trade);
-        if (this.tradeSamples.has(tradeFingerprint)) {
-          abuseDetected = true;
-          break;
-        }
-
-        if (nTradesSampled < N_TRADES_FOR_ABUSE_CHECK) {
-          this.tradeSamples.add(tradeFingerprint);
-          nTradesSampled += 1;
-        }
-
         totalVolume += trade.cost;
         score += this.calculateTradeScore(trade);
-      }
-
-      if (abuseDetected) {
-        score = 0;
-        totalVolume = 0;
-        break;
       }
     }
 
@@ -102,11 +89,7 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
      */
     this.totalVolumeMeta += totalVolume;
 
-    return { abuseDetected, score, total_volume: totalVolume };
-  }
-
-  private getTradeFingerprint(trade: Trade): string {
-    return `${trade.id}-${trade.side}`;
+    return { abuseDetected: false, score, total_volume: totalVolume };
   }
 
   protected calculateTradeScore(trade: Trade): number {

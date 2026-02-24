@@ -119,11 +119,11 @@ describe('ThresholdProgressChecker', () => {
     });
 
     it('should return zeros if abuse detected', async () => {
-      const abuseAddrress = faker.finance.ethereumAddress();
+      const abuseAddress = faker.finance.ethereumAddress();
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
-        abuseAddrress,
+        abuseAddress,
       );
-      resultsChecker.ethDepositAddresses.add(abuseAddrress);
+      resultsChecker.ethDepositAddresses.add(abuseAddress);
 
       mockedExchangeApiClient.fetchBalance.mockResolvedValue(
         generateAccountBalance([progressCheckerSetup.symbol]),

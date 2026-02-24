@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useLocation, useNavigate, Link as RouterLink } from 'react-router';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
@@ -15,8 +15,8 @@ import {
   useIsLgDesktop,
   useIsMobile,
 } from '@/hooks/useBreakpoints';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { Campaign } from '@/types';
 import {
@@ -57,9 +57,9 @@ const formatDate = (dateString: string) => {
 };
 
 const MyCampaignsNoRows: FC = () => {
-  const { signer } = useRetrieveSigner();
+  const { isSignerReady } = useSignerContext();
 
-  if (!signer) {
+  if (!isSignerReady) {
     return (
       <>
         <Typography variant="subtitle2" component="p">

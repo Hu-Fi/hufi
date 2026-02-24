@@ -2,8 +2,7 @@ import type { FC, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Box, CircularProgress } from '@mui/material';
-import { Navigate } from 'react-router-dom';
-import { useConnection } from 'wagmi';
+import { Navigate } from 'react-router';
 
 import { ROUTES } from '@/constants';
 import { useStakeContext } from '@/providers/StakeProvider';
@@ -24,30 +23,31 @@ const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
     StakeStatus.CHECKING
   );
 
-  const { isConnected, isConnecting } = useConnection();
-  const { fetchStakingData, isStakingClientReady } = useStakeContext();
+  const { isClientPending, isClientMissing, fetchStakingData } =
+    useStakeContext();
 
   useEffect(() => {
     const checkStake = async () => {
-      if (!isConnected && !isConnecting) {
-        setStakeStatus(StakeStatus.NO_SIGNER);
-        return;
+      if (isClientMissing) {
+        return setStakeStatus(StakeStatus.NO_SIGNER);
       }
 
-      if (isStakingClientReady) {
-        try {
-          const amount = Number(await fetchStakingData());
-          setStakeStatus(
-            amount > 0 ? StakeStatus.HAS_STAKE : StakeStatus.NO_STAKE
-          );
-        } catch {
-          setStakeStatus(StakeStatus.NO_STAKE);
-        }
+      if (isClientPending) {
+        return setStakeStatus(StakeStatus.CHECKING);
+      }
+
+      try {
+        const amount = Number(await fetchStakingData());
+        setStakeStatus(
+          amount > 0 ? StakeStatus.HAS_STAKE : StakeStatus.NO_STAKE
+        );
+      } catch {
+        setStakeStatus(StakeStatus.NO_STAKE);
       }
     };
 
     checkStake();
-  }, [isConnected, isConnecting, fetchStakingData, isStakingClientReady]);
+  }, [fetchStakingData, isClientPending, isClientMissing]);
 
   if (stakeStatus === StakeStatus.CHECKING) {
     return (

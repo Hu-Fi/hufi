@@ -12,7 +12,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
@@ -25,8 +25,8 @@ import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 
 type StyledLinkProps = {
   to: string;
@@ -68,7 +68,7 @@ const Header: FC = () => {
   const { pathname } = useLocation();
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useConnection();
-  const { signer } = useRetrieveSigner();
+  const { isSignerReady } = useSignerContext();
   const isMobile = useIsMobile();
 
   const handleMenuOpen = useCallback(
@@ -224,10 +224,10 @@ const Header: FC = () => {
               sx={{ '& button': { flex: 1 } }}
             >
               <LaunchCampaignButton
-                variant={signer ? 'outlined' : 'contained'}
+                variant={isSignerReady ? 'outlined' : 'contained'}
                 handleCallbackOnClick={handleMenuClose}
               />
-              {!signer && (
+              {!isSignerReady && (
                 <CustomTooltip
                   arrow
                   placement="left"

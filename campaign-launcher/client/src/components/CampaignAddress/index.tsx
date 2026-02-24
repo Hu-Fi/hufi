@@ -43,7 +43,7 @@ const CampaignAddress: FC<Props> = ({
   variant = 'subtitle2',
 }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>(null);
 
   useEffect(() => {
     return () => {

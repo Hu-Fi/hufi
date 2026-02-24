@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Link as MuiLink, type LinkProps } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 
 type StretchedLinkProps = LinkProps & Record<string, unknown>;
 

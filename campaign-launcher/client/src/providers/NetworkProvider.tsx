@@ -26,11 +26,11 @@ export const NetworkProvider: FC<PropsWithChildren> = ({ children }) => {
   const config = useConfig();
   const [appChainId, setAppChainId] = useState<ChainId>(config.chains[0].id);
   const [isSwitching, setIsSwitching] = useState(true);
-  const { switchChainAsync } = useSwitchChain();
+  const switchChain = useSwitchChain();
 
   useEffect(() => {
     const initChainId = async () => {
-      const savedChainId = (await config?.storage?.getItem(
+      const savedChainId = (await config.storage?.getItem(
         'chainId'
       )) as ChainId | null;
       if (savedChainId) {
@@ -44,24 +44,22 @@ export const NetworkProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const handleSwitchChain = useCallback(
     async (chainId: ChainId) => {
+      if (isSwitching) return;
+
       if (appChainId === chainId) return;
 
       setIsSwitching(true);
       try {
-        config.setState((state) => ({
-          ...state,
-          chainId,
-        }));
+        await switchChain.mutateAsync({ chainId });
         setAppChainId(chainId);
-        await switchChainAsync?.({ chainId });
-        await config?.storage?.setItem('chainId', chainId);
+        await config.storage?.setItem('chainId', chainId);
       } catch (error) {
         console.error('Failed to switch chain', error);
       } finally {
         setIsSwitching(false);
       }
     },
-    [config, switchChainAsync, appChainId]
+    [config, switchChain, appChainId, isSwitching]
   );
 
   const value = useMemo(

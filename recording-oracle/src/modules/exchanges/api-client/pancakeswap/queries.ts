@@ -33,7 +33,7 @@ export const GET_ACCOUNT_SWAPS_QUERY = gql`
       }
       first: ${MAX_PAGE_SIZE}
       skip: $skip
-      orderBy: timestamp
+      orderBy: nonce
       orderDirection: asc
     ) {
       id

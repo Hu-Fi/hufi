@@ -37,7 +37,7 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
       },
       [ExchangeName.BITMART]: {
-        enabled: true,
+        enabled: false,
         ...getExchangeMetaFromCcxt(ExchangeName.BITMART),
         type: ExchangeType.CEX,
       },
@@ -52,7 +52,7 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
-        enabled: true,
+        enabled: false,
         ...getExchangeMetaFromCcxt(ExchangeName.HTX),
         type: ExchangeType.CEX,
       },
@@ -62,7 +62,7 @@ export class ExchangesConfigService {
         type: ExchangeType.DEX,
       },
       [ExchangeName.KRAKEN]: {
-        enabled: true,
+        enabled: false,
         ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
         type: ExchangeType.CEX,
       },
@@ -79,12 +79,12 @@ export class ExchangesConfigService {
         type: ExchangeType.DEX,
       },
       [ExchangeName.UPBIT]: {
-        enabled: true,
+        enabled: false,
         ...getExchangeMetaFromCcxt(ExchangeName.UPBIT),
         type: ExchangeType.CEX,
       },
       [ExchangeName.XT]: {
-        enabled: true,
+        enabled: false,
         ...getExchangeMetaFromCcxt(ExchangeName.XT),
         type: ExchangeType.CEX,
       },

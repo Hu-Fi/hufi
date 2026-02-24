@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import { ROUTES } from '@/constants';

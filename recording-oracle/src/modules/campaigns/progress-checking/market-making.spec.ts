@@ -18,7 +18,7 @@ import { MarketMakingProgressChecker } from './market-making';
 import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
 
 class TestCampaignProgressChecker extends MarketMakingProgressChecker {
-  override tradeSamples = new Set<string>();
+  override ethDepositAddresses = new Set<string>();
 
   override calculateTradeScore(trade: Trade): number {
     return super.calculateTradeScore(trade);
@@ -213,76 +213,24 @@ describe('MarketMakingProgressChecker', () => {
   });
 
   describe('abuse detection', () => {
-    let spyOnCalculateTradeScore: jest.SpyInstance;
-
     const progressCheckerSetup = generateMarketMakingCheckerSetup();
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangesService,
       progressCheckerSetup,
     );
 
-    beforeAll(() => {
-      spyOnCalculateTradeScore = jest.spyOn(
-        resultsChecker,
-        'calculateTradeScore',
-      );
-    });
-
-    afterAll(() => {
-      spyOnCalculateTradeScore.mockRestore();
-    });
-
     beforeEach(() => {
-      resultsChecker.tradeSamples.clear();
-      /**
-       * Always return some positive score in order to
-       * make sure it's not counted when abuse detected
-       */
-      spyOnCalculateTradeScore.mockImplementation(() =>
-        faker.number.float({ min: 0.1 }),
-      );
+      resultsChecker.ethDepositAddresses.clear();
     });
 
     it('should return zeros when abuse detected', async () => {
-      const sameTrade = generateTrade();
-      fetchMyTrades.mockResolvedValueOnce([
-        generateTrade(),
-        sameTrade,
-        generateTrade(),
-      ]);
-      fetchMyTrades.mockResolvedValueOnce([]); // no more trades for this participant
-
-      fetchMyTrades.mockResolvedValueOnce([generateTrade(), sameTrade]);
-
-      const normalResult = await resultsChecker.checkForParticipant(
-        generateParticipantInfo({
-          joinedAt: progressCheckerSetup.periodStart,
-        }),
+      const abuseAddress = faker.finance.ethereumAddress();
+      mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
+        abuseAddress,
       );
-      expect(normalResult.abuseDetected).toBe(false);
-      expect(normalResult.score).toBeGreaterThan(0);
-      expect(normalResult.total_volume).toBeGreaterThan(0);
+      resultsChecker.ethDepositAddresses.add(abuseAddress);
 
-      const abuseResult = await resultsChecker.checkForParticipant(
-        generateParticipantInfo({
-          joinedAt: progressCheckerSetup.periodStart,
-        }),
-      );
-      expect(abuseResult.abuseDetected).toBe(true);
-      expect(abuseResult.score).toBe(0);
-      expect(abuseResult.total_volume).toBe(0);
-    });
-
-    it('should avoid extra fetch iterations if abuse detected', async () => {
-      const sameTrade = generateTrade();
-
-      const pages = Array.from({ length: 3 }, () => [
-        generateTrade(),
-        sameTrade,
-      ]);
-      for (const page of pages) {
-        fetchMyTrades.mockResolvedValueOnce(page);
-      }
+      fetchMyTrades.mockResolvedValueOnce([generateTrade()]);
 
       const result = await resultsChecker.checkForParticipant(
         generateParticipantInfo({
@@ -290,44 +238,9 @@ describe('MarketMakingProgressChecker', () => {
         }),
       );
       expect(result.abuseDetected).toBe(true);
-
-      expect(fetchMyTrades).toHaveBeenCalledTimes(2);
-    });
-
-    it('should sample only 5 trades per participant', async () => {
-      const trades = Array.from({ length: 6 }, () => generateTrade());
-      fetchMyTrades.mockResolvedValueOnce(trades);
-      await resultsChecker.checkForParticipant(
-        generateParticipantInfo({
-          joinedAt: progressCheckerSetup.periodStart,
-        }),
-      );
-
-      expect(resultsChecker.tradeSamples.size).toBe(5);
-    });
-
-    it('should not detect self-trade as abuse', async () => {
-      const baseTrade = generateTrade();
-      fetchMyTrades.mockResolvedValueOnce([
-        {
-          ...baseTrade,
-          side: 'buy',
-        },
-        {
-          ...baseTrade,
-          side: 'sell',
-        },
-      ]);
-
-      const result = await resultsChecker.checkForParticipant(
-        generateParticipantInfo({
-          joinedAt: progressCheckerSetup.periodStart,
-        }),
-      );
-
-      expect(result.abuseDetected).toBe(false);
-      expect(result.score).toBeGreaterThan(0);
-      expect(result.total_volume).toBeGreaterThan(0);
+      expect(result.score).toBe(0);
+      expect(result.total_volume).toBe(0);
+      expect(fetchMyTrades).toHaveBeenCalledTimes(0);
     });
   });
 
@@ -346,6 +259,9 @@ describe('MarketMakingProgressChecker', () => {
     });
 
     it('should collect total volume for all checked participants', async () => {
+      mockedExchangeApiClient.fetchDepositAddress.mockImplementation(async () =>
+        faker.finance.ethereumAddress(),
+      );
       const nParticipants = faker.number.int({ min: 2, max: 5 });
 
       let expectedTotalVolume = 0;
@@ -366,23 +282,16 @@ describe('MarketMakingProgressChecker', () => {
     });
 
     it('should not count volume of abuse participants', async () => {
-      // mock normal trades
-      const sameTrade = generateTrade();
-      const normalTrades = [
-        generateTrade(),
-        sameTrade,
-        generateTrade(),
-        generateTrade({
-          /**
-           * Last trade is out of configured period,
-           * so no more pages fetched for the first participant
-           */
-          timestamp: progressCheckerSetup.periodEnd.valueOf(),
-        }),
-      ];
+      mockedExchangeApiClient.fetchDepositAddress.mockResolvedValue(
+        faker.finance.ethereumAddress(),
+      );
+
+      const normalTrades = [generateTrade(), generateTrade()];
       fetchMyTrades.mockResolvedValueOnce(normalTrades);
-      // mock abuse trades
-      fetchMyTrades.mockResolvedValueOnce([generateTrade(), sameTrade]);
+      fetchMyTrades.mockResolvedValueOnce([]); // last page for first participant
+
+      fetchMyTrades.mockResolvedValueOnce([generateTrade()]);
+      fetchMyTrades.mockResolvedValueOnce([]); // last page for second participant
 
       const normalResult = await resultsChecker.checkForParticipant(
         generateParticipantInfo({

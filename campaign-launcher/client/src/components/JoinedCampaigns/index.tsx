@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Button, CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import CampaignsTable from '@/components/CampaignsTable';
 import CampaignsTablePagination from '@/components/CampaignsTablePagination';

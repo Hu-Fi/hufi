@@ -21,7 +21,7 @@ export class ExchangesConfigService {
         skipCcxtPreload: true,
       },
       [ExchangeName.BITMART]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.BYBIT]: {
@@ -33,7 +33,7 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.HYPERLIQUID]: {
@@ -41,7 +41,7 @@ export class ExchangesConfigService {
         type: ExchangeType.DEX,
       },
       [ExchangeName.KRAKEN]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.MEXC]: {
@@ -54,11 +54,11 @@ export class ExchangesConfigService {
         skipCcxtPreload: true,
       },
       [ExchangeName.UPBIT]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
       [ExchangeName.XT]: {
-        enabled: true,
+        enabled: false,
         type: ExchangeType.CEX,
       },
     });

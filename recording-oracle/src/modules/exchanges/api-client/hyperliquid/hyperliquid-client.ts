@@ -1,5 +1,6 @@
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
+import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
@@ -98,33 +99,50 @@ export class HyperliquidClient implements ExchangeApiClient {
       throw new Error('"until" must be a ms timestamp in acceptable range');
     }
 
-    if (until < since) {
-      throw new Error('"until" must be greater than or equal to "since"');
-    }
-
     try {
-      let fetchTradesSince = since;
+      /**
+       * At max 10k fills available atm, so it's fine to
+       * store all ids for deduplication instead of moving slice
+       * of limited size.
+       */
+      const dedupTradeIds = new Set<string>();
 
-      while (fetchTradesSince < until) {
+      let fetchTradesSince = since;
+      do {
         const trades = await this.ccxtClient.fetchMyTrades(
           symbol,
           fetchTradesSince,
           HYPERLIQUID_TRADES_PAGE_LIMIT,
           {
             user: this.userEvmAddress,
-            until,
+            /**
+             * https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#retrieve-a-users-fills-by-time
+             * Both "since" and "until" are inclusive.
+             */
+            until: until - 1,
           },
         );
-        if (trades.length === 0) {
+
+        const newTrades: Trade[] = [];
+        for (const trade of trades) {
+          const mappedTrade = ccxtClientUtils.mapCcxtTrade(trade);
+
+          if (dedupTradeIds.has(mappedTrade.id)) {
+            continue;
+          }
+
+          dedupTradeIds.add(mappedTrade.id);
+          newTrades.push(mappedTrade);
+        }
+
+        if (newTrades.length === 0) {
           break;
         }
 
-        yield trades.map(ccxtClientUtils.mapCcxtTrade);
+        yield newTrades;
 
-        const lastTradeTimestamp = trades.at(-1)!.timestamp;
-
-        fetchTradesSince = lastTradeTimestamp + 1;
-      }
+        fetchTradesSince = newTrades.at(-1)!.timestamp;
+      } while (dedupTradeIds.size > 0); // safety-belt if adding accidentally removed
     } catch (error) {
       const message = 'Failed to fetch trades';
       this.logger.error(message, {
@@ -141,7 +159,7 @@ export class HyperliquidClient implements ExchangeApiClient {
     throw new MethodNotImplementedError();
   }
 
-  fetchDepositAddress(): never {
-    throw new MethodNotImplementedError();
+  async fetchDepositAddress(): Promise<string> {
+    return ethers.getAddress(this.userEvmAddress);
   }
 }

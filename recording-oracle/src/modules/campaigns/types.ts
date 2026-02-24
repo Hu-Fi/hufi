@@ -1,4 +1,3 @@
-import type { UserEntity } from '@/modules/users';
 /*
   Internal status of the campaign in recording oracle database.
   Used to simplify queries for results calculation and cancellation.
@@ -91,11 +90,6 @@ export type CampaignEscrowInfo = {
   fundAmount: number;
   fundTokenSymbol: string;
   fundTokenDecimals: number;
-};
-
-export type CampaignParticipant = UserEntity & {
-  campaignId: string;
-  joinedAt: Date;
 };
 
 export type ParticipantOutcome = {

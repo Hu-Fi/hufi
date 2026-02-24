@@ -3,8 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
-import useRetrieveSigner from '@/hooks/useRetrieveSigner';
 import { useNetwork } from '@/providers/NetworkProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { EvmAddress, CampaignsQueryParams } from '@/types';
 
@@ -14,7 +14,7 @@ type JoinedCampaignsParams = Pick<
 >;
 
 export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
-  const { signer } = useRetrieveSigner();
+  const { isSignerReady } = useSignerContext();
   const { isAuthenticated } = useWeb3Auth();
   const { status, limit, skip } = params;
 
@@ -22,7 +22,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
     queryKey: [
       QUERY_KEYS.JOINED_CAMPAIGNS,
       isAuthenticated,
-      !!signer,
+      isSignerReady,
       status,
       limit,
       skip,
@@ -36,7 +36,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
         id: campaign.address,
       })),
     }),
-    enabled: isAuthenticated && !!signer,
+    enabled: isAuthenticated && isSignerReady,
   });
 };
 
