@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {
   type FC,
   type PropsWithChildren,
@@ -45,6 +46,9 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
     chainId: walletChainId, // this is crucial to avoid the mismatch error
     query: { enabled: !!activeAddress && isConnected && !isSwitching },
   });
+
+  console.log('status: ', status);
+  console.log('signer: ', signer);
 
   useEffect(() => {
     let cancelled = false;
