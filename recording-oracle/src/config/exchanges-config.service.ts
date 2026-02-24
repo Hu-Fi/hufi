@@ -79,4 +79,11 @@ export class ExchangesConfigService {
   isExchangeSupported(exchangeName: string): exchangeName is ExchangeName {
     return exchangeName in this.configByExchange;
   }
+
+  get pancakeswapSubgraphUrl(): string {
+    return this.configService.get(
+      'PANCAKESWAP_SUBGRAPH_URL',
+      'https://gateway.thegraph.com/api/deployments/id/QmYQLE8EzY8Jw4F5y2rEcSJ4vZJny1ipiyC6EnB2cFYWyr/indexers/id/0xf92f430dd8567b0d466358c79594ab58d919a6d4',
+    );
+  }
 }

@@ -36,6 +36,9 @@ export const envValidator = Joi.object({
   USE_EXCHANGE_SANDBOX: Joi.string().valid('true', 'false'),
   FEATURE_PANCAKESWAP: Joi.string().valid('true', 'false'),
   FEATURE_HYPERLIQUID: Joi.string().valid('true', 'false'),
+  PANCAKESWAP_SUBGRAPH_URL: Joi.string()
+    .uri({ scheme: ['https'] })
+    .allow(''),
 
   // Web3
   WEB3_PRIVATE_KEY: Joi.string().required(),
