@@ -17,7 +17,7 @@ import { generateEthWallet } from '~/test/fixtures/web3';
 
 import { AuthError, AuthErrorMessage } from './auth.errors';
 import { AuthService } from './auth.service';
-import { RefreshTokenEntity } from './refresh-token.entity';
+import { type RefreshTokenEntity } from './refresh-token.entity';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 const { publicKey, privateKey } = generateES256Keys();

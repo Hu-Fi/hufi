@@ -34,7 +34,6 @@ import {
   ExchangesConfigService,
   Web3ConfigService,
 } from '@/config';
-import { isDuplicatedError } from '@/infrastructure/database';
 import logger from '@/logger';
 import {
   ExchangesService,
@@ -65,6 +64,10 @@ import {
 } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
+  ParticipationsRepository,
+  ParticipationsService,
+} from './participations';
+import {
   type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
   CampaignProgressMeta,
@@ -94,8 +97,6 @@ import {
   LeaderboardRanking,
   CampaignManifestBase,
 } from './types';
-import { UserCampaignEntity } from './user-campaign.entity';
-import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
 @Injectable()
@@ -110,7 +111,8 @@ export class CampaignsService implements OnModuleDestroy {
     private readonly campaignsRepository: CampaignsRepository,
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangesService: ExchangesService,
-    private readonly userCampaignsRepository: UserCampaignsRepository,
+    private readonly participationsRepository: ParticipationsRepository,
+    private readonly participationsService: ParticipationsService,
     private readonly storageService: StorageService,
     private readonly volumeStatsRepository: VolumeStatsRepository,
     private readonly web3Service: Web3Service,
@@ -167,7 +169,7 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     const userJoinedAt =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
+      await this.participationsService.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );
@@ -214,20 +216,7 @@ export class CampaignsService implements OnModuleDestroy {
       CAMPAIGN_PERMISSIONS_MAP[campaign.type],
     );
 
-    const newUserCampaign = new UserCampaignEntity();
-    newUserCampaign.userId = userId;
-    newUserCampaign.campaignId = campaign.id;
-    newUserCampaign.createdAt = new Date();
-
-    try {
-      await this.userCampaignsRepository.insert(newUserCampaign);
-    } catch (error) {
-      if (isDuplicatedError(error)) {
-        // joined w/ race condition, noop;
-      } else {
-        throw error;
-      }
-    }
+    await this.participationsService.joinCampaign(userId, campaign.id);
 
     return campaign.id;
   }
@@ -260,26 +249,6 @@ export class CampaignsService implements OnModuleDestroy {
     await this.campaignsRepository.insert(newCampaign);
 
     return newCampaign;
-  }
-
-  async getJoined(
-    userId: string,
-    options?: Partial<{
-      statuses?: CampaignStatus[];
-      limit: number;
-      skip: number;
-    }>,
-  ): Promise<CampaignEntity[]> {
-    const userCampaigns = await this.userCampaignsRepository.findByUserId(
-      userId,
-      {
-        statuses: options?.statuses,
-        limit: options?.limit,
-        skip: options?.skip,
-      },
-    );
-
-    return userCampaigns;
   }
 
   private assertCorrectCampaignSetup(manifest: CampaignManifest): void {
@@ -775,7 +744,7 @@ export class CampaignsService implements OnModuleDestroy {
     );
 
     const participants =
-      await this.userCampaignsRepository.findCampaignParticipants(campaign.id);
+      await this.participationsRepository.findCampaignParticipants(campaign.id);
 
     const outcomes: ParticipantOutcome[] = [];
     for (const participant of participants) {
@@ -1090,7 +1059,7 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     const userJoinedAt =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
+      await this.participationsService.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );
@@ -1161,7 +1130,7 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     const userJoinedAt =
-      await this.userCampaignsRepository.checkUserJoinedCampaign(
+      await this.participationsService.checkUserJoinedCampaign(
         userId,
         campaign.id,
       );

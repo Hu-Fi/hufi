@@ -10,7 +10,6 @@ export {
 } from './api-client';
 
 export {
-  ExchangeApiKeyEntity,
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
 } from './exchange-api-keys';
