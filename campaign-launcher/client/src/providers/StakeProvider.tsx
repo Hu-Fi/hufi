@@ -57,6 +57,8 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [appChainId]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const initStakingClient = async () => {
       if (isSignerPending) {
         setStatus(ClientStatus.UNAVAILABLE);
@@ -76,9 +78,11 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
         try {
           checkSupportedChain();
           const client = await StakingClient.build(signer);
+          if (cancelled) return;
           setClient(client);
           setStatus(ClientStatus.READY);
         } catch (error) {
+          if (cancelled) return;
           console.error('Failed to init staking client', error);
           setClient(null);
           setStatus(ClientStatus.ERROR);
@@ -87,6 +91,10 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
     };
 
     initStakingClient();
+
+    return () => {
+      cancelled = true;
+    };
   }, [signer, isSignerPending, isSignerMissing, checkSupportedChain]);
 
   const fetchStakingData = useCallback(async () => {

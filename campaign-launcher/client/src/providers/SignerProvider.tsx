@@ -49,6 +49,8 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
   const isTransportReady = !!client && 'request' in client.transport;
 
   useEffect(() => {
+    let cancelled = false;
+
     const getSigner = async () => {
       if (!isConnected && !isConnecting) {
         setStatus(SignerStatus.DISCONNECTED);
@@ -63,31 +65,41 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
           let provider = new BrowserProvider(client.transport);
           const network = await provider.getNetwork();
 
+          if (cancelled) return;
+
           if (Number(network.chainId) !== appChainId) {
             await client.switchChain({ id: appChainId });
             /* 
               Need to re-create provider after switching chain, 
               because it uses previous chain and can't create signer
             */
+
+            if (cancelled) return;
             provider = new BrowserProvider(client.transport);
           }
 
           const _signer = await provider.getSigner(activeAddress);
+          if (cancelled) return;
           setSigner(_signer);
           setStatus(SignerStatus.READY);
         } catch (error) {
+          if (cancelled) return;
           console.error('Error creating signer:', error);
           setSigner(undefined);
           setStatus(SignerStatus.ERROR);
         }
       } else {
+        if (cancelled) return;
         setStatus(SignerStatus.UNAVAILABLE);
         setSigner(undefined);
       }
     };
 
     getSigner();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     client,
     isConnected,
@@ -95,6 +107,7 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
     activeAddress,
     isSwitching,
     isTransportReady,
+    appChainId,
   ]);
 
   const value = useMemo(
