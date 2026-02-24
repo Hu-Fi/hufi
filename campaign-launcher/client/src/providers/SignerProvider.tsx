@@ -46,10 +46,9 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
     query: { enabled: !!activeAddress && isConnected && !isSwitching },
   });
 
-  const isTransportReady = !!client && 'request' in client.transport;
-
   useEffect(() => {
     let cancelled = false;
+    const isTransportReady = !!client && 'request' in client.transport;
 
     const getSigner = async () => {
       if (!isConnected && !isConnecting) {
@@ -106,7 +105,6 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
     isConnecting,
     activeAddress,
     isSwitching,
-    isTransportReady,
     appChainId,
   ]);
 

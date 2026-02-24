@@ -70,21 +70,21 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
         setStatus(ClientStatus.WAITING_FOR_SIGNER);
         setClient(null);
         return;
-      } else {
-        setStatus(ClientStatus.CREATING);
+      }
+
+      setStatus(ClientStatus.CREATING);
+      setClient(null);
+      try {
+        checkSupportedChain();
+        const client = await StakingClient.build(signer);
+        if (cancelled) return;
+        setClient(client);
+        setStatus(ClientStatus.READY);
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Failed to init staking client', error);
         setClient(null);
-        try {
-          checkSupportedChain();
-          const client = await StakingClient.build(signer);
-          if (cancelled) return;
-          setClient(client);
-          setStatus(ClientStatus.READY);
-        } catch (error) {
-          if (cancelled) return;
-          console.error('Failed to init staking client', error);
-          setClient(null);
-          setStatus(ClientStatus.ERROR);
-        }
+        setStatus(ClientStatus.ERROR);
       }
     };
 
