@@ -13,7 +13,7 @@ import {
   ExchangeApiClientFactory,
   ExchangePermission,
 } from '../api-client';
-import { ExchangeApiKeyEntity } from './exchange-api-key.entity';
+import { type ExchangeApiKeyEntity } from './exchange-api-key.entity';
 import {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,

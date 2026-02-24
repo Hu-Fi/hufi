@@ -60,9 +60,8 @@ import {
   generateTestnetChainId,
   mockWeb3ConfigService,
 } from '@/modules/web3/fixtures';
-import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
-import { CampaignEntity } from './campaign.entity';
+import { type CampaignEntity } from './campaign.entity';
 import { CampaignsCache } from './campaigns-cache';
 import {
   CampaignAlreadyFinishedError,
@@ -95,34 +94,38 @@ import {
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
-  CampaignProgressMeta,
+  type CampaignParticipant,
+  ParticipationsRepository,
+  ParticipationsService,
+} from './participations';
+import {
+  type CampaignProgressMeta,
   HoldingProgressChecker,
   MarketMakingProgressChecker,
 } from './progress-checking';
-import { HoldingMeta } from './progress-checking/holding';
-import { MarketMakingMeta } from './progress-checking/market-making';
+import { type HoldingMeta } from './progress-checking/holding';
+import { type MarketMakingMeta } from './progress-checking/market-making';
 import {
-  ThresholdMeta,
+  type ThresholdMeta,
   ThresholdProgressChecker,
 } from './progress-checking/threshold';
 import {
-  CampaignParticipant,
-  CampaignProgress,
+  type CampaignProgress,
   CampaignStatus,
   CampaignType,
-  HoldingCampaignDetails,
-  IntermediateResultsData,
+  type HoldingCampaignDetails,
+  type IntermediateResultsData,
   LeaderboardRanking,
-  MarketMakingCampaignDetails,
-  ThresholdCampaignDetails,
+  type MarketMakingCampaignDetails,
+  type ThresholdCampaignDetails,
 } from './types';
-import { UserCampaignsRepository } from './user-campaigns.repository';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
 const mockCacheManager = new CacheManagerMock();
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
-const mockUserCampaignsRepository = createMock<UserCampaignsRepository>();
+const mockParticipationsRepository = createMock<ParticipationsRepository>();
+const mockParticipationsService = createMock<ParticipationsService>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
 const mockExchangesService = createMock<ExchangesService>();
 const mockStorageService = createMock<StorageService>();
@@ -171,8 +174,12 @@ describe('CampaignsService', () => {
           useValue: mockExchangesService,
         },
         {
-          provide: UserCampaignsRepository,
-          useValue: mockUserCampaignsRepository,
+          provide: ParticipationsRepository,
+          useValue: mockParticipationsRepository,
+        },
+        {
+          provide: ParticipationsService,
+          useValue: mockParticipationsService,
         },
         {
           provide: StorageService,
@@ -940,7 +947,7 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
 
@@ -958,7 +965,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
@@ -966,7 +973,7 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
 
@@ -984,58 +991,21 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
 
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(1);
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledWith(
         userId,
-        campaignId: campaign.id,
-        createdAt: expect.any(Date),
-      });
-    });
-
-    it('should return campaign id if campaign exists and user joined with race condition', async () => {
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
+        campaign.id,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
-        null,
-      );
-      mockUserCampaignsRepository.insert.mockRejectedValueOnce(
-        createDuplicatedKeyError(),
-      );
-
-      const id = await campaignsService.join(
-        userId,
-        chainId,
-        // not checksummed address
-        campaign.address.toLowerCase(),
-      );
-
-      expect(id).toBe(campaign.id);
-
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaign.address);
-
-      expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
-      ).toHaveBeenCalledWith(userId, campaign.id);
-
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
-        userId,
-        campaignId: campaign.id,
-        createdAt: expect.any(Date),
-      });
     });
 
     it('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
       const testError = new Error(faker.lorem.sentence());
@@ -1078,7 +1048,7 @@ describe('CampaignsService', () => {
         escrowInfo,
       });
 
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
       mockExchangesService.assertUserHasRequiredAccess.mockResolvedValueOnce();
@@ -1110,12 +1080,11 @@ describe('CampaignsService', () => {
         escrowInfo,
       );
 
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledWith({
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(1);
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledWith(
         userId,
         campaignId,
-        createdAt: now,
-      });
+      );
 
       spyOnretrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
@@ -1128,7 +1097,7 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
 
@@ -1143,7 +1112,7 @@ describe('CampaignsService', () => {
       expect(thrownError.chainId).toBe(campaign.chainId);
       expect(thrownError.address).toBe(campaign.address);
 
-      expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(0);
     });
 
     it.each([
@@ -1156,7 +1125,7 @@ describe('CampaignsService', () => {
         mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
           campaign,
         );
-        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
           null,
         );
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
@@ -1172,41 +1141,9 @@ describe('CampaignsService', () => {
         expect(thrownError.chainId).toBe(campaign.chainId);
         expect(thrownError.address).toBe(campaign.address);
 
-        expect(mockUserCampaignsRepository.insert).toHaveBeenCalledTimes(0);
+        expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(0);
       },
     );
-  });
-
-  describe('getJoined', () => {
-    it('should return data of campaigns where user is participant', async () => {
-      const userId = faker.string.uuid();
-      const userCampaigns = Array.from({ length: 3 }, () =>
-        generateCampaignEntity(),
-      );
-      mockUserCampaignsRepository.findByUserId.mockResolvedValueOnce(
-        userCampaigns,
-      );
-      const testStatus = faker.string.sample();
-      const testLimit = faker.number.int();
-      const testSkip = faker.number.int();
-
-      const campaigns = await campaignsService.getJoined(userId, {
-        statuses: [testStatus as CampaignStatus],
-        limit: testLimit,
-        skip: testSkip,
-      });
-
-      expect(campaigns).toEqual(userCampaigns);
-      expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledTimes(1);
-      expect(mockUserCampaignsRepository.findByUserId).toHaveBeenCalledWith(
-        userId,
-        {
-          statuses: [testStatus],
-          limit: testLimit,
-          skip: testSkip,
-        },
-      );
-    });
   });
 
   describe('getCampaignProgressChecker', () => {
@@ -1526,7 +1463,7 @@ describe('CampaignsService', () => {
 
     it('should return results in correct format', async () => {
       const participant = generateCampaignParticipant(campaign);
-      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [participant],
       );
 
@@ -1562,7 +1499,7 @@ describe('CampaignsService', () => {
         generateCampaignParticipant(campaign),
         generateCampaignParticipant(campaign),
       ];
-      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         participants,
       );
 
@@ -1582,7 +1519,7 @@ describe('CampaignsService', () => {
     it('should skip participant results if abuse detected', async () => {
       const abuseParticipant = generateCampaignParticipant(campaign);
       const normalParticipant = generateCampaignParticipant(campaign);
-      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [abuseParticipant, normalParticipant],
       );
 
@@ -1630,7 +1567,7 @@ describe('CampaignsService', () => {
     it('should skip participant if its api key not found', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noApiKeyParticipant = generateCampaignParticipant(campaign);
-      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [normalParticipant, noApiKeyParticipant],
       );
 
@@ -1685,7 +1622,7 @@ describe('CampaignsService', () => {
     it('should skip participant if it lacks exchange api access and revalidate his api key', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noAccessParticipant = generateCampaignParticipant(campaign);
-      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [normalParticipant, noAccessParticipant],
       );
 
@@ -1747,7 +1684,7 @@ describe('CampaignsService', () => {
     });
 
     it('should throw if should retry some participant', async () => {
-      mockUserCampaignsRepository.findCampaignParticipants.mockResolvedValueOnce(
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [
           generateCampaignParticipant(campaign),
           generateCampaignParticipant(campaign),
@@ -3057,7 +2994,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(0);
     });
 
@@ -3067,7 +3004,7 @@ describe('CampaignsService', () => {
       );
 
       const userJoinedAt = generateUserJoinedDate(campaign);
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         userJoinedAt,
       );
 
@@ -3083,10 +3020,10 @@ describe('CampaignsService', () => {
       });
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(1);
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
@@ -3099,7 +3036,7 @@ describe('CampaignsService', () => {
         mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
           campaign,
         );
-        mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+        mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
           null,
         );
         spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
@@ -3116,10 +3053,10 @@ describe('CampaignsService', () => {
         });
 
         expect(
-          mockUserCampaignsRepository.checkUserJoinedCampaign,
+          mockParticipationsService.checkUserJoinedCampaign,
         ).toHaveBeenCalledTimes(1);
         expect(
-          mockUserCampaignsRepository.checkUserJoinedCampaign,
+          mockParticipationsService.checkUserJoinedCampaign,
         ).toHaveBeenCalledWith(userId, campaign.id);
       },
     );
@@ -3130,7 +3067,7 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
@@ -3147,10 +3084,10 @@ describe('CampaignsService', () => {
       });
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(1);
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
@@ -3158,7 +3095,7 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
@@ -3175,10 +3112,10 @@ describe('CampaignsService', () => {
       });
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(1);
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
@@ -3186,7 +3123,7 @@ describe('CampaignsService', () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(false);
@@ -3202,10 +3139,10 @@ describe('CampaignsService', () => {
       });
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(1);
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
   });
@@ -3614,7 +3551,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(0);
     });
 
@@ -3649,7 +3586,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(0);
     });
 
@@ -3684,7 +3621,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(0);
     });
 
@@ -3721,13 +3658,13 @@ describe('CampaignsService', () => {
         ).toHaveBeenCalledWith(chainId, campaign.address);
 
         expect(
-          mockUserCampaignsRepository.checkUserJoinedCampaign,
+          mockParticipationsService.checkUserJoinedCampaign,
         ).toHaveBeenCalledTimes(0);
       },
     );
 
     it('should throw if user not joined', async () => {
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
 
@@ -3746,10 +3683,10 @@ describe('CampaignsService', () => {
       expect(thrownError).toBeInstanceOf(UserIsNotParticipatingError);
 
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledTimes(1);
       expect(
-        mockUserCampaignsRepository.checkUserJoinedCampaign,
+        mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
@@ -3782,7 +3719,7 @@ describe('CampaignsService', () => {
     });
 
     it('should return campaign progress for participant from cache if same timeframe', async () => {
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
 
@@ -3838,7 +3775,7 @@ describe('CampaignsService', () => {
     });
 
     it('should return null if no value for campaign in cache', async () => {
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
 
@@ -3859,7 +3796,7 @@ describe('CampaignsService', () => {
     });
 
     it('should return null if value in cache is for previous timeframe', async () => {
-      mockUserCampaignsRepository.checkUserJoinedCampaign.mockResolvedValueOnce(
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
 
