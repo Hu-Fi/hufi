@@ -33,7 +33,7 @@ enum ClientStatus {
   CREATING = 'creating',
   READY = 'ready',
   ERROR = 'error',
-  DISCONNECTED = 'disconnected',
+  WAITING_FOR_SIGNER = 'waiting_for_signer',
   UNAVAILABLE = 'unavailable',
 }
 
@@ -61,13 +61,13 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
 
     const initStakingClient = async () => {
       if (isSignerMissing) {
-        setStatus(ClientStatus.DISCONNECTED);
+        setStatus(ClientStatus.UNAVAILABLE);
         setClient(null);
         return;
       }
 
       if (!isSignerReady) {
-        setStatus(ClientStatus.UNAVAILABLE);
+        setStatus(ClientStatus.WAITING_FOR_SIGNER);
         setClient(null);
         return;
       }
@@ -123,10 +123,10 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
       isClientPending:
         status === ClientStatus.IDLE ||
         status === ClientStatus.CREATING ||
-        status === ClientStatus.UNAVAILABLE,
+        status === ClientStatus.WAITING_FOR_SIGNER,
       isClientReady: status === ClientStatus.READY,
       isClientMissing:
-        status === ClientStatus.DISCONNECTED || status === ClientStatus.ERROR,
+        status === ClientStatus.UNAVAILABLE || status === ClientStatus.ERROR,
     }),
     [fetchStakingData, isFetching, status]
   );
