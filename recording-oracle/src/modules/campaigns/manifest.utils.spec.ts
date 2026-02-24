@@ -347,13 +347,22 @@ describe('manifest utils', () => {
         rewards_distribution: [],
       }),
       Object.assign({}, validManifest, {
-        rewards_distribution: [faker.number.int({ min: -42, max: 0 })],
+        rewards_distribution: [faker.number.int({ min: -100, max: 0 })],
       }),
       Object.assign({}, validManifest, {
         rewards_distribution: undefined,
       }),
       Object.assign({}, validManifest, {
         rewards_distribution: [faker.number.int({ min: 1 }).toString()],
+      }),
+      Object.assign({}, validManifest, {
+        min_threshold: faker.number.float({ min: -100, max: -1 }),
+      }),
+      Object.assign({}, validManifest, {
+        min_threshold: undefined,
+      }),
+      Object.assign({}, validManifest, {
+        min_threshold: faker.number.int({ min: 1 }).toString(),
       }),
       Object.assign({}, validManifest, {
         rewards_distribution: [60, 41],
@@ -375,17 +384,25 @@ describe('manifest utils', () => {
     });
 
     it('should not throw when rewards distribution sum is less or equal to 100', () => {
+      const validDistributionManifest = Object.assign({}, validManifest, {
+        rewards_distribution: [50, 30, 20],
+      });
       expect(
         manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest({
-          ...validManifest,
-          rewards_distribution: [50, 30, 20],
+          ...validDistributionManifest,
         }),
       ).toBeUndefined();
 
+      const validPartialDistributionManifest = Object.assign(
+        {},
+        validManifest,
+        {
+          rewards_distribution: [50, 30],
+        },
+      );
       expect(
         manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest({
-          ...validManifest,
-          rewards_distribution: [50, 30],
+          ...validPartialDistributionManifest,
         }),
       ).toBeUndefined();
     });

@@ -32,6 +32,7 @@ export type MarketMakingCampaignDetails = {
 
 export type CompetitiveMarketMakingCampaignDetails = {
   rewardsDistribution: number[];
+  minThreshold: number;
 };
 
 export type HoldingCampaignDetails = {
@@ -65,6 +66,7 @@ export type CompetitiveMarketMakingCampaignManifest = CampaignManifestBase & {
   type: CampaignType.COMPETITIVE_MARKET_MAKING;
   pair: string;
   rewards_distribution: number[];
+  min_threshold: number;
 };
 
 export type HoldingCampaignManifest = CampaignManifestBase & {

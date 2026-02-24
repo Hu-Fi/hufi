@@ -93,6 +93,9 @@ class MarketMakingCampaignDto extends JoinedCampaignDto {
 }
 
 class CompetitiveMarketMakingCampaignDetailsDto {
+  @ApiProperty({ name: 'min_threshold' })
+  minThreshold: number;
+
   @ApiProperty({ name: 'rewards_distribution' })
   rewardsDistribution: number[];
 }

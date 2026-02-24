@@ -70,6 +70,7 @@ const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
+  min_threshold: Joi.number().strict().min(0).required(),
   rewards_distribution: Joi.array()
     .items(Joi.number().strict().greater(0))
     .min(1)
@@ -150,6 +151,7 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as CompetitiveMarketMakingCampaignManifest;
       const details: CompetitiveMarketMakingCampaignDetails = {
         rewardsDistribution: _manifest.rewards_distribution,
+        minThreshold: _manifest.min_threshold,
       };
       return {
         symbol: _manifest.pair,
