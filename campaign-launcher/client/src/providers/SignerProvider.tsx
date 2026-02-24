@@ -58,7 +58,7 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
         return;
       }
 
-      if (client && isTransportReady && !isSwitching) {
+      if (isTransportReady && !isSwitching) {
         try {
           setStatus(SignerStatus.CREATING);
           setSigner(undefined);

@@ -36,15 +36,13 @@ const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
         return setStakeStatus(StakeStatus.CHECKING);
       }
 
-      if (isClientReady) {
-        try {
-          const amount = Number(await fetchStakingData());
-          return setStakeStatus(
-            amount > 0 ? StakeStatus.HAS_STAKE : StakeStatus.NO_STAKE
-          );
-        } catch {
-          setStakeStatus(StakeStatus.NO_STAKE);
-        }
+      try {
+        const amount = Number(await fetchStakingData());
+        setStakeStatus(
+          amount > 0 ? StakeStatus.HAS_STAKE : StakeStatus.NO_STAKE
+        );
+      } catch {
+        setStakeStatus(StakeStatus.NO_STAKE);
       }
     };
 

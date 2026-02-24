@@ -98,10 +98,9 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [signer, isSignerPending, isSignerMissing, checkSupportedChain]);
 
   const fetchStakingData = useCallback(async () => {
-    checkSupportedChain();
-
     if (client && activeAddress) {
       setIsFetching(true);
+      checkSupportedChain();
       try {
         const stakingInfo = await client.getStakerInfo(activeAddress);
         return formatTokenAmount(stakingInfo?.stakedAmount ?? '0n');
