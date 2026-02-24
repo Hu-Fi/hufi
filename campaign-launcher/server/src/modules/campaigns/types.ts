@@ -18,6 +18,7 @@ export type MarketMakingCampaignManifest = BaseCampaignManifest & {
 export type CompetitiveMarketMakingCampaignManifest = BaseCampaignManifest & {
   pair: string;
   rewards_distribution: number[];
+  min_threshold: number;
 };
 
 export type ThresholdCampaignManifest = BaseCampaignManifest & {

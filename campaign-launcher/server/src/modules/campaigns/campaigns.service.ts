@@ -245,6 +245,7 @@ export class CampaignsService {
       symbol = manifest.pair;
       details = {
         rewardsDistribution: manifest.rewards_distribution,
+        minThreshold: manifest.min_threshold,
       };
     } else if (manifestUtils.isHoldingManifest(manifest)) {
       symbol = manifest.symbol;

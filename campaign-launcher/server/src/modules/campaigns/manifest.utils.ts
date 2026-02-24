@@ -78,6 +78,7 @@ const competitiveMarketMakingManifestSchema = Joi.object({
       'any.custom':
         '"rewards_distribution" sum must be less than or equal to 100',
     }),
+  min_threshold: Joi.number().strict().min(0).required(),
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
