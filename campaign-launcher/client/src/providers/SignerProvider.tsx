@@ -48,7 +48,6 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    const isTransportReady = !!client && 'request' in client.transport;
 
     const getSigner = async () => {
       if (!isConnected && !isConnecting) {
@@ -57,7 +56,7 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
         return;
       }
 
-      if (isTransportReady && !isSwitching) {
+      if (!!client && !isSwitching) {
         try {
           setStatus(SignerStatus.CREATING);
           setSigner(undefined);
