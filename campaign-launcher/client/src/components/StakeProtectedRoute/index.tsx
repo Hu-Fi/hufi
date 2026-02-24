@@ -23,7 +23,7 @@ const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
     StakeStatus.CHECKING
   );
 
-  const { isClientPending, isClientMissing, isClientReady, fetchStakingData } =
+  const { isClientPending, isClientMissing, fetchStakingData } =
     useStakeContext();
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const StakeProtectedRoute: FC<StakeProtectedRouteProps> = ({ children }) => {
     };
 
     checkStake();
-  }, [fetchStakingData, isClientPending, isClientMissing, isClientReady]);
+  }, [fetchStakingData, isClientPending, isClientMissing]);
 
   if (stakeStatus === StakeStatus.CHECKING) {
     return (

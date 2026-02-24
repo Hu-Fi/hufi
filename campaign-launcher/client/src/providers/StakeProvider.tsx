@@ -44,7 +44,7 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const { activeAddress } = useActiveAccount();
   const { appChainId } = useNetwork();
-  const { signer, isSignerPending, isSignerMissing } = useSignerContext();
+  const { signer, isSignerMissing, isSignerReady } = useSignerContext();
 
   const checkSupportedChain = useCallback(() => {
     const isSupportedChain = getSupportedChainIds().includes(appChainId);
@@ -60,14 +60,14 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
     let cancelled = false;
 
     const initStakingClient = async () => {
-      if (isSignerPending) {
-        setStatus(ClientStatus.UNAVAILABLE);
+      if (isSignerMissing) {
+        setStatus(ClientStatus.DISCONNECTED);
         setClient(null);
         return;
       }
 
-      if (isSignerMissing) {
-        setStatus(ClientStatus.DISCONNECTED);
+      if (!isSignerReady) {
+        setStatus(ClientStatus.UNAVAILABLE);
         setClient(null);
         return;
       }
@@ -95,7 +95,7 @@ const StakeProvider: FC<PropsWithChildren> = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [signer, isSignerPending, isSignerMissing, checkSupportedChain]);
+  }, [signer, isSignerReady, isSignerMissing, checkSupportedChain]);
 
   const fetchStakingData = useCallback(async () => {
     if (client && activeAddress) {
