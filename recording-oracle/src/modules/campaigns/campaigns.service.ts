@@ -1408,16 +1408,21 @@ export class CampaignsService implements OnModuleDestroy {
         return null;
       }
       timeframeEnd = cancellationRequestedAt;
-    } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
+    } else {
+      timeframeEnd = now;
+    }
+
+    if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
       const client = new PancakeswapClient({
         userId: 'system',
         userEvmAddress: 'n/a',
         subgraphApiKey: this.web3ConfigService.subgraphApiKey,
       });
       const subgraphMeta = await client.fetchSubgraphMeta();
-      timeframeEnd = new Date(subgraphMeta.block.timestamp * 1000);
-    } else {
-      timeframeEnd = now;
+      const lastBlockSyncedAt = new Date(subgraphMeta.block.timestamp * 1000);
+      if (lastBlockSyncedAt.valueOf() < timeframeEnd.valueOf()) {
+        timeframeEnd = lastBlockSyncedAt;
+      }
     }
 
     return {

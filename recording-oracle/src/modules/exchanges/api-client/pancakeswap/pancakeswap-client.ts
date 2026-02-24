@@ -93,7 +93,12 @@ export class PancakeswapClient implements ExchangeApiClient {
     }
 
     if (subgraphMeta.block.timestamp < timestamp) {
-      throw new PancakeswapClientError('Subgraph is stale');
+      const errorMessage = 'Subgraph is stale';
+      this.logger.warn(errorMessage, {
+        subgraphMeta,
+        checkedTimestamp: timestamp,
+      });
+      throw new PancakeswapClientError(errorMessage);
     }
   }
 
