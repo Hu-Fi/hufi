@@ -31,17 +31,6 @@ import {
 } from './types';
 import { StorageService } from '../storage';
 
-function isCompetitiveCampaignManifest(
-  manifest: CampaignManifest,
-): manifest is CompetitiveCampaignManifest {
-  return (
-    manifest.type === 'COMPETITIVE_MARKET_MAKING' &&
-    Array.isArray(
-      (manifest as CompetitiveCampaignManifest).rewards_distribution,
-    )
-  );
-}
-
 @Injectable()
 export class PayoutsService {
   private readonly logger = logger.child({
@@ -155,38 +144,13 @@ export class PayoutsService {
       }
 
       let rewardsBatches: CalculatedRewardsBatch[] = [];
-      if (isCompetitiveCampaignManifest(manifest)) {
-        const isCampaignEnded =
-          new Date(manifest.end_date).valueOf() <= Date.now();
-        const shouldCalculateCompetitivePayouts =
-          escrowStatus === EscrowStatus.ToCancel || isCampaignEnded;
-
-        if (shouldCalculateCompetitivePayouts) {
-          rewardsBatches = this.calculateRewardsForCompetitiveCampaign(
-            intermediateResultsData,
-            manifest,
-            campaign.fundAmount,
-            campaign.fundTokenDecimals,
-          );
-        }
-      } else {
-        rewardsBatches = intermediateResultsData.results.flatMap(
-          (intermediateResult) => {
-            const calculatedRewards =
-              this.calculateRewardsForIntermediateResult(
-                intermediateResult,
-                campaign.fundTokenDecimals,
-              );
-
-            logger.debug('Rewards calculated for intermediate result', {
-              periodFrom: intermediateResult.from,
-              periodTo: intermediateResult.to,
-            });
-
-            return calculatedRewards;
-          },
-        );
-      }
+      rewardsBatches = this.calculateRewardsBatches(
+        manifest,
+        intermediateResultsData,
+        escrowStatus,
+        campaign.fundAmount,
+        campaign.fundTokenDecimals,
+      );
 
       for (const rewardsBatch of rewardsBatches) {
         /**
@@ -437,59 +401,165 @@ export class PayoutsService {
     return rewardsBatches;
   }
 
+  private calculateRewardsBatches(
+    manifest: CampaignManifest,
+    intermediateResultsData: IntermediateResultsData,
+    escrowStatus: EscrowStatus,
+    fundAmount: number,
+    tokenDecimals: number,
+  ): CalculatedRewardsBatch[] {
+    if (manifest.type === 'COMPETITIVE_MARKET_MAKING') {
+      const isCampaignEnded =
+        new Date(manifest.end_date).valueOf() <= Date.now();
+      const shouldCalculateCompetitivePayouts =
+        escrowStatus === EscrowStatus.ToCancel || isCampaignEnded;
+
+      if (!shouldCalculateCompetitivePayouts) {
+        return [];
+      }
+
+      return this.calculateRewardsForCompetitiveCampaign(
+        intermediateResultsData,
+        manifest as CompetitiveCampaignManifest,
+        fundAmount,
+        tokenDecimals,
+      );
+    }
+
+    return intermediateResultsData.results.flatMap((intermediateResult) => {
+      const calculatedRewardsBatches =
+        this.calculateRewardsForIntermediateResult(
+          intermediateResult,
+          tokenDecimals,
+        );
+
+      logger.debug('Rewards calculated for intermediate result', {
+        periodFrom: intermediateResult.from,
+        periodTo: intermediateResult.to,
+      });
+
+      return calculatedRewardsBatches;
+    });
+  }
+
   private calculateRewardsForCompetitiveCampaign(
     intermediateResultsData: IntermediateResultsData,
     manifest: CompetitiveCampaignManifest,
     fundAmount: number,
     tokenDecimals: number,
   ): CalculatedRewardsBatch[] {
-    const participantsScores = new Map<string, Decimal>();
+    const scoresByParticipant = new Map<
+      string,
+      { score: Decimal; totalVolume: Decimal }
+    >();
     for (const intermediateResult of intermediateResultsData.results) {
       for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
         for (const outcome of outcomesBatch.results) {
-          const currentScore = participantsScores.get(outcome.address);
-          participantsScores.set(
-            outcome.address,
-            (currentScore || new Decimal(0)).plus(outcome.score),
-          );
+          const currentStats = scoresByParticipant.get(outcome.address) || {
+            score: new Decimal(0),
+            totalVolume: new Decimal(0),
+          };
+          scoresByParticipant.set(outcome.address, {
+            score: currentStats.score.plus(outcome.score),
+            totalVolume: currentStats.totalVolume.plus(
+              outcome.total_volume || 0,
+            ),
+          });
         }
       }
     }
+    const minThreshold = new Decimal(manifest.min_threshold || 0);
 
-    const sortedParticipants = Array.from(participantsScores.entries())
-      .filter(([_address, score]) => score.greaterThan(0))
-      .sort(([addressA, scoreA], [addressB, scoreB]) => {
-        const scoreComparison = scoreB.comparedTo(scoreA);
-        return scoreComparison || addressA.localeCompare(addressB);
+    const sortedParticipantResults = Array.from(
+      scoresByParticipant,
+      ([address, { score, totalVolume }]) => ({
+        address,
+        score,
+        totalVolume,
+      }),
+    )
+      .filter(
+        (participantResult) =>
+          participantResult.score.greaterThan(0) &&
+          participantResult.totalVolume.greaterThanOrEqualTo(minThreshold),
+      )
+      .sort((resultA, resultB) => {
+        const scoreComparison = resultB.score.comparedTo(resultA.score);
+        if (scoreComparison !== 0) {
+          return scoreComparison;
+        }
+
+        const totalVolumeComparison = resultB.totalVolume.comparedTo(
+          resultA.totalVolume,
+        );
+        if (totalVolumeComparison !== 0) {
+          return totalVolumeComparison;
+        }
+
+        return resultA.address.localeCompare(resultB.address);
       });
-
     const sortedRewardsDistribution = [...manifest.rewards_distribution].sort(
       (valueA, valueB) => valueB - valueA,
     );
     const rewardPool = new Decimal(fundAmount);
 
     const rewardsBatch: CalculatedRewardsBatch = {
-      id: intermediateResultsData.results
-        .at(-1)!
-        .participants_outcomes_batches.at(-1)!.id,
+      id: intermediateResultsData.address,
       rewards: [],
     };
-    const nRewards = Math.min(
-      sortedParticipants.length,
-      sortedRewardsDistribution.length,
-    );
-    for (let i = 0; i < nRewards; i += 1) {
-      const [address] = sortedParticipants[i];
-      const reward = rewardPool
-        .mul(sortedRewardsDistribution[i])
-        .div(100)
-        .toDecimalPlaces(tokenDecimals, Decimal.ROUND_DOWN);
-      if (reward.greaterThan(0)) {
-        rewardsBatch.rewards.push({
-          address,
-          amount: reward.toString(),
-        });
+
+    for (
+      let rankIndex = 0;
+      rankIndex < sortedParticipantResults.length &&
+      rankIndex < sortedRewardsDistribution.length;
+    ) {
+      const firstTiedParticipant = sortedParticipantResults[rankIndex];
+      let nextIndex = rankIndex + 1;
+      for (; nextIndex < sortedParticipantResults.length; nextIndex += 1) {
+        const participant = sortedParticipantResults[nextIndex];
+        const isTie =
+          participant.score.comparedTo(firstTiedParticipant.score) === 0 &&
+          participant.totalVolume.comparedTo(
+            firstTiedParticipant.totalVolume,
+          ) === 0;
+        if (!isTie) {
+          break;
+        }
       }
+
+      const nTiedParticipants = nextIndex - rankIndex;
+      const slotsToCombine = Math.min(
+        nTiedParticipants,
+        sortedRewardsDistribution.length - rankIndex,
+      );
+      if (slotsToCombine <= 0) {
+        break;
+      }
+
+      let combinedDistributionPercent = new Decimal(0);
+      for (let i = 0; i < slotsToCombine; i += 1) {
+        combinedDistributionPercent = combinedDistributionPercent.plus(
+          sortedRewardsDistribution[rankIndex + i],
+        );
+      }
+
+      const rewardPerParticipant = rewardPool
+        .mul(combinedDistributionPercent)
+        .div(100)
+        .div(nTiedParticipants)
+        .toDecimalPlaces(tokenDecimals, Decimal.ROUND_DOWN);
+
+      if (rewardPerParticipant.greaterThan(0)) {
+        for (let i = rankIndex; i < nextIndex; i += 1) {
+          const participant = sortedParticipantResults[i];
+          rewardsBatch.rewards.push({
+            address: participant.address,
+            amount: rewardPerParticipant.toString(),
+          });
+        }
+      }
+
+      rankIndex = nextIndex;
     }
 
     return [rewardsBatch];

@@ -45,6 +45,7 @@ export function generateManifest(
         ...baseManifest,
         type: 'COMPETITIVE_MARKET_MAKING',
         pair: generateValidPair(),
+        min_threshold: faker.number.float({ min: 0 }),
         rewards_distribution: [50, 30, 20],
       };
       return manifest;
@@ -67,8 +68,7 @@ export function generateManifest(
       };
       return manifest;
     }
-    case 'MARKET_MAKING':
-    default: {
+    case 'MARKET_MAKING': {
       const manifest = {
         ...baseManifest,
         type: 'MARKET_MAKING',
@@ -77,6 +77,8 @@ export function generateManifest(
       };
       return manifest;
     }
+    default:
+      return baseManifest;
   }
 }
 

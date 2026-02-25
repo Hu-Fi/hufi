@@ -11,9 +11,12 @@ export type CompetitiveCampaignManifest = BaseCampaignManifest & {
   type: 'COMPETITIVE_MARKET_MAKING';
   pair: string;
   rewards_distribution: number[];
+  min_threshold: number;
 };
 
-export type CampaignManifest = BaseCampaignManifest & Record<string, unknown>;
+export type CampaignManifest =
+  | BaseCampaignManifest
+  | CompetitiveCampaignManifest;
 
 export type CampaignWithResults = Pick<
   IEscrow,
@@ -34,6 +37,7 @@ export type CampaignWithResults = Pick<
 export type ParticipantOutcome = {
   address: string;
   score: number;
+  total_volume?: number;
 };
 
 export type ParticipantsOutcomesBatch = {
