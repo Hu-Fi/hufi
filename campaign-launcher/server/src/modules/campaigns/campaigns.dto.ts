@@ -80,9 +80,9 @@ export class CampaignDetails {
   rewardsDistribution?: number[];
 
   @ApiPropertyOptional({
-    name: 'min_threshold',
+    name: 'min_volume_required',
   })
-  minThreshold?: number;
+  minVolumeRequired?: number;
 
   @ApiPropertyOptional({
     name: 'daily_balance_target',
