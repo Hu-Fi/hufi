@@ -572,15 +572,14 @@ describe('PayoutsService', () => {
 
   describe('calculateRewardsForCompetitiveCampaign', () => {
     it('should distribute rewards by manifest percentages to top cumulative score', () => {
-      const firstAddress = faker.finance.ethereumAddress();
-      const secondAddress = faker.finance.ethereumAddress();
-      const thirdAddress = faker.finance.ethereumAddress();
+      const firstPlaceAddress = faker.finance.ethereumAddress();
+      const secondPlaceAddress = faker.finance.ethereumAddress();
+      const thirdPlaceAddress = faker.finance.ethereumAddress();
 
-      const firstPeriodScoreA = faker.number.int({ min: 8, max: 12 });
-      const secondPeriodScoreA = faker.number.int({ min: 8, max: 12 });
-      const totalScoreA = firstPeriodScoreA + secondPeriodScoreA;
-      const totalScoreB = totalScoreA + faker.number.int({ min: 1, max: 5 });
-      const totalScoreC = faker.number.int({ min: 4, max: 8 });
+      const baseScore = faker.number.int({ min: 90, max: 180 });
+      const firstPlaceScore = baseScore;
+      const secondPlaceScore = Math.floor(baseScore / 2);
+      const thirdPlaceScore = Math.floor(baseScore / 3);
 
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -592,13 +591,13 @@ describe('PayoutsService', () => {
               id: faker.string.uuid(),
               results: [
                 generateParticipantOutcome({
-                  address: firstAddress,
-                  score: firstPeriodScoreA,
+                  address: firstPlaceAddress,
+                  score: firstPlaceScore,
                   total_volume: faker.number.int({ min: 100, max: 200 }),
                 }),
                 generateParticipantOutcome({
-                  address: secondAddress,
-                  score: totalScoreB,
+                  address: secondPlaceAddress,
+                  score: Math.floor(secondPlaceScore / 2),
                   total_volume: faker.number.int({ min: 100, max: 200 }),
                 }),
               ],
@@ -613,13 +612,13 @@ describe('PayoutsService', () => {
               id: faker.string.uuid(),
               results: [
                 generateParticipantOutcome({
-                  address: firstAddress,
-                  score: secondPeriodScoreA,
+                  address: secondPlaceAddress,
+                  score: Math.floor(secondPlaceScore / 2),
                   total_volume: faker.number.int({ min: 100, max: 200 }),
                 }),
                 generateParticipantOutcome({
-                  address: thirdAddress,
-                  score: totalScoreC,
+                  address: thirdPlaceAddress,
+                  score: thirdPlaceScore,
                   total_volume: faker.number.int({ min: 100, max: 200 }),
                 }),
               ],
@@ -644,9 +643,9 @@ describe('PayoutsService', () => {
 
       expect(rewardsBatches).toHaveLength(1);
       expect(rewardsBatches[0].rewards).toEqual([
-        { address: secondAddress, amount: '50' },
-        { address: firstAddress, amount: '30' },
-        { address: thirdAddress, amount: '20' },
+        { address: firstPlaceAddress, amount: '50' },
+        { address: secondPlaceAddress, amount: '30' },
+        { address: thirdPlaceAddress, amount: '20' },
       ]);
     });
 
@@ -703,11 +702,13 @@ describe('PayoutsService', () => {
     });
 
     it('should split combined rewards for exact tie on 1st place', () => {
-      const firstAddress = faker.finance.ethereumAddress();
-      const secondAddress = faker.finance.ethereumAddress();
-      const thirdAddress = faker.finance.ethereumAddress();
-      const topScore = faker.number.int({ min: 4000, max: 5000 });
-      const thirdScore = topScore - faker.number.int({ min: 500, max: 1200 });
+      const firstPlaceAddress = faker.finance.ethereumAddress();
+      const secondPlaceAddress = faker.finance.ethereumAddress();
+      const thirdPlaceAddress = faker.finance.ethereumAddress();
+      const baseScore = faker.number.int({ min: 90, max: 180 });
+      const firstPlaceScore = baseScore;
+      const secondPlaceScore = baseScore;
+      const thirdPlaceScore = Math.floor(baseScore / 2);
       const firstTotalVolume = faker.number.int({ min: 900, max: 1400 });
       const secondTotalVolume = faker.number.int({ min: 900, max: 1400 });
       const thirdTotalVolume = faker.number.int({ min: 700, max: 1200 });
@@ -721,18 +722,18 @@ describe('PayoutsService', () => {
               id: faker.string.uuid(),
               results: [
                 generateParticipantOutcome({
-                  address: firstAddress,
-                  score: topScore,
+                  address: firstPlaceAddress,
+                  score: firstPlaceScore,
                   total_volume: firstTotalVolume,
                 }),
                 generateParticipantOutcome({
-                  address: secondAddress,
-                  score: topScore,
+                  address: secondPlaceAddress,
+                  score: secondPlaceScore,
                   total_volume: secondTotalVolume,
                 }),
                 generateParticipantOutcome({
-                  address: thirdAddress,
-                  score: thirdScore,
+                  address: thirdPlaceAddress,
+                  score: thirdPlaceScore,
                   total_volume: thirdTotalVolume,
                 }),
               ],
@@ -756,21 +757,21 @@ describe('PayoutsService', () => {
       );
 
       expect(rewardsBatches[0].rewards).toEqual([
-        { address: firstAddress, amount: '40' },
-        { address: secondAddress, amount: '40' },
-        { address: thirdAddress, amount: '20' },
+        { address: firstPlaceAddress, amount: '40' },
+        { address: secondPlaceAddress, amount: '40' },
+        { address: thirdPlaceAddress, amount: '20' },
       ]);
     });
 
     it('should split last rewardable place reward between tied participants', () => {
-      const firstAddress = faker.finance.ethereumAddress();
-      const secondAddress = faker.finance.ethereumAddress();
-      const thirdAddress = faker.finance.ethereumAddress();
-      const fourthAddress = faker.finance.ethereumAddress();
-      const firstScore = faker.number.int({ min: 4000, max: 5000 });
-      const secondScore =
-        firstScore - faker.number.int({ min: 800, max: 1500 });
-      const tiedScore = secondScore - faker.number.int({ min: 400, max: 900 });
+      const firstPlaceAddress = faker.finance.ethereumAddress();
+      const secondPlaceAddress = faker.finance.ethereumAddress();
+      const thirdPlaceAddress = faker.finance.ethereumAddress();
+      const fourthPlaceAddress = faker.finance.ethereumAddress();
+      const baseScore = faker.number.int({ min: 90, max: 180 });
+      const firstPlaceScore = baseScore;
+      const secondPlaceScore = Math.floor(baseScore / 2);
+      const tiedThirdPlaceScore = Math.floor(baseScore / 3);
       const firstTotalVolume = faker.number.int({ min: 1000, max: 1400 });
       const secondTotalVolume = faker.number.int({ min: 800, max: 1200 });
       const thirdTotalVolume = faker.number.int({ min: 600, max: 900 });
@@ -785,23 +786,23 @@ describe('PayoutsService', () => {
               id: faker.string.uuid(),
               results: [
                 generateParticipantOutcome({
-                  address: firstAddress,
-                  score: firstScore,
+                  address: firstPlaceAddress,
+                  score: firstPlaceScore,
                   total_volume: firstTotalVolume,
                 }),
                 generateParticipantOutcome({
-                  address: secondAddress,
-                  score: secondScore,
+                  address: secondPlaceAddress,
+                  score: secondPlaceScore,
                   total_volume: secondTotalVolume,
                 }),
                 generateParticipantOutcome({
-                  address: thirdAddress,
-                  score: tiedScore,
+                  address: thirdPlaceAddress,
+                  score: tiedThirdPlaceScore,
                   total_volume: thirdTotalVolume,
                 }),
                 generateParticipantOutcome({
-                  address: fourthAddress,
-                  score: tiedScore,
+                  address: fourthPlaceAddress,
+                  score: tiedThirdPlaceScore,
                   total_volume: fourthTotalVolume,
                 }),
               ],
@@ -825,25 +826,26 @@ describe('PayoutsService', () => {
       );
 
       expect(rewardsBatches[0].rewards).toEqual([
-        { address: firstAddress, amount: '50' },
-        { address: secondAddress, amount: '30' },
-        { address: thirdAddress, amount: '10' },
-        { address: fourthAddress, amount: '10' },
+        { address: firstPlaceAddress, amount: '50' },
+        { address: secondPlaceAddress, amount: '30' },
+        { address: thirdPlaceAddress, amount: '10' },
+        { address: fourthPlaceAddress, amount: '10' },
       ]);
     });
 
     it('should split all remaining slots when many participants tie for 2nd place', () => {
-      const firstAddress = faker.finance.ethereumAddress();
-      const tiedAddresses = Array.from({ length: 5 }, () =>
+      const firstPlaceAddress = faker.finance.ethereumAddress();
+      const tiedSecondPlaceAddresses = Array.from({ length: 5 }, () =>
         faker.finance.ethereumAddress(),
       );
-      const seventhAddress = faker.finance.ethereumAddress();
-      const eighthAddress = faker.finance.ethereumAddress();
+      const seventhPlaceAddress = faker.finance.ethereumAddress();
+      const eighthPlaceAddress = faker.finance.ethereumAddress();
 
-      const firstScore = faker.number.int({ min: 100, max: 200 });
-      const tiedScore = firstScore - faker.number.int({ min: 10, max: 30 });
-      const seventhScore = tiedScore - faker.number.int({ min: 10, max: 20 });
-      const eighthScore = seventhScore - faker.number.int({ min: 5, max: 10 });
+      const baseScore = faker.number.int({ min: 120, max: 240 });
+      const firstPlaceScore = baseScore;
+      const tiedSecondPlaceScore = Math.floor(baseScore / 2);
+      const seventhPlaceScore = Math.floor(baseScore / 3);
+      const eighthPlaceScore = Math.floor(baseScore / 4);
       const minVolumeRequired = faker.number.int({ min: 50, max: 120 });
       const eligibleVolume =
         minVolumeRequired + faker.number.int({ min: 1, max: 100 });
@@ -857,25 +859,25 @@ describe('PayoutsService', () => {
               id: faker.string.uuid(),
               results: [
                 generateParticipantOutcome({
-                  address: firstAddress,
-                  score: firstScore,
+                  address: firstPlaceAddress,
+                  score: firstPlaceScore,
                   total_volume: eligibleVolume,
                 }),
-                ...tiedAddresses.map((address) =>
+                ...tiedSecondPlaceAddresses.map((address) =>
                   generateParticipantOutcome({
                     address,
-                    score: tiedScore,
+                    score: tiedSecondPlaceScore,
                     total_volume: eligibleVolume,
                   }),
                 ),
                 generateParticipantOutcome({
-                  address: seventhAddress,
-                  score: seventhScore,
+                  address: seventhPlaceAddress,
+                  score: seventhPlaceScore,
                   total_volume: eligibleVolume,
                 }),
                 generateParticipantOutcome({
-                  address: eighthAddress,
-                  score: eighthScore,
+                  address: eighthPlaceAddress,
+                  score: eighthPlaceScore,
                   total_volume: eligibleVolume,
                 }),
               ],
@@ -906,18 +908,24 @@ describe('PayoutsService', () => {
       );
 
       expect(rewardsBatches[0].rewards).toHaveLength(6);
-      expect(rewardsByAddress.get(firstAddress)).toBe('50');
-      for (const tiedAddress of tiedAddresses) {
+      expect(rewardsByAddress.get(firstPlaceAddress)).toBe('50');
+      for (const tiedAddress of tiedSecondPlaceAddresses) {
         expect(rewardsByAddress.get(tiedAddress)).toBe('10');
       }
-      expect(rewardsByAddress.has(seventhAddress)).toBe(false);
-      expect(rewardsByAddress.has(eighthAddress)).toBe(false);
+      expect(rewardsByAddress.has(seventhPlaceAddress)).toBe(false);
+      expect(rewardsByAddress.has(eighthPlaceAddress)).toBe(false);
     });
 
     it('should filter out participants below min_volume_required', () => {
-      const firstAddress = ethers.getAddress(faker.finance.ethereumAddress());
-      const secondAddress = ethers.getAddress(faker.finance.ethereumAddress());
-      const thirdAddress = ethers.getAddress(faker.finance.ethereumAddress());
+      const firstPlaceAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
+      const secondPlaceAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
+      const thirdPlaceAddress = ethers.getAddress(
+        faker.finance.ethereumAddress(),
+      );
       const minVolumeRequired = faker.number.int({ min: 100, max: 300 });
       const firstParticipantVolume =
         minVolumeRequired - faker.number.int({ min: 1, max: 50 });
@@ -925,9 +933,10 @@ describe('PayoutsService', () => {
         minVolumeRequired + faker.number.int({ min: 10, max: 80 });
       const thirdParticipantVolume =
         minVolumeRequired + faker.number.int({ min: 1, max: 40 });
-      const firstScore = faker.number.int({ min: 100, max: 150 });
-      const secondScore = firstScore - faker.number.int({ min: 5, max: 20 });
-      const thirdScore = secondScore - faker.number.int({ min: 5, max: 20 });
+      const baseScore = faker.number.int({ min: 90, max: 180 });
+      const firstPlaceScore = baseScore;
+      const secondPlaceScore = Math.floor(baseScore / 2);
+      const thirdPlaceScore = Math.floor(baseScore / 3);
 
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -938,18 +947,18 @@ describe('PayoutsService', () => {
               id: faker.string.uuid(),
               results: [
                 generateParticipantOutcome({
-                  address: firstAddress,
-                  score: firstScore,
+                  address: firstPlaceAddress,
+                  score: firstPlaceScore,
                   total_volume: firstParticipantVolume,
                 }),
                 generateParticipantOutcome({
-                  address: secondAddress,
-                  score: secondScore,
+                  address: secondPlaceAddress,
+                  score: secondPlaceScore,
                   total_volume: secondParticipantVolume,
                 }),
                 generateParticipantOutcome({
-                  address: thirdAddress,
-                  score: thirdScore,
+                  address: thirdPlaceAddress,
+                  score: thirdPlaceScore,
                   total_volume: thirdParticipantVolume,
                 }),
               ],
@@ -973,8 +982,8 @@ describe('PayoutsService', () => {
       );
 
       expect(rewardsBatches[0].rewards).toEqual([
-        { address: secondAddress, amount: '50' },
-        { address: thirdAddress, amount: '30' },
+        { address: secondPlaceAddress, amount: '50' },
+        { address: thirdPlaceAddress, amount: '30' },
       ]);
     });
   });
