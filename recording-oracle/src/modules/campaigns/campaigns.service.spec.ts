@@ -912,7 +912,7 @@ describe('CampaignsService', () => {
         fundToken: fundTokenSymbol,
         fundTokenDecimals,
         details: {
-          minThreshold: manifest.min_threshold,
+          minVolumeRequired: manifest.min_volume_required,
           rewardsDistribution: manifest.rewards_distribution,
         },
         status: 'active',

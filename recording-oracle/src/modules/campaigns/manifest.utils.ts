@@ -70,7 +70,7 @@ const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
-  min_threshold: Joi.number().strict().min(0).required(),
+  min_volume_required: Joi.number().strict().positive().required(),
   rewards_distribution: Joi.array()
     .items(Joi.number().strict().greater(0))
     .min(1)
@@ -81,9 +81,13 @@ const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
         0,
       );
       if (distributionSum > 100) {
-        return helpers.error('any.invalid');
+        return helpers.error('any.custom');
       }
       return values;
+    })
+    .messages({
+      'any.custom':
+        '"rewards_distribution" sum must be less than or equal to 100',
     }),
 });
 export function assertValidCompetitiveMarketMakingCampaignManifest(
@@ -151,7 +155,7 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as CompetitiveMarketMakingCampaignManifest;
       const details: CompetitiveMarketMakingCampaignDetails = {
         rewardsDistribution: _manifest.rewards_distribution,
-        minThreshold: _manifest.min_threshold,
+        minVolumeRequired: _manifest.min_volume_required,
       };
       return {
         symbol: _manifest.pair,

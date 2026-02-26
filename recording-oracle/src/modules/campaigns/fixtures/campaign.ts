@@ -42,7 +42,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
       break;
     case CampaignType.COMPETITIVE_MARKET_MAKING:
       details = {
-        minThreshold: faker.number.float({ min: 0, max: 1000 }),
+        minVolumeRequired: faker.number.float({ min: 0.0001, max: 1000 }),
         rewardsDistribution: Array.from(
           { length: faker.number.int({ min: 1, max: 5 }) },
           () => faker.number.float({ min: 0.01, max: 100 }),
