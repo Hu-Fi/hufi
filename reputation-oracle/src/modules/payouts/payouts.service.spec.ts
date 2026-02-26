@@ -486,7 +486,7 @@ describe('PayoutsService', () => {
       ];
 
       const rewardsBatches = payoutsService['calculateRewardsBatches'](
-        generateManifest('MARKET_MAKING'),
+        generateManifest(),
         intermediateResultsData,
         EscrowStatus.Pending,
         100,

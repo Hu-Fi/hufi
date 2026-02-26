@@ -45,7 +45,7 @@ export function generateManifest(
         ...baseManifest,
         type: 'COMPETITIVE_MARKET_MAKING',
         pair: generateValidPair(),
-        min_volume_required: faker.number.float({ min: 0 }),
+        min_volume_required: faker.number.float({ min: 0.001 }),
         rewards_distribution: [50, 30, 20],
       };
       return manifest;

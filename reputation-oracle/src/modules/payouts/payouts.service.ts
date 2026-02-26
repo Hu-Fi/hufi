@@ -137,7 +137,6 @@ export class PayoutsService {
         campaign.chainId,
       );
 
-      const rewardsBatchesToPay: CalculatedRewardsBatch[] = [];
       let totalReservedFunds = new Decimal(0);
       for (const intermediateResult of intermediateResultsData.results) {
         totalReservedFunds = totalReservedFunds.plus(
@@ -145,8 +144,7 @@ export class PayoutsService {
         );
       }
 
-      let rewardsBatches: CalculatedRewardsBatch[] = [];
-      rewardsBatches = this.calculateRewardsBatches(
+      const rewardsBatches = this.calculateRewardsBatches(
         manifest,
         intermediateResultsData,
         escrowStatus,
@@ -154,6 +152,7 @@ export class PayoutsService {
         campaign.fundTokenDecimals,
       );
 
+      const rewardsBatchesToPay: CalculatedRewardsBatch[] = [];
       for (const rewardsBatch of rewardsBatches) {
         /**
          * All participants in batch got zero reward -> nothing to pay
@@ -434,11 +433,6 @@ export class PayoutsService {
           intermediateResult,
           tokenDecimals,
         );
-
-      logger.debug('Rewards calculated for intermediate result', {
-        periodFrom: intermediateResult.from,
-        periodTo: intermediateResult.to,
-      });
 
       return calculatedRewardsBatches;
     });
