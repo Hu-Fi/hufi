@@ -486,7 +486,9 @@ describe('PayoutsService', () => {
       ];
 
       const rewardsBatches = payoutsService['calculateRewardsBatches'](
-        generateManifest(),
+        generateManifest(
+          faker.helpers.arrayElement(['MARKET_MAKING', 'HOLDING', 'THRESHOLD']),
+        ),
         intermediateResultsData,
         EscrowStatus.Pending,
         100,
