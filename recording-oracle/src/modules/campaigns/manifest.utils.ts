@@ -6,10 +6,12 @@ import {
   CampaignDetails,
   CampaignManifestBase,
   CampaignType,
+  CompetitiveMarketMakingCampaignDetails,
   HoldingCampaignDetails,
   MarketMakingCampaignDetails,
   ThresholdCampaignDetails,
   type CampaignManifest,
+  type CompetitiveMarketMakingCampaignManifest,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
   type ThresholdCampaignManifest,
@@ -63,6 +65,43 @@ export function assertValidMarketMakingCampaignManifest(
   }
 }
 
+const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING),
+  pair: Joi.string()
+    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
+    .required(),
+  min_volume_required: Joi.number().strict().positive().required(),
+  rewards_distribution: Joi.array()
+    .items(Joi.number().strict().greater(0))
+    .min(1)
+    .required()
+    .custom((values, helpers) => {
+      const distributionSum = values.reduce(
+        (acc: number, value: number) => acc + value,
+        0,
+      );
+      if (distributionSum > 100) {
+        return helpers.error('any.custom');
+      }
+      return values;
+    })
+    .messages({
+      'any.custom':
+        '"rewards_distribution" sum must be less than or equal to 100',
+    }),
+});
+export function assertValidCompetitiveMarketMakingCampaignManifest(
+  manifest: CampaignManifestBase,
+): asserts manifest is CompetitiveMarketMakingCampaignManifest {
+  try {
+    Joi.assert(manifest, competitiveMarketMakingManifestSchema);
+  } catch {
+    throw new Error(
+      'Invalid competitive market making campaign manifest schema',
+    );
+  }
+}
+
 const holdingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.HOLDING),
   symbol: Joi.string()
@@ -106,6 +145,17 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as MarketMakingCampaignManifest;
       const details: MarketMakingCampaignDetails = {
         dailyVolumeTarget: _manifest.daily_volume_target,
+      };
+      return {
+        symbol: _manifest.pair,
+        details,
+      };
+    }
+    case CampaignType.COMPETITIVE_MARKET_MAKING: {
+      const _manifest = manifest as CompetitiveMarketMakingCampaignManifest;
+      const details: CompetitiveMarketMakingCampaignDetails = {
+        rewardsDistribution: _manifest.rewards_distribution,
+        minVolumeRequired: _manifest.min_volume_required,
       };
       return {
         symbol: _manifest.pair,
