@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import { ethers } from 'ethers';
 import { GraphQLClient } from 'graphql-request';
 import _ from 'lodash';
@@ -14,11 +16,7 @@ import {
 } from '../exchange-api-client.interface';
 import { type RequiredAccessCheckResult, type Trade } from '../types';
 import * as apiClientUtils from '../utils';
-import {
-  MAX_LOOKBACK_MS,
-  PANCAKESWAP_BSC_SUBGRAPH,
-  tokenAddressBySymbol,
-} from './constants';
+import { MAX_LOOKBACK_MS, tokenAddressBySymbol } from './constants';
 import {
   GET_ACCOUNT_SWAPS_QUERY,
   GET_SUBGRAPH_META_QUERY,
@@ -29,6 +27,7 @@ import { type Swap } from './types';
 import * as pancakeswapUtils from './utils';
 
 type PancakeswapClientInitOptions = DexApiClientInitOptions & {
+  subgraphUrl: string;
   subgraphApiKey: string;
 };
 
@@ -49,12 +48,17 @@ export class PancakeswapClient implements ExchangeApiClient {
   constructor({
     userId,
     userEvmAddress,
+    subgraphUrl,
     subgraphApiKey,
   }: PancakeswapClientInitOptions) {
+    assert(subgraphUrl, 'subgraphUrl is required');
+    assert(subgraphApiKey, 'subgraphApiKey is required');
+    assert(userEvmAddress, 'userEvmAddress is required');
+
     this.userId = userId;
     this.userEvmAddress = userEvmAddress;
 
-    this.graphClient = new GraphQLClient(PANCAKESWAP_BSC_SUBGRAPH, {
+    this.graphClient = new GraphQLClient(subgraphUrl, {
       headers: {
         Authorization: `Bearer ${subgraphApiKey}`,
       },

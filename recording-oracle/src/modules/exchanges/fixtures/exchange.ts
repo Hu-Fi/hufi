@@ -23,4 +23,5 @@ export const mockExchangesConfigService: Omit<
   isExchangeSupported(exchangeName: string): exchangeName is ExchangeName {
     return exchangeName in this.configByExchange;
   },
+  pancakeswapSubgraphUrl: faker.internet.url(),
 };
