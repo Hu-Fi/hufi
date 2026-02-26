@@ -7,9 +7,8 @@ import ERC20ABI from '@/abi/ERC20.json';
 import { UNLIMITED_AMOUNT } from '@/constants';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import { getTokenAddress } from '@/utils';
-
-import useRetrieveSigner from './useRetrieveSigner';
 
 type UseTokenAllowanceReturn = {
   allowance: string | null;
@@ -29,7 +28,7 @@ export const useTokenAllowance = (): UseTokenAllowanceReturn => {
 
   const { activeAddress } = useActiveAccount();
   const { appChainId } = useNetwork();
-  const { signer } = useRetrieveSigner();
+  const { signer } = useSignerContext();
 
   const allowanceSpender = NETWORKS[appChainId as ChainId]?.factoryAddress;
 

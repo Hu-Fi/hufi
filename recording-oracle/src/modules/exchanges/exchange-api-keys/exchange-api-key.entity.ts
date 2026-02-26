@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
-import { UserEntity } from '@/modules/users';
+import { type UserEntity } from '@/modules/users';
 
 import { ExchangeExtras, ExchangePermission } from '../api-client';
 

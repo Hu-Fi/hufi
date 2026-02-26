@@ -7,14 +7,13 @@ import ERC20ABI from '@/abi/ERC20.json';
 import { launcherApi } from '@/api';
 import { oracles } from '@/constants';
 import { useNetwork } from '@/providers/NetworkProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import {
   CampaignType,
   type ManifestUploadDto,
   type CampaignFormValues,
 } from '@/types';
 import { calculateHash, getTokenAddress } from '@/utils';
-
-import useRetrieveSigner from './useRetrieveSigner';
 
 type CreateEscrowMutationResult = {
   escrowAddress: string;
@@ -79,7 +78,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { appChainId } = useNetwork();
-  const { signer } = useRetrieveSigner();
+  const { signer } = useSignerContext();
 
   const isError = !!error;
   const isSuccess = !!data && !error && !isLoading;
