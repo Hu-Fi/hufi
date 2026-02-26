@@ -67,20 +67,21 @@ export const getExplorerUrl = (chainId: ChainId, address: string): string => {
 };
 
 export const formatTokenAmount = (
-  amount: string | number,
+  amount: string | bigint,
   decimals = 18
-): string | number => {
+): string => {
   const bigIntAmount = BigInt(amount);
   const amountString = formatUnits(bigIntAmount, decimals);
   const amountNumber = Number(amountString);
 
   if (!Number.isFinite(amountNumber)) return amountString;
 
-  if (amountNumber >= 1000) {
-    return Math.round(amountNumber);
-  } else {
-    return parseFloat(amountNumber.toFixed(4));
-  }
+  const displayValue =
+    amountNumber >= 1000
+      ? Math.round(amountNumber)
+      : parseFloat(amountNumber.toFixed(4));
+
+  return displayValue.toString();
 };
 
 const theme = createAppTheme('dark');

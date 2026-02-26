@@ -415,6 +415,7 @@ describe('ExchangeApiClientFactory', () => {
         expect.objectContaining({
           userId,
           userEvmAddress,
+          subgraphUrl: mockExchangesConfigService.pancakeswapSubgraphUrl,
           subgraphApiKey: mockWeb3ConfigService.subgraphApiKey,
         }),
       );

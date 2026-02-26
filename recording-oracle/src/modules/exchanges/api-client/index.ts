@@ -17,4 +17,4 @@ export {
   type Trade,
 } from './types';
 
-export { PancakeswapClient } from './pancakeswap';
+export { type PancakeswapClient } from './pancakeswap';

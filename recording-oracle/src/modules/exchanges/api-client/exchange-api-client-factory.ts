@@ -197,6 +197,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
       case ExchangeName.PANCAKESWAP: {
         return new PancakeswapClient({
           ...clientInitOptions,
+          subgraphUrl: this.exchangesConfigService.pancakeswapSubgraphUrl,
           subgraphApiKey: this.web3ConfigService.subgraphApiKey,
         });
       }

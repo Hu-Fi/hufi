@@ -40,6 +40,7 @@ import {
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignNotFoundError } from './campaigns.errors';
 import { CampaignsService } from './campaigns.service';
+import { ParticipationsRepository } from './participations';
 import { ReturnedCampaignStatus, CampaignStatus } from './types';
 
 const RETURNED_STATUS_TO_CAMPAIGN_STATUSES: Record<
@@ -77,7 +78,10 @@ const SPECIFIC_CAMPAIGN_ROUTE = '/:chain_id-:campaign_address';
 @Controller('/campaigns')
 @UseFilters(CampaignsControllerErrorsFilter)
 export class CampaignsController {
-  constructor(private readonly campaignsService: CampaignsService) {}
+  constructor(
+    private readonly campaignsService: CampaignsService,
+    private readonly participationsRepository: ParticipationsRepository,
+  ) {}
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -101,11 +105,14 @@ export class CampaignsController {
       ? RETURNED_STATUS_TO_CAMPAIGN_STATUSES[query.status]
       : [];
 
-    const campaigns = await this.campaignsService.getJoined(request.user.id, {
-      statuses,
-      limit: limit + 1,
-      skip: query.skip,
-    });
+    const campaigns = await this.participationsRepository.findByUserId(
+      request.user.id,
+      {
+        statuses,
+        limit: limit + 1,
+        skip: query.skip,
+      },
+    );
 
     return {
       hasMore: campaigns.length > limit,

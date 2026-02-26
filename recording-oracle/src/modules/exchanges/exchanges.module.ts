@@ -9,6 +9,6 @@ import { ExchangesService } from './exchanges.service';
 @Module({
   imports: [ExchangeApiClientModule, ExchangeApiKeysModule, UsersModule],
   providers: [ExchangesService],
-  exports: [ExchangesService],
+  exports: [ExchangesService, ExchangeApiClientModule],
 })
 export class ExchangesModule {}
