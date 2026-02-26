@@ -11,6 +11,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
+import _ from 'lodash';
 
 import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
@@ -22,6 +23,7 @@ import { WalletWithProvider, Web3Service } from '@/modules/web3';
 import * as payoutsUtils from './payouts.utils';
 import {
   CampaignManifest,
+  CalculatedReward,
   CalculatedRewardsBatch,
   CampaignWithResults,
   CompetitiveCampaignManifest,
@@ -448,121 +450,111 @@ export class PayoutsService {
     fundAmount: number,
     tokenDecimals: number,
   ): CalculatedRewardsBatch[] {
-    const scoresByParticipant = new Map<
+    const rewardPool = new Decimal(fundAmount);
+    const resultsByParticipant = new Map<
       string,
       { score: Decimal; totalVolume: Decimal }
     >();
     for (const intermediateResult of intermediateResultsData.results) {
       for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
         for (const outcome of outcomesBatch.results) {
-          const currentStats = scoresByParticipant.get(outcome.address) || {
+          const participantResult = resultsByParticipant.get(
+            outcome.address,
+          ) || {
             score: new Decimal(0),
             totalVolume: new Decimal(0),
           };
-          scoresByParticipant.set(outcome.address, {
-            score: currentStats.score.plus(outcome.score),
-            totalVolume: currentStats.totalVolume.plus(
+          resultsByParticipant.set(outcome.address, {
+            score: participantResult.score.plus(outcome.score),
+            totalVolume: participantResult.totalVolume.plus(
               outcome.total_volume || 0,
             ),
           });
         }
       }
     }
-    const minThreshold = new Decimal(manifest.min_threshold || 0);
 
-    const sortedParticipantResults = Array.from(
-      scoresByParticipant,
-      ([address, { score, totalVolume }]) => ({
+    const scoresByParticipant = new Map<string, Decimal>();
+    for (const [address, { score, totalVolume }] of resultsByParticipant) {
+      if (
+        score.greaterThan(0) &&
+        totalVolume.greaterThanOrEqualTo(manifest.min_volume_required)
+      ) {
+        scoresByParticipant.set(address, score);
+      }
+    }
+
+    const sortedParticipantResults = _.orderBy(
+      Array.from(scoresByParticipant, ([address, score]) => ({
         address,
-        score,
-        totalVolume,
-      }),
-    )
-      .filter(
-        (participantResult) =>
-          participantResult.score.greaterThan(0) &&
-          participantResult.totalVolume.greaterThanOrEqualTo(minThreshold),
-      )
-      .sort((resultA, resultB) => {
-        const scoreComparison = resultB.score.comparedTo(resultA.score);
-        if (scoreComparison !== 0) {
-          return scoreComparison;
-        }
-
-        const totalVolumeComparison = resultB.totalVolume.comparedTo(
-          resultA.totalVolume,
-        );
-        if (totalVolumeComparison !== 0) {
-          return totalVolumeComparison;
-        }
-
-        return resultA.address.localeCompare(resultB.address);
-      });
-    const sortedRewardsDistribution = [...manifest.rewards_distribution].sort(
-      (valueA, valueB) => valueB - valueA,
+        score: score.toNumber(),
+      })),
+      'score',
+      'desc',
     );
-    const rewardPool = new Decimal(fundAmount);
 
-    const rewardsBatch: CalculatedRewardsBatch = {
-      id: intermediateResultsData.address,
-      rewards: [],
-    };
+    const sortedRewardsDistribution = _.orderBy(
+      manifest.rewards_distribution,
+      [],
+      'desc',
+    );
 
-    for (
-      let rankIndex = 0;
-      rankIndex < sortedParticipantResults.length &&
-      rankIndex < sortedRewardsDistribution.length;
+    const rewards: CalculatedReward[] = [];
+
+    let rankedResultIndex = 0;
+    while (
+      rankedResultIndex < sortedParticipantResults.length &&
+      rankedResultIndex < sortedRewardsDistribution.length
     ) {
-      const firstTiedParticipant = sortedParticipantResults[rankIndex];
-      let nextIndex = rankIndex + 1;
-      for (; nextIndex < sortedParticipantResults.length; nextIndex += 1) {
-        const participant = sortedParticipantResults[nextIndex];
-        const isTie =
-          participant.score.comparedTo(firstTiedParticipant.score) === 0 &&
-          participant.totalVolume.comparedTo(
-            firstTiedParticipant.totalVolume,
-          ) === 0;
-        if (!isTie) {
+      const tiedResults = [sortedParticipantResults[rankedResultIndex]];
+
+      let maybeTiedResultIndex = rankedResultIndex + 1;
+      for (
+        ;
+        maybeTiedResultIndex < sortedParticipantResults.length;
+        maybeTiedResultIndex += 1
+      ) {
+        const maybeTiedResult = sortedParticipantResults[maybeTiedResultIndex];
+        if (maybeTiedResult.score !== tiedResults[0]!.score) {
           break;
         }
+        tiedResults.push(maybeTiedResult);
       }
 
-      const nTiedParticipants = nextIndex - rankIndex;
-      const slotsToCombine = Math.min(
-        nTiedParticipants,
-        sortedRewardsDistribution.length - rankIndex,
+      const nTiedResults = tiedResults.length;
+      const rewardSlots = sortedRewardsDistribution.slice(
+        rankedResultIndex,
+        rankedResultIndex + nTiedResults,
       );
-      if (slotsToCombine <= 0) {
-        break;
-      }
-
-      let combinedDistributionPercent = new Decimal(0);
-      for (let i = 0; i < slotsToCombine; i += 1) {
-        combinedDistributionPercent = combinedDistributionPercent.plus(
-          sortedRewardsDistribution[rankIndex + i],
-        );
-      }
+      const totalRewardPercent = rewardSlots.reduce(
+        (prev, curr) => Decimal.sum(prev, curr),
+        new Decimal(0),
+      );
 
       const rewardPerParticipant = rewardPool
-        .mul(combinedDistributionPercent)
+        .mul(totalRewardPercent)
         .div(100)
-        .div(nTiedParticipants)
+        .div(nTiedResults)
         .toDecimalPlaces(tokenDecimals, Decimal.ROUND_DOWN);
 
       if (rewardPerParticipant.greaterThan(0)) {
-        for (let i = rankIndex; i < nextIndex; i += 1) {
-          const participant = sortedParticipantResults[i];
-          rewardsBatch.rewards.push({
-            address: participant.address,
+        for (const tiedResult of tiedResults) {
+          rewards.push({
+            address: tiedResult.address,
             amount: rewardPerParticipant.toString(),
           });
         }
       }
 
-      rankIndex = nextIndex;
+      rankedResultIndex = maybeTiedResultIndex;
     }
 
-    return [rewardsBatch];
+    return [
+      {
+        id: intermediateResultsData.address,
+        rewards,
+      },
+    ];
   }
 
   private async uploadFinalResults(

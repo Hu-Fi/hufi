@@ -11,7 +11,7 @@ export type CompetitiveCampaignManifest = BaseCampaignManifest & {
   type: 'COMPETITIVE_MARKET_MAKING';
   pair: string;
   rewards_distribution: number[];
-  min_threshold: number;
+  min_volume_required: number;
 };
 
 export type CampaignManifest =

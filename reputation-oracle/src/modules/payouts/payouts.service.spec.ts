@@ -465,7 +465,7 @@ describe('PayoutsService', () => {
 
   describe('calculateRewardsBatches', () => {
     it('should calculate reward batches for non-competitive campaigns', () => {
-      const participantAddress = '0x0000000000000000000000000000000000000001';
+      const participantAddress = faker.finance.ethereumAddress();
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
         {
@@ -510,7 +510,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           end_date: faker.date.soon().toISOString(),
-          min_threshold: 0,
+          min_volume_required: 0,
         } as CompetitiveCampaignManifest,
         intermediateResultsData,
         EscrowStatus.Pending,
@@ -523,6 +523,12 @@ describe('PayoutsService', () => {
 
     it('should calculate rewards for ended competitive campaign', () => {
       const participantAddress = '0x0000000000000000000000000000000000000001';
+      const minVolumeRequired = faker.number.int({ min: 50, max: 150 });
+      const participantScore = faker.number.float({ min: 0.01 });
+      const participantTotalVolume = faker.number.float({
+        min: minVolumeRequired,
+        max: minVolumeRequired + 100,
+      });
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
         {
@@ -533,8 +539,8 @@ describe('PayoutsService', () => {
               results: [
                 generateParticipantOutcome({
                   address: participantAddress,
-                  score: 100,
-                  total_volume: 100,
+                  score: participantScore,
+                  total_volume: participantTotalVolume,
                 }),
               ],
             },
@@ -546,7 +552,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           end_date: faker.date.past().toISOString(),
-          min_threshold: 0,
+          min_volume_required: minVolumeRequired,
           rewards_distribution: [100],
         } as CompetitiveCampaignManifest,
         intermediateResultsData,
@@ -566,9 +572,9 @@ describe('PayoutsService', () => {
 
   describe('calculateRewardsForCompetitiveCampaign', () => {
     it('should distribute rewards by manifest percentages to top cumulative score', () => {
-      const firstAddress = '0x0000000000000000000000000000000000000001';
-      const secondAddress = '0x0000000000000000000000000000000000000002';
-      const thirdAddress = '0x0000000000000000000000000000000000000003';
+      const firstAddress = faker.finance.ethereumAddress();
+      const secondAddress = faker.finance.ethereumAddress();
+      const thirdAddress = faker.finance.ethereumAddress();
 
       const firstPeriodScoreA = faker.number.int({ min: 8, max: 12 });
       const secondPeriodScoreA = faker.number.int({ min: 8, max: 12 });
@@ -629,7 +635,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_threshold: 0,
+          min_volume_required: 0,
           rewards_distribution: [20, 50, 30],
         } as CompetitiveCampaignManifest,
         100,
@@ -644,11 +650,13 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should use cumulative total volume as tie-breaker when scores are equal', () => {
-      const firstAddress = '0x0000000000000000000000000000000000000001';
-      const secondAddress = '0x0000000000000000000000000000000000000002';
+    it('should split rewards when scores are equal', () => {
+      const firstAddress = faker.finance.ethereumAddress();
+      const secondAddress = faker.finance.ethereumAddress();
 
       const tiedScore = faker.number.int({ min: 50, max: 100 });
+      const firstTotalVolume = faker.number.int({ min: 100, max: 200 });
+      const secondTotalVolume = faker.number.int({ min: 201, max: 300 });
 
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -661,12 +669,12 @@ describe('PayoutsService', () => {
                 generateParticipantOutcome({
                   address: firstAddress,
                   score: tiedScore,
-                  total_volume: 100,
+                  total_volume: firstTotalVolume,
                 }),
                 generateParticipantOutcome({
                   address: secondAddress,
                   score: tiedScore,
-                  total_volume: 200,
+                  total_volume: secondTotalVolume,
                 }),
               ],
             },
@@ -681,7 +689,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_threshold: 0,
+          min_volume_required: 0,
           rewards_distribution: [60, 40],
         } as CompetitiveCampaignManifest,
         100,
@@ -689,15 +697,20 @@ describe('PayoutsService', () => {
       );
 
       expect(rewardsBatches[0].rewards).toEqual([
-        { address: secondAddress, amount: '60' },
-        { address: firstAddress, amount: '40' },
+        { address: firstAddress, amount: '50' },
+        { address: secondAddress, amount: '50' },
       ]);
     });
 
     it('should split combined rewards for exact tie on 1st place', () => {
-      const firstAddress = '0x0000000000000000000000000000000000000001';
-      const secondAddress = '0x0000000000000000000000000000000000000002';
-      const thirdAddress = '0x0000000000000000000000000000000000000003';
+      const firstAddress = faker.finance.ethereumAddress();
+      const secondAddress = faker.finance.ethereumAddress();
+      const thirdAddress = faker.finance.ethereumAddress();
+      const topScore = faker.number.int({ min: 4000, max: 5000 });
+      const thirdScore = topScore - faker.number.int({ min: 500, max: 1200 });
+      const firstTotalVolume = faker.number.int({ min: 900, max: 1400 });
+      const secondTotalVolume = faker.number.int({ min: 900, max: 1400 });
+      const thirdTotalVolume = faker.number.int({ min: 700, max: 1200 });
 
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -709,18 +722,18 @@ describe('PayoutsService', () => {
               results: [
                 generateParticipantOutcome({
                   address: firstAddress,
-                  score: 4200,
-                  total_volume: 1000,
+                  score: topScore,
+                  total_volume: firstTotalVolume,
                 }),
                 generateParticipantOutcome({
                   address: secondAddress,
-                  score: 4200,
-                  total_volume: 1000,
+                  score: topScore,
+                  total_volume: secondTotalVolume,
                 }),
                 generateParticipantOutcome({
                   address: thirdAddress,
-                  score: 2800,
-                  total_volume: 900,
+                  score: thirdScore,
+                  total_volume: thirdTotalVolume,
                 }),
               ],
             },
@@ -735,7 +748,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_threshold: 0,
+          min_volume_required: 0,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         100,
@@ -750,10 +763,18 @@ describe('PayoutsService', () => {
     });
 
     it('should split last rewardable place reward between tied participants', () => {
-      const firstAddress = '0x0000000000000000000000000000000000000001';
-      const secondAddress = '0x0000000000000000000000000000000000000002';
-      const thirdAddress = '0x0000000000000000000000000000000000000003';
-      const fourthAddress = '0x0000000000000000000000000000000000000004';
+      const firstAddress = faker.finance.ethereumAddress();
+      const secondAddress = faker.finance.ethereumAddress();
+      const thirdAddress = faker.finance.ethereumAddress();
+      const fourthAddress = faker.finance.ethereumAddress();
+      const firstScore = faker.number.int({ min: 4000, max: 5000 });
+      const secondScore =
+        firstScore - faker.number.int({ min: 800, max: 1500 });
+      const tiedScore = secondScore - faker.number.int({ min: 400, max: 900 });
+      const firstTotalVolume = faker.number.int({ min: 1000, max: 1400 });
+      const secondTotalVolume = faker.number.int({ min: 800, max: 1200 });
+      const thirdTotalVolume = faker.number.int({ min: 600, max: 900 });
+      const fourthTotalVolume = faker.number.int({ min: 600, max: 900 });
 
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -765,23 +786,23 @@ describe('PayoutsService', () => {
               results: [
                 generateParticipantOutcome({
                   address: firstAddress,
-                  score: 4200,
-                  total_volume: 1000,
+                  score: firstScore,
+                  total_volume: firstTotalVolume,
                 }),
                 generateParticipantOutcome({
                   address: secondAddress,
-                  score: 2800,
-                  total_volume: 900,
+                  score: secondScore,
+                  total_volume: secondTotalVolume,
                 }),
                 generateParticipantOutcome({
                   address: thirdAddress,
-                  score: 1500,
-                  total_volume: 700,
+                  score: tiedScore,
+                  total_volume: thirdTotalVolume,
                 }),
                 generateParticipantOutcome({
                   address: fourthAddress,
-                  score: 1500,
-                  total_volume: 700,
+                  score: tiedScore,
+                  total_volume: fourthTotalVolume,
                 }),
               ],
             },
@@ -796,7 +817,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_threshold: 0,
+          min_volume_required: 0,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         100,
@@ -811,10 +832,21 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should filter out participants below min_threshold', () => {
-      const firstAddress = ethers.getAddress(faker.finance.ethereumAddress());
-      const secondAddress = ethers.getAddress(faker.finance.ethereumAddress());
-      const thirdAddress = ethers.getAddress(faker.finance.ethereumAddress());
+    it('should split all remaining slots when many participants tie for 2nd place', () => {
+      const firstAddress = faker.finance.ethereumAddress();
+      const tiedAddresses = Array.from({ length: 5 }, () =>
+        faker.finance.ethereumAddress(),
+      );
+      const seventhAddress = faker.finance.ethereumAddress();
+      const eighthAddress = faker.finance.ethereumAddress();
+
+      const firstScore = faker.number.int({ min: 100, max: 200 });
+      const tiedScore = firstScore - faker.number.int({ min: 10, max: 30 });
+      const seventhScore = tiedScore - faker.number.int({ min: 10, max: 20 });
+      const eighthScore = seventhScore - faker.number.int({ min: 5, max: 10 });
+      const minVolumeRequired = faker.number.int({ min: 50, max: 120 });
+      const eligibleVolume =
+        minVolumeRequired + faker.number.int({ min: 1, max: 100 });
 
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -826,18 +858,25 @@ describe('PayoutsService', () => {
               results: [
                 generateParticipantOutcome({
                   address: firstAddress,
-                  score: 100,
-                  total_volume: 50,
+                  score: firstScore,
+                  total_volume: eligibleVolume,
+                }),
+                ...tiedAddresses.map((address) =>
+                  generateParticipantOutcome({
+                    address,
+                    score: tiedScore,
+                    total_volume: eligibleVolume,
+                  }),
+                ),
+                generateParticipantOutcome({
+                  address: seventhAddress,
+                  score: seventhScore,
+                  total_volume: eligibleVolume,
                 }),
                 generateParticipantOutcome({
-                  address: secondAddress,
-                  score: 90,
-                  total_volume: 200,
-                }),
-                generateParticipantOutcome({
-                  address: thirdAddress,
-                  score: 80,
-                  total_volume: 150,
+                  address: eighthAddress,
+                  score: eighthScore,
+                  total_volume: eligibleVolume,
                 }),
               ],
             },
@@ -852,7 +891,81 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_threshold: 100,
+          min_volume_required: minVolumeRequired,
+          rewards_distribution: [50, 30, 20],
+        } as CompetitiveCampaignManifest,
+        100,
+        18,
+      );
+
+      const rewardsByAddress = new Map(
+        rewardsBatches[0].rewards.map((reward) => [
+          reward.address,
+          reward.amount,
+        ]),
+      );
+
+      expect(rewardsBatches[0].rewards).toHaveLength(6);
+      expect(rewardsByAddress.get(firstAddress)).toBe('50');
+      for (const tiedAddress of tiedAddresses) {
+        expect(rewardsByAddress.get(tiedAddress)).toBe('10');
+      }
+      expect(rewardsByAddress.has(seventhAddress)).toBe(false);
+      expect(rewardsByAddress.has(eighthAddress)).toBe(false);
+    });
+
+    it('should filter out participants below min_volume_required', () => {
+      const firstAddress = ethers.getAddress(faker.finance.ethereumAddress());
+      const secondAddress = ethers.getAddress(faker.finance.ethereumAddress());
+      const thirdAddress = ethers.getAddress(faker.finance.ethereumAddress());
+      const minVolumeRequired = faker.number.int({ min: 100, max: 300 });
+      const firstParticipantVolume =
+        minVolumeRequired - faker.number.int({ min: 1, max: 50 });
+      const secondParticipantVolume =
+        minVolumeRequired + faker.number.int({ min: 10, max: 80 });
+      const thirdParticipantVolume =
+        minVolumeRequired + faker.number.int({ min: 1, max: 40 });
+      const firstScore = faker.number.int({ min: 100, max: 150 });
+      const secondScore = firstScore - faker.number.int({ min: 5, max: 20 });
+      const thirdScore = secondScore - faker.number.int({ min: 5, max: 20 });
+
+      const intermediateResultsData = generateIntermediateResultsData();
+      intermediateResultsData.results = [
+        {
+          ...generateIntermediateResult(),
+          participants_outcomes_batches: [
+            {
+              id: faker.string.uuid(),
+              results: [
+                generateParticipantOutcome({
+                  address: firstAddress,
+                  score: firstScore,
+                  total_volume: firstParticipantVolume,
+                }),
+                generateParticipantOutcome({
+                  address: secondAddress,
+                  score: secondScore,
+                  total_volume: secondParticipantVolume,
+                }),
+                generateParticipantOutcome({
+                  address: thirdAddress,
+                  score: thirdScore,
+                  total_volume: thirdParticipantVolume,
+                }),
+              ],
+            },
+          ],
+        },
+      ];
+
+      const rewardsBatches = payoutsService[
+        'calculateRewardsForCompetitiveCampaign'
+      ](
+        intermediateResultsData,
+        {
+          ...generateManifest('COMPETITIVE_MARKET_MAKING'),
+          pair: 'BTC/USDT',
+          min_volume_required: minVolumeRequired,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         100,
