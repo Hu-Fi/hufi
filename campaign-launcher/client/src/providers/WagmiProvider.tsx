@@ -1,6 +1,6 @@
 import type { FC, PropsWithChildren } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
+import { ChainId } from '@human-protocol/sdk/dist/enums';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import { polygon, polygonAmoy } from '@reown/appkit/networks';
 import { AppKitProvider } from '@reown/appkit/react';
