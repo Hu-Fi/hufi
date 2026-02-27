@@ -34,7 +34,10 @@ const LaunchCampaignForm: FC = () => {
       minHeight={{ xs: 'auto', md: '600px' }}
     >
       {step < 4 && (
-        <TopNavigation step={step} handleBackClick={() => setStep(step - 1)} />
+        <TopNavigation
+          step={step}
+          handleBackClick={() => setStep((prevStep) => prevStep - 1)}
+        />
       )}
       {step === 1 && (
         <FirstStep

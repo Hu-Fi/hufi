@@ -1,4 +1,4 @@
-import { ChainId } from '@human-protocol/sdk';
+import { ChainId } from '@human-protocol/sdk/dist/enums';
 
 export const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 

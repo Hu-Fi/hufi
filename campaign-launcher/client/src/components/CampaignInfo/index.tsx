@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react';
+import { lazy, Suspense, useState, type FC } from 'react';
 
 import { Box, Button, Skeleton, Stack, Typography } from '@mui/material';
 
@@ -7,12 +7,13 @@ import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import CustomTooltip from '@/components/CustomTooltip';
 import JoinCampaign from '@/components/JoinCampaign';
-import ChartModal from '@/components/modals/ChartModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
 import type { CampaignDetails, CampaignJoinStatus } from '@/types';
 import { getChainIcon, getNetworkName } from '@/utils';
 import dayjs from '@/utils/dayjs';
+
+const ChartModal = lazy(() => import('@/components/modals/ChartModal'));
 
 const formatDate = (dateString: string): string => {
   return dayjs(dateString).format('D MMM YYYY');
@@ -136,11 +137,13 @@ const CampaignInfo: FC<Props> = ({
           >
             Paid Amount Chart
           </Button>
-          <ChartModal
-            open={isChartModalOpen}
-            onClose={() => setIsChartModalOpen(false)}
-            campaign={campaign}
-          />
+          <Suspense fallback={null}>
+            <ChartModal
+              open={isChartModalOpen}
+              onClose={() => setIsChartModalOpen(false)}
+              campaign={campaign}
+            />
+          </Suspense>
         </Box>
       )}
     </Box>

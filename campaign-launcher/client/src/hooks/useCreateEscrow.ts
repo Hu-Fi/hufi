@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { EscrowClient } from '@human-protocol/sdk';
+import { EscrowClient } from '@human-protocol/sdk/dist/escrow';
 import { ethers } from 'ethers';
 
 import ERC20ABI from '@/abi/ERC20.json';

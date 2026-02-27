@@ -1,4 +1,11 @@
-import { type FC, type PropsWithChildren, Children, useState } from 'react';
+import {
+  type FC,
+  type PropsWithChildren,
+  Children,
+  lazy,
+  Suspense,
+  useState,
+} from 'react';
 
 import { Box, Button, Skeleton, styled, Typography, Grid } from '@mui/material';
 
@@ -21,7 +28,7 @@ import {
   getTokenInfo,
 } from '@/utils';
 
-import ChartModal from '../modals/ChartModal';
+const ChartModal = lazy(() => import('@/components/modals/ChartModal'));
 
 type Props = {
   campaign: CampaignDetails | null | undefined;
@@ -377,11 +384,13 @@ const CampaignStats: FC<Props> = ({
           >
             Paid Amount Chart
           </Button>
-          <ChartModal
-            open={isChartModalOpen}
-            onClose={() => setIsChartModalOpen(false)}
-            campaign={campaign}
-          />
+          <Suspense fallback={null}>
+            <ChartModal
+              open={isChartModalOpen}
+              onClose={() => setIsChartModalOpen(false)}
+              campaign={campaign}
+            />
+          </Suspense>
         </>
       )}
     </>

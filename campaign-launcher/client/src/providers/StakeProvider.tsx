@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { StakingClient } from '@human-protocol/sdk';
+import { StakingClient } from '@human-protocol/sdk/dist/staking';
 
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';

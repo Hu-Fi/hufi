@@ -1,4 +1,5 @@
-import { NETWORKS, type ChainId } from '@human-protocol/sdk';
+import { NETWORKS } from '@human-protocol/sdk/dist/constants';
+import { type ChainId } from '@human-protocol/sdk/dist/enums';
 import { ethers, formatUnits } from 'ethers';
 
 import {
