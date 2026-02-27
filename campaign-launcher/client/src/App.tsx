@@ -24,6 +24,8 @@ import ThemeProvider from '@/providers/ThemeProvider';
 import WagmiProvider from '@/providers/WagmiProvider';
 import { Web3AuthProvider } from '@/providers/Web3AuthProvider';
 
+import './index.css';
+
 const App: FC = () => {
   return (
     <WagmiProvider>

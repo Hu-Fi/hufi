@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
-import { type ChainId, NETWORKS } from '@human-protocol/sdk';
+import { type ChainId } from '@human-protocol/sdk';
+import { NETWORKS } from '@human-protocol/sdk/dist/constants';
 import { ethers } from 'ethers';
 
 import ERC20ABI from '@/abi/ERC20.json';

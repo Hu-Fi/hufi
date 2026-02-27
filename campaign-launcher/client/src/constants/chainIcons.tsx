@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
+import { ChainId } from '@human-protocol/sdk/dist/enums';
 
 import { EthereumIcon } from '@/icons/chainIcons/EthereumIcon';
 import { HumanIcon } from '@/icons/chainIcons/HumanIcon';
