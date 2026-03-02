@@ -3,11 +3,12 @@ import Joi from 'joi';
 import { ChainIds } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 
-import { BaseCampaignManifest, IntermediateResultsData } from './types';
+import { CampaignManifest, IntermediateResultsData } from './types';
 
 const participantOutcome = Joi.object({
   address: Joi.string().required(),
   score: Joi.number().strict().min(0).required(),
+  total_volume: Joi.number().strict().min(0).optional(),
 });
 
 const participantsOutcomesBatchSchema = Joi.object({
@@ -60,7 +61,7 @@ export async function downloadIntermediateResults(
 export async function retrieveCampaignManifest(
   manifestOrUrl: string,
   manifestHash: string,
-): Promise<BaseCampaignManifest> {
+): Promise<CampaignManifest> {
   let manifestData;
   if (httpUtils.isValidHttpUrl(manifestOrUrl)) {
     const manifestContent = await httpUtils.downloadFileAndVerifyHash(
@@ -75,5 +76,9 @@ export async function retrieveCampaignManifest(
     manifestData = manifestOrUrl;
   }
 
-  return JSON.parse(manifestData);
+  try {
+    return JSON.parse(manifestData) as CampaignManifest;
+  } catch {
+    throw new Error('Invalid campaign manifest');
+  }
 }
