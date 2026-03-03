@@ -171,7 +171,6 @@ const createAppTheme = (mode: PaletteMode) => {
         letterSpacing: 0,
       },
       alert: {
-        fontFamily: 'Roboto, sans-serif',
         fontSize: 16,
         fontWeight: 500,
         lineHeight: '150%',
@@ -219,7 +218,6 @@ const createAppTheme = (mode: PaletteMode) => {
       MuiMenuItem: {
         styleOverrides: {
           root: {
-            fontFamily: 'Roboto, sans-serif',
             fontSize: '16px',
             fontWeight: 400,
             lineHeight: '150%',

@@ -10,7 +10,6 @@ import {
 } from 'wagmi';
 
 import coinbaseSvg from '@/assets/coinbase.svg';
-import metaMaskSvg from '@/assets/metamask.svg';
 import walletConnectSvg from '@/assets/walletconnect.svg';
 import BaseModal from '@/components/modals/BaseModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -18,20 +17,16 @@ import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 const WALLET_ICONS: Record<string, string> = {
-  metaMask: metaMaskSvg,
   coinbaseWalletSDK: coinbaseSvg,
   walletConnect: walletConnectSvg,
 };
 
-const ConnectWallet: FC = () => {
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-  const connect = useConnect();
-  const connectors = useConnectors();
-  const { isConnecting } = useActiveAccount();
-  const { setShowSignInPrompt } = useWeb3Auth();
-  const disconnect = useDisconnect();
+const Content: FC<{ onClose: () => void }> = ({ onClose }) => {
   const isMobile = useIsMobile();
+  const connectors = useConnectors();
+  const connect = useConnect();
+  const disconnect = useDisconnect();
+  const { setShowSignInPrompt } = useWeb3Auth();
 
   const handleConnect = async (connector: Connector) => {
     try {
@@ -50,58 +45,63 @@ const ConnectWallet: FC = () => {
     }
   };
 
+  return (
+    <>
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="column"
+        gap={1}
+        mt={{ xs: 2, md: 0 }}
+      >
+        {connectors.map((connector) => (
+          <Button
+            key={connector.id}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              px: 3,
+              py: 2,
+              bgcolor: 'rgba(255, 255, 255, 0.09)',
+              color: 'text.primary',
+              borderRadius: '4px',
+            }}
+            onClick={() => {
+              handleConnect(connector);
+              if (isMobile) {
+                onClose();
+              }
+            }}
+          >
+            <img
+              src={connector.icon ?? WALLET_ICONS[connector.id]}
+              alt={connector.id}
+              width={24}
+              height={24}
+            />
+            <span>{connector.name}</span>
+          </Button>
+        ))}
+      </Box>
+      <Typography color="text.primary" fontSize={11} mt={1.5}>
+        By connecting a wallet, you agree to HUMAN Protocol Terms of Service and
+        consent to its Privacy Policy.
+      </Typography>
+    </>
+  );
+};
+
+const ConnectWallet: FC = () => {
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+  const { isConnecting } = useActiveAccount();
+  const isMobile = useIsMobile();
+
   const handleConnectWalletButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(e.currentTarget);
   };
 
   const onClose = () => setAnchorEl(null);
-
-  const renderContent = () => {
-    return (
-      <>
-        <Box
-          width="100%"
-          display="flex"
-          flexDirection="column"
-          gap={1}
-          mt={{ xs: 2, md: 0 }}
-        >
-          {connectors.map((connector) => (
-            <Button
-              key={connector.id}
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                px: 3,
-                py: 2,
-                bgcolor: 'rgba(255, 255, 255, 0.09)',
-                color: 'text.primary',
-                borderRadius: '4px',
-              }}
-              onClick={() => {
-                handleConnect(connector);
-                if (isMobile) {
-                  onClose();
-                }
-              }}
-            >
-              <img
-                src={connector.icon ?? WALLET_ICONS[connector.id]}
-                alt={connector.id}
-                width={24}
-                height={24}
-              />
-              <span>{connector.name}</span>
-            </Button>
-          ))}
-        </Box>
-        <Typography color="text.primary" fontSize={11} mt={1.5}>
-          By connecting a wallet, you agree to HUMAN Protocol Terms of Service
-          and consent to its Privacy Policy.
-        </Typography>
-      </>
-    );
-  };
 
   return (
     <>
@@ -121,7 +121,7 @@ const ConnectWallet: FC = () => {
           elevation={4}
           sx={{ px: 2 }}
         >
-          {renderContent()}
+          <Content onClose={onClose} />
         </BaseModal>
       ) : (
         <Popover
@@ -157,7 +157,7 @@ const ConnectWallet: FC = () => {
               <CloseIcon sx={{ color: 'primary.main' }} />
             </IconButton>
           </Box>
-          {renderContent()}
+          <Content onClose={onClose} />
         </Popover>
       )}
     </>
