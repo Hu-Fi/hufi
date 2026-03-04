@@ -39,7 +39,8 @@ import {
   ExchangesService,
   ExchangeApiAccessError,
   ExchangeApiKeyNotFoundError,
-  PancakeswapClient,
+  ExchangeApiClientFactory,
+  type PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -80,6 +81,7 @@ import { HoldingMeta } from './progress-checking/holding';
 import { MarketMakingMeta } from './progress-checking/market-making';
 import { ThresholdMeta } from './progress-checking/threshold';
 import {
+  isCompetitiveMarketMakingCampaign,
   isHoldingCampaign,
   isMarketMakingCampaign,
   isThresholdCampaign,
@@ -109,6 +111,7 @@ export class CampaignsService implements OnModuleDestroy {
     private readonly campaignsCache: CampaignsCache,
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
+    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangesService: ExchangesService,
     private readonly participationsRepository: ParticipationsRepository,
@@ -270,7 +273,10 @@ export class CampaignsService implements OnModuleDestroy {
       [ExchangeName.PANCAKESWAP, ExchangeName.HYPERLIQUID].includes(
         manifest.exchange as ExchangeName,
       ) &&
-      manifest.type !== CampaignType.MARKET_MAKING
+      ![
+        CampaignType.MARKET_MAKING,
+        CampaignType.COMPETITIVE_MARKET_MAKING,
+      ].includes(manifest.type as CampaignType)
     ) {
       throw new Error(
         `Only market making campaigns supported for ${manifest.exchange}`,
@@ -370,6 +376,11 @@ export class CampaignsService implements OnModuleDestroy {
       switch (manifest.type) {
         case CampaignType.MARKET_MAKING:
           manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
+          break;
+        case CampaignType.COMPETITIVE_MARKET_MAKING:
+          manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest(
+            manifest,
+          );
           break;
         case CampaignType.HOLDING:
           manifestUtils.assertValidHoldingCampaignManifest(manifest);
@@ -594,41 +605,57 @@ export class CampaignsService implements OnModuleDestroy {
             { logWarnings: true, caller: this.recordCampaignProgress.name },
           );
 
-          let progressValueTarget: number;
-          let progressValue: number;
-          if (isMarketMakingCampaign(campaign)) {
-            progressValueTarget = campaign.details.dailyVolumeTarget;
-            progressValue = (progress.meta as MarketMakingMeta).total_volume;
-          } else if (isHoldingCampaign(campaign)) {
-            progressValueTarget = campaign.details.dailyBalanceTarget;
-            progressValue = (progress.meta as HoldingMeta).total_balance;
-          } else if (isThresholdCampaign(campaign)) {
-            /**
-             * We are going to distribute daily reward pool fully in case there is at least one participant eligible for the reward.
-             * This is why we're using hardcoded 1 as a progressValueTarget and total_score instead of a balance for the progressValue.
-             * */
-            progressValueTarget = 1;
-            // TODO: Check this logic before releasing new contracts
-            progressValue = (progress.meta as ThresholdMeta).total_score;
+          let rewardPool: string;
+          if (isCompetitiveMarketMakingCampaign(campaign)) {
+            const shouldReserveFunds =
+              escrowStatus === EscrowStatus.ToCancel ||
+              endDate.valueOf() === campaign.endDate.valueOf();
+            rewardPool = shouldReserveFunds
+              ? new Decimal(campaign.fundAmount)
+                  .toDecimalPlaces(
+                    campaign.fundTokenDecimals,
+                    Decimal.ROUND_DOWN,
+                  )
+                  .toString()
+              : '0';
           } else {
-            throw new Error(
-              `Unknown campaign type for reward pool calculation: ${campaign.type}`,
-            );
-          }
+            let periodDurationDays = PROGRESS_PERIOD_DAYS;
+            if (escrowStatus === EscrowStatus.ToCancel) {
+              periodDurationDays = Math.ceil(
+                dayjs(endDate).diff(startDate, 'days', true),
+              );
+            }
 
-          let periodDurationDays = PROGRESS_PERIOD_DAYS;
-          if (escrowStatus === EscrowStatus.ToCancel) {
-            periodDurationDays = Math.ceil(
-              dayjs(endDate).diff(startDate, 'days', true),
-            );
+            let progressValueTarget: number;
+            let progressValue: number;
+            if (isMarketMakingCampaign(campaign)) {
+              progressValueTarget = campaign.details.dailyVolumeTarget;
+              progressValue = (progress.meta as MarketMakingMeta).total_volume;
+            } else if (isHoldingCampaign(campaign)) {
+              progressValueTarget = campaign.details.dailyBalanceTarget;
+              progressValue = (progress.meta as HoldingMeta).total_balance;
+            } else if (isThresholdCampaign(campaign)) {
+              /**
+               * We are going to distribute daily reward pool fully in case there is at least one participant eligible for the reward.
+               * This is why we're using hardcoded 1 as a progressValueTarget and total_score instead of a balance for the progressValue.
+               * */
+              progressValueTarget = 1;
+              // TODO: Check this logic before releasing new contracts
+              progressValue = (progress.meta as ThresholdMeta).total_score;
+            } else {
+              throw new Error(
+                `Unknown campaign type for reward pool calculation: ${campaign.type}`,
+              );
+            }
+
+            rewardPool = this.calculateRewardPool({
+              baseRewardPool: this.calculateDailyReward(campaign),
+              maxRewardPoolRatio: periodDurationDays,
+              progressValueTarget,
+              progressValue,
+              fundTokenDecimals: campaign.fundTokenDecimals,
+            });
           }
-          const rewardPool = this.calculateRewardPool({
-            baseRewardPool: this.calculateDailyReward(campaign),
-            maxRewardPoolRatio: periodDurationDays,
-            progressValueTarget,
-            progressValue,
-            fundTokenDecimals: campaign.fundTokenDecimals,
-          });
 
           const intermediateResult: IntermediateResult = {
             from: progress.from,
@@ -673,7 +700,10 @@ export class CampaignsService implements OnModuleDestroy {
             resultsUrl: storedResultsMeta.url,
           });
 
-          if (isMarketMakingCampaign(campaign)) {
+          if (
+            isMarketMakingCampaign(campaign) ||
+            isCompetitiveMarketMakingCampaign(campaign)
+          ) {
             void this.recordGeneratedVolume(campaign, intermediateResult);
           }
 
@@ -818,6 +848,7 @@ export class CampaignsService implements OnModuleDestroy {
   ): CampaignProgressChecker<ProgressCheckResult, CampaignProgressMeta> {
     switch (campaignType) {
       case CampaignType.MARKET_MAKING:
+      case CampaignType.COMPETITIVE_MARKET_MAKING:
         return new MarketMakingProgressChecker(
           this.exchangesService,
           campaignCheckerSetup,
@@ -1408,16 +1439,25 @@ export class CampaignsService implements OnModuleDestroy {
         return null;
       }
       timeframeEnd = cancellationRequestedAt;
-    } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
-      const client = new PancakeswapClient({
-        userId: 'system',
-        userEvmAddress: 'n/a',
-        subgraphApiKey: this.web3ConfigService.subgraphApiKey,
-      });
-      const subgraphMeta = await client.fetchSubgraphMeta();
-      timeframeEnd = new Date(subgraphMeta.block.timestamp * 1000);
     } else {
       timeframeEnd = now;
+    }
+
+    if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
+      const client = this.exchangeApiClientFactory.createDex(
+        ExchangeName.PANCAKESWAP,
+        {
+          userId: 'system',
+          userEvmAddress: 'n/a',
+        },
+      ) as PancakeswapClient;
+
+      const subgraphMeta = await client.fetchSubgraphMeta();
+
+      const lastBlockSyncedAt = new Date(subgraphMeta.block.timestamp * 1000);
+      if (lastBlockSyncedAt.valueOf() < timeframeEnd.valueOf()) {
+        timeframeEnd = lastBlockSyncedAt;
+      }
     }
 
     return {

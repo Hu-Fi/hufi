@@ -1,8 +1,6 @@
 import { NETWORKS, ChainId } from '@human-protocol/sdk';
 import ms from 'ms';
 
-export const PANCAKESWAP_BSC_SUBGRAPH = `https://gateway.thegraph.com/api/subgraphs/id/F6L7Zd1hoEc5FKATZjTMpFqwDEUNE3LRC4Z784RahMYH`;
-
 export const MAX_PAGE_SIZE = 50;
 
 export const tokenAddressBySymbol: Record<string, string | undefined> = {

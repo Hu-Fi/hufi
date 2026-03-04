@@ -1,8 +1,9 @@
 export {
   ExchangeApiAccessError,
   ExchangeApiClientError,
+  ExchangeApiClientFactory,
   ExchangePermission,
-  PancakeswapClient,
+  type PancakeswapClient,
   TakerOrMakerFlag,
   TradingSide,
   type ExchangeApiClient,

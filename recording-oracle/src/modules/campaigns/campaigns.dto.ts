@@ -92,6 +92,22 @@ class MarketMakingCampaignDto extends JoinedCampaignDto {
   declare details: MarketMakingCampaignDetailsDto;
 }
 
+class CompetitiveMarketMakingCampaignDetailsDto {
+  @ApiProperty({ name: 'min_volume_required' })
+  minVolumeRequired: number;
+
+  @ApiProperty({ name: 'rewards_distribution' })
+  rewardsDistribution: number[];
+}
+
+class CompetitiveMarketMakingCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.COMPETITIVE_MARKET_MAKING] })
+  declare type: CampaignType.COMPETITIVE_MARKET_MAKING;
+
+  @ApiProperty()
+  declare details: CompetitiveMarketMakingCampaignDetailsDto;
+}
+
 class HoldingCampaignDetailsDto {
   @ApiProperty({ name: 'daily_balance_target' })
   dailyBalanceTarget: number;
@@ -145,6 +161,7 @@ export class ListJoinedCampaignsQueryDto {
 
 @ApiExtraModels(
   MarketMakingCampaignDto,
+  CompetitiveMarketMakingCampaignDto,
   HoldingCampaignDto,
   ThresholdCampaignDto,
 )
@@ -157,6 +174,7 @@ export class ListJoinedCampaignsSuccessDto {
   @ApiProperty({
     oneOf: [
       { $ref: getSchemaPath(MarketMakingCampaignDto) },
+      { $ref: getSchemaPath(CompetitiveMarketMakingCampaignDto) },
       { $ref: getSchemaPath(HoldingCampaignDto) },
       { $ref: getSchemaPath(ThresholdCampaignDto) },
     ],
@@ -164,6 +182,9 @@ export class ListJoinedCampaignsSuccessDto {
       propertyName: 'type',
       mapping: {
         [CampaignType.MARKET_MAKING]: getSchemaPath(MarketMakingCampaignDto),
+        [CampaignType.COMPETITIVE_MARKET_MAKING]: getSchemaPath(
+          CompetitiveMarketMakingCampaignDto,
+        ),
         [CampaignType.HOLDING]: getSchemaPath(HoldingCampaignDto),
         [CampaignType.THRESHOLD]: getSchemaPath(ThresholdCampaignDto),
       },

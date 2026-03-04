@@ -75,6 +75,16 @@ export class CampaignDetails {
   dailyVolumeTarget?: number;
 
   @ApiPropertyOptional({
+    name: 'rewards_distribution',
+  })
+  rewardsDistribution?: number[];
+
+  @ApiPropertyOptional({
+    name: 'min_volume_required',
+  })
+  minVolumeRequired?: number;
+
+  @ApiPropertyOptional({
     name: 'daily_balance_target',
   })
   dailyBalanceTarget?: number;
