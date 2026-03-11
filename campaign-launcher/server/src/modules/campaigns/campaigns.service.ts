@@ -77,7 +77,7 @@ export class CampaignsService {
         reputationOracleAddress: this.web3ConfigService.reputationOracle,
         creatorAddress: filters?.launcherAddress,
         status_in: statuses.length > 0 ? statuses : undefined,
-      } as CampaignFilters & { creatorAddress: string },
+      } as CampaignFilters & { creatorAddress?: string },
       first: pagination?.limit,
       skip: pagination?.skip,
       orderBy: CampaignOrderBy.CREATED_AT,
@@ -271,9 +271,10 @@ export class CampaignsService {
   ): Promise<bigint> {
     try {
       if (
-        [CampaignStatus.CANCELLED, CampaignStatus.COMPLETED].includes(
-          subgraphCampaign.status as CampaignStatus,
-        )
+        [
+          SubgraphCampaignStatus.CANCELLED,
+          SubgraphCampaignStatus.COMPLETED,
+        ].includes(subgraphCampaign.status as SubgraphCampaignStatus)
       ) {
         return 0n;
       }
