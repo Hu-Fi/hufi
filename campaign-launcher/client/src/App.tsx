@@ -8,7 +8,8 @@ import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import StakeProtectedRoute from '@/components/StakeProtectedRoute';
 import { ROUTES } from '@/constants';
-import Campaign from '@/pages/Campaign';
+import CampaignDetails from '@/pages/CampaignDetails';
+import Campaigns from '@/pages/Campaigns';
 import Dashboard from '@/pages/Dashboard';
 import LaunchCampaignPage from '@/pages/LaunchCampaign';
 import ManageApiKeysPage from '@/pages/ManageApiKeys';
@@ -47,8 +48,12 @@ const App: FC = () => {
                                   element={<Dashboard />}
                                 />
                                 <Route
+                                  path={ROUTES.CAMPAIGNS}
+                                  element={<Campaigns />}
+                                />
+                                <Route
                                   path={ROUTES.CAMPAIGN_DETAILS}
-                                  element={<Campaign />}
+                                  element={<CampaignDetails />}
                                 />
                                 <Route
                                   path={ROUTES.MANAGE_API_KEYS}

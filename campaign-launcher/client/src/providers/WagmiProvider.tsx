@@ -9,7 +9,7 @@ import {
   polygonAmoy,
   sepolia,
 } from 'wagmi/chains';
-import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
+import { walletConnect, coinbaseWallet, metaMask } from 'wagmi/connectors';
 
 import { isMainnet } from '@/constants';
 
@@ -21,6 +21,7 @@ export const config = isMainnet
       connectors: [
         walletConnect({ projectId }),
         coinbaseWallet({ appName: 'HuFi' }),
+        metaMask(),
       ],
       syncConnectedChain: false,
       transports: {
@@ -40,6 +41,7 @@ export const config = isMainnet
       connectors: [
         walletConnect({ projectId }),
         coinbaseWallet({ appName: 'HuFi' }),
+        metaMask(),
       ],
       syncConnectedChain: false,
       transports: {

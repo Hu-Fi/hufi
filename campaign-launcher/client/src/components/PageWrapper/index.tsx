@@ -5,16 +5,15 @@ import { Paper } from '@mui/material';
 const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
         display: 'flex',
-        py: { xs: 2, md: 4, xl: 8 },
-        px: { xs: 2, md: 4, xl: 13 },
+        pt: { xs: 4, md: 8 },
+        pb: { xs: 5, md: 8 },
+        px: { xs: 2, md: 0 },
         flexDirection: 'column',
-        borderRadius: { xs: '0px', md: '20px' },
         bgcolor: 'background.default',
         minHeight: 'calc(100vh - 226px)',
-        gap: { xs: 3, md: 4, xl: 7 },
       }}
     >
       {children}

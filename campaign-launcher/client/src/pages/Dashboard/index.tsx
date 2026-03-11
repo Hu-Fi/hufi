@@ -1,18 +1,130 @@
-import type { FC } from 'react';
+import { useState, type FC } from 'react';
 
-import Campaigns from '@/components/Campaigns';
-import DashboardStats from '@/components/DashboardStats';
-import HowToLaunch from '@/components/HowToLaunch';
-import PageTitle from '@/components/PageTitle';
+import { Box, Button, Grid, Link } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
+
+import AboutHuFi from '@/components/AboutHuFi';
+import CampaignsFeed from '@/components/CampaignsFeed';
+import CampaignsViewToggle from '@/components/CampaignsViewToggle';
+import DashboardWidgets from '@/components/DashboardWidgets';
+import FAQ from '@/components/FAQ';
 import PageWrapper from '@/components/PageWrapper';
+import { ROUTES } from '@/constants';
+import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
+import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useCampaigns } from '@/hooks/useCampaigns';
+import usePagination from '@/hooks/usePagination';
+import { ChevronIcon } from '@/icons';
+import { config as wagmiConfig } from '@/providers/WagmiProvider';
+import {
+  type CampaignsQueryParams,
+  CampaignStatus,
+  CampaignsTabFilter as TabFilter,
+} from '@/types';
+import { filterFalsyQueryParams } from '@/utils';
+
+const LinkToCampaigns = () => (
+  <Link
+    component={RouterLink}
+    to={ROUTES.CAMPAIGNS}
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: { xs: 'space-between', sm: 'flex-start' },
+      width: { xs: '100%', sm: 'auto' },
+      color: 'white',
+      fontSize: { xs: 20, sm: 24 },
+      fontWeight: { xs: 500, sm: 800 },
+      letterSpacing: { xs: '0px', sm: '-0.5px' },
+      gap: 1,
+      textDecoration: 'none',
+      '&:hover': { textDecoration: 'underline' },
+    }}
+  >
+    Campaigns
+    <ChevronIcon sx={{ transform: 'rotate(-90deg)', color: 'white' }} />
+  </Link>
+);
 
 const Dashboard: FC = () => {
+  const [view, setView] = useState<'grid' | 'table'>('grid');
+
+  const isMobile = useIsMobile();
+  const {
+    params: { limit, skip },
+  } = usePagination();
+
+  const isGridView = view === 'grid';
+
+  const queryParams = filterFalsyQueryParams({
+    chain_id: wagmiConfig.chains[0]?.id ?? null,
+    status: CampaignStatus.ACTIVE,
+    limit,
+    skip,
+  }) as CampaignsQueryParams;
+
+  const {
+    data,
+    isLoading: isCampaignsLoading,
+    isFetching: isCampaignsFetching,
+  } = useCampaigns(queryParams);
+
+  const { isLoading: isJoinedCampaignsLoading } =
+    useGetJoinedCampaigns(queryParams);
+
+  const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
+
   return (
     <PageWrapper>
-      <PageTitle title="Dashboard" />
-      <DashboardStats />
-      <Campaigns />
-      <HowToLaunch />
+      <DashboardWidgets />
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        mb={{ xs: 2, md: 3 }}
+      >
+        <LinkToCampaigns />
+        {!isMobile && (
+          <CampaignsViewToggle
+            isGridView={isGridView}
+            disableFilters={false}
+            changeView={setView}
+          />
+        )}
+      </Box>
+      <CampaignsFeed
+        data={data?.results ?? []}
+        isGridView={view === 'grid'}
+        isLoading={isLoading}
+        isFetching={isCampaignsFetching}
+        tabFilter={TabFilter.ACTIVE}
+      />
+      {isMobile && (
+        <Button
+          component={RouterLink}
+          to={ROUTES.CAMPAIGNS}
+          variant="outlined"
+          size="large"
+          fullWidth
+          sx={{ mt: 2, color: 'white', borderColor: 'error.main' }}
+        >
+          View All
+        </Button>
+      )}
+      <Grid
+        container
+        component="section"
+        spacing={{ xs: 4, md: 3 }}
+        mt={{ xs: 4, md: 8 }}
+        minHeight={{ xs: 'auto', md: '400px' }}
+      >
+        <Grid size={{ xs: 12, md: 5 }}>
+          <FAQ />
+        </Grid>
+        <Grid size={{ xs: 12, md: 7 }}>
+          <AboutHuFi />
+        </Grid>
+      </Grid>
     </PageWrapper>
   );
 };

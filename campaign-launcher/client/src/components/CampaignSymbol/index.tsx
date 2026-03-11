@@ -26,12 +26,12 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'small':
       return {
         image: {
-          width: 24,
+          width: 22,
           border: '1px solid white',
         },
         text: {
-          fontWeight: 400,
-          fontSize: 16,
+          fontWeight: 600,
+          fontSize: 20,
         },
       };
     case 'medium':

@@ -1,6 +1,11 @@
 import { useCallback, useState } from 'react';
 
-import { DEFAULT_TABLE_PAGE_SIZE } from '@/constants';
+import {
+  DEFAULT_TABLE_PAGE_SIZE,
+  DEFAULT_TABLE_PAGE_SIZE_MOBILE,
+} from '@/constants';
+
+import { useIsMobile } from './useBreakpoints';
 
 type PaginationState = {
   params: {
@@ -17,8 +22,11 @@ type PaginationState = {
 };
 
 const usePagination = (): PaginationState => {
+  const isMobile = useIsMobile();
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(
+    isMobile ? DEFAULT_TABLE_PAGE_SIZE_MOBILE : DEFAULT_TABLE_PAGE_SIZE
+  );
 
   const skip = page * pageSize;
 

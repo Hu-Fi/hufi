@@ -5,8 +5,15 @@ import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import type { CampaignsQueryParams } from '@/types';
 
-export const useCampaigns = (params: CampaignsQueryParams) => {
+import { useIsMobile } from './useBreakpoints';
+
+export const useCampaigns = (
+  params: CampaignsQueryParams,
+  options?: { enabled?: boolean }
+) => {
+  const isMobile = useIsMobile();
   const { chain_id, status, launcher, limit = 10, skip } = params;
+  const { enabled = true } = options ?? {};
 
   return useQuery({
     queryKey: [
@@ -25,31 +32,9 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
         id: campaign.address,
       })),
     }),
-    enabled: !!chain_id,
-  });
-};
-
-export const useMyCampaigns = (params: CampaignsQueryParams) => {
-  const { chain_id, status, launcher, limit = 10, skip } = params;
-
-  return useQuery({
-    queryKey: [
-      QUERY_KEYS.MY_CAMPAIGNS,
-      chain_id,
-      launcher,
-      status,
-      limit,
-      skip,
-    ],
-    queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
-    select: (data) => ({
-      ...data,
-      results: data.results.map((campaign) => ({
-        ...campaign,
-        id: campaign.address,
-      })),
-    }),
-    enabled: !!chain_id && !!launcher,
+    enabled: enabled && !!chain_id,
+    placeholderData: (prev) =>
+      prev?.results?.length && isMobile ? prev : undefined,
   });
 };
 

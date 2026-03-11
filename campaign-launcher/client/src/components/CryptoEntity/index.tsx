@@ -25,9 +25,7 @@ const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
           borderRadius="100%"
         />
       )}
-      <Typography color="text.primary" {...getSymbolStyles(size).text}>
-        {label}
-      </Typography>
+      <Typography {...getSymbolStyles(size).text}>{label}</Typography>
     </Box>
   );
 };
