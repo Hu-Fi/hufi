@@ -1,13 +1,11 @@
 import { type FC, useMemo } from 'react';
 
-import { Skeleton, Typography } from '@mui/material';
+import { Skeleton } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';
-import HowToLaunch from '@/components/HowToLaunch';
 import JoinCampaign from '@/components/JoinCampaign';
-import JoinedCampaigns from '@/components/JoinedCampaigns';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
 import { useCheckCampaignJoinStatus } from '@/hooks/recording-oracle';
@@ -16,7 +14,7 @@ import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { CampaignJoinStatus, type EvmAddress } from '@/types';
 import { isCampaignDetails } from '@/utils';
 
-const Campaign: FC = () => {
+const CampaignDetails: FC = () => {
   const { address } = useParams() as { address: EvmAddress };
   const [searchParams] = useSearchParams();
   const { data: campaign, isFetching: isCampaignLoading } =
@@ -77,15 +75,8 @@ const Campaign: FC = () => {
           joinStatusInfo?.status === CampaignJoinStatus.USER_ALREADY_JOINED
         }
       />
-      <Typography variant="h6">Joined Campaigns</Typography>
-      <JoinedCampaigns
-        showOnlyActiveCampaigns={false}
-        showPagination={false}
-        showViewAll={true}
-      />
-      <HowToLaunch />
     </PageWrapper>
   );
 };
 
-export default Campaign;
+export default CampaignDetails;
