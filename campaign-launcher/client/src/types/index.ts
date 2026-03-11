@@ -236,3 +236,10 @@ export enum AllowanceType {
   UNLIMITED = 'unlimited',
   CUSTOM = 'custom',
 }
+
+export enum CampaignsTabFilter {
+  ACTIVE = 'active',
+  JOINED = 'joined',
+  HOSTED = 'hosted',
+  HISTORY = 'history',
+}

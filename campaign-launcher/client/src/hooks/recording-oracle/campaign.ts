@@ -32,6 +32,7 @@ export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
       })),
     }),
     enabled: isAuthenticated,
+    staleTime: Infinity,
   });
 };
 

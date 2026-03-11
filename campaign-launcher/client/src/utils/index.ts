@@ -320,3 +320,28 @@ export const scrollToFirstErrorFieldOnMobile = <T extends object>(
     });
   }
 };
+
+export const getTargetInfo = (campaign: Campaign) => {
+  switch (campaign.type) {
+    case CampaignType.MARKET_MAKING:
+      return {
+        label: 'Target Volume',
+        value: campaign.details.daily_volume_target,
+      };
+    case CampaignType.HOLDING:
+      return {
+        label: 'Target Balance',
+        value: campaign.details.daily_balance_target,
+      };
+    case CampaignType.THRESHOLD:
+      return {
+        label: 'Target Balance',
+        value: campaign.details.minimum_balance_target,
+      };
+    default:
+      return {
+        label: 'Target Volume',
+        value: campaign.details.daily_volume_target,
+      };
+  }
+};
