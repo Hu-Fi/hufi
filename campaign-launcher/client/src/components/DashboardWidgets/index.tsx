@@ -20,7 +20,7 @@ const Card = styled('div', {
 })<CardProps>(({ theme, isReverse }: { theme: Theme } & CardProps) => ({
   display: 'flex',
   flexDirection: isReverse ? 'column-reverse' : 'column',
-  height: 'stretch',
+  height: '100%',
   backgroundColor: '#251d47',
   borderRadius: '16px',
   border: '1px solid',
