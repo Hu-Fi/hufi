@@ -23,7 +23,7 @@ jobs:
 
       - name: Generate summary for the last sprint
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
           TODAY=$(date -u +%Y-%m-%d)
 
