@@ -161,7 +161,7 @@ const ConnectWallet: FC<Props> = ({ size = 'large', handleClickCallback }) => {
               p: 0,
             }}
           >
-            <CloseIcon sx={{ color: 'white', size: 16 }} />
+            <CloseIcon sx={{ color: 'white', fontSize: 24 }} />
           </IconButton>
           <Typography variant="h6" component="h6" color="white" mb={1.5}>
             Connect Wallet

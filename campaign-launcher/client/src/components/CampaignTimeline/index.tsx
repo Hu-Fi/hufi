@@ -25,6 +25,7 @@ const mapLabelToColor = (label: string) => {
     case 'Ended on':
       return '#d4cfff';
     default:
+      return 'transparent';
   }
 };
 
