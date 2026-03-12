@@ -5,9 +5,7 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useLocation, useNavigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
-import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
-import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
@@ -18,9 +16,7 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { Campaign } from '@/types';
 import {
   formatTokenAmount,
-  getChainIcon,
   getDailyTargetTokenSymbol,
-  getNetworkName,
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
@@ -170,41 +166,8 @@ const CampaignsTable: FC<Props> = ({
       },
     },
     {
-      field: 'network',
-      headerName: 'Net',
-      flex: 0.5,
-      minWidth: 50,
-      renderCell: (params) => {
-        const networkName = getNetworkName(params.row.chain_id);
-        return (
-          <CustomTooltip
-            title={networkName || 'Unknown Network'}
-            placement="top"
-            sx={{ zIndex: 1 }}
-          >
-            <Box display="flex" alignItems="center" p={0} color="text.primary">
-              {getChainIcon(params.row.chain_id)}
-            </Box>
-          </CustomTooltip>
-        );
-      },
-    },
-    {
-      field: 'address',
-      headerName: 'Address',
-      flex: 1,
-      minWidth: 140,
-      renderCell: (params) => (
-        <CampaignAddress
-          address={params.row.address}
-          chainId={params.row.chain_id}
-          size="medium"
-        />
-      ),
-    },
-    {
-      field: 'date',
-      headerName: 'Date',
+      field: 'status',
+      headerName: 'Status',
       flex: 1,
       minWidth: 120,
       renderCell: (params) => <CampaignTimelineCell campaign={params.row} />,
