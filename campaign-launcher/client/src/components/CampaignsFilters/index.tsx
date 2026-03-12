@@ -1,4 +1,4 @@
-import { type FC, type SubmitEvent, useMemo, useState } from 'react';
+import { type FC, type SubmitEvent, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -56,7 +56,7 @@ const CheckboxCheckedIcon = () => (
     width={20}
     height={20}
     borderRadius="4px"
-    bgcolor="#FA2A75"
+    bgcolor="error.main"
   >
     <CheckIcon sx={{ color: '#ffffff', fontSize: 16 }} />
   </Box>
@@ -83,6 +83,18 @@ export type CampaignsFiltersSelection = {
   network: number;
 };
 
+const campaignTypeOptions = [...Object.values(CampaignType)].map(
+  (campaignType) => ({
+    value: campaignType,
+    label: mapTypeToLabel(campaignType),
+  })
+);
+
+const networkOptions = wagmiConfig.chains.map((chain) => ({
+  value: chain.id,
+  label: chain.name,
+}));
+
 type Props = {
   appliedFilters: CampaignsFiltersSelection;
   handleApplyFilters: (filters: CampaignsFiltersSelection) => void;
@@ -101,32 +113,10 @@ const CampaignsFilters: FC<Props> = ({
 
   const { exchanges = [] } = useExchangesContext();
 
-  const campaignTypeOptions = useMemo(
-    () =>
-      [...Object.values(CampaignType)].map((campaignType) => ({
-        value: campaignType,
-        label: mapTypeToLabel(campaignType),
-      })),
-    []
-  );
-
-  const exchangeOptions = useMemo(
-    () =>
-      exchanges.map(({ name, display_name }) => ({
-        value: name,
-        label: display_name,
-      })),
-    [exchanges]
-  );
-
-  const networkOptions = useMemo(
-    () =>
-      wagmiConfig.chains.map((chain) => ({
-        value: chain.id,
-        label: chain.name,
-      })),
-    []
-  );
+  const exchangeOptions = exchanges.map(({ name, display_name }) => ({
+    value: name,
+    label: display_name,
+  }));
 
   const isAllCampaignTypesSelected = draftFilters.campaignTypes.includes('');
   const isAllExchangesSelected = draftFilters.exchanges.includes('');
@@ -257,33 +247,16 @@ const CampaignsFilters: FC<Props> = ({
         >
           <CloseIcon sx={{ color: 'white' }} />
         </IconButton>
-        <Box
+        <Stack
           component="form"
-          display="flex"
-          flexDirection="column"
           maxHeight="100%"
           minHeight={0}
           onSubmit={handleSubmit}
         >
-          <Typography
-            variant="h6"
-            component="h6"
-            color="white"
-            lineHeight={1}
-            ml={2}
-            mb={3}
-          >
+          <Typography variant="h6" color="white" lineHeight={1} ml={2} mb={3}>
             Campaign Filters
           </Typography>
-          <Box
-            display="flex"
-            flexDirection="column"
-            flex={1}
-            pt={2}
-            minHeight={0}
-            overflow="auto"
-            gap={2}
-          >
+          <Stack pt={2} gap={2} minHeight={0} overflow="auto">
             <Stack gap={1} px={2}>
               <Typography
                 variant="caption"
@@ -319,9 +292,9 @@ const CampaignsFilters: FC<Props> = ({
                           width={20}
                           height={20}
                           borderRadius="50%"
-                          bgcolor="#FA2A75"
+                          bgcolor="error.main"
                         >
-                          <CheckIcon sx={{ color: '#ffffff', fontSize: 16 }} />
+                          <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
                         </Box>
                       }
                     />
@@ -428,7 +401,7 @@ const CampaignsFilters: FC<Props> = ({
                 />
               ))}
             </Stack>
-          </Box>
+          </Stack>
           <Box
             display="flex"
             borderTop="1px solid #3a2e6f"
@@ -441,12 +414,12 @@ const CampaignsFilters: FC<Props> = ({
               variant="contained"
               fullWidth
               disableRipple
-              sx={{ bgcolor: '#fa2a75', color: 'white', boxShadow: 'none' }}
+              sx={{ bgcolor: 'error.main', color: 'white', boxShadow: 'none' }}
             >
               Apply filters
             </Button>
           </Box>
-        </Box>
+        </Stack>
       </Drawer>
     </>
   );
