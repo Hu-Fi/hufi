@@ -1,0 +1,108 @@
+name: Weekly summary
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  weekly-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v6
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Generate summary for the last sprint
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+
+          copilot --allow-tool 'shell' \
+                  --allow-tool 'write(weekly_summary.md)' \
+                  -p "Task: Create a last sprint engineering summary for the Hu-Fi/hufi repository using fixed sprint cadence (no GitHub Project dependency).
+
+          Cadence gate (must run first):
+          - Use UTC date TODAY (${TODAY}).
+          - Sprint cadence is fixed at 14 days.
+          - Anchor sprint start date is hardcoded: 2026-02-23 (UTC, sprint day 1).
+          - Compute days_since_anchor = (TODAY - 2026-02-23) in whole UTC days.
+          - TODAY is a sprint start day only if:
+            - days_since_anchor >= 0
+            - days_since_anchor % 14 == 0
+
+          If TODAY is NOT sprint start day:
+          - Write exactly: \"Not sprint start day (cadence check); skipping sprint report.\"
+          - Exit successfully.
+
+          If TODAY IS sprint start day:
+          - Report window is the PREVIOUS sprint:
+            - sprint_end_exclusive = TODAY
+            - sprint_start_inclusive = TODAY - 14 days
+          - Generate summary for work completed in [sprint_start_inclusive, sprint_end_exclusive).
+
+          Data collection (for previous sprint window only):
+          1) Find PRs merged into develop in the window.
+          2) Find issues closed in the window.
+          3) Summarize delivered work from PR titles/descriptions/changed files and linked issues.
+          4) Include carry-over/in-progress items if identifiable from linked issues/PR context.
+
+          Output requirements:
+          - Write output to weekly_summary.md.
+          - 10-20 concise bullets.
+          - Group by theme: Backend, Frontend, Infra, Fixes, Other.
+          - Each bullet includes:
+            - what changed,
+            - impact/outcome (if inferable),
+            - PR/issue link(s).
+          - Add final sections:
+            - Risks / Follow-ups
+            - Metrics (merged PR count, closed issue count, sprint range).
+          - Metrics must be plain bullet points, not a markdown table.
+          - In Metrics, include at least these bullets:
+            - PRs merged into develop: <number>
+            - Issues closed: <number>
+            - Sprint range: <start> -> <end>
+          - If no qualifying work:
+            - Write exactly: \"No significant engineering changes in the previous sprint.\"
+
+          Quality bar:
+          - Do not invent facts.
+          - Make sure that every issue or pull request mention is actually a link to a corresponding item on GitHub.
+          - Keep wording factual and concise."
+
+      - name: Post summary to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.REPORT_SLACK_WEBHOOK_URL }}
+        run: |
+          if [ ! -s weekly_summary.md ]; then
+            echo "weekly_summary.md is empty"; exit 1
+          fi
+
+          if grep -Fxq "Not sprint start day (cadence check); skipping sprint report." weekly_summary.md; then
+            echo "Skipping Slack post: not sprint start day."
+            exit 0
+          fi
+
+          sed -E \
+            -e 's/^#{1,6} (.+)$/\*\1\*/' \
+            -e 's/\*\*([^*]+)\*\*/\*\1\*/g' \
+            -e 's/\[([^]]+)\]\(([^)]+)\)/<\2|\1>/g' \
+            weekly_summary.md \
+            | jq -Rs '{
+                text: .,
+                mrkdwn: true,
+                unfurl_links: false,
+                unfurl_media: false
+              }' \
+            | curl -sf -X POST -H 'Content-type: application/json' \
+                --data @- "$SLACK_WEBHOOK_URL"
