@@ -3,9 +3,10 @@ import type { FC } from 'react';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import XIcon from '@mui/icons-material/X';
-import { Box, IconButton, styled, Typography } from '@mui/material';
+import { Box, IconButton, Stack, styled, Typography } from '@mui/material';
 
 import Container from '@/components/Container';
+import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
 
 const SocialMediaIconButton = styled(IconButton)(({ theme }) => ({
   padding: 0,
@@ -27,18 +28,22 @@ const handleClickOnSocialButton = (url: string) => {
   window.open(url, '_blank');
 };
 
-const Footer: FC = () => {
+const Footer: FC<{ showMobileBottomNav: boolean }> = ({
+  showMobileBottomNav,
+}) => {
   return (
-    <Box component="footer" sx={{ bgcolor: 'background.default' }}>
+    <Box
+      component="footer"
+      bgcolor="background.default"
+      pb={showMobileBottomNav ? `${MOBILE_BOTTOM_NAV_HEIGHT}px` : 0}
+    >
       <Container>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          flexDirection={{ xs: 'column-reverse', md: 'row' }}
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          py={4}
-          gap={{ xs: 3, md: 0 }}
-          px={{ xs: 3, md: 0 }}
+        <Stack
+          alignItems="center"
+          pt={1}
+          pb={3}
+          gap={1}
+          borderTop="1px solid #433679"
         >
           <Typography color="text.secondary" variant="caption">
             © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
@@ -48,7 +53,7 @@ const Footer: FC = () => {
             alignItems="center"
             gap="30px"
             width={{ xs: '100%', md: 'auto' }}
-            justifyContent={{ xs: 'flex-start', md: 'center' }}
+            justifyContent="center"
           >
             <SocialMediaIconButton
               aria-label="GitHub"
@@ -79,7 +84,7 @@ const Footer: FC = () => {
               <TelegramIcon />
             </SocialMediaIconButton>
           </Box>
-        </Box>
+        </Stack>
       </Container>
     </Box>
   );

@@ -225,3 +225,207 @@ export const ChartIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const WalletIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M16 13C16 13.8284 16.6716 14.5 17.5 14.5C18.3284 14.5 19 13.8284 19 13C19 12.1716 18.3284 11.5 17.5 11.5C16.6716 11.5 16 12.1716 16 13Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M11 19H16C18.8284 19 20.2426 19 21.1213 18.1213C22 17.2426 22 15.8284 22 13V12C22 9.17157 22 7.75736 21.1213 6.87868C20.48 6.23738 19.5534 6.06413 18 6.01732M10 6H16C16.7641 6 17.425 6 18 6.01732M2 10C2 6.22876 2 5.34315 3.17157 4.17157C4.34315 3 6.22876 3 10 3H14.9827C15.9308 3 16.4049 3 16.7779 3.15749C17.2579 3.36014 17.6399 3.7421 17.8425 4.22208C18 4.5951 18 5.06917 18 6.01732"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M3.125 19.5L3.125 13.5M5 13.5V12M5 21V19.5M3.125 16.5H6.875M6.875 16.5C7.49632 16.5 8 17.0037 8 17.625V18.375C8 18.9963 7.49632 19.5 6.875 19.5H2M6.875 16.5C7.49632 16.5 8 15.9963 8 15.375V14.625C8 14.0037 7.49632 13.5 6.875 13.5H2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const FilterIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 5H2M6 12H18M9 19H15M16 5H22M19 8V2"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const ArrowLeftIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 19L5 12M5 12L12 5M5 12H19"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const TableViewIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 18 18" fill="none">
+      <path
+        d="M14.6756 14.6754C13.6602 15.6907 12.0261 15.6907 8.75778 15.6907C5.48947 15.6907 3.85531 15.6907 2.83998 14.6754C1.82464 13.6601 1.82464 12.0259 1.82464 8.7576C1.82464 5.48929 1.82464 3.85513 2.83998 2.8398C3.85531 1.82446 5.48947 1.82446 8.75778 1.82446C12.0261 1.82446 13.6602 1.82446 14.6756 2.8398C15.6909 3.85513 15.6909 5.48929 15.6909 8.7576C15.6909 12.0259 15.6909 13.6601 14.6756 14.6754Z"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.6909 6.20337L1.82464 6.20337"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
+      <path
+        d="M15.6909 11.312L1.82464 11.312"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
+    </SvgIcon>
+  );
+};
+
+export const GridViewIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 18 18" fill="none">
+      <path
+        d="M14.6767 2.84012C15.6921 3.85554 15.6921 5.48982 15.6921 8.75839C15.6921 12.027 15.6921 13.6612 14.6767 14.6767C13.6612 15.6921 12.027 15.6921 8.75839 15.6921C5.48982 15.6921 3.85553 15.6921 2.84012 14.6767C1.82471 13.6612 1.82471 12.027 1.82471 8.75839C1.82471 5.48982 1.82471 3.85553 2.84012 2.84012C3.85554 1.82471 5.48982 1.82471 8.75839 1.82471C12.027 1.82471 13.6612 1.82471 14.6767 2.84012Z"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.6919 8.7583L1.82453 8.7583"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8.7583 1.82471L8.7583 15.6921"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinecap="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const LinkIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 16 16" fill="none">
+      <g clipPath="url(#clip0_890_8119)" fill="none">
+        <path
+          d="M6.6668 8.66795C6.9531 9.0507 7.31837 9.3674 7.73783 9.59657C8.1573 9.82574 8.62114 9.96202 9.0979 9.99617C9.57466 10.0303 10.0532 9.96152 10.501 9.79447C10.9489 9.62741 11.3555 9.36599 11.6935 9.02795L13.6935 7.02795C14.3007 6.39927 14.6366 5.55726 14.629 4.68328C14.6215 3.80929 14.2709 2.97324 13.6529 2.35522C13.0348 1.73719 12.1988 1.38663 11.3248 1.37903C10.4508 1.37144 9.60881 1.70742 8.98013 2.31461L7.83347 3.45461M9.33347 7.33461C9.04716 6.95186 8.68189 6.63516 8.26243 6.40599C7.84297 6.17681 7.37913 6.04054 6.90237 6.00639C6.4256 5.97225 5.94708 6.04103 5.49924 6.20809C5.0514 6.37515 4.64472 6.63657 4.3068 6.97461L2.3068 8.97461C1.69961 9.60329 1.36363 10.4453 1.37122 11.3193C1.37881 12.1933 1.72938 13.0293 2.3474 13.6473C2.96543 14.2654 3.80147 14.6159 4.67546 14.6235C5.54945 14.6311 6.39146 14.2951 7.02013 13.6879L8.16013 12.5479"
+          stroke="currentColor"
+          strokeWidth="1.33333"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+    </SvgIcon>
+  );
+};
+
+export const ConnectWalletIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 18 18" fill="none">
+      <path
+        d="M12.6347 10.9572L14.5919 9C16.136 7.45584 16.136 4.95227 14.5919 3.40812C13.0477 1.86396 10.5442 1.86396 9 3.40812L7.04284 5.36528M10.9572 12.6347L9 14.5919C7.45584 16.136 4.95227 16.136 3.40812 14.5919C1.86396 13.0477 1.86396 10.5442 3.40812 9L5.36528 7.04284"
+        stroke="currentColor"
+        strokeWidth="1.125"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16.5 12.75H14.9408M12.75 16.5L12.75 14.9408"
+        stroke="currentColor"
+        strokeWidth="1.125"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.5 5.25H3.05917M5.25 1.5L5.25 3.05917"
+        stroke="currentColor"
+        strokeWidth="1.125"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const MobileBottomNavIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 36 35" fill="none">
+      <path
+        d="M15 25C17.2091 25 19 26.7909 19 29V31C19 33.2091 17.2091 35 15 35H8C5.79086 35 4 33.2091 4 31V29C4 26.7909 5.79086 25 8 25H15ZM32 17C34.2091 17 36 18.7909 36 21V31C36 33.2091 34.2091 35 32 35H25C22.7909 35 21 33.2091 21 31V21C21 18.7909 22.7909 17 25 17H32ZM15 5C17.2091 5 19 6.79086 19 9V19C19 21.2091 17.2091 23 15 23H8C5.79086 23 4 21.2091 4 19V9C4 6.79086 5.79086 5 8 5H15ZM32 5C34.2091 5 36 6.79086 36 9V11C36 13.2091 34.2091 15 32 15H25C22.7909 15 21 13.2091 21 11V9C21 6.79086 22.7909 5 25 5H32Z"
+        fillOpacity="0.1"
+      />
+      <rect
+        x="0.5"
+        y="0.5"
+        width="14"
+        height="17"
+        rx="3.5"
+        stroke="currentColor"
+      />
+      <rect
+        x="0.5"
+        y="20.5"
+        width="14"
+        height="9"
+        rx="3.5"
+        stroke="currentColor"
+      />
+      <rect
+        x="31.5"
+        y="29.5"
+        width="14"
+        height="17"
+        rx="3.5"
+        transform="rotate(-180 31.5 29.5)"
+        stroke="currentColor"
+      />
+      <rect
+        x="31.5"
+        y="9.5"
+        width="14"
+        height="9"
+        rx="3.5"
+        transform="rotate(-180 31.5 9.5)"
+        stroke="currentColor"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_1154_3379"
+          x1="8"
+          y1="6.5"
+          x2="20"
+          y2="35"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="currentColor" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0.13" />
+        </linearGradient>
+      </defs>
+    </SvgIcon>
+  );
+};

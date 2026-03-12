@@ -13,10 +13,14 @@ type JoinedCampaignsParams = Pick<
   'status' | 'limit' | 'skip'
 >;
 
-export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
+export const useGetJoinedCampaigns = (
+  params: JoinedCampaignsParams = {},
+  options?: { enabled?: boolean }
+) => {
   const { isSignerReady } = useSignerContext();
   const { isAuthenticated } = useWeb3Auth();
   const { status, limit, skip } = params;
+  const { enabled = true } = options ?? {};
 
   return useQuery({
     queryKey: [
@@ -36,7 +40,8 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
         id: campaign.address,
       })),
     }),
-    enabled: isAuthenticated && isSignerReady,
+    staleTime: Infinity,
+    enabled: enabled && isAuthenticated && isSignerReady,
   });
 };
 

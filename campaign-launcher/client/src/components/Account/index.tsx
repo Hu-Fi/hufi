@@ -83,16 +83,15 @@ const Account: FC = () => {
   return (
     <>
       <Button
-        size={isMobile ? 'small' : 'medium'}
+        size={isMobile ? 'medium' : 'large'}
         aria-describedby="account-popover"
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disableRipple
         sx={{
           bgcolor: 'primary.main',
           borderRadius: '4px',
-          height: isMobile ? '30px' : '42px',
           width: 'fit-content',
-          paddingX: 1,
+          px: 1,
           borderBottomLeftRadius: anchorEl ? 0 : 4,
           borderBottomRightRadius: anchorEl ? 0 : 4,
         }}

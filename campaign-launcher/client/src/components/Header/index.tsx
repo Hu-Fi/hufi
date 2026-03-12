@@ -10,7 +10,6 @@ import {
   Stack,
   type SxProps,
   Toolbar,
-  Typography,
 } from '@mui/material';
 import { Link, useLocation } from 'react-router';
 import { useConnection } from 'wagmi';
@@ -19,48 +18,62 @@ import logo from '@/assets/logo.svg';
 import Account from '@/components/Account';
 import ConnectWallet from '@/components/ConnectWallet';
 import Container from '@/components/Container';
-import CustomTooltip from '@/components/CustomTooltip';
-import InfoTooltipInner from '@/components/InfoTooltipInner';
-import LaunchCampaignButton from '@/components/LaunchCampaignButton';
-import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { OpenInNewIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { useSignerContext } from '@/providers/SignerProvider';
 
 type StyledLinkProps = {
   to: string;
   text: string;
+  isActive?: boolean;
+  isExternal?: boolean;
   sx?: SxProps;
   target?: string;
   onClick?: () => void;
 };
 
-const StyledLink = ({ to, text, sx, target, onClick }: StyledLinkProps) => {
+const StyledLink = ({
+  to,
+  text,
+  isActive,
+  isExternal,
+  sx,
+  onClick,
+}: StyledLinkProps) => {
   return (
     <MuiLink
       to={to}
       component={Link}
-      target={target}
+      target={isExternal ? '_blank' : undefined}
       sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
         width: { xs: 'fit-content', md: 'auto' },
+        px: { xs: 0, md: 2 },
+        py: { xs: 0, md: 1 },
         textDecoration: 'none',
-        color: 'primary.main',
+        color: { xs: 'text.primary', md: isActive ? 'white' : '#6b6490' },
         fontWeight: 600,
         fontSize: '14px',
+        bgcolor: isActive ? 'rgba(255, 255, 255, 0.07)' : 'transparent',
+        borderRadius: '10px',
         ...sx,
+        '&:hover': {
+          color: 'white',
+        },
       }}
       onClick={onClick}
     >
       {text}
+      {isExternal && <OpenInNewIcon />}
     </MuiLink>
   );
 };
 
 const DOCS_URL = import.meta.env.VITE_APP_DOCS_URL;
 const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
-const LAUNCH_CAMPAIGN_TOOLTIP =
-  "You'll need to connect your wallet before launching a campaign";
 
 const Header: FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -68,7 +81,6 @@ const Header: FC = () => {
   const { pathname } = useLocation();
   const { activeAddress } = useActiveAccount();
   const { isConnected } = useConnection();
-  const { isSignerReady } = useSignerContext();
   const isMobile = useIsMobile();
 
   const handleMenuOpen = useCallback(
@@ -99,12 +111,13 @@ const Header: FC = () => {
       position="static"
       elevation={0}
       sx={{
-        position: { xs: 'sticky', sm: 'static' },
+        position: 'sticky',
         top: 0,
         zIndex: (theme) => theme.zIndex.appBar,
         bgcolor: 'background.default',
         boxShadow: 'none',
         width: '100%',
+        borderBottom: '1px solid #433679',
         '& .MuiToolbar-root': {
           px: { xs: 2, md: 0 },
         },
@@ -144,25 +157,32 @@ const Header: FC = () => {
 
           <Box
             display={{ xs: 'none', md: 'flex' }}
-            gap={2}
             alignItems="center"
             height="100%"
+            mx="auto"
           >
-            <StyledLink to={DOCS_URL} text="Support" target="_blank" />
-            <StyledLink to={ROUTES.DASHBOARD} text="Dashboard" />
+            <StyledLink
+              to={ROUTES.DASHBOARD}
+              text="Dashboard"
+              isActive={pathname === ROUTES.DASHBOARD}
+            />
+            <StyledLink
+              to={ROUTES.CAMPAIGNS}
+              text="Campaigns"
+              isActive={pathname === ROUTES.CAMPAIGNS}
+            />
+            <StyledLink to={DOCS_URL} text="Support" isExternal />
             <StyledLink
               to={STAKING_DASHBOARD_URL}
               text="Stake HMT"
-              target="_blank"
+              isExternal
             />
-            <NetworkSwitcher />
-            <LaunchCampaignButton variant="outlined" withTooltip />
-            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
           </Box>
-
-          <Box display={{ xs: 'flex', md: 'none' }}>
-            {activeAddress && isConnected ? <Account /> : <ConnectWallet />}
-          </Box>
+          {activeAddress && isConnected ? (
+            <Account />
+          ) : (
+            <ConnectWallet size={isMobile ? 'medium' : 'large'} />
+          )}
         </Toolbar>
 
         <Popover
@@ -200,56 +220,27 @@ const Header: FC = () => {
             }}
           >
             <StyledLink
-              to={DOCS_URL}
-              text="Support"
-              onClick={handleMenuClose}
-            />
-            <StyledLink
               to={ROUTES.DASHBOARD}
               text="Dashboard"
               onClick={handleMenuClose}
             />
             <StyledLink
-              to={STAKING_DASHBOARD_URL}
-              text="Stake HMT"
-              target="_blank"
+              to={ROUTES.CAMPAIGNS}
+              text="Campaigns"
               onClick={handleMenuClose}
             />
-            <NetworkSwitcher />
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={2}
-              width="100%"
-              sx={{ '& button': { flex: 1 } }}
-            >
-              <LaunchCampaignButton
-                variant={isSignerReady ? 'outlined' : 'contained'}
-                handleCallbackOnClick={handleMenuClose}
-              />
-              {!isSignerReady && (
-                <CustomTooltip
-                  arrow
-                  placement="left"
-                  title={
-                    <Typography variant="tooltip">
-                      {LAUNCH_CAMPAIGN_TOOLTIP}
-                    </Typography>
-                  }
-                  slotProps={{
-                    tooltip: {
-                      sx: {
-                        width: '150px',
-                        lineHeight: '14px',
-                        mr: '12px !important',
-                      },
-                    },
-                  }}
-                >
-                  <InfoTooltipInner />
-                </CustomTooltip>
-              )}
-            </Box>
+            <StyledLink
+              to={DOCS_URL}
+              text="Support"
+              isExternal
+              onClick={handleMenuClose}
+            />
+            <StyledLink
+              to={STAKING_DASHBOARD_URL}
+              text="Stake HMT"
+              isExternal
+              onClick={handleMenuClose}
+            />
           </Stack>
         </Popover>
       </Container>
