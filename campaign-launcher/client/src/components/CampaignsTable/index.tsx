@@ -6,9 +6,9 @@ import { useLocation, useNavigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import CampaignSymbol from '@/components/CampaignSymbol';
+import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
-import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
 import { ArrowLeftIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useSignerContext } from '@/providers/SignerProvider';
@@ -27,21 +27,6 @@ type Props = {
   isFetching?: boolean;
   isJoinedCampaigns?: boolean;
   isMyCampaigns?: boolean;
-};
-
-const CampaignTimelineCell: FC<{ campaign: Campaign }> = ({ campaign }) => {
-  const campaignTimeline = useCampaignTimeline(campaign);
-
-  return (
-    <Box display="flex" flexDirection="column">
-      <Typography variant="caption" fontWeight={500} letterSpacing={0.15}>
-        {campaignTimeline.label}
-      </Typography>
-      <Typography component="p" variant="subtitle2">
-        {campaignTimeline.value}
-      </Typography>
-    </Box>
-  );
 };
 
 const MyCampaignsNoRows: FC = () => {
@@ -170,7 +155,9 @@ const CampaignsTable: FC<Props> = ({
       headerName: 'Status',
       flex: 1,
       minWidth: 120,
-      renderCell: (params) => <CampaignTimelineCell campaign={params.row} />,
+      renderCell: (params) => (
+        <CampaignTimeline campaign={params.row} direction="column" />
+      ),
     },
     {
       field: 'target',
