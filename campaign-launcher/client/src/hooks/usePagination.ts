@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   DEFAULT_TABLE_PAGE_SIZE,
@@ -29,6 +29,14 @@ const usePagination = (): PaginationState => {
   );
 
   const skip = page * pageSize;
+
+  useEffect(() => {
+    if (isMobile) {
+      setPageSize(DEFAULT_TABLE_PAGE_SIZE_MOBILE);
+    } else {
+      setPageSize(DEFAULT_TABLE_PAGE_SIZE);
+    }
+  }, [isMobile]);
 
   const setNextPage = useCallback(() => {
     setPage((prev) => prev + 1);

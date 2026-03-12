@@ -232,7 +232,7 @@ const CampaignsTable: FC<Props> = ({
                 height: 42,
                 p: 0,
                 borderRadius: '4px',
-                border: '1px solid #433679;',
+                border: '1px solid #433679',
               }}
               onClick={() =>
                 navigate(`/campaign-details/${params.row.address}`)

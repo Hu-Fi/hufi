@@ -30,7 +30,7 @@ const Campaigns: FC = () => {
     useState<CampaignsFiltersSelection>({
       campaignTypes: [],
       exchanges: [],
-      network: wagmiConfig.chains[0]?.id ?? null,
+      network: wagmiConfig.chains[0].id,
     });
 
   const { activeAddress } = useActiveAccount();
