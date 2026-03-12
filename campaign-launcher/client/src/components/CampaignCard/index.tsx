@@ -7,9 +7,10 @@ import { useConnection } from 'wagmi';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
+import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
 import { QUERY_KEYS } from '@/constants/queryKeys';
-import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
+import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { type Campaign } from '@/types';
 import {
   formatTokenAmount,
@@ -44,9 +45,9 @@ type Props = {
 
 const CampaignCard: FC<Props> = ({ campaign }) => {
   const { fund_amount, fund_token_decimals } = campaign;
-  const campaignTimeline = useCampaignTimeline(campaign);
   const { isConnected } = useConnection();
   const queryClient = useQueryClient();
+  const { exchangesMap } = useExchangesContext();
 
   const joinedCampaignsQueries = queryClient.getQueriesData<{
     results?: Campaign[];
@@ -58,6 +59,8 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
       (joinedCampaign) => joinedCampaign.address === campaign.address
     )
   );
+
+  const exchangeName = exchangesMap.get(campaign.exchange_name)?.display_name;
 
   const targetInfo = getTargetInfo(campaign);
   const targetValue = Number(targetInfo.value || 0);
@@ -129,9 +132,23 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           campaignType={campaign.type}
           size="small"
         />
-        <Typography variant="body2" color="text.secondary" fontWeight={600}>
-          {campaignTimeline.label} {campaignTimeline.value}
-        </Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            letterSpacing="0.15px"
+          >
+            {exchangeName}
+          </Typography>
+          <Box
+            width={4}
+            height={4}
+            borderRadius="50%"
+            bgcolor="text.secondary"
+            flexShrink={0}
+          />
+          <CampaignTimeline campaign={campaign} />
+        </Box>
       </Box>
       <Stack
         direction="row"
