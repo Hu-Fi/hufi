@@ -39,6 +39,13 @@ export enum CampaignStatus {
   TO_CANCEL = 'to_cancel',
 }
 
+export enum SubgraphCampaignStatus {
+  LAUNCHED = 'launched',
+  COMPLETED = 'completed',
+  AWAITING_CANCELLATION = 'awaiting_cancellation',
+  CANCELLED = 'cancelled',
+}
+
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
   COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',

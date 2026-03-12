@@ -1,17 +1,14 @@
-import {
-  EscrowClient,
-  EscrowStatus,
-  EscrowUtils,
-  type IEscrow,
+import hufiSdk, {
+  CampaignOrderBy,
   OrderDirection,
-  TransactionUtils,
-} from '@human-protocol/sdk';
+  type Campaign as SubgraphCampaign,
+} from '@hu-fi/subgraph-sdk';
+import { EscrowClient, TransactionUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { ethers } from 'ethers';
+import _ from 'lodash';
 
-import { ChainId, ReadableEscrowStatus } from '@/common/constants';
-import * as httpUtils from '@/common/utils/http';
+import { ChainId } from '@/common/constants';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
@@ -24,27 +21,26 @@ import {
 } from './campaigns.dto';
 import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
-import { CampaignManifest, CampaignStatus, CampaignType } from './types';
-
-const CAMPAIGN_STATUS_TO_ESCROW_STATUSES: Record<
+import {
+  CampaignManifest,
   CampaignStatus,
-  EscrowStatus[]
+  CampaignType,
+  SubgraphCampaignStatus,
+} from './types';
+
+const CAMPAIGN_STATUS_TO_SUBGRAPH_CAMPAIGN_STATUS: Record<
+  CampaignStatus,
+  SubgraphCampaignStatus
 > = {
-  [CampaignStatus.ACTIVE]: [EscrowStatus.Pending, EscrowStatus.Partial],
-  [CampaignStatus.TO_CANCEL]: [EscrowStatus.ToCancel],
-  [CampaignStatus.CANCELLED]: [EscrowStatus.Cancelled],
-  [CampaignStatus.COMPLETED]: [EscrowStatus.Complete],
+  [CampaignStatus.ACTIVE]: SubgraphCampaignStatus.LAUNCHED,
+  [CampaignStatus.TO_CANCEL]: SubgraphCampaignStatus.AWAITING_CANCELLATION,
+  [CampaignStatus.CANCELLED]: SubgraphCampaignStatus.CANCELLED,
+  [CampaignStatus.COMPLETED]: SubgraphCampaignStatus.COMPLETED,
 };
 
-const ESCROW_STATUS_TO_CAMPAIGN_STATUS: Record<string, CampaignStatus> = {};
-for (const [campaignStatus, escrowStatuses] of Object.entries(
-  CAMPAIGN_STATUS_TO_ESCROW_STATUSES,
-)) {
-  for (const escrowStatus of escrowStatuses) {
-    ESCROW_STATUS_TO_CAMPAIGN_STATUS[EscrowStatus[escrowStatus]] =
-      campaignStatus as CampaignStatus;
-  }
-}
+const SUBGRAPH_CAMPAIGN_STATUS_TO_CAMPAIGN_STATUS = _.invert(
+  CAMPAIGN_STATUS_TO_SUBGRAPH_CAMPAIGN_STATUS,
+) as Record<SubgraphCampaignStatus, CampaignStatus>;
 
 @Injectable()
 export class CampaignsService {
@@ -60,41 +56,41 @@ export class CampaignsService {
     filters?: Partial<{
       launcherAddress: string;
       statuses: CampaignStatus[];
-      since: Date;
     }>,
     pagination?: Partial<{
       skip: number;
       limit: number;
-      order: `${OrderDirection}`;
     }>,
   ): Promise<CampaignData[]> {
-    const campaigns: CampaignData[] = [];
-
-    let statuses: EscrowStatus[] | undefined;
-    if (filters?.statuses?.length) {
-      statuses = filters.statuses.flatMap(
-        (status) => CAMPAIGN_STATUS_TO_ESCROW_STATUSES[status],
+    let statuses: SubgraphCampaignStatus[] = [];
+    if (filters?.statuses) {
+      statuses = filters.statuses.map(
+        (status) => CAMPAIGN_STATUS_TO_SUBGRAPH_CAMPAIGN_STATUS[status],
       );
     }
-    const campaignEscrows = await EscrowUtils.getEscrows({
-      chainId: chainId as number,
-      exchangeOracle: this.web3ConfigService.exchangeOracle,
-      recordingOracle: this.web3ConfigService.recordingOracle,
-      reputationOracle: this.web3ConfigService.reputationOracle,
-      launcher: filters?.launcherAddress,
-      status: statuses,
+
+    const subgraphCampaigns = await hufiSdk.getCampaigns(chainId, {
+      filters: {
+        exchangeOracleAddress: this.web3ConfigService.exchangeOracle,
+        recordingOracleAddress: this.web3ConfigService.recordingOracle,
+        reputationOracleAddress: this.web3ConfigService.reputationOracle,
+        creatorAddress: filters?.launcherAddress,
+        status_in: statuses.length > 0 ? statuses : undefined,
+      },
       first: pagination?.limit,
       skip: pagination?.skip,
-      from: filters?.since,
-      orderDirection: pagination?.order
-        ? (pagination.order as OrderDirection)
-        : undefined,
+      orderBy: CampaignOrderBy.CREATED_AT,
+      orderDirection: OrderDirection.DESC,
     });
 
-    for (const campaignEscrow of campaignEscrows) {
+    const campaigns: CampaignData[] = [];
+    for (const subgraphCampaign of subgraphCampaigns) {
       let campaignData: CampaignData;
       try {
-        campaignData = await this.retrieveCampaignData(campaignEscrow);
+        campaignData = await this.retrieveCampaignData(
+          chainId,
+          subgraphCampaign,
+        );
       } catch (error) {
         if (error instanceof InvalidCampaignManifestError) {
           continue;
@@ -112,26 +108,22 @@ export class CampaignsService {
     chainId: ChainId,
     campaignAddress: string,
   ): Promise<CampaignDataWithDetails | null> {
-    const campaignEscrow = await EscrowUtils.getEscrow(
-      chainId as number,
-      campaignAddress,
-    );
-
-    if (!campaignEscrow) {
+    const hufiCampaign = await hufiSdk.getCampaign(chainId, campaignAddress);
+    if (!hufiCampaign) {
       return null;
     }
 
     const [campaignData, reservedFunds] = await Promise.all([
-      this.retrieveCampaignData(campaignEscrow),
-      this.getReservedFunds(campaignEscrow),
+      this.retrieveCampaignData(chainId, hufiCampaign),
+      this.getReservedFunds(chainId, hufiCampaign),
     ]);
 
     return {
       ...campaignData,
       // details
-      exchangeOracleFeePercent: campaignEscrow.exchangeOracleFee as number,
-      recordingOracleFeePercent: campaignEscrow.recordingOracleFee as number,
-      reputationOracleFeePercent: campaignEscrow.reputationOracleFee as number,
+      exchangeOracleFeePercent: hufiCampaign.exchangeOracleFee,
+      recordingOracleFeePercent: hufiCampaign.recordingOracleFee,
+      reputationOracleFeePercent: hufiCampaign.reputationOracleFee,
       reservedFunds: reservedFunds.toString(),
     };
   }
@@ -181,54 +173,19 @@ export class CampaignsService {
     }));
   }
 
-  private async retrieveCampaignManifset(
-    manifestUrlOrJson: string,
-    manifestHash: string,
-  ): Promise<CampaignManifest> {
-    let manifestString;
-    if (httpUtils.isValidHttpUrl(manifestUrlOrJson)) {
-      manifestString = await manifestUtils.donwload(
-        manifestUrlOrJson,
-        manifestHash,
-      );
-    } else {
-      manifestString = manifestUrlOrJson;
-    }
-
-    let manifestJson: unknown;
-    try {
-      manifestJson = JSON.parse(manifestString);
-    } catch {
-      throw new Error('Manifest is not valid JSON');
-    }
-
-    return manifestUtils.validateSchema(manifestJson);
-  }
-
   private async retrieveCampaignData(
-    campaignEscrow: IEscrow,
+    chainId: number,
+    subgraphCampaign: SubgraphCampaign,
   ): Promise<CampaignData> {
-    const chainId = campaignEscrow.chainId;
-    const address = ethers.getAddress(campaignEscrow.address);
-
-    if (!campaignEscrow.manifest || !campaignEscrow.manifestHash) {
-      throw new InvalidCampaignManifestError(
-        chainId,
-        address,
-        'Manifest is missing',
-      );
-    }
-
     let manifest: CampaignManifest;
     try {
-      manifest = await this.retrieveCampaignManifset(
-        campaignEscrow.manifest,
-        campaignEscrow.manifestHash,
+      manifest = manifestUtils.validateSchema(
+        JSON.parse(subgraphCampaign.manifest),
       );
     } catch (error) {
       throw new InvalidCampaignManifestError(
         chainId,
-        address,
+        subgraphCampaign.id,
         error.message as string,
       );
     }
@@ -261,75 +218,78 @@ export class CampaignsService {
       // Should not happen at this point, just for typescript types
       throw new InvalidCampaignManifestError(
         chainId,
-        address,
+        subgraphCampaign.id,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         `Unknown campaign type: ${(manifest as any).type}`,
       );
     }
 
-    const fundToken = ethers.getAddress(campaignEscrow.token);
     const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
-      this.web3Service.getTokenSymbol(chainId, fundToken),
-      this.web3Service.getTokenDecimals(chainId, fundToken),
+      this.web3Service.getTokenSymbol(
+        chainId,
+        subgraphCampaign.fundTokenAddress,
+      ),
+      this.web3Service.getTokenDecimals(
+        chainId,
+        subgraphCampaign.fundTokenAddress,
+      ),
     ]);
 
     return {
       chainId,
-      address,
+      address: subgraphCampaign.id,
       type: manifest.type as CampaignType,
       exchangeName: manifest.exchange,
       symbol,
       details,
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
-      fundAmount: campaignEscrow.totalFundedAmount.toString(),
-      fundToken,
+      fundAmount: subgraphCampaign.fundAmount.toString(),
+      fundToken: subgraphCampaign.fundTokenAddress,
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
-      status: ESCROW_STATUS_TO_CAMPAIGN_STATUS[campaignEscrow.status],
-      escrowStatus: campaignEscrow.status as ReadableEscrowStatus,
-      launcher: ethers.getAddress(campaignEscrow.launcher),
-      exchangeOracle: campaignEscrow.exchangeOracle as string,
-      recordingOracle: campaignEscrow.recordingOracle as string,
-      reputationOracle: campaignEscrow.reputationOracle as string,
-      balance: campaignEscrow.balance.toString(),
-      amountPaid: campaignEscrow.amountPaid.toString(),
-      intermediateResultsUrl: campaignEscrow.intermediateResultsUrl,
-      finalResultsUrl: campaignEscrow.finalResultsUrl,
-      createdAt: campaignEscrow.createdAt,
+      status:
+        SUBGRAPH_CAMPAIGN_STATUS_TO_CAMPAIGN_STATUS[
+          subgraphCampaign.status as SubgraphCampaignStatus
+        ],
+      launcher: subgraphCampaign.creatorAddress,
+      exchangeOracle: subgraphCampaign.exchangeOracleAddress,
+      recordingOracle: subgraphCampaign.recordingOracleAddress,
+      reputationOracle: subgraphCampaign.reputationOracleAddress,
+      balance: subgraphCampaign.currentBalance.toString(),
+      amountPaid: subgraphCampaign.rewardsDistributed.toString(),
+      intermediateResultsUrl: subgraphCampaign.intermediateResultsUrl,
+      finalResultsUrl: subgraphCampaign.finalResultsUrl,
+      createdAt: subgraphCampaign.createdAt,
     };
   }
 
-  private async getReservedFunds(escrow: IEscrow): Promise<bigint> {
+  private async getReservedFunds(
+    chainId: number,
+    subgraphCampaign: SubgraphCampaign,
+  ): Promise<bigint> {
     try {
-      /**
-       * This is to eliminate escrows that have been
-       * completed before `reservedFunds()` were introduced.
-       * We know for sure that there will be no escrows
-       * in these statuses when contracts are upgraded.
-       */
-      const escrowStatus =
-        EscrowStatus[escrow.status as keyof typeof EscrowStatus];
       if (
-        ![
-          EscrowStatus.Pending,
-          EscrowStatus.Partial,
-          EscrowStatus.ToCancel,
-        ].includes(escrowStatus)
+        [
+          SubgraphCampaignStatus.CANCELLED,
+          SubgraphCampaignStatus.COMPLETED,
+        ].includes(subgraphCampaign.status as SubgraphCampaignStatus)
       ) {
         return 0n;
       }
 
-      const provider = this.web3Service.getProvider(escrow.chainId);
+      const provider = this.web3Service.getProvider(chainId);
       const escrowClient = await EscrowClient.build(provider);
-      const reservedFunds = await escrowClient.getReservedFunds(escrow.address);
+      const reservedFunds = await escrowClient.getReservedFunds(
+        subgraphCampaign.id,
+      );
 
       return reservedFunds;
     } catch (error) {
       const message = 'Failed to get reserved funds';
       this.logger.error(message, {
-        chainId: escrow.chainId,
-        campaignAddress: escrow.address,
+        chainId,
+        campaignAddress: subgraphCampaign.id,
         error,
       });
       throw new Error(message);
