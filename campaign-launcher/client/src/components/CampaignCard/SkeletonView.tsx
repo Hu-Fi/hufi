@@ -8,7 +8,7 @@ const SkeletonCard = () => {
         p: 2,
         gap: 1.5,
         flexDirection: 'column',
-        background: 'linear-gradient(0deg, #251D47 0%, #251D47 100%), #251D47',
+        bgcolor: '#251d47',
         borderRadius: '8px',
         border: '1px solid #433679',
         boxShadow: 'none',

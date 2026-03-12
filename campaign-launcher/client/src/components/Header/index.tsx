@@ -118,7 +118,6 @@ const Header: FC = () => {
         boxShadow: 'none',
         width: '100%',
         borderBottom: '1px solid #433679',
-        backdropFilter: 'blur(10px)',
         '& .MuiToolbar-root': {
           px: { xs: 2, md: 0 },
         },

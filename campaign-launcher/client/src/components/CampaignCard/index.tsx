@@ -5,55 +5,37 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
 import { useConnection } from 'wagmi';
 
+import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import FormattedNumber from '@/components/FormattedNumber';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
-import { type Campaign, CampaignType } from '@/types';
+import { type Campaign } from '@/types';
 import {
   formatTokenAmount,
   getChainIcon,
   getDailyTargetTokenSymbol,
+  getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
 } from '@/utils';
 
-import CampaignAddress from '../CampaignAddress';
-
-const getTargetLabel = (campaignType: CampaignType) => {
-  switch (campaignType) {
-    case CampaignType.MARKET_MAKING:
-      return 'Target Volume';
-    case CampaignType.HOLDING:
-      return 'Target Balance';
-    case CampaignType.THRESHOLD:
-      return 'Target Balance';
-    default:
-      return 'Target Volume';
-  }
-};
-
-const getTargetValue = (campaign: Campaign) => {
-  switch (campaign.type) {
-    case CampaignType.MARKET_MAKING:
-      return campaign.details.daily_volume_target;
-    case CampaignType.HOLDING:
-      return campaign.details.daily_balance_target;
-    case CampaignType.THRESHOLD:
-      return campaign.details.minimum_balance_target;
-    default:
-      return 0;
-  }
-};
-
-const getDisplayTargetValue = (targetValue: number) => {
+const getDisplayTargetData = (targetValue: number) => {
   const shouldUseDoubleKNotation = targetValue >= 1000000;
   const shouldUseKNotation = targetValue >= 1000 && !shouldUseDoubleKNotation;
-  return shouldUseDoubleKNotation
+  const value = shouldUseDoubleKNotation
     ? targetValue / 1000000
     : shouldUseKNotation
       ? targetValue / 1000
       : targetValue;
+  const suffix = shouldUseDoubleKNotation
+    ? 'kk'
+    : shouldUseKNotation
+      ? 'k'
+      : '';
+  const decimals = suffix ? 1 : 3;
+
+  return { value, suffix, decimals };
 };
 
 type Props = {
@@ -77,31 +59,28 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
     )
   );
 
-  const targetValue = Number(getTargetValue(campaign) || 0);
-  const shouldUseDoubleKNotation = targetValue >= 1000000;
-  const shouldUseKNotation = targetValue >= 1000 && !shouldUseDoubleKNotation;
-  const displayTargetValue = getDisplayTargetValue(targetValue);
-  const displayTargetSuffix = shouldUseDoubleKNotation
-    ? 'kk'
-    : shouldUseKNotation
-      ? 'k'
-      : '';
-  const displayTargetDecimals = displayTargetSuffix ? 1 : 3;
+  const targetInfo = getTargetInfo(campaign);
+  const targetValue = Number(targetInfo.value || 0);
+  const {
+    value: displayTargetValue,
+    suffix: displayTargetSuffix,
+    decimals: displayTargetDecimals,
+  } = getDisplayTargetData(targetValue);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
     <Paper
+      elevation={0}
       sx={{
         display: 'flex',
+        flexDirection: 'column',
         p: 2,
         gap: 1.5,
-        flexDirection: 'column',
-        background: 'linear-gradient(0deg, #251D47 0%, #251D47 100%), #251D47',
+        bgcolor: '#251D47',
         borderRadius: '8px',
         border: '1px solid #433679',
-        boxShadow: 'none',
       }}
     >
       <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -177,7 +156,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
             fontWeight={500}
             textTransform="uppercase"
           >
-            {getTargetLabel(campaign.type)}
+            {targetInfo.label}
           </Typography>
           <Typography variant="h6-mobile" color="white" fontWeight={700}>
             <FormattedNumber
@@ -222,7 +201,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           size="large"
           color="primary"
           fullWidth
-          sx={{ color: '#ffffff', borderColor: '#433679' }}
+          sx={{ color: 'white', borderColor: '#433679' }}
         >
           View Details
         </Button>
@@ -233,8 +212,8 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
             color="primary"
             fullWidth
             sx={{
-              color: '#ffffff',
-              bgcolor: '#fa2a75',
+              color: 'white',
+              bgcolor: 'error.main',
             }}
           >
             Join
