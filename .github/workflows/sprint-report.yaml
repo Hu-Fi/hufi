@@ -1,4 +1,4 @@
-name: Weekly summary
+name: Sprint report
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  weekly-summary:
+  sprint-report:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
           TODAY=$(date -u +%Y-%m-%d)
 
           copilot --allow-tool 'shell' \
-                  --allow-tool 'write(weekly_summary.md)' \
+                  --allow-tool 'write(sprint_report.md)' \
                   -p "Task: Create a last sprint engineering summary for the Hu-Fi/hufi repository using fixed sprint cadence (no GitHub Project dependency).
 
           Cadence gate (must run first):
@@ -57,7 +57,7 @@ jobs:
           4) Include carry-over/in-progress items if identifiable from linked issues/PR context.
 
           Output requirements:
-          - Write output to weekly_summary.md.
+          - Write output to sprint_report.md.
           - 10-20 concise bullets.
           - Group by theme: Backend, Frontend, Infra, Fixes, Other.
           - Each bullet includes:
@@ -84,11 +84,11 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.REPORT_SLACK_WEBHOOK_URL }}
         run: |
-          if [ ! -s weekly_summary.md ]; then
-            echo "weekly_summary.md is empty"; exit 1
+          if [ ! -s sprint_report.md ]; then
+            echo "sprint_report.md is empty"; exit 1
           fi
 
-          if grep -Fxq "Not sprint start day (cadence check); skipping sprint report." weekly_summary.md; then
+          if grep -Fxq "Not sprint start day (cadence check); skipping sprint report." sprint_report.md; then
             echo "Skipping Slack post: not sprint start day."
             exit 0
           fi
@@ -97,7 +97,7 @@ jobs:
             -e 's/^#{1,6} (.+)$/\*\1\*/' \
             -e 's/\*\*([^*]+)\*\*/\*\1\*/g' \
             -e 's/\[([^]]+)\]\(([^)]+)\)/<\2|\1>/g' \
-            weekly_summary.md \
+            sprint_report.md \
             | jq -Rs '{
                 text: .,
                 mrkdwn: true,
