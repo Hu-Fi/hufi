@@ -1402,13 +1402,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hu-fi/subgraph-sdk@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@hu-fi/subgraph-sdk@npm:1.1.0"
+"@hu-fi/subgraph-sdk@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@hu-fi/subgraph-sdk@npm:2.0.1"
   dependencies:
     graphql: "npm:^16.13.1"
     graphql-request: "npm:^7.4.0"
-  checksum: 10c0/b7e32a380bd643d0d79bddf86701d5afc3643b5203eb2436880570725dbdf270b27626f888e9a57061f9990ac7b098d73ea55d42fd0a33e1043fe406840b0188
+  checksum: 10c0/53de24e4d7b62c39aa98cb6b911204c01a774feaac681e7b9d53e895d9981bc893b0bb1daf2e684827d9849273b2a7f7dbe2c1774bdfb6f1b80c71cd7736460a
   languageName: node
   linkType: hard
 
@@ -5061,7 +5061,7 @@ __metadata:
     "@eslint/js": "npm:^9.39.1"
     "@faker-js/faker": "npm:^9.9.0"
     "@golevelup/ts-jest": "npm:^1.1.1"
-    "@hu-fi/subgraph-sdk": "npm:^1.1.0"
+    "@hu-fi/subgraph-sdk": "npm:^2.0.1"
     "@human-protocol/logger": "npm:^1.3.0"
     "@human-protocol/sdk": "npm:^6.1.0"
     "@nestjs/cli": "npm:^11.0.14"

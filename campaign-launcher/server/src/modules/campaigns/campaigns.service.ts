@@ -1,5 +1,4 @@
 import hufiSdk, {
-  type CampaignFilters,
   CampaignOrderBy,
   OrderDirection,
   type Campaign as SubgraphCampaign,
@@ -77,7 +76,7 @@ export class CampaignsService {
         reputationOracleAddress: this.web3ConfigService.reputationOracle,
         creatorAddress: filters?.launcherAddress,
         status_in: statuses.length > 0 ? statuses : undefined,
-      } as CampaignFilters & { creatorAddress?: string },
+      },
       first: pagination?.limit,
       skip: pagination?.skip,
       orderBy: CampaignOrderBy.CREATED_AT,
