@@ -149,17 +149,6 @@ export const OpenInNewIcon: FC<SvgIconProps> = (props) => {
   );
 };
 
-export const CalendarIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M20 3H19V1H17V3H7V1H5V3H4C2.9 3 2 3.9 2 5V21C2 22.1 2.9 23 4 23H20C21.1 23 22 22.1 22 21V5C22 3.9 21.1 3 20 3ZM20 21H4V8H20V21Z"
-        fill="#D4CFFF"
-      />
-    </SvgIcon>
-  );
-};
-
 export const ApiKeyIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
@@ -210,17 +199,6 @@ export const SuccessIcon: FC<SvgIconProps> = (props) => {
       <path
         fill="currentColor"
         d="M12.5486 22.3822L6.75689 16.5905L4.78467 18.5489L12.5486 26.3127L29.2152 9.64608L27.2569 7.68774L12.5486 22.3822Z"
-      />
-    </SvgIcon>
-  );
-};
-
-export const ChartIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M21 5.47L12 12L7.62 7.62L3 11V8.52L7.83 5L12.21 9.38L21 3V5.47ZM21 15H16.3L12.13 18.34L6 12.41L3 14.54V17L5.8 15L12 21L17 17H21V15Z"
-        fill="currentColor"
       />
     </SvgIcon>
   );
