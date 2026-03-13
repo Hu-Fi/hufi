@@ -166,6 +166,8 @@ const CampaignStats: FC<Props> = ({
     campaign.fund_token_decimals
   );
 
+  const targetInfo = getTargetInfo(campaign);
+
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
@@ -183,12 +185,10 @@ const CampaignStats: FC<Props> = ({
           </StatsCard>
 
           <StatsCard>
-            <CardName variant="subtitle2">
-              {getTargetInfo(campaign).label}
-            </CardName>
+            <CardName variant="subtitle2">{targetInfo.label}</CardName>
             <CardValue>
               <FormattedNumber
-                value={getTargetInfo(campaign).value}
+                value={targetInfo.value}
                 decimals={3}
                 suffix={` ${targetTokenSymbol}`}
               />
