@@ -110,7 +110,12 @@ const CampaignInfo: FC<Props> = ({
         height={{ xs: 'auto', md: '42px' }}
       >
         <Box display="flex" alignItems="center" gap={1.5} color="white">
-          <IconButton disableRipple sx={{ p: 0 }} onClick={handleGoBack}>
+          <IconButton
+            aria-label="Go back"
+            disableRipple
+            sx={{ p: 0 }}
+            onClick={handleGoBack}
+          >
             <ArrowLeftIcon />
           </IconButton>
           <CampaignSymbol
