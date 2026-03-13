@@ -1,27 +1,19 @@
-import { type FC, type PropsWithChildren, Children, useState } from 'react';
+import { type FC, type PropsWithChildren, Children } from 'react';
 
-import { Box, Button, Skeleton, styled, Typography, Grid } from '@mui/material';
+import { Box, Skeleton, styled, Typography, Grid } from '@mui/material';
 
-import CampaignResultsWidget, {
-  StatusTooltip,
-} from '@/components/CampaignResultsWidget';
-import CampaignSymbol from '@/components/CampaignSymbol';
-import CustomTooltip from '@/components/CustomTooltip';
+import CampaignResultsWidget from '@/components/CampaignResultsWidget';
 import FormattedNumber from '@/components/FormattedNumber';
-import InfoTooltipInner from '@/components/InfoTooltipInner';
-import UserProgressWidget from '@/components/UserProgressWidget';
-import { useIsXlDesktop, useIsMobile } from '@/hooks/useBreakpoints';
-import { ChartIcon } from '@/icons';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import { CampaignStatus, CampaignType, type CampaignDetails } from '@/types';
+import { CampaignStatus, type CampaignDetails } from '@/types';
 import {
   formatTokenAmount,
   getDailyTargetTokenSymbol,
+  getTargetInfo,
   getTokenInfo,
 } from '@/utils';
-
-import ChartModal from '../modals/ChartModal';
 
 type Props = {
   campaign: CampaignDetails | null | undefined;
@@ -32,36 +24,49 @@ type Props = {
 const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  height: '216px',
-  padding: '16px 32px',
-  backgroundColor: theme.palette.background.default,
+  justifyContent: 'space-between',
+  height: '175px',
+  padding: '28px 32px',
+  backgroundColor: '#251D47',
   borderRadius: '16px',
   border: '1px solid rgba(255, 255, 255, 0.1)',
 
-  [theme.breakpoints.down('xl')]: {
-    height: 'unset',
-    minHeight: '125px',
-    justifyContent: 'space-between',
-    padding: '16px',
-  },
-
   [theme.breakpoints.down('md')]: {
-    height: 'unset',
-    minHeight: '125px',
+    flexDirection: 'column-reverse',
+    height: '100px',
+    padding: '12px 16px 16px',
+    borderRadius: '8px',
   },
 }));
 
-const Title = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.primary,
-  marginBottom: '56px',
-  textTransform: 'capitalize',
-
-  [theme.breakpoints.down('xl')]: {
-    marginBottom: '16px',
-  },
+const CardName = styled(Typography)(({ theme }) => ({
+  color: theme.palette.text.secondary,
+  fontSize: '16px',
+  fontWeight: 600,
+  lineHeight: '18px',
+  letterSpacing: '1.5px',
+  textTransform: 'uppercase',
+  marginBottom: '45px',
 
   [theme.breakpoints.down('md')]: {
-    marginBottom: 'auto',
+    fontSize: '14px',
+    lineHeight: '150%',
+    letterSpacing: '0px',
+    marginBottom: '0px',
+  },
+}));
+
+const CardValue = styled(Typography)(({ theme }) => ({
+  color: 'white',
+  fontSize: '36px',
+  fontWeight: 800,
+  lineHeight: '100%',
+
+  [theme.breakpoints.down('md')]: {
+    fontSize: '20px',
+    fontWeight: 500,
+    lineHeight: '150%',
+    marginBottom: '16px',
   },
 }));
 
@@ -103,73 +108,20 @@ const FirstRowWrapper: FC<
   );
 };
 
-const getDailyTargetCardLabel = (campaignType: CampaignType) => {
-  switch (campaignType) {
-    case CampaignType.MARKET_MAKING:
-      return 'Daily volume target';
-    case CampaignType.HOLDING:
-      return 'Daily balance target';
-    case CampaignType.THRESHOLD:
-      return 'Minimum balance target';
-    default:
-      return campaignType as never;
-  }
-};
-
-const getDailyTargetValue = (campaign: CampaignDetails) => {
-  switch (campaign.type) {
-    case CampaignType.MARKET_MAKING:
-      return campaign.details.daily_volume_target;
-    case CampaignType.HOLDING:
-      return campaign.details.daily_balance_target;
-    case CampaignType.THRESHOLD:
-      return campaign.details.minimum_balance_target;
-    default:
-      return 0;
-  }
-};
-
-const renderProgressWidget = (campaign: CampaignDetails) => (
-  <Grid size={{ xs: 12, md: 6 }}>
-    <Box
-      display="flex"
-      py={2}
-      px={3}
-      bgcolor="background.default"
-      borderRadius="16px"
-      border="1px solid rgba(255, 255, 255, 0.1)"
-      height="100%"
-    >
-      <UserProgressWidget campaign={campaign} />
-    </Box>
-  </Grid>
-);
-
-const renderSkeletonBlocks = () => {
-  const row = Array(4).fill(0);
+const renderSkeletonBlocks = (isMobile: boolean) => {
+  const size = isMobile ? 6 : 8;
+  const row = Array(size).fill(0);
   return (
-    <>
-      <Grid container spacing={{ xs: 1, md: 2 }} width="100%">
-        {row.map((_, index) => (
-          <Grid size={{ xs: 6, md: 3 }} key={`first-${index}`}>
-            <StatsCard>
-              <Skeleton variant="text" width="100%" height={22} />
-              <Skeleton variant="text" width="100%" height={32} />
-            </StatsCard>
-          </Grid>
-        ))}
-      </Grid>
-      <Grid container spacing={{ xs: 1, md: 2 }} width="100%" mt={-2}>
-        {row.map((_, index) => (
-          <Grid size={{ xs: 6, md: 3 }} key={`second-${index}`}>
-            <StatsCard>
-              <Skeleton variant="text" width="100%" height={22} />
-              <Skeleton variant="text" width="100%" height={32} />
-            </StatsCard>
-          </Grid>
-        ))}
-      </Grid>
-    </>
+    <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
+      {row.map((_, index) => (
+        <Grid size={{ xs: 6, md: 3 }} key={`first-${index}`}>
+          <StatsCard>
+            <Skeleton variant="text" width="100%" height={22} />
+            <Skeleton variant="text" width="100%" height={32} />
+          </StatsCard>
+        </Grid>
+      ))}
+    </Grid>
   );
 };
 
@@ -178,14 +130,11 @@ const CampaignStats: FC<Props> = ({
   isJoined,
   isCampaignLoading,
 }) => {
-  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
-
   const { exchangesMap } = useExchangesContext();
-  const isXl = useIsXlDesktop();
   const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
 
-  if (isCampaignLoading) return renderSkeletonBlocks();
+  if (isCampaignLoading) return renderSkeletonBlocks(isMobile);
 
   if (!campaign) return null;
 
@@ -207,18 +156,8 @@ const CampaignStats: FC<Props> = ({
     exchangesMap.get(campaign.exchange_name)?.display_name ||
     campaign.exchange_name;
 
-  const totalFee =
-    campaign.exchange_oracle_fee_percent +
-    campaign.recording_oracle_fee_percent +
-    campaign.reputation_oracle_fee_percent;
-
   const formattedTokenAmount = +formatTokenAmount(
     campaign.fund_amount,
-    campaign.fund_token_decimals
-  );
-
-  const formattedAmountPaid = +formatTokenAmount(
-    campaign.amount_paid,
     campaign.fund_token_decimals
   );
 
@@ -232,105 +171,48 @@ const CampaignStats: FC<Props> = ({
 
   return (
     <>
-      <Grid container spacing={{ xs: 1, md: 2 }} width="100%">
-        {showProgressWidget && isMobile && renderProgressWidget(campaign)}
+      <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
         <FirstRowWrapper showProgressWidget={showProgressWidget}>
           <StatsCard>
-            <Title variant="subtitle2">Total Funded Amount</Title>
-            <Typography
-              variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
-              fontWeight={700}
-              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
-            >
+            <CardName variant="subtitle2">
+              {isMobile ? 'Reward Pool' : 'Total Reward Pool'}
+            </CardName>
+            <CardValue>
               {formattedTokenAmount} {campaign.fund_token_symbol}
-            </Typography>
+            </CardValue>
           </StatsCard>
+
           <StatsCard>
-            <Title variant="subtitle2">Amount Paid</Title>
-            <Typography
-              variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
-              fontWeight={700}
-              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
-            >
-              {formattedAmountPaid} {campaign.fund_token_symbol}
-            </Typography>
-          </StatsCard>
-          <StatsCard>
-            <Title variant="subtitle2">Oracle fees</Title>
-            <Typography
-              variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
-              fontWeight={700}
-              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
-            >
+            <CardName variant="subtitle2">
+              {getTargetInfo(campaign).label}
+            </CardName>
+            <CardValue>
               <FormattedNumber
-                value={(formattedTokenAmount * totalFee) / 100}
-              />{' '}
-              {campaign.fund_token_symbol}{' '}
-              <Typography
-                variant={isMobile ? 'body1' : 'h6'}
-                fontWeight={700}
-                component="span"
-                color="rgba(255, 255, 255, 0.18)"
-              >
-                ({totalFee}%)
-              </Typography>
-            </Typography>
-          </StatsCard>
-          <StatsCard>
-            <Title variant="subtitle2">
-              {getDailyTargetCardLabel(campaign.type)}
-            </Title>
-            <Typography
-              variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
-              fontWeight={700}
-              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
-            >
-              <FormattedNumber
-                value={getDailyTargetValue(campaign)}
+                value={getTargetInfo(campaign).value}
                 decimals={3}
-              />{' '}
-              <span>{targetTokenSymbol}</span>
-            </Typography>
+                suffix={` ${targetTokenSymbol}`}
+              />
+            </CardValue>
           </StatsCard>
         </FirstRowWrapper>
-        {showProgressWidget && !isMobile && renderProgressWidget(campaign)}
       </Grid>
-      <Grid container spacing={{ xs: 1, md: 2 }} width="100%" mt={-2}>
+      <Grid
+        container
+        spacing={{ xs: 2, md: 3 }}
+        width="100%"
+        mt={{ xs: 2, md: 3 }}
+      >
         <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
-            <Title variant="subtitle2">Reserved funds</Title>
-            <Typography
-              variant={isMobile ? 'h6-mobile' : 'h5'}
-              color="primary.violet"
-              fontWeight={700}
-              lineHeight={isMobile ? '1.5rem' : '2.25rem'}
-            >
+            <CardName variant="subtitle2">Reserved funds</CardName>
+            <CardValue>
               {formattedReservedFunds} {campaign.fund_token_symbol}
-            </Typography>
+            </CardValue>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
-            <Title
-              variant="subtitle2"
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              gap={1}
-            >
-              Campaign results
-              <CustomTooltip
-                title={<StatusTooltip />}
-                arrow
-                placement={isMobile ? 'left' : 'top'}
-              >
-                <InfoTooltipInner />
-              </CustomTooltip>
-            </Title>
+            <CardName>Campaign results</CardName>
             <CampaignResultsWidget
               campaignStatus={campaign.status}
               finalResultsUrl={campaign.final_results_url}
@@ -340,50 +222,17 @@ const CampaignStats: FC<Props> = ({
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
           <StatsCard>
-            <Title variant="subtitle2">Exchange</Title>
-            <Typography
-              variant={isXl ? 'h4' : isMobile ? 'body2' : 'h6-mobile'}
-              fontWeight={isXl ? 600 : isMobile ? 700 : 500}
-            >
-              {exchangeName}
-            </Typography>
+            <CardName>Exchange</CardName>
+            <CardValue>{exchangeName}</CardValue>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
-          <StatsCard
-            sx={{
-              '&:last-child p': {
-                fontWeight: { xs: 700, md: 500 },
-              },
-            }}
-          >
-            <Title variant="subtitle2">Symbol</Title>
-            <CampaignSymbol
-              symbol={campaign.symbol}
-              campaignType={campaign.type}
-              size={isXl ? 'large' : isMobile ? 'small' : 'medium'}
-            />
+          <StatsCard>
+            <CardName variant="subtitle2">Symbol</CardName>
+            <CardValue>{campaign.symbol}</CardValue>
           </StatsCard>
         </Grid>
       </Grid>
-      {isMobile && (
-        <>
-          <Button
-            variant="outlined"
-            size="medium"
-            sx={{ mt: -1 }}
-            onClick={() => setIsChartModalOpen(true)}
-            endIcon={<ChartIcon />}
-          >
-            Paid Amount Chart
-          </Button>
-          <ChartModal
-            open={isChartModalOpen}
-            onClose={() => setIsChartModalOpen(false)}
-            campaign={campaign}
-          />
-        </>
-      )}
     </>
   );
 };

@@ -1,9 +1,56 @@
 import { type FC } from 'react';
 
-import { Chip } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { CampaignStatus } from '@/types';
-import { mapStatusToColor } from '@/utils';
+import { type Campaign, CampaignStatus } from '@/types';
+
+export const mapStatusToColorAndText = (
+  status: Campaign['status'],
+  startDate: string,
+  endDate: string
+) => {
+  const now = new Date().toISOString();
+
+  switch (status) {
+    case CampaignStatus.ACTIVE:
+      if (now < startDate) {
+        return {
+          color: '#b78608',
+          text: 'Awaiting start date',
+        };
+      } else if (now > endDate) {
+        return {
+          color: '#5596ff',
+          text: 'Waiting for payouts',
+        };
+      } else {
+        return {
+          color: '#1a926e',
+          text: 'Active',
+        };
+      }
+    case CampaignStatus.COMPLETED:
+      return {
+        color: '#d4cfff',
+        text: 'Ended',
+      };
+    case CampaignStatus.CANCELLED:
+      return {
+        color: '#da4c4f',
+        text: 'Cancelled',
+      };
+    case CampaignStatus.TO_CANCEL:
+      return {
+        color: '#da4c4f',
+        text: 'Pending cancellation',
+      };
+    default:
+      return {
+        color: '#d4cfff',
+        text: 'Unknown',
+      };
+  }
+};
 
 type Props = {
   campaignStatus: CampaignStatus;
@@ -16,29 +63,31 @@ const CampaignStatusLabel: FC<Props> = ({
   startDate,
   endDate,
 }) => {
-  const isCompleted = campaignStatus === CampaignStatus.COMPLETED;
+  const { color, text } = mapStatusToColorAndText(
+    campaignStatus,
+    startDate,
+    endDate
+  );
   return (
-    <Chip
-      label={campaignStatus.split('_').join(' ')}
-      color="secondary"
-      size="medium"
-      sx={{
-        height: 36,
-        py: '6px',
-        bgcolor: mapStatusToColor(campaignStatus, startDate, endDate),
-        textTransform: 'capitalize',
-        borderRadius: '100px',
-        '& > .MuiChip-label': {
-          py: 0,
-          px: 2,
-          color: isCompleted ? 'secondary.contrast' : 'primary.contrast',
-          fontSize: 14,
-          fontWeight: 600,
-          lineHeight: '24px',
-          letterSpacing: '0.1px',
-        },
-      }}
-    />
+    <Box display="flex" alignItems="center" gap={1}>
+      <Box
+        component="span"
+        display="inline-flex"
+        width="12px"
+        height="12px"
+        borderRadius="100%"
+        bgcolor={color}
+      />
+      <Typography
+        color={color}
+        fontSize={12}
+        fontWeight={600}
+        lineHeight="150%"
+        textTransform="capitalize"
+      >
+        {text}
+      </Typography>
+    </Box>
   );
 };
 

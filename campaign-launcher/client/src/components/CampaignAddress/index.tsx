@@ -10,7 +10,7 @@ type Props = {
   address: string;
   chainId: ChainId;
   withCopy?: boolean;
-  size?: 'small' | 'medium';
+  size?: 'small' | 'medium' | 'large';
 };
 
 const AddressLink: FC<Props> = ({ address, chainId, size }) => {
@@ -19,7 +19,8 @@ const AddressLink: FC<Props> = ({ address, chainId, size }) => {
       href={getExplorerUrl(chainId, address)}
       target="_blank"
       sx={{
-        fontSize: size === 'small' ? '12px' : '16px',
+        fontSize:
+          size === 'small' ? '12px' : size === 'medium' ? '14px' : '16px',
         color: 'text.primary',
         textDecoration: 'underline',
         textDecorationStyle: 'dotted',
