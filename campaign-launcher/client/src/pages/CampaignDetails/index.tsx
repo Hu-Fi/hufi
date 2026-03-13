@@ -1,15 +1,11 @@
 import { type FC, useMemo } from 'react';
 
-import { Skeleton } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';
-import JoinCampaignButton from '@/components/JoinCampaignButton';
-import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
 import { useCheckCampaignJoinStatus } from '@/hooks/recording-oracle';
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { CampaignJoinStatus, type EvmAddress } from '@/types';
 import { isCampaignDetails } from '@/utils';
@@ -21,8 +17,6 @@ const CampaignDetails: FC = () => {
     useCampaignDetails(address);
   const { data: joinStatusInfo, isLoading: isJoinStatusLoading } =
     useCheckCampaignJoinStatus(address);
-
-  const isMobile = useIsMobile();
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
@@ -48,14 +42,6 @@ const CampaignDetails: FC = () => {
 
   return (
     <PageWrapper>
-      <PageTitle title="Campaign Data">
-        {!isMobile && campaignData && (
-          <JoinCampaignButton campaign={campaignData} />
-        )}
-      </PageTitle>
-      {isCampaignLoading && !isMobile && (
-        <Skeleton variant="rectangular" width="100%" height={40} />
-      )}
       <CampaignInfo
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
