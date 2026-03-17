@@ -642,13 +642,15 @@ export class PayoutsService {
     escrowAddress: string,
     chainId: ChainId,
   ) {
-    const { block } = (
-      await TransactionUtils.getTransactions({
-        chainId: chainId as number,
-        escrow: escrowAddress,
-        method: 'createEscrow',
-      })
-    )[0];
+    /**
+     * Temp fix to unblock payouts
+     */
+    const transactions = await TransactionUtils.getTransactions({
+      chainId: chainId as number,
+      escrow: escrowAddress,
+      method: 'storeResults',
+      first: 1000,
+    });
 
     const bulkInterfaceV3 = new ethers.Interface(EscrowABI);
     const topicV3 = bulkInterfaceV3.getEvent('BulkTransferV3')!.topicHash;
@@ -656,7 +658,7 @@ export class PayoutsService {
     const logs = await signer.provider.getLogs({
       address: escrowAddress,
       topics: [topicV3],
-      fromBlock: block,
+      fromBlock: transactions.at(-1)!.block,
       toBlock: 'latest',
     });
 
