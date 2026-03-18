@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { EscrowClient } from '@human-protocol/sdk';
+import { EscrowClient, type IEscrowConfig } from '@human-protocol/sdk';
 import { ethers } from 'ethers';
 
 import ERC20ABI from '@/abi/ERC20.json';
@@ -117,25 +117,23 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       const manifest = createManifest(variables);
 
       try {
-        /*
-          Before creating the escrow, we need to get the oracle fees in order to
-          make sure the backend won't interrupt the process and users won't lose their funds
-        */
+        /**
+         * We display campaign data after creation based on the form values
+         * and result of this operation, and have to include oracles fees there,
+         * so retrieve it here to keep the whole flow simple and do it before escrow creation
+         * in order to avoid confusion in case of failure (if we do it after escrow creation,
+         * we might end up in a state when escrow is created, but campaign creation failed
+         * due to oracle fee retrieval failure).
+         */
         const oracleFees = await launcherApi.getOracleFees(appChainId);
-        const formattedFees = {
-          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
-          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
-          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
-        };
 
         const manifestString = JSON.stringify(manifest);
         const manifestHash = await calculateHash(manifestString);
 
-        const escrowConfig = {
+        const escrowConfig: IEscrowConfig = {
           exchangeOracle: oracles.exchangeOracle,
           recordingOracle: oracles.recordingOracle,
           reputationOracle: oracles.reputationOracle,
-          ...formattedFees,
           manifest: manifestString,
           manifestHash: manifestHash,
         };
@@ -143,17 +141,17 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
         const _escrowAddress = await escrowClient.createFundAndSetupEscrow(
           tokenAddress,
           fundAmount,
-          crypto.randomUUID(),
+          'hufi-campaign-launcher',
           escrowConfig
         );
 
-        const result = {
+        return {
           escrowAddress: _escrowAddress,
           tokenDecimals,
-          ...formattedFees,
+          exchangeOracleFee: BigInt(oracleFees.exchange_oracle_fee),
+          recordingOracleFee: BigInt(oracleFees.recording_oracle_fee),
+          reputationOracleFee: BigInt(oracleFees.reputation_oracle_fee),
         };
-
-        return result;
       } catch (e) {
         console.error(e);
         throw e;
@@ -168,6 +166,7 @@ const useCreateEscrow = (): CreateEscrowMutationState => {
       setError(undefined);
       try {
         const result = await createEscrowMutation(variables);
+
         setData(result);
       } catch (e) {
         const err =

@@ -1,5 +1,4 @@
 import {
-  InvalidKeyError,
   KVStoreKeys,
   KVStoreUtils,
   OrderDirection,
@@ -148,18 +147,14 @@ export class StatisticsService {
             KVStoreKeys.url,
           );
         } catch (error) {
-          if (error instanceof InvalidKeyError) {
-            recordingOracleUrl = '';
-          } else {
-            this.logger.error(
-              'Failed to get Recording Oracle url from KV store',
-              {
-                chainId,
-                error,
-              },
-            );
-            return null;
-          }
+          this.logger.error(
+            'Failed to get Recording Oracle url from KV store',
+            {
+              chainId,
+              error,
+            },
+          );
+          return null;
         }
 
         if (!httpUtils.isValidHttpUrl(recordingOracleUrl)) {

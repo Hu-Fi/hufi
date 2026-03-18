@@ -2,12 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 
 import EscrowABI from '@human-protocol/core/abis/Escrow.json';
-import {
-  EscrowClient,
-  EscrowStatus,
-  EscrowUtils,
-  TransactionUtils,
-} from '@human-protocol/sdk';
+import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
@@ -643,10 +638,10 @@ export class PayoutsService {
     chainId: ChainId,
   ) {
     const { block } = (
-      await TransactionUtils.getTransactions({
+      await EscrowUtils.getStatusEvents({
         chainId: chainId as number,
-        escrow: escrowAddress,
-        method: 'createEscrow',
+        escrowAddress,
+        statuses: [EscrowStatus.Pending],
       })
     )[0];
 
