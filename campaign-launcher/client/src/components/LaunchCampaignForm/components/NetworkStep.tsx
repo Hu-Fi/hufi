@@ -98,7 +98,7 @@ const NetworkStep: FC<Props> = ({
     label: chain.name,
   }));
   const { setAppChainId } = useNetwork();
-  const { signer, isSignerReady } = useSignerContext();
+  const { signer, isSignerReady, isSignerMissing } = useSignerContext();
   const { activeAddress } = useActiveAccount();
   const isMobile = useIsMobile();
 
@@ -114,6 +114,12 @@ const NetworkStep: FC<Props> = ({
   };
 
   useEffect(() => {
+    if (isSignerMissing) {
+      setIsCheckingStake(false);
+      setShowNotStakedWarning(true);
+      return;
+    }
+
     if (isCheckingStake && isSignerReady && signer && activeAddress) {
       (async () => {
         try {
@@ -132,7 +138,14 @@ const NetworkStep: FC<Props> = ({
         }
       })();
     }
-  }, [isCheckingStake, activeAddress, isSignerReady, signer, handleChangeStep]);
+  }, [
+    isCheckingStake,
+    activeAddress,
+    isSignerReady,
+    signer,
+    handleChangeStep,
+    isSignerMissing,
+  ]);
 
   useEffect(() => {
     if (isMobile && showNotStakedWarning && warningRef.current) {

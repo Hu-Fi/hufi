@@ -227,7 +227,7 @@ const ThresholdForm: FC<Props> = ({
             control={control}
             render={({ field }) => (
               <Select
-                labelId="fund-token-select-label"
+                aria-label="Fund Token Select"
                 id="fund-token-select"
                 MenuProps={{
                   PaperProps: {

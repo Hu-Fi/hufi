@@ -69,7 +69,12 @@ const FormExchangeSelect = <
         return exchange?.display_name || option || '';
       }}
       renderInput={(params) => (
-        <TextField {...params} placeholder="Select" error={error} />
+        <TextField
+          {...params}
+          aria-label="Exchange Select"
+          placeholder="Select"
+          error={error}
+        />
       )}
       renderOption={(props, option) => {
         const exchange = exchangesMap.get(option);

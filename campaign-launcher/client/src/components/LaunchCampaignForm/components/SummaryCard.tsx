@@ -195,13 +195,17 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
           <Row>
             <RowName>Start Date</RowName>
             <RowValue>
-              {dayjs(formValues?.start_date).format('Do MMM YYYY HH:mm') || '-'}
+              {formValues?.start_date
+                ? dayjs(formValues?.start_date).format('Do MMM YYYY HH:mm')
+                : '-'}
             </RowValue>
           </Row>
           <Row>
             <RowName>End Date</RowName>
             <RowValue>
-              {dayjs(formValues?.end_date).format('Do MMM YYYY HH:mm') || '-'}
+              {formValues?.end_date
+                ? dayjs(formValues?.end_date).format('Do MMM YYYY HH:mm')
+                : '-'}
             </RowValue>
           </Row>
         </>
