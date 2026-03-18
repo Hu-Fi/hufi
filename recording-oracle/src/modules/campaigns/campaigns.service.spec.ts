@@ -2423,7 +2423,7 @@ describe('CampaignsService', () => {
 
     it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = new Date(Date.now() - 1);
+      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2798,7 +2798,7 @@ describe('CampaignsService', () => {
 
     it('should record generated volume stat for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = new Date(Date.now() - 1);
+      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
