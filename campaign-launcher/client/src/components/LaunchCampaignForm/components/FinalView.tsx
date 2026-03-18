@@ -29,31 +29,29 @@ const FinalView: FC<Props> = ({
       px={{ xs: 2, md: 3 }}
     >
       <ModalSuccess />
-      <Typography variant="h4" color="text.primary" mt={1}>
+      <Typography variant="h5" color="text.primary" fontWeight={700}>
         Congratulations!
       </Typography>
-      <Typography variant="body1" fontWeight={500}>
+      <Typography variant="body1" fontWeight={500} color="#a0a0a0">
         Your {mapTypeToLabel(campaignType)} campaign has been successfully
         launched.
         <br />
         Everything is set up and ready to go.
       </Typography>
-      <Typography variant="body2">
-        Click the buttons below to view the campaign details or launch another
-        campaign.
-      </Typography>
       <Stack mt={2} gap={2} width={{ xs: '100%', md: 'fit-content' }}>
         <Button
           size="large"
-          variant="contained"
+          variant="outlined"
           fullWidth={isMobile}
+          sx={{ color: 'white', borderColor: '#433679' }}
           onClick={onViewDetails}
         >
           View campaign details page
         </Button>
         <Button
           size="large"
-          variant="outlined"
+          variant="contained"
+          color="error"
           fullWidth={isMobile}
           onClick={handleStartOver}
         >

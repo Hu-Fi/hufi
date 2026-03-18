@@ -1,31 +1,31 @@
-import { type FC } from 'react';
+import { type FC, type PropsWithChildren } from 'react';
 
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Button, Stack, useTheme } from '@mui/material';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
 
-import { StepsIndicator } from './';
-
 type Props = {
-  step: number;
   handleNextClick: () => void;
-  disableNextButton?: boolean;
-  disableBackButton?: boolean;
-  nextButtonText?: string;
-  nextButtonType?: 'button' | 'submit';
   handleBackClick?: () => void;
+  disableBackButton?: boolean;
+  disableNextButton?: boolean;
+  nextButtonText?: string;
+  formId?: string;
 };
 
-const BottomNavigation: FC<Props> = ({
-  step,
+const BottomNavigation: FC<PropsWithChildren<Props>> = ({
   handleNextClick,
   disableNextButton = false,
   disableBackButton = false,
   nextButtonText = 'Next',
-  nextButtonType = 'button',
+  formId,
   handleBackClick,
+  children,
 }) => {
   const isMobile = useIsMobile();
+  const theme = useTheme();
+
+  const showBackButton = !!handleBackClick;
 
   const onBackClick = () => {
     if (disableBackButton) return;
@@ -40,37 +40,56 @@ const BottomNavigation: FC<Props> = ({
   return (
     <Stack
       direction="row"
-      alignItems="center"
+      alignItems="flex-end"
       justifyContent="space-between"
-      width="100%"
-      mt={{ xs: 8, md: 15 }}
+      mt="auto"
+      gridArea="bottomNav"
+      minHeight={{ xs: 95, md: 140 }}
+      px={{ xs: 2, md: 0 }}
+      py={{ xs: 3, md: 0 }}
+      position={{ xs: 'fixed', md: 'static' }}
+      left={{ xs: 0, md: 'auto' }}
+      right={{ xs: 0, md: 'auto' }}
+      bottom={{ xs: 0, md: 'auto' }}
+      width={{ xs: '100%', md: 'auto' }}
+      gap={{ xs: 0, md: 4 }}
+      bgcolor={{ xs: 'background.default', md: 'transparent' }}
+      borderTop={{ xs: '2px solid #251d47', md: 'none' }}
+      sx={{
+        zIndex: { xs: theme.zIndex.appBar, md: 'auto' },
+      }}
     >
-      {!isMobile && <StepsIndicator step={step} />}
+      {children}
       <Box
         display="flex"
         alignItems="center"
-        flexDirection={{ xs: 'column', md: 'row' }}
+        flexDirection="row"
         gap={2}
         width={{ xs: '100%', md: 'auto' }}
+        ml="auto"
       >
-        {step > 1 && (
+        {showBackButton && (
           <Button
             variant="outlined"
+            size="large"
             fullWidth={isMobile}
             disabled={disableBackButton}
-            sx={{ minWidth: 150 }}
+            sx={{ minWidth: 150, color: 'white', borderColor: '#433679' }}
             onClick={onBackClick}
           >
-            Back
+            {isMobile ? 'Back' : 'Previous'}
           </Button>
         )}
         <Button
           variant="contained"
+          size="large"
+          color="error"
           fullWidth={isMobile}
-          type={nextButtonType}
+          type={formId ? 'submit' : 'button'}
+          form={formId}
           disabled={disableNextButton}
           sx={{ minWidth: 150 }}
-          onClick={nextButtonType === 'submit' ? undefined : onNextClick}
+          onClick={formId ? undefined : onNextClick}
         >
           {nextButtonText}
         </Button>

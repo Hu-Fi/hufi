@@ -7,8 +7,6 @@ import {
   FormControl,
   FormHelperText,
   InputAdornment,
-  inputBaseClasses,
-  InputLabel,
   MenuItem,
   Select,
   Stack,
@@ -34,14 +32,19 @@ import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
-import { ExchangeInfoTooltip } from './';
-
 type Props = {
   control: Control<HoldingFormValues>;
   errors: FieldErrors<HoldingFormValues>;
   watch: UseFormWatch<HoldingFormValues>;
   trigger: UseFormTrigger<HoldingFormValues>;
   campaignType: CampaignType;
+};
+
+const labelStyles = {
+  color: 'white',
+  mb: 1,
+  lineHeight: '100%',
+  letterSpacing: '0px',
 };
 
 const HoldingForm: FC<Props> = ({
@@ -60,37 +63,29 @@ const HoldingForm: FC<Props> = ({
   return (
     <>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
-        <Box display="flex" gap={1} width="100%">
-          <FormControl
-            error={!!errors.exchange}
-            sx={{
-              width: '100%',
-              mb: errors.exchange ? 2 : 0,
-              '& .MuiFormHelperText-root': {
-                position: 'absolute',
-                bottom: 0,
-                mb: { xs: -3, md: -2 },
-              },
-            }}
-          >
-            <Controller
-              name="exchange"
-              control={control}
-              render={({ field }) => (
-                <FormExchangeSelect<HoldingFormValues, 'exchange'>
-                  field={field}
-                  campaignType={campaignType}
-                  error={!!errors.exchange}
-                />
-              )}
-            />
-            {errors.exchange && (
-              <FormHelperText>{errors.exchange.message}</FormHelperText>
+        <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Exchange
+          </Typography>
+          <Controller
+            name="exchange"
+            control={control}
+            render={({ field }) => (
+              <FormExchangeSelect<HoldingFormValues, 'exchange'>
+                field={field}
+                campaignType={campaignType}
+                error={!!errors.exchange}
+              />
             )}
-          </FormControl>
-          <ExchangeInfoTooltip />
-        </Box>
+          />
+          {errors.exchange && (
+            <FormHelperText>{errors.exchange.message}</FormHelperText>
+          )}
+        </FormControl>
         <FormControl error={!!errors.symbol} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Symbol
+          </Typography>
           <Controller
             name="symbol"
             control={control}
@@ -116,7 +111,7 @@ const HoldingForm: FC<Props> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Symbol"
+                      placeholder="Select"
                       error={!!errors.symbol}
                       slotProps={{
                         input: {
@@ -141,7 +136,7 @@ const HoldingForm: FC<Props> = ({
                         component="li"
                         sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
                       >
-                        <CryptoEntity symbol={option} />
+                        <CryptoEntity symbol={option} size="xs" />
                       </Box>
                     );
                   }}
@@ -157,18 +152,15 @@ const HoldingForm: FC<Props> = ({
         </FormControl>
       </Stack>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
-        <FormControl
-          error={!!errors.start_date}
-          sx={{
-            width: '100%',
-          }}
-        >
+        <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Start Date
+          </Typography>
           <Controller
             name="start_date"
             control={control}
             render={({ field }) => (
               <MobileDateTimePicker
-                label="Start Date"
                 format="DD-MM-YYYY HH:mm"
                 ampm={false}
                 disablePast
@@ -182,6 +174,7 @@ const HoldingForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.start_date,
+                    placeholder: 'Select',
                   },
                 }}
               />
@@ -191,18 +184,15 @@ const HoldingForm: FC<Props> = ({
             <FormHelperText>{errors.start_date.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl
-          error={!!errors.end_date}
-          sx={{
-            width: '100%',
-          }}
-        >
+        <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            End Date
+          </Typography>
           <Controller
             name="end_date"
             control={control}
             render={({ field }) => (
               <MobileDateTimePicker
-                label="End Date"
                 format="DD-MM-YYYY HH:mm"
                 ampm={false}
                 disablePast
@@ -217,6 +207,7 @@ const HoldingForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.end_date,
+                    placeholder: 'Select',
                   },
                 }}
               />
@@ -229,7 +220,9 @@ const HoldingForm: FC<Props> = ({
       </Stack>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
+          <Typography variant="h6" sx={labelStyles}>
+            Fund Token
+          </Typography>
           <Controller
             name="fund_token"
             control={control}
@@ -237,7 +230,6 @@ const HoldingForm: FC<Props> = ({
               <Select
                 labelId="fund-token-select-label"
                 id="fund-token-select"
-                label="Fund Token"
                 MenuProps={{
                   PaperProps: {
                     elevation: 4,
@@ -250,7 +242,7 @@ const HoldingForm: FC<Props> = ({
               >
                 {FUND_TOKENS.map((token) => (
                   <MenuItem key={token} value={token}>
-                    <CryptoEntity symbol={token} />
+                    <CryptoEntity symbol={token} size="xs" />
                   </MenuItem>
                 ))}
               </Select>
@@ -264,13 +256,15 @@ const HoldingForm: FC<Props> = ({
           error={!!errors.daily_balance_target}
           sx={{ width: '100%' }}
         >
+          <Typography variant="h6" sx={labelStyles}>
+            Daily Balance Target
+          </Typography>
           <Controller
             name="daily_balance_target"
             control={control}
             render={({ field }) => (
               <TextField
                 id="daily-balance-target-input"
-                label="Daily Balance Target"
                 placeholder="1"
                 type="number"
                 error={!!errors.daily_balance_target}
@@ -303,10 +297,12 @@ const HoldingForm: FC<Props> = ({
                           height: '23px',
                           opacity: 0,
                           pointerEvents: 'none',
-                          [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
-                            {
-                              opacity: 1,
-                            },
+                          '.Mui-focused &': {
+                            opacity: 1,
+                          },
+                          'input:not(:placeholder-shown) ~ &': {
+                            opacity: 1,
+                          },
                         }}
                       >
                         <Typography variant="body1" color="text.primary">

@@ -1,4 +1,5 @@
 import { createTheme, type PaletteMode } from '@mui/material/styles';
+import type {} from '@mui/x-date-pickers/themeAugmentation';
 
 declare module '@mui/material/styles' {
   interface Theme {
@@ -244,6 +245,41 @@ const createAppTheme = (mode: PaletteMode) => {
               },
             '& input[type=number]': {
               MozAppearance: 'textfield',
+            },
+          },
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-input': {
+              padding: '16px 14px',
+            },
+          },
+        },
+      },
+      MuiInputBase: {
+        styleOverrides: {
+          input: {
+            color: 'white',
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#433679',
+            },
+          },
+        },
+      },
+      MuiPickersOutlinedInput: {
+        styleOverrides: {
+          root: {
+            color: 'white',
+            '& .MuiPickersOutlinedInput-notchedOutline': {
+              borderColor: '#433679',
             },
           },
         },

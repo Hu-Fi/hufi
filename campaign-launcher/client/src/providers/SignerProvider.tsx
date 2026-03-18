@@ -115,11 +115,11 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
         status === SignerStatus.CREATING ||
         status === SignerStatus.IDLE ||
         status === SignerStatus.UNAVAILABLE,
-      isSignerReady: status === SignerStatus.READY,
+      isSignerReady: !isSwitching && status === SignerStatus.READY,
       isSignerMissing:
         status === SignerStatus.DISCONNECTED || status === SignerStatus.ERROR,
     }),
-    [signer, status]
+    [signer, status, isSwitching]
   );
 
   return (

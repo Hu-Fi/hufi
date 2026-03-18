@@ -17,9 +17,9 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
       <ModalError message="Something went wrong, please try again." />
       <Button
         size="large"
-        variant="contained"
+        variant="outlined"
         fullWidth={isMobile}
-        sx={{ mt: 4, mx: 'auto' }}
+        sx={{ mt: 4, mx: 'auto', color: 'white', borderColor: '#433679' }}
         onClick={onRetry}
       >
         Try again
