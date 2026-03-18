@@ -2,12 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 
 import EscrowABI from '@human-protocol/core/abis/Escrow.json';
-import {
-  EscrowClient,
-  EscrowStatus,
-  EscrowUtils,
-  TransactionUtils,
-} from '@human-protocol/sdk';
+import { EscrowClient, EscrowStatus, EscrowUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
@@ -642,15 +637,13 @@ export class PayoutsService {
     escrowAddress: string,
     chainId: ChainId,
   ) {
-    /**
-     * Temp fix to unblock payouts
-     */
-    const transactions = await TransactionUtils.getTransactions({
-      chainId: chainId as number,
-      escrow: escrowAddress,
-      method: 'storeResults',
-      first: 1000,
-    });
+    const { block } = (
+      await EscrowUtils.getStatusEvents({
+        chainId: chainId as number,
+        escrowAddress,
+        statuses: [EscrowStatus.Pending],
+      })
+    )[0];
 
     const bulkInterfaceV3 = new ethers.Interface(EscrowABI);
     const topicV3 = bulkInterfaceV3.getEvent('BulkTransferV3')!.topicHash;
@@ -658,7 +651,7 @@ export class PayoutsService {
     const logs = await signer.provider.getLogs({
       address: escrowAddress,
       topics: [topicV3],
-      fromBlock: transactions.at(-1)!.block,
+      fromBlock: block,
       toBlock: 'latest',
     });
 
