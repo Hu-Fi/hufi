@@ -13,7 +13,6 @@ import {
   type ChainId,
   ChainIds,
   DEFAULT_PAGINATION_LIMIT,
-  type ReadableEscrowStatus,
 } from '@/common/constants';
 import { EvmAddressValidator, IsChainId } from '@/common/validators';
 
@@ -152,9 +151,6 @@ export class CampaignData {
 
   @ApiProperty()
   status: CampaignStatus;
-
-  @ApiProperty({ name: 'escrow_status' })
-  escrowStatus: ReadableEscrowStatus;
 
   @ApiProperty()
   launcher: string;
