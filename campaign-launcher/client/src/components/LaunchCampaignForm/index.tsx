@@ -29,7 +29,6 @@ const LaunchCampaignForm: FC = () => {
   const [chainId, setChainId] = useState<ChainId | null>(null);
   const [fundAmount, setFundAmount] = useState<string>('');
   const [formValues, setFormValues] = useState<CampaignFormValues | null>(null);
-  const [isEscrowCreated, setIsEscrowCreated] = useState(false);
 
   const isMobile = useIsMobile();
 
@@ -38,7 +37,6 @@ const LaunchCampaignForm: FC = () => {
     setFundAmount('');
     setFormValues(null);
     setChainId(null);
-    setIsEscrowCreated(false);
   };
 
   useEffect(() => {
@@ -66,7 +64,7 @@ const LaunchCampaignForm: FC = () => {
         zIndex: { xs: 1, md: 2 },
       }}
     >
-      {!isEscrowCreated && <StepsIndicator currentStep={step} steps={steps} />}
+      {!isLastStep && <StepsIndicator currentStep={step} steps={steps} />}
       {step === 1 && (
         <NetworkStep
           chainId={chainId}
@@ -81,29 +79,28 @@ const LaunchCampaignForm: FC = () => {
           handleChangeStep={setStep}
         />
       )}
-      {step === 3 && (
+      {step === 3 && formValues && (
         <EscrowDetailsStep
-          formValues={formValues as CampaignFormValues}
+          formValues={formValues}
           setFormValues={setFormValues}
           handleChangeStep={setStep}
         />
       )}
-      {step === 4 && (
+      {step === 4 && formValues && (
         <ApprovalStep
           fundAmount={fundAmount}
           setFundAmount={setFundAmount}
-          formValues={formValues as CampaignFormValues}
+          formValues={formValues}
           handleChangeStep={setStep}
         />
       )}
-      {step === 5 && (
+      {step === 5 && formValues && chainId && (
         <LaunchStep
-          chainId={chainId as ChainId}
+          chainId={chainId}
           fundAmount={fundAmount}
-          formValues={formValues as CampaignFormValues}
+          formValues={formValues}
           handleChangeStep={setStep}
           handleStartOver={handleStartOver}
-          setIsEscrowCreated={setIsEscrowCreated}
         />
       )}
       {!isLastStep && !isMobile && (

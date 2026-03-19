@@ -1,7 +1,14 @@
-import { type SetStateAction, type Dispatch, type FC, useEffect } from 'react';
+import { type SetStateAction, type Dispatch, type FC } from 'react';
 
 import { type ChainId } from '@human-protocol/sdk';
-import { Box, Button, CircularProgress, Paper, Stack } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { useNavigate } from 'react-router';
 
 import { ROUTES } from '@/constants';
@@ -18,7 +25,6 @@ type Props = {
   formValues: CampaignFormValues;
   handleChangeStep: Dispatch<SetStateAction<number>>;
   handleStartOver: () => void;
-  setIsEscrowCreated: (isCreated: boolean) => void;
 };
 
 const LaunchStep: FC<Props> = ({
@@ -27,7 +33,6 @@ const LaunchStep: FC<Props> = ({
   formValues,
   handleChangeStep,
   handleStartOver,
-  setIsEscrowCreated,
 }) => {
   const {
     data: escrowData,
@@ -40,12 +45,6 @@ const LaunchStep: FC<Props> = ({
 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (isEscrowCreated) {
-      setIsEscrowCreated(true);
-    }
-  }, [isEscrowCreated, setIsEscrowCreated]);
 
   const handleBackToEdit = () => {
     handleChangeStep((prev) => prev - 1);
@@ -101,7 +100,17 @@ const LaunchStep: FC<Props> = ({
 
   return (
     <>
-      <Stack width="100%" mt={5} gridArea="main">
+      {!isEscrowCreated && (
+        <Typography
+          variant="h6"
+          color="white"
+          fontSize={{ xs: '18px', md: '20px' }}
+          fontWeight={{ xs: 700, md: 600 }}
+        >
+          One final look before you initiate the campaign
+        </Typography>
+      )}
+      <Stack width="100%" mt={5}>
         <Paper
           elevation={0}
           sx={{

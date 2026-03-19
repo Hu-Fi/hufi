@@ -12,6 +12,7 @@ import { StakingClient, type ChainId } from '@human-protocol/sdk';
 import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useNotification } from '@/hooks/useNotification';
 import { ArrowLeftIcon, RefreshIcon, WarningIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
@@ -101,8 +102,10 @@ const NetworkStep: FC<Props> = ({
   const { signer, isSignerReady, isSignerMissing } = useSignerContext();
   const { activeAddress } = useActiveAccount();
   const isMobile = useIsMobile();
+  const { showError } = useNotification();
 
   const handleClickOnNetwork = (chainId: ChainId) => {
+    if (isCheckingStake) return;
     handleSetNetwork(chainId);
     setShowNotStakedWarning(false);
   };
@@ -116,7 +119,7 @@ const NetworkStep: FC<Props> = ({
   useEffect(() => {
     if (isSignerMissing) {
       setIsCheckingStake(false);
-      setShowNotStakedWarning(true);
+      showError('Error checking stake');
       return;
     }
 
@@ -132,7 +135,7 @@ const NetworkStep: FC<Props> = ({
           }
         } catch (error) {
           console.error('Error checking stake: ', error);
-          setShowNotStakedWarning(true);
+          showError('Error checking stake');
         } finally {
           setIsCheckingStake(false);
         }
@@ -145,6 +148,7 @@ const NetworkStep: FC<Props> = ({
     signer,
     handleChangeStep,
     isSignerMissing,
+    showError,
   ]);
 
   useEffect(() => {

@@ -43,7 +43,7 @@ type Props = {
 
 const labelStyles = {
   color: 'white',
-  mb: 1,
+  mb: 1.5,
   lineHeight: '100%',
   letterSpacing: '0px',
 };
