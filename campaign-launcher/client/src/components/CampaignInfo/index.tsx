@@ -2,22 +2,18 @@ import { type FC } from 'react';
 
 import {
   Box,
-  IconButton,
   Divider as MuiDivider,
   Skeleton,
   Stack,
   styled,
   Typography,
 } from '@mui/material';
-import { useNavigate } from 'react-router';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import JoinCampaign from '@/components/JoinCampaign';
-import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { ArrowLeftIcon } from '@/icons';
 import type { CampaignDetails, CampaignJoinStatus } from '@/types';
 import { getChainIcon, getNetworkName, mapTypeToLabel } from '@/utils';
 import dayjs from '@/utils/dayjs';
@@ -48,19 +44,6 @@ const CampaignInfo: FC<Props> = ({
   isJoinStatusLoading,
 }) => {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
-
-  const handleGoBack = () => {
-    const appHistoryIndex = window.history.state?.idx;
-    const canGoBackInApp = Number(appHistoryIndex) > 0;
-
-    if (canGoBackInApp) {
-      navigate(-1);
-      return;
-    }
-
-    navigate(ROUTES.CAMPAIGNS);
-  };
 
   if (isCampaignLoading) {
     if (isMobile) {
@@ -109,21 +92,11 @@ const CampaignInfo: FC<Props> = ({
         gap={2}
         height={{ xs: 'auto', md: '42px' }}
       >
-        <Box display="flex" alignItems="center" gap={1.5} color="white">
-          <IconButton
-            aria-label="Go back"
-            disableRipple
-            sx={{ p: 0 }}
-            onClick={handleGoBack}
-          >
-            <ArrowLeftIcon />
-          </IconButton>
-          <CampaignSymbol
-            symbol={campaign.symbol}
-            campaignType={campaign.type}
-            size="small"
-          />
-        </Box>
+        <CampaignSymbol
+          symbol={campaign.symbol}
+          campaignType={campaign.type}
+          size="small"
+        />
         <Box display="flex" alignItems="center" gap={3}>
           <CampaignStatusLabel
             campaignStatus={campaign.status}

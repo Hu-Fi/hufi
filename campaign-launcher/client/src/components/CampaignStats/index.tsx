@@ -1,10 +1,11 @@
-import { type FC, type PropsWithChildren, Children } from 'react';
+import { type FC } from 'react';
 
 import { Box, Skeleton, styled, Typography, Grid } from '@mui/material';
 
 import CampaignResultsWidget from '@/components/CampaignResultsWidget';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
@@ -24,9 +25,10 @@ type Props = {
 const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'space-between',
+  justifyContent: 'start',
   height: '175px',
-  padding: '28px 32px',
+  padding: '32px',
+  gap: '45px',
   backgroundColor: '#251D47',
   borderRadius: '16px',
   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -34,7 +36,8 @@ const StatsCard = styled(Box)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column-reverse',
     height: '100px',
-    padding: '12px 16px 16px',
+    padding: '12px',
+    gap: '16px',
     borderRadius: '8px',
   },
 }));
@@ -46,13 +49,13 @@ const CardName = styled(Typography)(({ theme }) => ({
   lineHeight: '18px',
   letterSpacing: '1.5px',
   textTransform: 'uppercase',
-  marginBottom: '45px',
 
   [theme.breakpoints.down('md')]: {
     fontSize: '14px',
+    fontWeight: 400,
     lineHeight: '150%',
     letterSpacing: '0px',
-    marginBottom: '0px',
+    textTransform: 'none',
   },
 }));
 
@@ -66,58 +69,20 @@ const CardValue = styled(Typography)(({ theme }) => ({
     fontSize: '20px',
     fontWeight: 500,
     lineHeight: '150%',
-    marginBottom: '16px',
-  },
-}));
-
-const FlexGrid = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '16px',
-  width: '100%',
-  '& > *': {
-    flexBasis: 'calc(50% - 8px)',
-  },
-
-  [theme.breakpoints.down('md')]: {
-    gap: '8px',
   },
 }));
 
 const now = new Date().toISOString();
 
-const FirstRowWrapper: FC<
-  PropsWithChildren<{
-    showProgressWidget: boolean;
-  }>
-> = ({ showProgressWidget, children }) => {
-  if (showProgressWidget) {
-    return (
-      <Grid size={{ xs: 12, md: 6 }}>
-        <FlexGrid>{children}</FlexGrid>
-      </Grid>
-    );
-  }
-
-  return (
-    <>
-      {Children.map(children, (child) => (
-        <Grid size={{ xs: 6, md: 3 }}>{child}</Grid>
-      ))}
-    </>
-  );
-};
-
 const renderSkeletonBlocks = (isMobile: boolean) => {
-  const size = isMobile ? 6 : 8;
-  const row = Array(size).fill(0);
+  const elements = Array(6).fill(0);
   return (
     <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
-      {row.map((_, index) => (
-        <Grid size={{ xs: 6, md: 3 }} key={`first-${index}`}>
+      {elements.map((_, index) => (
+        <Grid size={{ xs: 6, md: 4 }} key={`first-${index}`}>
           <StatsCard>
-            <Skeleton variant="text" width="100%" height={22} />
-            <Skeleton variant="text" width="100%" height={32} />
+            <Skeleton variant="text" width="100%" height={isMobile ? 21 : 18} />
+            <Skeleton variant="text" width="100%" height={isMobile ? 30 : 36} />
           </StatsCard>
         </Grid>
       ))}
@@ -133,6 +98,7 @@ const CampaignStats: FC<Props> = ({
   const { exchangesMap } = useExchangesContext();
   const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
+  const campaignTimeline = useCampaignTimeline(campaign);
 
   if (isCampaignLoading) return renderSkeletonBlocks(isMobile);
 
@@ -147,7 +113,7 @@ const CampaignStats: FC<Props> = ({
     campaign.status === CampaignStatus.TO_CANCEL &&
     campaign.reserved_funds !== campaign.balance;
 
-  const showProgressWidget =
+  const showUserPerformance =
     isAuthenticated &&
     isJoined &&
     (isOngoingCampaign || hasProgressBeforeCancel);
@@ -172,68 +138,75 @@ const CampaignStats: FC<Props> = ({
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
-    <>
-      <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
-        <FirstRowWrapper showProgressWidget={showProgressWidget}>
-          <StatsCard>
-            <CardName variant="subtitle2">
-              {isMobile ? 'Reward Pool' : 'Total Reward Pool'}
-            </CardName>
-            <CardValue>
-              {formattedTokenAmount} {campaign.fund_token_symbol}
-            </CardValue>
-          </StatsCard>
-
-          <StatsCard>
-            <CardName variant="subtitle2">{targetInfo.label}</CardName>
-            <CardValue>
-              <FormattedNumber
-                value={targetInfo.value}
-                decimals={3}
-                suffix={` ${targetTokenSymbol}`}
-              />
-            </CardValue>
-          </StatsCard>
-        </FirstRowWrapper>
+    <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName variant="subtitle2">
+            {isMobile ? 'Reward Pool' : 'Total Reward Pool'}
+          </CardName>
+          <CardValue>
+            {formattedTokenAmount} {campaign.fund_token_symbol}
+          </CardValue>
+        </StatsCard>
       </Grid>
-      <Grid
-        container
-        spacing={{ xs: 2, md: 3 }}
-        width="100%"
-        mt={{ xs: 2, md: 3 }}
-      >
-        <Grid size={{ xs: 6, md: 3 }}>
-          <StatsCard>
-            <CardName variant="subtitle2">Reserved funds</CardName>
-            <CardValue>
-              {formattedReservedFunds} {campaign.fund_token_symbol}
-            </CardValue>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <StatsCard>
-            <CardName>Campaign results</CardName>
-            <CampaignResultsWidget
-              campaignStatus={campaign.status}
-              finalResultsUrl={campaign.final_results_url}
-              intermediateResultsUrl={campaign.intermediate_results_url}
+      {showUserPerformance && (
+        <>
+          <Grid size={{ xs: 6, md: 4 }}>
+            <StatsCard>
+              <CardName variant="subtitle2">Ranking</CardName>
+              <CardValue>14 / 81</CardValue>
+            </StatsCard>
+          </Grid>
+          <Grid size={{ xs: 6, md: 4 }}>
+            <StatsCard>
+              <CardName variant="subtitle2">My Volume</CardName>
+              <CardValue>
+                {formattedTokenAmount} {campaign.fund_token_symbol}
+              </CardValue>
+            </StatsCard>
+          </Grid>
+        </>
+      )}
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName variant="subtitle2">{targetInfo.label}</CardName>
+          <CardValue>
+            <FormattedNumber
+              value={targetInfo.value}
+              decimals={3}
+              suffix={` ${targetTokenSymbol}`}
             />
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <StatsCard>
-            <CardName>Exchange</CardName>
-            <CardValue>{exchangeName}</CardValue>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <StatsCard>
-            <CardName variant="subtitle2">Symbol</CardName>
-            <CardValue>{campaign.symbol}</CardValue>
-          </StatsCard>
-        </Grid>
+          </CardValue>
+        </StatsCard>
       </Grid>
-    </>
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName variant="subtitle2">Reserved funds</CardName>
+          <CardValue>
+            {formattedReservedFunds} {campaign.fund_token_symbol}
+          </CardValue>
+        </StatsCard>
+      </Grid>
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName>Exchange</CardName>
+          <CardValue>{exchangeName}</CardValue>
+        </StatsCard>
+      </Grid>
+      <Grid size={{ xs: 6, md: 4 }}>
+        <CampaignResultsWidget
+          campaignStatus={campaign.status}
+          finalResultsUrl={campaign.final_results_url}
+          intermediateResultsUrl={campaign.intermediate_results_url}
+        />
+      </Grid>
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName>{campaignTimeline.label}</CardName>
+          <CardValue>{campaignTimeline.value}</CardValue>
+        </StatsCard>
+      </Grid>
+    </Grid>
   );
 };
 
