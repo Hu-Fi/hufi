@@ -19,15 +19,8 @@ export default defineConfig(() => {
     build: {
       outDir: 'dist',
       sourcemap: true,
-      commonjsOptions: {
-        transformMixedEsModules: true,
-      },
-      rollupOptions: {
+      rolldownOptions: {
         onwarn(warning, defaultHandler) {
-          if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
-            return;
-          }
-
           if (warning.code === 'SOURCEMAP_ERROR') {
             return;
           }
@@ -42,6 +35,5 @@ export default defineConfig(() => {
         buffer: 'buffer/',
       },
     },
-    optimizeDeps: {},
   };
 });
