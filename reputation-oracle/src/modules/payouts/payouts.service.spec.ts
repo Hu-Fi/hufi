@@ -1184,10 +1184,11 @@ describe('PayoutsService', () => {
         .mockReset()
         .mockResolvedValueOnce(EscrowStatus.ToCancel);
 
-      const now = Date.now();
+      const now = new Date();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(now);
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
         Object.assign(generateManifest(), {
-          start_date: new Date(now + 1).toISOString(),
+          start_date: new Date(now.valueOf() + 1).toISOString(),
         }),
       );
 

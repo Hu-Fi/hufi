@@ -97,8 +97,13 @@ export class PayoutsService {
       );
 
       if (escrowStatus === EscrowStatus.ToCancel) {
+        const cancellationRequestedAt =
+          await escrowUtils.getCancellationRequestDate(
+            campaign.chainId,
+            campaign.address,
+          );
         const campaignStartDate = new Date(manifest.start_date);
-        if (campaignStartDate.valueOf() > Date.now()) {
+        if (cancellationRequestedAt.valueOf() < campaignStartDate.valueOf()) {
           logger.info(
             'Campaign cancellation requested before campaign started, cancelling',
           );
