@@ -1744,6 +1744,7 @@ describe('CampaignsService', () => {
         'Exchange access failed for provided api key',
         {
           participantId: noAccessParticipant.id,
+          participantEvmAddress: noAccessParticipant.evmAddress,
           error: syntheticError,
         },
       );

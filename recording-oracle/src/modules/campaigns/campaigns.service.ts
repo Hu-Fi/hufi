@@ -815,6 +815,7 @@ export class CampaignsService implements OnModuleDestroy {
           if (options.logWarnings) {
             logger.warn('Exchange access failed for provided api key', {
               participantId: participant.id,
+              participantEvmAddress: participant.evmAddress,
               error,
             });
           }
