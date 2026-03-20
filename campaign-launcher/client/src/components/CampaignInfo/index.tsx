@@ -149,6 +149,7 @@ const CampaignInfo: FC<Props> = ({
           address={campaign.address}
           chainId={campaign.chain_id}
           size={isMobile ? 'medium' : 'large'}
+          withCopy
         />
         <DividerStyled orientation="vertical" flexItem />
         <Typography

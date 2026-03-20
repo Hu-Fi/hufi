@@ -140,11 +140,32 @@ export const ChevronIcon: FC<SvgIconProps> = (props) => {
 
 export const OpenInNewIcon: FC<SvgIconProps> = (props) => {
   return (
-    <SvgIcon {...props} viewBox="0 0 25 24" fill="none">
+    <SvgIcon {...props} viewBox="0 0 16 16" fill="none">
       <path
-        fill="currentColor"
-        d="M19.2 19H5.19995V5H12.2V3H5.19995C4.08995 3 3.19995 3.9 3.19995 5V19C3.19995 20.1 4.08995 21 5.19995 21H19.2C20.3 21 21.2 20.1 21.2 19V12H19.2V19ZM14.2 3V5H17.79L7.95995 14.83L9.36995 16.24L19.2 6.41V10H21.2V3H14.2Z"
+        d="M10 2H14M14 2V6M14 2L6.66667 9.33333M12 8.66667V12.6667C12 13.0203 11.8595 13.3594 11.6095 13.6095C11.3594 13.8595 11.0203 14 10.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V5.33333C2 4.97971 2.14048 4.64057 2.39052 4.39052C2.64057 4.14048 2.97971 4 3.33333 4H7.33333"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.33333"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
+    </SvgIcon>
+  );
+};
+
+export const CopyIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 20 20" fill="none">
+      <g clipPath="url(#clip0_1586_816)">
+        <path
+          d="M3.33317 13.3332C2.4165 13.3332 1.6665 12.5832 1.6665 11.6665V3.33317C1.6665 2.4165 2.4165 1.6665 3.33317 1.6665H11.6665C12.5832 1.6665 13.3332 2.4165 13.3332 3.33317M8.33317 6.6665H16.6665C17.587 6.6665 18.3332 7.4127 18.3332 8.33317V16.6665C18.3332 17.587 17.587 18.3332 16.6665 18.3332H8.33317C7.4127 18.3332 6.6665 17.587 6.6665 16.6665V8.33317C6.6665 7.4127 7.4127 6.6665 8.33317 6.6665Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.66667"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
     </SvgIcon>
   );
 };
