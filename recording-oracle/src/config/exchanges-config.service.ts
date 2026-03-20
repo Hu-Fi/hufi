@@ -21,7 +21,7 @@ export class ExchangesConfigService {
         skipCcxtPreload: true,
       },
       [ExchangeName.BITMART]: {
-        enabled: false,
+        enabled: true,
         type: ExchangeType.CEX,
       },
       [ExchangeName.BYBIT]: {
