@@ -127,11 +127,6 @@ const CampaignStats: FC<Props> = ({
     campaign.fund_token_decimals
   );
 
-  const formattedReservedFunds = +formatTokenAmount(
-    campaign.reserved_funds,
-    campaign.fund_token_decimals
-  );
-
   const targetInfo = getTargetInfo(campaign);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
@@ -147,6 +142,24 @@ const CampaignStats: FC<Props> = ({
           <CardValue>
             {formattedTokenAmount} {campaign.fund_token_symbol}
           </CardValue>
+        </StatsCard>
+      </Grid>
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName variant="subtitle2">{targetInfo.label}</CardName>
+          <CardValue>
+            <FormattedNumber
+              value={targetInfo.value}
+              decimals={3}
+              suffix={` ${targetTokenSymbol}`}
+            />
+          </CardValue>
+        </StatsCard>
+      </Grid>
+      <Grid size={{ xs: 6, md: 4 }}>
+        <StatsCard>
+          <CardName>Exchange</CardName>
+          <CardValue>{exchangeName}</CardValue>
         </StatsCard>
       </Grid>
       {showUserPerformance && (
@@ -167,32 +180,6 @@ const CampaignStats: FC<Props> = ({
           </Grid>
         </>
       )}
-      <Grid size={{ xs: 6, md: 4 }}>
-        <StatsCard>
-          <CardName variant="subtitle2">{targetInfo.label}</CardName>
-          <CardValue>
-            <FormattedNumber
-              value={targetInfo.value}
-              decimals={3}
-              suffix={` ${targetTokenSymbol}`}
-            />
-          </CardValue>
-        </StatsCard>
-      </Grid>
-      <Grid size={{ xs: 6, md: 4 }}>
-        <StatsCard>
-          <CardName variant="subtitle2">Reserved funds</CardName>
-          <CardValue>
-            {formattedReservedFunds} {campaign.fund_token_symbol}
-          </CardValue>
-        </StatsCard>
-      </Grid>
-      <Grid size={{ xs: 6, md: 4 }}>
-        <StatsCard>
-          <CardName>Exchange</CardName>
-          <CardValue>{exchangeName}</CardValue>
-        </StatsCard>
-      </Grid>
       <Grid size={{ xs: 6, md: 4 }}>
         <CampaignResultsWidget
           campaignStatus={campaign.status}
