@@ -8,6 +8,8 @@ import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
 import DashboardWidgets from '@/components/DashboardWidgets';
 import FAQ from '@/components/FAQ';
+import { useReserveLayoutBottomOffset } from '@/components/Layout';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
 import { ROUTES } from '@/constants';
 import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
@@ -50,6 +52,7 @@ const Dashboard: FC = () => {
   const [view, setView] = useState<'grid' | 'table'>('grid');
 
   const isMobile = useIsMobile();
+  useReserveLayoutBottomOffset(isMobile);
   const {
     params: { limit, skip },
   } = usePagination();
@@ -125,6 +128,7 @@ const Dashboard: FC = () => {
           <AboutHuFi />
         </Grid>
       </Grid>
+      <MobileBottomNav isVisible={isMobile} />
     </PageWrapper>
   );
 };
