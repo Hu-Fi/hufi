@@ -9,6 +9,8 @@ import CampaignsFilters, {
 import CampaignsTabs from '@/components/CampaignsTabs';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
+import { useReserveLayoutBottomOffset } from '@/components/Layout';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
 import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -38,6 +40,7 @@ const Campaigns: FC = () => {
     params: { limit, skip },
   } = usePagination();
   const isMobile = useIsMobile();
+  useReserveLayoutBottomOffset(isMobile);
 
   const isGridView = view === 'grid';
   const isHostedWithoutActiveAddress =
@@ -141,6 +144,7 @@ const Campaigns: FC = () => {
         isFetching={isCampaignsFetching}
         tabFilter={tabFilter}
       />
+      <MobileBottomNav isVisible={isMobile} />
     </PageWrapper>
   );
 };
