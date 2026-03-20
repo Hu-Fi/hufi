@@ -571,7 +571,7 @@ export class CampaignsService implements OnModuleDestroy {
             if (escrowStatus === EscrowStatus.ToCancel) {
               /**
                * This can happen when:
-               * - campaign cancelled before it reached start_date from manifest
+               * - campaign cancellation requested before it reached start_date from manifest
                * - if we processed results and stored them for 'ToCancel' campaign,
                * but failed to update internal status to exclude it from further processing
                */
