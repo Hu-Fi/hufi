@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react';
+import { useMemo, useState, type FC } from 'react';
 
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
@@ -57,21 +57,23 @@ const Campaigns: FC = () => {
   const isHostedWithoutActiveAddress =
     tabFilter === TabFilter.HOSTED && !activeAddress;
 
-  let statusFilter = undefined;
-  if (tabFilter === TabFilter.HISTORY) {
-    statusFilter = CampaignStatus.COMPLETED;
-  } else {
-    statusFilter = CampaignStatus.ACTIVE;
-  }
+  const statusFilter = useMemo(() => {
+    if (tabFilter === TabFilter.HISTORY) {
+      return CampaignStatus.COMPLETED;
+    }
+    return CampaignStatus.ACTIVE;
+  }, [tabFilter]);
 
-  let launcherFilter = undefined;
-  if (
-    tabFilter === TabFilter.HOSTED ||
-    (tabFilter === TabFilter.HISTORY &&
-      historyViewFilter === HistoryViewFilter.HOSTED)
-  ) {
-    launcherFilter = activeAddress;
-  }
+  const launcherFilter = useMemo(() => {
+    if (
+      tabFilter === TabFilter.HOSTED ||
+      (tabFilter === TabFilter.HISTORY &&
+        historyViewFilter === HistoryViewFilter.HOSTED)
+    ) {
+      return activeAddress;
+    }
+    return undefined;
+  }, [tabFilter, historyViewFilter, activeAddress]);
 
   const queryParams = filterFalsyQueryParams({
     chain_id: appliedFilters.network,
