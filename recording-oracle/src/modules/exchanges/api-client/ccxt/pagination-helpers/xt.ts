@@ -7,30 +7,31 @@ import type {
   PaginationParams,
 } from './types';
 
-type BitmartNextPageToken = {
+type XtNextPageToken = {
   nextPageUntil: number;
   movingDedupIds: string[];
 };
 
-const PAGE_LIMIT = 200; // max allowed
+const PAGE_LIMIT = 100; // max allowed
 
 export const getPaginationInput: GetPaginationInputFn<
-  BitmartNextPageToken,
+  XtNextPageToken,
   PaginationParams
 > = (since, until, nextPageToken) => {
   return {
     limit: PAGE_LIMIT,
-    since: since,
+    since,
     params: {
+      direction: 'NEXT', // from newest to oldest
       endTime: nextPageToken?.nextPageUntil || until,
     },
   };
 };
 
 export const handlePaginationResponse: HandlePaginationResponseFn<
-  BitmartNextPageToken,
+  XtNextPageToken,
   PaginationParams
-> = ({ trades, currentPageToken }) => {
+> = ({ trades, ccxtClient, currentPageToken }) => {
   const movingDedupIds = new Set(currentPageToken?.movingDedupIds || []);
 
   /**
@@ -52,16 +53,22 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
     return { trades: [] };
   }
 
-  const nextPageToken: BitmartNextPageToken = {
-    nextPageUntil: newTrades.at(-1)!.timestamp,
-    /**
-     * Keep last two pages to detect if we stuck in situation
-     * where there are more trades within same-millisecond than trades page limit.
-     */
-    movingDedupIds: [...movingDedupIds, ..._.map(newTrades, 'id')].slice(
-      -1 * PAGE_LIMIT * 2,
-    ),
-  };
+  const lastResponse = ccxtClient.parseJson(ccxtClient.last_http_response);
+
+  let nextPageToken: XtNextPageToken | undefined;
+
+  if (lastResponse.result.hasNext) {
+    nextPageToken = {
+      nextPageUntil: newTrades.at(-1)!.timestamp,
+      /**
+       * Keep last two pages to detect if we stuck in situation
+       * where there are more trades within same-millisecond than trades page limit.
+       */
+      movingDedupIds: [...movingDedupIds, ..._.map(newTrades, 'id')].slice(
+        -1 * PAGE_LIMIT * 2,
+      ),
+    };
+  }
 
   return {
     trades: newTrades,

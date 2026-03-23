@@ -33,16 +33,12 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
-        enabled: false,
+        enabled: true,
         type: ExchangeType.CEX,
       },
       [ExchangeName.HYPERLIQUID]: {
         enabled: this.isHyperliquidEnabled,
         type: ExchangeType.DEX,
-      },
-      [ExchangeName.KRAKEN]: {
-        enabled: false,
-        type: ExchangeType.CEX,
       },
       [ExchangeName.MEXC]: {
         enabled: true,
@@ -53,12 +49,8 @@ export class ExchangesConfigService {
         type: ExchangeType.DEX,
         skipCcxtPreload: true,
       },
-      [ExchangeName.UPBIT]: {
-        enabled: false,
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.XT]: {
-        enabled: false,
+        enabled: true,
         type: ExchangeType.CEX,
       },
     });

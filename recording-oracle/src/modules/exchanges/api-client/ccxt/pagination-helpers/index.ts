@@ -4,9 +4,11 @@ import Environment from '@/common/utils/environment';
 import * as bitmartHelpers from './bitmart';
 import * as bybitHelpers from './bybit';
 import * as gateHelpers from './gate';
+import * as htxHelpers from './htx';
 import * as mexcHelpers from './mexc';
 import * as testHelpers from './test';
 import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
+import * as xtHelpers from './xt';
 
 const safeWrapHandlePaginationResponse: (
   fn: HandlePaginationResponseFn,
@@ -42,8 +44,16 @@ export function getPagionationHelpers(
       paginationHelpers = gateHelpers;
       break;
     }
+    case ExchangeName.HTX: {
+      paginationHelpers = htxHelpers;
+      break;
+    }
     case ExchangeName.MEXC: {
       paginationHelpers = mexcHelpers;
+      break;
+    }
+    case ExchangeName.XT: {
+      paginationHelpers = xtHelpers;
       break;
     }
     default: {

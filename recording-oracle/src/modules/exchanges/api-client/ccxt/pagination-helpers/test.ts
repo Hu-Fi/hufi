@@ -6,14 +6,16 @@ import type {
   PaginationParams,
 } from './types';
 
-type TestNextPageToken = number;
+type TestNextPageToken = {
+  nextPageSince: number;
+};
 
 export const getPaginationInput: GetPaginationInputFn<
   TestNextPageToken,
   PaginationParams
 > = (since, _until, nextPageToken) => {
   return {
-    since: nextPageToken || since,
+    since: nextPageToken?.nextPageSince || since,
     params: {},
     limit: 42,
   };
@@ -28,6 +30,8 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
 
   return {
     trades: _trades,
-    nextPageToken: _trades.at(-1)!.timestamp + 1,
+    nextPageToken: {
+      nextPageSince: _trades.at(-1)!.timestamp + 1,
+    },
   };
 };

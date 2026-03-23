@@ -61,11 +61,6 @@ export class ExchangesConfigService {
         ...getExchangeMetaFromCcxt(ExchangeName.HYPERLIQUID),
         type: ExchangeType.DEX,
       },
-      [ExchangeName.KRAKEN]: {
-        enabled: false,
-        ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.MEXC]: {
         enabled: true,
         ...getExchangeMetaFromCcxt(ExchangeName.MEXC),
@@ -77,11 +72,6 @@ export class ExchangesConfigService {
         url: 'https://pancakeswap.finance/swap',
         logo: 'https://tokens.pancakeswap.finance/images/symbol/cake.png',
         type: ExchangeType.DEX,
-      },
-      [ExchangeName.UPBIT]: {
-        enabled: false,
-        ...getExchangeMetaFromCcxt(ExchangeName.UPBIT),
-        type: ExchangeType.CEX,
       },
       [ExchangeName.XT]: {
         enabled: false,
