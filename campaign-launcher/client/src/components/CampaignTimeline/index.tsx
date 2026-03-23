@@ -12,12 +12,8 @@ type Props = {
 
 const mapLabelToColor = (label: string) => {
   switch (label) {
-    case 'Starts in':
-      return '#43ba96';
     case 'Starts on':
       return '#43ba96';
-    case 'Ends in':
-      return '#b98c08';
     case 'Ends on':
       return '#b98c08';
     case 'Cancelled on':
