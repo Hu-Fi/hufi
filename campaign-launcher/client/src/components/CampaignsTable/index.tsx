@@ -147,7 +147,7 @@ const CampaignsTable: FC<Props> = ({
         const exchangeName = exchangesMap.get(
           params.row.exchange_name
         )?.display_name;
-        return <Typography>{exchangeName}</Typography>;
+        return <Typography color="white">{exchangeName}</Typography>;
       },
     },
     {
