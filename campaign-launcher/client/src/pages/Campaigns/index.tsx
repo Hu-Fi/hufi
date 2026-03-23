@@ -1,6 +1,7 @@
 import { useState, type FC } from 'react';
 
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import { useNavigate } from 'react-router';
 
 import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsFilters, {
@@ -8,19 +9,24 @@ import CampaignsFilters, {
 } from '@/components/CampaignsFilters';
 import CampaignsTabs from '@/components/CampaignsTabs';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
+import HistoryFilters from '@/components/HistoryFilters';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
+import { ROUTES } from '@/constants';
 import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import usePagination from '@/hooks/usePagination';
+import { ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { config as wagmiConfig } from '@/providers/WagmiProvider';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import {
   type CampaignsQueryParams,
   CampaignStatus,
+  HistoryViewFilter,
   CampaignsTabFilter as TabFilter,
 } from '@/types';
 import { filterFalsyQueryParams } from '@/utils';
@@ -28,6 +34,9 @@ import { filterFalsyQueryParams } from '@/utils';
 const Campaigns: FC = () => {
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [tabFilter, setTabFilter] = useState<TabFilter>(TabFilter.ACTIVE);
+  const [historyViewFilter, setHistoryViewFilter] = useState<HistoryViewFilter>(
+    HistoryViewFilter.ALL
+  );
   const [appliedFilters, setAppliedFilters] =
     useState<CampaignsFiltersSelection>({
       campaignTypes: [],
@@ -35,6 +44,8 @@ const Campaigns: FC = () => {
       network: wagmiConfig.chains[0].id,
     });
 
+  const navigate = useNavigate();
+  const { isAuthenticated } = useWeb3Auth();
   const { activeAddress } = useActiveAccount();
   const {
     params: { limit, skip },
@@ -46,10 +57,26 @@ const Campaigns: FC = () => {
   const isHostedWithoutActiveAddress =
     tabFilter === TabFilter.HOSTED && !activeAddress;
 
+  let statusFilter = undefined;
+  if (tabFilter === TabFilter.HISTORY) {
+    statusFilter = CampaignStatus.COMPLETED;
+  } else {
+    statusFilter = CampaignStatus.ACTIVE;
+  }
+
+  let launcherFilter = undefined;
+  if (
+    tabFilter === TabFilter.HOSTED ||
+    (tabFilter === TabFilter.HISTORY &&
+      historyViewFilter === HistoryViewFilter.HOSTED)
+  ) {
+    launcherFilter = activeAddress;
+  }
+
   const queryParams = filterFalsyQueryParams({
     chain_id: appliedFilters.network,
-    status: tabFilter === TabFilter.ACTIVE ? CampaignStatus.ACTIVE : undefined,
-    launcher: tabFilter === TabFilter.HOSTED ? activeAddress : undefined,
+    status: statusFilter,
+    launcher: launcherFilter,
     limit,
     skip,
   }) as CampaignsQueryParams;
@@ -59,11 +86,19 @@ const Campaigns: FC = () => {
     isLoading: isCampaignsLoading,
     isFetching: isCampaignsFetching,
   } = useCampaigns(queryParams, {
-    enabled: tabFilter !== TabFilter.JOINED && !isHostedWithoutActiveAddress,
+    enabled:
+      tabFilter !== TabFilter.JOINED &&
+      historyViewFilter !== HistoryViewFilter.JOINED &&
+      !isHostedWithoutActiveAddress,
   });
 
   const { data: joinedCampaignsData, isLoading: isJoinedCampaignsLoading } =
-    useGetJoinedCampaigns(queryParams);
+    useGetJoinedCampaigns(queryParams, {
+      enabled:
+        tabFilter === TabFilter.JOINED ||
+        (tabFilter === TabFilter.HISTORY &&
+          historyViewFilter === HistoryViewFilter.JOINED),
+    });
 
   const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
   const campaignsData = isHostedWithoutActiveAddress
@@ -103,7 +138,19 @@ const Campaigns: FC = () => {
           </Typography>
         </Stack>
         <Box display="flex" gap={2}>
-          <LaunchCampaignButton size="large" />
+          <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
+          {isAuthenticated && (
+            <Button
+              variant="outlined"
+              size={isMobile ? 'medium' : 'large'}
+              color="error"
+              sx={{ color: 'white' }}
+              onClick={() => navigate(ROUTES.MANAGE_API_KEYS)}
+              startIcon={<ApiKeyIcon />}
+            >
+              Manage API Keys
+            </Button>
+          )}
         </Box>
       </Box>
       <Box
@@ -137,6 +184,12 @@ const Campaigns: FC = () => {
           changeView={setView}
         />
       </Box>
+      {tabFilter === TabFilter.HISTORY && (
+        <HistoryFilters
+          selectedFilter={historyViewFilter}
+          setSelectedFilter={setHistoryViewFilter}
+        />
+      )}
       <CampaignsFeed
         data={campaignsData?.results ?? []}
         isGridView={isGridView}
