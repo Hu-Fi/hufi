@@ -243,3 +243,9 @@ export enum CampaignsTabFilter {
   HOSTED = 'hosted',
   HISTORY = 'history',
 }
+
+export enum HistoryViewFilter {
+  ALL = 'all',
+  JOINED = 'joined',
+  HOSTED = 'hosted',
+}
