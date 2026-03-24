@@ -26,7 +26,7 @@ import {
 } from '../types';
 import * as apiClientUtils from '../utils';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
-import { getPagionationHelpers } from './pagination-helpers';
+import { getPaginationHelpers } from './pagination-helpers';
 import * as ccxtClientUtils from './utils';
 
 export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
@@ -206,7 +206,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     inputs: { since: number; until: number; nextPageToken?: unknown },
   ): Promise<{ trades: CcxtTrade[]; nextPageToken?: unknown }> {
     const { getPaginationInput, handlePaginationResponse } =
-      getPagionationHelpers(this.exchangeName);
+      getPaginationHelpers(this.exchangeName);
 
     const { since, params, limit } = getPaginationInput(
       inputs.since,

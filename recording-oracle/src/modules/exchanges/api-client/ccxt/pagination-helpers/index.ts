@@ -26,7 +26,7 @@ type PaginationHelpers = {
   handlePaginationResponse: HandlePaginationResponseFn;
 };
 
-export function getPagionationHelpers(
+export function getPaginationHelpers(
   exchangeName: ExchangeName,
 ): PaginationHelpers {
   let paginationHelpers: PaginationHelpers;

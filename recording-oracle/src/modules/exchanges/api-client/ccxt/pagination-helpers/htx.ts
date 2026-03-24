@@ -4,13 +4,13 @@ import type {
   PaginationParams,
 } from './types';
 
-type TradesPagiantionRecord = {
+type TradesPaginationRecord = {
   id: string;
   tradeId: string;
 };
 
 type HtxNextPageToken = {
-  oldestPaginationRecord: TradesPagiantionRecord;
+  oldestPaginationRecord: TradesPaginationRecord;
 };
 
 type HtxPaginationParams = {
@@ -25,7 +25,7 @@ export const getPaginationInput: GetPaginationInputFn<
   PaginationParams
 > = (since, until, nextPageToken) => {
   /**
-   * Make boundaries inclusuve, becuase HTX doesn't
+   * Make boundaries inclusive, because HTX doesn't
    */
   const _since = since - 1;
   const _until = until + 1;
@@ -58,7 +58,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
    * we have reached the end of pagination
    */
   const newTrades = trades.filter(
-    (trade) => (trade.info as TradesPagiantionRecord).id !== currentPageFromId,
+    (trade) => (trade.info as TradesPaginationRecord).id !== currentPageFromId,
   );
   if (newTrades.length === 0) {
     return { trades: [] };
@@ -67,7 +67,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
   return {
     trades: newTrades,
     nextPageToken: {
-      oldestPaginationRecord: trades.at(-1)!.info as TradesPagiantionRecord,
+      oldestPaginationRecord: newTrades.at(-1)!.info as TradesPaginationRecord,
     },
   };
 };

@@ -1,8 +1,6 @@
 import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
 
-type BybitNextPageToken = {
-  nextPageCursor: string;
-};
+type BybitNextPageToken = string;
 
 type BybitPaginationParams = {
   endTime: number;
@@ -18,7 +16,7 @@ export const getPaginationInput: GetPaginationInputFn<
   };
 
   if (nextPageToken) {
-    params.cursor = nextPageToken.nextPageCursor;
+    params.cursor = nextPageToken;
   }
 
   return {
@@ -32,13 +30,11 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
   BybitNextPageToken,
   BybitPaginationParams
 > = ({ trades, ccxtClient }) => {
-  const lastResponse: { result: { nextPageCursor: string } } =
+  const lastResponse: { result: { nextPageCursor: string | undefined } } =
     ccxtClient.parseJson(ccxtClient.last_http_response);
 
   return {
     trades,
-    nextPageToken: {
-      nextPageCursor: lastResponse.result.nextPageCursor,
-    },
+    nextPageToken: lastResponse.result.nextPageCursor,
   };
 };
