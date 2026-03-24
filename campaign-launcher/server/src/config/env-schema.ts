@@ -2,6 +2,12 @@ import * as Joi from 'joi';
 
 import { EVM_ADDRESS_REGEX } from '@/common/constants';
 
+const EVM_ADDRESS_SCHEMA = Joi.string().pattern(EVM_ADDRESS_REGEX);
+const BOOL_STRING_SCHEMA = Joi.string().valid('true', 'false');
+const RPC_URL_SCHEMA = Joi.string()
+  .uri({ scheme: ['http', 'https'] })
+  .allow('');
+
 export const envValidator = Joi.object({
   // General
   HOST: Joi.string(),
@@ -12,23 +18,15 @@ export const envValidator = Joi.object({
    * because for the code it's the same case
    * as absence of value, but more conveninent for CI/CD.
    */
-  RPC_URL_ETHEREUM: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .allow(''),
-  RPC_URL_SEPOLIA: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .allow(''),
-  RPC_URL_POLYGON: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .allow(''),
-  RPC_URL_POLYGON_AMOY: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .allow(''),
+  RPC_URL_ETHEREUM: RPC_URL_SCHEMA,
+  RPC_URL_SEPOLIA: RPC_URL_SCHEMA,
+  RPC_URL_POLYGON: RPC_URL_SCHEMA,
+  RPC_URL_POLYGON_AMOY: RPC_URL_SCHEMA,
   RPC_URL_LOCALHOST: Joi.string(),
 
-  EXCHANGE_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
-  RECORDING_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
-  REPUTATION_ORACLE: Joi.string().pattern(EVM_ADDRESS_REGEX).required(),
+  EXCHANGE_ORACLE: EVM_ADDRESS_SCHEMA.required(),
+  RECORDING_ORACLE: EVM_ADDRESS_SCHEMA.required(),
+  REPUTATION_ORACLE: EVM_ADDRESS_SCHEMA.required(),
 
   ALCHEMY_API_KEY: Joi.string().required(),
 
@@ -38,9 +36,16 @@ export const envValidator = Joi.object({
     .required(),
   VALKEY_PORT: Joi.number().positive().integer(),
   VALKEY_DB: Joi.number().integer().min(0).required(),
-  VALKEY_TLS: Joi.string().valid('true', 'false'),
+  VALKEY_TLS: BOOL_STRING_SCHEMA,
 
   // Exchanges
-  FEATURE_PANCAKESWAP: Joi.string().valid('true', 'false'),
-  FEATURE_HYPERLIQUID: Joi.string().valid('true', 'false'),
+  FEATURE_BIGONE: BOOL_STRING_SCHEMA,
+  FEATURE_BITMART: BOOL_STRING_SCHEMA,
+  FEATURE_BYBIT: BOOL_STRING_SCHEMA,
+  FEATURE_GATE: BOOL_STRING_SCHEMA,
+  FEATURE_HTX: BOOL_STRING_SCHEMA,
+  FEATURE_HYPERLIQUID: BOOL_STRING_SCHEMA,
+  FEATURE_MEXC: BOOL_STRING_SCHEMA,
+  FEATURE_PANCAKESWAP: BOOL_STRING_SCHEMA,
+  FEATURE_XT: BOOL_STRING_SCHEMA,
 });
