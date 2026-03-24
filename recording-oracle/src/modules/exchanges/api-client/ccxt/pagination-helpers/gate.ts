@@ -2,7 +2,7 @@ import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
 
 type GateNextPageToken = number;
 
-type GatePaginationParams = {
+export type GatePaginationParams = {
   until: number;
   page: number;
 };

@@ -3,12 +3,12 @@ import _ from 'lodash';
 
 import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
 
-type MexcNextPageToken = {
+export type MexcNextPageToken = {
   nextPageUntil: number;
   movingDedupIds: string[];
 };
 
-type MexcPaginationParams = {
+export type MexcPaginationParams = {
   until: number;
 };
 

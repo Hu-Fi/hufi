@@ -7,7 +7,7 @@ import type {
   PaginationParams,
 } from './types';
 
-type BitmartNextPageToken = {
+export type BitmartNextPageToken = {
   nextPageUntil: number;
   movingDedupIds: string[];
 };

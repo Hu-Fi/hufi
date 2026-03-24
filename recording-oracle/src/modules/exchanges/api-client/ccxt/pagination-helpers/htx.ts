@@ -4,16 +4,16 @@ import type {
   PaginationParams,
 } from './types';
 
-type TradesPaginationRecord = {
+export type TradesPaginationRecord = {
   id: string;
   tradeId: string;
 };
 
-type HtxNextPageToken = {
+export type HtxNextPageToken = {
   oldestPaginationRecord: TradesPaginationRecord;
 };
 
-type HtxPaginationParams = {
+export type HtxPaginationParams = {
   until: number;
   size: number;
   direct: 'next' | 'prev';

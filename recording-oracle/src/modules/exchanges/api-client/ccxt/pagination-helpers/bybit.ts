@@ -2,7 +2,7 @@ import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
 
 type BybitNextPageToken = string;
 
-type BybitPaginationParams = {
+export type BybitPaginationParams = {
   endTime: number;
   cursor?: string;
 };

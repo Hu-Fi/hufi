@@ -7,7 +7,7 @@ import type {
   PaginationParams,
 } from './types';
 
-type XtNextPageToken = {
+export type XtNextPageToken = {
   nextPageUntil: number;
   movingDedupIds: string[];
 };
