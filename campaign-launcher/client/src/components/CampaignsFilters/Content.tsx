@@ -1,0 +1,361 @@
+import { type FC, type FormEvent, useEffect, useState } from 'react';
+
+import CheckIcon from '@mui/icons-material/Check';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  Radio,
+  Stack,
+  Typography,
+} from '@mui/material';
+
+import { type CampaignsFiltersSelection } from '@/components/CampaignsFilters';
+import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useExchangesContext } from '@/providers/ExchangesProvider';
+import { config as wagmiConfig } from '@/providers/WagmiProvider';
+import { CampaignType } from '@/types';
+import { mapTypeToLabel } from '@/utils';
+
+const controlSlotProps = {
+  root: {
+    sx: {
+      ml: 1,
+      py: 0,
+      px: 0.5,
+    },
+  },
+};
+
+const labelSlotProps = {
+  typography: {
+    color: 'white',
+  },
+};
+
+const CheckboxIcon = () => (
+  <Box
+    width={20}
+    height={20}
+    borderRadius="4px"
+    border="1.5px solid #6d6d6d"
+    bgcolor="transparent"
+  />
+);
+
+const CheckboxCheckedIcon = () => (
+  <Box
+    display="flex"
+    alignItems="center"
+    justifyContent="center"
+    width={20}
+    height={20}
+    borderRadius="4px"
+    bgcolor="error.main"
+  >
+    <CheckIcon sx={{ color: '#ffffff', fontSize: 16 }} />
+  </Box>
+);
+
+const campaignTypeOptions = [...Object.values(CampaignType)].map(
+  (campaignType) => ({
+    value: campaignType,
+    label: mapTypeToLabel(campaignType),
+  })
+);
+
+const networkOptions = wagmiConfig.chains.map((chain) => ({
+  value: chain.id,
+  label: chain.name,
+}));
+
+type Props = {
+  appliedFilters: CampaignsFiltersSelection;
+  isOpen: boolean;
+  onApplyFilters: (filters: CampaignsFiltersSelection) => void;
+  onAppliedFiltersCountChange: (count: number) => void;
+  onClose: () => void;
+};
+
+const CampaignsFiltersContent: FC<Props> = ({
+  appliedFilters,
+  isOpen,
+  onApplyFilters,
+  onAppliedFiltersCountChange,
+  onClose,
+}) => {
+  const [draftFilters, setDraftFilters] =
+    useState<CampaignsFiltersSelection>(appliedFilters);
+
+  const { exchanges = [] } = useExchangesContext();
+  const isMobile = useIsMobile();
+
+  const exchangeOptions = exchanges.map(({ name, display_name }) => ({
+    value: name,
+    label: display_name,
+  }));
+
+  const isAllCampaignTypesSelected = draftFilters.campaignTypes.includes('');
+  const isAllExchangesSelected = draftFilters.exchanges.includes('');
+
+  const toggleAll = (section: keyof CampaignsFiltersSelection) => {
+    const currentValues = draftFilters[section] as string[];
+    const isAllSelected = currentValues.includes('');
+
+    setDraftFilters((previous) => ({
+      ...previous,
+      [section]: isAllSelected ? [] : [''],
+    }));
+  };
+
+  const toggleOption = (
+    section: keyof CampaignsFiltersSelection,
+    value: string,
+    options: string[]
+  ) => {
+    const currentValues = draftFilters[section] as string[];
+    let nextValues: string[];
+
+    if (currentValues.includes('')) {
+      nextValues = options.filter((option) => option !== value);
+    } else if (currentValues.includes(value)) {
+      nextValues = currentValues.filter(
+        (selectedValue) => selectedValue !== value
+      );
+    } else {
+      nextValues = [...currentValues, value];
+    }
+
+    setDraftFilters((previous) => ({
+      ...previous,
+      [section]: nextValues.length === options.length ? [''] : nextValues,
+    }));
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    let nextFiltersCount = 0;
+
+    if (draftFilters.campaignTypes.includes('')) {
+      nextFiltersCount += campaignTypeOptions.length;
+    } else {
+      nextFiltersCount += draftFilters.campaignTypes.length;
+    }
+
+    if (draftFilters.exchanges.includes('')) {
+      nextFiltersCount += exchangeOptions.length;
+    } else {
+      nextFiltersCount += draftFilters.exchanges.length;
+    }
+
+    onApplyFilters(draftFilters);
+    onAppliedFiltersCountChange(nextFiltersCount);
+    onClose();
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setDraftFilters(appliedFilters);
+    }
+  }, [isOpen, appliedFilters]);
+
+  return (
+    <Stack
+      component="form"
+      height="100%"
+      maxHeight="100%"
+      minHeight={0}
+      overflow="hidden"
+      onSubmit={handleSubmit}
+    >
+      <Typography
+        variant="h6"
+        color="white"
+        lineHeight={1}
+        ml={{ xs: 2, md: 4 }}
+        mb={3}
+      >
+        Campaign Filters
+      </Typography>
+      <Stack pt={2} pb={3} gap={2} minHeight={0} flex={1} overflow="auto">
+        <Stack gap={1} px={{ xs: 2, md: 4 }}>
+          <Typography
+            variant="caption"
+            fontSize={13}
+            fontWeight={500}
+            textTransform="uppercase"
+          >
+            Network
+          </Typography>
+          {networkOptions.map(({ label, value }) => (
+            <FormControlLabel
+              key={value}
+              label={label}
+              slotProps={labelSlotProps}
+              control={
+                <Radio
+                  checked={draftFilters.network === value}
+                  slotProps={controlSlotProps}
+                  icon={
+                    <Box
+                      width={20}
+                      height={20}
+                      borderRadius="50%"
+                      border="1.5px solid #6d6d6d"
+                      bgcolor="transparent"
+                    />
+                  }
+                  checkedIcon={
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      width={20}
+                      height={20}
+                      borderRadius="50%"
+                      bgcolor="error.main"
+                    >
+                      <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
+                    </Box>
+                  }
+                />
+              }
+              onChange={() =>
+                setDraftFilters((previous) => ({
+                  ...previous,
+                  network: value,
+                }))
+              }
+            />
+          ))}
+        </Stack>
+        <Divider sx={{ borderColor: '#3a2e6f' }} />
+        <Stack gap={1} px={{ xs: 2, md: 4 }}>
+          <Typography
+            variant="caption"
+            fontSize={13}
+            fontWeight={500}
+            textTransform="uppercase"
+          >
+            Campaign Type
+          </Typography>
+          <FormControlLabel
+            label="All"
+            control={
+              <Checkbox
+                checked={isAllCampaignTypesSelected}
+                slotProps={controlSlotProps}
+                icon={<CheckboxIcon />}
+                checkedIcon={<CheckboxCheckedIcon />}
+              />
+            }
+            slotProps={labelSlotProps}
+            onChange={() => toggleAll('campaignTypes')}
+          />
+          {campaignTypeOptions.map(({ label, value }) => (
+            <FormControlLabel
+              key={value}
+              label={label}
+              control={
+                <Checkbox
+                  checked={
+                    isAllCampaignTypesSelected ||
+                    draftFilters.campaignTypes.includes(value)
+                  }
+                  slotProps={controlSlotProps}
+                  icon={<CheckboxIcon />}
+                  checkedIcon={<CheckboxCheckedIcon />}
+                />
+              }
+              slotProps={labelSlotProps}
+              onChange={() =>
+                toggleOption(
+                  'campaignTypes',
+                  value,
+                  campaignTypeOptions.map((option) => option.value)
+                )
+              }
+            />
+          ))}
+        </Stack>
+        <Divider sx={{ borderColor: '#3a2e6f' }} />
+        <Stack gap={1} px={{ xs: 2, md: 4 }}>
+          <Typography
+            variant="caption"
+            fontSize={13}
+            fontWeight={500}
+            textTransform="uppercase"
+          >
+            Exchanges
+          </Typography>
+          <FormControlLabel
+            label="All"
+            control={
+              <Checkbox
+                checked={isAllExchangesSelected}
+                slotProps={controlSlotProps}
+                icon={<CheckboxIcon />}
+                checkedIcon={<CheckboxCheckedIcon />}
+              />
+            }
+            slotProps={labelSlotProps}
+            onChange={() => toggleAll('exchanges')}
+          />
+          {exchangeOptions.map(({ label, value }) => (
+            <FormControlLabel
+              key={value}
+              label={label}
+              control={
+                <Checkbox
+                  checked={
+                    isAllExchangesSelected ||
+                    draftFilters.exchanges.includes(value)
+                  }
+                  slotProps={controlSlotProps}
+                  icon={<CheckboxIcon />}
+                  checkedIcon={<CheckboxCheckedIcon />}
+                />
+              }
+              slotProps={labelSlotProps}
+              onChange={() =>
+                toggleOption(
+                  'exchanges',
+                  value,
+                  exchangeOptions.map((option) => option.value)
+                )
+              }
+            />
+          ))}
+        </Stack>
+      </Stack>
+      <Box
+        display="flex"
+        borderTop="1px solid #3a2e6f"
+        pt={3}
+        pb={4}
+        px={{ xs: 2, md: 3 }}
+      >
+        <Button
+          type="submit"
+          size="large"
+          variant="contained"
+          fullWidth={isMobile}
+          disableRipple
+          sx={{
+            bgcolor: 'error.main',
+            color: 'white',
+            ml: { xs: 0, md: 'auto' },
+            boxShadow: 'none',
+          }}
+        >
+          Apply filters
+        </Button>
+      </Box>
+    </Stack>
+  );
+};
+
+export default CampaignsFiltersContent;
