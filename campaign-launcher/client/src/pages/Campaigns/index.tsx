@@ -2,6 +2,7 @@ import { useMemo, useState, type FC } from 'react';
 
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
+import { useConnection } from 'wagmi';
 
 import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsFilters, {
@@ -46,11 +47,13 @@ const Campaigns: FC = () => {
     });
 
   const navigate = useNavigate();
+  const { isConnected } = useConnection();
   const { isAuthenticated } = useWeb3Auth();
   const { activeAddress } = useActiveAccount();
   const {
     params: { limit, skip },
   } = usePagination();
+
   const isMobile = useIsMobile();
   useReserveLayoutBottomOffset(isMobile);
 
@@ -141,7 +144,9 @@ const Campaigns: FC = () => {
           </Typography>
         </Stack>
         <Box display="flex" gap={2}>
-          <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
+          {isConnected && (
+            <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
+          )}
           {isAuthenticated && (
             <Button
               variant="outlined"
