@@ -2425,10 +2425,7 @@ describe('CampaignsService', () => {
             },
           ],
         }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2473,10 +2470,7 @@ describe('CampaignsService', () => {
             },
           ],
         }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2513,42 +2507,37 @@ describe('CampaignsService', () => {
             },
           ],
         }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
     describe('threshold campaign reserved funds calculation', () => {
-      it('should record correct value when no maxParticipants', async () => {
+      it('should record correct value when no qualified participants', async () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
-        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
 
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-        const nQualifiedParticipans = faker.number.int({ min: 0, max: 10 });
+        const minimumBalanceTarget = (
+          campaign.details as ThresholdCampaignDetails
+        ).minimumBalanceTarget;
+
+        const nQualified = 0;
+        const nNonQualified = faker.number.int({ min: 1, max: 10 });
+
         const totalBalance =
-          (campaign.details as ThresholdCampaignDetails).minimumBalanceTarget *
-          nQualifiedParticipans;
+          nNonQualified * minimumBalanceTarget * Math.random() +
+          nQualified * minimumBalanceTarget;
 
         const campaignProgress = generateCampaignProgress(campaign);
         (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score =
-          nQualifiedParticipans;
+        (campaignProgress.meta as ThresholdMeta).total_score = nQualified;
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           campaignProgress,
         );
 
         await campaignsService.recordCampaignProgress(campaign);
 
-        const expectedRewardPool = campaignsService.calculateRewardPool({
-          baseRewardPool: campaignsService.calculateDailyReward(campaign),
-          maxRewardPoolRatio: 1,
-          progressValue: nQualifiedParticipans,
-          progressValueTarget: 1,
-          fundTokenDecimals: campaign.fundTokenDecimals,
-        });
+        const expectedRewardPool = '0';
 
         expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
         expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -2558,16 +2547,60 @@ describe('CampaignsService', () => {
                 from: campaignProgress.from,
                 to: campaignProgress.to,
                 total_balance: totalBalance,
-                total_score: nQualifiedParticipans,
+                total_score: nQualified,
                 reserved_funds: expectedRewardPool,
                 participants_outcomes_batches: [],
               },
             ],
           }),
-          ethers.parseUnits(
-            expectedRewardPool.toString(),
-            campaign.fundTokenDecimals,
-          ),
+          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+        );
+      });
+
+      it('should record correct value when no maxParticipants', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const minimumBalanceTarget = (
+          campaign.details as ThresholdCampaignDetails
+        ).minimumBalanceTarget;
+
+        const nQualified = faker.number.int({ min: 1, max: 10 });
+        const nNonQualified = faker.number.int({ min: 1, max: 10 });
+
+        const totalBalance =
+          nNonQualified * minimumBalanceTarget * Math.random() +
+          nQualified * minimumBalanceTarget;
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
+        (campaignProgress.meta as ThresholdMeta).total_score = nQualified;
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        const expectedRewardPool =
+          campaignsService.calculateDailyReward(campaign);
+
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+          expect.objectContaining({
+            results: [
+              {
+                from: campaignProgress.from,
+                to: campaignProgress.to,
+                total_balance: totalBalance,
+                total_score: nQualified,
+                reserved_funds: expectedRewardPool,
+                participants_outcomes_batches: [],
+              },
+            ],
+          }),
+          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
         );
       });
 
@@ -2579,18 +2612,20 @@ describe('CampaignsService', () => {
 
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-        const nQualifiedParticipans = faker.number.int({
-          min: 2,
-          max: maxParticipants,
-        });
+        const minimumBalanceTarget = (
+          campaign.details as ThresholdCampaignDetails
+        ).minimumBalanceTarget;
+
+        const nQualified = faker.number.int({ min: 1, max: 10 });
+        const nNonQualified = faker.number.int({ min: 1, max: 10 });
+
         const totalBalance =
-          (campaign.details as ThresholdCampaignDetails).minimumBalanceTarget *
-          nQualifiedParticipans;
+          nNonQualified * minimumBalanceTarget * Math.random() +
+          nQualified * minimumBalanceTarget;
 
         const campaignProgress = generateCampaignProgress(campaign);
         (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score =
-          nQualifiedParticipans;
+        (campaignProgress.meta as ThresholdMeta).total_score = nQualified;
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           campaignProgress,
         );
@@ -2600,7 +2635,7 @@ describe('CampaignsService', () => {
         const expectedRewardPool = campaignsService.calculateRewardPool({
           baseRewardPool: campaignsService.calculateDailyReward(campaign),
           maxRewardPoolRatio: 1,
-          progressValue: nQualifiedParticipans,
+          progressValue: nQualified,
           progressValueTarget: maxParticipants,
           fundTokenDecimals: campaign.fundTokenDecimals,
         });
@@ -2613,16 +2648,13 @@ describe('CampaignsService', () => {
                 from: campaignProgress.from,
                 to: campaignProgress.to,
                 total_balance: totalBalance,
-                total_score: nQualifiedParticipans,
+                total_score: nQualified,
                 reserved_funds: expectedRewardPool,
                 participants_outcomes_batches: [],
               },
             ],
           }),
-          ethers.parseUnits(
-            expectedRewardPool.toString(),
-            campaign.fundTokenDecimals,
-          ),
+          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
         );
       });
     });
