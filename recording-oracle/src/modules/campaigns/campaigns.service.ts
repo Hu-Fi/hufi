@@ -220,7 +220,7 @@ export class CampaignsService implements OnModuleDestroy {
       CAMPAIGN_PERMISSIONS_MAP[campaign.type],
     );
 
-    await this.participationsService.joinCampaign(userId, campaign.id);
+    await this.participationsService.joinCampaign(userId, campaign);
 
     return campaign.id;
   }
@@ -1112,6 +1112,17 @@ export class CampaignsService implements OnModuleDestroy {
         status: CampaignJoinStatus.JOIN_IS_CLOSED,
         reason: 'ended',
       };
+    }
+
+    if (isThresholdCampaign(campaign) && campaign.details.maxParticipants) {
+      const nParticipants =
+        await this.participationsRepository.countParticipants(campaign.id);
+      if (nParticipants === campaign.details.maxParticipants) {
+        return {
+          status: CampaignJoinStatus.JOIN_IS_CLOSED,
+          reason: 'max_participants_reached',
+        };
+      }
     }
 
     const isCampaignTargetMet = await this.checkCampaignTargetMet(campaign);

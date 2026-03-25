@@ -1,7 +1,7 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpStatus,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
@@ -16,13 +16,14 @@ import {
 
 import {
   CampaignAlreadyFinishedError,
-  CampaignNotStartedError,
   CampaignCancelledError,
+  CampaignJoinLimitedError,
   CampaignNotFoundError,
+  CampaignNotStartedError,
   InvalidCampaign,
   UserIsNotParticipatingError,
-  CampaignJoinLimitedError,
 } from './campaigns.errors';
+import { MaxParticipationsError } from './participations';
 
 @Catch(
   CampaignNotFoundError,
@@ -35,6 +36,7 @@ import {
   KeyAuthorizationError,
   InvalidEvmAddressError,
   UserIsNotParticipatingError,
+  MaxParticipationsError,
 )
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
@@ -62,6 +64,8 @@ export class CampaignsControllerErrorsFilter implements ExceptionFilter {
       responseData.message = `${exception.message}. ${exception.detail}`;
     } else if (exception instanceof KeyAuthorizationError) {
       responseData.message = `${exception.message}. Missing: ${exception.missingPermissions.join(', ')}`;
+    } else if (exception instanceof MaxParticipationsError) {
+      responseData.message = `${exception.message}. Total: ${exception.nParticipants}`;
     }
 
     return response.status(status).json(responseData);

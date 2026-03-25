@@ -1,17 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import _ from 'lodash';
 import { DataSource, Repository } from 'typeorm';
 
 import { type ChainId } from '@/common/constants';
+import { isNumber } from '@/common/utils/type-guard';
 import type { UserEntity } from '@/modules/users';
 
 import { CampaignEntity } from '../campaign.entity';
 import { CampaignStatus } from '../types';
 import { ParticipationEntity } from './participation.entity';
+import { MaxParticipationsError } from './participations.errors';
 import { type CampaignParticipant } from './types';
 
 @Injectable()
 export class ParticipationsRepository extends Repository<ParticipationEntity> {
-  constructor(dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(ParticipationEntity, dataSource.createEntityManager());
   }
 
@@ -107,4 +110,59 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
 
     await removalOp.execute();
   }
+
+  async countParticipants(campaignId: string): Promise<number> {
+    return this.count({
+      where: { campaignId },
+    });
+  }
+
+  async safeInsert(
+    participation: ParticipationEntity,
+    participantsLimit?: number,
+  ): Promise<void> {
+    const campaignId = participation.campaignId;
+
+    const _participantsLimit =
+      isNumber(participantsLimit) && participantsLimit > 0
+        ? participantsLimit
+        : -1;
+
+    return await this.dataSource.transaction(async (txManager) => {
+      const participationsRepository = txManager
+        .getRepository(ParticipationEntity)
+        .extend(CustomParticipationsRepositoryMethods);
+
+      const campaignsRepository = txManager.getRepository(CampaignEntity);
+      /**
+       * Use parent row lock to be DB agnostic and avoid using SERIALIZABLE
+       * isolation level that we have to handle deadlock error and retry
+       */
+      await campaignsRepository.findOne({
+        where: { id: campaignId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      const nParticipants =
+        await participationsRepository.countParticipants(campaignId);
+      if (nParticipants >= _participantsLimit) {
+        throw new MaxParticipationsError(campaignId, nParticipants);
+      }
+
+      await participationsRepository.insert(participation);
+    });
+  }
 }
+
+const CUSTOM_REPOSITORY_METHOD_NAMES = [
+  'findByUserAndCampaign',
+  'findByUserId',
+  'findCampaignParticipants',
+  'removeUserFromActiveCampaigns',
+  'countParticipants',
+] as const satisfies readonly (keyof ParticipationsRepository)[];
+
+export const CustomParticipationsRepositoryMethods = _.pick(
+  ParticipationsRepository.prototype,
+  CUSTOM_REPOSITORY_METHOD_NAMES,
+);

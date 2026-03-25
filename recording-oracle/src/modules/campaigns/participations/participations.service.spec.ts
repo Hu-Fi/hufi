@@ -4,8 +4,11 @@ import { Test } from '@nestjs/testing';
 
 import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
+import type { CampaignEntity } from '../campaign.entity';
+import { generateCampaignEntity } from '../fixtures';
 import { ParticipationsRepository } from './participations.repository';
 import { ParticipationsService } from './participations.service';
+import { isThresholdCampaign } from '../type-guards';
 
 const mockParticipationsRepository = createMock<ParticipationsRepository>();
 
@@ -40,7 +43,8 @@ describe('ParticipationsService', () => {
     const testFakeDate = new Date();
 
     let userId: string;
-    let campaignId: string;
+    let campaign: CampaignEntity;
+    let expectedParticipantsLimit: number | undefined;
 
     beforeAll(() => {
       jest.useFakeTimers({ now: testFakeDate });
@@ -52,48 +56,61 @@ describe('ParticipationsService', () => {
 
     beforeEach(() => {
       userId = faker.string.uuid();
-      campaignId = faker.string.uuid();
+      campaign = generateCampaignEntity();
+      expectedParticipantsLimit = isThresholdCampaign(campaign)
+        ? campaign.details.maxParticipants
+        : undefined;
     });
 
     it('should join user to campaign if no race condition', async () => {
-      mockParticipationsRepository.insert.mockResolvedValueOnce({} as never);
+      mockParticipationsRepository.safeInsert.mockResolvedValueOnce(
+        {} as never,
+      );
 
       await expect(
-        participationsService.joinCampaign(userId, campaignId),
+        participationsService.joinCampaign(userId, campaign),
       ).resolves.toBeUndefined();
 
-      expect(mockParticipationsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockParticipationsRepository.insert).toHaveBeenCalledWith({
-        userId,
-        campaignId,
-        createdAt: testFakeDate,
-      });
+      expect(mockParticipationsRepository.safeInsert).toHaveBeenCalledTimes(1);
+      expect(mockParticipationsRepository.safeInsert).toHaveBeenCalledWith(
+        {
+          userId,
+          campaignId: campaign.id,
+          createdAt: testFakeDate,
+        },
+        expectedParticipantsLimit,
+      );
     });
 
     it('should join user to campaign if joined with race condition', async () => {
-      mockParticipationsRepository.insert.mockRejectedValueOnce(
+      mockParticipationsRepository.safeInsert.mockRejectedValueOnce(
         createDuplicatedKeyError(),
       );
 
       await expect(
-        participationsService.joinCampaign(userId, campaignId),
+        participationsService.joinCampaign(userId, campaign),
       ).resolves.toBeUndefined();
 
-      expect(mockParticipationsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockParticipationsRepository.insert).toHaveBeenCalledWith({
-        userId,
-        campaignId,
-        createdAt: testFakeDate,
-      });
+      expect(mockParticipationsRepository.safeInsert).toHaveBeenCalledTimes(1);
+      expect(mockParticipationsRepository.safeInsert).toHaveBeenCalledWith(
+        {
+          userId,
+          campaignId: campaign.id,
+          createdAt: testFakeDate,
+        },
+        expectedParticipantsLimit,
+      );
     });
 
     it('should re-throw unexpected errors', async () => {
       const syntheticError = new Error(faker.lorem.sentence());
 
-      mockParticipationsRepository.insert.mockRejectedValueOnce(syntheticError);
+      mockParticipationsRepository.safeInsert.mockRejectedValueOnce(
+        syntheticError,
+      );
 
       await expect(
-        participationsService.joinCampaign(userId, campaignId),
+        participationsService.joinCampaign(userId, campaign),
       ).rejects.toThrow(syntheticError);
     });
   });

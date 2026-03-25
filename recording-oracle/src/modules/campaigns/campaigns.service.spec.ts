@@ -1110,7 +1110,7 @@ describe('CampaignsService', () => {
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(1);
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledWith(
         userId,
-        campaign.id,
+        campaign,
       );
     });
 
@@ -1193,10 +1193,12 @@ describe('CampaignsService', () => {
         escrowInfo,
       );
 
+      const expectedCampaignEntity =
+        await spyOnCreateCampaign.mock.results.at(-1)?.value;
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(1);
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledWith(
         userId,
-        campaignId,
+        expectedCampaignEntity,
       );
 
       spyOnretrieveCampaignData.mockRestore();
