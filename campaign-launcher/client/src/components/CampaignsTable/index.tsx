@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router';
 
@@ -185,7 +185,14 @@ const CampaignsTable: FC<Props> = ({
             >
               <ArrowLeftIcon sx={{ transform: 'rotate(135deg)' }} />
             </IconButton>
-            <JoinCampaignButton campaign={params.row} />
+            <Button
+              variant="contained"
+              size="large"
+              color="error"
+              sx={{ width: 120 }}
+            >
+              Join
+            </Button>
           </Box>
         );
       },
