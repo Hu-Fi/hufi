@@ -19,6 +19,7 @@ export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
       isAuthenticated,
       chain_id,
       status,
+      chain_id,
       limit,
       skip,
       AUTHED_QUERY_TAG,
