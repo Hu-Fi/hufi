@@ -90,6 +90,7 @@ const thresholdManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.THRESHOLD).required(),
   exchange: Joi.string().required(),
   minimum_balance_target: Joi.number().strict().greater(0).required(),
+  max_participants: Joi.number().strict().positive().integer(),
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
