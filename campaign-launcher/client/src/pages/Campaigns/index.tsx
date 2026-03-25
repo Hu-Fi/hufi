@@ -21,7 +21,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import usePagination from '@/hooks/usePagination';
 import { ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { config as wagmiConfig } from '@/providers/WagmiProvider';
+import { useNetwork } from '@/providers/NetworkProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import {
   type CampaignsQueryParams,
@@ -32,6 +32,7 @@ import {
 import { filterFalsyQueryParams } from '@/utils';
 
 const Campaigns: FC = () => {
+  const { appChainId } = useNetwork();
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [tabFilter, setTabFilter] = useState<TabFilter>(TabFilter.ACTIVE);
   const [historyViewFilter, setHistoryViewFilter] = useState<HistoryViewFilter>(
@@ -41,7 +42,7 @@ const Campaigns: FC = () => {
     useState<CampaignsFiltersSelection>({
       campaignTypes: [],
       exchanges: [],
-      network: wagmiConfig.chains[0].id,
+      network: appChainId,
     });
 
   const navigate = useNavigate();
