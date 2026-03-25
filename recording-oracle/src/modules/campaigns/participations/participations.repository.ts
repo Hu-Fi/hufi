@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 
+import { type ChainId } from '@/common/constants';
 import type { UserEntity } from '@/modules/users';
 
 import { CampaignEntity } from '../campaign.entity';
@@ -29,6 +30,7 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
   async findByUserId(
     userId: string,
     options: {
+      chaindId?: ChainId;
       statuses?: CampaignStatus[];
       limit?: number;
       skip?: number;
@@ -37,6 +39,12 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
     const query = this.createQueryBuilder('participation')
       .leftJoinAndSelect('participation.campaign', 'campaign')
       .where('participation.userId = :userId', { userId });
+
+    if (options.chaindId) {
+      query.andWhere('campaign.chainId = :chainId', {
+        chainId: options.chaindId,
+      });
+    }
 
     if (options.statuses?.length) {
       query.andWhere('campaign.status IN (:...statuses)', {

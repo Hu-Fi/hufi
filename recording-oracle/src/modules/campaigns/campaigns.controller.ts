@@ -108,6 +108,7 @@ export class CampaignsController {
     const campaigns = await this.participationsRepository.findByUserId(
       request.user.id,
       {
+        chaindId: query.chainId,
         statuses,
         limit: limit + 1,
         skip: query.skip,
