@@ -40,6 +40,7 @@ export type HoldingCampaignDetails = {
 
 export type ThresholdCampaignDetails = {
   minimumBalanceTarget: number;
+  maxParticipants?: number;
 };
 
 export type CampaignDetails =
@@ -78,6 +79,7 @@ export type ThresholdCampaignManifest = CampaignManifestBase & {
   type: CampaignType.THRESHOLD;
   symbol: string;
   minimum_balance_target: number;
+  max_participants?: number;
 };
 
 export type CampaignManifest =

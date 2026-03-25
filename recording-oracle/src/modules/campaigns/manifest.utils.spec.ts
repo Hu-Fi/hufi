@@ -412,7 +412,10 @@ describe('manifest utils', () => {
     const validManifest = generateThresholdampaignManifest();
 
     it.each([
-      { ...validManifest },
+      Object.assign({}, validManifest, { maxParticipants: undefined }),
+      Object.assign({}, validManifest, {
+        maxParticipants: faker.number.int({ min: 1 }),
+      }),
       Object.assign({}, validManifest, {
         symbol: `5${faker.string.alphanumeric({
           casing: 'upper',
@@ -453,6 +456,22 @@ describe('manifest utils', () => {
       // unsafe balance target
       Object.assign({}, validManifest, {
         minimum_balance_target: Number.MAX_SAFE_INTEGER + 42,
+      }),
+      // max participants string
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: 1 }).toString(),
+      }),
+      // max participants zero
+      Object.assign({}, validManifest, {
+        max_participants: 0,
+      }),
+      // max participants negative
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: -42, max: -1 }),
+      }),
+      // max participants non-integer
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.float({ fractionDigits: 3 }),
       }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
       let thrownError: any;

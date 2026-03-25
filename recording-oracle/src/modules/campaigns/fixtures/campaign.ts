@@ -57,6 +57,9 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     case CampaignType.THRESHOLD:
       details = {
         minimumBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
+        maxParticipants: faker.datatype.boolean()
+          ? faker.number.int({ min: 1, max: 100 })
+          : undefined,
       };
       break;
   }

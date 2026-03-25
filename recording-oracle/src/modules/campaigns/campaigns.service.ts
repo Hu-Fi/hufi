@@ -627,22 +627,23 @@ export class CampaignsService implements OnModuleDestroy {
               );
             }
 
-            let progressValueTarget: number;
             let progressValue: number;
+            let progressValueTarget: number;
             if (isMarketMakingCampaign(campaign)) {
-              progressValueTarget = campaign.details.dailyVolumeTarget;
               progressValue = (progress.meta as MarketMakingMeta).total_volume;
+              progressValueTarget = campaign.details.dailyVolumeTarget;
             } else if (isHoldingCampaign(campaign)) {
-              progressValueTarget = campaign.details.dailyBalanceTarget;
               progressValue = (progress.meta as HoldingMeta).total_balance;
+              progressValueTarget = campaign.details.dailyBalanceTarget;
             } else if (isThresholdCampaign(campaign)) {
               /**
-               * We are going to distribute daily reward pool fully in case there is at least one participant eligible for the reward.
-               * This is why we're using hardcoded 1 as a progressValueTarget and total_score instead of a balance for the progressValue.
-               * */
-              progressValueTarget = 1;
-              // TODO: Check this logic before releasing new contracts
+               * 'total_score' in this case is the number of participants in current cycle,
+               * so when caclulating reward pool we are going to distribute equal portion
+               * of daily reward to each participant that reached the threshold,
+               * where equal portion is defined as `dailyReward / maxParticipants`
+               */
               progressValue = (progress.meta as ThresholdMeta).total_score;
+              progressValueTarget = campaign.details.maxParticipants || 1;
             } else {
               throw new Error(
                 `Unknown campaign type for reward pool calculation: ${campaign.type}`,
