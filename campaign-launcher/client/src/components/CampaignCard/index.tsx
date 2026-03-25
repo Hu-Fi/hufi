@@ -7,7 +7,7 @@ import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
-import JoinCampaignButton from '@/components/JoinCampaignButton';
+import JoinCampaign from '@/components/JoinCampaign';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { type Campaign } from '@/types';
 import {
@@ -195,7 +195,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
         >
           View Details
         </Button>
-        <JoinCampaignButton campaign={campaign} />
+        <JoinCampaign campaign={campaign} />
       </Box>
     </Paper>
   );

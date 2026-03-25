@@ -5,9 +5,9 @@ import { useParams, useSearchParams } from 'react-router';
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';
 import PageWrapper from '@/components/PageWrapper';
-import { useCheckCampaignJoinStatus } from '@/hooks/recording-oracle';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
-import { CampaignJoinStatus, type EvmAddress } from '@/types';
+import { useWeb3Auth } from '@/providers/Web3AuthProvider';
+import { type EvmAddress } from '@/types';
 import { isCampaignDetails } from '@/utils';
 
 const CampaignDetails: FC = () => {
@@ -15,8 +15,7 @@ const CampaignDetails: FC = () => {
   const [searchParams] = useSearchParams();
   const { data: campaign, isFetching: isCampaignLoading } =
     useCampaignDetails(address);
-  const { data: joinStatusInfo, isLoading: isJoinStatusLoading } =
-    useCheckCampaignJoinStatus(address);
+  const { joinedCampaigns } = useWeb3Auth();
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
@@ -38,6 +37,13 @@ const CampaignDetails: FC = () => {
     }
   }, [searchParams]);
 
+  const isJoined = useMemo(() => {
+    return !!joinedCampaigns?.results.some(
+      (joinedCampaign) =>
+        joinedCampaign.address.toLowerCase() === campaign?.address.toLowerCase()
+    );
+  }, [joinedCampaigns?.results, campaign?.address]);
+
   const campaignData = campaign || parsedData;
 
   return (
@@ -45,16 +51,11 @@ const CampaignDetails: FC = () => {
       <CampaignInfo
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
-        joinStatus={joinStatusInfo?.status}
-        joinedAt={joinStatusInfo?.joined_at}
-        isJoinStatusLoading={isJoinStatusLoading}
       />
       <CampaignStats
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
-        isJoined={
-          joinStatusInfo?.status === CampaignJoinStatus.USER_ALREADY_JOINED
-        }
+        isJoined={isJoined}
       />
     </PageWrapper>
   );

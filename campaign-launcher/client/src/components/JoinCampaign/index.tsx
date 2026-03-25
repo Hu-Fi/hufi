@@ -1,11 +1,10 @@
-import { type FC, useState } from 'react';
+import { type FC, useMemo, useState } from 'react';
 
-import CheckIcon from '@mui/icons-material/CheckCircleOutline';
-import LockIcon from '@mui/icons-material/LockOutlined';
-import { Box, Button, CircularProgress } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
+import { useNavigate } from 'react-router';
+import { useConnection } from 'wagmi';
 
-import CustomTooltip from '@/components/CustomTooltip';
-import AddKeysPromptModal from '@/components/modals/AddKeysPromptModal';
+import { ROUTES } from '@/constants';
 import {
   useGetEnrolledExchanges,
   useJoinCampaign,
@@ -14,30 +13,23 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import {
-  CampaignJoinStatus,
-  CampaignStatus,
-  ExchangeType,
-  type CampaignDetails,
-} from '@/types';
+import { CampaignStatus, ExchangeType, type Campaign } from '@/types';
 import * as errorUtils from '@/utils/error';
 
+import JoinCampaignOverlay from './JoinCampaignOverlay';
+
 type Props = {
-  campaign: CampaignDetails;
-  joinStatus?: CampaignJoinStatus;
-  joinedAt?: string;
-  isJoinStatusLoading: boolean;
+  campaign: Campaign;
 };
 
-const JoinCampaign: FC<Props> = ({
-  campaign,
-  joinStatus,
-  joinedAt,
-  isJoinStatusLoading,
-}) => {
-  const [modalOpen, setModalOpen] = useState(false);
+const JoinCampaign: FC<Props> = ({ campaign }) => {
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [startStep, setStartStep] = useState<'connect' | 'auth'>('connect');
 
-  const { isAuthenticated } = useWeb3Auth();
+  const navigate = useNavigate();
+  const { isConnected } = useConnection();
+  const { isAuthenticated, joinedCampaigns, isJoinedCampaignsLoading } =
+    useWeb3Auth();
   const { data: enrolledExchanges, isLoading: isEnrolledExchangesLoading } =
     useGetEnrolledExchanges();
   const { exchangesMap } = useExchangesContext();
@@ -47,47 +39,33 @@ const JoinCampaign: FC<Props> = ({
   const isMobile = useIsMobile();
 
   const isLoading =
-    isEnrolledExchangesLoading || isJoinStatusLoading || isJoining;
+    isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoining;
 
-  const isAlreadyJoined = joinStatus === CampaignJoinStatus.USER_ALREADY_JOINED;
-  const isJoinClosed = joinStatus === CampaignJoinStatus.JOIN_IS_CLOSED;
+  const isAlreadyJoined = useMemo(
+    () =>
+      !!joinedCampaigns?.results.some(
+        (joinedCampaign) =>
+          joinedCampaign.address.toLowerCase() ===
+          campaign.address.toLowerCase()
+      ),
+    [joinedCampaigns?.results, campaign.address]
+  );
   const exchangeInfo = exchangesMap.get(campaign.exchange_name);
 
-  const isButtonDisabled =
-    !isAuthenticated ||
-    isLoading ||
-    !joinStatus ||
-    isAlreadyJoined ||
-    isJoinClosed ||
-    !exchangeInfo?.enabled;
-
-  const getButtonText = () => {
-    if (isJoining) return null;
-
-    if (isAlreadyJoined) {
-      return isMobile ? 'Joined' : 'Registered to Campaign';
-    }
-
-    if (isJoinClosed) {
-      return isMobile ? 'Join' : 'Registration Closed';
-    }
-
-    return isMobile ? 'Join' : 'Join Campaign';
+  const handleOverlayClose = () => {
+    setIsOverlayOpen(false);
   };
 
-  const handleButtonClick = async () => {
-    if (isButtonDisabled || !campaign) {
-      return;
-    }
+  const handleJoinCampaign = async () => {
+    if (!campaign || !exchangeInfo) return;
 
     const hasEnrolledApiKey = (enrolledExchanges || []).includes(
       campaign.exchange_name
     );
     if (exchangeInfo.type === ExchangeType.CEX && !hasEnrolledApiKey) {
-      setModalOpen(true);
+      navigate(ROUTES.MANAGE_API_KEYS);
       return;
     }
-
     try {
       await joinCampaign({
         chainId: campaign.chain_id,
@@ -102,75 +80,55 @@ const JoinCampaign: FC<Props> = ({
     }
   };
 
+  const handleButtonClick = async () => {
+    if (isLoading || !campaign) return;
+
+    if (!isConnected || !isAuthenticated) {
+      setIsOverlayOpen(true);
+      setStartStep(isConnected ? 'auth' : 'connect');
+      return;
+    }
+
+    await handleJoinCampaign();
+  };
+
   const isCampaignFinished =
     campaign.end_date < new Date().toISOString() ||
     campaign.status !== CampaignStatus.ACTIVE;
-  if (!campaign || isCampaignFinished) {
+
+  if (
+    !campaign ||
+    !exchangeInfo?.enabled ||
+    isAlreadyJoined ||
+    isCampaignFinished
+  ) {
     return null;
-  }
-
-  if (!isAuthenticated && !isMobile) {
-    return (
-      <Button variant="contained" size="large" disabled sx={{ ml: 'auto' }}>
-        Sign in to Join Campaign
-      </Button>
-    );
-  }
-
-  if (isAlreadyJoined && joinedAt) {
-    return (
-      <CustomTooltip
-        title={`Joined at 
-          ${new Date(joinedAt).toLocaleTimeString()} 
-          ${new Date(joinedAt).toLocaleDateString()}
-        `}
-        arrow
-        placement="top"
-        sx={{ ml: 'auto' }}
-      >
-        <Box component="span">
-          <Button
-            variant="contained"
-            size="medium"
-            disabled
-            sx={{
-              color: 'primary.contrast',
-              minWidth: isMobile ? '105px' : '135px',
-            }}
-            endIcon={isMobile && <CheckIcon />}
-          >
-            {isMobile ? 'Joined' : 'Registered to Campaign'}
-          </Button>
-        </Box>
-      </CustomTooltip>
-    );
   }
 
   return (
     <>
       <Button
         variant="contained"
-        size="medium"
+        size="large"
+        color="error"
+        fullWidth={isMobile}
         sx={{
-          ml: 'auto',
-          color: 'primary.contrast',
-          minWidth: isMobile ? '105px' : '135px',
+          color: 'white',
         }}
-        disabled={isButtonDisabled}
+        disabled={isLoading}
         onClick={handleButtonClick}
-        endIcon={
-          isMobile &&
-          ((isAlreadyJoined && <CheckIcon />) || (isJoinClosed && <LockIcon />))
-        }
       >
-        {isJoining && (
+        {isJoining ? (
           <CircularProgress size={24} sx={{ color: 'primary.contrast' }} />
+        ) : (
+          'Join'
         )}
-        {getButtonText()}
       </Button>
-      <AddKeysPromptModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+      <JoinCampaignOverlay
+        key={startStep}
+        open={isOverlayOpen}
+        onClose={handleOverlayClose}
+        startStep={startStep}
       />
     </>
   );

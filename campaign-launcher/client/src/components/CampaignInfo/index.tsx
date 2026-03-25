@@ -14,7 +14,7 @@ import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import JoinCampaign from '@/components/JoinCampaign';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import type { CampaignDetails, CampaignJoinStatus } from '@/types';
+import type { CampaignDetails } from '@/types';
 import { getChainIcon, getNetworkName, mapTypeToLabel } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -31,18 +31,9 @@ const DividerStyled = styled(MuiDivider)({
 type Props = {
   campaign: CampaignDetails | null | undefined;
   isCampaignLoading: boolean;
-  joinStatus?: CampaignJoinStatus;
-  joinedAt?: string;
-  isJoinStatusLoading: boolean;
 };
 
-const CampaignInfo: FC<Props> = ({
-  campaign,
-  isCampaignLoading,
-  joinStatus,
-  joinedAt,
-  isJoinStatusLoading,
-}) => {
+const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
   const isMobile = useIsMobile();
 
   if (isCampaignLoading) {
@@ -103,14 +94,7 @@ const CampaignInfo: FC<Props> = ({
             startDate={campaign.start_date}
             endDate={campaign.end_date}
           />
-          {!isMobile && (
-            <JoinCampaign
-              campaign={campaign}
-              joinStatus={joinStatus}
-              joinedAt={joinedAt}
-              isJoinStatusLoading={isJoinStatusLoading}
-            />
-          )}
+          {!isMobile && <JoinCampaign campaign={campaign} />}
         </Box>
       </Box>
       <Box
