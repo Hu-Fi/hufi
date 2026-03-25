@@ -136,6 +136,15 @@ class ThresholdCampaignDto extends JoinedCampaignDto {
 
 export class ListJoinedCampaignsQueryDto {
   @ApiPropertyOptional({
+    name: 'chain_id',
+    enum: ChainIds,
+  })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsIn(ChainIds)
+  chainId: ChainId;
+
+  @ApiPropertyOptional({
     enum: ReturnedCampaignStatus,
   })
   @IsOptional()
