@@ -213,6 +213,7 @@ export class CampaignsService {
       symbol = manifest.symbol;
       details = {
         minimumBalanceTarget: manifest.minimum_balance_target,
+        maxParticipants: manifest.max_participants,
       };
     } else {
       // Should not happen at this point, just for typescript types
