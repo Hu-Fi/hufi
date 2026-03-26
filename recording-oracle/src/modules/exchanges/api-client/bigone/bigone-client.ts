@@ -98,7 +98,12 @@ export class BigoneClient implements ExchangeApiClient {
     secret,
     userId,
     loggingConfig,
+    sandbox,
   }: BigoneClientInitOptions) {
+    if (sandbox) {
+      throw new Error(`Sandbox mode is not supported for ${this.exchangeName}`);
+    }
+
     if (!userId) {
       throw new Error('userId is missing');
     }

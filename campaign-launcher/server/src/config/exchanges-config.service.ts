@@ -32,71 +32,55 @@ export class ExchangesConfigService {
   constructor(private configService: ConfigService) {
     this.configByExchange = Object.freeze({
       [ExchangeName.BIGONE]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_BIGONE', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.BIGONE),
         type: ExchangeType.CEX,
       },
       [ExchangeName.BITMART]: {
-        enabled: false,
+        enabled: this.configService.get('FEATURE_BITMART', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.BITMART),
         type: ExchangeType.CEX,
       },
       [ExchangeName.BYBIT]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_BYBIT', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.BYBIT),
         type: ExchangeType.CEX,
       },
       [ExchangeName.GATE]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_GATE', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.GATE),
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
-        enabled: false,
+        enabled: this.configService.get('FEATURE_HTX', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.HTX),
         type: ExchangeType.CEX,
       },
       [ExchangeName.HYPERLIQUID]: {
-        enabled: this.isHyperliquidEnabled,
+        enabled:
+          this.configService.get('FEATURE_HYPERLIQUID', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.HYPERLIQUID),
         type: ExchangeType.DEX,
       },
-      [ExchangeName.KRAKEN]: {
-        enabled: false,
-        ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.MEXC]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_MEXC', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.MEXC),
         type: ExchangeType.CEX,
       },
       [ExchangeName.PANCAKESWAP]: {
-        enabled: this.isPancakeswapEnabled,
+        enabled:
+          this.configService.get('FEATURE_PANCAKESWAP', 'true') === 'true',
         displayName: 'PancakeSwap',
         url: 'https://pancakeswap.finance/swap',
         logo: 'https://tokens.pancakeswap.finance/images/symbol/cake.png',
         type: ExchangeType.DEX,
       },
-      [ExchangeName.UPBIT]: {
-        enabled: false,
-        ...getExchangeMetaFromCcxt(ExchangeName.UPBIT),
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.XT]: {
-        enabled: false,
+        enabled: this.configService.get('FEATURE_XT', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.XT),
         type: ExchangeType.CEX,
       },
     });
-  }
-
-  private get isPancakeswapEnabled(): boolean {
-    return this.configService.get('FEATURE_PANCAKESWAP', '') === 'true';
-  }
-
-  private get isHyperliquidEnabled(): boolean {
-    return this.configService.get('FEATURE_HYPERLIQUID', '') === 'true';
   }
 
   isExchangeSupported(exchangeName: string): exchangeName is ExchangeName {
