@@ -126,7 +126,7 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
     const _participantsLimit =
       isFiniteNumber(participantsLimit) && participantsLimit > 0
         ? participantsLimit
-        : -1;
+        : Number.MAX_SAFE_INTEGER;
 
     return await this.dataSource.transaction(async (txManager) => {
       const participationsRepository = txManager
