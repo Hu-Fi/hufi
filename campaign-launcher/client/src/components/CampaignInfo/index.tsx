@@ -12,7 +12,7 @@ import {
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignSymbol from '@/components/CampaignSymbol';
-import JoinCampaign from '@/components/JoinCampaign';
+import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import type { CampaignDetails } from '@/types';
 import { getChainIcon, getNetworkName, mapTypeToLabel } from '@/utils';
@@ -31,9 +31,10 @@ const DividerStyled = styled(MuiDivider)({
 type Props = {
   campaign: CampaignDetails | null | undefined;
   isCampaignLoading: boolean;
+  isJoined: boolean;
 };
 
-const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
+const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
   const isMobile = useIsMobile();
 
   if (isCampaignLoading) {
@@ -94,7 +95,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
             startDate={campaign.start_date}
             endDate={campaign.end_date}
           />
-          {!isMobile && <JoinCampaign campaign={campaign} />}
+          {!isMobile && <JoinCampaignButton campaign={campaign} />}
         </Box>
       </Box>
       <Box
@@ -145,6 +146,20 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
           {mapTypeToLabel(campaign.type)}
         </Typography>
         <DividerStyled orientation="vertical" flexItem />
+        {isJoined && (
+          <>
+            <Typography
+              color="error.main"
+              fontSize={{ xs: 14, md: 20 }}
+              fontWeight={500}
+              lineHeight="100%"
+              letterSpacing={0}
+            >
+              Joined
+            </Typography>
+            <DividerStyled orientation="vertical" flexItem />
+          </>
+        )}
         <Typography
           display="flex"
           alignItems="center"

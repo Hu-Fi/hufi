@@ -97,9 +97,8 @@ const CampaignResultsWidget: FC<Props> = ({
       )}
       <Box display="flex" alignItems="center" gap={1}>
         <Box
-          width={{ xs: 8, md: 12 }}
-          height={{ xs: 8, md: 12 }}
-          borderRadius="50%"
+          p={{ xs: '4px', md: '6px' }}
+          borderRadius="100%"
           bgcolor={result.bgcolor}
         />
         <Typography

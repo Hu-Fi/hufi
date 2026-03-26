@@ -7,7 +7,6 @@ import * as errorUtils from '@/utils/error';
 
 export const useGetEnrolledExchanges = () => {
   const { isAuthenticated } = useWeb3Auth();
-
   return useQuery({
     queryKey: [QUERY_KEYS.ENROLLED_EXCHANGES, AUTHED_QUERY_TAG],
     queryFn: () => recordingApi.getEnrolledExchanges(),
