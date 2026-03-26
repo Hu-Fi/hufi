@@ -638,12 +638,23 @@ export class CampaignsService implements OnModuleDestroy {
               progressValueTarget = campaign.details.dailyBalanceTarget;
             } else if (isThresholdCampaign(campaign)) {
               /**
-               * 'total_score' in this case is the number of participants in current cycle,
+               * 'total_score' in this case is the number of qualified participants in current cycle,
                * so when caclulating reward pool we are going to distribute equal portion
                * of daily reward to each participant that reached the threshold,
                * where equal portion is defined as `dailyReward / maxParticipants`
                */
-              progressValue = (progress.meta as ThresholdMeta).total_score;
+              // prettier-ignore
+              const nQualifiedParticipants = (progress.meta as ThresholdMeta).total_score;
+              if (
+                campaign.details.maxParticipants &&
+                nQualifiedParticipants > campaign.details.maxParticipants
+              ) {
+                // safety-belt
+                throw new Error(
+                  `Unexcpected number of qualified participants: ${nQualifiedParticipants}, max allowed: ${campaign.details.maxParticipants}`,
+                );
+              }
+              progressValue = nQualifiedParticipants;
               progressValueTarget = campaign.details.maxParticipants || 1;
             } else {
               throw new Error(
