@@ -1863,13 +1863,94 @@ describe('CampaignsService', () => {
     it('should throw if invalid period passed', async () => {
       [periodStart, periodEnd] = [periodEnd, periodStart];
 
-      await expect(
-        campaignsService.checkCampaignProgressForPeriod(
-          campaign,
-          periodStart,
-          periodEnd,
-        ),
-      ).rejects.toThrow('Invalid period range provided');
+      try {
+        await expect(
+          campaignsService.checkCampaignProgressForPeriod(
+            campaign,
+            periodStart,
+            periodEnd,
+          ),
+        ).rejects.toThrow('Invalid period range provided');
+      } finally {
+        // set back to valid period for other tests
+        [periodStart, periodEnd] = [periodEnd, periodStart];
+      }
+    });
+
+    it('should exclude participants with zero score if flag is on', async () => {
+      const participants = Array.from({ length: 3 }, () =>
+        generateCampaignParticipant(campaign),
+      );
+
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        participants,
+      );
+      let callIdx = 0;
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        () => ({
+          abuseDetected: false,
+          score: callIdx++ % 2,
+        }),
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        periodStart,
+        periodEnd,
+        { excludeIneligible: true },
+      );
+
+      expect(
+        mockParticipationsRepository.removeParticipation,
+      ).toHaveBeenCalledTimes(Math.ceil(participants.length / 2));
+
+      for (const [idx, participant] of participants.entries()) {
+        const expectedScore = idx % 2;
+
+        expect(progress.participants_outcomes[idx]).toEqual({
+          address: participant.evmAddress,
+          score: expectedScore,
+        });
+
+        if (expectedScore === 0) {
+          expect(
+            mockParticipationsRepository.removeParticipation,
+          ).toHaveBeenCalledWith(participant.id, campaign.id);
+        }
+      }
+    });
+
+    it('should exclude participants with zero score if flag is on', async () => {
+      const participants = Array.from({ length: 3 }, () =>
+        generateCampaignParticipant(campaign),
+      );
+
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        participants,
+      );
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        () => ({
+          abuseDetected: false,
+          score: 0,
+        }),
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(
+        mockParticipationsRepository.removeParticipation,
+      ).toHaveBeenCalledTimes(0);
+
+      for (const [idx, participant] of participants.entries()) {
+        expect(progress.participants_outcomes[idx]).toEqual({
+          address: participant.evmAddress,
+          score: 0,
+        });
+      }
     });
   });
 
@@ -2179,7 +2260,11 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2196,7 +2281,11 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2246,7 +2335,11 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2280,7 +2373,11 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2298,7 +2395,11 @@ describe('CampaignsService', () => {
         campaign,
         campaign.startDate,
         campaign.endDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2317,7 +2418,11 @@ describe('CampaignsService', () => {
         campaign,
         campaign.startDate,
         cancellationRequestedAt,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2522,7 +2627,7 @@ describe('CampaignsService', () => {
     });
 
     describe('threshold campaign reserved funds calculation', () => {
-      it('should record correct value when no qualified participants', async () => {
+      it('should record correct value when no eligible participants', async () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
 
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -2531,16 +2636,16 @@ describe('CampaignsService', () => {
           campaign.details as ThresholdCampaignDetails
         ).minimumBalanceTarget;
 
-        const nQualified = 0;
-        const nNonQualified = faker.number.int({ min: 1, max: 10 });
+        const nEligible = 0;
+        const nIneligible = faker.number.int({ min: 1, max: 10 });
 
         const totalBalance =
-          nNonQualified * minimumBalanceTarget * Math.random() +
-          nQualified * minimumBalanceTarget;
+          nIneligible * minimumBalanceTarget * Math.random() +
+          nEligible * minimumBalanceTarget;
 
         const campaignProgress = generateCampaignProgress(campaign);
         (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score = nQualified;
+        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           campaignProgress,
         );
@@ -2557,7 +2662,7 @@ describe('CampaignsService', () => {
                 from: campaignProgress.from,
                 to: campaignProgress.to,
                 total_balance: totalBalance,
-                total_score: nQualified,
+                total_score: nEligible,
                 reserved_funds: expectedRewardPool,
                 participants_outcomes_batches: [],
               },
@@ -2577,16 +2682,16 @@ describe('CampaignsService', () => {
           campaign.details as ThresholdCampaignDetails
         ).minimumBalanceTarget;
 
-        const nQualified = faker.number.int({ min: 1, max: 10 });
-        const nNonQualified = faker.number.int({ min: 1, max: 10 });
+        const nEligible = faker.number.int({ min: 1, max: 10 });
+        const nIneligible = faker.number.int({ min: 1, max: 10 });
 
         const totalBalance =
-          nNonQualified * minimumBalanceTarget * Math.random() +
-          nQualified * minimumBalanceTarget;
+          nIneligible * minimumBalanceTarget * Math.random() +
+          nEligible * minimumBalanceTarget;
 
         const campaignProgress = generateCampaignProgress(campaign);
         (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score = nQualified;
+        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           campaignProgress,
         );
@@ -2604,7 +2709,7 @@ describe('CampaignsService', () => {
                 from: campaignProgress.from,
                 to: campaignProgress.to,
                 total_balance: totalBalance,
-                total_score: nQualified,
+                total_score: nEligible,
                 reserved_funds: expectedRewardPool,
                 participants_outcomes_batches: [],
               },
@@ -2626,16 +2731,16 @@ describe('CampaignsService', () => {
           campaign.details as ThresholdCampaignDetails
         ).minimumBalanceTarget;
 
-        const nQualified = faker.number.int({ min: 1, max: 10 });
-        const nNonQualified = faker.number.int({ min: 1, max: 10 });
+        const nEligible = faker.number.int({ min: 1, max: 10 });
+        const nIneligible = faker.number.int({ min: 1, max: 10 });
 
         const totalBalance =
-          nNonQualified * minimumBalanceTarget * Math.random() +
-          nQualified * minimumBalanceTarget;
+          nIneligible * minimumBalanceTarget * Math.random() +
+          nEligible * minimumBalanceTarget;
 
         const campaignProgress = generateCampaignProgress(campaign);
         (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score = nQualified;
+        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           campaignProgress,
         );
@@ -2645,7 +2750,7 @@ describe('CampaignsService', () => {
         const expectedRewardPool = campaignsService.calculateRewardPool({
           baseRewardPool: campaignsService.calculateDailyReward(campaign),
           maxRewardPoolRatio: 1,
-          progressValue: nQualified,
+          progressValue: nEligible,
           progressValueTarget: maxParticipants,
           fundTokenDecimals: campaign.fundTokenDecimals,
         });
@@ -2658,7 +2763,7 @@ describe('CampaignsService', () => {
                 from: campaignProgress.from,
                 to: campaignProgress.to,
                 total_balance: totalBalance,
-                total_score: nQualified,
+                total_score: nEligible,
                 reserved_funds: expectedRewardPool,
                 participants_outcomes_batches: [],
               },
@@ -3039,6 +3144,83 @@ describe('CampaignsService', () => {
       );
 
       expect(logger.error).toHaveBeenCalledTimes(0);
+    });
+
+    describe('excludeIneligible flag', () => {
+      it('should exclude ineligible participants for threshold with limit', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        (campaign.details as ThresholdCampaignDetails).maxParticipants =
+          faker.number.int({ min: 1, max: 10 });
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          expect.any(Date),
+          expect.any(Date),
+          expect.objectContaining({
+            excludeIneligible: true,
+          }),
+        );
+      });
+
+      it('should not exclude ineligible participants for threshold without limit', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          expect.any(Date),
+          expect.any(Date),
+          expect.objectContaining({
+            excludeIneligible: false,
+          }),
+        );
+      });
+
+      it('should not exclude ineligible participants for non-threshold campaign', async () => {
+        campaign = generateCampaignEntity(
+          faker.helpers.arrayElement(
+            Object.values(CampaignType).filter(
+              (type) => type !== CampaignType.THRESHOLD,
+            ),
+          ),
+        );
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          expect.any(Date),
+          expect.any(Date),
+          expect.objectContaining({
+            excludeIneligible: false,
+          }),
+        );
+      });
     });
   });
 

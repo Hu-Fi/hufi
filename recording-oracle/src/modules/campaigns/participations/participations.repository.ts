@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { DataSource, Repository } from 'typeorm';
 
 import { type ChainId } from '@/common/constants';
-import { isNumber } from '@/common/utils/type-guard';
+import { isFiniteNumber } from '@/common/utils/type-guard';
 import type { UserEntity } from '@/modules/users';
 
 import { CampaignEntity } from '../campaign.entity';
@@ -124,7 +124,7 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
     const campaignId = participation.campaignId;
 
     const _participantsLimit =
-      isNumber(participantsLimit) && participantsLimit > 0
+      isFiniteNumber(participantsLimit) && participantsLimit > 0
         ? participantsLimit
         : -1;
 
@@ -152,6 +152,13 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
       await participationsRepository.insert(participation);
     });
   }
+
+  async removeParticipation(userId: string, campaignId: string): Promise<void> {
+    await this.delete({
+      userId,
+      campaignId,
+    });
+  }
 }
 
 const CUSTOM_REPOSITORY_METHOD_NAMES = [
@@ -160,6 +167,7 @@ const CUSTOM_REPOSITORY_METHOD_NAMES = [
   'findCampaignParticipants',
   'removeUserFromActiveCampaigns',
   'countParticipants',
+  'removeParticipation',
 ] as const satisfies readonly (keyof ParticipationsRepository)[];
 
 export const CustomParticipationsRepositoryMethods = _.pick(

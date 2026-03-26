@@ -28,7 +28,7 @@ import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
-import { toError } from '@/common/utils/type-guard';
+import { isFiniteNumber, toError } from '@/common/utils/type-guard';
 import * as web3Utils from '@/common/utils/web3';
 import {
   CampaignsConfigService,
@@ -604,7 +604,13 @@ export class CampaignsService implements OnModuleDestroy {
             campaign,
             startDate,
             endDate,
-            { logWarnings: true, caller: this.recordCampaignProgress.name },
+            {
+              excludeIneligible:
+                isThresholdCampaign(campaign) &&
+                isFiniteNumber(campaign.details.maxParticipants),
+              logWarnings: true,
+              caller: this.recordCampaignProgress.name,
+            },
           );
 
           let rewardPool: string;
@@ -638,23 +644,23 @@ export class CampaignsService implements OnModuleDestroy {
               progressValueTarget = campaign.details.dailyBalanceTarget;
             } else if (isThresholdCampaign(campaign)) {
               /**
-               * 'total_score' in this case is the number of qualified participants in current cycle,
+               * 'total_score' in this case is the number of eligible participants in current cycle,
                * so when caclulating reward pool we are going to distribute equal portion
                * of daily reward to each participant that reached the threshold,
                * where equal portion is defined as `dailyReward / maxParticipants`
                */
               // prettier-ignore
-              const nQualifiedParticipants = (progress.meta as ThresholdMeta).total_score;
+              const nEligibleParticipants = (progress.meta as ThresholdMeta).total_score;
               if (
                 campaign.details.maxParticipants &&
-                nQualifiedParticipants > campaign.details.maxParticipants
+                nEligibleParticipants > campaign.details.maxParticipants
               ) {
                 // safety-belt
                 throw new Error(
-                  `Unexcpected number of qualified participants: ${nQualifiedParticipants}, max allowed: ${campaign.details.maxParticipants}`,
+                  `Unexcpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
                 );
               }
-              progressValue = nQualifiedParticipants;
+              progressValue = nEligibleParticipants;
               progressValueTarget = campaign.details.maxParticipants || 1;
             } else {
               throw new Error(
@@ -749,7 +755,11 @@ export class CampaignsService implements OnModuleDestroy {
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-    options: { logWarnings?: boolean; caller?: string } = {},
+    options: {
+      excludeIneligible?: boolean;
+      logWarnings?: boolean;
+      caller?: string;
+    } = {},
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
     if (dayjs(startDate).isAfter(endDate)) {
       throw new Error('Invalid period range provided');
@@ -795,6 +805,31 @@ export class CampaignsService implements OnModuleDestroy {
       try {
         const { abuseDetected, ...participantOutcomes } =
           await campaignProgressChecker.checkForParticipant(participant);
+
+        if (participantOutcomes.score === 0 && options.excludeIneligible) {
+          const exclusionLogData = {
+            participantId: participant.id,
+            participantOutcome: {
+              abuseDetected,
+              ...participantOutcomes,
+            },
+          };
+          try {
+            await this.participationsRepository.removeParticipation(
+              participant.id,
+              participant.campaignId,
+            );
+            this.logger.warn(
+              'Excluded ineligible participant from campaign',
+              exclusionLogData,
+            );
+          } catch (error) {
+            this.logger.error('Failed to exclude ineligible participant', {
+              ...exclusionLogData,
+              error,
+            });
+          }
+        }
 
         if (abuseDetected) {
           if (options.logWarnings) {
