@@ -8,3 +8,12 @@ export class MaxParticipationsError extends BaseError {
     super('Campaign has reached the maximum number of participants');
   }
 }
+
+export class UserAlreadyJoinedError extends BaseError {
+  constructor(
+    readonly campaignId: string,
+    readonly userId: string,
+  ) {
+    super('User has already joined the campaign');
+  }
+}

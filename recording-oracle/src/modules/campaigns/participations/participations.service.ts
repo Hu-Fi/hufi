@@ -5,6 +5,7 @@ import { isDuplicatedError } from '@/infrastructure/database';
 import type { CampaignEntity } from '../campaign.entity';
 import { isThresholdCampaign } from '../type-guards';
 import { ParticipationEntity } from './participation.entity';
+import { UserAlreadyJoinedError } from './participations.errors';
 import { ParticipationsRepository } from './participations.repository';
 
 @Injectable()
@@ -31,7 +32,7 @@ export class ParticipationsService {
       );
     } catch (error) {
       if (isDuplicatedError(error)) {
-        // joined w/ race condition, noop;
+        throw new UserAlreadyJoinedError(campaign.id, userId);
       } else {
         throw error;
       }
@@ -53,5 +54,23 @@ export class ParticipationsService {
     }
 
     return participation.createdAt.toISOString();
+  }
+
+  async checkParticipantLimitReached(
+    campaign: CampaignEntity,
+  ): Promise<boolean> {
+    if (!isThresholdCampaign(campaign)) {
+      return false;
+    }
+
+    if (!campaign.details.maxParticipants) {
+      return false;
+    }
+
+    const nParticipants = await this.participationsRepository.countParticipants(
+      campaign.id,
+    );
+
+    return nParticipants >= campaign.details.maxParticipants;
   }
 }

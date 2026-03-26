@@ -23,7 +23,10 @@ import {
   InvalidCampaign,
   UserIsNotParticipatingError,
 } from './campaigns.errors';
-import { MaxParticipationsError } from './participations';
+import {
+  MaxParticipationsError,
+  UserAlreadyJoinedError,
+} from './participations';
 
 @Catch(
   CampaignNotFoundError,
@@ -37,6 +40,7 @@ import { MaxParticipationsError } from './participations';
   InvalidEvmAddressError,
   UserIsNotParticipatingError,
   MaxParticipationsError,
+  UserAlreadyJoinedError,
 )
 export class CampaignsControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({

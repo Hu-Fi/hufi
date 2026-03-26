@@ -97,6 +97,7 @@ import {
   type CampaignParticipant,
   ParticipationsRepository,
   ParticipationsService,
+  UserAlreadyJoinedError,
 } from './participations';
 import {
   type CampaignProgressMeta,
@@ -1056,7 +1057,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should return campaign id if campaign exists and user already joined', async () => {
+    it('should throw if user already joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1064,22 +1065,29 @@ describe('CampaignsService', () => {
         generateUserJoinedDate(campaign),
       );
 
-      const id = await campaignsService.join(
-        userId,
-        chainId,
-        // not checksummed address
-        campaign.address.toLowerCase(),
-      );
+      let thrownError;
+      try {
+        await campaignsService.join(
+          userId,
+          chainId,
+          // not checksummed address
+          campaign.address.toLowerCase(),
+        );
+      } catch (error) {
+        thrownError = error;
+      }
 
-      expect(id).toBe(campaign.id);
+      expect(thrownError).toBeInstanceOf(UserAlreadyJoinedError);
+      expect(thrownError.userId).toBe(userId);
+      expect(thrownError.campaignId).toBe(campaign.id);
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
       ).toHaveBeenCalledWith(chainId, campaign.address);
-
       expect(
         mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(0);
     });
 
     it('should return campaign id if campaign exists and user not joined yet', async () => {
@@ -3404,12 +3412,45 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
+    it('should return "max_participants_reached" if user not joined and participant limit reached', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
+        null,
+      );
+      mockParticipationsService.checkParticipantLimitReached.mockResolvedValueOnce(
+        true,
+      );
+
+      const result = await campaignsService.checkJoinStatus(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toEqual({
+        status: 'join_closed',
+        reason: 'max_participants_reached',
+      });
+
+      expect(
+        mockParticipationsService.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockParticipationsService.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
     it('should return "join_closed" if user not joined and ongoing campaign target is met', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
+      );
+      mockParticipationsService.checkParticipantLimitReached.mockResolvedValueOnce(
+        false,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
@@ -3438,6 +3479,9 @@ describe('CampaignsService', () => {
       );
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
+      );
+      mockParticipationsService.checkParticipantLimitReached.mockResolvedValueOnce(
+        false,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(false);
 

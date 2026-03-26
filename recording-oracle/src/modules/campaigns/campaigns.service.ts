@@ -37,10 +37,10 @@ import {
 } from '@/config';
 import logger from '@/logger';
 import {
-  ExchangesService,
   ExchangeApiAccessError,
-  ExchangeApiKeyNotFoundError,
   ExchangeApiClientFactory,
+  ExchangeApiKeyNotFoundError,
+  ExchangesService,
   type PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
@@ -68,6 +68,7 @@ import * as manifestUtils from './manifest.utils';
 import {
   ParticipationsRepository,
   ParticipationsService,
+  UserAlreadyJoinedError,
 } from './participations';
 import {
   type CampaignProgressChecker,
@@ -89,16 +90,16 @@ import {
 } from './type-guards';
 import {
   CampaignEscrowInfo,
+  CampaignJoinStatus,
   CampaignManifest,
+  CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
-  CampaignJoinStatus,
   IntermediateResult,
   IntermediateResultsData,
-  ParticipantOutcome,
   LeaderboardRanking,
-  CampaignManifestBase,
+  ParticipantOutcome,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
@@ -178,7 +179,7 @@ export class CampaignsService implements OnModuleDestroy {
         campaign.id,
       );
     if (userJoinedAt) {
-      return campaign.id;
+      throw new UserAlreadyJoinedError(campaign.id, userId);
     }
 
     /**
@@ -210,7 +211,7 @@ export class CampaignsService implements OnModuleDestroy {
       throw new CampaignJoinLimitedError(
         campaign.chainId,
         campaign.address,
-        'Target is met',
+        'Target is met.',
       );
     }
 
@@ -1114,15 +1115,13 @@ export class CampaignsService implements OnModuleDestroy {
       };
     }
 
-    if (isThresholdCampaign(campaign) && campaign.details.maxParticipants) {
-      const nParticipants =
-        await this.participationsRepository.countParticipants(campaign.id);
-      if (nParticipants === campaign.details.maxParticipants) {
-        return {
-          status: CampaignJoinStatus.JOIN_IS_CLOSED,
-          reason: 'max_participants_reached',
-        };
-      }
+    const isParticipantLimitReached =
+      await this.participationsService.checkParticipantLimitReached(campaign);
+    if (isParticipantLimitReached) {
+      return {
+        status: CampaignJoinStatus.JOIN_IS_CLOSED,
+        reason: 'max_participants_reached',
+      };
     }
 
     const isCampaignTargetMet = await this.checkCampaignTargetMet(campaign);

@@ -1,4 +1,7 @@
-export { MaxParticipationsError } from './participations.errors';
+export {
+  MaxParticipationsError,
+  UserAlreadyJoinedError,
+} from './participations.errors';
 export { type CampaignParticipant } from './types';
 
 export { ParticipationsModule } from './participations.module';
