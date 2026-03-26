@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
+import JoinCampaignButton from '@/components/JoinCampaignButton';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { ArrowLeftIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
@@ -218,14 +219,7 @@ const CampaignsTable: FC<Props> = ({
             >
               <ArrowLeftIcon sx={{ transform: 'rotate(135deg)' }} />
             </IconButton>
-            <Button
-              variant="contained"
-              size="large"
-              color="error"
-              sx={{ width: 120 }}
-            >
-              Join
-            </Button>
+            <JoinCampaignButton campaign={params.row} />
           </Box>
         );
       },
