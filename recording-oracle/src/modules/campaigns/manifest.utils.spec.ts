@@ -412,9 +412,9 @@ describe('manifest utils', () => {
     const validManifest = generateThresholdampaignManifest();
 
     it.each([
-      Object.assign({}, validManifest, { maxParticipants: undefined }),
+      Object.assign({}, validManifest, { max_participants: undefined }),
       Object.assign({}, validManifest, {
-        maxParticipants: faker.number.int({ min: 1 }),
+        max_participants: faker.number.int({ min: 1 }),
       }),
       Object.assign({}, validManifest, {
         symbol: `5${faker.string.alphanumeric({

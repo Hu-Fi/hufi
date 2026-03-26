@@ -645,7 +645,7 @@ export class CampaignsService implements OnModuleDestroy {
             } else if (isThresholdCampaign(campaign)) {
               /**
                * 'total_score' in this case is the number of eligible participants in current cycle,
-               * so when caclulating reward pool we are going to distribute equal portion
+               * so when calculating reward pool we are going to distribute equal portion
                * of daily reward to each participant that reached the threshold,
                * where equal portion is defined as `dailyReward / maxParticipants`
                */
@@ -657,7 +657,7 @@ export class CampaignsService implements OnModuleDestroy {
               ) {
                 // safety-belt
                 throw new Error(
-                  `Unexcpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
+                  `Unexpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
                 );
               }
               progressValue = nEligibleParticipants;

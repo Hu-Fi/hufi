@@ -1920,7 +1920,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should exclude participants with zero score if flag is on', async () => {
+    it('should not exclude participants with zero score if flag is off', async () => {
       const participants = Array.from({ length: 3 }, () =>
         generateCampaignParticipant(campaign),
       );
