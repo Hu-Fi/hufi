@@ -28,6 +28,7 @@ import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
+import { toError } from '@/common/utils/type-guard';
 import * as web3Utils from '@/common/utils/web3';
 import {
   CampaignsConfigService,
@@ -362,7 +363,7 @@ export class CampaignsService implements OnModuleDestroy {
         throw new InvalidCampaign(
           chainId,
           campaignAddress,
-          error.message as string,
+          toError(error).message,
         );
       }
     } else {
@@ -397,7 +398,7 @@ export class CampaignsService implements OnModuleDestroy {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
-        error.message as string,
+        toError(error).message,
       );
     }
 

@@ -7,7 +7,11 @@ import * as gateHelpers from './gate';
 import * as htxHelpers from './htx';
 import * as mexcHelpers from './mexc';
 import * as testHelpers from './test';
-import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
+import type {
+  GetPaginationInputFn,
+  HandlePaginationResponseFn,
+  PaginationParams,
+} from './types';
 import * as xtHelpers from './xt';
 
 const safeWrapHandlePaginationResponse: (
@@ -21,15 +25,16 @@ const safeWrapHandlePaginationResponse: (
   };
 };
 
-type PaginationHelpers = {
-  getPaginationInput: GetPaginationInputFn;
-  handlePaginationResponse: HandlePaginationResponseFn;
+type PaginationHelpers<T, P> = {
+  getPaginationInput: GetPaginationInputFn<T, P>;
+  handlePaginationResponse: HandlePaginationResponseFn<T, P>;
 };
 
 export function getPaginationHelpers(
   exchangeName: ExchangeName,
-): PaginationHelpers {
-  let paginationHelpers: PaginationHelpers;
+): PaginationHelpers<unknown, PaginationParams> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let paginationHelpers: PaginationHelpers<any, any>;
 
   switch (exchangeName) {
     case ExchangeName.BITMART: {

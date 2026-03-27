@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { Test } from '@nestjs/testing';
@@ -41,7 +42,7 @@ describe('UsersService', () => {
 
   describe('create', () => {
     it('should throw when invalid address provided', async () => {
-      let thrownError;
+      let thrownError: any;
       try {
         await usersService.create(generateInvalidEvmAddress());
       } catch (error) {
@@ -76,7 +77,7 @@ describe('UsersService', () => {
 
   describe('findOneByEvmAddress', () => {
     it('should throw when invalid address provided', async () => {
-      let thrownError;
+      let thrownError: any;
       try {
         await usersService.findOneByEvmAddress(generateInvalidEvmAddress());
       } catch (error) {
@@ -103,7 +104,7 @@ describe('UsersService', () => {
 
   describe('getNonce', () => {
     it('should throw when invalid address provided', async () => {
-      let thrownError;
+      let thrownError: any;
       try {
         await usersService.getNonce(generateInvalidEvmAddress());
       } catch (error) {
@@ -141,7 +142,7 @@ describe('UsersService', () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(false);
       const testUserId = faker.string.uuid();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await usersService.assertUserExistsById(testUserId);
       } catch (error) {

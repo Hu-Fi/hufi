@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@/logger');
 
 import { faker } from '@faker-js/faker';
@@ -68,7 +69,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     mockRefresTokenRepository.insert.mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // @ts-expect-error - no need to have exact TypeORM type here
       async (entity: RefreshTokenEntity): Promise<any> => {
         if (!entity.id) {
           entity.id = faker.string.uuid();
@@ -145,7 +146,7 @@ describe('AuthService', () => {
     });
 
     it('should throw if invalid signature', async () => {
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.auth(
           faker.string.hexadecimal(),
@@ -170,7 +171,7 @@ describe('AuthService', () => {
         ethWallet.privateKey,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.auth(signature, abuseAddress);
       } catch (error) {
@@ -192,7 +193,7 @@ describe('AuthService', () => {
         ethWallet.privateKey,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.auth(signature, user.evmAddress);
       } catch (error) {
@@ -280,7 +281,7 @@ describe('AuthService', () => {
     it('should throw when token not found', async () => {
       mockRefresTokenRepository.findOneById.mockResolvedValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.refresh(refreshToken);
       } catch (error) {
@@ -297,7 +298,7 @@ describe('AuthService', () => {
         expiresAt: faker.date.past(),
       } as RefreshTokenEntity);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.refresh(refreshToken);
       } catch (error) {
@@ -319,7 +320,7 @@ describe('AuthService', () => {
         refreshTokenEntity,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.refresh(refreshToken);
       } catch (error) {

@@ -87,6 +87,7 @@ describe('HyperliquidClient', () => {
     mockedTrades[2].timestamp = mockedTrades[3].timestamp;
 
     mockedExchange.fetchMyTrades.mockImplementation(
+      // @ts-expect-error - type is stricter than original, but it's fine
       async (_symbol, since: number, _limit, _params: { until: number }) => {
         return mockedTrades
           .filter((t) => t.timestamp >= since && t.timestamp <= _params.until)
