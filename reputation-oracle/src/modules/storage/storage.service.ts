@@ -36,7 +36,7 @@ export class StorageService {
       await this.minioClient.statObject(this.s3ConfigService.bucket, key);
       return true;
     } catch (error) {
-      if (error?.code === MinioErrorCodes.NotFound) {
+      if ((error as { code: unknown })?.code === MinioErrorCodes.NotFound) {
         return false;
       }
       this.logger.error('Failed to check if file exists', {

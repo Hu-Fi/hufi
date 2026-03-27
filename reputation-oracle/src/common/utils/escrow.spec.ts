@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@human-protocol/sdk');
 
 import { faker } from '@faker-js/faker';
@@ -15,7 +16,7 @@ describe('Escrow utilities', () => {
     it('should call with correct params and throw when no cancellation tx in subgraph', async () => {
       mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await escrowUtils.getCancellationRequestDate(chainId, campaignAddress);
       } catch (error) {

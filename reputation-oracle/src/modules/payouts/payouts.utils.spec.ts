@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as crypto from 'crypto';
 
 import { faker } from '@faker-js/faker';
@@ -50,7 +51,7 @@ describe('payouts utils', () => {
       it('should throw when manifest not found', async () => {
         const scope = nock(manfestUrl).get('/').reply(404);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await payoutsUtils.retrieveCampaignManifest(
             manfestUrl,
@@ -71,7 +72,7 @@ describe('payouts utils', () => {
         const invalidHash = faker.string.hexadecimal();
         const scope = nock(manfestUrl).get('/').reply(200, mockedManifest);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await payoutsUtils.retrieveCampaignManifest(manfestUrl, invalidHash);
         } catch (error) {
@@ -123,7 +124,7 @@ describe('payouts utils', () => {
     it('should throw when intermediate results not found', async () => {
       const scope = nock(intermediateResultsUrl).get('/').reply(404);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await payoutsUtils.downloadIntermediateResults(
           intermediateResultsUrl,
@@ -146,7 +147,7 @@ describe('payouts utils', () => {
         .get('/')
         .reply(200, mockedIntermediateResults);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await payoutsUtils.downloadIntermediateResults(
           intermediateResultsUrl,
@@ -435,7 +436,7 @@ describe('payouts utils', () => {
           .get('/')
           .reply(200, mockedIntermediateResults);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await payoutsUtils.downloadIntermediateResults(
             intermediateResultsUrl,
