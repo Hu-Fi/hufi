@@ -203,7 +203,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
     >
       <DataGrid
         columns={columns}
-        rows={rows}
+        rows={rows || []}
         columnHeaderHeight={40}
         scrollbarSize={0}
         disableColumnFilter

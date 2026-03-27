@@ -104,7 +104,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
             onClick={handleClose}
             sx={{ color: 'white', borderColor: '#433679', minWidth: 135 }}
           >
-            Cancel
+            {isIdle ? 'Cancel' : 'Close'}
           </Button>
           {isIdle && (
             <Button
