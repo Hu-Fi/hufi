@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@human-protocol/sdk', () => {
   const mockedSdk = jest.createMockFromModule<
     typeof import('@human-protocol/sdk')

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';

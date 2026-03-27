@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('./bigone');
 jest.mock('./ccxt');
 jest.mock('./hyperliquid');

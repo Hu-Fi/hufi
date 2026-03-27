@@ -8,7 +8,6 @@ import { ValkeyClient } from '@/infrastructure/valkey';
 import { ValkeyHealthIndicator } from './valkey.health';
 
 const mockValkeyClient = createMock<ValkeyClient>();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (mockValkeyClient as any).clientName = faker.lorem.slug();
 
 describe('ValkeyHealthIndicator', () => {

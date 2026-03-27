@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@/logger');
 
 import { faker } from '@faker-js/faker';

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as crypto from 'crypto';
 import { Readable } from 'stream';
 

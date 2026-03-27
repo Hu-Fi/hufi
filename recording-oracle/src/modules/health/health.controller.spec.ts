@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { ServiceUnavailableException } from '@nestjs/common';
