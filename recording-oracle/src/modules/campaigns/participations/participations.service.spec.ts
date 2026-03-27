@@ -65,9 +65,7 @@ describe('ParticipationsService', () => {
     });
 
     it('should join user to campaign if no race condition', async () => {
-      mockParticipationsRepository.safeInsert.mockResolvedValueOnce(
-        {} as never,
-      );
+      mockParticipationsRepository.safeInsert.mockResolvedValueOnce(undefined);
 
       await expect(
         participationsService.joinCampaign(userId, campaign),

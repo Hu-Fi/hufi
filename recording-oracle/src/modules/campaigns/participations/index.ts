@@ -1,5 +1,5 @@
 export {
-  MaxParticipationsError,
+  MaxParticipantsError,
   UserAlreadyJoinedError,
 } from './participations.errors';
 export { type CampaignParticipant } from './types';

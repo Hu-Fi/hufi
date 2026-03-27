@@ -1,6 +1,6 @@
 import { BaseError } from '@/common/errors/base';
 
-export class MaxParticipationsError extends BaseError {
+export class MaxParticipantsError extends BaseError {
   constructor(
     readonly campaignId: string,
     readonly nParticipants: number,

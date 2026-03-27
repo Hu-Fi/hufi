@@ -9,7 +9,7 @@ import type { UserEntity } from '@/modules/users';
 import { CampaignEntity } from '../campaign.entity';
 import { CampaignStatus } from '../types';
 import { ParticipationEntity } from './participation.entity';
-import { MaxParticipationsError } from './participations.errors';
+import { MaxParticipantsError } from './participations.errors';
 import { type CampaignParticipant } from './types';
 
 @Injectable()
@@ -136,7 +136,7 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
       const campaignsRepository = txManager.getRepository(CampaignEntity);
       /**
        * Use parent row lock to be DB agnostic and avoid using SERIALIZABLE
-       * isolation level that we have to handle deadlock error and retry
+       * isolation level which requires handling deadlock error and retry
        */
       await campaignsRepository.findOne({
         where: { id: campaignId },
@@ -146,7 +146,7 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
       const nParticipants =
         await participationsRepository.countParticipants(campaignId);
       if (nParticipants >= _participantsLimit) {
-        throw new MaxParticipationsError(campaignId, nParticipants);
+        throw new MaxParticipantsError(campaignId, nParticipants);
       }
 
       await participationsRepository.insert(participation);

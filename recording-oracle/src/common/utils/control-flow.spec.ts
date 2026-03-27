@@ -32,7 +32,7 @@ describe('Control Flow utilities', () => {
       });
     });
 
-    it('should throw if operation times out', async () => {
+    it('should throw when operation times out', async () => {
       const startTs = Date.now();
 
       let thrownError: any;

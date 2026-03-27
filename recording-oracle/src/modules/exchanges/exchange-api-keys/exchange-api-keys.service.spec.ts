@@ -92,7 +92,7 @@ describe('ExchangeApiKeysService', () => {
       Object.assign(generateExchangeApiKeysData(), { userId: '' }),
       Object.assign(generateExchangeApiKeysData(), { apiKey: '' }),
       Object.assign(generateExchangeApiKeysData(), { secretKey: '' }),
-    ])('should throw if required param is missing [%#]', async (input) => {
+    ])('should throw when required param is missing [%#]', async (input) => {
       let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
@@ -104,7 +104,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Invalid arguments');
     });
 
-    it('should throw if not supported exchange', async () => {
+    it('should throw when not supported exchange', async () => {
       mockExchangesConfigService.configByExchange[input.exchangeName] = {
         enabled: false,
         type: ExchangeType.DEX,
@@ -121,7 +121,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Only CEX exchanges support API keys');
     });
 
-    it('should throw if provided keys do not have required access', async () => {
+    it('should throw when provided keys do not have required access', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
 
       const missingPermissions = faker.helpers.arrayElements(
@@ -145,7 +145,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.missingPermissions).toBe(missingPermissions);
     });
 
-    it('should rethrow if user not exists', async () => {
+    it('should rethrow when user not exists', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
@@ -228,7 +228,7 @@ describe('ExchangeApiKeysService', () => {
   });
 
   describe('retrieve', () => {
-    it('should throw if key not found for the user', async () => {
+    it('should throw when key not found for the user', async () => {
       const { userId, exchangeName } = generateExchangeApiKeysData();
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
@@ -333,7 +333,7 @@ describe('ExchangeApiKeysService', () => {
       exchangeName = faker.lorem.slug();
     });
 
-    it('should throw if key not found', async () => {
+    it('should throw when key not found', async () => {
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
       );

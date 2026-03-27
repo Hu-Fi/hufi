@@ -1057,7 +1057,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should throw if user already joined', async () => {
+    it('should throw when user already joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1826,7 +1826,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw if should retry some participant', async () => {
+    it('should throw when should retry some participant', async () => {
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [
           generateCampaignParticipant(campaign),
@@ -1860,7 +1860,7 @@ describe('CampaignsService', () => {
       expect(thrownError).toEqual(syntheticError);
     });
 
-    it('should throw if invalid period passed', async () => {
+    it('should throw when invalid period passed', async () => {
       [periodStart, periodEnd] = [periodEnd, periodStart];
 
       try {
@@ -4126,7 +4126,7 @@ describe('CampaignsService', () => {
       mockCacheManager.clear();
     });
 
-    it('should throw if campaign not found', async () => {
+    it('should throw when campaign not found', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress
         .mockReset()
         .mockResolvedValueOnce(null);
@@ -4159,7 +4159,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw if campaign not started yet', async () => {
+    it('should throw when campaign not started yet', async () => {
       jest.useFakeTimers({
         now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
       });
@@ -4194,7 +4194,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw if campaign already finished', async () => {
+    it('should throw when campaign already finished', async () => {
       jest.useFakeTimers({
         now: new Date(campaign.endDate.valueOf() + 1),
       });
@@ -4234,7 +4234,7 @@ describe('CampaignsService', () => {
       CampaignStatus.PENDING_CANCELLATION,
       CampaignStatus.COMPLETED,
     ])(
-      'should throw if campaign status is not eligible for progress check: "%s"',
+      'should throw when campaign status is not eligible for progress check: "%s"',
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
@@ -4267,7 +4267,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should throw if user not joined', async () => {
+    it('should throw when user not joined', async () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
@@ -4294,7 +4294,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it("should throw if can't get active timeframe", async () => {
+    it("should throw when can't get active timeframe", async () => {
       spyOnGetActiveTimeframe.mockReturnValueOnce(null);
 
       let thrownError: any;
@@ -4908,7 +4908,7 @@ describe('CampaignsService', () => {
       expect(data).toEqual([]);
     });
 
-    it('should throw if ranking option is not supported', async () => {
+    it('should throw when ranking option is not supported', async () => {
       const notSupportedRankingOption = faker.lorem.word();
 
       let thrownError: any;
