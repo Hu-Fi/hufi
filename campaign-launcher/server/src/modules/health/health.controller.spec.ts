@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import { ServiceUnavailableException } from '@nestjs/common';
@@ -20,7 +21,6 @@ const mockServerConfigService = {
 const mockTypeOrmPingCheck = jest.fn();
 
 const mockValkeyCacheClient = createMock<ValkeyClient>();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (mockValkeyCacheClient as any).clientName = faker.lorem.slug();
 
 describe('HealthController', () => {
@@ -92,7 +92,7 @@ describe('HealthController', () => {
         .mockReset()
         .mockRejectedValueOnce(new Error('timeout'));
 
-      let thrownError;
+      let thrownError: any;
       try {
         await healthController.check();
       } catch (error) {

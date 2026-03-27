@@ -133,7 +133,7 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
     }
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
-    return validatedManifest;
+    return validatedManifest as CampaignManifest;
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Invalid manifest schema: ${error.message}`);

@@ -1,3 +1,4 @@
+import { toError } from '@/common/utils/type-guard';
 import logger from '@/logger';
 import type { Logger } from '@/logger';
 
@@ -60,7 +61,7 @@ export abstract class BaseExchangeApiClient implements ExchangeApiClient {
       await this.runLoadMarkets();
     } catch (error) {
       this.logger.error('Failed to load markets', { error, msSinceLastLoad });
-      throw new LoadMarketsError(this.exchangeName, error.message);
+      throw new LoadMarketsError(this.exchangeName, toError(error).message);
     }
 
     this.marketsLoadedAt = Date.now();
