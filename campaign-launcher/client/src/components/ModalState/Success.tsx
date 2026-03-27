@@ -11,6 +11,8 @@ const ModalSuccess: FC<PropsWithChildren> = ({ children }) => {
         display="flex"
         justifyContent="center"
         alignItems="center"
+        width="fit-content"
+        flexShrink={0}
         mb={1}
         p="3px"
         color="white"
