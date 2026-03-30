@@ -11,11 +11,11 @@ import {
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
-import CampaignSymbol from '@/components/CampaignSymbol';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import type { CampaignDetails } from '@/types';
-import { getChainIcon, getNetworkName, mapTypeToLabel } from '@/utils';
+import { getChainIcon, getNetworkName } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
 const formatDate = (dateString: string): string => {
@@ -36,6 +36,10 @@ type Props = {
 
 const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
   const isMobile = useIsMobile();
+  const { activeAddress } = useActiveAccount();
+
+  const isHosted =
+    campaign?.launcher?.toLowerCase() === activeAddress?.toLowerCase();
 
   if (isCampaignLoading) {
     if (isMobile) {
@@ -45,10 +49,10 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
           mx={-2}
           px={2}
           pb={4}
-          gap={1.5}
+          gap={2}
           borderBottom="1px solid #473C74"
         >
-          <Skeleton variant="text" width="100%" height={30} />
+          <Skeleton variant="text" width="100%" height={32} />
           <Skeleton variant="text" width="100%" height={48} />
         </Stack>
       );
@@ -75,20 +79,23 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
       mx={{ xs: -2, md: 0 }}
       px={{ xs: 2, md: 0 }}
       pb={{ xs: 4, md: 0 }}
-      gap={{ xs: 1.5, md: 3.5 }}
+      gap={{ xs: 2, md: 3.5 }}
       borderBottom={{ xs: '1px solid #473C74', md: 'none' }}
     >
       <Box
         display="flex"
         justifyContent="space-between"
+        alignItems="center"
         gap={2}
         height={{ xs: 'auto', md: '42px' }}
       >
-        <CampaignSymbol
-          symbol={campaign.symbol}
-          campaignType={campaign.type}
-          size="small"
-        />
+        <Typography
+          variant="h6"
+          color="white"
+          fontWeight={{ xs: 500, md: 600 }}
+        >
+          Campaign Details
+        </Typography>
         <Box display="flex" alignItems="center" gap={3}>
           <CampaignStatusLabel
             campaignStatus={campaign.status}
@@ -137,16 +144,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
           withCopy
         />
         <DividerStyled orientation="vertical" flexItem />
-        <Typography
-          fontSize={{ xs: 14, md: 20 }}
-          fontWeight={500}
-          lineHeight="100%"
-          letterSpacing={0}
-        >
-          {mapTypeToLabel(campaign.type)}
-        </Typography>
-        <DividerStyled orientation="vertical" flexItem />
-        {isJoined && (
+        {(isJoined || isHosted) && (
           <>
             <Typography
               color="error.main"
@@ -154,8 +152,9 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
               fontWeight={500}
               lineHeight="100%"
               letterSpacing={0}
+              textTransform="uppercase"
             >
-              Joined
+              {isJoined ? 'Joined' : 'Hosted'}
             </Typography>
             <DividerStyled orientation="vertical" flexItem />
           </>

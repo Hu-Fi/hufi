@@ -69,12 +69,11 @@ const CampaignStatusLabel: FC<Props> = ({
     endDate
   );
   return (
-    <Box display="flex" alignItems="center" gap={1}>
+    <Box display="flex" alignItems="center" gap={{ xs: 0.5, md: 1 }}>
       <Box
         component="span"
         display="inline-flex"
-        width="12px"
-        height="12px"
+        p={{ xs: '4px', md: '6px' }}
         borderRadius="100%"
         bgcolor={color}
       />
