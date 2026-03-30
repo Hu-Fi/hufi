@@ -15,7 +15,7 @@ describe('Escrow utilities', () => {
     it('should call with correct params and throw when no cancellation tx in subgraph', async () => {
       mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await escrowUtils.getCancellationRequestDate(chainId, campaignAddress);
       } catch (error) {

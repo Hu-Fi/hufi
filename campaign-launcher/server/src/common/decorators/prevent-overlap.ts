@@ -2,7 +2,10 @@ export function PreventCallOverlap() {
   return function (
     _target: unknown,
     propertyKey: string,
-    descriptor: PropertyDescriptor,
+    descriptor: TypedPropertyDescriptor<
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this: any, ...args: unknown[]) => any
+    >,
   ) {
     const original = descriptor.value!;
 

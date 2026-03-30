@@ -5,6 +5,8 @@ import _ from 'lodash';
 
 import { BaseError } from '@/common/errors/base';
 
+import { toError } from './type-guard';
+
 export function formatAxiosError(error: AxiosError) {
   return {
     name: error.name,
@@ -83,7 +85,7 @@ export async function downloadFile<T extends DownloadFileOptions>(
     if (error instanceof FileDownloadError) {
       throw error;
     }
-    throw new FileDownloadError(url, error.message);
+    throw new FileDownloadError(url, toError(error).message);
   }
 }
 

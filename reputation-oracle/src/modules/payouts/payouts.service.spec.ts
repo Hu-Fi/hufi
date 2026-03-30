@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@human-protocol/sdk');
 jest.mock('@/logger');
 
@@ -185,7 +184,7 @@ describe('PayoutsService', () => {
       const syntheticError = new Error(faker.lorem.sentence());
       mockedEscrowUtils.getEscrows.mockRejectedValueOnce(syntheticError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await payoutsService['getCampaignsForPayouts'](chainId);
       } catch (error) {

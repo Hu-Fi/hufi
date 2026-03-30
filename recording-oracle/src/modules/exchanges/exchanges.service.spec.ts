@@ -71,7 +71,7 @@ describe('ExchangesService', () => {
       const userId = faker.string.uuid();
       const exchangeName = generateExchangeName();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangesService.getClientForUser(userId, exchangeName);
       } catch (error) {
@@ -230,7 +230,7 @@ describe('ExchangesService', () => {
         missing: missingPermissions,
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangesService.assertUserHasRequiredAccess(
           userId,

@@ -1,4 +1,4 @@
-type BaseCampaignManifest = {
+export type BaseCampaignManifest = {
   type: string;
   exchange: string;
   start_date: Date;

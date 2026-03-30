@@ -82,7 +82,6 @@ describe('ExchangeApiClientFactory', () => {
 
     beforeAll(() => {
       spyOnPreloadCcxtClient = jest.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         exchangeApiClientFactory as any,
         'preloadCcxtClient',
       );
@@ -221,7 +220,7 @@ describe('ExchangeApiClientFactory', () => {
         false,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         exchangeApiClientFactory.createCex(exchangeName, {
           apiKey,
@@ -385,7 +384,7 @@ describe('ExchangeApiClientFactory', () => {
     it('should throw ExchangeNotSupportedError if no exchange client defined for exchange', () => {
       const exchangeName = faker.lorem.slug() as ExchangeName;
 
-      let thrownError;
+      let thrownError: any;
       try {
         exchangeApiClientFactory.createDex(exchangeName, {
           userId,

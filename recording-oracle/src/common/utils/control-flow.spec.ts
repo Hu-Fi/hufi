@@ -35,7 +35,7 @@ describe('Control Flow utilities', () => {
     it('should throw if operation times out', async () => {
       const startTs = Date.now();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await withTimeout(delay(timeoutMs + delayMarginMs), timeoutMs);
       } catch (error) {

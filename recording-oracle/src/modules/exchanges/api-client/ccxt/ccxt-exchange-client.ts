@@ -39,7 +39,7 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
     propertyKey: string,
     descriptor: TypedPropertyDescriptor<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this: CcxtExchangeClient, ...args: unknown[]) => any
+      (this: CcxtExchangeClient, ...args: any[]) => any
     >,
   ) {
     const original = descriptor.value!;
@@ -50,7 +50,8 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
     ) {
       try {
         return await original.apply(this, args);
-      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
         error[ccxtClientUtils.ERROR_EXCHANGE_NAME_PROP] = this.exchangeName;
         if (ccxtClientUtils.isExchangeApiAccessError(error)) {
           if (this.loggingConfig.logPermissionErrors) {

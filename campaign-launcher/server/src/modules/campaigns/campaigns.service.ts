@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 import { ChainId } from '@/common/constants';
+import { toError } from '@/common/utils/type-guard';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { Web3Service } from '@/modules/web3';
@@ -22,7 +23,8 @@ import {
 import { InvalidCampaignManifestError } from './campaigns.errors';
 import * as manifestUtils from './manifest.utils';
 import {
-  CampaignManifest,
+  type BaseCampaignManifest,
+  type CampaignManifest,
   CampaignStatus,
   CampaignType,
   SubgraphCampaignStatus,
@@ -186,7 +188,7 @@ export class CampaignsService {
       throw new InvalidCampaignManifestError(
         chainId,
         subgraphCampaign.id,
-        error.message as string,
+        toError(error).message,
       );
     }
 
@@ -220,8 +222,7 @@ export class CampaignsService {
       throw new InvalidCampaignManifestError(
         chainId,
         subgraphCampaign.id,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        `Unknown campaign type: ${(manifest as any).type}`,
+        `Unknown campaign type: ${(manifest as BaseCampaignManifest).type}`,
       );
     }
 

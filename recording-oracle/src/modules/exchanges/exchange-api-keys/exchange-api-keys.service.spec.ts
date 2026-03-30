@@ -93,7 +93,7 @@ describe('ExchangeApiKeysService', () => {
       Object.assign(generateExchangeApiKeysData(), { apiKey: '' }),
       Object.assign(generateExchangeApiKeysData(), { secretKey: '' }),
     ])('should throw if required param is missing [%#]', async (input) => {
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -110,7 +110,7 @@ describe('ExchangeApiKeysService', () => {
         type: ExchangeType.DEX,
       };
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -133,7 +133,7 @@ describe('ExchangeApiKeysService', () => {
         missing: missingPermissions,
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -154,7 +154,7 @@ describe('ExchangeApiKeysService', () => {
       const testError = new Error('Synthetic user not exist');
       mockUsersService.assertUserExistsById.mockRejectedValueOnce(testError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -197,7 +197,6 @@ describe('ExchangeApiKeysService', () => {
     it('should upsert encrypted keys if data is valid and extras provided', async () => {
       input.extras = {
         [faker.string.alpha()]: faker.string.sample(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
 
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
@@ -235,7 +234,7 @@ describe('ExchangeApiKeysService', () => {
         null,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.retrieve(userId, exchangeName);
       } catch (error) {
@@ -338,7 +337,7 @@ describe('ExchangeApiKeysService', () => {
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
       );
-      let thrownError;
+      let thrownError: any;
 
       try {
         await exchangeApiKeysService.markValidity(

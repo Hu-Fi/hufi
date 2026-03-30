@@ -50,7 +50,7 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
     propertyKey: string,
     descriptor: TypedPropertyDescriptor<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this: BigoneClient, ...args: unknown[]) => any
+      (this: BigoneClient, ...args: any[]) => any
     >,
   ) {
     const original = descriptor.value!;

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@human-protocol/sdk', () => {
   const mockedSdk = jest.createMockFromModule<
     typeof import('@human-protocol/sdk')
@@ -234,7 +233,7 @@ describe('CampaignsService', () => {
     it('should throw when exchange from manifest not supported', () => {
       const manifest = generateCampaignManifest();
 
-      let thrownError;
+      let thrownError: any;
       try {
         campaignsService['assertCorrectCampaignSetup'](manifest);
       } catch (error) {
@@ -255,7 +254,7 @@ describe('CampaignsService', () => {
         },
       };
 
-      let thrownError;
+      let thrownError: any;
       try {
         campaignsService['assertCorrectCampaignSetup'](manifest);
       } catch (error) {
@@ -282,7 +281,7 @@ describe('CampaignsService', () => {
           },
         };
 
-        let thrownError;
+        let thrownError: any;
         try {
           campaignsService['assertCorrectCampaignSetup'](manifest);
         } catch (error) {
@@ -363,7 +362,7 @@ describe('CampaignsService', () => {
     it('should throw when escrow not found', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -388,7 +387,7 @@ describe('CampaignsService', () => {
         token: '',
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -414,7 +413,7 @@ describe('CampaignsService', () => {
         token: faker.finance.ethereumAddress(),
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -441,7 +440,7 @@ describe('CampaignsService', () => {
         totalFundedAmount: 0n,
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -470,7 +469,7 @@ describe('CampaignsService', () => {
         manifestHash: faker.string.hexadecimal(),
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -499,7 +498,7 @@ describe('CampaignsService', () => {
         manifestHash: faker.helpers.arrayElement(['', null]),
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -530,7 +529,7 @@ describe('CampaignsService', () => {
         recordingOracle: escrowRecordingOracle,
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -569,7 +568,7 @@ describe('CampaignsService', () => {
         EscrowStatus[escrowStatus as unknown as EscrowStatus],
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -607,7 +606,7 @@ describe('CampaignsService', () => {
       const syntheticError = new Error(faker.lorem.sentence());
       spyOnDownloadCampaignManifest.mockRejectedValueOnce(syntheticError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -647,7 +646,7 @@ describe('CampaignsService', () => {
       } as IEscrow);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -682,7 +681,7 @@ describe('CampaignsService', () => {
         JSON.stringify(mockedManifest),
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -1068,7 +1067,7 @@ describe('CampaignsService', () => {
         testError,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.join(userId, chainId, campaign.address);
       } catch (error) {
@@ -1156,7 +1155,7 @@ describe('CampaignsService', () => {
         null,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.join(userId, chainId, campaign.address);
       } catch (error) {
@@ -1185,7 +1184,7 @@ describe('CampaignsService', () => {
         );
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await campaignsService.join(userId, chainId, campaign.address);
         } catch (error) {
@@ -1273,7 +1272,7 @@ describe('CampaignsService', () => {
       const campaign = generateCampaignEntity();
       campaign.type = faker.string.sample() as any;
 
-      let thrownError;
+      let thrownError: any;
       try {
         campaignsService['getCampaignProgressChecker'](campaign.type, {
           exchangeName: campaign.exchangeName as ExchangeName,
@@ -1330,7 +1329,7 @@ describe('CampaignsService', () => {
       const testError = new Error(faker.lorem.sentence());
       spyOnDownloadFile.mockRejectedValueOnce(testError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignIntermediateResults'](campaign);
       } catch (error) {
@@ -1778,7 +1777,7 @@ describe('CampaignsService', () => {
         syntheticError,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.checkCampaignProgressForPeriod(
           campaign,
@@ -3759,7 +3758,7 @@ describe('CampaignsService', () => {
         .mockReset()
         .mockResolvedValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3792,7 +3791,7 @@ describe('CampaignsService', () => {
         now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3827,7 +3826,7 @@ describe('CampaignsService', () => {
         now: new Date(campaign.endDate.valueOf() + 1),
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3866,7 +3865,7 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        let thrownError;
+        let thrownError: any;
         try {
           await campaignsService.getUserProgress(
             userId,
@@ -3900,7 +3899,7 @@ describe('CampaignsService', () => {
         null,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3925,7 +3924,7 @@ describe('CampaignsService', () => {
     it("should throw if can't get active timeframe", async () => {
       spyOnGetActiveTimeframe.mockReturnValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -4539,7 +4538,7 @@ describe('CampaignsService', () => {
     it('should throw if ranking option is not supported', async () => {
       const notSupportedRankingOption = faker.lorem.word();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getCampaignLeaderboard(
           campaign.chainId,
@@ -4769,7 +4768,7 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        let thrownError;
+        let thrownError: any;
         try {
           await campaignsService['getCurrentProgressLeaderboardEntries'](
             campaign,
