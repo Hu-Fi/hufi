@@ -555,7 +555,6 @@ describe('CampaignsService', () => {
     });
 
     it.each([
-      EscrowStatus[EscrowStatus.ToCancel],
       EscrowStatus[EscrowStatus.Cancelled],
       EscrowStatus[EscrowStatus.Complete],
     ])('should throw when escrow has "%s" status', async (escrowStatus) => {
@@ -4591,6 +4590,8 @@ describe('CampaignsService', () => {
 
     let spyOnRetrieveCampaignData: jest.SpyInstance;
     let spyOnCreateCampaign: jest.SpyInstance;
+    let spyOnGetChainDiscoveryAnchor: jest.SpyInstance;
+    let spyOnSetChainDiscoveryAnchor: jest.SpyInstance;
 
     beforeAll(() => {
       spyOnRetrieveCampaignData = jest.spyOn(
@@ -4601,6 +4602,18 @@ describe('CampaignsService', () => {
 
       spyOnCreateCampaign = jest.spyOn(campaignsService, 'createCampaign');
       spyOnCreateCampaign.mockImplementation();
+
+      spyOnGetChainDiscoveryAnchor = jest.spyOn(
+        campaignsCache,
+        'getChainDiscoveryAnchor',
+      );
+      spyOnGetChainDiscoveryAnchor.mockImplementation();
+
+      spyOnSetChainDiscoveryAnchor = jest.spyOn(
+        campaignsCache,
+        'setChainDiscoveryAnchor',
+      );
+      spyOnSetChainDiscoveryAnchor.mockImplementation();
     });
 
     beforeEach(() => {
@@ -4612,6 +4625,8 @@ describe('CampaignsService', () => {
 
       spyOnRetrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
+      spyOnGetChainDiscoveryAnchor.mockRestore();
+      spyOnSetChainDiscoveryAnchor.mockRestore();
     });
 
     it('should run discovery for each supported chain', async () => {
@@ -4622,25 +4637,17 @@ describe('CampaignsService', () => {
 
       await campaignsService.discoverNewCampaigns();
 
-      expect(
-        mockCampaignsRepository.findLatestCampaignForChain,
-      ).toHaveBeenCalledTimes(mockWeb3Service.supportedChainIds.length);
+      expect(spyOnGetChainDiscoveryAnchor).toHaveBeenCalledTimes(
+        mockWeb3Service.supportedChainIds.length,
+      );
       for (const chainId of mockWeb3Service.supportedChainIds) {
-        expect(
-          mockCampaignsRepository.findLatestCampaignForChain,
-        ).toHaveBeenCalledWith(chainId);
+        expect(spyOnGetChainDiscoveryAnchor).toHaveBeenCalledWith(chainId);
       }
     });
 
-    it('should use latest saved campaign for lookback', async () => {
-      const campaign = generateCampaignEntity();
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        campaign,
-      );
-      const escrowTimestamp = faker.date.past().valueOf();
-      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
-        createdAt: escrowTimestamp,
-      } as IEscrow);
+    it('should use discovery anchor for lookback', async () => {
+      const chainDiscoveryAnchor = faker.date.past();
+      spyOnGetChainDiscoveryAnchor.mockResolvedValue(chainDiscoveryAnchor);
 
       await campaignsService.discoverNewCampaigns();
 
@@ -4648,42 +4655,28 @@ describe('CampaignsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
-        status: EscrowStatus.Pending,
-        from: new Date(escrowTimestamp),
+        status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+        from: chainDiscoveryAnchor,
         orderDirection: OrderDirection.ASC,
-        first: 10,
+        first: 50,
       });
     });
 
-    it('should use 1d ago for lookback if no latest campaign', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
-      const now = new Date();
-
-      const dayAgo = dayjs(now).subtract(1, 'day').toDate();
-
-      jest.useFakeTimers({ now });
-
+    it('should use default "from" if no latest campaign', async () => {
       await campaignsService.discoverNewCampaigns();
-
-      jest.useRealTimers();
 
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledTimes(1);
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
-        status: EscrowStatus.Pending,
-        from: dayAgo,
+        status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+        from: undefined,
         orderDirection: OrderDirection.ASC,
-        first: 10,
+        first: 50,
       });
     });
 
     it('should not save discovered campaign if it already exists', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(true);
 
       const campaignAddress = ethers.getAddress(
@@ -4691,6 +4684,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4704,21 +4698,24 @@ describe('CampaignsService', () => {
         campaignAddress,
       );
 
-      expect(logger.debug).toHaveBeenCalledTimes(4);
+      expect(logger.debug).toHaveBeenCalledTimes(3);
       expect(logger.debug).toHaveBeenNthCalledWith(
-        3,
+        2,
         'Discovered campaign already exists; skip it',
         {
           chainId: supportedChainId,
           campaignAddress,
         },
       );
+
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(1);
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledWith(
+        supportedChainId,
+        new Date(escrow.createdAt),
+      );
     });
 
     it('should save discovered campaign if not already exist', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4726,6 +4723,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4766,12 +4764,15 @@ describe('CampaignsService', () => {
           campaignId: mockCampaign.id,
         },
       );
+
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(1);
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledWith(
+        supportedChainId,
+        new Date(escrow.createdAt),
+      );
     });
 
     it('should not save and skip discovered campaign if invalid', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4779,6 +4780,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4809,13 +4811,16 @@ describe('CampaignsService', () => {
         },
       );
 
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(1);
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledWith(
+        supportedChainId,
+        new Date(escrow.createdAt),
+      );
+
       expect(logger.error).toHaveBeenCalledTimes(0);
     });
 
     it('should rethrow and stop discovery if fails to retrieve some campaign', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4823,6 +4828,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4849,6 +4855,8 @@ describe('CampaignsService', () => {
         },
       );
 
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(0);
+
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'Error while discovering new campaigns for chain',
@@ -4860,15 +4868,13 @@ describe('CampaignsService', () => {
     });
 
     it('should process each discovered campaign', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValue(true);
 
       const escrows = Array.from(
         { length: faker.number.int({ min: 2, max: 4 }) },
         () => ({
           address: faker.finance.ethereumAddress(),
+          createdAt: faker.date.recent().valueOf(),
         }),
       );
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce(escrows as IEscrow[]);

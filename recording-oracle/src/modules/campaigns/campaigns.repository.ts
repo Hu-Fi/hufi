@@ -66,19 +66,6 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
     });
   }
 
-  async findLatestCampaignForChain(
-    chainId: number,
-  ): Promise<CampaignEntity | null> {
-    return this.findOne({
-      where: {
-        chainId,
-      },
-      order: {
-        createdAt: 'desc',
-      },
-    });
-  }
-
   async checkCampaignExists(
     chainId: number,
     address: string,
