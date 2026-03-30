@@ -75,7 +75,9 @@ export function generateCompetitiveMarketMakingCampaignManifest(): CompetitiveMa
   return manifest;
 }
 
-export function generateThresholdampaignManifest(): ThresholdCampaignManifest {
+export function generateThresholdampaignManifest({
+  shouldHaveMaxParticipants = faker.datatype.boolean(),
+} = {}): ThresholdCampaignManifest {
   const manifestBase = generateBaseCampaignManifest();
 
   const manifest: ThresholdCampaignManifest = {
@@ -83,6 +85,9 @@ export function generateThresholdampaignManifest(): ThresholdCampaignManifest {
     type: CampaignType.THRESHOLD,
     symbol: faker.finance.currencyCode(),
     minimum_balance_target: faker.number.float(),
+    max_participants: shouldHaveMaxParticipants
+      ? faker.number.int({ min: 1, max: 100 })
+      : undefined,
   };
   return manifest;
 }

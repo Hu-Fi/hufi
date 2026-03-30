@@ -137,7 +137,7 @@ describe('UsersService', () => {
   });
 
   describe('assertUserExistsById', () => {
-    it('should throw if used does not exist for provided id', async () => {
+    it('should throw when used does not exist for provided id', async () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(false);
       const testUserId = faker.string.uuid();
 
@@ -152,7 +152,7 @@ describe('UsersService', () => {
       expect(thrownError).toBeInstanceOf(UserNotFoundError);
     });
 
-    it('should not throw if user exists for provided id', async () => {
+    it('should not throw when user exists for provided id', async () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(true);
       const testUserId = faker.string.uuid();
 

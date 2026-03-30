@@ -152,7 +152,7 @@ describe('ThresholdProgressChecker', () => {
       );
     });
 
-    it('should collect total balance for all checked participants', async () => {
+    it('should collect correct totals for all checked participants', async () => {
       const nParticipants = faker.number.int({ min: 2, max: 5 });
 
       let expectedTotalBalance = 0;

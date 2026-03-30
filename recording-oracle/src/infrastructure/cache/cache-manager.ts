@@ -2,7 +2,7 @@ import assert from 'assert';
 
 import { Inject, Injectable } from '@nestjs/common';
 
-import { isNumber } from '@/common/utils/type-guard';
+import { isFiniteNumber } from '@/common/utils/type-guard';
 import {
   VALKEY_CACHE_CLIENT,
   type ValkeyClient,
@@ -64,7 +64,7 @@ export class CacheManager {
         type: TimeUnit.UnixMilliseconds,
         count: expiry.getTime(),
       };
-    } else if (isNumber(expiry)) {
+    } else if (isFiniteNumber(expiry)) {
       options.expiry = {
         type: TimeUnit.Milliseconds,
         count: expiry,
