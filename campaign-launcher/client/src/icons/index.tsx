@@ -371,23 +371,6 @@ export const ConnectWalletIcon: FC<SvgIconProps> = (props) => {
   );
 };
 
-export const CopyIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 20 20" fill="none">
-      <g clipPath="url(#clip0_1586_816)">
-        <path
-          d="M3.33317 13.3332C2.4165 13.3332 1.6665 12.5832 1.6665 11.6665V3.33317C1.6665 2.4165 2.4165 1.6665 3.33317 1.6665H11.6665C12.5832 1.6665 13.3332 2.4165 13.3332 3.33317M8.33317 6.6665H16.6665C17.587 6.6665 18.3332 7.4127 18.3332 8.33317V16.6665C18.3332 17.587 17.587 18.3332 16.6665 18.3332H8.33317C7.4127 18.3332 6.6665 17.587 6.6665 16.6665V8.33317C6.6665 7.4127 7.4127 6.6665 8.33317 6.6665Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.66667"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-    </SvgIcon>
-  );
-};
-
 export const MobileBottomNavDashboardIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 36 35" fill="none">
@@ -572,7 +555,22 @@ export const NoKeysIcon: FC<SvgIconProps> = (props) => {
         width="2.87756"
         height="32.6271"
         transform="rotate(-45 10.4092 12.6621)"
-        fill="current Color"
+        fill="currentColor"
+      />
+    </SvgIcon>
+  );
+};
+
+export const CancelIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 32 32" fill="none">
+      <path
+        d="M20.0003 11.9998L12.0003 19.9998M12.0003 11.9998L20.0003 19.9998M29.3337 15.9998C29.3337 23.3636 23.3641 29.3332 16.0003 29.3332C8.63653 29.3332 2.66699 23.3636 2.66699 15.9998C2.66699 8.63604 8.63653 2.6665 16.0003 2.6665C23.3641 2.6665 29.3337 8.63604 29.3337 15.9998Z"
+        fill="none"
+        stroke="#FB4A4A"
+        strokeWidth="2.66667"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </SvgIcon>
   );
