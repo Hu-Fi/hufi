@@ -1065,7 +1065,7 @@ describe('CampaignsService', () => {
         generateUserJoinedDate(campaign),
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.join(
           userId,

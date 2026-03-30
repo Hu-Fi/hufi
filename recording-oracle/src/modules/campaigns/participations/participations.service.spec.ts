@@ -87,7 +87,7 @@ describe('ParticipationsService', () => {
         createDuplicatedKeyError(),
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await participationsService.joinCampaign(userId, campaign);
       } catch (error) {
