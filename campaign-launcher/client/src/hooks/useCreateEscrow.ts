@@ -34,13 +34,13 @@ type CreateEscrowMutationState = {
   reset: () => void;
 };
 
-const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
-  const normalizeDate = (date: Date): string => {
-    const normalizedDate = new Date(date);
-    normalizedDate.setSeconds(0, 0);
-    return normalizedDate.toISOString();
-  };
+const normalizeDate = (date: Date): string => {
+  const normalizedDate = new Date(date);
+  normalizedDate.setSeconds(0, 0);
+  return normalizedDate.toISOString();
+};
 
+const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
   const baseManifest = {
     exchange: data.exchange,
     start_date: normalizeDate(data.start_date),
