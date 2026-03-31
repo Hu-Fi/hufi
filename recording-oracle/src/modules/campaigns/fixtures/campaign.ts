@@ -30,9 +30,6 @@ import {
 export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
   const _type = type || faker.helpers.arrayElement(Object.values(CampaignType));
 
-  const startDate = dayjs().subtract(1, 'days').toDate();
-  const durationInDays = faker.number.int({ min: 3, max: 7 });
-
   let details: CampaignDetails;
   switch (_type) {
     case CampaignType.MARKET_MAKING:
@@ -64,6 +61,14 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
       break;
   }
 
+  /**
+   * Campaign duration is [startDate, endDate)
+   */
+  const startDate = dayjs().subtract(1, 'days').toDate();
+  const endDate = dayjs(startDate)
+    .add(faker.number.int({ min: 3, max: 7 }), 'days')
+    .toDate();
+
   const campaign: Omit<CampaignEntity, 'beforeInsert' | 'beforeUpdate'> = {
     id: faker.string.uuid(),
     chainId: generateTestnetChainId(),
@@ -72,7 +77,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     exchangeName: generateExchangeName(),
     symbol: generateTradingPair(),
     startDate,
-    endDate: dayjs(startDate).add(durationInDays, 'days').toDate(),
+    endDate,
     fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),
     fundToken: faker.finance.currencyCode(),
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),

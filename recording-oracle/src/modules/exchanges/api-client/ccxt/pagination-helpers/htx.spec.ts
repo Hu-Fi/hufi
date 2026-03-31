@@ -35,7 +35,7 @@ describe('htx pagination helpers', () => {
       expect(result).toEqual({
         since: since - 1,
         params: {
-          until: until + 1,
+          until,
           size: 250,
           direct: 'next',
         },
@@ -53,7 +53,7 @@ describe('htx pagination helpers', () => {
       expect(result).toEqual({
         since: since - 1,
         params: {
-          until: until + 1,
+          until,
           size: 250,
           direct: 'next',
           from: nextPageToken.oldestPaginationRecord.id,

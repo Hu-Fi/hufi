@@ -27,7 +27,7 @@ describe('bybit pagination helpers', () => {
       expect(result).toEqual({
         since,
         params: {
-          endTime: until,
+          endTime: until - 1,
         },
         limit: 100,
       });
@@ -41,7 +41,7 @@ describe('bybit pagination helpers', () => {
       expect(result).toEqual({
         since,
         params: {
-          endTime: until,
+          endTime: until - 1,
           cursor: nextPageToken,
         },
         limit: 100,

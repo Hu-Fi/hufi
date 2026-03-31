@@ -242,6 +242,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
   /**
    * Returns all historical trades, both for fully and partially filled orders,
    * i.e. returns historical data for actual buy/sell that happened.
+   * Fetch interval is [since; until)
    */
   async *fetchMyTrades(
     symbol: string,

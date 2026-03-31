@@ -2326,13 +2326,12 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedStartDate = new Date(lastResultsEndDate.valueOf() + 1);
-      const expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
+      const expectedEndDate = dayjs(lastResultsEndDate).add(1, 'day').toDate();
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        expectedStartDate,
+        lastResultsEndDate,
         expectedEndDate,
         {
           excludeIneligible: expect.any(Boolean),
@@ -2364,13 +2363,12 @@ describe('CampaignsService', () => {
 
       jest.useRealTimers();
 
-      const expectedStartDate = new Date(lastResultsEndDate.valueOf() + 1);
       const expectedEndDate = campaign.endDate;
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        expectedStartDate,
+        lastResultsEndDate,
         expectedEndDate,
         {
           excludeIneligible: expect.any(Boolean),
@@ -2881,7 +2879,7 @@ describe('CampaignsService', () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
       const currentDate = new Date();
-      campaign.endDate = new Date(currentDate.valueOf() - 1);
+      campaign.endDate = currentDate;
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
         generateIntermediateResultsData({
           results: [generateIntermediateResult({ endDate: campaign.endDate })],
@@ -3754,7 +3752,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const cancellationRequestedAt = dayjs(expectedTimeframeStart)
@@ -3782,7 +3779,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const result = await campaignsService.getActiveTimeframe(campaign);
@@ -3838,7 +3834,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const result = await campaignsService.getActiveTimeframe(campaign);
@@ -3884,7 +3879,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const cancellationRequestedAt = dayjs(expectedTimeframeStart)

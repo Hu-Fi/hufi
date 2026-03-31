@@ -20,6 +20,9 @@ import {
 const baseManifestSchema = Joi.object({
   type: Joi.string().min(2).required(),
   exchange: Joi.string().min(2).required(),
+  /**
+   * Duration interval is [start_date, end_date)
+   */
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: false });

@@ -517,11 +517,7 @@ export class CampaignsService implements OnModuleDestroy {
               -1,
             ) as IntermediateResult;
 
-            const lastResultDate = new Date(lastResultAt);
-            /**
-             * Add 1 ms to end date because interval boundaries are inclusive
-             */
-            startDate = new Date(lastResultDate.valueOf() + 1);
+            startDate = new Date(lastResultAt);
           }
 
           let endDate: Date;
@@ -747,6 +743,9 @@ export class CampaignsService implements OnModuleDestroy {
     );
   }
 
+  /**
+   * Period boundaries are [startDate, endDate)
+   */
   async checkCampaignProgressForPeriod(
     campaign: CampaignEntity,
     startDate: Date,
@@ -1471,7 +1470,6 @@ export class CampaignsService implements OnModuleDestroy {
 
     const timeframeStart = dayjs(campaign.startDate)
       .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
-      .add(1, 'millisecond')
       .toDate();
 
     let timeframeEnd: Date;

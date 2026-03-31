@@ -27,8 +27,8 @@ describe('Control Flow utilities', () => {
       timeoutMs = faker.number.int({ min: 500, max: 1000 });
 
       delayMarginMs = faker.number.int({
-        min: 10,
-        max: 20,
+        min: 50,
+        max: 100,
       });
     });
 

@@ -8,7 +8,7 @@ import type {
 } from './types';
 
 export type XtNextPageToken = {
-  nextPageUntil: number;
+  oldestTradeAt: number;
   movingDedupIds: string[];
 };
 
@@ -18,12 +18,26 @@ export const getPaginationInput: GetPaginationInputFn<
   XtNextPageToken,
   PaginationParams
 > = (since, until, nextPageToken) => {
+  /**
+   * Xt API is [since, until]
+   */
+  let endTime: number;
+
+  if (nextPageToken) {
+    /**
+     * Keep it as is to handle same-millisecond trades
+     */
+    endTime = nextPageToken.oldestTradeAt;
+  } else {
+    endTime = until - 1;
+  }
+
   return {
     limit: PAGE_LIMIT,
     since,
     params: {
       direction: 'NEXT', // from newest to oldest
-      endTime: nextPageToken?.nextPageUntil || until,
+      endTime,
     },
   };
 };
@@ -35,10 +49,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
   const movingDedupIds = new Set(currentPageToken?.movingDedupIds || []);
 
   /**
-   * startTime & endTime are inclusive, so due to pagination mechanism
-   * we have to filter out a boundary-timestamp trade.
-   *
-   * Also there might be an edge case with same-millisecond trades.
+   * There might be same-millisecond trades, so we have to filter out duplicates
    */
   const newTrades: CcxtTrade[] = [];
   for (const trade of trades) {
@@ -59,7 +70,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
 
   if (lastResponse.result.hasNext) {
     nextPageToken = {
-      nextPageUntil: newTrades.at(-1)!.timestamp,
+      oldestTradeAt: newTrades.at(-1)!.timestamp,
       /**
        * Keep last two pages to detect if we stuck in situation
        * where there are more trades within same-millisecond than trades page limit.

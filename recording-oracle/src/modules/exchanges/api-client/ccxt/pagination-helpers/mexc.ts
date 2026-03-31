@@ -4,7 +4,7 @@ import _ from 'lodash';
 import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
 
 export type MexcNextPageToken = {
-  nextPageUntil: number;
+  oldestTradeAt: number;
   movingDedupIds: string[];
 };
 
@@ -18,8 +18,23 @@ export const getPaginationInput: GetPaginationInputFn<
   MexcNextPageToken,
   MexcPaginationParams
 > = (since, until, nextPageToken) => {
+  /**
+   * Mexc API is [since, until]
+   * It does respect ms filters, but returns timestamp rounded to seconds
+   */
+
+  let _until: number;
+  if (nextPageToken) {
+    /**
+     * Inlcude it as is to cover same-seconds trades between pages
+     */
+    _until = nextPageToken.oldestTradeAt;
+  } else {
+    _until = until - 1;
+  }
+
   const params: MexcPaginationParams = {
-    until: nextPageToken?.nextPageUntil || until,
+    until: _until,
   };
 
   return {
@@ -58,7 +73,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
   }
 
   const nextPageToken: MexcNextPageToken = {
-    nextPageUntil: newTrades.at(-1)!.timestamp,
+    oldestTradeAt: newTrades.at(-1)!.timestamp,
     /**
      * Keep ids from up to two last full pages in order to dedup,
      * because we only need two pages to detect if we stuck in situation

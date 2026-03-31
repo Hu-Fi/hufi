@@ -25,18 +25,17 @@ export const getPaginationInput: GetPaginationInputFn<
   PaginationParams
 > = (since, until, nextPageToken) => {
   /**
-   * Make boundaries inclusive, because HTX doesn't
+   * HTX boundaries are exclusive, i.e. (since, until)
    */
   const _since = since - 1;
-  const _until = until + 1;
 
   const params: HtxPaginationParams = {
-    until: _until,
+    until,
     size: 250, // max allowed is 500;
     direct: 'next',
   };
 
-  if (nextPageToken?.oldestPaginationRecord) {
+  if (nextPageToken) {
     params.from = nextPageToken.oldestPaginationRecord.id;
   }
 

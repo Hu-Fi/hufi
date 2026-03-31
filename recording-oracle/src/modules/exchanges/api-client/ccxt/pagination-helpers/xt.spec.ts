@@ -30,14 +30,14 @@ describe('bybit pagination helpers', () => {
         since,
         params: {
           direction: 'NEXT',
-          endTime: until,
+          endTime: until - 1,
         },
       });
     });
 
     it('should return correct pagination input with nextPageToken', () => {
       const nextPageToken: XtNextPageToken = {
-        nextPageUntil: faker.date.recent({ refDate: until }).getTime(),
+        oldestTradeAt: faker.date.recent({ refDate: until }).getTime(),
         movingDedupIds: [faker.string.ulid()],
       };
 
@@ -48,7 +48,7 @@ describe('bybit pagination helpers', () => {
         since,
         params: {
           direction: 'NEXT',
-          endTime: nextPageToken.nextPageUntil,
+          endTime: nextPageToken.oldestTradeAt,
         },
       });
     });
@@ -80,7 +80,7 @@ describe('bybit pagination helpers', () => {
 
       const currentPageToken = {
         movingDedupIds: _.map(trades, 'id'),
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -94,11 +94,11 @@ describe('bybit pagination helpers', () => {
       expect(result.nextPageToken).toBeUndefined();
     });
 
-    it('should generate correct nextPageUntil and movingDedupIds when no duplicates', () => {
+    it('should generate correct oldestTradeAt and movingDedupIds when no duplicates', () => {
       const trades = Array.from({ length: 3 }, () => generateCcxtTrade());
       const currentPageToken: XtNextPageToken = {
         movingDedupIds: [],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -110,7 +110,7 @@ describe('bybit pagination helpers', () => {
 
       expect(result.trades).toEqual(trades);
       expect(result.nextPageToken).toEqual({
-        nextPageUntil: trades.at(-1)!.timestamp,
+        oldestTradeAt: trades.at(-1)!.timestamp,
         movingDedupIds: _.map(trades, 'id'),
       });
     });
@@ -124,7 +124,7 @@ describe('bybit pagination helpers', () => {
 
       const currentPageToken: XtNextPageToken = {
         movingDedupIds: ['2'],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -136,7 +136,7 @@ describe('bybit pagination helpers', () => {
 
       expect(_.map(result.trades, 'id')).toEqual(['1', '3']);
       expect(result.nextPageToken).toEqual({
-        nextPageUntil: trades.at(-1)!.timestamp,
+        oldestTradeAt: trades.at(-1)!.timestamp,
         movingDedupIds: ['2', '1', '3'],
       });
     });
@@ -151,7 +151,7 @@ describe('bybit pagination helpers', () => {
       const trades = Array.from({ length: 3 }, () => generateCcxtTrade());
       const currentPageToken: XtNextPageToken = {
         movingDedupIds: [],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
