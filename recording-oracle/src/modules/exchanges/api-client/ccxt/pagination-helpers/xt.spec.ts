@@ -12,7 +12,7 @@ import { generateCcxtTrade } from '../fixtures';
 
 const mockedCcxtClient = createMock<Exchange>();
 
-describe('bybit pagination helpers', () => {
+describe('xt pagination helpers', () => {
   describe('getPaginationInput', () => {
     let since: number;
     let until: number;

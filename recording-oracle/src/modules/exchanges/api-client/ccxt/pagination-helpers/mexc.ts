@@ -26,7 +26,7 @@ export const getPaginationInput: GetPaginationInputFn<
   let _until: number;
   if (nextPageToken) {
     /**
-     * Inlcude it as is to cover same-seconds trades between pages
+     * Include it as is to cover same-seconds trades between pages
      */
     _until = nextPageToken.oldestTradeAt;
   } else {

@@ -1339,7 +1339,7 @@ export class CampaignsService implements OnModuleDestroy {
         await this.campaignsCache.setChainDiscoveryAnchor(
           chainId,
           /**
-           * Some campaigns might be reated within the same block
+           * Some campaigns might be сreated within the same block
            * but not yet synced to subgraph, so use last discovered
            * campaign date as anchor to avoid missing them
            */
