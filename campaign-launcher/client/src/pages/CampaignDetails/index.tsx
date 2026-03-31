@@ -8,6 +8,7 @@ import CampaignStats from '@/components/CampaignStats';
 import CycleInfoSection from '@/components/CycleInfoSection';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
+import Leaderboard from '@/components/Leaderboard';
 import PageWrapper from '@/components/PageWrapper';
 import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
 import { useGetLeaderboard } from '@/hooks/recording-oracle/campaign';
@@ -123,6 +124,7 @@ const CampaignDetails: FC = () => {
           <JoinCampaignButton campaign={campaignData as Campaign} />
         </BottomButtonWrapper>
       )}
+      {campaignData && <Leaderboard campaign={campaignData} />}
     </PageWrapper>
   );
 };
