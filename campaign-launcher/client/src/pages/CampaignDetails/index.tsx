@@ -16,7 +16,12 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { CampaignStatus, type Campaign, type EvmAddress } from '@/types';
+import {
+  CampaignStatus,
+  CampaignType,
+  type Campaign,
+  type EvmAddress,
+} from '@/types';
 import { isCampaignDetails } from '@/utils';
 
 const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
@@ -100,6 +105,12 @@ const CampaignDetails: FC = () => {
 
   useReserveLayoutBottomOffset(showJoinCampaignButton);
 
+  const showLeaderboard =
+    campaignData &&
+    campaignData.status === CampaignStatus.ACTIVE &&
+    campaignData.type !== CampaignType.THRESHOLD &&
+    leaderboard;
+
   return (
     <PageWrapper>
       <CampaignInfo
@@ -124,7 +135,9 @@ const CampaignDetails: FC = () => {
           <JoinCampaignButton campaign={campaignData as Campaign} />
         </BottomButtonWrapper>
       )}
-      {campaignData && <Leaderboard campaign={campaignData} />}
+      {showLeaderboard && (
+        <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
+      )}
     </PageWrapper>
   );
 };

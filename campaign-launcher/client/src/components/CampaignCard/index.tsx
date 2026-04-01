@@ -18,6 +18,7 @@ import {
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
+  getCompactNumberParts,
 } from '@/utils';
 
 type Props = {
