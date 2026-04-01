@@ -289,7 +289,7 @@ export class CampaignLeaderboardResponseDto {
   data: LeaderboardEntry[];
 
   @ApiProperty()
-  total: string;
+  total: number;
 
   @ApiProperty({
     name: 'actual_on',

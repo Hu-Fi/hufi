@@ -1536,7 +1536,7 @@ export class CampaignsService implements OnModuleDestroy {
     campaignAddress: string,
   ): Promise<{
     entries: LeaderboardEntry[];
-    total: string;
+    total: number;
     actualOn: Date;
   }> {
     const campaign = await this.findOneByChainIdAndAddress(
@@ -1550,7 +1550,7 @@ export class CampaignsService implements OnModuleDestroy {
        */
       return {
         entries: [],
-        total: '0',
+        total: 0,
         actualOn: new Date(),
       };
     }
@@ -1597,7 +1597,7 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     const leaderboardEntries: LeaderboardEntry[] = [];
-    let total = new Decimal(0);
+    let total = 0;
     for (const participantOutcome of resultsToInspect) {
       let result: number;
       if (
@@ -1613,7 +1613,7 @@ export class CampaignsService implements OnModuleDestroy {
         );
       }
 
-      total = total.add(result);
+      total += result;
       leaderboardEntries.push({
         address: participantOutcome.address,
         score: participantOutcome.score,
@@ -1623,9 +1623,7 @@ export class CampaignsService implements OnModuleDestroy {
 
     return {
       entries: _.orderBy(leaderboardEntries, 'score', 'desc'),
-      total: total
-        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-        .toString(),
+      total,
       actualOn,
     };
   }

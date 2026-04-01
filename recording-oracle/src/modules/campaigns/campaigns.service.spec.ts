@@ -4924,7 +4924,7 @@ describe('CampaignsService', () => {
 
       expect(data).toEqual({
         actualOn: now,
-        total: '0',
+        total: 0,
         entries: [],
       });
     });
@@ -4975,13 +4975,13 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
-        let expectedTotal = new Decimal(0);
+        let expectedTotal = 0;
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
             // prettier-ignore
             const result = (outcome.total_volume || outcome.total_balance) as number;
 
-            expectedTotal = expectedTotal.add(result);
+            expectedTotal += result;
 
             return {
               address: outcome.address,
@@ -4994,9 +4994,7 @@ describe('CampaignsService', () => {
         );
         expect(data).toEqual({
           entries: expectedEntries,
-          total: expectedTotal
-            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-            .toString(),
+          total: expectedTotal,
           actualOn: now,
         });
       },
@@ -5025,13 +5023,13 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
-        let expectedTotal = new Decimal(0);
+        let expectedTotal = 0;
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
             // prettier-ignore
             const result = (outcome.total_volume || outcome.total_balance) as number;
 
-            expectedTotal = expectedTotal.add(result);
+            expectedTotal += result;
 
             return {
               address: outcome.address,
@@ -5044,9 +5042,7 @@ describe('CampaignsService', () => {
         );
         expect(data).toEqual({
           entries: expectedEntries,
-          total: expectedTotal
-            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-            .toString(),
+          total: expectedTotal,
           actualOn: cacheCycleTo,
         });
       },
@@ -5064,7 +5060,7 @@ describe('CampaignsService', () => {
 
         expect(data).toEqual({
           actualOn: now,
-          total: '0',
+          total: 0,
           entries: [],
         });
       },
