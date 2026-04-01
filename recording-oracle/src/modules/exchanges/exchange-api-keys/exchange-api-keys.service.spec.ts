@@ -92,8 +92,8 @@ describe('ExchangeApiKeysService', () => {
       Object.assign(generateExchangeApiKeysData(), { userId: '' }),
       Object.assign(generateExchangeApiKeysData(), { apiKey: '' }),
       Object.assign(generateExchangeApiKeysData(), { secretKey: '' }),
-    ])('should throw if required param is missing [%#]', async (input) => {
-      let thrownError;
+    ])('should throw when required param is missing [%#]', async (input) => {
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -104,13 +104,13 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Invalid arguments');
     });
 
-    it('should throw if not supported exchange', async () => {
+    it('should throw when not supported exchange', async () => {
       mockExchangesConfigService.configByExchange[input.exchangeName] = {
         enabled: false,
         type: ExchangeType.DEX,
       };
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -121,7 +121,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Only CEX exchanges support API keys');
     });
 
-    it('should throw if provided keys do not have required access', async () => {
+    it('should throw when provided keys do not have required access', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
 
       const missingPermissions = faker.helpers.arrayElements(
@@ -133,7 +133,7 @@ describe('ExchangeApiKeysService', () => {
         missing: missingPermissions,
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -145,7 +145,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.missingPermissions).toBe(missingPermissions);
     });
 
-    it('should rethrow if user not exists', async () => {
+    it('should rethrow when user not exists', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
@@ -154,7 +154,7 @@ describe('ExchangeApiKeysService', () => {
       const testError = new Error('Synthetic user not exist');
       mockUsersService.assertUserExistsById.mockRejectedValueOnce(testError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);
       } catch (error) {
@@ -197,7 +197,6 @@ describe('ExchangeApiKeysService', () => {
     it('should upsert encrypted keys if data is valid and extras provided', async () => {
       input.extras = {
         [faker.string.alpha()]: faker.string.sample(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
 
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
@@ -229,13 +228,13 @@ describe('ExchangeApiKeysService', () => {
   });
 
   describe('retrieve', () => {
-    it('should throw if key not found for the user', async () => {
+    it('should throw when key not found for the user', async () => {
       const { userId, exchangeName } = generateExchangeApiKeysData();
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangeApiKeysService.retrieve(userId, exchangeName);
       } catch (error) {
@@ -334,11 +333,11 @@ describe('ExchangeApiKeysService', () => {
       exchangeName = faker.lorem.slug();
     });
 
-    it('should throw if key not found', async () => {
+    it('should throw when key not found', async () => {
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
       );
-      let thrownError;
+      let thrownError: any;
 
       try {
         await exchangeApiKeysService.markValidity(

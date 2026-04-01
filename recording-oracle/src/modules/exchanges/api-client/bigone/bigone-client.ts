@@ -50,7 +50,7 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
     propertyKey: string,
     descriptor: TypedPropertyDescriptor<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this: BigoneClient, ...args: unknown[]) => any
+      (this: BigoneClient, ...args: any[]) => any
     >,
   ) {
     const original = descriptor.value!;
@@ -98,7 +98,12 @@ export class BigoneClient implements ExchangeApiClient {
     secret,
     userId,
     loggingConfig,
+    sandbox,
   }: BigoneClientInitOptions) {
+    if (sandbox) {
+      throw new Error(`Sandbox mode is not supported for ${this.exchangeName}`);
+    }
+
     if (!userId) {
       throw new Error('userId is missing');
     }

@@ -7,6 +7,7 @@ import { CampaignProgress } from './types';
 
 enum CampaignsDataKey {
   INTERIM_PROGRESS = 'interim_progress',
+  DISCOVERY_ANCHOR = 'discovered_at',
 }
 
 @Injectable()
@@ -41,5 +42,32 @@ export class CampaignsCache {
     ]);
 
     await this.cacheManager.set(cacheKey, JSON.stringify(progress), expiresAt);
+  }
+
+  async getChainDiscoveryAnchor(chainId: number): Promise<Date | null> {
+    const cacheKey = CacheManager.makeCacheKey([
+      chainId,
+      CampaignsDataKey.DISCOVERY_ANCHOR,
+    ]);
+
+    const lastDiscoveryAt = await this.cacheManager.get<string>(cacheKey);
+
+    if (lastDiscoveryAt === null) {
+      return null;
+    }
+
+    return new Date(lastDiscoveryAt);
+  }
+
+  async setChainDiscoveryAnchor(
+    chainId: number,
+    lastDiscoveryAt: Date,
+  ): Promise<void> {
+    const cacheKey = CacheManager.makeCacheKey([
+      chainId,
+      CampaignsDataKey.DISCOVERY_ANCHOR,
+    ]);
+
+    await this.cacheManager.set(cacheKey, lastDiscoveryAt.toISOString());
   }
 }

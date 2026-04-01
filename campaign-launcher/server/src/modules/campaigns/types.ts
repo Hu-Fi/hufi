@@ -1,4 +1,4 @@
-type BaseCampaignManifest = {
+export type BaseCampaignManifest = {
   type: string;
   exchange: string;
   start_date: Date;
@@ -24,6 +24,7 @@ export type CompetitiveMarketMakingCampaignManifest = BaseCampaignManifest & {
 export type ThresholdCampaignManifest = BaseCampaignManifest & {
   symbol: string;
   minimum_balance_target: number;
+  max_participants?: number;
 };
 
 export type CampaignManifest =

@@ -117,7 +117,7 @@ export class HyperliquidClient implements ExchangeApiClient {
             user: this.userEvmAddress,
             /**
              * https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#retrieve-a-users-fills-by-time
-             * Both "since" and "until" are inclusive.
+             * Both "since" and "until" are inclusive in API
              */
             until: until - 1,
           },

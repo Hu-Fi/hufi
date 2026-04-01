@@ -13,6 +13,7 @@ export type CexApiClientInitOptions = {
   apiKey: string;
   secret: string;
   extraCreds?: ExtraCreds;
+  sandbox?: boolean;
   loggingConfig?: Partial<{
     logPermissionErrors: boolean;
   }>;
@@ -32,6 +33,9 @@ export interface ExchangeApiClient {
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult>;
 
+  /**
+   * Fetch interval is [since; until)
+   */
   fetchMyTrades(
     symbol: string,
     since: number,

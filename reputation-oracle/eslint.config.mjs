@@ -55,4 +55,10 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ['**/*spec.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 );

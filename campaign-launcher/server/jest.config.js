@@ -10,8 +10,7 @@ const config = {
   roots: ['<rootDir>/src'],
   testEnvironment: 'node',
   testRegex: '.*\\.spec\\.ts$',
-  modulePaths: [compilerOptions.baseUrl],
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>' }),
   clearMocks: true,
   setupFiles: ['<rootDir>/src/setup-libs.ts'],
 };

@@ -68,7 +68,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     mockRefresTokenRepository.insert.mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // @ts-expect-error - no need to have exact TypeORM type here
       async (entity: RefreshTokenEntity): Promise<any> => {
         if (!entity.id) {
           entity.id = faker.string.uuid();
@@ -144,8 +144,8 @@ describe('AuthService', () => {
       spyOnGenerateTokens.mockRestore();
     });
 
-    it('should throw if invalid signature', async () => {
-      let thrownError;
+    it('should throw when invalid signature', async () => {
+      let thrownError: any;
       try {
         await authService.auth(
           faker.string.hexadecimal(),
@@ -159,7 +159,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
     });
 
-    it('should throw if valid signup signature for wrong address', async () => {
+    it('should throw when valid signup signature for wrong address', async () => {
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(null);
 
       const ethWallet = generateEthWallet();
@@ -170,7 +170,7 @@ describe('AuthService', () => {
         ethWallet.privateKey,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.auth(signature, abuseAddress);
       } catch (error) {
@@ -181,7 +181,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
     });
 
-    it('should throw if valid nonce signature for wrong address', async () => {
+    it('should throw when valid nonce signature for wrong address', async () => {
       const user = generateUserEntity();
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(user);
 
@@ -192,7 +192,7 @@ describe('AuthService', () => {
         ethWallet.privateKey,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.auth(signature, user.evmAddress);
       } catch (error) {
@@ -280,7 +280,7 @@ describe('AuthService', () => {
     it('should throw when token not found', async () => {
       mockRefresTokenRepository.findOneById.mockResolvedValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.refresh(refreshToken);
       } catch (error) {
@@ -297,7 +297,7 @@ describe('AuthService', () => {
         expiresAt: faker.date.past(),
       } as RefreshTokenEntity);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.refresh(refreshToken);
       } catch (error) {
@@ -319,7 +319,7 @@ describe('AuthService', () => {
         refreshTokenEntity,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await authService.refresh(refreshToken);
       } catch (error) {

@@ -2,28 +2,21 @@
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "target": "es2024",
     "rootDir": ".",
     "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "strictBindCallApply": true,
     "paths": {
-      "@/*": ["src/*"],
-      "~/test/*": ["test/*"]
+      "@/*": ["./src/*"],
+      "~/test/*": ["./test/*"]
     },
-    "resolveJsonModule": true
+    "incremental": true,
+    "isolatedModules": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "types": ["jest", "lodash", "node"]
   },
   "ts-node": {
     "files": true,

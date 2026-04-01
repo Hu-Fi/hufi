@@ -26,11 +26,10 @@ import {
 } from '../types';
 import * as apiClientUtils from '../utils';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
-import { type MexcNextPageToken } from './types';
+import { getPaginationHelpers } from './pagination-helpers';
 import * as ccxtClientUtils from './utils';
 
 export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
-  sandbox?: boolean;
   preloadedExchangeClient?: Exchange;
 }
 
@@ -40,7 +39,7 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
     propertyKey: string,
     descriptor: TypedPropertyDescriptor<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this: CcxtExchangeClient, ...args: unknown[]) => any
+      (this: CcxtExchangeClient, ...args: any[]) => any
     >,
   ) {
     const original = descriptor.value!;
@@ -51,7 +50,8 @@ function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
     ) {
       try {
         return await original.apply(this, args);
-      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
         error[ccxtClientUtils.ERROR_EXCHANGE_NAME_PROP] = this.exchangeName;
         if (ccxtClientUtils.isExchangeApiAccessError(error)) {
           if (this.loggingConfig.logPermissionErrors) {
@@ -206,54 +206,14 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     symbol: string,
     inputs: { since: number; until: number; nextPageToken?: unknown },
   ): Promise<{ trades: CcxtTrade[]; nextPageToken?: unknown }> {
-    let since: number | undefined;
-    let limit: number | undefined;
-    const params: Record<string, unknown> = {};
+    const { getPaginationInput, handlePaginationResponse } =
+      getPaginationHelpers(this.exchangeName);
 
-    switch (this.exchangeName) {
-      case ExchangeName.BYBIT: {
-        // max is 100
-        limit = 100;
-        since = inputs.since;
-        params.endTime = inputs.until;
-
-        if (inputs.nextPageToken) {
-          params.cursor = inputs.nextPageToken;
-        }
-
-        break;
-      }
-      case ExchangeName.GATE: {
-        // max is 1000
-        limit = 250;
-        since = inputs.since;
-        /**
-         * Origin API has it as 'to', but it's in seconds,
-         * so pass it as 'until' for ccxt to convert it.
-         */
-        params.until = inputs.until;
-        params.page = inputs.nextPageToken || 1;
-
-        break;
-      }
-      case ExchangeName.MEXC: {
-        // max is 100
-        limit = 100;
-        since = inputs.since;
-
-        const nextPageToken = inputs.nextPageToken as
-          | MexcNextPageToken
-          | undefined;
-        params.until = nextPageToken?.nextPageUntil || inputs.until;
-        break;
-      }
-      default:
-        if (Environment.isTest()) {
-          since = (inputs.nextPageToken as number) || inputs.since;
-          break;
-        }
-        throw new Error('Pagination mechanism should be defined for ccxt');
-    }
+    const { since, params, limit } = getPaginationInput(
+      inputs.since,
+      inputs.until,
+      inputs.nextPageToken,
+    );
 
     let trades = await this.ccxtClient.fetchMyTrades(
       symbol,
@@ -271,82 +231,18 @@ export class CcxtExchangeClient implements ExchangeApiClient {
      */
     trades = _.orderBy(trades, 'timestamp', 'desc');
 
-    let nextPageToken: unknown;
-    switch (this.exchangeName) {
-      case ExchangeName.BYBIT: {
-        const lastResponse = this.ccxtClient.parseJson(
-          this.ccxtClient.last_http_response,
-        );
-        nextPageToken = lastResponse.result.nextPageCursor;
-        break;
-      }
-      case ExchangeName.GATE: {
-        const lastPage = params.page as number;
-
-        // there is a hard limit on number of pages
-        if (lastPage < 100) {
-          nextPageToken = lastPage + 1;
-        }
-        break;
-      }
-      case ExchangeName.MEXC: {
-        const currentPageToken = inputs.nextPageToken as
-          | MexcNextPageToken
-          | undefined;
-        const movingDedupIds = new Set(currentPageToken?.movingDedupIds || []);
-
-        /**
-         * There might be same-second trades that are cut by limit param,
-         * so in order to retrieve all trades we need to query next page
-         * using same timestamp as a boundary object and filter entries
-         * with same timestamp from previous pages.
-         *
-         * We have to keep all trades ids to avoid infinite fetches when
-         * the whole page consists of same-seconds trades.
-         */
-        const newTrades: CcxtTrade[] = [];
-        for (const trade of trades) {
-          if (movingDedupIds.has(trade.id)) {
-            continue;
-          }
-
-          newTrades.push(trade);
-        }
-
-        if (newTrades.length === 0) {
-          return { trades: [] };
-        }
-
-        trades = newTrades;
-
-        (nextPageToken as MexcNextPageToken) = {
-          nextPageUntil: trades.at(-1)!.timestamp,
-          /**
-           * Keep ids from up to two last full pages in order to dedup,
-           * because we only need two pages to detect if we stuck in situation
-           * where there are more trades within same-second than trades page limit.
-           */
-          movingDedupIds: [...movingDedupIds, ..._.map(newTrades, 'id')].slice(
-            -1 * limit! * 2,
-          ),
-        };
-        break;
-      }
-      default:
-        if (Environment.isTest()) {
-          // mimic ccxt pagination example for unit tests
-          trades = _.orderBy(trades, 'timestamp', 'asc');
-          nextPageToken = trades.at(-1)!.timestamp + 1;
-        }
-        break;
-    }
-
-    return { trades, nextPageToken };
+    return handlePaginationResponse({
+      trades,
+      ccxtClient: this.ccxtClient,
+      paginationParams: params,
+      currentPageToken: inputs.nextPageToken,
+    });
   }
 
   /**
    * Returns all historical trades, both for fully and partially filled orders,
    * i.e. returns historical data for actual buy/sell that happened.
+   * Fetch interval is [since; until)
    */
   async *fetchMyTrades(
     symbol: string,

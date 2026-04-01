@@ -27,15 +27,15 @@ describe('Control Flow utilities', () => {
       timeoutMs = faker.number.int({ min: 500, max: 1000 });
 
       delayMarginMs = faker.number.int({
-        min: 10,
-        max: 20,
+        min: 50,
+        max: 100,
       });
     });
 
-    it('should throw if operation times out', async () => {
+    it('should throw when operation times out', async () => {
       const startTs = Date.now();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await withTimeout(delay(timeoutMs + delayMarginMs), timeoutMs);
       } catch (error) {

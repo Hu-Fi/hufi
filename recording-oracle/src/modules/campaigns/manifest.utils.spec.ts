@@ -34,7 +34,7 @@ describe('manifest utils', () => {
     it('should throw when manifest not found', async () => {
       const scope = nock(manifestUrl).get('/').reply(404);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await manifestUtils.downloadCampaignManifest(
           manifestUrl,
@@ -55,7 +55,7 @@ describe('manifest utils', () => {
       const invalidHash = faker.string.hexadecimal();
       const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await manifestUtils.downloadCampaignManifest(manifestUrl, invalidHash);
       } catch (error) {
@@ -132,7 +132,7 @@ describe('manifest utils', () => {
       'should throw when invalid base manifest schema [%#]',
       async (manifestResponse) => {
         const manifest = JSON.stringify(manifestResponse);
-        let thrownError;
+        let thrownError: any;
         try {
           manifestUtils.validateBaseSchema(manifest);
         } catch (error) {
@@ -233,7 +233,7 @@ describe('manifest utils', () => {
         daily_volume_target: Number.MAX_SAFE_INTEGER + 42,
       }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
-      let thrownError;
+      let thrownError: any;
       try {
         manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
       } catch (error) {
@@ -294,7 +294,7 @@ describe('manifest utils', () => {
         daily_balance_target: Number.MAX_SAFE_INTEGER + 42,
       }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
-      let thrownError;
+      let thrownError: any;
       try {
         manifestUtils.assertValidHoldingCampaignManifest(manifest);
       } catch (error) {
@@ -368,7 +368,7 @@ describe('manifest utils', () => {
         rewards_distribution: [60, 41],
       }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
-      let thrownError;
+      let thrownError: any;
       try {
         manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest(
           manifest,
@@ -412,7 +412,10 @@ describe('manifest utils', () => {
     const validManifest = generateThresholdampaignManifest();
 
     it.each([
-      { ...validManifest },
+      Object.assign({}, validManifest, { max_participants: undefined }),
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: 1 }),
+      }),
       Object.assign({}, validManifest, {
         symbol: `5${faker.string.alphanumeric({
           casing: 'upper',
@@ -454,8 +457,24 @@ describe('manifest utils', () => {
       Object.assign({}, validManifest, {
         minimum_balance_target: Number.MAX_SAFE_INTEGER + 42,
       }),
+      // max participants string
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: 1 }).toString(),
+      }),
+      // max participants zero
+      Object.assign({}, validManifest, {
+        max_participants: 0,
+      }),
+      // max participants negative
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: -42, max: -1 }),
+      }),
+      // max participants non-integer
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.float({ fractionDigits: 3 }),
+      }),
     ])('should throw when invalid manifest schema [%#]', async (manifest) => {
-      let thrownError;
+      let thrownError: any;
       try {
         manifestUtils.assertValidThresholdCampaignManifest(manifest);
       } catch (error) {

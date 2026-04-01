@@ -16,49 +16,43 @@ export class ExchangesConfigService {
   constructor(private configService: ConfigService) {
     this.configByExchange = Object.freeze({
       [ExchangeName.BIGONE]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_BIGONE', 'true') === 'true',
         type: ExchangeType.CEX,
         skipCcxtPreload: true,
       },
       [ExchangeName.BITMART]: {
-        enabled: false,
+        enabled: this.configService.get('FEATURE_BITMART', 'true') === 'true',
         type: ExchangeType.CEX,
       },
       [ExchangeName.BYBIT]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_BYBIT', 'true') === 'true',
         type: ExchangeType.CEX,
       },
       [ExchangeName.GATE]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_GATE', 'true') === 'true',
         type: ExchangeType.CEX,
       },
       [ExchangeName.HTX]: {
-        enabled: false,
+        enabled: this.configService.get('FEATURE_HTX', 'true') === 'true',
         type: ExchangeType.CEX,
       },
       [ExchangeName.HYPERLIQUID]: {
-        enabled: this.isHyperliquidEnabled,
+        enabled:
+          this.configService.get('FEATURE_HYPERLIQUID', 'true') === 'true',
         type: ExchangeType.DEX,
       },
-      [ExchangeName.KRAKEN]: {
-        enabled: false,
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.MEXC]: {
-        enabled: true,
+        enabled: this.configService.get('FEATURE_MEXC', 'true') === 'true',
         type: ExchangeType.CEX,
       },
       [ExchangeName.PANCAKESWAP]: {
-        enabled: this.isPancakeswapEnabled,
+        enabled:
+          this.configService.get('FEATURE_PANCAKESWAP', 'true') === 'true',
         type: ExchangeType.DEX,
         skipCcxtPreload: true,
       },
-      [ExchangeName.UPBIT]: {
-        enabled: false,
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.XT]: {
-        enabled: false,
+        enabled: this.configService.get('FEATURE_XT', 'true') === 'true',
         type: ExchangeType.CEX,
       },
     });
@@ -66,14 +60,6 @@ export class ExchangesConfigService {
 
   get useSandbox(): boolean {
     return this.configService.get('USE_EXCHANGE_SANDBOX', '') === 'true';
-  }
-
-  private get isPancakeswapEnabled(): boolean {
-    return this.configService.get('FEATURE_PANCAKESWAP', '') === 'true';
-  }
-
-  private get isHyperliquidEnabled(): boolean {
-    return this.configService.get('FEATURE_HYPERLIQUID', '') === 'true';
   }
 
   isExchangeSupported(exchangeName: string): exchangeName is ExchangeName {

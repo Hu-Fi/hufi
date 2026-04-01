@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@human-protocol/sdk');
 jest.mock('@/logger');
 
@@ -185,7 +184,7 @@ describe('PayoutsService', () => {
       const syntheticError = new Error(faker.lorem.sentence());
       mockedEscrowUtils.getEscrows.mockRejectedValueOnce(syntheticError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await payoutsService['getCampaignsForPayouts'](chainId);
       } catch (error) {
@@ -1184,10 +1183,11 @@ describe('PayoutsService', () => {
         .mockReset()
         .mockResolvedValueOnce(EscrowStatus.ToCancel);
 
-      const now = Date.now();
+      const now = new Date();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(now);
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
         Object.assign(generateManifest(), {
-          start_date: new Date(now + 1).toISOString(),
+          start_date: new Date(now.valueOf() + 1).toISOString(),
         }),
       );
 

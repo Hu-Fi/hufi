@@ -58,7 +58,7 @@ describe('CcxtExchangeClient', () => {
 
     it('should not create instance if exchange not supported', () => {
       const exchangeName = faker.lorem.slug();
-      let thrownError;
+      let thrownError: any;
       try {
         new CcxtExchangeClient(exchangeName, {
           apiKey: faker.string.sample(),
@@ -202,7 +202,7 @@ describe('CcxtExchangeClient', () => {
         const testError = new ccxt.NetworkError(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(testError);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await ccxtExchangeApiClient.checkRequiredAccess(exchangePermissions);
         } catch (error) {
@@ -224,7 +224,7 @@ describe('CcxtExchangeClient', () => {
         const testError = new Error(faker.lorem.sentence());
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await ccxtExchangeApiClient.checkRequiredAccess(exchangePermissions);
         } catch (error) {
@@ -268,7 +268,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledWith(
           'ETH/USDT',
           now - 1,
-          undefined,
+          42,
           {},
         );
       });
@@ -413,7 +413,7 @@ describe('CcxtExchangeClient', () => {
           1,
           tradingPair,
           tradesSince.valueOf(),
-          undefined,
+          42,
           {},
         );
         for (const [index, tradesPage] of tradesPages.entries()) {
@@ -421,7 +421,7 @@ describe('CcxtExchangeClient', () => {
             index + 2,
             tradingPair,
             tradesPage.at(-1)!.timestamp + 1,
-            undefined,
+            42,
             {},
           );
         }
@@ -434,7 +434,7 @@ describe('CcxtExchangeClient', () => {
         const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(testError);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await controlFlow.consumeIteratorOnce(
             ccxtExchangeApiClient.fetchMyTrades(
@@ -481,7 +481,7 @@ describe('CcxtExchangeClient', () => {
                 new Error(errorMessage),
               );
 
-              let thrownError;
+              let thrownError: any;
               try {
                 await controlFlow.consumeIteratorOnce(
                   mexcClient.fetchMyTrades(
@@ -518,7 +518,7 @@ describe('CcxtExchangeClient', () => {
             );
             mockedExchange.fetchMyTrades.mockRejectedValueOnce(nonMexcError);
 
-            let thrownError;
+            let thrownError: any;
             try {
               await controlFlow.consumeIteratorOnce(
                 exchangeClient.fetchMyTrades(
@@ -558,7 +558,7 @@ describe('CcxtExchangeClient', () => {
         const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(testError);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await ccxtExchangeApiClient.fetchBalance();
         } catch (error) {
@@ -598,7 +598,7 @@ describe('CcxtExchangeClient', () => {
                 new Error(errorMessage),
               );
 
-              let thrownError;
+              let thrownError: any;
               try {
                 await mexcClient.fetchBalance();
               } catch (error) {
@@ -629,7 +629,7 @@ describe('CcxtExchangeClient', () => {
             );
             mockedExchange.fetchBalance.mockRejectedValueOnce(nonMexcError);
 
-            let thrownError;
+            let thrownError: any;
             try {
               await exchangeClient.fetchBalance();
             } catch (error) {
@@ -670,7 +670,7 @@ describe('CcxtExchangeClient', () => {
         const testError = new ErrorConstructor(faker.lorem.sentence());
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await ccxtExchangeApiClient.fetchDepositAddress(
             faker.finance.currencyCode(),
@@ -712,7 +712,7 @@ describe('CcxtExchangeClient', () => {
                 new Error(errorMessage),
               );
 
-              let thrownError;
+              let thrownError: any;
               try {
                 await mexcClient.fetchDepositAddress(
                   faker.finance.currencyCode(),
@@ -747,7 +747,7 @@ describe('CcxtExchangeClient', () => {
               nonMexcError,
             );
 
-            let thrownError;
+            let thrownError: any;
             try {
               await exchangeClient.fetchDepositAddress(
                 faker.finance.currencyCode(),

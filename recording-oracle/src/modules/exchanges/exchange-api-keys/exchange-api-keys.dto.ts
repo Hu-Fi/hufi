@@ -16,7 +16,7 @@ import {
 } from 'class-validator';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
-import { ClassConstructor } from '@/common/types';
+import type { ClassConstructor } from '@/common/types';
 import { ExchangeNameValidator } from '@/common/validators';
 
 export class ExchangeNameParamDto {

@@ -21,7 +21,7 @@ describe('HTTP utilities', () => {
     it('should throw for invalid url', async () => {
       const invalidUrl = faker.internet.domainName();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await httpUtils.downloadFile(invalidUrl);
       } catch (error) {
@@ -33,12 +33,12 @@ describe('HTTP utilities', () => {
       expect(thrownError.details).toBe('Invalid http url');
     });
 
-    it('should throw if file not found', async () => {
+    it('should throw when file not found', async () => {
       const url = faker.internet.url();
 
       const scope = nock(url).get('/').reply(404);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await httpUtils.downloadFile(url);
       } catch (error) {
@@ -58,7 +58,7 @@ describe('HTTP utilities', () => {
 
       const scope = nock(url).get('/').replyWithError(ERROR_MESSAGE);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await httpUtils.downloadFile(url);
       } catch (error) {
@@ -127,7 +127,7 @@ describe('HTTP utilities', () => {
         .reply(200, () => Readable.from(Buffer.from(fileContent)));
 
       const randomHash = generateRandomHashString('sha256');
-      let thrownError;
+      let thrownError: any;
       try {
         await httpUtils.downloadFileAndVerifyHash(fileUrl, randomHash);
       } catch (error) {

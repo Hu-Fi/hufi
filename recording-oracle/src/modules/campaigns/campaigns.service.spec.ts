@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('@human-protocol/sdk', () => {
   const mockedSdk = jest.createMockFromModule<
     typeof import('@human-protocol/sdk')
@@ -45,9 +44,9 @@ import {
 import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
 import logger from '@/logger';
 import {
-  ExchangeApiClientFactory,
   ExchangeApiAccessError,
   ExchangeApiClientError,
+  ExchangeApiClientFactory,
   ExchangeApiKeyNotFoundError,
   ExchangePermission,
   ExchangesService,
@@ -77,27 +76,28 @@ import {
   generateBaseCampaignManifest,
   generateCampaignEntity,
   generateCampaignManifest,
+  generateCampaignParticipant,
   generateCampaignProgress,
   generateCompetitiveMarketMakingCampaignManifest,
   generateHoldingCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
+  generateLeaderboardEntries,
   generateMarketMakingCampaignManifest,
   generateParticipantOutcome,
   generateStoredResultsMeta,
   generateThresholdampaignManifest,
-  MockCampaignProgressChecker,
-  MockProgressCheckResult,
-  generateCampaignParticipant,
-  mockCampaignsConfigService,
   generateUserJoinedDate,
-  generateLeaderboardEntries,
+  MockCampaignProgressChecker,
+  mockCampaignsConfigService,
+  MockProgressCheckResult,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 import {
   type CampaignParticipant,
   ParticipationsRepository,
   ParticipationsService,
+  UserAlreadyJoinedError,
 } from './participations';
 import {
   type CampaignProgressMeta,
@@ -119,6 +119,7 @@ import {
   LeaderboardRanking,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
+  type ThresholdCampaignManifest,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
@@ -234,7 +235,7 @@ describe('CampaignsService', () => {
     it('should throw when exchange from manifest not supported', () => {
       const manifest = generateCampaignManifest();
 
-      let thrownError;
+      let thrownError: any;
       try {
         campaignsService['assertCorrectCampaignSetup'](manifest);
       } catch (error) {
@@ -255,7 +256,7 @@ describe('CampaignsService', () => {
         },
       };
 
-      let thrownError;
+      let thrownError: any;
       try {
         campaignsService['assertCorrectCampaignSetup'](manifest);
       } catch (error) {
@@ -282,7 +283,7 @@ describe('CampaignsService', () => {
           },
         };
 
-        let thrownError;
+        let thrownError: any;
         try {
           campaignsService['assertCorrectCampaignSetup'](manifest);
         } catch (error) {
@@ -363,7 +364,7 @@ describe('CampaignsService', () => {
     it('should throw when escrow not found', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -388,7 +389,7 @@ describe('CampaignsService', () => {
         token: '',
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -414,7 +415,7 @@ describe('CampaignsService', () => {
         token: faker.finance.ethereumAddress(),
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -441,7 +442,7 @@ describe('CampaignsService', () => {
         totalFundedAmount: 0n,
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -470,7 +471,7 @@ describe('CampaignsService', () => {
         manifestHash: faker.string.hexadecimal(),
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -499,7 +500,7 @@ describe('CampaignsService', () => {
         manifestHash: faker.helpers.arrayElement(['', null]),
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -530,7 +531,7 @@ describe('CampaignsService', () => {
         recordingOracle: escrowRecordingOracle,
       } as IEscrow);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -554,7 +555,6 @@ describe('CampaignsService', () => {
     });
 
     it.each([
-      EscrowStatus[EscrowStatus.ToCancel],
       EscrowStatus[EscrowStatus.Cancelled],
       EscrowStatus[EscrowStatus.Complete],
     ])('should throw when escrow has "%s" status', async (escrowStatus) => {
@@ -569,7 +569,7 @@ describe('CampaignsService', () => {
         EscrowStatus[escrowStatus as unknown as EscrowStatus],
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -607,7 +607,7 @@ describe('CampaignsService', () => {
       const syntheticError = new Error(faker.lorem.sentence());
       spyOnDownloadCampaignManifest.mockRejectedValueOnce(syntheticError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -647,7 +647,7 @@ describe('CampaignsService', () => {
       } as IEscrow);
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -682,7 +682,7 @@ describe('CampaignsService', () => {
         JSON.stringify(mockedManifest),
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignData'](
           chainId,
@@ -932,52 +932,110 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should create threshold campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
-      const manifest = generateThresholdampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
+    describe('threshold campaign creation', () => {
+      let chainId: number;
+      let campaignAddress: string;
+      let manifest: ThresholdCampaignManifest;
+      let fundAmount: number;
+      let fundTokenSymbol: string;
+      let fundTokenDecimals: number;
 
-      const campaign = await campaignsService.createCampaign(
-        chainId,
-        campaignAddress,
-        manifest,
-        {
-          fundAmount,
-          fundTokenSymbol,
+      beforeEach(() => {
+        chainId = generateTestnetChainId();
+        campaignAddress = faker.finance.ethereumAddress();
+        manifest = generateThresholdampaignManifest();
+        fundAmount = faker.number.float();
+        fundTokenSymbol = faker.finance.currencyCode();
+        fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
+      });
+
+      it('should create with proper data', async () => {
+        const campaign = await campaignsService.createCampaign(
+          chainId,
+          campaignAddress,
+          manifest,
+          {
+            fundAmount,
+            fundTokenSymbol,
+            fundTokenDecimals,
+          },
+        );
+
+        expect(isUuidV4(campaign.id)).toBe(true);
+
+        const expectedCampaignData = {
+          id: expect.any(String),
+          chainId,
+          address: ethers.getAddress(campaignAddress),
+          type: manifest.type,
+          exchangeName: manifest.exchange,
+          symbol: manifest.symbol,
+          startDate: manifest.start_date,
+          endDate: manifest.end_date,
+          fundAmount: fundAmount.toString(),
+          fundToken: fundTokenSymbol,
           fundTokenDecimals,
-        },
-      );
+          details: expect.objectContaining({
+            minimumBalanceTarget: manifest.minimum_balance_target,
+          }),
+          status: 'active',
+          lastResultsAt: null,
+          resultsCutoffAt: null,
+        };
+        expect(campaign).toEqual(expectedCampaignData);
 
-      expect(isUuidV4(campaign.id)).toBe(true);
+        expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+        expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+          expectedCampaignData,
+        );
+      });
 
-      const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
-        type: manifest.type,
-        exchangeName: manifest.exchange,
-        symbol: manifest.symbol,
-        startDate: manifest.start_date,
-        endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
-        details: {
+      it('should create with maxParticipants in details when it is in manifest', async () => {
+        manifest = generateThresholdampaignManifest({
+          shouldHaveMaxParticipants: true,
+        });
+
+        const campaign = await campaignsService.createCampaign(
+          chainId,
+          campaignAddress,
+          manifest,
+          {
+            fundAmount,
+            fundTokenSymbol,
+            fundTokenDecimals,
+          },
+        );
+
+        expect(isUuidV4(campaign.id)).toBe(true);
+        expect(campaign.details).toEqual({
           minimumBalanceTarget: manifest.minimum_balance_target,
-        },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
-      };
-      expect(campaign).toEqual(expectedCampaignData);
+          maxParticipants: manifest.max_participants,
+        });
+        expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      });
 
-      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
-        expectedCampaignData,
-      );
+      it('should create without maxParticipants in details when manifest does not have it', async () => {
+        manifest = generateThresholdampaignManifest({
+          shouldHaveMaxParticipants: false,
+        });
+
+        const campaign = await campaignsService.createCampaign(
+          chainId,
+          campaignAddress,
+          manifest,
+          {
+            fundAmount,
+            fundTokenSymbol,
+            fundTokenDecimals,
+          },
+        );
+
+        expect(isUuidV4(campaign.id)).toBe(true);
+        expect(campaign.details).toEqual({
+          minimumBalanceTarget: manifest.minimum_balance_target,
+        });
+        expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
@@ -998,7 +1056,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should return campaign id if campaign exists and user already joined', async () => {
+    it('should throw when user already joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1006,22 +1064,29 @@ describe('CampaignsService', () => {
         generateUserJoinedDate(campaign),
       );
 
-      const id = await campaignsService.join(
-        userId,
-        chainId,
-        // not checksummed address
-        campaign.address.toLowerCase(),
-      );
+      let thrownError: any;
+      try {
+        await campaignsService.join(
+          userId,
+          chainId,
+          // not checksummed address
+          campaign.address.toLowerCase(),
+        );
+      } catch (error) {
+        thrownError = error;
+      }
 
-      expect(id).toBe(campaign.id);
+      expect(thrownError).toBeInstanceOf(UserAlreadyJoinedError);
+      expect(thrownError.userId).toBe(userId);
+      expect(thrownError.campaignId).toBe(campaign.id);
 
       expect(
         mockCampaignsRepository.findOneByChainIdAndAddress,
       ).toHaveBeenCalledWith(chainId, campaign.address);
-
       expect(
         mockParticipationsService.checkUserJoinedCampaign,
       ).toHaveBeenCalledWith(userId, campaign.id);
+      expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(0);
     });
 
     it('should return campaign id if campaign exists and user not joined yet', async () => {
@@ -1052,7 +1117,7 @@ describe('CampaignsService', () => {
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(1);
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledWith(
         userId,
-        campaign.id,
+        campaign,
       );
     });
 
@@ -1068,7 +1133,7 @@ describe('CampaignsService', () => {
         testError,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.join(userId, chainId, campaign.address);
       } catch (error) {
@@ -1135,10 +1200,12 @@ describe('CampaignsService', () => {
         escrowInfo,
       );
 
+      const expectedCampaignEntity =
+        await spyOnCreateCampaign.mock.results.at(-1)?.value;
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(1);
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledWith(
         userId,
-        campaignId,
+        expectedCampaignEntity,
       );
 
       spyOnretrieveCampaignData.mockRestore();
@@ -1156,7 +1223,7 @@ describe('CampaignsService', () => {
         null,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.join(userId, chainId, campaign.address);
       } catch (error) {
@@ -1185,7 +1252,7 @@ describe('CampaignsService', () => {
         );
         mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
-        let thrownError;
+        let thrownError: any;
         try {
           await campaignsService.join(userId, chainId, campaign.address);
         } catch (error) {
@@ -1273,7 +1340,7 @@ describe('CampaignsService', () => {
       const campaign = generateCampaignEntity();
       campaign.type = faker.string.sample() as any;
 
-      let thrownError;
+      let thrownError: any;
       try {
         campaignsService['getCampaignProgressChecker'](campaign.type, {
           exchangeName: campaign.exchangeName as ExchangeName,
@@ -1330,7 +1397,7 @@ describe('CampaignsService', () => {
       const testError = new Error(faker.lorem.sentence());
       spyOnDownloadFile.mockRejectedValueOnce(testError);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService['retrieveCampaignIntermediateResults'](campaign);
       } catch (error) {
@@ -1744,6 +1811,7 @@ describe('CampaignsService', () => {
         'Exchange access failed for provided api key',
         {
           participantId: noAccessParticipant.id,
+          participantEvmAddress: noAccessParticipant.evmAddress,
           error: syntheticError,
         },
       );
@@ -1757,7 +1825,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw if should retry some participant', async () => {
+    it('should throw when should retry some participant', async () => {
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [
           generateCampaignParticipant(campaign),
@@ -1777,7 +1845,7 @@ describe('CampaignsService', () => {
         syntheticError,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.checkCampaignProgressForPeriod(
           campaign,
@@ -1791,16 +1859,97 @@ describe('CampaignsService', () => {
       expect(thrownError).toEqual(syntheticError);
     });
 
-    it('should throw if invalid period passed', async () => {
+    it('should throw when invalid period passed', async () => {
       [periodStart, periodEnd] = [periodEnd, periodStart];
 
-      await expect(
-        campaignsService.checkCampaignProgressForPeriod(
-          campaign,
-          periodStart,
-          periodEnd,
-        ),
-      ).rejects.toThrow('Invalid period range provided');
+      try {
+        await expect(
+          campaignsService.checkCampaignProgressForPeriod(
+            campaign,
+            periodStart,
+            periodEnd,
+          ),
+        ).rejects.toThrow('Invalid period range provided');
+      } finally {
+        // set back to valid period for other tests
+        [periodStart, periodEnd] = [periodEnd, periodStart];
+      }
+    });
+
+    it('should exclude participants with zero score if flag is on', async () => {
+      const participants = Array.from({ length: 3 }, () =>
+        generateCampaignParticipant(campaign),
+      );
+
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        participants,
+      );
+      let callIdx = 0;
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        () => ({
+          abuseDetected: false,
+          score: callIdx++ % 2,
+        }),
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        periodStart,
+        periodEnd,
+        { excludeIneligible: true },
+      );
+
+      expect(
+        mockParticipationsRepository.removeParticipation,
+      ).toHaveBeenCalledTimes(Math.ceil(participants.length / 2));
+
+      for (const [idx, participant] of participants.entries()) {
+        const expectedScore = idx % 2;
+
+        expect(progress.participants_outcomes[idx]).toEqual({
+          address: participant.evmAddress,
+          score: expectedScore,
+        });
+
+        if (expectedScore === 0) {
+          expect(
+            mockParticipationsRepository.removeParticipation,
+          ).toHaveBeenCalledWith(participant.id, campaign.id);
+        }
+      }
+    });
+
+    it('should not exclude participants with zero score if flag is off', async () => {
+      const participants = Array.from({ length: 3 }, () =>
+        generateCampaignParticipant(campaign),
+      );
+
+      mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
+        participants,
+      );
+      mockCampaignProgressChecker.checkForParticipant.mockImplementation(
+        () => ({
+          abuseDetected: false,
+          score: 0,
+        }),
+      );
+
+      const progress = await campaignsService.checkCampaignProgressForPeriod(
+        campaign,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(
+        mockParticipationsRepository.removeParticipation,
+      ).toHaveBeenCalledTimes(0);
+
+      for (const [idx, participant] of participants.entries()) {
+        expect(progress.participants_outcomes[idx]).toEqual({
+          address: participant.evmAddress,
+          score: 0,
+        });
+      }
     });
   });
 
@@ -2110,7 +2259,11 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2127,7 +2280,11 @@ describe('CampaignsService', () => {
         campaign,
         expectedStartDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2169,15 +2326,18 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedStartDate = new Date(lastResultsEndDate.valueOf() + 1);
-      const expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
+      const expectedEndDate = dayjs(lastResultsEndDate).add(1, 'day').toDate();
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        expectedStartDate,
+        lastResultsEndDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2203,15 +2363,18 @@ describe('CampaignsService', () => {
 
       jest.useRealTimers();
 
-      const expectedStartDate = new Date(lastResultsEndDate.valueOf() + 1);
       const expectedEndDate = campaign.endDate;
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        expectedStartDate,
+        lastResultsEndDate,
         expectedEndDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2229,7 +2392,11 @@ describe('CampaignsService', () => {
         campaign,
         campaign.startDate,
         campaign.endDate,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2248,7 +2415,11 @@ describe('CampaignsService', () => {
         campaign,
         campaign.startDate,
         cancellationRequestedAt,
-        { logWarnings: true, caller: 'recordCampaignProgress' },
+        {
+          excludeIneligible: expect.any(Boolean),
+          logWarnings: true,
+          caller: 'recordCampaignProgress',
+        },
       );
     });
 
@@ -2366,10 +2537,7 @@ describe('CampaignsService', () => {
             },
           ],
         }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2414,16 +2582,13 @@ describe('CampaignsService', () => {
             },
           ],
         }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
     it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = new Date(Date.now() - 1);
+      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2454,64 +2619,156 @@ describe('CampaignsService', () => {
             },
           ],
         }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
-    it('should record correctly calculated reserved funds for THRESHOLD campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.THRESHOLD);
-      const minimumBalanceTarget = (
-        campaign.details as ThresholdCampaignDetails
-      ).minimumBalanceTarget;
+    describe('threshold campaign reserved funds calculation', () => {
+      it('should record correct value when no eligible participants', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
 
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const totalBalance = faker.number.float({
-        min: 0.1,
-        max: minimumBalanceTarget * 2,
+        const minimumBalanceTarget = (
+          campaign.details as ThresholdCampaignDetails
+        ).minimumBalanceTarget;
+
+        const nEligible = 0;
+        const nIneligible = faker.number.int({ min: 1, max: 10 });
+
+        const totalBalance =
+          nIneligible * minimumBalanceTarget * Math.random() +
+          nEligible * minimumBalanceTarget;
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
+        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        const expectedRewardPool = '0';
+
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+          expect.objectContaining({
+            results: [
+              {
+                from: campaignProgress.from,
+                to: campaignProgress.to,
+                total_balance: totalBalance,
+                total_score: nEligible,
+                reserved_funds: expectedRewardPool,
+                participants_outcomes_batches: [],
+              },
+            ],
+          }),
+          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+        );
       });
 
-      const totalScore = totalBalance >= minimumBalanceTarget ? 1 : 0;
+      it('should record correct value when no maxParticipants', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
 
-      const campaignProgress = generateCampaignProgress(campaign);
-      (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-      (campaignProgress.meta as ThresholdMeta).total_score = totalScore;
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      await campaignsService.recordCampaignProgress(campaign);
+        const minimumBalanceTarget = (
+          campaign.details as ThresholdCampaignDetails
+        ).minimumBalanceTarget;
 
-      const expectedRewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool: campaignsService.calculateDailyReward(campaign),
-        maxRewardPoolRatio: 1,
-        progressValue: totalScore,
-        progressValueTarget: 1,
-        fundTokenDecimals: campaign.fundTokenDecimals,
+        const nEligible = faker.number.int({ min: 1, max: 10 });
+        const nIneligible = faker.number.int({ min: 1, max: 10 });
+
+        const totalBalance =
+          nIneligible * minimumBalanceTarget * Math.random() +
+          nEligible * minimumBalanceTarget;
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
+        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        const expectedRewardPool =
+          campaignsService.calculateDailyReward(campaign);
+
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+          expect.objectContaining({
+            results: [
+              {
+                from: campaignProgress.from,
+                to: campaignProgress.to,
+                total_balance: totalBalance,
+                total_score: nEligible,
+                reserved_funds: expectedRewardPool,
+                participants_outcomes_batches: [],
+              },
+            ],
+          }),
+          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+        );
       });
 
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
-        expect.objectContaining({
-          results: [
-            {
-              from: campaignProgress.from,
-              to: campaignProgress.to,
-              total_balance: totalBalance,
-              total_score: totalScore,
-              reserved_funds: expectedRewardPool,
-              participants_outcomes_batches: [],
-            },
-          ],
-        }),
-        ethers.parseUnits(
-          expectedRewardPool.toString(),
-          campaign.fundTokenDecimals,
-        ),
-      );
+      it('should record correct value when there is maxParticipants', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        const maxParticipants = faker.number.int({ min: 5, max: 100 });
+        (campaign.details as ThresholdCampaignDetails).maxParticipants =
+          maxParticipants;
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const minimumBalanceTarget = (
+          campaign.details as ThresholdCampaignDetails
+        ).minimumBalanceTarget;
+
+        const nEligible = faker.number.int({ min: 1, max: 10 });
+        const nIneligible = faker.number.int({ min: 1, max: 10 });
+
+        const totalBalance =
+          nIneligible * minimumBalanceTarget * Math.random() +
+          nEligible * minimumBalanceTarget;
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
+        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        const expectedRewardPool = campaignsService.calculateRewardPool({
+          baseRewardPool: campaignsService.calculateDailyReward(campaign),
+          maxRewardPoolRatio: 1,
+          progressValue: nEligible,
+          progressValueTarget: maxParticipants,
+          fundTokenDecimals: campaign.fundTokenDecimals,
+        });
+
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+          expect.objectContaining({
+            results: [
+              {
+                from: campaignProgress.from,
+                to: campaignProgress.to,
+                total_balance: totalBalance,
+                total_score: nEligible,
+                reserved_funds: expectedRewardPool,
+                participants_outcomes_batches: [],
+              },
+            ],
+          }),
+          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+        );
+      });
     });
 
     it('should record participant results in batches', async () => {
@@ -2622,7 +2879,7 @@ describe('CampaignsService', () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(escrowStatus);
 
       const currentDate = new Date();
-      campaign.endDate = new Date(currentDate.valueOf() - 1);
+      campaign.endDate = currentDate;
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
         generateIntermediateResultsData({
           results: [generateIntermediateResult({ endDate: campaign.endDate })],
@@ -2798,7 +3055,7 @@ describe('CampaignsService', () => {
 
     it('should record generated volume stat for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = new Date(Date.now() - 1);
+      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2884,6 +3141,83 @@ describe('CampaignsService', () => {
       );
 
       expect(logger.error).toHaveBeenCalledTimes(0);
+    });
+
+    describe('excludeIneligible flag', () => {
+      it('should exclude ineligible participants for threshold with limit', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        (campaign.details as ThresholdCampaignDetails).maxParticipants =
+          faker.number.int({ min: 1, max: 10 });
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          expect.any(Date),
+          expect.any(Date),
+          expect.objectContaining({
+            excludeIneligible: true,
+          }),
+        );
+      });
+
+      it('should not exclude ineligible participants for threshold without limit', async () => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          expect.any(Date),
+          expect.any(Date),
+          expect.objectContaining({
+            excludeIneligible: false,
+          }),
+        );
+      });
+
+      it('should not exclude ineligible participants for non-threshold campaign', async () => {
+        campaign = generateCampaignEntity(
+          faker.helpers.arrayElement(
+            Object.values(CampaignType).filter(
+              (type) => type !== CampaignType.THRESHOLD,
+            ),
+          ),
+        );
+
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
+
+        await campaignsService.recordCampaignProgress(campaign);
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
+          campaign,
+          expect.any(Date),
+          expect.any(Date),
+          expect.objectContaining({
+            excludeIneligible: false,
+          }),
+        );
+      });
     });
   });
 
@@ -3257,12 +3591,45 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
+    it('should return "max_participants_reached" if user not joined and participant limit reached', async () => {
+      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
+        campaign,
+      );
+      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
+        null,
+      );
+      mockParticipationsService.checkParticipantLimitReached.mockResolvedValueOnce(
+        true,
+      );
+
+      const result = await campaignsService.checkJoinStatus(
+        userId,
+        chainId,
+        campaign.address,
+      );
+
+      expect(result).toEqual({
+        status: 'join_closed',
+        reason: 'max_participants_reached',
+      });
+
+      expect(
+        mockParticipationsService.checkUserJoinedCampaign,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockParticipationsService.checkUserJoinedCampaign,
+      ).toHaveBeenCalledWith(userId, campaign.id);
+    });
+
     it('should return "join_closed" if user not joined and ongoing campaign target is met', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
+      );
+      mockParticipationsService.checkParticipantLimitReached.mockResolvedValueOnce(
+        false,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
@@ -3291,6 +3658,9 @@ describe('CampaignsService', () => {
       );
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
+      );
+      mockParticipationsService.checkParticipantLimitReached.mockResolvedValueOnce(
+        false,
       );
       spyOnCheckCampaignTargetMet.mockResolvedValueOnce(false);
 
@@ -3382,7 +3752,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const cancellationRequestedAt = dayjs(expectedTimeframeStart)
@@ -3410,7 +3779,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const result = await campaignsService.getActiveTimeframe(campaign);
@@ -3466,7 +3834,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const result = await campaignsService.getActiveTimeframe(campaign);
@@ -3512,7 +3879,6 @@ describe('CampaignsService', () => {
 
       const expectedTimeframeStart = dayjs(campaign.startDate)
         .add(campaignDaysPassed, 'days')
-        .add(1, 'millisecond')
         .toDate();
 
       const cancellationRequestedAt = dayjs(expectedTimeframeStart)
@@ -3753,12 +4119,12 @@ describe('CampaignsService', () => {
       mockCacheManager.clear();
     });
 
-    it('should throw if campaign not found', async () => {
+    it('should throw when campaign not found', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress
         .mockReset()
         .mockResolvedValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3786,12 +4152,12 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw if campaign not started yet', async () => {
+    it('should throw when campaign not started yet', async () => {
       jest.useFakeTimers({
         now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3821,12 +4187,12 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw if campaign already finished', async () => {
+    it('should throw when campaign already finished', async () => {
       jest.useFakeTimers({
         now: new Date(campaign.endDate.valueOf() + 1),
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3861,11 +4227,11 @@ describe('CampaignsService', () => {
       CampaignStatus.PENDING_CANCELLATION,
       CampaignStatus.COMPLETED,
     ])(
-      'should throw if campaign status is not eligible for progress check: "%s"',
+      'should throw when campaign status is not eligible for progress check: "%s"',
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        let thrownError;
+        let thrownError: any;
         try {
           await campaignsService.getUserProgress(
             userId,
@@ -3894,12 +4260,12 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should throw if user not joined', async () => {
+    it('should throw when user not joined', async () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -3921,10 +4287,10 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it("should throw if can't get active timeframe", async () => {
+    it("should throw when can't get active timeframe", async () => {
       spyOnGetActiveTimeframe.mockReturnValueOnce(null);
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getUserProgress(
           userId,
@@ -4218,6 +4584,8 @@ describe('CampaignsService', () => {
 
     let spyOnRetrieveCampaignData: jest.SpyInstance;
     let spyOnCreateCampaign: jest.SpyInstance;
+    let spyOnGetChainDiscoveryAnchor: jest.SpyInstance;
+    let spyOnSetChainDiscoveryAnchor: jest.SpyInstance;
 
     beforeAll(() => {
       spyOnRetrieveCampaignData = jest.spyOn(
@@ -4228,6 +4596,18 @@ describe('CampaignsService', () => {
 
       spyOnCreateCampaign = jest.spyOn(campaignsService, 'createCampaign');
       spyOnCreateCampaign.mockImplementation();
+
+      spyOnGetChainDiscoveryAnchor = jest.spyOn(
+        campaignsCache,
+        'getChainDiscoveryAnchor',
+      );
+      spyOnGetChainDiscoveryAnchor.mockImplementation();
+
+      spyOnSetChainDiscoveryAnchor = jest.spyOn(
+        campaignsCache,
+        'setChainDiscoveryAnchor',
+      );
+      spyOnSetChainDiscoveryAnchor.mockImplementation();
     });
 
     beforeEach(() => {
@@ -4239,6 +4619,8 @@ describe('CampaignsService', () => {
 
       spyOnRetrieveCampaignData.mockRestore();
       spyOnCreateCampaign.mockRestore();
+      spyOnGetChainDiscoveryAnchor.mockRestore();
+      spyOnSetChainDiscoveryAnchor.mockRestore();
     });
 
     it('should run discovery for each supported chain', async () => {
@@ -4249,25 +4631,17 @@ describe('CampaignsService', () => {
 
       await campaignsService.discoverNewCampaigns();
 
-      expect(
-        mockCampaignsRepository.findLatestCampaignForChain,
-      ).toHaveBeenCalledTimes(mockWeb3Service.supportedChainIds.length);
+      expect(spyOnGetChainDiscoveryAnchor).toHaveBeenCalledTimes(
+        mockWeb3Service.supportedChainIds.length,
+      );
       for (const chainId of mockWeb3Service.supportedChainIds) {
-        expect(
-          mockCampaignsRepository.findLatestCampaignForChain,
-        ).toHaveBeenCalledWith(chainId);
+        expect(spyOnGetChainDiscoveryAnchor).toHaveBeenCalledWith(chainId);
       }
     });
 
-    it('should use latest saved campaign for lookback', async () => {
-      const campaign = generateCampaignEntity();
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        campaign,
-      );
-      const escrowTimestamp = faker.date.past().valueOf();
-      mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
-        createdAt: escrowTimestamp,
-      } as IEscrow);
+    it('should use discovery anchor for lookback', async () => {
+      const chainDiscoveryAnchor = faker.date.past();
+      spyOnGetChainDiscoveryAnchor.mockResolvedValue(chainDiscoveryAnchor);
 
       await campaignsService.discoverNewCampaigns();
 
@@ -4275,42 +4649,28 @@ describe('CampaignsService', () => {
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
-        status: EscrowStatus.Pending,
-        from: new Date(escrowTimestamp),
+        status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+        from: chainDiscoveryAnchor,
         orderDirection: OrderDirection.ASC,
-        first: 10,
+        first: 50,
       });
     });
 
-    it('should use 1d ago for lookback if no latest campaign', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
-      const now = new Date();
-
-      const dayAgo = dayjs(now).subtract(1, 'day').toDate();
-
-      jest.useFakeTimers({ now });
-
+    it('should use default "from" if no latest campaign', async () => {
       await campaignsService.discoverNewCampaigns();
-
-      jest.useRealTimers();
 
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledTimes(1);
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledWith({
         chainId: supportedChainId,
         recordingOracle: mockWeb3ConfigService.operatorAddress,
-        status: EscrowStatus.Pending,
-        from: dayAgo,
+        status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+        from: undefined,
         orderDirection: OrderDirection.ASC,
-        first: 10,
+        first: 50,
       });
     });
 
     it('should not save discovered campaign if it already exists', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(true);
 
       const campaignAddress = ethers.getAddress(
@@ -4318,6 +4678,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4331,21 +4692,24 @@ describe('CampaignsService', () => {
         campaignAddress,
       );
 
-      expect(logger.debug).toHaveBeenCalledTimes(4);
+      expect(logger.debug).toHaveBeenCalledTimes(3);
       expect(logger.debug).toHaveBeenNthCalledWith(
-        3,
+        2,
         'Discovered campaign already exists; skip it',
         {
           chainId: supportedChainId,
           campaignAddress,
         },
       );
+
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(1);
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledWith(
+        supportedChainId,
+        new Date(escrow.createdAt),
+      );
     });
 
     it('should save discovered campaign if not already exist', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4353,6 +4717,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4393,12 +4758,15 @@ describe('CampaignsService', () => {
           campaignId: mockCampaign.id,
         },
       );
+
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(1);
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledWith(
+        supportedChainId,
+        new Date(escrow.createdAt),
+      );
     });
 
     it('should not save and skip discovered campaign if invalid', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4406,6 +4774,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4436,13 +4805,16 @@ describe('CampaignsService', () => {
         },
       );
 
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(1);
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledWith(
+        supportedChainId,
+        new Date(escrow.createdAt),
+      );
+
       expect(logger.error).toHaveBeenCalledTimes(0);
     });
 
     it('should rethrow and stop discovery if fails to retrieve some campaign', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4450,6 +4822,7 @@ describe('CampaignsService', () => {
       );
       const escrow = {
         address: campaignAddress.toLowerCase(),
+        createdAt: faker.date.recent().valueOf(),
       } as IEscrow;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
@@ -4476,6 +4849,8 @@ describe('CampaignsService', () => {
         },
       );
 
+      expect(spyOnSetChainDiscoveryAnchor).toHaveBeenCalledTimes(0);
+
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'Error while discovering new campaigns for chain',
@@ -4487,15 +4862,13 @@ describe('CampaignsService', () => {
     });
 
     it('should process each discovered campaign', async () => {
-      mockCampaignsRepository.findLatestCampaignForChain.mockResolvedValueOnce(
-        null,
-      );
       mockCampaignsRepository.checkCampaignExists.mockResolvedValue(true);
 
       const escrows = Array.from(
         { length: faker.number.int({ min: 2, max: 4 }) },
         () => ({
           address: faker.finance.ethereumAddress(),
+          createdAt: faker.date.recent().valueOf(),
         }),
       );
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce(escrows as IEscrow[]);
@@ -4535,10 +4908,10 @@ describe('CampaignsService', () => {
       expect(data).toEqual([]);
     });
 
-    it('should throw if ranking option is not supported', async () => {
+    it('should throw when ranking option is not supported', async () => {
       const notSupportedRankingOption = faker.lorem.word();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await campaignsService.getCampaignLeaderboard(
           campaign.chainId,
@@ -4768,7 +5141,7 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        let thrownError;
+        let thrownError: any;
         try {
           await campaignsService['getCurrentProgressLeaderboardEntries'](
             campaign,

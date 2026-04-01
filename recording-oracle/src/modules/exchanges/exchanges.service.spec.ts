@@ -67,11 +67,11 @@ describe('ExchangesService', () => {
       mockExchangesConfigService.configByExchange = {};
     });
 
-    it('should throw if exchange is not supported', async () => {
+    it('should throw when exchange is not supported', async () => {
       const userId = faker.string.uuid();
       const exchangeName = generateExchangeName();
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangesService.getClientForUser(userId, exchangeName);
       } catch (error) {
@@ -197,7 +197,7 @@ describe('ExchangesService', () => {
       expect(spyOnGetClientForUser).toHaveBeenCalledTimes(0);
     });
 
-    it('should not throw if access check succeeded', async () => {
+    it('should not throw when access check succeeded', async () => {
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
       });
@@ -230,7 +230,7 @@ describe('ExchangesService', () => {
         missing: missingPermissions,
       });
 
-      let thrownError;
+      let thrownError: any;
       try {
         await exchangesService.assertUserHasRequiredAccess(
           userId,

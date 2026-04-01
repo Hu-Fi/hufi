@@ -25,7 +25,6 @@ const mockServerConfigService = {
 const mockTypeOrmPingCheck = jest.fn();
 
 const mockValkeyCacheClient = createMock<ValkeyClient>();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (mockValkeyCacheClient as any).clientName = faker.lorem.slug();
 
 function generateMockHealthIndicatorResult(
@@ -120,7 +119,7 @@ describe('HealthController', () => {
           ),
         );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await healthController.check();
       } catch (error) {
@@ -149,7 +148,7 @@ describe('HealthController', () => {
         .mockReset()
         .mockRejectedValueOnce(new Error('timeout'));
 
-      let thrownError;
+      let thrownError: any;
       try {
         await healthController.check();
       } catch (error) {

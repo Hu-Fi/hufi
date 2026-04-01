@@ -58,7 +58,7 @@ describe('Web3Service', () => {
       expect(signer.provider).toBeInstanceOf(JsonRpcProvider);
     });
 
-    it('should throw if invalid chain id provided', () => {
+    it('should throw when invalid chain id provided', () => {
       const invalidChainId = -42;
 
       expect(() => web3Service.getSigner(invalidChainId)).toThrow(
@@ -108,7 +108,7 @@ describe('Web3Service', () => {
       });
     });
 
-    it('should throw if no transaction fee data from provider', async () => {
+    it('should throw when no transaction fee data from provider', async () => {
       const testChainId = generateTestnetChainId();
 
       mockProvider.getFeeData.mockResolvedValueOnce({
@@ -173,7 +173,6 @@ describe('Web3Service', () => {
 
     beforeAll(() => {
       replacedAlchemySdkRef = jest.replaceProperty(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         web3Service as any,
         'alchemySdk',
         mockAlchemySdk,
@@ -197,7 +196,7 @@ describe('Web3Service', () => {
         testError,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await web3Service.getTokenPriceUsd(testTokenSymbol);
       } catch (error) {

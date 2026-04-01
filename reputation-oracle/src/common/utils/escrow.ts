@@ -1,5 +1,8 @@
 import { TransactionUtils } from '@human-protocol/sdk';
 
+/**
+ * TODO: replace it with property from Escrow entity once available in subgraph
+ */
 export async function getCancellationRequestDate(
   chainId: number,
   campaignAddress: string,

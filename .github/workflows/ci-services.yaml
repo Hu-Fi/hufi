@@ -27,7 +27,7 @@ jobs:
 
       - id: filter
         name: Evaluate path filters
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             common:

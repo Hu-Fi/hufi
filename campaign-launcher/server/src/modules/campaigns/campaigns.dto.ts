@@ -92,6 +92,11 @@ export class CampaignDetails {
     name: 'minimum_balance_target',
   })
   minimumBalanceTarget?: number;
+
+  @ApiPropertyOptional({
+    name: 'max_participants',
+  })
+  maxParticipants?: number;
 }
 
 export class CampaignData {

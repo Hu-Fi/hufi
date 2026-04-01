@@ -60,7 +60,7 @@ describe('StorageService', () => {
   });
 
   describe('uploadData', () => {
-    it('should throw if configured bucket does not exist', async () => {
+    it('should throw when configured bucket does not exist', async () => {
       mockedMinioClientInstance.bucketExists.mockImplementation(
         (bucketName) => {
           if (bucketName === mockS3ConfigService.bucket) {

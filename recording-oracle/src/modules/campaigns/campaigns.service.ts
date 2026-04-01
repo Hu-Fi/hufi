@@ -28,6 +28,7 @@ import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
+import { isFiniteNumber, toError } from '@/common/utils/type-guard';
 import * as web3Utils from '@/common/utils/web3';
 import {
   CampaignsConfigService,
@@ -36,10 +37,10 @@ import {
 } from '@/config';
 import logger from '@/logger';
 import {
-  ExchangesService,
   ExchangeApiAccessError,
-  ExchangeApiKeyNotFoundError,
   ExchangeApiClientFactory,
+  ExchangeApiKeyNotFoundError,
+  ExchangesService,
   type PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
@@ -67,6 +68,7 @@ import * as manifestUtils from './manifest.utils';
 import {
   ParticipationsRepository,
   ParticipationsService,
+  UserAlreadyJoinedError,
 } from './participations';
 import {
   type CampaignProgressChecker,
@@ -88,16 +90,16 @@ import {
 } from './type-guards';
 import {
   CampaignEscrowInfo,
+  CampaignJoinStatus,
   CampaignManifest,
+  CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
   CampaignType,
-  CampaignJoinStatus,
   IntermediateResult,
   IntermediateResultsData,
-  ParticipantOutcome,
   LeaderboardRanking,
-  CampaignManifestBase,
+  ParticipantOutcome,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
@@ -177,7 +179,7 @@ export class CampaignsService implements OnModuleDestroy {
         campaign.id,
       );
     if (userJoinedAt) {
-      return campaign.id;
+      throw new UserAlreadyJoinedError(campaign.id, userId);
     }
 
     /**
@@ -209,7 +211,7 @@ export class CampaignsService implements OnModuleDestroy {
       throw new CampaignJoinLimitedError(
         campaign.chainId,
         campaign.address,
-        'Target is met',
+        'Target is met.',
       );
     }
 
@@ -219,7 +221,7 @@ export class CampaignsService implements OnModuleDestroy {
       CAMPAIGN_PERMISSIONS_MAP[campaign.type],
     );
 
-    await this.participationsService.joinCampaign(userId, campaign.id);
+    await this.participationsService.joinCampaign(userId, campaign);
 
     return campaign.id;
   }
@@ -337,11 +339,7 @@ export class CampaignsService implements OnModuleDestroy {
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
 
     if (
-      [
-        EscrowStatus.ToCancel,
-        EscrowStatus.Cancelled,
-        EscrowStatus.Complete,
-      ].includes(escrowStatus)
+      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
         chainId,
@@ -362,7 +360,7 @@ export class CampaignsService implements OnModuleDestroy {
         throw new InvalidCampaign(
           chainId,
           campaignAddress,
-          error.message as string,
+          toError(error).message,
         );
       }
     } else {
@@ -397,7 +395,7 @@ export class CampaignsService implements OnModuleDestroy {
       throw new InvalidCampaign(
         chainId,
         campaignAddress,
-        error.message as string,
+        toError(error).message,
       );
     }
 
@@ -519,11 +517,7 @@ export class CampaignsService implements OnModuleDestroy {
               -1,
             ) as IntermediateResult;
 
-            const lastResultDate = new Date(lastResultAt);
-            /**
-             * Add 1 ms to end date because interval boundaries are inclusive
-             */
-            startDate = new Date(lastResultDate.valueOf() + 1);
+            startDate = new Date(lastResultAt);
           }
 
           let endDate: Date;
@@ -571,7 +565,7 @@ export class CampaignsService implements OnModuleDestroy {
             if (escrowStatus === EscrowStatus.ToCancel) {
               /**
                * This can happen when:
-               * - campaign cancelled before it reached start_date from manifest
+               * - campaign cancellation requested before it reached start_date from manifest
                * - if we processed results and stored them for 'ToCancel' campaign,
                * but failed to update internal status to exclude it from further processing
                */
@@ -602,7 +596,13 @@ export class CampaignsService implements OnModuleDestroy {
             campaign,
             startDate,
             endDate,
-            { logWarnings: true, caller: this.recordCampaignProgress.name },
+            {
+              excludeIneligible:
+                isThresholdCampaign(campaign) &&
+                isFiniteNumber(campaign.details.maxParticipants),
+              logWarnings: true,
+              caller: this.recordCampaignProgress.name,
+            },
           );
 
           let rewardPool: string;
@@ -626,22 +626,34 @@ export class CampaignsService implements OnModuleDestroy {
               );
             }
 
-            let progressValueTarget: number;
             let progressValue: number;
+            let progressValueTarget: number;
             if (isMarketMakingCampaign(campaign)) {
-              progressValueTarget = campaign.details.dailyVolumeTarget;
               progressValue = (progress.meta as MarketMakingMeta).total_volume;
+              progressValueTarget = campaign.details.dailyVolumeTarget;
             } else if (isHoldingCampaign(campaign)) {
-              progressValueTarget = campaign.details.dailyBalanceTarget;
               progressValue = (progress.meta as HoldingMeta).total_balance;
+              progressValueTarget = campaign.details.dailyBalanceTarget;
             } else if (isThresholdCampaign(campaign)) {
               /**
-               * We are going to distribute daily reward pool fully in case there is at least one participant eligible for the reward.
-               * This is why we're using hardcoded 1 as a progressValueTarget and total_score instead of a balance for the progressValue.
-               * */
-              progressValueTarget = 1;
-              // TODO: Check this logic before releasing new contracts
-              progressValue = (progress.meta as ThresholdMeta).total_score;
+               * 'total_score' in this case is the number of eligible participants in current cycle,
+               * so when calculating reward pool we are going to distribute equal portion
+               * of daily reward to each participant that reached the threshold,
+               * where equal portion is defined as `dailyReward / maxParticipants`
+               */
+              // prettier-ignore
+              const nEligibleParticipants = (progress.meta as ThresholdMeta).total_score;
+              if (
+                campaign.details.maxParticipants &&
+                nEligibleParticipants > campaign.details.maxParticipants
+              ) {
+                // safety-belt
+                throw new Error(
+                  `Unexpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
+                );
+              }
+              progressValue = nEligibleParticipants;
+              progressValueTarget = campaign.details.maxParticipants || 1;
             } else {
               throw new Error(
                 `Unknown campaign type for reward pool calculation: ${campaign.type}`,
@@ -731,11 +743,18 @@ export class CampaignsService implements OnModuleDestroy {
     );
   }
 
+  /**
+   * Period boundaries are [startDate, endDate)
+   */
   async checkCampaignProgressForPeriod(
     campaign: CampaignEntity,
     startDate: Date,
     endDate: Date,
-    options: { logWarnings?: boolean; caller?: string } = {},
+    options: {
+      excludeIneligible?: boolean;
+      logWarnings?: boolean;
+      caller?: string;
+    } = {},
   ): Promise<CampaignProgress<CampaignProgressMeta>> {
     if (dayjs(startDate).isAfter(endDate)) {
       throw new Error('Invalid period range provided');
@@ -782,6 +801,31 @@ export class CampaignsService implements OnModuleDestroy {
         const { abuseDetected, ...participantOutcomes } =
           await campaignProgressChecker.checkForParticipant(participant);
 
+        if (participantOutcomes.score === 0 && options.excludeIneligible) {
+          const exclusionLogData = {
+            participantId: participant.id,
+            participantOutcome: {
+              abuseDetected,
+              ...participantOutcomes,
+            },
+          };
+          try {
+            await this.participationsRepository.removeParticipation(
+              participant.id,
+              participant.campaignId,
+            );
+            this.logger.warn(
+              'Excluded ineligible participant from campaign',
+              exclusionLogData,
+            );
+          } catch (error) {
+            this.logger.error('Failed to exclude ineligible participant', {
+              ...exclusionLogData,
+              error,
+            });
+          }
+        }
+
         if (abuseDetected) {
           if (options.logWarnings) {
             logger.warn('Abuse detected. Skipping participant outcome', {
@@ -815,6 +859,7 @@ export class CampaignsService implements OnModuleDestroy {
           if (options.logWarnings) {
             logger.warn('Exchange access failed for provided api key', {
               participantId: participant.id,
+              participantEvmAddress: participant.evmAddress,
               error,
             });
           }
@@ -1111,6 +1156,15 @@ export class CampaignsService implements OnModuleDestroy {
       };
     }
 
+    const isParticipantLimitReached =
+      await this.participationsService.checkParticipantLimitReached(campaign);
+    if (isParticipantLimitReached) {
+      return {
+        status: CampaignJoinStatus.JOIN_IS_CLOSED,
+        reason: 'max_participants_reached',
+      };
+    }
+
     const isCampaignTargetMet = await this.checkCampaignTargetMet(campaign);
     if (isCampaignTargetMet) {
       return {
@@ -1207,50 +1261,32 @@ export class CampaignsService implements OnModuleDestroy {
 
   @ScheduleInterval(CampaignServiceJob.DISCOVER_NEW_CAMPAIGNS, ms('10 minutes'))
   async discoverNewCampaigns(): Promise<void> {
-    this.logger.debug('New campaigns discovery job started');
+    this.logger.debug('Campaigns discovery job started');
 
     for (const chainId of this.web3Service.supportedChainIds) {
       try {
-        const latestKnownCampaign =
-          await this.campaignsRepository.findLatestCampaignForChain(chainId);
-        let lookbackDate: Date;
-        if (latestKnownCampaign) {
-          const campaignEscrow = await EscrowUtils.getEscrow(
-            latestKnownCampaign.chainId,
-            latestKnownCampaign.address,
-          );
-          if (!campaignEscrow) {
-            throw new Error('No escrow data for latest known campaign');
-          }
-          /**
-           * 'createdAt' is a tx block timestamp, so technically
-           * there might be multiple escrows created within the same block
-           * and we have to discover from the same timestamp value to not miss some.
-           */
-          lookbackDate = new Date(campaignEscrow.createdAt);
-        } else {
-          lookbackDate = dayjs().subtract(1, 'day').toDate();
-        }
+        const discoveryAnchor =
+          await this.campaignsCache.getChainDiscoveryAnchor(chainId);
 
-        const newEscrows = await EscrowUtils.getEscrows({
+        const discoveredEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress,
-          /**
-           * We are interested only in pending escrows, because if it's in `ToCancel`
-           * status and not in RecO DB yet - it means nobody joined and no need to process it
-           */
-          status: EscrowStatus.Pending,
-          from: lookbackDate,
+          status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+          from: discoveryAnchor ?? undefined,
           orderDirection: OrderDirection.ASC,
-          first: 10,
-        });
-        this.logger.debug('Discovered new launched campaigns', {
-          chainId,
-          campaigns: newEscrows.map((e) => e.address),
+          first: 50,
         });
 
-        for (const newEscrow of newEscrows) {
-          const campaignAddress = ethers.getAddress(newEscrow.address);
+        if (discoveredEscrows.length === 0) {
+          this.logger.debug('No new escrows discovered for chain', {
+            chainId,
+            discoveryAnchor,
+          });
+          continue;
+        }
+
+        for (const discoveredEscrow of discoveredEscrows) {
+          const campaignAddress = ethers.getAddress(discoveredEscrow.address);
           const campaignExists =
             await this.campaignsRepository.checkCampaignExists(
               chainId as number,
@@ -1299,6 +1335,16 @@ export class CampaignsService implements OnModuleDestroy {
             }
           }
         }
+
+        await this.campaignsCache.setChainDiscoveryAnchor(
+          chainId,
+          /**
+           * Some campaigns might be сreated within the same block
+           * but not yet synced to subgraph, so use last discovered
+           * campaign date as anchor to avoid missing them
+           */
+          new Date(discoveredEscrows.at(-1)!.createdAt),
+        );
       } catch (error) {
         this.logger.error('Error while discovering new campaigns for chain', {
           chainId,
@@ -1307,7 +1353,7 @@ export class CampaignsService implements OnModuleDestroy {
       }
     }
 
-    this.logger.debug('New campaigns discovery job finished');
+    this.logger.debug('Campaigns discovery job finished');
   }
 
   @Cron(CronExpression.EVERY_10_MINUTES, {
@@ -1424,7 +1470,6 @@ export class CampaignsService implements OnModuleDestroy {
 
     const timeframeStart = dayjs(campaign.startDate)
       .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
-      .add(1, 'millisecond')
       .toDate();
 
     let timeframeEnd: Date;

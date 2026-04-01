@@ -74,7 +74,6 @@ describe('Web3Service', () => {
 
     beforeAll(() => {
       replacedAlchemySdkRef = jest.replaceProperty(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         web3Service as any,
         'alchemySdk',
         mockAlchemySdk,
@@ -98,7 +97,7 @@ describe('Web3Service', () => {
         testError,
       );
 
-      let thrownError;
+      let thrownError: any;
       try {
         await web3Service.getTokenPriceUsd(testTokenSymbol);
       } catch (error) {

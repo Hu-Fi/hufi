@@ -1,5 +1,6 @@
 import bnbLogo from '@/assets/tokens/bnb.png';
 import btcLogo from '@/assets/tokens/btc.png';
+import ccdLogo from '@/assets/tokens/ccd.png';
 import ethLogo from '@/assets/tokens/eth.png';
 import hmtLogo from '@/assets/tokens/hmt.png';
 import icbxLogo from '@/assets/tokens/icbx.png';
@@ -59,6 +60,11 @@ export const TOKENS: TokenData[] = [
     name: 'mob',
     label: 'MOB',
     icon: mobLogo,
+  },
+  {
+    name: 'ccd',
+    label: 'CCD',
+    icon: ccdLogo,
   },
 ];
 

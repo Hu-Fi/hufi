@@ -90,6 +90,7 @@ const thresholdManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.THRESHOLD).required(),
   exchange: Joi.string().required(),
   minimum_balance_target: Joi.number().strict().greater(0).required(),
+  max_participants: Joi.number().strict().positive().integer(),
   symbol: Joi.string()
     .pattern(/^[\dA-Z]{3,10}$/)
     .required(),
@@ -132,7 +133,7 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
     }
     const validatedManifest = Joi.attempt(manifestJson, manifestSchema);
 
-    return validatedManifest;
+    return validatedManifest as CampaignManifest;
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Invalid manifest schema: ${error.message}`);
