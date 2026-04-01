@@ -6,7 +6,6 @@ import {
   EscrowStatus,
   EscrowUtils,
   OrderDirection,
-  TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
@@ -71,17 +70,17 @@ import {
   UserAlreadyJoinedError,
 } from './participations';
 import {
-  type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
   CampaignProgressMeta,
   HoldingProgressChecker,
   MarketMakingProgressChecker,
   ProgressCheckResult,
   ThresholdProgressChecker,
+  type CampaignProgressChecker,
+  type HoldingMeta,
+  type MarketMakingMeta,
+  type ThresholdMeta,
 } from './progress-checking';
-import { HoldingMeta } from './progress-checking/holding';
-import { MarketMakingMeta } from './progress-checking/market-making';
-import { ThresholdMeta } from './progress-checking/threshold';
 import {
   isCompetitiveMarketMakingCampaign,
   isHoldingCampaign,
@@ -98,7 +97,6 @@ import {
   CampaignType,
   IntermediateResult,
   IntermediateResultsData,
-  LeaderboardRanking,
   ParticipantOutcome,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
@@ -1536,8 +1534,11 @@ export class CampaignsService implements OnModuleDestroy {
   async getCampaignLeaderboard(
     chainId: number,
     campaignAddress: string,
-    rankBy: LeaderboardRanking,
-  ): Promise<LeaderboardEntry[]> {
+  ): Promise<{
+    entries: LeaderboardEntry[];
+    total: string;
+    actualOn: Date;
+  }> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
@@ -1547,116 +1548,13 @@ export class CampaignsService implements OnModuleDestroy {
        * It might be that campaign escrow is not synced yet,
        * so return empty results in this case
        */
-      return [];
+      return {
+        entries: [],
+        total: '0',
+        actualOn: new Date(),
+      };
     }
 
-    let leaderboardEntries: LeaderboardEntry[];
-    switch (rankBy) {
-      case LeaderboardRanking.TOTAL_REWARDS:
-        leaderboardEntries = await this.getRewardsLeaderboardEntries(campaign);
-        break;
-      case LeaderboardRanking.CURRENT_PROGRESS:
-        leaderboardEntries =
-          await this.getCurrentProgressLeaderboardEntries(campaign);
-        break;
-      default:
-        throw new Error(`Leaderboard ranking by "${rankBy}" is not supported`);
-    }
-
-    leaderboardEntries = leaderboardEntries.map(({ address, result }) => ({
-      address: ethers.getAddress(address),
-      result,
-    }));
-
-    return _.orderBy(leaderboardEntries, 'result', 'desc');
-  }
-
-  private async getRewardsLeaderboardEntries(
-    campaign: CampaignEntity,
-  ): Promise<LeaderboardEntry[]> {
-    if (!campaign.resultsCutoffAt) {
-      return [];
-    }
-
-    const participantAdresses = new Set<string>();
-
-    const intermediateResultsData =
-      await this.retrieveCampaignIntermediateResults(campaign);
-
-    for (const intermediateResult of intermediateResultsData?.results || []) {
-      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
-        for (const participantOutcome of outcomesBatch.results) {
-          participantAdresses.add(participantOutcome.address);
-        }
-      }
-    }
-
-    if (participantAdresses.size === 0) {
-      return [];
-    }
-
-    const leaderboardEntriesMap: {
-      /**
-       * Subgraph returns lowercased data, so use same here
-       */
-      [lowercasedAddress: string]: bigint;
-    } = {};
-    for (const address of participantAdresses) {
-      leaderboardEntriesMap[address.toLowerCase()] = 0n;
-    }
-
-    let nTxsChecked = 0;
-    do {
-      const transactions = await TransactionUtils.getTransactions({
-        chainId: campaign.chainId,
-        fromAddress: campaign.address,
-        toAddress: campaign.address,
-        method: 'bulkTransfer',
-        first: 100,
-        skip: nTxsChecked,
-      });
-
-      if (transactions.length === 0) {
-        break;
-      }
-
-      for (const tx of transactions) {
-        for (const internalTx of tx.internalTransactions) {
-          const receiverAddress = internalTx.receiver || '';
-          if (leaderboardEntriesMap[receiverAddress] === undefined) {
-            /**
-             * Oracle fees and launcher refunds are also
-             * in array of internal transactions
-             */
-            continue;
-          }
-
-          leaderboardEntriesMap[receiverAddress] += internalTx.value;
-        }
-      }
-
-      nTxsChecked += transactions.length;
-      // eslint-disable-next-line no-constant-condition
-    } while (true);
-
-    const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, totalRewards] of Object.entries(
-      leaderboardEntriesMap,
-    )) {
-      leaderboardEntries.push({
-        address,
-        result: Number(
-          ethers.formatUnits(totalRewards, campaign.fundTokenDecimals),
-        ),
-      });
-    }
-
-    return leaderboardEntries;
-  }
-
-  private async getCurrentProgressLeaderboardEntries(
-    campaign: CampaignEntity,
-  ): Promise<LeaderboardEntry[]> {
     if (
       [CampaignStatus.CANCELLED, CampaignStatus.COMPLETED].includes(
         campaign.status,
@@ -1669,12 +1567,16 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     let resultsToInspect: ParticipantOutcome[] = [];
+    let actualOn: Date;
     if (
       [
         CampaignStatus.PENDING_CANCELLATION,
         CampaignStatus.PENDING_COMPLETION,
       ].includes(campaign.status)
     ) {
+      /**
+       * TODO: cache results file if already downloaded
+       */
       const intermediateResultsData =
         await this.retrieveCampaignIntermediateResults(campaign);
 
@@ -1682,38 +1584,49 @@ export class CampaignsService implements OnModuleDestroy {
       for (const outcomesBatch of latestIntermediateResult.participants_outcomes_batches) {
         resultsToInspect.push(...outcomesBatch.results);
       }
+      /**
+       * Results are final, so always actual
+       */
+      actualOn = new Date();
     } else {
       const cachedInterimResults = await this.campaignsCache.getInterimProgress(
         campaign.id,
       );
       resultsToInspect = cachedInterimResults?.participants_outcomes || [];
-    }
-
-    const leaderboardEntriesMap: {
-      [lowercasedAddress: string]: Decimal;
-    } = {};
-
-    for (const participantOutcome of resultsToInspect) {
-      leaderboardEntriesMap[participantOutcome.address] = (
-        leaderboardEntriesMap[participantOutcome.address] || new Decimal(0)
-      ).add(participantOutcome.score);
+      actualOn = new Date(cachedInterimResults?.to || Date.now());
     }
 
     const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, currentScore] of Object.entries(
-      leaderboardEntriesMap,
-    )) {
+    let total = new Decimal(0);
+    for (const participantOutcome of resultsToInspect) {
+      let result: number;
+      if (
+        isMarketMakingCampaign(campaign) ||
+        isCompetitiveMarketMakingCampaign(campaign)
+      ) {
+        result = participantOutcome.total_volume as number;
+      } else if (isHoldingCampaign(campaign) || isThresholdCampaign(campaign)) {
+        result = participantOutcome.total_balance as number;
+      } else {
+        throw new Error(
+          `Unknown campaign type for leaderboard calculation: ${campaign.type}`,
+        );
+      }
+
+      total = total.add(result);
       leaderboardEntries.push({
-        address,
-        result: Number(
-          currentScore.toDecimalPlaces(
-            campaign.fundTokenDecimals,
-            Decimal.ROUND_DOWN,
-          ),
-        ),
+        address: participantOutcome.address,
+        score: participantOutcome.score,
+        result,
       });
     }
 
-    return leaderboardEntries;
+    return {
+      entries: _.orderBy(leaderboardEntries, 'score', 'desc'),
+      total: total
+        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+        .toString(),
+      actualOn,
+    };
   }
 }

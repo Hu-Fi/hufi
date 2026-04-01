@@ -93,12 +93,28 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
 }
 
 export function generateParticipantOutcome(
+  campaignType: CampaignType,
   overrides: Partial<ParticipantOutcome> = {},
 ): ParticipantOutcome {
   const outcome: ParticipantOutcome = {
     address: ethers.getAddress(faker.finance.ethereumAddress()),
     score: faker.number.float(),
   };
+
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      outcome.total_volume = faker.number.float({ min: 0, max: 10000 });
+      break;
+    case CampaignType.HOLDING:
+    case CampaignType.THRESHOLD:
+      outcome.total_balance = faker.number.float({ min: 0, max: 1000 });
+      break;
+    default:
+      throw new Error(
+        `Unsupported campaign type for participant outcome: ${campaignType}`,
+      );
+  }
 
   Object.assign(outcome, overrides);
 
@@ -219,14 +235,4 @@ export function generateUserJoinedDate(campaign: CampaignEntity): string {
   return faker.date
     .between({ from: campaign.startDate, to: campaign.endDate })
     .toISOString();
-}
-
-export function generateLeaderboardEntries(): Array<{
-  address: string;
-  result: number;
-}> {
-  return Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
-    address: faker.finance.ethereumAddress(),
-    result: faker.number.float({ max: 1000 }),
-  }));
 }

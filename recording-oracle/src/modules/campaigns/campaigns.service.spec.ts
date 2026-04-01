@@ -19,9 +19,7 @@ import {
   EscrowStatus,
   EscrowUtils,
   type IEscrow,
-  type ITransaction,
   OrderDirection,
-  TransactionUtils,
 } from '@human-protocol/sdk';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
@@ -82,7 +80,6 @@ import {
   generateHoldingCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
-  generateLeaderboardEntries,
   generateMarketMakingCampaignManifest,
   generateParticipantOutcome,
   generateStoredResultsMeta,
@@ -116,7 +113,6 @@ import {
   CampaignType,
   type HoldingCampaignDetails,
   type IntermediateResultsData,
-  LeaderboardRanking,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
   type ThresholdCampaignManifest,
@@ -141,7 +137,6 @@ const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
-const mockedTransactionUtils = jest.mocked(TransactionUtils);
 
 const mockedPancakeswapClient = createMock<PancakeswapClient>();
 
@@ -2775,9 +2770,9 @@ describe('CampaignsService', () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const participantOutcomes = [
-        generateParticipantOutcome(),
-        generateParticipantOutcome(),
-        generateParticipantOutcome(),
+        generateParticipantOutcome(campaign.type),
+        generateParticipantOutcome(campaign.type),
+        generateParticipantOutcome(campaign.type),
       ];
 
       const campaignProgress = generateCampaignProgress(campaign);
@@ -4322,9 +4317,11 @@ describe('CampaignsService', () => {
 
       const participantMetaProp = faker.lorem.word();
       const participantMetaValue = faker.number.float();
-      const participantOutcome = generateParticipantOutcome({
+      const participantOutcome = generateParticipantOutcome(campaign.type, {
         address: evmAddress,
         [participantMetaProp]: participantMetaValue,
+        total_volume: undefined,
+        total_balance: undefined,
       });
 
       const mockedActiveTimeframe = {
@@ -4337,9 +4334,9 @@ describe('CampaignsService', () => {
         from: mockedActiveTimeframe.start.toISOString(),
         to: mockedActiveTimeframe.end.toISOString(),
         participants_outcomes: [
-          generateParticipantOutcome(),
+          generateParticipantOutcome(campaign.type),
           participantOutcome,
-          generateParticipantOutcome(),
+          generateParticipantOutcome(campaign.type),
         ],
         meta: {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -4882,16 +4879,37 @@ describe('CampaignsService', () => {
   });
 
   describe('getCampaignLeaderboard', () => {
+    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let campaign: CampaignEntity;
+    let now: Date;
 
     beforeAll(() => {
+      now = new Date();
+      jest.useFakeTimers({ now });
+
+      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignIntermediateResults',
+      );
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+
       campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
     });
 
     beforeEach(() => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+    });
+
+    afterEach(() => {
+      mockCacheManager.clear();
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+      spyOnRetrieveCampaignIntermediateResults.mockRestore();
     });
 
     it('should return empty data if campaign not found', async () => {
@@ -4902,238 +4920,13 @@ describe('CampaignsService', () => {
       const data = await campaignsService.getCampaignLeaderboard(
         campaign.chainId,
         campaign.address,
-        faker.helpers.arrayElement(Object.values(LeaderboardRanking)),
       );
 
-      expect(data).toEqual([]);
-    });
-
-    it('should throw when ranking option is not supported', async () => {
-      const notSupportedRankingOption = faker.lorem.word();
-
-      let thrownError: any;
-      try {
-        await campaignsService.getCampaignLeaderboard(
-          campaign.chainId,
-          campaign.address,
-          notSupportedRankingOption as LeaderboardRanking,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe(
-        `Leaderboard ranking by "${notSupportedRankingOption}" is not supported`,
-      );
-    });
-
-    it('should return rewards leaderboard data in correct format', async () => {
-      const spyOnGetRewardsLeaderboard = jest.spyOn(
-        campaignsService as any,
-        'getRewardsLeaderboardEntries',
-      );
-
-      const leaderboardEntries = generateLeaderboardEntries();
-      spyOnGetRewardsLeaderboard.mockResolvedValueOnce(leaderboardEntries);
-
-      const data = await campaignsService.getCampaignLeaderboard(
-        campaign.chainId,
-        campaign.address,
-        LeaderboardRanking.TOTAL_REWARDS,
-      );
-
-      expect(data).toEqual(
-        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
-          address: ethers.getAddress(e.address),
-          result: e.result,
-        })),
-      );
-      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledTimes(1);
-      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledWith(campaign);
-
-      spyOnGetRewardsLeaderboard.mockRestore();
-    });
-
-    it('should return current progress leaderboard data in correct format', async () => {
-      const spyOnGetCurrentProgressLeaderboard = jest.spyOn(
-        campaignsService as any,
-        'getCurrentProgressLeaderboardEntries',
-      );
-
-      const leaderboardEntries = generateLeaderboardEntries();
-      spyOnGetCurrentProgressLeaderboard.mockResolvedValueOnce(
-        leaderboardEntries,
-      );
-
-      const data = await campaignsService.getCampaignLeaderboard(
-        campaign.chainId,
-        campaign.address,
-        LeaderboardRanking.CURRENT_PROGRESS,
-      );
-
-      expect(data).toEqual(
-        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
-          address: ethers.getAddress(e.address),
-          result: e.result,
-        })),
-      );
-      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledTimes(1);
-      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledWith(campaign);
-
-      spyOnGetCurrentProgressLeaderboard.mockRestore();
-    });
-  });
-
-  describe('getRewardsLeaderboardEntries', () => {
-    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
-    let campaign: CampaignEntity;
-
-    beforeAll(() => {
-      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
-        campaignsService as any,
-        'retrieveCampaignIntermediateResults',
-      );
-      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
-    });
-
-    beforeEach(() => {
-      campaign = generateCampaignEntity();
-      campaign.resultsCutoffAt = faker.date.recent();
-    });
-
-    afterAll(() => {
-      spyOnRetrieveCampaignIntermediateResults.mockRestore();
-    });
-
-    it('should return empty data if results not yet recorded', async () => {
-      campaign.resultsCutoffAt = null;
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([]);
-    });
-
-    it('should return empty result if no participants in results', async () => {
-      const intermediateResultsData = generateIntermediateResultsData();
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
-        intermediateResultsData,
-      );
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([]);
-    });
-
-    it('should return zeros if no reward transactions for participants yet', async () => {
-      const intermediateResultsData = generateIntermediateResultsData();
-      const participantOutcome = generateParticipantOutcome();
-      intermediateResultsData.results[0].participants_outcomes_batches.push({
-        id: faker.string.uuid(),
-        results: [participantOutcome],
+      expect(data).toEqual({
+        actualOn: now,
+        total: '0',
+        entries: [],
       });
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
-        intermediateResultsData,
-      );
-      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([
-        {
-          address: participantOutcome.address.toLowerCase(),
-          result: 0,
-        },
-      ]);
-      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(1);
-      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledWith({
-        chainId: campaign.chainId,
-        fromAddress: campaign.address,
-        toAddress: campaign.address,
-        method: 'bulkTransfer',
-        first: 100,
-        skip: 0,
-      });
-    });
-
-    it('should return only participants data for leaderboard', async () => {
-      const intermediateResultsData = generateIntermediateResultsData();
-      const participantOutcome = generateParticipantOutcome();
-      intermediateResultsData.results[0].participants_outcomes_batches.push({
-        id: faker.string.uuid(),
-        results: [participantOutcome],
-      });
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
-        intermediateResultsData,
-      );
-      const participantRewardValue = faker.number.bigInt();
-      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([
-        {
-          internalTransactions: [
-            {
-              receiver: participantOutcome.address.toLowerCase(),
-              value: participantRewardValue,
-            },
-            // imitate broken value
-            {
-              receiver: null,
-              value: faker.number.bigInt(),
-            },
-            // imitate oracle fee/launcher refund payout
-            {
-              receiver: faker.finance.ethereumAddress(),
-              value: faker.number.bigInt(),
-            },
-          ],
-        },
-      ] as ITransaction[]);
-      // next page request
-      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([
-        {
-          address: participantOutcome.address.toLowerCase(),
-          result: Number(
-            ethers.formatUnits(
-              participantRewardValue,
-              campaign.fundTokenDecimals,
-            ),
-          ),
-        },
-      ]);
-      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('getCurrentProgressLeaderboardEntries', () => {
-    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
-    let campaign: CampaignEntity;
-
-    beforeAll(() => {
-      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
-        campaignsService as any,
-        'retrieveCampaignIntermediateResults',
-      );
-      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
-    });
-
-    beforeEach(() => {
-      campaign = generateCampaignEntity();
-      campaign.resultsCutoffAt = faker.date.recent();
-    });
-
-    afterEach(() => {
-      mockCacheManager.clear();
-    });
-
-    afterAll(() => {
-      spyOnRetrieveCampaignIntermediateResults.mockRestore();
     });
 
     it.each([CampaignStatus.CANCELLED, CampaignStatus.COMPLETED])(
@@ -5143,8 +4936,9 @@ describe('CampaignsService', () => {
 
         let thrownError: any;
         try {
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
+          await campaignsService.getCampaignLeaderboard(
+            campaign.chainId,
+            campaign.address,
           );
         } catch (error) {
           thrownError = error;
@@ -5165,31 +4959,46 @@ describe('CampaignsService', () => {
         campaign.status = campaignStatus;
 
         const intermediateResultsData = generateIntermediateResultsData();
-        const participantOutcome = generateParticipantOutcome();
+        const participantOutcomes = Array.from({ length: 3 }, () =>
+          generateParticipantOutcome(campaign.type),
+        );
         intermediateResultsData.results[0].participants_outcomes_batches.push({
           id: faker.string.uuid(),
-          results: [participantOutcome],
+          results: participantOutcomes,
         });
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
           intermediateResultsData,
         );
 
-        const data =
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
-          );
+        const data = await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+        );
 
-        expect(data).toEqual([
-          {
-            address: participantOutcome.address,
-            result: Number(
-              new Decimal(participantOutcome.score).toDecimalPlaces(
-                campaign.fundTokenDecimals,
-                Decimal.ROUND_DOWN,
-              ),
-            ),
-          },
-        ]);
+        let expectedTotal = new Decimal(0);
+        const expectedEntries = _.orderBy(
+          participantOutcomes.map((outcome) => {
+            // prettier-ignore
+            const result = (outcome.total_volume || outcome.total_balance) as number;
+
+            expectedTotal = expectedTotal.add(result);
+
+            return {
+              address: outcome.address,
+              score: outcome.score,
+              result: result,
+            };
+          }),
+          'score',
+          'desc',
+        );
+        expect(data).toEqual({
+          entries: expectedEntries,
+          total: expectedTotal
+            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+            .toString(),
+          actualOn: now,
+        });
       },
     );
 
@@ -5198,31 +5007,48 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        const participantOutcome = generateParticipantOutcome();
+        const participantOutcomes = Array.from({ length: 3 }, () =>
+          generateParticipantOutcome(campaign.type),
+        );
+        const cacheCycleTo = faker.date.recent();
         await campaignsCache.setInterimProgress(
           campaign.id,
           {
-            participants_outcomes: [participantOutcome],
+            to: cacheCycleTo.toISOString(),
+            participants_outcomes: participantOutcomes,
           } as CampaignProgress<CampaignProgressMeta>,
           faker.date.future(),
         );
 
-        const data =
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
-          );
+        const data = await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+        );
 
-        expect(data).toEqual([
-          {
-            address: participantOutcome.address,
-            result: Number(
-              new Decimal(participantOutcome.score).toDecimalPlaces(
-                campaign.fundTokenDecimals,
-                Decimal.ROUND_DOWN,
-              ),
-            ),
-          },
-        ]);
+        let expectedTotal = new Decimal(0);
+        const expectedEntries = _.orderBy(
+          participantOutcomes.map((outcome) => {
+            // prettier-ignore
+            const result = (outcome.total_volume || outcome.total_balance) as number;
+
+            expectedTotal = expectedTotal.add(result);
+
+            return {
+              address: outcome.address,
+              score: outcome.score,
+              result: result,
+            };
+          }),
+          'score',
+          'desc',
+        );
+        expect(data).toEqual({
+          entries: expectedEntries,
+          total: expectedTotal
+            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+            .toString(),
+          actualOn: cacheCycleTo,
+        });
       },
     );
 
@@ -5231,12 +5057,16 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        const data =
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
-          );
+        const data = await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+        );
 
-        expect(data).toEqual([]);
+        expect(data).toEqual({
+          actualOn: now,
+          total: '0',
+          entries: [],
+        });
       },
     );
   });

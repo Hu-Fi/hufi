@@ -25,7 +25,6 @@ import {
   CampaignType,
   CampaignJoinStatus,
   ReturnedCampaignStatus,
-  LeaderboardRanking,
 } from './types';
 
 export class JoinCampaignDto {
@@ -265,25 +264,18 @@ export class GetUserProgressResponseDto {
   totalMeta: object;
 }
 
-export class GetLeaderboardQueryDto {
-  @ApiProperty({
-    name: 'rank_by',
-    enum: LeaderboardRanking,
-  })
-  @IsEnum(LeaderboardRanking)
-  rankBy: LeaderboardRanking;
-}
-
 export class LeaderboardEntry {
   @ApiProperty()
   address: string;
 
+  @ApiProperty()
+  score: number;
+
   @ApiProperty({
     description: `
-      This field represents different value based on chosen ranking mode and can be:
-        - total rewards earned by participant
-        - current score on market making campaign
-        - current amount of held tokens
+      This field represents different value based on the campaign type and can be:
+        - current score on "market making" campaign
+        - current amount of held tokens for "holding" campaign
     `,
   })
   result: number;
@@ -295,4 +287,12 @@ export class CampaignLeaderboardResponseDto {
     isArray: true,
   })
   data: LeaderboardEntry[];
+
+  @ApiProperty()
+  total: string;
+
+  @ApiProperty({
+    name: 'actual_on',
+  })
+  actualOn: string;
 }
