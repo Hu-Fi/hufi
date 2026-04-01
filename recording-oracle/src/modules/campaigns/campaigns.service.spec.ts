@@ -4904,6 +4904,7 @@ describe('CampaignsService', () => {
     });
 
     afterEach(() => {
+      campaignsService['prefinalResultsCache'].clear();
       mockCacheManager.clear();
     });
 

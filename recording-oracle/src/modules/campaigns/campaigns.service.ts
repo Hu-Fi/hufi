@@ -18,6 +18,7 @@ import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import { LRUCache } from 'lru-cache';
 import ms from 'ms';
 
 import { ExchangeName } from '@/common/constants';
@@ -106,6 +107,11 @@ export class CampaignsService implements OnModuleDestroy {
   private readonly logger = logger.child({
     context: CampaignsService.name,
   });
+
+  private readonly prefinalResultsCache = new LRUCache<
+    string,
+    IntermediateResultsData
+  >({ max: 100 });
 
   constructor(
     private readonly campaignsCache: CampaignsCache,
@@ -1574,13 +1580,15 @@ export class CampaignsService implements OnModuleDestroy {
         CampaignStatus.PENDING_COMPLETION,
       ].includes(campaign.status)
     ) {
-      /**
-       * TODO: cache results file if already downloaded
-       */
-      const intermediateResultsData =
-        await this.retrieveCampaignIntermediateResults(campaign);
+      if (!this.prefinalResultsCache.has(campaign.id)) {
+        const intermediateResultsData =
+          await this.retrieveCampaignIntermediateResults(campaign);
+        this.prefinalResultsCache.set(campaign.id, intermediateResultsData!);
+      }
 
-      const latestIntermediateResult = intermediateResultsData!.results.at(-1)!;
+      const latestIntermediateResult = this.prefinalResultsCache
+        .get(campaign.id)!
+        .results.at(-1)!;
       for (const outcomesBatch of latestIntermediateResult.participants_outcomes_batches) {
         resultsToInspect.push(...outcomesBatch.results);
       }
