@@ -339,11 +339,7 @@ export class CampaignsService implements OnModuleDestroy {
     const escrowStatus = await escrowClient.getStatus(campaignAddress);
 
     if (
-      [
-        EscrowStatus.ToCancel,
-        EscrowStatus.Cancelled,
-        EscrowStatus.Complete,
-      ].includes(escrowStatus)
+      [EscrowStatus.Cancelled, EscrowStatus.Complete].includes(escrowStatus)
     ) {
       throw new InvalidCampaign(
         chainId,
@@ -521,11 +517,7 @@ export class CampaignsService implements OnModuleDestroy {
               -1,
             ) as IntermediateResult;
 
-            const lastResultDate = new Date(lastResultAt);
-            /**
-             * Add 1 ms to end date because interval boundaries are inclusive
-             */
-            startDate = new Date(lastResultDate.valueOf() + 1);
+            startDate = new Date(lastResultAt);
           }
 
           let endDate: Date;
@@ -751,6 +743,9 @@ export class CampaignsService implements OnModuleDestroy {
     );
   }
 
+  /**
+   * Period boundaries are [startDate, endDate)
+   */
   async checkCampaignProgressForPeriod(
     campaign: CampaignEntity,
     startDate: Date,
@@ -1266,50 +1261,32 @@ export class CampaignsService implements OnModuleDestroy {
 
   @ScheduleInterval(CampaignServiceJob.DISCOVER_NEW_CAMPAIGNS, ms('10 minutes'))
   async discoverNewCampaigns(): Promise<void> {
-    this.logger.debug('New campaigns discovery job started');
+    this.logger.debug('Campaigns discovery job started');
 
     for (const chainId of this.web3Service.supportedChainIds) {
       try {
-        const latestKnownCampaign =
-          await this.campaignsRepository.findLatestCampaignForChain(chainId);
-        let lookbackDate: Date;
-        if (latestKnownCampaign) {
-          const campaignEscrow = await EscrowUtils.getEscrow(
-            latestKnownCampaign.chainId,
-            latestKnownCampaign.address,
-          );
-          if (!campaignEscrow) {
-            throw new Error('No escrow data for latest known campaign');
-          }
-          /**
-           * 'createdAt' is a tx block timestamp, so technically
-           * there might be multiple escrows created within the same block
-           * and we have to discover from the same timestamp value to not miss some.
-           */
-          lookbackDate = new Date(campaignEscrow.createdAt);
-        } else {
-          lookbackDate = dayjs().subtract(1, 'day').toDate();
-        }
+        const discoveryAnchor =
+          await this.campaignsCache.getChainDiscoveryAnchor(chainId);
 
-        const newEscrows = await EscrowUtils.getEscrows({
+        const discoveredEscrows = await EscrowUtils.getEscrows({
           chainId: chainId as number,
           recordingOracle: this.web3ConfigService.operatorAddress,
-          /**
-           * We are interested only in pending escrows, because if it's in `ToCancel`
-           * status and not in RecO DB yet - it means nobody joined and no need to process it
-           */
-          status: EscrowStatus.Pending,
-          from: lookbackDate,
+          status: [EscrowStatus.Pending, EscrowStatus.ToCancel],
+          from: discoveryAnchor ?? undefined,
           orderDirection: OrderDirection.ASC,
-          first: 10,
-        });
-        this.logger.debug('Discovered new launched campaigns', {
-          chainId,
-          campaigns: newEscrows.map((e) => e.address),
+          first: 50,
         });
 
-        for (const newEscrow of newEscrows) {
-          const campaignAddress = ethers.getAddress(newEscrow.address);
+        if (discoveredEscrows.length === 0) {
+          this.logger.debug('No new escrows discovered for chain', {
+            chainId,
+            discoveryAnchor,
+          });
+          continue;
+        }
+
+        for (const discoveredEscrow of discoveredEscrows) {
+          const campaignAddress = ethers.getAddress(discoveredEscrow.address);
           const campaignExists =
             await this.campaignsRepository.checkCampaignExists(
               chainId as number,
@@ -1358,6 +1335,16 @@ export class CampaignsService implements OnModuleDestroy {
             }
           }
         }
+
+        await this.campaignsCache.setChainDiscoveryAnchor(
+          chainId,
+          /**
+           * Some campaigns might be сreated within the same block
+           * but not yet synced to subgraph, so use last discovered
+           * campaign date as anchor to avoid missing them
+           */
+          new Date(discoveredEscrows.at(-1)!.createdAt),
+        );
       } catch (error) {
         this.logger.error('Error while discovering new campaigns for chain', {
           chainId,
@@ -1366,7 +1353,7 @@ export class CampaignsService implements OnModuleDestroy {
       }
     }
 
-    this.logger.debug('New campaigns discovery job finished');
+    this.logger.debug('Campaigns discovery job finished');
   }
 
   @Cron(CronExpression.EVERY_10_MINUTES, {
@@ -1483,7 +1470,6 @@ export class CampaignsService implements OnModuleDestroy {
 
     const timeframeStart = dayjs(campaign.startDate)
       .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
-      .add(1, 'millisecond')
       .toDate();
 
     let timeframeEnd: Date;

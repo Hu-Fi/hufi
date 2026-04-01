@@ -8,7 +8,7 @@ import type {
 } from './types';
 
 export type BitmartNextPageToken = {
-  nextPageUntil: number;
+  oldestTradeAt: number;
   movingDedupIds: string[];
 };
 
@@ -18,11 +18,26 @@ export const getPaginationInput: GetPaginationInputFn<
   BitmartNextPageToken,
   PaginationParams
 > = (since, until, nextPageToken) => {
+  /**
+   * Bitmart API is [since, until]
+   */
+
+  let pageEndTime: number;
+  if (nextPageToken) {
+    /**
+     * Use timestamp as is in order to fetch all
+     * trades with same-millisecond timestamp if any
+     */
+    pageEndTime = nextPageToken.oldestTradeAt;
+  } else {
+    pageEndTime = until - 1;
+  }
+
   return {
     limit: PAGE_LIMIT,
     since: since,
     params: {
-      endTime: nextPageToken?.nextPageUntil || until,
+      endTime: pageEndTime,
     },
   };
 };
@@ -34,10 +49,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
   const movingDedupIds = new Set(currentPageToken?.movingDedupIds || []);
 
   /**
-   * startTime & endTime are inclusive, so due to pagination mechanism
-   * we have to filter out a boundary-timestamp trade.
-   *
-   * Also there might be an edge case with same-millisecond trades.
+   * There might be same-millisecond trades, so we have to filter out duplicates
    */
   const newTrades: CcxtTrade[] = [];
   for (const trade of trades) {
@@ -53,7 +65,7 @@ export const handlePaginationResponse: HandlePaginationResponseFn<
   }
 
   const nextPageToken: BitmartNextPageToken = {
-    nextPageUntil: newTrades.at(-1)!.timestamp,
+    oldestTradeAt: newTrades.at(-1)!.timestamp,
     /**
      * Keep last two pages to detect if we stuck in situation
      * where there are more trades within same-millisecond than trades page limit.

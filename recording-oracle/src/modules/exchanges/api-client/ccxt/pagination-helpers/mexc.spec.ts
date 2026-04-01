@@ -23,19 +23,19 @@ describe('mexc pagination helpers', () => {
       until = faker.date.soon({ refDate: since }).getTime();
     });
 
-    it('should use until if nextPageToken is not provided', () => {
+    it('should use correct until if nextPageToken is not provided', () => {
       const result = getPaginationInput(since, until);
 
       expect(result).toEqual({
         limit: 100,
         since,
-        params: { until },
+        params: { until: until - 1 },
       });
     });
 
     it('should use nextPageToken if provided', () => {
       const nextPageToken: MexcNextPageToken = {
-        nextPageUntil: faker.date.recent({ refDate: until }).getTime(),
+        oldestTradeAt: faker.date.recent({ refDate: until }).getTime(),
         movingDedupIds: [],
       };
       const result = getPaginationInput(since, until, nextPageToken);
@@ -43,7 +43,7 @@ describe('mexc pagination helpers', () => {
       expect(result).toEqual({
         limit: 100,
         since,
-        params: { until: nextPageToken.nextPageUntil },
+        params: { until: nextPageToken.oldestTradeAt },
       });
     });
   });
@@ -62,7 +62,7 @@ describe('mexc pagination helpers', () => {
 
       const currentPageToken = {
         movingDedupIds: _.map(trades, 'id'),
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -76,14 +76,14 @@ describe('mexc pagination helpers', () => {
       expect(result.nextPageToken).toBeUndefined();
     });
 
-    it('should generate correct nextPageUntil and movingDedupIds when no duplicates', () => {
+    it('should generate correct oldestTradeAt and movingDedupIds when no duplicates', () => {
       const trades = Array.from({ length: 3 }, () => generateCcxtTrade());
 
       const prevPageIds = Array.from({ length: 3 }, () => faker.string.ulid());
 
       const currentPageToken: MexcNextPageToken = {
         movingDedupIds: [...prevPageIds],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -94,7 +94,7 @@ describe('mexc pagination helpers', () => {
       });
 
       expect(result.nextPageToken).toBeDefined();
-      expect(result.nextPageToken!.nextPageUntil).toBe(
+      expect(result.nextPageToken!.oldestTradeAt).toBe(
         trades.at(-1)!.timestamp,
       );
       expect(result.nextPageToken!.movingDedupIds.sort()).toEqual(
@@ -111,7 +111,7 @@ describe('mexc pagination helpers', () => {
 
       const currentPageToken: MexcNextPageToken = {
         movingDedupIds: ['2'],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
       const result = handlePaginationResponse({
         trades,

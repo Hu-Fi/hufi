@@ -11,8 +11,11 @@ export const getPaginationInput: GetPaginationInputFn<
   BybitNextPageToken,
   BybitPaginationParams
 > = (since, until, nextPageToken) => {
+  /**
+   * Bybit API is [since, until]
+   */
   const params: BybitPaginationParams = {
-    endTime: until,
+    endTime: until - 1,
   };
 
   if (nextPageToken) {

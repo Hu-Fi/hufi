@@ -28,22 +28,22 @@ describe('bitmart pagination helpers', () => {
       expect(result).toEqual({
         limit: 200,
         since: since,
-        params: { endTime: until },
+        params: { endTime: until - 1 },
       });
     });
 
     it('should use nextPageToken for endTime if provided', () => {
-      const nextPageUntil = faker.date.recent({ refDate: since }).getTime();
+      const oldestTradeAt = faker.date.recent({ refDate: since }).getTime();
 
       const result = getPaginationInput(since, until, {
-        nextPageUntil,
+        oldestTradeAt,
         movingDedupIds: [],
       });
 
       expect(result).toEqual({
         limit: 200,
         since,
-        params: { endTime: nextPageUntil },
+        params: { endTime: oldestTradeAt },
       });
     });
   });
@@ -54,9 +54,9 @@ describe('bitmart pagination helpers', () => {
     it('should return empty trades if all are duplicates', () => {
       const trades = Array.from({ length: 3 }, () => generateCcxtTrade());
 
-      const currentPageToken = {
+      const currentPageToken: BitmartNextPageToken = {
         movingDedupIds: _.map(trades, 'id'),
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -70,14 +70,14 @@ describe('bitmart pagination helpers', () => {
       expect(result.nextPageToken).toBeUndefined();
     });
 
-    it('should generate correct nextPageUntil and movingDedupIds when no duplicates', () => {
+    it('should generate correct oldestTradeAt and movingDedupIds when no duplicates', () => {
       const trades = Array.from({ length: 3 }, () => generateCcxtTrade());
 
       const prevPageIds = Array.from({ length: 3 }, () => faker.string.ulid());
 
       const currentPageToken: BitmartNextPageToken = {
         movingDedupIds: [...prevPageIds],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -88,7 +88,7 @@ describe('bitmart pagination helpers', () => {
       });
 
       expect(result.nextPageToken).toBeDefined();
-      expect(result.nextPageToken!.nextPageUntil).toBe(
+      expect(result.nextPageToken!.oldestTradeAt).toBe(
         trades.at(-1)!.timestamp,
       );
       expect(result.nextPageToken!.movingDedupIds).toEqual([
@@ -106,7 +106,7 @@ describe('bitmart pagination helpers', () => {
 
       const currentPageToken: BitmartNextPageToken = {
         movingDedupIds: ['2'],
-        nextPageUntil: faker.date.anytime().getTime(),
+        oldestTradeAt: faker.date.anytime().getTime(),
       };
 
       const result = handlePaginationResponse({
@@ -118,7 +118,7 @@ describe('bitmart pagination helpers', () => {
 
       expect(_.map(result.trades, 'id')).toEqual(['1', '3']);
       expect(result.nextPageToken).toEqual({
-        nextPageUntil: trades.at(-1)!.timestamp,
+        oldestTradeAt: trades.at(-1)!.timestamp,
         movingDedupIds: ['2', '1', '3'],
       });
     });
