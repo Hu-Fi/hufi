@@ -1572,6 +1572,16 @@ export class CampaignsService implements OnModuleDestroy {
       );
     }
 
+    /**
+     * With current implementation of competitive market making campaign type
+     * we have to download all intermediate results and merge them with
+     * what we have in cache to correctly construct leaderboard. It's a gap
+     * in that campaign design and we either need to make its cycle duration
+     * same as other campaign types or make cycly configurable.
+     *
+     * For now - assume we have same cycle duration for all campaign types.
+     * TODO: revisit this
+     */
     let resultsToInspect: ParticipantOutcome[] = [];
     let actualOn: Date;
     if (
