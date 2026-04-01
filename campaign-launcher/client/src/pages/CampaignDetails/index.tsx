@@ -106,8 +106,7 @@ const CampaignDetails: FC = () => {
   useReserveLayoutBottomOffset(showJoinCampaignButton);
 
   const showLeaderboard =
-    campaignData &&
-    campaignData.status === CampaignStatus.ACTIVE &&
+    isOngoingCampaign &&
     campaignData.type !== CampaignType.THRESHOLD &&
     leaderboard;
 
@@ -130,13 +129,13 @@ const CampaignDetails: FC = () => {
           totalGenerated={leaderboard?.total || 0}
         />
       )}
+      {showLeaderboard && (
+        <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
+      )}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>
           <JoinCampaignButton campaign={campaignData as Campaign} />
         </BottomButtonWrapper>
-      )}
-      {showLeaderboard && (
-        <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
       )}
     </PageWrapper>
   );
