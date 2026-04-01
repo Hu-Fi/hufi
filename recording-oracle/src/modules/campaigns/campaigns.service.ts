@@ -62,7 +62,7 @@ import { CampaignsRepository } from './campaigns.repository';
 import {
   CAMPAIGN_PERMISSIONS_MAP,
   CampaignServiceJob,
-  PROGRESS_PERIOD_DAYS,
+  CAMPAIGNS_DAILY_CYCLE,
 } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -534,7 +534,7 @@ export class CampaignsService implements OnModuleDestroy {
             endDate = cancellationRequestedAt;
           } else {
             endDate = dayjs(startDate)
-              .add(PROGRESS_PERIOD_DAYS, 'day')
+              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
               .toDate();
 
             const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
@@ -623,54 +623,7 @@ export class CampaignsService implements OnModuleDestroy {
                   .toString()
               : '0';
           } else {
-            let periodDurationDays = PROGRESS_PERIOD_DAYS;
-            if (escrowStatus === EscrowStatus.ToCancel) {
-              periodDurationDays = Math.ceil(
-                dayjs(endDate).diff(startDate, 'days', true),
-              );
-            }
-
-            let progressValue: number;
-            let progressValueTarget: number;
-            if (isMarketMakingCampaign(campaign)) {
-              progressValue = (progress.meta as MarketMakingMeta).total_volume;
-              progressValueTarget = campaign.details.dailyVolumeTarget;
-            } else if (isHoldingCampaign(campaign)) {
-              progressValue = (progress.meta as HoldingMeta).total_balance;
-              progressValueTarget = campaign.details.dailyBalanceTarget;
-            } else if (isThresholdCampaign(campaign)) {
-              /**
-               * 'total_score' in this case is the number of eligible participants in current cycle,
-               * so when calculating reward pool we are going to distribute equal portion
-               * of daily reward to each participant that reached the threshold,
-               * where equal portion is defined as `dailyReward / maxParticipants`
-               */
-              // prettier-ignore
-              const nEligibleParticipants = (progress.meta as ThresholdMeta).total_score;
-              if (
-                campaign.details.maxParticipants &&
-                nEligibleParticipants > campaign.details.maxParticipants
-              ) {
-                // safety-belt
-                throw new Error(
-                  `Unexpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
-                );
-              }
-              progressValue = nEligibleParticipants;
-              progressValueTarget = campaign.details.maxParticipants || 1;
-            } else {
-              throw new Error(
-                `Unknown campaign type for reward pool calculation: ${campaign.type}`,
-              );
-            }
-
-            rewardPool = this.calculateRewardPool({
-              baseRewardPool: this.calculateDailyReward(campaign),
-              maxRewardPoolRatio: periodDurationDays,
-              progressValueTarget,
-              progressValue,
-              fundTokenDecimals: campaign.fundTokenDecimals,
-            });
+            rewardPool = this.calculateRewardPool(campaign, progress);
           }
 
           const intermediateResult: IntermediateResult = {
@@ -950,23 +903,55 @@ export class CampaignsService implements OnModuleDestroy {
       .toString();
   }
 
-  calculateRewardPool(input: {
-    baseRewardPool: string;
-    maxRewardPoolRatio: number;
-    progressValueTarget: number;
-    progressValue: number;
-    fundTokenDecimals: number;
-  }): string {
-    const rewardRatio = Math.min(
-      input.progressValue / input.progressValueTarget,
-      input.maxRewardPoolRatio,
-    );
+  calculateRewardPool(
+    campaign: CampaignEntity,
+    progress: CampaignProgress<CampaignProgressMeta>,
+  ): string {
+    let progressValue: number;
+    let progressValueTarget: number;
+    if (isMarketMakingCampaign(campaign)) {
+      progressValue = (progress.meta as MarketMakingMeta).total_volume;
+      progressValueTarget = campaign.details.dailyVolumeTarget;
+    } else if (isHoldingCampaign(campaign)) {
+      progressValue = (progress.meta as HoldingMeta).total_balance;
+      progressValueTarget = campaign.details.dailyBalanceTarget;
+    } else if (isThresholdCampaign(campaign)) {
+      /**
+       * 'total_score' in this case is the number of eligible participants in current cycle,
+       * so when calculating reward pool we are going to distribute equal portion
+       * of daily reward to each participant that reached the threshold,
+       * where equal portion is defined as `dailyReward / maxParticipants`
+       */
+      // prettier-ignore
+      const nEligibleParticipants = (progress.meta as ThresholdMeta).total_score;
+      if (
+        campaign.details.maxParticipants &&
+        nEligibleParticipants > campaign.details.maxParticipants
+      ) {
+        // safety-belt
+        throw new Error(
+          `Unexpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
+        );
+      }
+      progressValue = nEligibleParticipants;
+      progressValueTarget = campaign.details.maxParticipants || 1;
+    } else {
+      throw new Error(
+        `Unknown campaign type for reward pool calculation: ${campaign.type}`,
+      );
+    }
 
-    const baseRewardPool = new Decimal(input.baseRewardPool);
+    const dailyReward = this.calculateDailyReward(campaign);
+    const baseRewardPool = new Decimal(dailyReward);
+
+    const rewardRatio = Math.min(
+      progressValue / progressValueTarget,
+      CAMPAIGNS_DAILY_CYCLE,
+    );
     const rewardPool = baseRewardPool.mul(rewardRatio);
 
     return rewardPool
-      .toDecimalPlaces(input.fundTokenDecimals, Decimal.ROUND_DOWN)
+      .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
       .toString();
   }
 
@@ -1469,11 +1454,11 @@ export class CampaignsService implements OnModuleDestroy {
 
     // Calculate start of the active timeframe (end is now)
     const timeframesPassed = Math.floor(
-      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
+      dayjs(now).diff(campaign.startDate, 'day', false) / CAMPAIGNS_DAILY_CYCLE,
     );
 
     const timeframeStart = dayjs(campaign.startDate)
-      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
+      .add(timeframesPassed * CAMPAIGNS_DAILY_CYCLE, 'day')
       .toDate();
 
     let timeframeEnd: Date;

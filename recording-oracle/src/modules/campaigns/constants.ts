@@ -2,7 +2,11 @@ import { ExchangePermission } from '@/modules/exchanges';
 
 import { CampaignType } from './types';
 
-export const PROGRESS_PERIOD_DAYS = 1;
+/**
+ * Just a convenience constant to easily search places where
+ * we rely on the campaign progress cycle duration. Must be 1 day.
+ */
+export const CAMPAIGNS_DAILY_CYCLE = 1;
 
 export const CAMPAIGN_PERMISSIONS_MAP: Record<
   CampaignType,
