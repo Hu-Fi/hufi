@@ -62,6 +62,13 @@ export class HoldingProgressChecker implements CampaignProgressChecker<
 
     this.totalBalanceMeta += tokenBalance;
 
+    if (this.totalBalanceMeta >= Number.MAX_SAFE_INTEGER) {
+      /**
+       * Safety-belt to refactor to decimal.js in case if values are too big
+       */
+      throw new Error('Participants total volume number overflow');
+    }
+
     return { abuseDetected, score, token_balance: tokenBalance };
   }
 
