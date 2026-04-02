@@ -88,6 +88,7 @@ const LeaderboardOverlay: FC<Props> = ({ open, onClose, data, symbol }) => {
             onChange={handleSearchChange}
             slotProps={{
               input: {
+                'aria-label': 'Search Wallet',
                 endAdornment: (
                   <InputAdornment position="end">
                     <SearchIcon sx={{ color: 'white', fontSize: 24 }} />

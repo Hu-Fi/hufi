@@ -59,7 +59,9 @@ const calculateListSlice = (
   const total = leaderboard.length;
 
   const userIndex = activeAddress
-    ? leaderboard.findIndex((entry) => entry.address === activeAddress)
+    ? leaderboard.findIndex(
+        (entry) => entry.address.toLowerCase() === activeAddress?.toLowerCase()
+      )
     : -1;
 
   if (userIndex === -1) {
@@ -123,7 +125,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           {leaderboard?.data.slice(0, 3)?.map((entry) => {
             const { rank, address, result } = entry;
             const { value, suffix, decimals } = getCompactNumberParts(result);
-            const isMyEntry = address === activeAddress;
+            const isMyEntry =
+              address.toLowerCase() === activeAddress?.toLowerCase();
             return (
               <Stack
                 key={address}

@@ -19,7 +19,7 @@ const LeaderboardList = memo(({ data, activeAddress }: Props) => (
     {data.map((entry) => {
       const { address, rank, result } = entry;
       const { value, suffix, decimals } = getCompactNumberParts(result);
-      const isMyEntry = address === activeAddress;
+      const isMyEntry = address.toLowerCase() === activeAddress?.toLowerCase();
       return (
         <Box
           key={address}
