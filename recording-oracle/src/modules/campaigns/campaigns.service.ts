@@ -15,7 +15,6 @@ import {
   SchedulerRegistry,
 } from '@nestjs/schedule';
 import dayjs from 'dayjs';
-import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
@@ -608,22 +607,10 @@ export class CampaignsService implements OnModuleDestroy {
             },
           );
 
-          let rewardPool: string;
-          if (isCompetitiveMarketMakingCampaign(campaign)) {
-            const shouldReserveFunds =
-              escrowStatus === EscrowStatus.ToCancel ||
-              endDate.valueOf() === campaign.endDate.valueOf();
-            rewardPool = shouldReserveFunds
-              ? new Decimal(campaign.fundAmount)
-                  .toDecimalPlaces(
-                    campaign.fundTokenDecimals,
-                    Decimal.ROUND_DOWN,
-                  )
-                  .toString()
-              : '0';
-          } else {
-            rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
-          }
+          const rewardPool = rewardsUtils.calculateRewardPool(
+            campaign,
+            progress,
+          );
 
           const intermediateResult: IntermediateResult = {
             from: progress.from,
@@ -1493,16 +1480,6 @@ export class CampaignsService implements OnModuleDestroy {
       );
     }
 
-    /**
-     * With current implementation of competitive market making campaign type
-     * we have to download all intermediate results and merge them with
-     * what we have in cache to correctly construct leaderboard. It's a gap
-     * in that campaign design and we either need to make its cycle duration
-     * same as other campaign types or make cycly configurable.
-     *
-     * For now - assume we have same cycle duration for all campaign types.
-     * TODO: revisit this
-     */
     let resultsToInspect: ParticipantOutcome[] = [];
     let estimatedRewardPool: string;
     let actualOn: Date;

@@ -2219,29 +2219,6 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
-    it('should check progress for completed daily period of ongoing COMPETITIVE_MARKET_MAKING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.startDate = dayjs().subtract(2, 'day').toDate();
-      campaign.endDate = dayjs().add(2, 'day').toDate();
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        generateCampaignProgress(campaign),
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-
-      const [intermediateResultsData, fundsToReserve] =
-        spyOnRecordCampaignIntermediateResults.mock.calls[0];
-      const lastResult = (
-        intermediateResultsData as IntermediateResultsData
-      ).results.at(-1)!;
-      expect(lastResult.reserved_funds).toBe('0');
-      expect(fundsToReserve).toBe(0n);
-    });
-
     it('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2434,6 +2411,11 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
         {
@@ -2445,13 +2427,13 @@ describe('CampaignsService', () => {
             {
               from: campaignProgress.from,
               to: campaignProgress.to,
-              reserved_funds: '0',
+              reserved_funds: expectedRewardPool,
               participants_outcomes_batches: [],
               ...campaignProgress.meta,
             },
           ],
         },
-        0n,
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2473,6 +2455,14 @@ describe('CampaignsService', () => {
         newCampaignProgress,
       );
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        newCampaignProgress,
+      );
+      /**
+       * Need to prepare it before calling recordCampaignProgress because it mutates
+       * intermediateResultsData that is mocked as return value above
+       */
       const expectedNewIntermediateResultsData = {
         ...intermediateResultsData,
         results: [
@@ -2480,7 +2470,7 @@ describe('CampaignsService', () => {
           {
             from: newCampaignProgress.from,
             to: newCampaignProgress.to,
-            reserved_funds: '0',
+            reserved_funds: expectedRewardPool,
             participants_outcomes_batches: [],
             ...newCampaignProgress.meta,
           },
@@ -2492,7 +2482,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
         expectedNewIntermediateResultsData,
-        0n,
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2629,7 +2619,6 @@ describe('CampaignsService', () => {
 
     it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2642,9 +2631,7 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = new Decimal(campaign.fundAmount)
-        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-        .toString();
+      const expectedRewardPool = rewardsUtils.calculateDailyReward(campaign);
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -3011,6 +2998,11 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(logger.info).toHaveBeenCalledTimes(2);
       expect(logger.info).toHaveBeenNthCalledWith(
         1,
@@ -3018,7 +3010,7 @@ describe('CampaignsService', () => {
         {
           from: campaignProgress.from,
           to: campaignProgress.to,
-          reserved_funds: '0',
+          reserved_funds: expectedRewardPool,
         },
       );
       expect(logger.info).toHaveBeenNthCalledWith(
@@ -3027,7 +3019,7 @@ describe('CampaignsService', () => {
         {
           from: campaignProgress.from,
           to: campaignProgress.to,
-          reserved_funds: '0',
+          reserved_funds: expectedRewardPool,
           resultsUrl: storedResultsMeta.url,
           ...campaignProgress.meta,
         },

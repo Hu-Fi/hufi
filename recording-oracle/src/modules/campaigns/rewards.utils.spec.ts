@@ -137,6 +137,22 @@ describe('rewards utils', () => {
       });
     });
 
+    describe('competitive market making campaigns', () => {
+      beforeEach(() => {
+        campaign = generateCampaignEntity(
+          CampaignType.COMPETITIVE_MARKET_MAKING,
+        );
+      });
+
+      it('should return daily reward as reward pool', () => {
+        const progress = generateCampaignProgress(campaign);
+
+        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
+
+        expect(rewardPool).toBe(rewardsUtils.calculateDailyReward(campaign));
+      });
+    });
+
     describe('holding campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.HOLDING);

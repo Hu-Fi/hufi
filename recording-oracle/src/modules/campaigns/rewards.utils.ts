@@ -10,6 +10,7 @@ import type {
   ThresholdMeta,
 } from './progress-checking';
 import {
+  isCompetitiveMarketMakingCampaign,
   isHoldingCampaign,
   isMarketMakingCampaign,
   isThresholdCampaign,
@@ -39,6 +40,13 @@ export function calculateRewardPool(
   if (isMarketMakingCampaign(campaign)) {
     progressValue = (progress.meta as MarketMakingMeta).total_volume;
     progressValueTarget = campaign.details.dailyVolumeTarget;
+  } else if (isCompetitiveMarketMakingCampaign(campaign)) {
+    /**
+     * We are going to distribute the whole daily reward across top performers,
+     * so for reward pool calculation we consider targer as achieved.
+     */
+    progressValue = 1;
+    progressValueTarget = progressValue;
   } else if (isHoldingCampaign(campaign)) {
     progressValue = (progress.meta as HoldingMeta).total_balance;
     progressValueTarget = campaign.details.dailyBalanceTarget;
@@ -68,14 +76,14 @@ export function calculateRewardPool(
     );
   }
 
-  const dailyReward = calculateDailyReward(campaign);
-  const baseRewardPool = new Decimal(dailyReward);
-
   const rewardRatio = Math.min(
     progressValue / progressValueTarget,
     CAMPAIGNS_DAILY_CYCLE,
   );
-  const rewardPool = baseRewardPool.mul(rewardRatio);
+
+  const dailyReward = calculateDailyReward(campaign);
+
+  const rewardPool = Decimal.mul(dailyReward, rewardRatio);
 
   return rewardPool
     .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
