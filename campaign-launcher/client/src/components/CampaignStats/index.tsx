@@ -2,17 +2,14 @@ import { type FC } from 'react';
 
 import { Box, Skeleton, Stack, styled, Typography, Grid } from '@mui/material';
 
-import CampaignResultsWidget from '@/components/CampaignResultsWidget';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
 import { CancelIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, type CampaignDetails } from '@/types';
 import {
-  formatTokenAmount,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
@@ -23,29 +20,39 @@ type Props = {
   campaign: CampaignDetails | null | undefined;
   isJoined: boolean;
   isCampaignLoading: boolean;
+  totalParticipants: number;
 };
 
-const StatsCard = styled(Box)(({ theme }) => ({
+export const StatsCard = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'withBorder',
+})<{ withBorder?: boolean }>(({ theme, withBorder }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'start',
   height: '175px',
   padding: '32px',
+  flex: 1,
   gap: '45px',
-  //backgroundColor: '#251D47',
-  //borderRadius: '16px',
-  //border: '1px solid rgba(255, 255, 255, 0.1)',
+  ...(withBorder && {
+    backgroundColor: '#251D47',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+  }),
 
   [theme.breakpoints.down('md')]: {
-    flexDirection: 'column-reverse',
-    height: '100px',
+    //flexDirection: 'column-reverse',
+    //height: '100px',
+    height: 'auto',
+    minHeight: '90px',
     padding: '12px',
-    gap: '16px',
-    //borderRadius: '8px',
+    gap: '8px',
+    ...(withBorder && {
+      borderRadius: '8px',
+    }),
   },
 }));
 
-const CardName = styled(Typography)(({ theme }) => ({
+export const CardName = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.secondary,
   fontSize: '16px',
   fontWeight: 600,
@@ -62,7 +69,7 @@ const CardName = styled(Typography)(({ theme }) => ({
   },
 }));
 
-const CardValue = styled(Typography)(({ theme }) => ({
+export const CardValue = styled(Typography)(({ theme }) => ({
   color: 'white',
   fontSize: '36px',
   fontWeight: 800,
@@ -97,11 +104,11 @@ const CampaignStats: FC<Props> = ({
   campaign,
   isJoined,
   isCampaignLoading,
+  totalParticipants,
 }) => {
   const { exchangesMap } = useExchangesContext();
   const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
-  const campaignTimeline = useCampaignTimeline(campaign);
 
   if (isCampaignLoading) return renderSkeletonBlocks(isMobile);
 
@@ -127,31 +134,33 @@ const CampaignStats: FC<Props> = ({
     exchangesMap.get(campaign.exchange_name)?.display_name ||
     campaign.exchange_name;
 
-  const formattedTokenAmount = +formatTokenAmount(
-    campaign.fund_amount,
-    campaign.fund_token_decimals
-  );
-
   const targetInfo = getTargetInfo(campaign);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
-    <Stack>
+    <Stack
+      mx={{ xs: -2, md: 0 }}
+      px={{ xs: 2, md: 0 }}
+      pt={3}
+      pb={{ xs: 2, md: 3 }}
+      gap={{ xs: 2, md: 3 }}
+      borderBottom="1px solid #473C74"
+    >
       <Typography
         component="h6"
-        variant="body1"
-        fontWeight={600}
-        letterSpacing="3.2px"
-        textTransform="uppercase"
+        color={isMobile ? 'white' : 'text.primary'}
+        fontSize={{ xs: 20, md: 16 }}
+        fontWeight={{ xs: 500, md: 600 }}
+        letterSpacing={{ xs: 0, md: '3.2px' }}
+        textTransform={{ xs: 'none', md: 'uppercase' }}
       >
         Details
       </Typography>
       {isCancelled && (
         <Stack
           width="100%"
-          mt={2}
           p={4}
           gap={1.5}
           bgcolor="#361034"
@@ -178,48 +187,42 @@ const CampaignStats: FC<Props> = ({
       <Grid
         container
         width="100%"
-        spacing={6}
-        mt={3}
+        spacing={{ xs: 0, md: 6 }}
         bgcolor="#251d47"
         borderRadius="16px"
         border="1px solid rgba(255, 255, 255, 0.07)"
       >
-        <Grid size={{ xs: 6, md: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <CardName>Exchange</CardName>
             <CardValue>{exchangeName}</CardValue>
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <CardName>Campaign Type</CardName>
             <CardValue>{mapTypeToLabel(campaign.type)}</CardValue>
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
             <CardName>Symbol</CardName>
             <CampaignSymbol
               symbol={campaign.symbol}
               campaignType={campaign.type}
-              size="large"
+              size={isMobile ? 'small' : 'large'}
             />
           </StatsCard>
         </Grid>
       </Grid>
-      <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
+      <Grid
+        container
+        spacing={{ xs: 2, md: 3 }}
+        width="100%"
+        alignItems="stretch"
+      >
         <Grid size={{ xs: 6, md: 4 }}>
-          <StatsCard>
-            <CardName variant="subtitle2">
-              {isMobile ? 'Reward Pool' : 'Total Reward Pool'}
-            </CardName>
-            <CardValue>
-              {formattedTokenAmount} {campaign.fund_token_symbol}
-            </CardValue>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
-          <StatsCard>
+          <StatsCard withBorder>
             <CardName variant="subtitle2">{targetInfo.label}</CardName>
             <CardValue>
               <FormattedNumber
@@ -230,43 +233,21 @@ const CampaignStats: FC<Props> = ({
             </CardValue>
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
-          <StatsCard>
-            <CardName>Exchange</CardName>
-            <CardValue>{exchangeName}</CardValue>
-          </StatsCard>
-        </Grid>
-        {showUserPerformance && (
-          <>
-            <Grid size={{ xs: 6, md: 4 }}>
-              <StatsCard>
-                <CardName variant="subtitle2">Ranking</CardName>
-                <CardValue>14 / 81</CardValue>
-              </StatsCard>
-            </Grid>
-            <Grid size={{ xs: 6, md: 4 }}>
-              <StatsCard>
-                <CardName variant="subtitle2">My Volume</CardName>
-                <CardValue>
-                  {formattedTokenAmount} {campaign.fund_token_symbol}
-                </CardValue>
-              </StatsCard>
-            </Grid>
-          </>
+        {showUserPerformance ? (
+          <Grid size={{ xs: 6, md: 4 }} display="flex">
+            <StatsCard withBorder>
+              <CardName variant="subtitle2">Ranking</CardName>
+              <CardValue>14 / 81</CardValue>
+            </StatsCard>
+          </Grid>
+        ) : (
+          <Grid size={{ xs: 6, md: 4 }} display="flex">
+            <StatsCard withBorder>
+              <CardName variant="subtitle2">Total Participants</CardName>
+              <CardValue>{totalParticipants}</CardValue>
+            </StatsCard>
+          </Grid>
         )}
-        <Grid size={{ xs: 6, md: 4 }}>
-          <CampaignResultsWidget
-            campaignStatus={campaign.status}
-            finalResultsUrl={campaign.final_results_url}
-            intermediateResultsUrl={campaign.intermediate_results_url}
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
-          <StatsCard>
-            <CardName>{campaignTimeline.label}</CardName>
-            <CardValue>{campaignTimeline.value}</CardValue>
-          </StatsCard>
-        </Grid>
       </Grid>
     </Stack>
   );
