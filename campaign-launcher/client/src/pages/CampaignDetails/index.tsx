@@ -9,6 +9,7 @@ import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import PageWrapper from '@/components/PageWrapper';
 import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
+import { useGetLeaderboard } from '@/hooks/recording-oracle/campaign';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
@@ -42,11 +43,21 @@ const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
 const CampaignDetails: FC = () => {
   const { address } = useParams() as { address: EvmAddress };
   const [searchParams] = useSearchParams();
-  const { data: campaign, isFetching: isCampaignLoading } =
-    useCampaignDetails(address);
+
   const { joinedCampaigns } = useAuthedUserData();
   const { exchangesMap } = useExchangesContext();
   const isMobile = useIsMobile();
+
+  const { data: campaign, isFetching: isCampaignLoading } =
+    useCampaignDetails(address);
+
+  const { data: leaderboard } = useGetLeaderboard({
+    address: campaign?.address || '',
+    enabled: campaign?.status === CampaignStatus.ACTIVE,
+  });
+
+  // eslint-disable-next-line no-console
+  console.log('leaderboard', leaderboard);
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');

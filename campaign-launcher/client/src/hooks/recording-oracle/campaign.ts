@@ -75,3 +75,26 @@ export const useCheckCampaignJoinStatus = (address: EvmAddress) => {
     enabled: isAuthenticated && !!appChainId && !!address,
   });
 };
+
+export const useGetLeaderboard = ({
+  address,
+  enabled = true,
+}: {
+  address: string;
+  enabled?: boolean;
+}) => {
+  const { appChainId } = useNetwork();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.LEADERBOARD, appChainId, address],
+    queryFn: () => recordingApi.getLeaderboard(appChainId, address),
+    enabled: enabled && !!appChainId && !!address,
+    select: (data) => ({
+      ...data,
+      data: data.data.map((entry, idx) => ({
+        ...entry,
+        rank: idx + 1,
+      })),
+    }),
+  });
+};

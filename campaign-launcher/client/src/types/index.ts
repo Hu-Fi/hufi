@@ -131,6 +131,16 @@ export type JoinedCampaignsResponse = {
   has_more: boolean;
 };
 
+export type LeaderboardEntry = {
+  address: EvmAddress;
+  result: number;
+  rank: number;
+};
+
+export type LeaderboardResponse = {
+  data: LeaderboardEntry[];
+};
+
 type BaseManifestDto = {
   exchange: string;
   start_date: string;
