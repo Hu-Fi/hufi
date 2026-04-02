@@ -44,14 +44,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
   if (isCampaignLoading) {
     if (isMobile) {
       return (
-        <Stack
-          mb={4}
-          mx={-2}
-          px={2}
-          pb={4}
-          gap={2}
-          borderBottom="1px solid #473C74"
-        >
+        <Stack mx={-2} px={2} pb={4} gap={2} borderBottom="1px solid #473C74">
           <Skeleton variant="text" width="100%" height={32} />
           <Skeleton variant="text" width="100%" height={48} />
         </Stack>
@@ -59,7 +52,7 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
     }
 
     return (
-      <Stack mb={3.5} gap={3.5}>
+      <Stack gap={3.5}>
         <Skeleton variant="text" width="100%" height={42} />
         <Skeleton variant="text" width="100%" height={32} />
       </Stack>
@@ -75,7 +68,6 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
 
   return (
     <Stack
-      mb={{ xs: 4, md: 3.5 }}
       mx={{ xs: -2, md: 0 }}
       px={{ xs: 2, md: 0 }}
       pb={{ xs: 4, md: 0 }}

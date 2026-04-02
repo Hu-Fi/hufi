@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';
+import CycleInfoSection from '@/components/CycleInfoSection';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import PageWrapper from '@/components/PageWrapper';
@@ -92,7 +93,7 @@ const CampaignDetails: FC = () => {
 
   const isCampaignFinished =
     (campaignData && campaignData.end_date < new Date().toISOString()) ||
-    campaignData?.status !== CampaignStatus.ACTIVE;
+    (campaignData && campaignData?.status !== CampaignStatus.ACTIVE);
 
   const showJoinCampaignButton =
     isMobile &&
@@ -114,7 +115,11 @@ const CampaignDetails: FC = () => {
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
         isJoined={isJoined}
+        totalParticipants={leaderboard?.data.length || 0}
       />
+      {!isCampaignFinished && !!campaignData && (
+        <CycleInfoSection campaign={campaignData as Campaign} />
+      )}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>
           <JoinCampaignButton campaign={campaignData as Campaign} />
