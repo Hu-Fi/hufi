@@ -1100,6 +1100,9 @@ export class CampaignsService implements OnModuleDestroy {
     };
   }
 
+  /**
+   * TODO: deprecate this functionality once we use leaderboards data on UI
+   */
   async getUserProgress(
     userId: string,
     evmAddress: string,
