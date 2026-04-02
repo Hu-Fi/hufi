@@ -4726,6 +4726,10 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
+        const estimatedRewards = rewardsUtils.estimateRewards(
+          participantOutcomes,
+          intermediateResultsData.results[0].reserved_funds,
+        );
         let expectedTotal = 0;
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
@@ -4738,6 +4742,7 @@ describe('CampaignsService', () => {
               address: outcome.address,
               score: outcome.score,
               result: result,
+              estimatedReward: estimatedRewards[outcome.address],
             };
           }),
           'score',
@@ -4760,12 +4765,24 @@ describe('CampaignsService', () => {
           generateParticipantOutcome(campaign.type),
         );
         const cacheCycleTo = faker.date.recent();
+        /**
+         * Put random meta to cover all campaign types
+         * just to verify estimated rewards
+         */
+        const interimMeta: MarketMakingMeta & HoldingMeta & ThresholdMeta = {
+          total_volume: faker.number.float({ min: 1, max: 1000 }),
+          total_balance: faker.number.float({ min: 1, max: 1000 }),
+          total_score: faker.number.float({ min: 1, max: 10 }),
+        };
+        const interimProgress: CampaignProgress<CampaignProgressMeta> = {
+          from: dayjs(cacheCycleTo).subtract(1, 'day').toISOString(),
+          to: cacheCycleTo.toISOString(),
+          participants_outcomes: participantOutcomes,
+          meta: interimMeta,
+        };
         await campaignsCache.setInterimProgress(
           campaign.id,
-          {
-            to: cacheCycleTo.toISOString(),
-            participants_outcomes: participantOutcomes,
-          } as CampaignProgress<CampaignProgressMeta>,
+          interimProgress,
           faker.date.future(),
         );
 
@@ -4774,6 +4791,10 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
+        const estimatedRewards = rewardsUtils.estimateRewards(
+          participantOutcomes,
+          rewardsUtils.calculateRewardPool(campaign, interimProgress),
+        );
         let expectedTotal = 0;
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
@@ -4786,6 +4807,7 @@ describe('CampaignsService', () => {
               address: outcome.address,
               score: outcome.score,
               result: result,
+              estimatedReward: estimatedRewards[outcome.address],
             };
           }),
           'score',

@@ -14,7 +14,7 @@ import {
   isMarketMakingCampaign,
   isThresholdCampaign,
 } from './type-guards';
-import type { CampaignProgress } from './types';
+import type { CampaignProgress, ParticipantOutcome } from './types';
 
 export function calculateDailyReward(campaign: CampaignEntity): string {
   const campaignDurationDays = Math.ceil(
@@ -80,4 +80,35 @@ export function calculateRewardPool(
   return rewardPool
     .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
     .toString();
+}
+
+export function estimateRewards(
+  participantOutcomes: ParticipantOutcome[],
+  rewardPool: string,
+): Record<string, number> {
+  let totalScore = new Decimal(0);
+  for (const participantOutcome of participantOutcomes) {
+    totalScore = totalScore.add(participantOutcome.score);
+  }
+
+  const estimatedRewards: {
+    [address: string]: number;
+  } = {};
+
+  for (const participantOutcome of participantOutcomes) {
+    let estimatedReward: number;
+    if (totalScore.equals(0) || participantOutcome.score === 0) {
+      estimatedReward = 0;
+    } else {
+      const participantShare = Decimal.div(
+        participantOutcome.score,
+        totalScore,
+      );
+      estimatedReward = Decimal.mul(rewardPool, participantShare).toNumber();
+    }
+
+    estimatedRewards[participantOutcome.address] = estimatedReward;
+  }
+
+  return estimatedRewards;
 }

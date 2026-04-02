@@ -1501,6 +1501,7 @@ export class CampaignsService implements OnModuleDestroy {
      * TODO: revisit this
      */
     let resultsToInspect: ParticipantOutcome[] = [];
+    let estimatedRewardPool: string;
     let actualOn: Date;
     if (
       [
@@ -1520,6 +1521,7 @@ export class CampaignsService implements OnModuleDestroy {
       for (const outcomesBatch of latestIntermediateResult.participants_outcomes_batches) {
         resultsToInspect.push(...outcomesBatch.results);
       }
+      estimatedRewardPool = latestIntermediateResult.reserved_funds;
       /**
        * Results are final, so always actual
        */
@@ -1528,9 +1530,25 @@ export class CampaignsService implements OnModuleDestroy {
       const cachedInterimResults = await this.campaignsCache.getInterimProgress(
         campaign.id,
       );
-      resultsToInspect = cachedInterimResults?.participants_outcomes || [];
-      actualOn = new Date(cachedInterimResults?.to || Date.now());
+
+      if (cachedInterimResults) {
+        resultsToInspect = cachedInterimResults.participants_outcomes;
+        estimatedRewardPool = rewardsUtils.calculateRewardPool(
+          campaign,
+          cachedInterimResults,
+        );
+        actualOn = new Date(cachedInterimResults.to);
+      } else {
+        resultsToInspect = [];
+        estimatedRewardPool = '0';
+        actualOn = new Date();
+      }
     }
+
+    const estimatedRewards = rewardsUtils.estimateRewards(
+      resultsToInspect,
+      estimatedRewardPool,
+    );
 
     const leaderboardEntries: LeaderboardEntry[] = [];
     let total = 0;
@@ -1554,6 +1572,7 @@ export class CampaignsService implements OnModuleDestroy {
         address: participantOutcome.address,
         score: participantOutcome.score,
         result,
+        estimatedReward: estimatedRewards[participantOutcome.address],
       });
     }
 
