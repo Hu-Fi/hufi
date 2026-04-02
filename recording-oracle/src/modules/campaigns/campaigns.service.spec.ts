@@ -109,6 +109,7 @@ import {
   ThresholdProgressChecker,
 } from './progress-checking/threshold';
 import * as rewardsUtils from './rewards.utils';
+import { isCompetitiveMarketMakingCampaign } from './type-guards';
 import {
   type CampaignProgress,
   CampaignStatus,
@@ -4718,10 +4719,15 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
-        const estimatedRewards = rewardsUtils.estimateRewards(
-          participantOutcomes,
-          intermediateResultsData.results[0].reserved_funds,
-        );
+        const rewardPool = intermediateResultsData.results[0].reserved_funds;
+        const estimatedRewards = isCompetitiveMarketMakingCampaign(campaign)
+          ? rewardsUtils.estimateCompetitiveRewards(
+              participantOutcomes,
+              rewardPool,
+              campaign,
+            )
+          : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
+
         let expectedTotal = 0;
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
@@ -4783,10 +4789,17 @@ describe('CampaignsService', () => {
           campaign.address,
         );
 
-        const estimatedRewards = rewardsUtils.estimateRewards(
-          participantOutcomes,
-          rewardsUtils.calculateRewardPool(campaign, interimProgress),
+        const rewardPool = rewardsUtils.calculateRewardPool(
+          campaign,
+          interimProgress,
         );
+        const estimatedRewards = isCompetitiveMarketMakingCampaign(campaign)
+          ? rewardsUtils.estimateCompetitiveRewards(
+              participantOutcomes,
+              rewardPool,
+              campaign,
+            )
+          : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
         let expectedTotal = 0;
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {

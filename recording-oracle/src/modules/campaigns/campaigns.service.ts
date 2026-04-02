@@ -1525,10 +1525,13 @@ export class CampaignsService implements OnModuleDestroy {
       }
     }
 
-    const estimatedRewards = rewardsUtils.estimateRewards(
-      resultsToInspect,
-      estimatedRewardPool,
-    );
+    const estimatedRewards = isCompetitiveMarketMakingCampaign(campaign)
+      ? rewardsUtils.estimateCompetitiveRewards(
+          resultsToInspect,
+          estimatedRewardPool,
+          campaign,
+        )
+      : rewardsUtils.estimateRewards(resultsToInspect, estimatedRewardPool);
 
     const leaderboardEntries: LeaderboardEntry[] = [];
     let total = 0;

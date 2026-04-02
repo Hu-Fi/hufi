@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
+import _ from 'lodash';
 
 import type { CampaignEntity } from './campaign.entity';
 import { CAMPAIGNS_DAILY_CYCLE } from './constants';
@@ -15,7 +16,11 @@ import {
   isMarketMakingCampaign,
   isThresholdCampaign,
 } from './type-guards';
-import type { CampaignProgress, ParticipantOutcome } from './types';
+import type {
+  CampaignProgress,
+  CompetitiveMarketMakingCampaignDetails,
+  ParticipantOutcome,
+} from './types';
 
 export function calculateDailyReward(campaign: CampaignEntity): string {
   const campaignDurationDays = Math.ceil(
@@ -116,6 +121,85 @@ export function estimateRewards(
     }
 
     estimatedRewards[participantOutcome.address] = estimatedReward;
+  }
+
+  return estimatedRewards;
+}
+
+export function estimateCompetitiveRewards(
+  participantOutcomes: ParticipantOutcome[],
+  rewardPool: string,
+  campaign: CampaignEntity & {
+    details: CompetitiveMarketMakingCampaignDetails;
+  },
+): Record<string, number> {
+  const estimatedRewards: {
+    [address: string]: number;
+  } = {};
+
+  const eligibleOutcomes: ParticipantOutcome[] = [];
+  for (const participantOutcome of participantOutcomes) {
+    if (
+      participantOutcome.score > 0 &&
+      (participantOutcome.total_volume as number) >
+        campaign.details.minVolumeRequired
+    ) {
+      eligibleOutcomes.push(participantOutcome);
+    } else {
+      estimatedRewards[participantOutcome.address] = 0;
+    }
+  }
+
+  const sortedParticipantResults = _.orderBy(eligibleOutcomes, 'score', 'desc');
+
+  const sortedRewardsDistribution = _.orderBy(
+    campaign.details.rewardsDistribution,
+    [],
+    'desc',
+  );
+
+  let rankedResultIndex = 0;
+  while (
+    rankedResultIndex < sortedParticipantResults.length &&
+    rankedResultIndex < sortedRewardsDistribution.length
+  ) {
+    const tiedResults = [sortedParticipantResults[rankedResultIndex]];
+
+    let maybeTiedResultIndex = rankedResultIndex + 1;
+    for (
+      ;
+      maybeTiedResultIndex < sortedParticipantResults.length;
+      maybeTiedResultIndex += 1
+    ) {
+      const maybeTiedResult = sortedParticipantResults[maybeTiedResultIndex];
+      if (maybeTiedResult.score !== tiedResults[0]!.score) {
+        break;
+      }
+      tiedResults.push(maybeTiedResult);
+    }
+
+    const nTiedResults = tiedResults.length;
+    const rewardSlots = sortedRewardsDistribution.slice(
+      rankedResultIndex,
+      rankedResultIndex + nTiedResults,
+    );
+    const totalRewardPercent = rewardSlots.reduce(
+      (prev, curr) => Decimal.sum(prev, curr),
+      new Decimal(0),
+    );
+
+    const rewardPerParticipant = Decimal.mul(rewardPool, totalRewardPercent)
+      .div(100)
+      .div(nTiedResults)
+      .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+
+    if (rewardPerParticipant.greaterThan(0)) {
+      for (const tiedResult of tiedResults) {
+        estimatedRewards[tiedResult.address] = rewardPerParticipant.toNumber();
+      }
+    }
+
+    rankedResultIndex = maybeTiedResultIndex;
   }
 
   return estimatedRewards;
