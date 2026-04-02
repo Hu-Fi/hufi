@@ -15,4 +15,5 @@ export const QUERY_KEYS = {
   USER_PROGRESS: 'user-progress',
   CHECK_CAMPAIGN_JOIN_STATUS: 'check-campaign-join-status',
   CAMPAIGN_DAILY_PAID_AMOUNTS: 'campaign-daily-paid-amounts',
+  LEADERBOARD: 'leaderboard',
 };

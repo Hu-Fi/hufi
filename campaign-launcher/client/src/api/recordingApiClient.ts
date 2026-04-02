@@ -12,6 +12,7 @@ import type {
   CampaignsResponse,
   UserProgress,
   CheckCampaignJoinStatusResponse,
+  LeaderboardResponse,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -218,5 +219,20 @@ export class RecordingApiClient extends HttpClient {
     );
 
     return response || null;
+  }
+
+  async getLeaderboard(
+    chain_id: ChainId,
+    campaign_address: string
+  ): Promise<LeaderboardResponse> {
+    const response = await this.get<LeaderboardResponse>(
+      `/campaigns/${chain_id}-${campaign_address}/leaderboard`,
+      {
+        params: {
+          rank_by: 'current_progress',
+        },
+      }
+    );
+    return response;
   }
 }
