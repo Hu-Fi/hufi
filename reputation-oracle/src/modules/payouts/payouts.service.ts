@@ -15,18 +15,19 @@ import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { WalletWithProvider, Web3Service } from '@/modules/web3';
 
+import { StorageService } from '../storage';
 import * as payoutsUtils from './payouts.utils';
 import {
-  CampaignManifest,
   CalculatedReward,
   CalculatedRewardsBatch,
+  CampaignManifest,
   CampaignWithResults,
   CompetitiveCampaignManifest,
   FinalResultsMeta,
   IntermediateResult,
   IntermediateResultsData,
+  ParticipantOutcome,
 } from './types';
-import { StorageService } from '../storage';
 
 @Injectable()
 export class PayoutsService {
@@ -147,8 +148,6 @@ export class PayoutsService {
       const rewardsBatches = this.calculateRewardsBatches(
         manifest,
         intermediateResultsData,
-        escrowStatus,
-        campaign.fundAmount,
         campaign.fundTokenDecimals,
       );
 
@@ -350,6 +349,35 @@ export class PayoutsService {
     }
   }
 
+  private calculateRewardsBatches(
+    manifest: CampaignManifest,
+    intermediateResultsData: IntermediateResultsData,
+    tokenDecimals: number,
+  ): CalculatedRewardsBatch[] {
+    if (manifest.type === 'COMPETITIVE_MARKET_MAKING') {
+      return intermediateResultsData.results.map((intermediateResult) => {
+        const calculatedRewardsBatch =
+          this.calculateRewardsForCompetitiveIntermediateResult(
+            intermediateResult,
+            manifest as CompetitiveCampaignManifest,
+            tokenDecimals,
+          );
+
+        return calculatedRewardsBatch;
+      });
+    }
+
+    return intermediateResultsData.results.flatMap((intermediateResult) => {
+      const calculatedRewardsBatches =
+        this.calculateRewardsForIntermediateResult(
+          intermediateResult,
+          tokenDecimals,
+        );
+
+      return calculatedRewardsBatches;
+    });
+  }
+
   private calculateRewardsForIntermediateResult(
     intermediateResult: IntermediateResult,
     tokenDecimals: number,
@@ -402,87 +430,25 @@ export class PayoutsService {
     return rewardsBatches;
   }
 
-  private calculateRewardsBatches(
-    manifest: CampaignManifest,
-    intermediateResultsData: IntermediateResultsData,
-    escrowStatus: EscrowStatus,
-    fundAmount: number,
-    tokenDecimals: number,
-  ): CalculatedRewardsBatch[] {
-    if (manifest.type === 'COMPETITIVE_MARKET_MAKING') {
-      const isCampaignEnded =
-        new Date(manifest.end_date).valueOf() <= Date.now();
-      const shouldCalculateCompetitivePayouts =
-        escrowStatus === EscrowStatus.ToCancel || isCampaignEnded;
-
-      if (!shouldCalculateCompetitivePayouts) {
-        return [];
-      }
-
-      return this.calculateRewardsForCompetitiveCampaign(
-        intermediateResultsData,
-        manifest as CompetitiveCampaignManifest,
-        fundAmount,
-        tokenDecimals,
-      );
-    }
-
-    return intermediateResultsData.results.flatMap((intermediateResult) => {
-      const calculatedRewardsBatches =
-        this.calculateRewardsForIntermediateResult(
-          intermediateResult,
-          tokenDecimals,
-        );
-
-      return calculatedRewardsBatches;
-    });
-  }
-
-  private calculateRewardsForCompetitiveCampaign(
-    intermediateResultsData: IntermediateResultsData,
+  private calculateRewardsForCompetitiveIntermediateResult(
+    intermediateResult: IntermediateResult,
     manifest: CompetitiveCampaignManifest,
-    fundAmount: number,
     tokenDecimals: number,
-  ): CalculatedRewardsBatch[] {
-    const rewardPool = new Decimal(fundAmount);
-    const resultsByParticipant = new Map<
-      string,
-      { score: Decimal; totalVolume: Decimal }
-    >();
-    for (const intermediateResult of intermediateResultsData.results) {
-      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
-        for (const outcome of outcomesBatch.results) {
-          const participantResult = resultsByParticipant.get(
-            outcome.address,
-          ) || {
-            score: new Decimal(0),
-            totalVolume: new Decimal(0),
-          };
-          resultsByParticipant.set(outcome.address, {
-            score: participantResult.score.plus(outcome.score),
-            totalVolume: participantResult.totalVolume.plus(
-              outcome.total_volume || 0,
-            ),
-          });
+  ): CalculatedRewardsBatch {
+    const eligibleOutcomes: ParticipantOutcome[] = [];
+    for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
+      for (const outcome of outcomesBatch.results as Required<ParticipantOutcome>[]) {
+        if (
+          outcome.score > 0 &&
+          outcome.total_volume > manifest.min_volume_required
+        ) {
+          eligibleOutcomes.push(outcome);
         }
       }
     }
 
-    const scoresByParticipant = new Map<string, Decimal>();
-    for (const [address, { score, totalVolume }] of resultsByParticipant) {
-      if (
-        score.greaterThan(0) &&
-        totalVolume.greaterThanOrEqualTo(manifest.min_volume_required)
-      ) {
-        scoresByParticipant.set(address, score);
-      }
-    }
-
     const sortedParticipantResults = _.orderBy(
-      Array.from(scoresByParticipant, ([address, score]) => ({
-        address,
-        score: score.toNumber(),
-      })),
+      eligibleOutcomes,
       'score',
       'desc',
     );
@@ -493,6 +459,7 @@ export class PayoutsService {
       'desc',
     );
 
+    const rewardPool = new Decimal(intermediateResult.reserved_funds);
     const rewards: CalculatedReward[] = [];
 
     let rankedResultIndex = 0;
@@ -543,12 +510,10 @@ export class PayoutsService {
       rankedResultIndex = maybeTiedResultIndex;
     }
 
-    return [
-      {
-        id: intermediateResultsData.address,
-        rewards,
-      },
-    ];
+    return {
+      id: `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`,
+      rewards,
+    };
   }
 
   private async uploadFinalResults(
