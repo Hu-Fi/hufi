@@ -95,7 +95,7 @@ export function calculateRewardPool(
    * Normally reward cycle is 1 day and if progress ratio is >= 1, then the whole reward pool
    * for that cycle should be distributed, but in case when cancellation request is made after
    * cycle end and that cycle is not yet recorded - so the number of cycles that should be rewarded
-   * might be more than 1, and in that case we consider the cycle that ends as as the last cycle to reward,
+   * might be more than 1, and in that case we consider the cycle that ends as the last cycle to reward,
    * proportionally increasing the reward pool with number of cycles to reward.
    *
    * This is a safety measure for cases when there are delays in recording.
