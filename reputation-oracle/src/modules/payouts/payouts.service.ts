@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import fs from 'fs/promises';
 
 import EscrowABI from '@human-protocol/core/abis/Escrow.json';
@@ -10,6 +9,7 @@ import _ from 'lodash';
 
 import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
+import * as cryptoUtils from '@/common/utils/crypto';
 import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -510,8 +510,13 @@ export class PayoutsService {
       rankedResultIndex = maybeTiedResultIndex;
     }
 
+    const batchId = `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`;
+
     return {
-      id: `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`,
+      /**
+       * Use hash to avoid potential issues with special characters in file names
+       */
+      id: cryptoUtils.hashString(batchId, 'sha256'),
       rewards,
     };
   }
@@ -521,10 +526,7 @@ export class PayoutsService {
     finalResults: IntermediateResultsData,
   ): Promise<FinalResultsMeta> {
     const stringifiedResults = JSON.stringify(finalResults);
-    const resultsHash = crypto
-      .createHash('sha256')
-      .update(stringifiedResults)
-      .digest('hex');
+    const resultsHash = cryptoUtils.hashString(stringifiedResults, 'sha256');
 
     const fileName = `${campaign.address}/${resultsHash}.json`;
 

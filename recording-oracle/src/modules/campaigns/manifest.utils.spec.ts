@@ -1,8 +1,7 @@
-import * as crypto from 'crypto';
-
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
 
+import * as cryptoUtils from '@/common/utils/crypto';
 import { generateTradingPair } from '@/modules/exchanges/fixtures';
 
 import {
@@ -70,10 +69,7 @@ describe('manifest utils', () => {
 
     it('should download manifest and return when hash is valid', async () => {
       const mockedManifest = JSON.stringify(generateManifestResponse());
-      const mockedManifestHash = crypto
-        .createHash('sha1')
-        .update(mockedManifest)
-        .digest('hex');
+      const mockedManifestHash = cryptoUtils.hashString(mockedManifest, 'sha1');
       const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
 
       const manifest = await manifestUtils.downloadCampaignManifest(

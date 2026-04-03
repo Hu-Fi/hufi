@@ -24,6 +24,7 @@ import ms from 'ms';
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import * as cryptoUtils from '@/common/utils/crypto';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -896,10 +897,7 @@ export class CampaignsService implements OnModuleDestroy {
     const campaignAddress = intermediateResults.address;
 
     const stringifiedResults = JSON.stringify(intermediateResults);
-    const resultsHash = crypto
-      .createHash('sha256')
-      .update(stringifiedResults)
-      .digest('hex');
+    const resultsHash = cryptoUtils.hashString(stringifiedResults, 'sha256');
 
     const fileName = `${campaignAddress}/${resultsHash}.json`;
 

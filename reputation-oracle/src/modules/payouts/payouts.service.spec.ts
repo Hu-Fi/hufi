@@ -1,8 +1,6 @@
 jest.mock('@human-protocol/sdk');
 jest.mock('@/logger');
 
-import crypto from 'crypto';
-
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import {
@@ -17,6 +15,7 @@ import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ContentType } from '@/common/enums';
+import * as cryptoUtils from '@/common/utils/crypto';
 import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -210,10 +209,7 @@ describe('PayoutsService', () => {
 
       const intermediateResultsData = generateIntermediateResultsData();
       const stringifiedResults = JSON.stringify(intermediateResultsData);
-      const resultsHash = crypto
-        .createHash('sha256')
-        .update(stringifiedResults)
-        .digest('hex');
+      const resultsHash = cryptoUtils.hashString(stringifiedResults, 'sha256');
 
       const campaignAddress = ethers.getAddress(
         faker.finance.ethereumAddress(),
@@ -387,7 +383,10 @@ describe('PayoutsService', () => {
 
       expect(rewardsBatches).toEqual([
         {
-          id: `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`,
+          id: cryptoUtils.hashString(
+            `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`,
+            'sha256',
+          ),
           rewards: [{ address: participantAddress, amount: '100' }],
         },
       ]);
@@ -568,7 +567,10 @@ describe('PayoutsService', () => {
       );
 
       expect(rewardsBatch.id).toBe(
-        `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`,
+        cryptoUtils.hashString(
+          `${intermediateResult.from.toISOString()}/${intermediateResult.to.toISOString()}`,
+          'sha256',
+        ),
       );
     });
 

@@ -10,8 +10,6 @@ jest.mock('@human-protocol/sdk', () => {
 });
 jest.mock('@/logger');
 
-import crypto from 'crypto';
-
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import {
@@ -30,6 +28,7 @@ import _ from 'lodash';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import * as cryptoUtils from '@/common/utils/crypto';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -1463,10 +1462,10 @@ describe('CampaignsService', () => {
       const intermediateResultsData = generateIntermediateResultsData();
       const stringifiedResultsData = JSON.stringify(intermediateResultsData);
 
-      const resultsHash = crypto
-        .createHash('sha256')
-        .update(stringifiedResultsData)
-        .digest('hex');
+      const resultsHash = cryptoUtils.hashString(
+        stringifiedResultsData,
+        'sha256',
+      );
       const fundsToReserve = faker.number.bigInt({ min: 1 });
       const recordingResult = await campaignsService[
         'recordCampaignIntermediateResults'
