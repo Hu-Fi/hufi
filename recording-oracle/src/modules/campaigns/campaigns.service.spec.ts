@@ -2624,8 +2624,9 @@ describe('CampaignsService', () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const campaignProgress = generateCampaignProgress(campaign);
-      (campaignProgress.meta as MarketMakingMeta).total_volume =
-        faker.number.float({ min: 0.1, max: 100_000 });
+      campaignProgress.participants_outcomes.push(
+        generateParticipantOutcome(campaign.type),
+      );
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         campaignProgress,
       );
@@ -2644,8 +2645,63 @@ describe('CampaignsService', () => {
               total_volume: (campaignProgress.meta as MarketMakingMeta)
                 .total_volume,
               reserved_funds: expectedRewardPool,
-              participants_outcomes_batches: [],
+              participants_outcomes_batches: [
+                {
+                  id: expect.any(String),
+                  results: campaignProgress.participants_outcomes,
+                },
+              ],
             },
+          ],
+        }),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+      );
+    });
+
+    it('should record correct results for pending cancellation campaign with unusual cycle duration', async () => {
+      /**
+       * This case applies to any campaign type but choose competitive for test simplicity
+       */
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      /**
+       * With 25 hours we mimic the behavior when cancellation requested after campaign start
+       * but RecO hasn't recorded any results yet, so in this case we should have
+       * one result recorded for campaign but with reward pool of 2 days
+       */
+      const cancellationRequestedAt = dayjs(campaign.startDate)
+        .add(25, 'hours')
+        .toDate();
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
+      );
+
+      const campaignProgress = generateCampaignProgress(campaign);
+      campaignProgress.to = cancellationRequestedAt.toISOString();
+      campaignProgress.participants_outcomes.push(
+        generateParticipantOutcome(campaign.type),
+      );
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const dailyReward = rewardsUtils.calculateDailyReward(campaign);
+      const expectedRewardPool = Decimal.mul(dailyReward, 2).toString();
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            expect.objectContaining({
+              from: campaignProgress.from,
+              to: cancellationRequestedAt.toISOString(),
+              reserved_funds: expectedRewardPool,
+            }),
           ],
         }),
         ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
@@ -2924,12 +2980,17 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: '0',
+        reserved_funds: expectedRewardPool,
         participants_outcomes_batches: [],
       });
     });
@@ -2951,14 +3012,17 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expepectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: new Decimal(campaign.fundAmount)
-          .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-          .toString(),
+        reserved_funds: expepectedRewardPool,
         participants_outcomes_batches: [],
       });
     });
