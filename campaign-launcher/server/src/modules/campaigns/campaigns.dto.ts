@@ -15,6 +15,7 @@ import {
   DEFAULT_PAGINATION_LIMIT,
   ExchangeName,
 } from '@/common/constants';
+import { parseQueryArray } from '@/common/utils/transformer';
 import { EvmAddressValidator, IsChainId } from '@/common/validators';
 
 import { CampaignStatus, CampaignType } from './types';
@@ -48,6 +49,7 @@ export class GetCampaignsQueryDto {
     enum: CampaignType,
   })
   @IsOptional()
+  @Transform(parseQueryArray)
   @IsEnum(CampaignType, { each: true })
   type?: CampaignType[];
 
@@ -57,6 +59,7 @@ export class GetCampaignsQueryDto {
     enum: ExchangeName,
   })
   @IsOptional()
+  @Transform(parseQueryArray)
   @IsEnum(ExchangeName, { each: true })
   exchange?: ExchangeName[];
 
