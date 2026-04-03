@@ -1556,7 +1556,7 @@ export class CampaignsService implements OnModuleDestroy {
       ) {
         result = participantOutcome.total_volume as number;
       } else if (isHoldingCampaign(campaign) || isThresholdCampaign(campaign)) {
-        result = participantOutcome.total_balance as number;
+        result = participantOutcome.token_balance as number;
       } else {
         throw new Error(
           `Unknown campaign type for leaderboard calculation: ${campaign.type}`,

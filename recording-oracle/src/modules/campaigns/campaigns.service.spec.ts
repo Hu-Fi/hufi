@@ -4279,7 +4279,7 @@ describe('CampaignsService', () => {
         address: evmAddress,
         [participantMetaProp]: participantMetaValue,
         total_volume: undefined,
-        total_balance: undefined,
+        token_balance: undefined,
       });
 
       const mockedActiveTimeframe = {
@@ -4692,6 +4692,7 @@ describe('CampaignsService', () => {
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let campaign: CampaignEntity;
     let now: Date;
+    let outcomeToEntryResultProp: string;
 
     beforeAll(() => {
       now = new Date();
@@ -4702,15 +4703,29 @@ describe('CampaignsService', () => {
         'retrieveCampaignIntermediateResults',
       );
       spyOnRetrieveCampaignIntermediateResults.mockImplementation();
-
-      campaign = generateCampaignEntity();
-      campaign.resultsCutoffAt = faker.date.recent();
     });
 
     beforeEach(() => {
+      campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+
+      if (
+        [
+          CampaignType.MARKET_MAKING,
+          CampaignType.COMPETITIVE_MARKET_MAKING,
+        ].includes(campaign.type)
+      ) {
+        outcomeToEntryResultProp = 'total_volume';
+      } else if (
+        [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(campaign.type)
+      ) {
+        outcomeToEntryResultProp = 'token_balance';
+      } else {
+        outcomeToEntryResultProp = 'unknown';
+      }
     });
 
     afterEach(() => {
@@ -4799,7 +4814,7 @@ describe('CampaignsService', () => {
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
             // prettier-ignore
-            const result = (outcome.total_volume || outcome.total_balance) as number;
+            const result = (outcome[outcomeToEntryResultProp]) as number;
 
             expectedTotal += result;
 
@@ -4873,10 +4888,11 @@ describe('CampaignsService', () => {
             )
           : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
         let expectedTotal = 0;
+
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
             // prettier-ignore
-            const result = (outcome.total_volume || outcome.total_balance) as number;
+            const result = (outcome[outcomeToEntryResultProp]) as number;
 
             expectedTotal += result;
 

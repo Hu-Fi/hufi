@@ -114,7 +114,7 @@ export function generateParticipantOutcome(
       break;
     case CampaignType.HOLDING:
     case CampaignType.THRESHOLD:
-      outcome.total_balance = faker.number.float({ min: 0, max: 1000 });
+      outcome.token_balance = faker.number.float({ min: 0, max: 1000 });
       break;
     default:
       throw new Error(
