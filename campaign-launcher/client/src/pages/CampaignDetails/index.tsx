@@ -108,7 +108,8 @@ const CampaignDetails: FC = () => {
   const showLeaderboard =
     isOngoingCampaign &&
     campaignData.type !== CampaignType.THRESHOLD &&
-    leaderboard;
+    leaderboard &&
+    leaderboard.data.length > 0;
 
   return (
     <PageWrapper>
