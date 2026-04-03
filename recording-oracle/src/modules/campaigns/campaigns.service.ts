@@ -15,6 +15,7 @@ import {
   SchedulerRegistry,
 } from '@nestjs/schedule';
 import dayjs from 'dayjs';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
@@ -611,6 +612,18 @@ export class CampaignsService implements OnModuleDestroy {
             campaign,
             progress,
           );
+          if (escrowStatus !== EscrowStatus.ToCancel) {
+            const dailyReward = rewardsUtils.calculateDailyReward(campaign);
+            if (Decimal(rewardPool).greaterThan(dailyReward)) {
+              /**
+               * Safety-belt
+               * Should not be possible for non-cancelled campaign
+               */
+              throw new Error(
+                'Calculated reward pool is greater than daily reward',
+              );
+            }
+          }
 
           const intermediateResult: IntermediateResult = {
             from: progress.from,
