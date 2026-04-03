@@ -417,22 +417,7 @@ describe('rewards utils', () => {
       campaignType = faker.helpers.arrayElement(campaignTypes);
     });
 
-    it('should return 0 rewards for all participants when total score is 0', () => {
-      const participantOutcomes = Array.from({ length: 3 }).map(() =>
-        generateParticipantOutcome(campaignType, { score: 0 }),
-      );
-
-      const estimatedRewards = rewardsUtils.estimateRewards(
-        participantOutcomes,
-        faker.number.int({ min: 1 }).toString(),
-      );
-
-      for (const reward of Object.values(estimatedRewards)) {
-        expect(reward).toBe(0);
-      }
-    });
-
-    it('should correctly estimate rewards based on scores', () => {
+    it('should return 0 rewards for all participants', () => {
       const participantOutcomes = Array.from({ length: 3 }).map(() =>
         generateParticipantOutcome(campaignType, { score: 0 }),
       );

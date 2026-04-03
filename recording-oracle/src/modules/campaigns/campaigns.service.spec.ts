@@ -3017,7 +3017,7 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expepectedRewardPool = rewardsUtils.calculateRewardPool(
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
         campaign,
         campaignProgress,
       );
@@ -3027,7 +3027,7 @@ describe('CampaignsService', () => {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: expepectedRewardPool,
+        reserved_funds: expectedRewardPool,
         participants_outcomes_batches: [],
       });
     });
