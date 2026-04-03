@@ -154,7 +154,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        gap={2}
+        gap={1.5}
       >
         <Box
           display="flex"
@@ -210,7 +210,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           </Typography>
         </Box>
       </Stack>
-      <Box display="flex" justifyContent="space-between" gap={2}>
+      <Box display="flex" justifyContent="space-between" gap={1.5}>
         <Button
           component={RouterLink}
           to={`/campaign-details/${campaign.address}`}
