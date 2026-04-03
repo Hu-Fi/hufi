@@ -109,7 +109,10 @@ import {
   ThresholdProgressChecker,
 } from './progress-checking/threshold';
 import * as rewardsUtils from './rewards.utils';
-import { isCompetitiveMarketMakingCampaign } from './type-guards';
+import {
+  isCompetitiveMarketMakingCampaign,
+  isThresholdCampaign,
+} from './type-guards';
 import {
   type CampaignProgress,
   CampaignStatus,
@@ -4834,7 +4837,12 @@ describe('CampaignsService', () => {
         const interimMeta: MarketMakingMeta & HoldingMeta & ThresholdMeta = {
           total_volume: faker.number.float({ min: 1, max: 1000 }),
           total_balance: faker.number.float({ min: 1, max: 1000 }),
-          total_score: faker.number.float({ min: 1, max: 10 }),
+          total_score: faker.number.float({
+            min: 1,
+            max: isThresholdCampaign(campaign)
+              ? campaign.details.maxParticipants
+              : 10,
+          }),
         };
         const interimProgress: CampaignProgress<CampaignProgressMeta> = {
           from: dayjs(cacheCycleTo).subtract(1, 'day').toISOString(),
