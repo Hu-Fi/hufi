@@ -2685,7 +2685,9 @@ describe('CampaignsService', () => {
       const campaignProgress = generateCampaignProgress(campaign);
       campaignProgress.to = cancellationRequestedAt.toISOString();
       campaignProgress.participants_outcomes.push(
-        generateParticipantOutcome(campaign.type),
+        generateParticipantOutcome(campaign.type, {
+          total_volume: faker.number.int({ min: 1 }),
+        }),
       );
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         campaignProgress,
