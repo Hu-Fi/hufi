@@ -274,8 +274,8 @@ export class LeaderboardEntry {
   @ApiProperty({
     description: `
       This field represents different value based on the campaign type and can be:
-        - current score on "market making" campaign
-        - current amount of held tokens for "holding" campaign
+        - total volume for "market making" campaigns
+        - total balance / held tokens for "holding" and "threshold" campaigns
     `,
   })
   result: number;

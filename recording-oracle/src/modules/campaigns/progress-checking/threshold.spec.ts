@@ -119,7 +119,7 @@ describe('ThresholdProgressChecker', () => {
 
       await expect(
         resultsChecker.checkForParticipant(participantInfo),
-      ).rejects.toThrow('Participants total volume number overflow');
+      ).rejects.toThrow('Participants total value number overflow');
     });
   });
 

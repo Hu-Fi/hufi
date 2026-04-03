@@ -66,7 +66,7 @@ export class HoldingProgressChecker implements CampaignProgressChecker<
       /**
        * Safety-belt to refactor to decimal.js in case if values are too big
        */
-      throw new Error('Participants total volume number overflow');
+      throw new Error('Participants total value number overflow');
     }
 
     return { abuseDetected, score, token_balance: tokenBalance };
