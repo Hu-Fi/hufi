@@ -196,6 +196,7 @@ const Campaigns: FC = () => {
         <HistoryFilters
           selectedFilter={historyViewFilter}
           setSelectedFilter={setHistoryViewFilter}
+          isDisabled={disableFilters}
         />
       )}
       <CampaignsFeed
@@ -205,6 +206,23 @@ const Campaigns: FC = () => {
         isFetching={isCampaignsFetching}
         tabFilter={tabFilter}
       />
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        mx="auto"
+        mt={4}
+      >
+        <Button
+          variant="contained"
+          color="error"
+          sx={{ width: '200px' }}
+          fullWidth={isMobile}
+          disabled={isCampaignsFetching}
+        >
+          Load More
+        </Button>
+      </Box>
       <MobileBottomNav isVisible={isMobile} />
     </PageWrapper>
   );

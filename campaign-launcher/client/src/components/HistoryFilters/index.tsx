@@ -21,16 +21,23 @@ const filters = [
 type Props = {
   selectedFilter: HistoryViewFilter;
   setSelectedFilter: (filter: HistoryViewFilter) => void;
+  isDisabled: boolean;
 };
 
-const HistoryFilters: FC<Props> = ({ selectedFilter, setSelectedFilter }) => {
+const HistoryFilters: FC<Props> = ({
+  selectedFilter,
+  setSelectedFilter,
+  isDisabled,
+}) => {
   return (
     <FormControl sx={{ mb: 4 }}>
       <RadioGroup
         value={selectedFilter}
         row
         sx={{ gap: 1.5 }}
-        onChange={(_, value) => setSelectedFilter(value as HistoryViewFilter)}
+        onChange={(_, value) =>
+          !isDisabled && setSelectedFilter(value as HistoryViewFilter)
+        }
       >
         {filters.map(({ label, value }) => (
           <FormControlLabel
@@ -40,6 +47,7 @@ const HistoryFilters: FC<Props> = ({ selectedFilter, setSelectedFilter }) => {
               <Radio
                 disableRipple
                 sx={{ p: 0 }}
+                disabled={isDisabled}
                 icon={
                   <Box
                     width={20}
