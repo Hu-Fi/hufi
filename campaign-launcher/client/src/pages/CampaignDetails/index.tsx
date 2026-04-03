@@ -57,9 +57,6 @@ const CampaignDetails: FC = () => {
     enabled: campaign?.status === CampaignStatus.ACTIVE,
   });
 
-  // eslint-disable-next-line no-console
-  console.log('leaderboard', leaderboard);
-
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
     if (!encodedData) return undefined;
@@ -91,16 +88,14 @@ const CampaignDetails: FC = () => {
 
   const campaignData = campaign || parsedData;
 
-  const isCampaignFinished =
-    (campaignData && campaignData.end_date < new Date().toISOString()) ||
-    (campaignData && campaignData?.status !== CampaignStatus.ACTIVE);
+  const isOngoingCampaign =
+    !!campaignData &&
+    campaignData.status === CampaignStatus.ACTIVE &&
+    campaignData.start_date < new Date().toISOString() &&
+    campaignData.end_date > new Date().toISOString();
 
   const showJoinCampaignButton =
-    isMobile &&
-    !!campaignData &&
-    !isJoined &&
-    !isCampaignFinished &&
-    !!exchangeInfo?.enabled;
+    isMobile && !isJoined && isOngoingCampaign && !!exchangeInfo?.enabled;
 
   useReserveLayoutBottomOffset(showJoinCampaignButton);
 
@@ -117,9 +112,7 @@ const CampaignDetails: FC = () => {
         isJoined={isJoined}
         totalParticipants={leaderboard?.data.length || 0}
       />
-      {!isCampaignFinished && !!campaignData && (
-        <CycleInfoSection campaign={campaignData as Campaign} />
-      )}
+      {isOngoingCampaign && <CycleInfoSection campaign={campaignData} />}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>
           <JoinCampaignButton campaign={campaignData as Campaign} />

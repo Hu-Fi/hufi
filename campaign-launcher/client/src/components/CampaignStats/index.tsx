@@ -40,8 +40,6 @@ export const StatsCard = styled(Box, {
   }),
 
   [theme.breakpoints.down('md')]: {
-    //flexDirection: 'column-reverse',
-    //height: '100px',
     height: 'auto',
     minHeight: '90px',
     padding: '12px',
@@ -85,18 +83,27 @@ export const CardValue = styled(Typography)(({ theme }) => ({
 const now = new Date().toISOString();
 
 const renderSkeletonBlocks = (isMobile: boolean) => {
-  const elements = Array(6).fill(0);
   return (
-    <Grid container spacing={{ xs: 2, md: 3 }} width="100%">
-      {elements.map((_, index) => (
-        <Grid size={{ xs: 6, md: 4 }} key={`first-${index}`}>
-          <StatsCard>
-            <Skeleton variant="text" width="100%" height={isMobile ? 21 : 18} />
-            <Skeleton variant="text" width="100%" height={isMobile ? 30 : 36} />
-          </StatsCard>
-        </Grid>
-      ))}
-    </Grid>
+    <Stack
+      mx={{ xs: -2, md: 0 }}
+      px={{ xs: 2, md: 0 }}
+      pt={3}
+      pb={{ xs: 2, md: 3 }}
+      gap={{ xs: 2, md: 3 }}
+      borderBottom="1px solid #473C74"
+    >
+      <Skeleton variant="text" width="100%" height={isMobile ? 30 : 24} />
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={isMobile ? 270 : 175}
+      />
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={isMobile ? 90 : 175}
+      />
+    </Stack>
   );
 };
 
@@ -194,6 +201,16 @@ const CampaignStats: FC<Props> = ({
       >
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
+            <CardName>Symbol</CardName>
+            <CampaignSymbol
+              symbol={campaign.symbol}
+              campaignType={campaign.type}
+              size={isMobile ? 'small' : 'large'}
+            />
+          </StatsCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <StatsCard>
             <CardName>Exchange</CardName>
             <CardValue>{exchangeName}</CardValue>
           </StatsCard>
@@ -202,16 +219,6 @@ const CampaignStats: FC<Props> = ({
           <StatsCard>
             <CardName>Campaign Type</CardName>
             <CardValue>{mapTypeToLabel(campaign.type)}</CardValue>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <StatsCard>
-            <CardName>Symbol</CardName>
-            <CampaignSymbol
-              symbol={campaign.symbol}
-              campaignType={campaign.type}
-              size={isMobile ? 'small' : 'large'}
-            />
           </StatsCard>
         </Grid>
       </Grid>
