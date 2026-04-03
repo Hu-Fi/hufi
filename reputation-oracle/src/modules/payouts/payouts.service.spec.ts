@@ -561,7 +561,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0,
+          min_volume_required: 0.0000001,
           rewards_distribution: [20, 50, 30],
         } as CompetitiveCampaignManifest,
         18,
@@ -614,7 +614,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0,
+          min_volume_required: 0.0000001,
           rewards_distribution: [20, 50, 30],
         } as CompetitiveCampaignManifest,
         18,
@@ -662,7 +662,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0,
+          min_volume_required: 0.0000001,
           rewards_distribution: [60, 40],
         } as CompetitiveCampaignManifest,
         18,
@@ -718,7 +718,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0,
+          min_volume_required: 0.0000001,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         18,
@@ -782,7 +782,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0,
+          min_volume_required: 0.0000001,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         18,
@@ -886,8 +886,7 @@ describe('PayoutsService', () => {
         minVolumeRequired - faker.number.int({ min: 1, max: 50 });
       const secondParticipantVolume =
         minVolumeRequired + faker.number.int({ min: 10, max: 80 });
-      const thirdParticipantVolume =
-        minVolumeRequired + faker.number.int({ min: 1, max: 40 });
+      const thirdParticipantVolume = minVolumeRequired;
       const baseScore = faker.number.int({ min: 90, max: 180 });
       const firstPlaceScore = baseScore;
       const secondPlaceScore = Math.floor(baseScore / 2);

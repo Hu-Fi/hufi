@@ -440,7 +440,7 @@ export class PayoutsService {
       for (const outcome of outcomesBatch.results as Required<ParticipantOutcome>[]) {
         if (
           outcome.score > 0 &&
-          outcome.total_volume > manifest.min_volume_required
+          outcome.total_volume >= manifest.min_volume_required
         ) {
           eligibleOutcomes.push(outcome);
         }

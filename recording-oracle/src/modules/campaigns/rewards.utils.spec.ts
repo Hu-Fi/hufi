@@ -377,7 +377,7 @@ describe('rewards utils', () => {
       // @ts-expect-error - we set expected type for campaign
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
       eligibleVolume =
-        campaign.details.minVolumeRequired + faker.number.float({ min: 0.001 });
+        campaign.details.minVolumeRequired + faker.number.float();
       rewardPool = faker.number.int({ min: 1 }).toString();
     });
 
@@ -395,11 +395,11 @@ describe('rewards utils', () => {
       expect(estimatedRewards[participantOutcome.address]).toBe(0);
     });
 
-    it('should return 0 when participant has not generate enough volume', () => {
+    it('should return 0 when participant has not generated enough volume', () => {
       const participantOutcome = generateParticipantOutcome(campaign.type, {
         total_volume: faker.number.float({
           min: 0,
-          max: campaign.details.minVolumeRequired,
+          max: campaign.details.minVolumeRequired - 0.00001,
         }),
       });
 

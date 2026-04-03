@@ -48,7 +48,7 @@ export function calculateRewardPool(
   } else if (isCompetitiveMarketMakingCampaign(campaign)) {
     /**
      * We are going to distribute the whole daily reward across top performers,
-     * so for reward pool calculation we consider targer as achieved.
+     * so for reward pool calculation we consider target as achieved.
      */
     progressValue = 1;
     progressValueTarget = progressValue;
@@ -137,7 +137,7 @@ export function estimateCompetitiveRewards(
   for (const participantOutcome of participantOutcomes) {
     if (
       participantOutcome.score > 0 &&
-      (participantOutcome.total_volume as number) >
+      (participantOutcome.total_volume as number) >=
         campaign.details.minVolumeRequired
     ) {
       eligibleOutcomes.push(participantOutcome);
