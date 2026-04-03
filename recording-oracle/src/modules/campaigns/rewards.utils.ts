@@ -89,20 +89,22 @@ export function calculateRewardPool(
     );
   }
 
+  /**
+   * If progress ratio is < 1, then we distribute proportionally to the progress in current cycle.
+   *
+   * Normally reward cycle is 1 day and if progress ratio is >= 1, then the whole reward pool
+   * for that cycle should be distributed, but in case when cancellation request is made after
+   * cycle end and that cycle is not yet recorded - so the number of cycles that should be rewarded
+   * might be more than 1, and in that case we consider the cycle that ends as as the last cycle to reward,
+   * proportionally increasing the reward pool with number of cycles to reward.
+   *
+   * This is a safety measure for cases when there are delays in recording.
+   */
   let rewardRatio: number;
   const progressRatio = progressValue / progressValueTarget;
   if (progressRatio < 1) {
     rewardRatio = progressRatio;
   } else {
-    /**
-     * Normally reward cycle is 1 day and should be max ratio (aka reward pool is equal to daily reward),
-     * but in case when cancellation request is made after cycle end and that cycle is not yet recorded -
-     * so the number of cycles that should be rewarded might be more than 1, and in that case we consider
-     * the cycly that ends we request cancellation as as the last cycle to reward, proportionally increasing
-     * the reward pool with number of cycles to reward.
-     *
-     * This is a safety measure for cases when there are delays in recording.
-     */
     const nRewardCycles = Math.ceil(
       dayjs(progress.to).diff(progress.from, 'days', true),
     );
