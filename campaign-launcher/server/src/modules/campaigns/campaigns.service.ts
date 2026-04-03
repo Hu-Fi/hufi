@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import _ from 'lodash';
 
-import { ChainId } from '@/common/constants';
+import { ChainId, ExchangeName } from '@/common/constants';
 import { toError } from '@/common/utils/type-guard';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
@@ -58,6 +58,8 @@ export class CampaignsService {
     filters?: Partial<{
       launcherAddress: string;
       statuses: CampaignStatus[];
+      types: CampaignType[];
+      exchanges: ExchangeName[];
     }>,
     pagination?: Partial<{
       skip: number;
@@ -71,6 +73,16 @@ export class CampaignsService {
       );
     }
 
+    let types: string[] = [];
+    if (filters?.types) {
+      types = filters.types;
+    }
+
+    let exchanges: string[] = [];
+    if (filters?.exchanges) {
+      exchanges = filters.exchanges;
+    }
+
     const subgraphCampaigns = await hufiSdk.getCampaigns(chainId, {
       filters: {
         exchangeOracleAddress: this.web3ConfigService.exchangeOracle,
@@ -78,6 +90,8 @@ export class CampaignsService {
         reputationOracleAddress: this.web3ConfigService.reputationOracle,
         creatorAddress: filters?.launcherAddress,
         status_in: statuses.length > 0 ? statuses : undefined,
+        type_in: types.length > 0 ? types : undefined,
+        exchange_in: exchanges.length > 0 ? exchanges : undefined,
       },
       first: pagination?.limit,
       skip: pagination?.skip,
@@ -263,6 +277,7 @@ export class CampaignsService {
       intermediateResultsUrl: subgraphCampaign.intermediateResultsUrl,
       finalResultsUrl: subgraphCampaign.finalResultsUrl,
       createdAt: subgraphCampaign.createdAt,
+      cancellationRequestedAt: subgraphCampaign.cancellationRequestedAt,
     };
   }
 

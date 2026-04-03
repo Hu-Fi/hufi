@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
+  IsArray,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -13,6 +14,7 @@ import {
   type ChainId,
   ChainIds,
   DEFAULT_PAGINATION_LIMIT,
+  ExchangeName,
 } from '@/common/constants';
 import { EvmAddressValidator, IsChainId } from '@/common/validators';
 
@@ -40,6 +42,24 @@ export class GetCampaignsQueryDto {
   @IsOptional()
   @IsEnum(CampaignStatus)
   status?: CampaignStatus;
+
+  @ApiPropertyOptional({
+    description: 'Campaign types',
+    isArray: true,
+    enum: CampaignType,
+  })
+  @IsOptional()
+  @IsEnum(CampaignType, { each: true })
+  type?: CampaignType[];
+
+  @ApiPropertyOptional({
+    description: 'Exchanges',
+    isArray: true,
+    enum: ExchangeName,
+  })
+  @IsOptional()
+  @IsEnum(ExchangeName, { each: true })
+  exchange?: ExchangeName[];
 
   @ApiPropertyOptional({
     default: DEFAULT_PAGINATION_LIMIT,
@@ -185,6 +205,9 @@ export class CampaignData {
 
   @ApiProperty({ name: 'created_at' })
   createdAt: number;
+
+  @ApiProperty({ name: 'cancellation_requested_at' })
+  cancellationRequestedAt: number | null;
 }
 
 export class GetCampaignsResponseDto {
