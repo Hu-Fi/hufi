@@ -133,10 +133,6 @@ export function estimateCompetitiveRewards(
     details: CompetitiveMarketMakingCampaignDetails;
   },
 ): Record<string, number> {
-  const estimatedRewards: {
-    [address: string]: number;
-  } = {};
-
   const eligibleOutcomes: ParticipantOutcome[] = [];
   for (const participantOutcome of participantOutcomes) {
     if (
@@ -145,8 +141,6 @@ export function estimateCompetitiveRewards(
         campaign.details.minVolumeRequired
     ) {
       eligibleOutcomes.push(participantOutcome);
-    } else {
-      estimatedRewards[participantOutcome.address] = 0;
     }
   }
 
@@ -157,6 +151,10 @@ export function estimateCompetitiveRewards(
     [],
     'desc',
   );
+
+  const estimatedRewards: {
+    [address: string]: number;
+  } = {};
 
   let rankedResultIndex = 0;
   while (
@@ -200,6 +198,12 @@ export function estimateCompetitiveRewards(
     }
 
     rankedResultIndex = maybeTiedResultIndex;
+  }
+
+  for (const participantOutcome of participantOutcomes) {
+    if (!estimatedRewards[participantOutcome.address]) {
+      estimatedRewards[participantOutcome.address] = 0;
+    }
   }
 
   return estimatedRewards;

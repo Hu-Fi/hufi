@@ -13,9 +13,9 @@ import { ContentType } from '@/common/enums';
 import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
+import { StorageService } from '@/modules/storage';
 import { WalletWithProvider, Web3Service } from '@/modules/web3';
 
-import { StorageService } from '../storage';
 import * as payoutsUtils from './payouts.utils';
 import {
   CalculatedReward,

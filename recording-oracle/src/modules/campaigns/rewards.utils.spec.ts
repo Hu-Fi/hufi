@@ -1,9 +1,14 @@
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
+import _ from 'lodash';
 
 import type { CampaignEntity } from './campaign.entity';
-import { generateCampaignEntity, generateCampaignProgress } from './fixtures';
+import {
+  generateCampaignEntity,
+  generateCampaignProgress,
+  generateParticipantOutcome,
+} from './fixtures';
 import type {
   HoldingMeta,
   MarketMakingMeta,
@@ -12,6 +17,7 @@ import type {
 import * as rewardsUtils from './rewards.utils';
 import {
   CampaignType,
+  CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
@@ -288,6 +294,231 @@ describe('rewards utils', () => {
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);
       });
+    });
+  });
+
+  describe('estimateRewards', () => {
+    const campaignTypes = Object.values(CampaignType).filter(
+      (t) => t !== CampaignType.COMPETITIVE_MARKET_MAKING,
+    );
+    let campaignType: CampaignType;
+
+    beforeEach(() => {
+      campaignType = faker.helpers.arrayElement(campaignTypes);
+    });
+
+    it('should return 0 rewards for all participants when total score is 0', () => {
+      const participantOutcomes = Array.from({ length: 3 }).map(() =>
+        generateParticipantOutcome(campaignType, { score: 0 }),
+      );
+
+      const estimatedRewards = rewardsUtils.estimateRewards(
+        participantOutcomes,
+        faker.number.int({ min: 1 }).toString(),
+      );
+
+      for (const reward of Object.values(estimatedRewards)) {
+        expect(reward).toBe(0);
+      }
+    });
+
+    it('should correctly estimate rewards based on scores', () => {
+      const participantOutcomes = Array.from({ length: 3 }).map(() =>
+        generateParticipantOutcome(campaignType, { score: 0 }),
+      );
+
+      const estimatedRewards = rewardsUtils.estimateRewards(
+        participantOutcomes,
+        faker.number.int({ min: 1 }).toString(),
+      );
+
+      for (const reward of Object.values(estimatedRewards)) {
+        expect(reward).toBe(0);
+      }
+    });
+
+    it('should correctly estimate rewards based on scores', () => {
+      let totalScore = 0;
+
+      const participantOutcomes = Array.from({
+        length: faker.number.int({ min: 3, max: 10 }),
+      }).map((_value, index) => {
+        const score = index * 10;
+        totalScore += score;
+
+        return generateParticipantOutcome(campaignType, { score: index * 10 });
+      });
+      const rewardPool = faker.number.int({ min: 1 }).toString();
+
+      const estimatedRewards = rewardsUtils.estimateRewards(
+        participantOutcomes,
+        rewardPool,
+      );
+
+      for (const participantOutcome of participantOutcomes) {
+        const expectedReward = Decimal.div(participantOutcome.score, totalScore)
+          .mul(rewardPool)
+          .toNumber();
+        expect(estimatedRewards[participantOutcome.address]).toBe(
+          expectedReward,
+        );
+      }
+    });
+  });
+
+  describe('estimateCompetitiveRewards', () => {
+    let campaign: CampaignEntity & {
+      details: CompetitiveMarketMakingCampaignDetails;
+    };
+    let eligibleVolume: number;
+    let rewardPool: string;
+
+    beforeAll(() => {
+      // @ts-expect-error - we set expected type for campaign
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+      eligibleVolume =
+        campaign.details.minVolumeRequired + faker.number.float({ min: 0.001 });
+      rewardPool = faker.number.int({ min: 1 }).toString();
+    });
+
+    it('should return 0 when participant score is 0', () => {
+      const participantOutcome = generateParticipantOutcome(campaign.type, {
+        score: 0,
+      });
+
+      const estimatedRewards = rewardsUtils.estimateCompetitiveRewards(
+        [participantOutcome],
+        rewardPool,
+        campaign,
+      );
+
+      expect(estimatedRewards[participantOutcome.address]).toBe(0);
+    });
+
+    it('should return 0 when participant has not generate enough volume', () => {
+      const participantOutcome = generateParticipantOutcome(campaign.type, {
+        total_volume: faker.number.float({
+          min: 0,
+          max: campaign.details.minVolumeRequired,
+        }),
+      });
+
+      const estimatedRewards = rewardsUtils.estimateCompetitiveRewards(
+        [participantOutcome],
+        rewardPool,
+        campaign,
+      );
+
+      expect(estimatedRewards[participantOutcome.address]).toBe(0);
+    });
+
+    it('should return 0 when participant is not in top list', () => {
+      const topParticipantsScore = faker.number.int({ min: 1 });
+
+      const topParticipantsOutcomes = Array.from({
+        length: campaign.details.rewardsDistribution.length,
+      }).map(() =>
+        generateParticipantOutcome(campaign.type, {
+          score: topParticipantsScore,
+          total_volume: eligibleVolume,
+        }),
+      );
+      const notTopParticipantOutcome = generateParticipantOutcome(
+        campaign.type,
+        {
+          score: topParticipantsScore - 1,
+          total_volume: eligibleVolume,
+        },
+      );
+
+      const estimatedRewards = rewardsUtils.estimateCompetitiveRewards(
+        faker.helpers.shuffle([
+          ...topParticipantsOutcomes,
+          notTopParticipantOutcome,
+        ]),
+        rewardPool,
+        campaign,
+      );
+
+      expect(estimatedRewards[notTopParticipantOutcome.address]).toBe(0);
+      for (const topParticipantOutcome of topParticipantsOutcomes) {
+        expect(estimatedRewards[topParticipantOutcome.address]).toBeGreaterThan(
+          0,
+        );
+      }
+    });
+
+    it('should return equal rewards if all tie', () => {
+      const topParticipantsScore = faker.number.int({ min: 1 });
+
+      const topParticipantsOutcomes = Array.from({
+        length: campaign.details.rewardsDistribution.length,
+      }).map(() =>
+        generateParticipantOutcome(campaign.type, {
+          score: topParticipantsScore,
+          total_volume: eligibleVolume,
+        }),
+      );
+
+      const estimatedRewards = rewardsUtils.estimateCompetitiveRewards(
+        faker.helpers.shuffle(topParticipantsOutcomes),
+        rewardPool,
+        campaign,
+      );
+
+      const tieReward = Decimal.div(
+        _.sum(campaign.details.rewardsDistribution),
+        100,
+      )
+        .mul(rewardPool)
+        .div(topParticipantsOutcomes.length)
+        .toNumber();
+
+      for (const topParticipantOutcome of topParticipantsOutcomes) {
+        expect(estimatedRewards[topParticipantOutcome.address]).toBe(tieReward);
+      }
+    });
+
+    it('should correctly estimate rewards based on scores and rewards distribution', () => {
+      campaign.details.rewardsDistribution = [30, 20, 50];
+
+      const eligibleVolume =
+        campaign.details.minVolumeRequired + faker.number.float({ min: 0.001 });
+
+      const firstPlaceParticipant = generateParticipantOutcome(campaign.type, {
+        score: 4,
+        total_volume: eligibleVolume,
+      });
+      const secondPlaceParticipant = generateParticipantOutcome(campaign.type, {
+        score: 3,
+        total_volume: eligibleVolume,
+      });
+      const thirdPlaceParticipant = generateParticipantOutcome(campaign.type, {
+        score: 2,
+        total_volume: eligibleVolume,
+      });
+      const notTop3Participant = generateParticipantOutcome(campaign.type, {
+        score: 1,
+        total_volume: eligibleVolume,
+      });
+
+      const rewardPool = '100';
+
+      const estimatedRewards = rewardsUtils.estimateCompetitiveRewards(
+        faker.helpers.shuffle([
+          firstPlaceParticipant,
+          secondPlaceParticipant,
+          thirdPlaceParticipant,
+          notTop3Participant,
+        ]),
+        rewardPool,
+        campaign,
+      );
+
+      expect(estimatedRewards[firstPlaceParticipant.address]).toBe(50);
+      expect(estimatedRewards[secondPlaceParticipant.address]).toBe(30);
+      expect(estimatedRewards[thirdPlaceParticipant.address]).toBe(20);
+      expect(estimatedRewards[notTop3Participant.address]).toBe(0);
     });
   });
 });
