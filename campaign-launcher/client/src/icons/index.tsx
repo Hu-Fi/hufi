@@ -225,3 +225,44 @@ export const ChartIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const ArrowLeftIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 19L5 12M5 12L12 5M5 12H19"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const ConnectWalletIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 18 18" fill="none">
+      <path
+        d="M12.6347 10.9572L14.5919 9C16.136 7.45584 16.136 4.95227 14.5919 3.40812C13.0477 1.86396 10.5442 1.86396 9 3.40812L7.04284 5.36528M10.9572 12.6347L9 14.5919C7.45584 16.136 4.95227 16.136 3.40812 14.5919C1.86396 13.0477 1.86396 10.5442 3.40812 9L5.36528 7.04284"
+        stroke="currentColor"
+        strokeWidth="1.125"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16.5 12.75H14.9408M12.75 16.5L12.75 14.9408"
+        stroke="currentColor"
+        strokeWidth="1.125"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.5 5.25H3.05917M5.25 1.5L5.25 3.05917"
+        stroke="currentColor"
+        strokeWidth="1.125"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};

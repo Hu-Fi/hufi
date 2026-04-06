@@ -15,7 +15,7 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'xs':
       return {
         image: {
-          width: 16,
+          size: 16,
           border: '1px solid white',
         },
         text: {
@@ -26,18 +26,18 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'small':
       return {
         image: {
-          width: 24,
+          size: 22,
           border: '1px solid white',
         },
         text: {
-          fontWeight: 400,
-          fontSize: 16,
+          fontWeight: 600,
+          fontSize: 20,
         },
       };
     case 'medium':
       return {
         image: {
-          width: 32,
+          size: 32,
           border: '1px solid white',
         },
         text: {
@@ -48,7 +48,7 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'large':
       return {
         image: {
-          width: 72,
+          size: 72,
           border: '2px solid white',
         },
         text: {

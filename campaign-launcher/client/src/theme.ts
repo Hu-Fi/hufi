@@ -188,13 +188,13 @@ const createAppTheme = (mode: PaletteMode) => {
           },
           sizeSmall: {
             padding: '4px 10px',
-            fontSize: '13px',
-            lineHeight: '22px',
+            fontSize: '10px',
+            lineHeight: '16px',
           },
           sizeMedium: {
             padding: '6px 16px',
-            fontSize: '14px',
-            lineHeight: '24px',
+            fontSize: '12px',
+            lineHeight: '20px',
           },
           sizeLarge: {
             padding: '8px 22px',
