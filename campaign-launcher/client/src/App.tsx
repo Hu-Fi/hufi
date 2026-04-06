@@ -13,6 +13,7 @@ import Dashboard from '@/pages/Dashboard';
 import LaunchCampaignPage from '@/pages/LaunchCampaign';
 import ManageApiKeysPage from '@/pages/ManageApiKeys';
 import ActiveAccountProvider from '@/providers/ActiveAccountProvider';
+import { AuthedUserDataProvider } from '@/providers/AuthedUserData';
 import ExchangesProvider from '@/providers/ExchangesProvider';
 import { NetworkProvider } from '@/providers/NetworkProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
@@ -34,43 +35,45 @@ const App: FC = () => {
                 <ActiveAccountProvider>
                   <SignerProvider>
                     <Web3AuthProvider>
-                      <ExchangesProvider>
-                        <StakeProvider>
-                          <LocalizationProvider
-                            dateAdapter={AdapterDayjs}
-                            adapterLocale="en"
-                          >
-                            <Layout>
-                              <Routes>
-                                <Route
-                                  path={ROUTES.DASHBOARD}
-                                  element={<Dashboard />}
-                                />
-                                <Route
-                                  path={ROUTES.CAMPAIGN_DETAILS}
-                                  element={<Campaign />}
-                                />
-                                <Route
-                                  path={ROUTES.MANAGE_API_KEYS}
-                                  element={
-                                    <ProtectedRoute>
-                                      <ManageApiKeysPage />
-                                    </ProtectedRoute>
-                                  }
-                                />
-                                <Route
-                                  path={ROUTES.LAUNCH_CAMPAIGN}
-                                  element={
-                                    <StakeProtectedRoute>
-                                      <LaunchCampaignPage />
-                                    </StakeProtectedRoute>
-                                  }
-                                />
-                              </Routes>
-                            </Layout>
-                          </LocalizationProvider>
-                        </StakeProvider>
-                      </ExchangesProvider>
+                      <AuthedUserDataProvider>
+                        <ExchangesProvider>
+                          <StakeProvider>
+                            <LocalizationProvider
+                              dateAdapter={AdapterDayjs}
+                              adapterLocale="en"
+                            >
+                              <Layout>
+                                <Routes>
+                                  <Route
+                                    path={ROUTES.DASHBOARD}
+                                    element={<Dashboard />}
+                                  />
+                                  <Route
+                                    path={ROUTES.CAMPAIGN_DETAILS}
+                                    element={<Campaign />}
+                                  />
+                                  <Route
+                                    path={ROUTES.MANAGE_API_KEYS}
+                                    element={
+                                      <ProtectedRoute>
+                                        <ManageApiKeysPage />
+                                      </ProtectedRoute>
+                                    }
+                                  />
+                                  <Route
+                                    path={ROUTES.LAUNCH_CAMPAIGN}
+                                    element={
+                                      <StakeProtectedRoute>
+                                        <LaunchCampaignPage />
+                                      </StakeProtectedRoute>
+                                    }
+                                  />
+                                </Routes>
+                              </Layout>
+                            </LocalizationProvider>
+                          </StakeProvider>
+                        </ExchangesProvider>
+                      </AuthedUserDataProvider>
                     </Web3AuthProvider>
                   </SignerProvider>
                 </ActiveAccountProvider>
