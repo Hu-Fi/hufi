@@ -32,26 +32,31 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
 
   let details: CampaignDetails;
   switch (_type) {
-    case CampaignType.MARKET_MAKING:
+    case CampaignType.MARKET_MAKING: {
       details = {
         dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
-    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    }
+    case CampaignType.COMPETITIVE_MARKET_MAKING: {
+      const nTopParticipants = faker.number.int({ min: 1, max: 5 });
+      const maxRewardSharePerParticipant = Math.floor(100 / nTopParticipants);
+
       details = {
         minVolumeRequired: faker.number.float({ min: 0.0001, max: 1000 }),
-        rewardsDistribution: Array.from(
-          { length: faker.number.int({ min: 1, max: 5 }) },
-          () => faker.number.float({ min: 0.01, max: 100 }),
+        rewardsDistribution: Array.from({ length: nTopParticipants }, () =>
+          faker.number.int({ min: 1, max: maxRewardSharePerParticipant }),
         ),
       };
       break;
-    case CampaignType.HOLDING:
+    }
+    case CampaignType.HOLDING: {
       details = {
         dailyBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
-    case CampaignType.THRESHOLD:
+    }
+    case CampaignType.THRESHOLD: {
       details = {
         minimumBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
         maxParticipants: faker.datatype.boolean()
@@ -59,6 +64,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
           : undefined,
       };
       break;
+    }
   }
 
   /**
@@ -93,12 +99,28 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
 }
 
 export function generateParticipantOutcome(
+  campaignType: CampaignType,
   overrides: Partial<ParticipantOutcome> = {},
 ): ParticipantOutcome {
   const outcome: ParticipantOutcome = {
     address: ethers.getAddress(faker.finance.ethereumAddress()),
     score: faker.number.float(),
   };
+
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      outcome.total_volume = faker.number.float({ min: 0, max: 10000 });
+      break;
+    case CampaignType.HOLDING:
+    case CampaignType.THRESHOLD:
+      outcome.token_balance = faker.number.float({ min: 0, max: 1000 });
+      break;
+    default:
+      throw new Error(
+        `Unsupported campaign type for participant outcome: ${campaignType}`,
+      );
+  }
 
   Object.assign(outcome, overrides);
 
@@ -219,14 +241,4 @@ export function generateUserJoinedDate(campaign: CampaignEntity): string {
   return faker.date
     .between({ from: campaign.startDate, to: campaign.endDate })
     .toISOString();
-}
-
-export function generateLeaderboardEntries(): Array<{
-  address: string;
-  result: number;
-}> {
-  return Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
-    address: faker.finance.ethereumAddress(),
-    result: faker.number.float({ max: 1000 }),
-  }));
 }

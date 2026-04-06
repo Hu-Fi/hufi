@@ -105,6 +105,22 @@ describe('ThresholdProgressChecker', () => {
       expect(result.score).toBe(expectedScore);
       expect(result.token_balance).toBe(expectedBalance);
     });
+
+    it('should throw when total exceeds max safe integer', async () => {
+      const mockedAccountBalance = generateAccountBalance([
+        progressCheckerSetup.symbol,
+      ]);
+      mockedAccountBalance[progressCheckerSetup.symbol]!.total =
+        Number.MAX_SAFE_INTEGER;
+
+      mockedExchangeApiClient.fetchBalance.mockResolvedValueOnce(
+        mockedAccountBalance,
+      );
+
+      await expect(
+        resultsChecker.checkForParticipant(participantInfo),
+      ).rejects.toThrow('Participants total value number overflow');
+    });
   });
 
   describe('abuse detection', () => {

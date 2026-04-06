@@ -1,12 +1,13 @@
-import type { HoldingResult, HoldingMeta } from './holding';
-import type { MarketMakingResult, MarketMakingMeta } from './market-making';
-import type { ThresholdResult, ThresholdMeta } from './threshold';
+import type { HoldingMeta, HoldingResult } from './holding';
+import type { MarketMakingMeta, MarketMakingResult } from './market-making';
+import type { ThresholdMeta, ThresholdResult } from './threshold';
 
 export { HoldingProgressChecker } from './holding';
 export { MarketMakingProgressChecker } from './market-making';
 export { ThresholdProgressChecker } from './threshold';
 
 export type * from './types';
+export type { HoldingMeta, MarketMakingMeta, ThresholdMeta };
 export type ProgressCheckResult =
   | HoldingResult
   | MarketMakingResult
@@ -15,4 +16,3 @@ export type CampaignProgressMeta =
   | HoldingMeta
   | MarketMakingMeta
   | ThresholdMeta;
-export type { HoldingMeta, MarketMakingMeta, ThresholdMeta };

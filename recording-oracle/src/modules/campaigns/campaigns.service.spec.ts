@@ -10,8 +10,6 @@ jest.mock('@human-protocol/sdk', () => {
 });
 jest.mock('@/logger');
 
-import crypto from 'crypto';
-
 import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-jest';
 import {
@@ -19,19 +17,17 @@ import {
   EscrowStatus,
   EscrowUtils,
   type IEscrow,
-  type ITransaction,
   OrderDirection,
-  TransactionUtils,
 } from '@human-protocol/sdk';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
-import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import * as cryptoUtils from '@/common/utils/crypto';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
 import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
@@ -72,6 +68,7 @@ import {
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
+import { CAMPAIGNS_DAILY_CYCLE } from './constants';
 import {
   generateBaseCampaignManifest,
   generateCampaignEntity,
@@ -82,7 +79,6 @@ import {
   generateHoldingCampaignManifest,
   generateIntermediateResult,
   generateIntermediateResultsData,
-  generateLeaderboardEntries,
   generateMarketMakingCampaignManifest,
   generateParticipantOutcome,
   generateStoredResultsMeta,
@@ -110,13 +106,18 @@ import {
   type ThresholdMeta,
   ThresholdProgressChecker,
 } from './progress-checking/threshold';
+import * as rewardsUtils from './rewards.utils';
+import {
+  isCompetitiveMarketMakingCampaign,
+  isThresholdCampaign,
+} from './type-guards';
 import {
   type CampaignProgress,
   CampaignStatus,
   CampaignType,
+  type CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type IntermediateResultsData,
-  LeaderboardRanking,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
   type ThresholdCampaignManifest,
@@ -141,11 +142,14 @@ const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = jest.mocked(EscrowClient);
 const mockedEscrowUtils = jest.mocked(EscrowUtils);
-const mockedTransactionUtils = jest.mocked(TransactionUtils);
 
 const mockedPancakeswapClient = createMock<PancakeswapClient>();
 
 const exchangePermissions = Object.values(ExchangePermission);
+
+it('campaign progress cycle duration should be 1 day', () => {
+  expect(CAMPAIGNS_DAILY_CYCLE).toBe(1);
+});
 
 describe('CampaignsService', () => {
   let campaignsService: CampaignsService;
@@ -1458,10 +1462,10 @@ describe('CampaignsService', () => {
       const intermediateResultsData = generateIntermediateResultsData();
       const stringifiedResultsData = JSON.stringify(intermediateResultsData);
 
-      const resultsHash = crypto
-        .createHash('sha256')
-        .update(stringifiedResultsData)
-        .digest('hex');
+      const resultsHash = cryptoUtils.hashString(
+        stringifiedResultsData,
+        'sha256',
+      );
       const fundsToReserve = faker.number.bigInt({ min: 1 });
       const recordingResult = await campaignsService[
         'recordCampaignIntermediateResults'
@@ -2218,29 +2222,6 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
-    it('should check progress for completed daily period of ongoing COMPETITIVE_MARKET_MAKING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.startDate = dayjs().subtract(2, 'day').toDate();
-      campaign.endDate = dayjs().add(2, 'day').toDate();
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        generateCampaignProgress(campaign),
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-
-      const [intermediateResultsData, fundsToReserve] =
-        spyOnRecordCampaignIntermediateResults.mock.calls[0];
-      const lastResult = (
-        intermediateResultsData as IntermediateResultsData
-      ).results.at(-1)!;
-      expect(lastResult.reserved_funds).toBe('0');
-      expect(fundsToReserve).toBe(0n);
-    });
-
     it('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2433,6 +2414,11 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
         {
@@ -2444,13 +2430,13 @@ describe('CampaignsService', () => {
             {
               from: campaignProgress.from,
               to: campaignProgress.to,
-              reserved_funds: '0',
+              reserved_funds: expectedRewardPool,
               participants_outcomes_batches: [],
               ...campaignProgress.meta,
             },
           ],
         },
-        0n,
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2472,6 +2458,14 @@ describe('CampaignsService', () => {
         newCampaignProgress,
       );
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        newCampaignProgress,
+      );
+      /**
+       * Need to prepare it before calling recordCampaignProgress because it mutates
+       * intermediateResultsData that is mocked as return value above
+       */
       const expectedNewIntermediateResultsData = {
         ...intermediateResultsData,
         results: [
@@ -2479,7 +2473,7 @@ describe('CampaignsService', () => {
           {
             from: newCampaignProgress.from,
             to: newCampaignProgress.to,
-            reserved_funds: '0',
+            reserved_funds: expectedRewardPool,
             participants_outcomes_batches: [],
             ...newCampaignProgress.meta,
           },
@@ -2491,7 +2485,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
         expectedNewIntermediateResultsData,
-        0n,
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
       );
     });
 
@@ -2516,13 +2510,10 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool: campaignsService.calculateDailyReward(campaign),
-        maxRewardPoolRatio: 1,
-        progressValue: totalVolume,
-        progressValueTarget: dailyVolumeTarget,
-        fundTokenDecimals: campaign.fundTokenDecimals,
-      });
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -2561,13 +2552,10 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool: campaignsService.calculateDailyReward(campaign),
-        maxRewardPoolRatio: 1,
-        progressValue: totalBalance,
-        progressValueTarget: dailyBalanceTarget,
-        fundTokenDecimals: campaign.fundTokenDecimals,
-      });
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -2586,24 +2574,72 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
+    it('should record correctly calculated reserved funds for THRESHOLD campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+      const campaignDetails = campaign.details as ThresholdCampaignDetails;
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
+      const nEligible = faker.number.int({
+        min: 1,
+        max: campaignDetails.maxParticipants || 10,
+      });
+      const totalBalance = nEligible * campaignDetails.minimumBalanceTarget;
+
       const campaignProgress = generateCampaignProgress(campaign);
-      (campaignProgress.meta as MarketMakingMeta).total_volume =
-        faker.number.float({ min: 0.1, max: 100_000 });
+      (campaignProgress.meta as ThresholdMeta) = {
+        total_score: nEligible,
+        total_balance: totalBalance,
+      };
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         campaignProgress,
       );
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = new Decimal(campaign.fundAmount)
-        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-        .toString();
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_balance: totalBalance,
+              total_score: nEligible,
+              reserved_funds: expectedRewardPool,
+              participants_outcomes_batches: [],
+            },
+          ],
+        }),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+      );
+    });
+
+    it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const campaignProgress = generateCampaignProgress(campaign);
+      campaignProgress.participants_outcomes.push(
+        generateParticipantOutcome(campaign.type, {
+          total_volume: (
+            campaign.details as CompetitiveMarketMakingCampaignDetails
+          ).minVolumeRequired,
+        }),
+      );
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedRewardPool = rewardsUtils.calculateDailyReward(campaign);
 
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
@@ -2615,7 +2651,12 @@ describe('CampaignsService', () => {
               total_volume: (campaignProgress.meta as MarketMakingMeta)
                 .total_volume,
               reserved_funds: expectedRewardPool,
-              participants_outcomes_batches: [],
+              participants_outcomes_batches: [
+                {
+                  id: expect.any(String),
+                  results: campaignProgress.participants_outcomes,
+                },
+              ],
             },
           ],
         }),
@@ -2623,161 +2664,13 @@ describe('CampaignsService', () => {
       );
     });
 
-    describe('threshold campaign reserved funds calculation', () => {
-      it('should record correct value when no eligible participants', async () => {
-        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
-
-        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-        const minimumBalanceTarget = (
-          campaign.details as ThresholdCampaignDetails
-        ).minimumBalanceTarget;
-
-        const nEligible = 0;
-        const nIneligible = faker.number.int({ min: 1, max: 10 });
-
-        const totalBalance =
-          nIneligible * minimumBalanceTarget * Math.random() +
-          nEligible * minimumBalanceTarget;
-
-        const campaignProgress = generateCampaignProgress(campaign);
-        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
-        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-          campaignProgress,
-        );
-
-        await campaignsService.recordCampaignProgress(campaign);
-
-        const expectedRewardPool = '0';
-
-        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
-          expect.objectContaining({
-            results: [
-              {
-                from: campaignProgress.from,
-                to: campaignProgress.to,
-                total_balance: totalBalance,
-                total_score: nEligible,
-                reserved_funds: expectedRewardPool,
-                participants_outcomes_batches: [],
-              },
-            ],
-          }),
-          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
-        );
-      });
-
-      it('should record correct value when no maxParticipants', async () => {
-        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
-        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
-
-        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-        const minimumBalanceTarget = (
-          campaign.details as ThresholdCampaignDetails
-        ).minimumBalanceTarget;
-
-        const nEligible = faker.number.int({ min: 1, max: 10 });
-        const nIneligible = faker.number.int({ min: 1, max: 10 });
-
-        const totalBalance =
-          nIneligible * minimumBalanceTarget * Math.random() +
-          nEligible * minimumBalanceTarget;
-
-        const campaignProgress = generateCampaignProgress(campaign);
-        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
-        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-          campaignProgress,
-        );
-
-        await campaignsService.recordCampaignProgress(campaign);
-
-        const expectedRewardPool =
-          campaignsService.calculateDailyReward(campaign);
-
-        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
-          expect.objectContaining({
-            results: [
-              {
-                from: campaignProgress.from,
-                to: campaignProgress.to,
-                total_balance: totalBalance,
-                total_score: nEligible,
-                reserved_funds: expectedRewardPool,
-                participants_outcomes_batches: [],
-              },
-            ],
-          }),
-          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
-        );
-      });
-
-      it('should record correct value when there is maxParticipants', async () => {
-        campaign = generateCampaignEntity(CampaignType.THRESHOLD);
-        const maxParticipants = faker.number.int({ min: 5, max: 100 });
-        (campaign.details as ThresholdCampaignDetails).maxParticipants =
-          maxParticipants;
-
-        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-        const minimumBalanceTarget = (
-          campaign.details as ThresholdCampaignDetails
-        ).minimumBalanceTarget;
-
-        const nEligible = faker.number.int({ min: 1, max: 10 });
-        const nIneligible = faker.number.int({ min: 1, max: 10 });
-
-        const totalBalance =
-          nIneligible * minimumBalanceTarget * Math.random() +
-          nEligible * minimumBalanceTarget;
-
-        const campaignProgress = generateCampaignProgress(campaign);
-        (campaignProgress.meta as ThresholdMeta).total_balance = totalBalance;
-        (campaignProgress.meta as ThresholdMeta).total_score = nEligible;
-        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-          campaignProgress,
-        );
-
-        await campaignsService.recordCampaignProgress(campaign);
-
-        const expectedRewardPool = campaignsService.calculateRewardPool({
-          baseRewardPool: campaignsService.calculateDailyReward(campaign),
-          maxRewardPoolRatio: 1,
-          progressValue: nEligible,
-          progressValueTarget: maxParticipants,
-          fundTokenDecimals: campaign.fundTokenDecimals,
-        });
-
-        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-        expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
-          expect.objectContaining({
-            results: [
-              {
-                from: campaignProgress.from,
-                to: campaignProgress.to,
-                total_balance: totalBalance,
-                total_score: nEligible,
-                reserved_funds: expectedRewardPool,
-                participants_outcomes_batches: [],
-              },
-            ],
-          }),
-          ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
-        );
-      });
-    });
-
     it('should record participant results in batches', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const participantOutcomes = [
-        generateParticipantOutcome(),
-        generateParticipantOutcome(),
-        generateParticipantOutcome(),
+        generateParticipantOutcome(campaign.type),
+        generateParticipantOutcome(campaign.type),
+        generateParticipantOutcome(campaign.type),
       ];
 
       const campaignProgress = generateCampaignProgress(campaign);
@@ -3043,12 +2936,17 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: '0',
+        reserved_funds: expectedRewardPool,
         participants_outcomes_batches: [],
       });
     });
@@ -3070,14 +2968,17 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
       expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
         from: campaignProgress.from,
         to: campaignProgress.to,
         total_volume: 0,
-        reserved_funds: new Decimal(campaign.fundAmount)
-          .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-          .toString(),
+        reserved_funds: expectedRewardPool,
         participants_outcomes_batches: [],
       });
     });
@@ -3118,6 +3019,11 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
       expect(logger.info).toHaveBeenCalledTimes(2);
       expect(logger.info).toHaveBeenNthCalledWith(
         1,
@@ -3125,7 +3031,7 @@ describe('CampaignsService', () => {
         {
           from: campaignProgress.from,
           to: campaignProgress.to,
-          reserved_funds: '0',
+          reserved_funds: expectedRewardPool,
         },
       );
       expect(logger.info).toHaveBeenNthCalledWith(
@@ -3134,7 +3040,7 @@ describe('CampaignsService', () => {
         {
           from: campaignProgress.from,
           to: campaignProgress.to,
-          reserved_funds: '0',
+          reserved_funds: expectedRewardPool,
           resultsUrl: storedResultsMeta.url,
           ...campaignProgress.meta,
         },
@@ -4322,9 +4228,11 @@ describe('CampaignsService', () => {
 
       const participantMetaProp = faker.lorem.word();
       const participantMetaValue = faker.number.float();
-      const participantOutcome = generateParticipantOutcome({
+      const participantOutcome = generateParticipantOutcome(campaign.type, {
         address: evmAddress,
         [participantMetaProp]: participantMetaValue,
+        total_volume: undefined,
+        token_balance: undefined,
       });
 
       const mockedActiveTimeframe = {
@@ -4337,9 +4245,9 @@ describe('CampaignsService', () => {
         from: mockedActiveTimeframe.start.toISOString(),
         to: mockedActiveTimeframe.end.toISOString(),
         participants_outcomes: [
-          generateParticipantOutcome(),
+          generateParticipantOutcome(campaign.type),
           participantOutcome,
-          generateParticipantOutcome(),
+          generateParticipantOutcome(campaign.type),
         ],
         meta: {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -4427,154 +4335,6 @@ describe('CampaignsService', () => {
       );
 
       expect(progress).toBeNull();
-    });
-  });
-
-  describe('calculateDailyReward', () => {
-    it('should correctly calculate reward when duration is integer number of days', () => {
-      const duration = faker.number.int({ min: 1, max: 15 });
-      const campaign = generateCampaignEntity();
-      campaign.endDate = dayjs(campaign.startDate)
-        .add(duration, 'days')
-        .toDate();
-
-      const dailyReward = campaignsService.calculateDailyReward(campaign);
-
-      const expectedDailyReward = new Decimal(campaign.fundAmount)
-        .div(duration)
-        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-        .toString();
-      expect(dailyReward).toBe(expectedDailyReward);
-    });
-
-    it('should correctly calculate reward when duration is not integer number of days', () => {
-      /**
-       * E.g. if duration is 5 days and 2 hours -
-       * then there are 6 "day intervals" to distribute reward
-       */
-
-      const duration = faker.number.int({ min: 2, max: 15 });
-      const campaign = generateCampaignEntity();
-      campaign.endDate = dayjs(campaign.startDate)
-        .add(duration - 1, 'days')
-        .add(1, 'minute')
-        .toDate();
-
-      const dailyReward = campaignsService.calculateDailyReward(campaign);
-
-      const expectedDailyReward = new Decimal(campaign.fundAmount)
-        .div(duration)
-        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-        .toString();
-      expect(dailyReward).toBe(expectedDailyReward);
-    });
-
-    it('should correctly truncate reward value', () => {
-      const duration = 6;
-      const campaign = generateCampaignEntity();
-      campaign.fundAmount = '10';
-      campaign.fundTokenDecimals = 18;
-      campaign.endDate = dayjs(campaign.startDate)
-        .add(duration, 'days')
-        .toDate();
-
-      const dailyReward = campaignsService.calculateDailyReward(campaign);
-
-      const expectedDailyReward = new Decimal(campaign.fundAmount)
-        .div(duration)
-        .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-        .toString();
-      expect(dailyReward).toBe(expectedDailyReward);
-    });
-  });
-
-  describe('calculateRewardPool', () => {
-    const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
-
-    let baseRewardPool: string;
-    let progressValueTarget: number;
-
-    beforeEach(() => {
-      baseRewardPool = faker.number.float({ min: 10, max: 100 }).toString();
-      progressValueTarget = faker.number.float({ min: 1, max: 1000 });
-    });
-
-    it('should return 0 reward pool when generated volume is 0', () => {
-      const rewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool,
-        maxRewardPoolRatio: 1,
-        progressValueTarget,
-        progressValue: 0,
-        fundTokenDecimals: TEST_TOKEN_DECIMALS,
-      });
-
-      expect(rewardPool).toBe('0');
-    });
-
-    it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
-      progressValueTarget = 42;
-      const progressValue = faker.number.float({
-        min: 1,
-        max: progressValueTarget,
-      });
-
-      const rewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool,
-        maxRewardPoolRatio: 1,
-        progressValueTarget,
-        progressValue,
-        fundTokenDecimals: TEST_TOKEN_DECIMALS,
-      });
-
-      const expectedRewardRatio = progressValue / progressValueTarget;
-      const expectedRewardPool = new Decimal(baseRewardPool)
-        .mul(expectedRewardRatio)
-        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
-        .toString();
-      expect(rewardPool).toBe(expectedRewardPool);
-    });
-
-    it('should correctly calculate reward pool when generated volume meets target', () => {
-      const progressValue = faker.number.float({
-        min: progressValueTarget,
-        max: progressValueTarget * 10,
-      });
-
-      const rewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool,
-        maxRewardPoolRatio: 1,
-        progressValueTarget,
-        progressValue,
-        fundTokenDecimals: TEST_TOKEN_DECIMALS,
-      });
-
-      const expectedRewardPool = new Decimal(baseRewardPool)
-        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
-        .toString();
-      expect(rewardPool).toBe(expectedRewardPool);
-    });
-
-    it('should respect maxRewardPoolRatio', () => {
-      const maxRewardPoolRatio = faker.number.int({ min: 2, max: 5 });
-
-      const progressValue = faker.number.float({
-        min: progressValueTarget * (maxRewardPoolRatio + 1),
-        max: progressValueTarget * (maxRewardPoolRatio + 2),
-      });
-
-      const rewardPool = campaignsService.calculateRewardPool({
-        baseRewardPool,
-        maxRewardPoolRatio,
-        progressValueTarget,
-        progressValue,
-        fundTokenDecimals: TEST_TOKEN_DECIMALS,
-      });
-
-      const expectedRewardPool = new Decimal(baseRewardPool)
-        .mul(maxRewardPoolRatio)
-        .toDecimalPlaces(TEST_TOKEN_DECIMALS, Decimal.ROUND_DOWN)
-        .toString();
-      expect(rewardPool).toBe(expectedRewardPool);
     });
   });
 
@@ -4882,16 +4642,53 @@ describe('CampaignsService', () => {
   });
 
   describe('getCampaignLeaderboard', () => {
+    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let campaign: CampaignEntity;
+    let now: Date;
+    let outcomeToEntryResultProp: string;
 
     beforeAll(() => {
-      campaign = generateCampaignEntity();
+      now = new Date();
+      jest.useFakeTimers({ now });
+
+      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+        campaignsService as any,
+        'retrieveCampaignIntermediateResults',
+      );
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
     });
 
     beforeEach(() => {
+      campaign = generateCampaignEntity();
+      campaign.resultsCutoffAt = faker.date.recent();
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
+
+      if (
+        [
+          CampaignType.MARKET_MAKING,
+          CampaignType.COMPETITIVE_MARKET_MAKING,
+        ].includes(campaign.type)
+      ) {
+        outcomeToEntryResultProp = 'total_volume';
+      } else if (
+        [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(campaign.type)
+      ) {
+        outcomeToEntryResultProp = 'token_balance';
+      } else {
+        outcomeToEntryResultProp = 'unknown';
+      }
+    });
+
+    afterEach(() => {
+      campaignsService['prefinalResultsCache'].clear();
+      mockCacheManager.clear();
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+      spyOnRetrieveCampaignIntermediateResults.mockRestore();
     });
 
     it('should return empty data if campaign not found', async () => {
@@ -4902,238 +4699,13 @@ describe('CampaignsService', () => {
       const data = await campaignsService.getCampaignLeaderboard(
         campaign.chainId,
         campaign.address,
-        faker.helpers.arrayElement(Object.values(LeaderboardRanking)),
       );
 
-      expect(data).toEqual([]);
-    });
-
-    it('should throw when ranking option is not supported', async () => {
-      const notSupportedRankingOption = faker.lorem.word();
-
-      let thrownError: any;
-      try {
-        await campaignsService.getCampaignLeaderboard(
-          campaign.chainId,
-          campaign.address,
-          notSupportedRankingOption as LeaderboardRanking,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(Error);
-      expect(thrownError.message).toBe(
-        `Leaderboard ranking by "${notSupportedRankingOption}" is not supported`,
-      );
-    });
-
-    it('should return rewards leaderboard data in correct format', async () => {
-      const spyOnGetRewardsLeaderboard = jest.spyOn(
-        campaignsService as any,
-        'getRewardsLeaderboardEntries',
-      );
-
-      const leaderboardEntries = generateLeaderboardEntries();
-      spyOnGetRewardsLeaderboard.mockResolvedValueOnce(leaderboardEntries);
-
-      const data = await campaignsService.getCampaignLeaderboard(
-        campaign.chainId,
-        campaign.address,
-        LeaderboardRanking.TOTAL_REWARDS,
-      );
-
-      expect(data).toEqual(
-        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
-          address: ethers.getAddress(e.address),
-          result: e.result,
-        })),
-      );
-      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledTimes(1);
-      expect(spyOnGetRewardsLeaderboard).toHaveBeenCalledWith(campaign);
-
-      spyOnGetRewardsLeaderboard.mockRestore();
-    });
-
-    it('should return current progress leaderboard data in correct format', async () => {
-      const spyOnGetCurrentProgressLeaderboard = jest.spyOn(
-        campaignsService as any,
-        'getCurrentProgressLeaderboardEntries',
-      );
-
-      const leaderboardEntries = generateLeaderboardEntries();
-      spyOnGetCurrentProgressLeaderboard.mockResolvedValueOnce(
-        leaderboardEntries,
-      );
-
-      const data = await campaignsService.getCampaignLeaderboard(
-        campaign.chainId,
-        campaign.address,
-        LeaderboardRanking.CURRENT_PROGRESS,
-      );
-
-      expect(data).toEqual(
-        _.orderBy(leaderboardEntries, 'result', 'desc').map((e) => ({
-          address: ethers.getAddress(e.address),
-          result: e.result,
-        })),
-      );
-      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledTimes(1);
-      expect(spyOnGetCurrentProgressLeaderboard).toHaveBeenCalledWith(campaign);
-
-      spyOnGetCurrentProgressLeaderboard.mockRestore();
-    });
-  });
-
-  describe('getRewardsLeaderboardEntries', () => {
-    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
-    let campaign: CampaignEntity;
-
-    beforeAll(() => {
-      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
-        campaignsService as any,
-        'retrieveCampaignIntermediateResults',
-      );
-      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
-    });
-
-    beforeEach(() => {
-      campaign = generateCampaignEntity();
-      campaign.resultsCutoffAt = faker.date.recent();
-    });
-
-    afterAll(() => {
-      spyOnRetrieveCampaignIntermediateResults.mockRestore();
-    });
-
-    it('should return empty data if results not yet recorded', async () => {
-      campaign.resultsCutoffAt = null;
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([]);
-    });
-
-    it('should return empty result if no participants in results', async () => {
-      const intermediateResultsData = generateIntermediateResultsData();
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
-        intermediateResultsData,
-      );
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([]);
-    });
-
-    it('should return zeros if no reward transactions for participants yet', async () => {
-      const intermediateResultsData = generateIntermediateResultsData();
-      const participantOutcome = generateParticipantOutcome();
-      intermediateResultsData.results[0].participants_outcomes_batches.push({
-        id: faker.string.uuid(),
-        results: [participantOutcome],
+      expect(data).toEqual({
+        updatedAt: now,
+        total: 0,
+        entries: [],
       });
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
-        intermediateResultsData,
-      );
-      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([
-        {
-          address: participantOutcome.address.toLowerCase(),
-          result: 0,
-        },
-      ]);
-      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(1);
-      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledWith({
-        chainId: campaign.chainId,
-        fromAddress: campaign.address,
-        toAddress: campaign.address,
-        method: 'bulkTransfer',
-        first: 100,
-        skip: 0,
-      });
-    });
-
-    it('should return only participants data for leaderboard', async () => {
-      const intermediateResultsData = generateIntermediateResultsData();
-      const participantOutcome = generateParticipantOutcome();
-      intermediateResultsData.results[0].participants_outcomes_batches.push({
-        id: faker.string.uuid(),
-        results: [participantOutcome],
-      });
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
-        intermediateResultsData,
-      );
-      const participantRewardValue = faker.number.bigInt();
-      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([
-        {
-          internalTransactions: [
-            {
-              receiver: participantOutcome.address.toLowerCase(),
-              value: participantRewardValue,
-            },
-            // imitate broken value
-            {
-              receiver: null,
-              value: faker.number.bigInt(),
-            },
-            // imitate oracle fee/launcher refund payout
-            {
-              receiver: faker.finance.ethereumAddress(),
-              value: faker.number.bigInt(),
-            },
-          ],
-        },
-      ] as ITransaction[]);
-      // next page request
-      mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
-
-      const data =
-        await campaignsService['getRewardsLeaderboardEntries'](campaign);
-
-      expect(data).toEqual([
-        {
-          address: participantOutcome.address.toLowerCase(),
-          result: Number(
-            ethers.formatUnits(
-              participantRewardValue,
-              campaign.fundTokenDecimals,
-            ),
-          ),
-        },
-      ]);
-      expect(mockedTransactionUtils.getTransactions).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('getCurrentProgressLeaderboardEntries', () => {
-    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
-    let campaign: CampaignEntity;
-
-    beforeAll(() => {
-      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
-        campaignsService as any,
-        'retrieveCampaignIntermediateResults',
-      );
-      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
-    });
-
-    beforeEach(() => {
-      campaign = generateCampaignEntity();
-      campaign.resultsCutoffAt = faker.date.recent();
-    });
-
-    afterEach(() => {
-      mockCacheManager.clear();
-    });
-
-    afterAll(() => {
-      spyOnRetrieveCampaignIntermediateResults.mockRestore();
     });
 
     it.each([CampaignStatus.CANCELLED, CampaignStatus.COMPLETED])(
@@ -5143,8 +4715,9 @@ describe('CampaignsService', () => {
 
         let thrownError: any;
         try {
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
+          await campaignsService.getCampaignLeaderboard(
+            campaign.chainId,
+            campaign.address,
           );
         } catch (error) {
           thrownError = error;
@@ -5165,31 +4738,54 @@ describe('CampaignsService', () => {
         campaign.status = campaignStatus;
 
         const intermediateResultsData = generateIntermediateResultsData();
-        const participantOutcome = generateParticipantOutcome();
+        const participantOutcomes = Array.from({ length: 3 }, () =>
+          generateParticipantOutcome(campaign.type),
+        );
         intermediateResultsData.results[0].participants_outcomes_batches.push({
           id: faker.string.uuid(),
-          results: [participantOutcome],
+          results: participantOutcomes,
         });
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
           intermediateResultsData,
         );
 
-        const data =
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
-          );
+        const data = await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+        );
 
-        expect(data).toEqual([
-          {
-            address: participantOutcome.address,
-            result: Number(
-              new Decimal(participantOutcome.score).toDecimalPlaces(
-                campaign.fundTokenDecimals,
-                Decimal.ROUND_DOWN,
-              ),
-            ),
-          },
-        ]);
+        const rewardPool = intermediateResultsData.results[0].reserved_funds;
+        const estimatedRewards = isCompetitiveMarketMakingCampaign(campaign)
+          ? rewardsUtils.estimateCompetitiveRewards(
+              participantOutcomes,
+              rewardPool,
+              campaign,
+            )
+          : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
+
+        let expectedTotal = 0;
+        const expectedEntries = _.orderBy(
+          participantOutcomes.map((outcome) => {
+            // prettier-ignore
+            const result = (outcome[outcomeToEntryResultProp]) as number;
+
+            expectedTotal += result;
+
+            return {
+              address: outcome.address,
+              score: outcome.score,
+              result: result,
+              estimatedReward: estimatedRewards[outcome.address],
+            };
+          }),
+          'score',
+          'desc',
+        );
+        expect(data).toEqual({
+          entries: expectedEntries,
+          total: expectedTotal,
+          updatedAt: new Date(intermediateResultsData.results[0].to),
+        });
       },
     );
 
@@ -5198,31 +4794,76 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        const participantOutcome = generateParticipantOutcome();
+        const participantOutcomes = Array.from({ length: 3 }, () =>
+          generateParticipantOutcome(campaign.type),
+        );
+        const cacheCycleTo = faker.date.recent();
+        /**
+         * Put random meta to cover all campaign types
+         * just to verify estimated rewards
+         */
+        const interimMeta: MarketMakingMeta & HoldingMeta & ThresholdMeta = {
+          total_volume: faker.number.float({ min: 1, max: 1000 }),
+          total_balance: faker.number.float({ min: 1, max: 1000 }),
+          total_score: faker.number.float({
+            min: 1,
+            max: isThresholdCampaign(campaign)
+              ? campaign.details.maxParticipants
+              : 10,
+          }),
+        };
+        const interimProgress: CampaignProgress<CampaignProgressMeta> = {
+          from: dayjs(cacheCycleTo).subtract(1, 'day').toISOString(),
+          to: cacheCycleTo.toISOString(),
+          participants_outcomes: participantOutcomes,
+          meta: interimMeta,
+        };
         await campaignsCache.setInterimProgress(
           campaign.id,
-          {
-            participants_outcomes: [participantOutcome],
-          } as CampaignProgress<CampaignProgressMeta>,
+          interimProgress,
           faker.date.future(),
         );
 
-        const data =
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
-          );
+        const data = await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+        );
 
-        expect(data).toEqual([
-          {
-            address: participantOutcome.address,
-            result: Number(
-              new Decimal(participantOutcome.score).toDecimalPlaces(
-                campaign.fundTokenDecimals,
-                Decimal.ROUND_DOWN,
-              ),
-            ),
-          },
-        ]);
+        const rewardPool = rewardsUtils.calculateRewardPool(
+          campaign,
+          interimProgress,
+        );
+        const estimatedRewards = isCompetitiveMarketMakingCampaign(campaign)
+          ? rewardsUtils.estimateCompetitiveRewards(
+              participantOutcomes,
+              rewardPool,
+              campaign,
+            )
+          : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
+        let expectedTotal = 0;
+
+        const expectedEntries = _.orderBy(
+          participantOutcomes.map((outcome) => {
+            // prettier-ignore
+            const result = (outcome[outcomeToEntryResultProp]) as number;
+
+            expectedTotal += result;
+
+            return {
+              address: outcome.address,
+              score: outcome.score,
+              result: result,
+              estimatedReward: estimatedRewards[outcome.address],
+            };
+          }),
+          'score',
+          'desc',
+        );
+        expect(data).toEqual({
+          entries: expectedEntries,
+          total: expectedTotal,
+          updatedAt: cacheCycleTo,
+        });
       },
     );
 
@@ -5231,12 +4872,16 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
-        const data =
-          await campaignsService['getCurrentProgressLeaderboardEntries'](
-            campaign,
-          );
+        const data = await campaignsService.getCampaignLeaderboard(
+          campaign.chainId,
+          campaign.address,
+        );
 
-        expect(data).toEqual([]);
+        expect(data).toEqual({
+          updatedAt: now,
+          total: 0,
+          entries: [],
+        });
       },
     );
   });

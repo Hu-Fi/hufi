@@ -72,6 +72,13 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
     this.totalBalanceMeta += tokenBalance;
     this.totalScoreMeta += score;
 
+    if (this.totalBalanceMeta >= Number.MAX_SAFE_INTEGER) {
+      /**
+       * Safety-belt to refactor to decimal.js in case if values are too big
+       */
+      throw new Error('Participants total value number overflow');
+    }
+
     return { abuseDetected, score, token_balance: tokenBalance };
   }
 
