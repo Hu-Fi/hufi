@@ -12,7 +12,7 @@ import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
 import { ROUTES } from '@/constants';
-import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
+import { useJoinedCampaigns } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import usePagination from '@/hooks/usePagination';
@@ -73,7 +73,7 @@ const Dashboard: FC = () => {
   } = useCampaigns(queryParams);
 
   const { isLoading: isJoinedCampaignsLoading } =
-    useGetJoinedCampaigns(queryParams);
+    useJoinedCampaigns(queryParams);
 
   const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
 

@@ -3,24 +3,23 @@ import { useEffect, useState, type FC } from 'react';
 import { Box, Button } from '@mui/material';
 
 import CampaignsFeed from '@/components/CampaignsFeed';
-import { useJoinedCampaigns } from '@/hooks/recording-oracle';
+import { useHostedCampaigns } from '@/hooks/useCampaigns';
 import type { Campaign, CampaignsQueryParams } from '@/types';
 import { CampaignsTabFilter as TabFilter } from '@/types';
 
 type Props = {
-  queryParams: CampaignsQueryParams;
   isGridView: boolean;
+  queryParams: CampaignsQueryParams;
   setNextPage: () => void;
 };
 
-const JoinedCampaigns: FC<Props> = ({
+const HostedCampaigns: FC<Props> = ({
   queryParams,
   isGridView,
   setNextPage,
 }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-
-  const { data, isLoading, isFetching } = useJoinedCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useHostedCampaigns(queryParams);
 
   const currentSkip = queryParams.skip ?? 0;
 
@@ -42,7 +41,7 @@ const JoinedCampaigns: FC<Props> = ({
         isGridView={isGridView}
         isLoading={isLoading}
         isFetching={isFetching}
-        tabFilter={TabFilter.JOINED}
+        tabFilter={TabFilter.HOSTED}
       />
       {showLoadMore && (
         <Box
@@ -67,4 +66,4 @@ const JoinedCampaigns: FC<Props> = ({
   );
 };
 
-export default JoinedCampaigns;
+export default HostedCampaigns;

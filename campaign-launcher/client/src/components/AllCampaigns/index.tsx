@@ -3,24 +3,23 @@ import { useEffect, useState, type FC } from 'react';
 import { Box, Button } from '@mui/material';
 
 import CampaignsFeed from '@/components/CampaignsFeed';
-import { useJoinedCampaigns } from '@/hooks/recording-oracle';
-import type { Campaign, CampaignsQueryParams } from '@/types';
-import { CampaignsTabFilter as TabFilter } from '@/types';
+import { useCampaigns } from '@/hooks/useCampaigns';
+import {
+  type Campaign,
+  type CampaignsQueryParams,
+  CampaignsTabFilter as TabFilter,
+} from '@/types';
 
 type Props = {
-  queryParams: CampaignsQueryParams;
   isGridView: boolean;
+  queryParams: CampaignsQueryParams;
   setNextPage: () => void;
 };
 
-const JoinedCampaigns: FC<Props> = ({
-  queryParams,
-  isGridView,
-  setNextPage,
-}) => {
+const AllCampaigns: FC<Props> = ({ isGridView, queryParams, setNextPage }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
-  const { data, isLoading, isFetching } = useJoinedCampaigns(queryParams);
+  const { data, isLoading, isFetching } = useCampaigns(queryParams);
 
   const currentSkip = queryParams.skip ?? 0;
 
@@ -42,7 +41,7 @@ const JoinedCampaigns: FC<Props> = ({
         isGridView={isGridView}
         isLoading={isLoading}
         isFetching={isFetching}
-        tabFilter={TabFilter.JOINED}
+        tabFilter={TabFilter.ACTIVE}
       />
       {showLoadMore && (
         <Box
@@ -67,4 +66,4 @@ const JoinedCampaigns: FC<Props> = ({
   );
 };
 
-export default JoinedCampaigns;
+export default AllCampaigns;

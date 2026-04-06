@@ -5,8 +5,11 @@ import { Box, Grid } from '@mui/material';
 import CampaignCard from '@/components/CampaignCard';
 import SkeletonCard from '@/components/CampaignCard/SkeletonView';
 import CampaignsTable from '@/components/CampaignsTable';
+import {
+  DEFAULT_CAMPAIGNS_QUERY_LIMIT,
+  DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE,
+} from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import usePagination from '@/hooks/usePagination';
 import { type Campaign, CampaignsTabFilter as TabFilter } from '@/types';
 
 type Props = {
@@ -25,9 +28,9 @@ const CampaignsFeed: FC<Props> = ({
   tabFilter,
 }) => {
   const isMobile = useIsMobile();
-  const {
-    pagination: { pageSize },
-  } = usePagination();
+  const pageSize = isMobile
+    ? DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE
+    : DEFAULT_CAMPAIGNS_QUERY_LIMIT;
 
   return (
     <>
@@ -57,7 +60,7 @@ const CampaignsFeed: FC<Props> = ({
                 </Grid>
               ))}
             {data?.map((campaign) => (
-              <Grid key={campaign.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Grid key={campaign.address} size={{ xs: 12, sm: 6, md: 4 }}>
                 <CampaignCard campaign={campaign} />
               </Grid>
             ))}

@@ -1,5 +1,10 @@
 import type { ChainId } from '@human-protocol/sdk';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
@@ -19,21 +24,14 @@ export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
       isAuthenticated,
       chain_id,
       status,
-      chain_id,
       limit,
       skip,
       AUTHED_QUERY_TAG,
     ],
     queryFn: ({ signal }) => recordingApi.getJoinedCampaigns(params, signal),
-    select: (data) => ({
-      ...data,
-      results: data.results.map((campaign) => ({
-        ...campaign,
-        id: campaign.address,
-      })),
-    }),
-    enabled: isAuthenticated,
     staleTime: Infinity,
+    enabled: isAuthenticated,
+    placeholderData: keepPreviousData,
   });
 };
 

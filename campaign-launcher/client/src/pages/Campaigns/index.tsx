@@ -1,24 +1,26 @@
 import { useMemo, useState, type FC } from 'react';
 
 import { Box, Button, Stack, Typography } from '@mui/material';
+import { useIsFetching } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
-import CampaignsFeed from '@/components/CampaignsFeed';
+import AllCampaigns from '@/components/AllCampaigns';
 import CampaignsFilters, {
   type CampaignsFiltersSelection,
 } from '@/components/CampaignsFilters';
 import CampaignsTabs from '@/components/CampaignsTabs';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
 import HistoryFilters from '@/components/HistoryFilters';
+import HostedCampaigns from '@/components/HostedCampaigns';
+import JoinedCampaigns from '@/components/JoinedCampaigns';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
 import { ROUTES } from '@/constants';
-import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
+import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { useCampaigns } from '@/hooks/useCampaigns';
 import usePagination from '@/hooks/usePagination';
 import { ApiKeyIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -52,14 +54,14 @@ const Campaigns: FC = () => {
   const { activeAddress } = useActiveAccount();
   const {
     params: { limit, skip },
+    resetPage,
+    setNextPage,
   } = usePagination();
 
   const isMobile = useIsMobile();
   useReserveLayoutBottomOffset(isMobile);
 
   const isGridView = view === 'grid';
-  const isHostedWithoutActiveAddress =
-    tabFilter === TabFilter.HOSTED && !activeAddress;
 
   const statusFilter = useMemo(() => {
     if (tabFilter === TabFilter.HISTORY) {
@@ -87,33 +89,48 @@ const Campaigns: FC = () => {
     skip,
   }) as CampaignsQueryParams;
 
-  const {
-    data,
-    isLoading: isCampaignsLoading,
-    isFetching: isCampaignsFetching,
-  } = useCampaigns(queryParams, {
-    enabled:
-      tabFilter !== TabFilter.JOINED &&
-      historyViewFilter !== HistoryViewFilter.JOINED &&
-      !isHostedWithoutActiveAddress,
-  });
+  const isJoinedTab =
+    tabFilter === TabFilter.JOINED ||
+    (tabFilter === TabFilter.HISTORY &&
+      historyViewFilter === HistoryViewFilter.JOINED);
 
-  const { data: joinedCampaignsData, isLoading: isJoinedCampaignsLoading } =
-    useGetJoinedCampaigns(queryParams, {
-      enabled:
-        tabFilter === TabFilter.JOINED ||
-        (tabFilter === TabFilter.HISTORY &&
-          historyViewFilter === HistoryViewFilter.JOINED),
-    });
+  const isHostedTab =
+    tabFilter === TabFilter.HOSTED ||
+    (tabFilter === TabFilter.HISTORY &&
+      historyViewFilter === HistoryViewFilter.HOSTED);
 
-  const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
-  const campaignsData = isHostedWithoutActiveAddress
-    ? { results: [] }
-    : tabFilter === TabFilter.JOINED
-      ? joinedCampaignsData
-      : data;
+  const isAllTab = !isJoinedTab && !isHostedTab;
 
-  const disableFilters = isLoading || isCampaignsFetching;
+  const commonKeys = [appliedFilters.network, statusFilter, limit, skip];
+  const activeKey = isJoinedTab
+    ? [
+        QUERY_KEYS.JOINED_CAMPAIGNS,
+        isAuthenticated,
+        ...commonKeys,
+        AUTHED_QUERY_TAG,
+      ]
+    : isHostedTab
+      ? [QUERY_KEYS.HOSTED_CAMPAIGNS, launcherFilter, ...commonKeys]
+      : [QUERY_KEYS.ALL_CAMPAIGNS, ...commonKeys];
+
+  const isFetchingCount = useIsFetching({ queryKey: activeKey });
+
+  const disableFilters = isFetchingCount > 0;
+
+  const handleSetTabFilter = (nextTab: TabFilter) => {
+    resetPage();
+    setTabFilter(nextTab);
+  };
+
+  const handleSetHistoryViewFilter = (nextFilter: HistoryViewFilter) => {
+    resetPage();
+    setHistoryViewFilter(nextFilter);
+  };
+
+  const handleApplyFilters = (nextFilters: CampaignsFiltersSelection) => {
+    resetPage();
+    setAppliedFilters(nextFilters);
+  };
 
   return (
     <PageWrapper>
@@ -177,12 +194,12 @@ const Campaigns: FC = () => {
         >
           <CampaignsTabs
             activeTab={tabFilter}
-            setActiveTab={setTabFilter}
+            setActiveTab={handleSetTabFilter}
             isDisabled={disableFilters}
           />
           <CampaignsFilters
             appliedFilters={appliedFilters}
-            handleApplyFilters={setAppliedFilters}
+            handleApplyFilters={handleApplyFilters}
             isDisabled={disableFilters}
           />
         </Box>
@@ -195,34 +212,31 @@ const Campaigns: FC = () => {
       {tabFilter === TabFilter.HISTORY && (
         <HistoryFilters
           selectedFilter={historyViewFilter}
-          setSelectedFilter={setHistoryViewFilter}
+          setSelectedFilter={handleSetHistoryViewFilter}
           isDisabled={disableFilters}
         />
       )}
-      <CampaignsFeed
-        data={campaignsData?.results ?? []}
-        isGridView={isGridView}
-        isLoading={isLoading}
-        isFetching={isCampaignsFetching}
-        tabFilter={tabFilter}
-      />
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        mx="auto"
-        mt={4}
-      >
-        <Button
-          variant="contained"
-          color="error"
-          sx={{ width: '200px' }}
-          fullWidth={isMobile}
-          disabled={isCampaignsFetching}
-        >
-          Load More
-        </Button>
-      </Box>
+      {isJoinedTab && (
+        <JoinedCampaigns
+          queryParams={queryParams}
+          isGridView={isGridView}
+          setNextPage={setNextPage}
+        />
+      )}
+      {isHostedTab && (
+        <HostedCampaigns
+          queryParams={queryParams}
+          isGridView={isGridView}
+          setNextPage={setNextPage}
+        />
+      )}
+      {isAllTab && (
+        <AllCampaigns
+          queryParams={queryParams}
+          isGridView={isGridView}
+          setNextPage={setNextPage}
+        />
+      )}
       <MobileBottomNav isVisible={isMobile} />
     </PageWrapper>
   );
