@@ -74,7 +74,7 @@ const MyCampaignsNoRows: FC = () => {
       <Typography variant="subtitle2" component="p">
         At the moment you are not running any campaign.
       </Typography>
-      <LaunchCampaignButton variant="contained" />
+      <LaunchCampaignButton />
     </>
   );
 };
@@ -340,7 +340,6 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 175,
       renderCell: (params) => (
         <CampaignAddress
-          variant={isMobile ? 'caption' : 'subtitle2'}
           address={params.row.address}
           chainId={params.row.chain_id}
         />

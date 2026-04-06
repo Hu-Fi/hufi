@@ -50,8 +50,8 @@ const useBreakpoints = (): BreakpointResult => {
 };
 
 export const useIsMobile = () => {
-  const { xs } = useBreakpoints();
-  return xs.isActive;
+  const { xs, sm } = useBreakpoints();
+  return xs.isActive || sm.isActive;
 };
 
 export const useIsLgDesktop = () => {

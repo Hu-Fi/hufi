@@ -2,45 +2,41 @@ import { type FC, type MouseEvent, useEffect, useRef, useState } from 'react';
 
 import type { ChainId } from '@human-protocol/sdk';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import {
-  IconButton,
-  Tooltip,
-  Typography,
-  type TypographyProps,
-} from '@mui/material';
+import { Box, IconButton, Link, Tooltip } from '@mui/material';
 
-import { OpenInNewIcon } from '@/icons';
 import { formatAddress, getExplorerUrl } from '@/utils';
 
 type Props = {
   address: string;
   chainId: ChainId;
   withCopy?: boolean;
-  variant?: TypographyProps['variant'];
+  size?: 'small' | 'medium';
 };
 
-const iconButtonSx = {
-  color: 'text.primary',
-  p: 0,
-  zIndex: 1,
-  '&:hover': { background: 'none' },
-};
-
-const handleOpenInExplorerClick = (
-  e: MouseEvent<HTMLButtonElement>,
-  chainId: ChainId,
-  address: string
-) => {
-  e.stopPropagation();
-  const explorerUrl = getExplorerUrl(chainId, address);
-  window.open(explorerUrl, '_blank');
+const AddressLink: FC<Props> = ({ address, chainId, size }) => {
+  return (
+    <Link
+      href={getExplorerUrl(chainId, address)}
+      target="_blank"
+      sx={{
+        fontSize: size === 'small' ? '12px' : '16px',
+        color: 'text.primary',
+        textDecoration: 'underline',
+        textDecorationStyle: 'dotted',
+        textDecorationThickness: '12%',
+        fontWeight: 600,
+      }}
+    >
+      {formatAddress(address)}
+    </Link>
+  );
 };
 
 const CampaignAddress: FC<Props> = ({
   address,
   chainId,
   withCopy = false,
-  variant = 'subtitle2',
+  size = 'medium',
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>(null);
@@ -69,28 +65,29 @@ const CampaignAddress: FC<Props> = ({
     }, 1500);
   };
 
-  return (
-    <Typography variant={variant} display="flex" alignItems="center" gap={1}>
-      {formatAddress(address)}
-      {withCopy && (
+  if (withCopy) {
+    return (
+      <Box display="flex" alignItems="center" gap={1}>
+        <AddressLink address={address} chainId={chainId} size={size} />
         <IconButton
           disabled={isCopied}
           onClick={handleCopyClick}
-          sx={iconButtonSx}
+          sx={{
+            color: 'text.primary',
+            p: 0,
+            zIndex: 1,
+            '&:hover': { background: 'none' },
+          }}
         >
           <Tooltip title="Copied" placement="top" open={isCopied}>
             <ContentCopyIcon />
           </Tooltip>
         </IconButton>
-      )}
-      <IconButton
-        onClick={(e) => handleOpenInExplorerClick(e, chainId, address)}
-        sx={iconButtonSx}
-      >
-        <OpenInNewIcon />
-      </IconButton>
-    </Typography>
-  );
+      </Box>
+    );
+  }
+
+  return <AddressLink address={address} chainId={chainId} size={size} />;
 };
 
 export default CampaignAddress;
