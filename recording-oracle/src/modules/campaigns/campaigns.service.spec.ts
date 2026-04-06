@@ -22,7 +22,6 @@ import {
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
-import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 
@@ -2654,58 +2653,6 @@ describe('CampaignsService', () => {
                 },
               ],
             },
-          ],
-        }),
-        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
-      );
-    });
-
-    it('should record correct results for pending cancellation campaign with unusual cycle duration', async () => {
-      /**
-       * This case applies to any campaign type but choose competitive for test simplicity
-       */
-      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-
-      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-      /**
-       * With 25 hours we mimic the behavior when cancellation requested after campaign start
-       * but RecO hasn't recorded any results yet, so in this case we should have
-       * one result recorded for campaign but with reward pool of 2 days
-       */
-      const cancellationRequestedAt = dayjs(campaign.startDate)
-        .add(25, 'hours')
-        .toDate();
-      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
-        cancellationRequestedAt,
-      );
-
-      const campaignProgress = generateCampaignProgress(campaign);
-      campaignProgress.to = cancellationRequestedAt.toISOString();
-      campaignProgress.participants_outcomes.push(
-        generateParticipantOutcome(campaign.type, {
-          total_volume: faker.number.int({ min: 1 }),
-        }),
-      );
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      const dailyReward = rewardsUtils.calculateDailyReward(campaign);
-      const expectedRewardPool = Decimal.mul(dailyReward, 2).toString();
-
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
-        expect.objectContaining({
-          results: [
-            expect.objectContaining({
-              from: campaignProgress.from,
-              to: cancellationRequestedAt.toISOString(),
-              reserved_funds: expectedRewardPool,
-            }),
           ],
         }),
         ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),

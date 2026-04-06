@@ -85,6 +85,19 @@ describe('rewards utils', () => {
   describe('calculateRewardPool', () => {
     let campaign: CampaignEntity;
 
+    it('should throw if reward cycly is > 1 day', () => {
+      campaign = generateCampaignEntity();
+      const progress = generateCampaignProgress(campaign);
+      progress.to = dayjs(progress.from)
+        .add(1, 'day')
+        .add(1, 'ms')
+        .toISOString();
+
+      expect(() => {
+        rewardsUtils.calculateRewardPool(campaign, progress);
+      }).toThrow();
+    });
+
     describe('market making campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
@@ -141,27 +154,6 @@ describe('rewards utils', () => {
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);
       });
-
-      it('should return reward pool for n cycles', () => {
-        const progressValueTarget = (
-          campaign.details as MarketMakingCampaignDetails
-        ).dailyVolumeTarget;
-        const progressValue = faker.number.float({
-          min: progressValueTarget,
-          max: progressValueTarget * 10,
-        });
-        const progress = generateCampaignProgress(campaign);
-        progress.to = dayjs(progress.from).add(25, 'hours').toISOString();
-        (progress.meta as MarketMakingMeta).total_volume = progressValue;
-
-        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
-
-        expect(rewardPool).toBe(
-          Decimal.mul(rewardsUtils.calculateDailyReward(campaign), 2)
-            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-            .toString(),
-        );
-      });
     });
 
     describe('competitive market making campaigns', () => {
@@ -199,26 +191,6 @@ describe('rewards utils', () => {
         const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
 
         expect(rewardPool).toBe('0');
-      });
-
-      it('should return reward pool for n cycles', () => {
-        const progress = generateCampaignProgress(campaign);
-        progress.to = dayjs(progress.from).add(25, 'hours').toISOString();
-        progress.participants_outcomes = [
-          generateParticipantOutcome(campaign.type, {
-            total_volume: (
-              campaign.details as CompetitiveMarketMakingCampaignDetails
-            ).minVolumeRequired,
-          }),
-        ];
-
-        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
-
-        expect(rewardPool).toBe(
-          Decimal.mul(rewardsUtils.calculateDailyReward(campaign), 2)
-            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-            .toString(),
-        );
       });
     });
 
@@ -275,26 +247,6 @@ describe('rewards utils', () => {
           .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);
-      });
-
-      it('should return reward pool for n cycles', () => {
-        const progressValueTarget = (campaign.details as HoldingCampaignDetails)
-          .dailyBalanceTarget;
-        const progressValue = faker.number.float({
-          min: progressValueTarget,
-          max: progressValueTarget * 10,
-        });
-        const progress = generateCampaignProgress(campaign);
-        progress.to = dayjs(progress.from).add(25, 'hours').toISOString();
-        (progress.meta as HoldingMeta).total_balance = progressValue;
-
-        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
-
-        expect(rewardPool).toBe(
-          Decimal.mul(rewardsUtils.calculateDailyReward(campaign), 2)
-            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-            .toString(),
-        );
       });
     });
 
@@ -376,33 +328,6 @@ describe('rewards utils', () => {
           .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);
-      });
-
-      it('should return reward pool for n cycles', () => {
-        delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
-
-        const minimumBalanceTarget = (
-          campaign.details as ThresholdCampaignDetails
-        ).minimumBalanceTarget;
-
-        const nEligible = faker.number.int({ min: 1, max: 10 });
-        const nIneligible = faker.number.int({ min: 1, max: 10 });
-        const progress = generateCampaignProgress(campaign);
-        progress.to = dayjs(progress.from).add(25, 'hours').toISOString();
-        (progress.meta as ThresholdMeta) = {
-          total_balance:
-            nIneligible * minimumBalanceTarget * Math.random() +
-            nEligible * minimumBalanceTarget,
-          total_score: nEligible,
-        };
-
-        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
-
-        expect(rewardPool).toBe(
-          Decimal.mul(rewardsUtils.calculateDailyReward(campaign), 2)
-            .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-            .toString(),
-        );
       });
     });
   });

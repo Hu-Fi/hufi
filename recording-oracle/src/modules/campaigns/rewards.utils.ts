@@ -40,6 +40,23 @@ export function calculateRewardPool(
   campaign: CampaignEntity,
   progress: CampaignProgress<CampaignProgressMeta>,
 ): string {
+  const nRewardCycles = Math.ceil(
+    dayjs(progress.to).diff(progress.from, 'days', true),
+  );
+
+  if (nRewardCycles > CAMPAIGNS_DAILY_CYCLE) {
+    /**
+     * TODO: handle "to_cancel" campaigns where cycle duration is > 1 day.
+     *
+     * Such can happend if RecO wasn't able to record results for a cycle in time
+     * and cancellation request came in after the end of that cycle.
+     * In that case we can't go cycle-by-cycly because `storeResults` can be called
+     * only once for `to_cancel` escrows, so we need to have a special handling for that case.
+     */
+    throw new Error(
+      `Unexpected number of reward cycles in progress period: ${nRewardCycles}`,
+    );
+  }
   let progressValue: number;
   let progressValueTarget: number;
   if (isMarketMakingCampaign(campaign)) {
@@ -89,31 +106,10 @@ export function calculateRewardPool(
     );
   }
 
-  /**
-   * If progress ratio is < 1, then we distribute proportionally to the progress in current cycle.
-   *
-   * Normally reward cycle is 1 day and if progress ratio is >= 1, then the whole reward pool
-   * for that cycle should be distributed, but in case when cancellation request is made after
-   * cycle end and that cycle is not yet recorded - so the number of cycles that should be rewarded
-   * might be more than 1, and in that case we consider the cycle that ends as the last cycle to reward,
-   * proportionally increasing the reward pool with number of cycles to reward.
-   *
-   * This is a safety measure for cases when there are delays in recording.
-   */
-  let rewardRatio: number;
-  const progressRatio = progressValue / progressValueTarget;
-  if (progressRatio < 1) {
-    rewardRatio = progressRatio;
-  } else {
-    const nRewardCycles = Math.ceil(
-      dayjs(progress.to).diff(progress.from, 'days', true),
-    );
-    rewardRatio = CAMPAIGNS_DAILY_CYCLE * nRewardCycles;
-  }
-
   const dailyReward = calculateDailyReward(campaign);
+  const progressRatio = Math.min(progressValue / progressValueTarget, 1);
 
-  const rewardPool = Decimal.mul(dailyReward, rewardRatio);
+  const rewardPool = Decimal.mul(dailyReward, progressRatio);
 
   return rewardPool
     .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
