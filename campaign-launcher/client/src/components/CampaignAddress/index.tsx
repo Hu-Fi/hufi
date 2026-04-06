@@ -1,16 +1,16 @@
 import { type FC, type MouseEvent, useEffect, useRef, useState } from 'react';
 
 import type { ChainId } from '@human-protocol/sdk';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, Link, Tooltip } from '@mui/material';
 
+import { CopyIcon } from '@/icons';
 import { formatAddress, getExplorerUrl } from '@/utils';
 
 type Props = {
   address: string;
   chainId: ChainId;
   withCopy?: boolean;
-  size?: 'small' | 'medium';
+  size?: 'small' | 'medium' | 'large';
 };
 
 const AddressLink: FC<Props> = ({ address, chainId, size }) => {
@@ -19,7 +19,8 @@ const AddressLink: FC<Props> = ({ address, chainId, size }) => {
       href={getExplorerUrl(chainId, address)}
       target="_blank"
       sx={{
-        fontSize: size === 'small' ? '12px' : '16px',
+        fontSize:
+          size === 'small' ? '12px' : size === 'medium' ? '14px' : '16px',
         color: 'text.primary',
         textDecoration: 'underline',
         textDecorationStyle: 'dotted',
@@ -80,7 +81,7 @@ const CampaignAddress: FC<Props> = ({
           }}
         >
           <Tooltip title="Copied" placement="top" open={isCopied}>
-            <ContentCopyIcon />
+            <CopyIcon sx={{ fontSize: { xs: '16px', md: '20px' } }} />
           </Tooltip>
         </IconButton>
       </Box>

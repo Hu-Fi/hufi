@@ -266,3 +266,20 @@ export const ConnectWalletIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const CopyIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 20 20" fill="none">
+      <g clipPath="url(#clip0_1586_816)">
+        <path
+          d="M3.33317 13.3332C2.4165 13.3332 1.6665 12.5832 1.6665 11.6665V3.33317C1.6665 2.4165 2.4165 1.6665 3.33317 1.6665H11.6665C12.5832 1.6665 13.3332 2.4165 13.3332 3.33317M8.33317 6.6665H16.6665C17.587 6.6665 18.3332 7.4127 18.3332 8.33317V16.6665C18.3332 17.587 17.587 18.3332 16.6665 18.3332H8.33317C7.4127 18.3332 6.6665 17.587 6.6665 16.6665V8.33317C6.6665 7.4127 7.4127 6.6665 8.33317 6.6665Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.66667"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+    </SvgIcon>
+  );
+};

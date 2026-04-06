@@ -48,24 +48,24 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'large':
       return {
         image: {
-          size: 72,
+          size: 32,
           border: '2px solid white',
         },
         text: {
           fontWeight: 800,
-          fontSize: 30,
-          lineHeight: '35px',
+          fontSize: 32,
+          lineHeight: '36px',
         },
       };
     default:
       return {
         image: {
-          width: 24,
+          size: 22,
           border: '1px solid white',
         },
         text: {
-          fontWeight: 400,
-          fontSize: 16,
+          fontWeight: 600,
+          fontSize: 20,
         },
       };
   }
