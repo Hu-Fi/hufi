@@ -115,6 +115,7 @@ import {
   type CampaignProgress,
   CampaignStatus,
   CampaignType,
+  type CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type IntermediateResultsData,
   type MarketMakingCampaignDetails,
@@ -2626,7 +2627,11 @@ describe('CampaignsService', () => {
 
       const campaignProgress = generateCampaignProgress(campaign);
       campaignProgress.participants_outcomes.push(
-        generateParticipantOutcome(campaign.type),
+        generateParticipantOutcome(campaign.type, {
+          total_volume: (
+            campaign.details as CompetitiveMarketMakingCampaignDetails
+          ).minVolumeRequired,
+        }),
       );
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
         campaignProgress,
