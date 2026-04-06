@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import CampaignSymbol from '@/components/CampaignSymbol';
@@ -34,11 +34,9 @@ const MyCampaignsNoRows: FC = () => {
 
   if (!isSignerReady) {
     return (
-      <>
-        <Typography variant="subtitle2" component="p">
-          To see your campaigns please connect your wallet
-        </Typography>
-      </>
+      <Typography variant="subtitle2" component="p">
+        To see your campaigns please connect your wallet
+      </Typography>
     );
   }
 
@@ -54,32 +52,13 @@ const MyCampaignsNoRows: FC = () => {
 
 const JoinedCampaignsNoRows: FC = () => {
   const { isAuthenticated } = useWeb3Auth();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-
-  const isHomePage = pathname === '/';
 
   if (isAuthenticated) {
     return (
-      <>
-        <Typography variant="subtitle2" component="p">
-          At the moment you are not participating in any campaign, please see
-          all campaigns to participate.
-        </Typography>
-        <Button
-          variant="contained"
-          size="medium"
-          sx={{
-            display: isHomePage ? 'none' : 'inline-flex',
-            height: '42px',
-            bgcolor: 'primary.main',
-            color: 'primary.contrast',
-          }}
-          onClick={() => navigate('/')}
-        >
-          All Campaigns
-        </Button>
-      </>
+      <Typography variant="subtitle2" component="p">
+        At the moment you are not participating in any campaign, please see
+        Active campaigns to participate.
+      </Typography>
     );
   }
 
@@ -271,6 +250,7 @@ const CampaignsTable: FC<Props> = ({
       columns={columns}
       columnHeaderHeight={72}
       rowHeight={92}
+      getRowId={(row) => row.address}
       scrollbarSize={0}
       disableColumnMenu
       disableColumnSelector
@@ -278,7 +258,6 @@ const CampaignsTable: FC<Props> = ({
       disableColumnSorting
       disableColumnResize
       disableRowSelectionOnClick
-      disableVirtualization
       hideFooter
       hideFooterPagination
       slots={{

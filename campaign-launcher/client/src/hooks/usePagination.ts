@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-  DEFAULT_TABLE_PAGE_SIZE,
-  DEFAULT_TABLE_PAGE_SIZE_MOBILE,
+  DEFAULT_CAMPAIGNS_QUERY_LIMIT,
+  DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE,
 } from '@/constants';
 
 import { useIsMobile } from './useBreakpoints';
@@ -16,25 +16,27 @@ type PaginationState = {
     page: number;
     pageSize: number;
   };
+  resetPage: () => void;
   setNextPage: () => void;
   setPrevPage: () => void;
-  setPageSize: (pageSize: number) => void;
 };
 
 const usePagination = (): PaginationState => {
   const isMobile = useIsMobile();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(
-    isMobile ? DEFAULT_TABLE_PAGE_SIZE_MOBILE : DEFAULT_TABLE_PAGE_SIZE
+    isMobile
+      ? DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE
+      : DEFAULT_CAMPAIGNS_QUERY_LIMIT
   );
 
   const skip = page * pageSize;
 
   useEffect(() => {
     if (isMobile) {
-      setPageSize(DEFAULT_TABLE_PAGE_SIZE_MOBILE);
+      setPageSize(DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE);
     } else {
-      setPageSize(DEFAULT_TABLE_PAGE_SIZE);
+      setPageSize(DEFAULT_CAMPAIGNS_QUERY_LIMIT);
     }
   }, [isMobile]);
 
@@ -46,8 +48,7 @@ const usePagination = (): PaginationState => {
     setPage((prev) => Math.max(0, prev - 1));
   }, []);
 
-  const handleSetPageSize = useCallback((newPageSize: number) => {
-    setPageSize(newPageSize);
+  const resetPage = useCallback(() => {
     setPage(0);
   }, []);
 
@@ -60,9 +61,9 @@ const usePagination = (): PaginationState => {
       page,
       pageSize,
     },
+    resetPage,
     setNextPage,
     setPrevPage,
-    setPageSize: handleSetPageSize,
   };
 };
 

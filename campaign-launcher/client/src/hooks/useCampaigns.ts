@@ -1,40 +1,40 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { launcherApi } from '@/api';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import type { CampaignsQueryParams } from '@/types';
 
-import { useIsMobile } from './useBreakpoints';
+export const useCampaigns = (params: CampaignsQueryParams) => {
+  const { chain_id, status, limit, skip } = params;
 
-export const useCampaigns = (
-  params: CampaignsQueryParams,
-  options?: { enabled?: boolean }
-) => {
-  const isMobile = useIsMobile();
-  const { chain_id, status, launcher, limit = 10, skip } = params;
-  const { enabled = true } = options ?? {};
+  return useQuery({
+    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, status, limit, skip],
+    queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
+    enabled: !!chain_id,
+    placeholderData: keepPreviousData,
+  });
+};
+
+export const useHostedCampaigns = (params: CampaignsQueryParams) => {
+  const { chain_id, status, launcher, limit, skip } = params;
 
   return useQuery({
     queryKey: [
-      QUERY_KEYS.ALL_CAMPAIGNS,
-      chain_id,
+      QUERY_KEYS.HOSTED_CAMPAIGNS,
       launcher,
+      chain_id,
       status,
       limit,
       skip,
     ],
     queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
-    select: (data) => ({
-      ...data,
-      results: data.results.map((campaign) => ({
-        ...campaign,
-        id: campaign.address,
-      })),
-    }),
-    enabled: enabled && !!chain_id,
-    placeholderData: (prev) =>
-      prev?.results?.length && isMobile ? prev : undefined,
+    enabled: !!chain_id && !!launcher,
+    placeholderData: keepPreviousData,
   });
 };
 
