@@ -1462,7 +1462,7 @@ export class CampaignsService implements OnModuleDestroy {
   ): Promise<{
     entries: LeaderboardEntry[];
     total: number;
-    actualOn: Date;
+    updatedAt: Date;
   }> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
@@ -1476,7 +1476,7 @@ export class CampaignsService implements OnModuleDestroy {
       return {
         entries: [],
         total: 0,
-        actualOn: new Date(),
+        updatedAt: new Date(),
       };
     }
 
@@ -1493,7 +1493,7 @@ export class CampaignsService implements OnModuleDestroy {
 
     let resultsToInspect: ParticipantOutcome[] = [];
     let estimatedRewardPool: string;
-    let actualOn: Date;
+    let updatedAt: Date;
     if (
       [
         CampaignStatus.PENDING_CANCELLATION,
@@ -1513,10 +1513,7 @@ export class CampaignsService implements OnModuleDestroy {
         resultsToInspect.push(...outcomesBatch.results);
       }
       estimatedRewardPool = latestIntermediateResult.reserved_funds;
-      /**
-       * Results are final, so always actual
-       */
-      actualOn = new Date();
+      updatedAt = new Date(latestIntermediateResult.to);
     } else {
       const cachedInterimResults = await this.campaignsCache.getInterimProgress(
         campaign.id,
@@ -1528,11 +1525,11 @@ export class CampaignsService implements OnModuleDestroy {
           campaign,
           cachedInterimResults,
         );
-        actualOn = new Date(cachedInterimResults.to);
+        updatedAt = new Date(cachedInterimResults.to);
       } else {
         resultsToInspect = [];
         estimatedRewardPool = '0';
-        actualOn = new Date();
+        updatedAt = new Date();
       }
     }
 
@@ -1573,7 +1570,7 @@ export class CampaignsService implements OnModuleDestroy {
     return {
       entries: _.orderBy(leaderboardEntries, 'score', 'desc'),
       total,
-      actualOn,
+      updatedAt,
     };
   }
 }

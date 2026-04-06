@@ -260,7 +260,7 @@ export class CampaignsController {
     return {
       data: leaderboardData.entries,
       total: leaderboardData.total,
-      actualOn: leaderboardData.actualOn.toISOString(),
+      updatedAt: leaderboardData.updatedAt.toISOString(),
     };
   }
 }

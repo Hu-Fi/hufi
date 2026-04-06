@@ -4750,7 +4750,7 @@ describe('CampaignsService', () => {
       );
 
       expect(data).toEqual({
-        actualOn: now,
+        updatedAt: now,
         total: 0,
         entries: [],
       });
@@ -4832,7 +4832,7 @@ describe('CampaignsService', () => {
         expect(data).toEqual({
           entries: expectedEntries,
           total: expectedTotal,
-          actualOn: now,
+          updatedAt: new Date(intermediateResultsData.results[0].to),
         });
       },
     );
@@ -4910,7 +4910,7 @@ describe('CampaignsService', () => {
         expect(data).toEqual({
           entries: expectedEntries,
           total: expectedTotal,
-          actualOn: cacheCycleTo,
+          updatedAt: cacheCycleTo,
         });
       },
     );
@@ -4926,7 +4926,7 @@ describe('CampaignsService', () => {
         );
 
         expect(data).toEqual({
-          actualOn: now,
+          updatedAt: now,
           total: 0,
           entries: [],
         });

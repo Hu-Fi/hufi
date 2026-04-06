@@ -274,8 +274,8 @@ export class LeaderboardEntry {
   @ApiProperty({
     description: `
       This field represents different value based on the campaign type and can be:
-        - total volume for "market making" campaigns
-        - total balance / held tokens for "holding" and "threshold" campaigns
+        - generated volume for "market making" campaigns
+        - balance / held tokens for "holding" and "threshold" campaigns
     `,
   })
   result: number;
@@ -297,7 +297,7 @@ export class CampaignLeaderboardResponseDto {
   total: number;
 
   @ApiProperty({
-    name: 'actual_on',
+    name: 'updated_at',
   })
-  actualOn: string;
+  updatedAt: string;
 }
