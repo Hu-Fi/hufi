@@ -18,6 +18,7 @@ const AddressLink: FC<Props> = ({ address, chainId, size }) => {
     <Link
       href={getExplorerUrl(chainId, address)}
       target="_blank"
+      rel="noopener noreferrer"
       sx={{
         fontSize:
           size === 'small' ? '12px' : size === 'medium' ? '14px' : '16px',

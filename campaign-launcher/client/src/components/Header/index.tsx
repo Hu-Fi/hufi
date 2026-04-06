@@ -46,6 +46,7 @@ const StyledLink = ({
       to={to}
       component={Link}
       target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
       sx={{
         display: 'flex',
         alignItems: 'center',
