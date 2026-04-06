@@ -4,25 +4,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
-import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { EvmAddress, CampaignsQueryParams } from '@/types';
 
-type JoinedCampaignsParams = Pick<
-  CampaignsQueryParams,
-  'status' | 'limit' | 'skip'
->;
+type JoinedCampaignsParams = Partial<Omit<CampaignsQueryParams, 'launcher'>>;
 
-export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
-  const { isSignerReady } = useSignerContext();
+export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
   const { isAuthenticated } = useWeb3Auth();
-  const { status, limit, skip } = params;
+  const { status, limit, skip, chain_id } = params;
 
   return useQuery({
     queryKey: [
       QUERY_KEYS.JOINED_CAMPAIGNS,
       isAuthenticated,
-      isSignerReady,
+      chain_id,
       status,
       limit,
       skip,
@@ -36,7 +31,7 @@ export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
         id: campaign.address,
       })),
     }),
-    enabled: isAuthenticated && isSignerReady,
+    enabled: isAuthenticated,
   });
 };
 

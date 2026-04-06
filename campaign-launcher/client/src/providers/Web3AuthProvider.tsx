@@ -16,9 +16,8 @@ import { REFRESH_FAILURE_EVENT } from '@/api/recordingApiClient';
 import SignInPromptModal from '@/components/modals/SignInPromptModal';
 import { AUTHED_QUERY_TAG } from '@/constants/queryKeys';
 import useCheckApiKeysValidity from '@/hooks/useCheckApiKeysValidity';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { tokenManager } from '@/utils/TokenManager';
-
-import { useActiveAccount } from './ActiveAccountProvider';
 
 type SetAuthenticationStateOptions = Partial<{
   clearQueryCache: boolean;
