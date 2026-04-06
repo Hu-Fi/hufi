@@ -1,7 +1,8 @@
 import { type FC, type PropsWithChildren } from 'react';
 
-import { Box, Button, Stack, useTheme } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 
+import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 
 type Props = {
@@ -11,6 +12,54 @@ type Props = {
   disableNextButton?: boolean;
   nextButtonText?: string;
   formId?: string;
+};
+
+const Wrapper = ({
+  isMobile,
+  children,
+}: {
+  isMobile: boolean;
+  children: React.ReactNode;
+}) => {
+  if (isMobile) {
+    return (
+      <Stack
+        direction="row"
+        alignItems="flex-end"
+        justifyContent="space-between"
+        height={`${MOBILE_BOTTOM_NAV_HEIGHT}px`}
+        px={2}
+        py={3}
+        position="fixed"
+        left="0"
+        right="0"
+        bottom={{ xs: 0, md: 'auto' }}
+        width="100%"
+        bgcolor="background.default"
+        borderTop="2px solid #251d47"
+        sx={{
+          zIndex: (theme) => theme.zIndex.appBar,
+        }}
+      >
+        {children}
+      </Stack>
+    );
+  }
+  return (
+    <Stack
+      direction="row"
+      alignItems="flex-end"
+      justifyContent="space-between"
+      mt="auto"
+      gridArea="bottomNav"
+      minHeight={140}
+      width="auto"
+      gap={4}
+      bgcolor="transparent"
+    >
+      {children}
+    </Stack>
+  );
 };
 
 const BottomNavigation: FC<PropsWithChildren<Props>> = ({
@@ -23,7 +72,6 @@ const BottomNavigation: FC<PropsWithChildren<Props>> = ({
   children,
 }) => {
   const isMobile = useIsMobile();
-  const theme = useTheme();
 
   const showBackButton = !!handleBackClick;
 
@@ -38,27 +86,7 @@ const BottomNavigation: FC<PropsWithChildren<Props>> = ({
   };
 
   return (
-    <Stack
-      direction="row"
-      alignItems="flex-end"
-      justifyContent="space-between"
-      mt="auto"
-      gridArea="bottomNav"
-      minHeight={{ xs: 95, md: 140 }}
-      px={{ xs: 2, md: 0 }}
-      py={{ xs: 3, md: 0 }}
-      position={{ xs: 'fixed', md: 'static' }}
-      left={{ xs: 0, md: 'auto' }}
-      right={{ xs: 0, md: 'auto' }}
-      bottom={{ xs: 0, md: 'auto' }}
-      width={{ xs: '100%', md: 'auto' }}
-      gap={{ xs: 0, md: 4 }}
-      bgcolor={{ xs: 'background.default', md: 'transparent' }}
-      borderTop={{ xs: '2px solid #251d47', md: 'none' }}
-      sx={{
-        zIndex: { xs: theme.zIndex.appBar, md: 'auto' },
-      }}
-    >
+    <Wrapper isMobile={isMobile}>
       {children}
       <Box
         display="flex"
@@ -94,7 +122,7 @@ const BottomNavigation: FC<PropsWithChildren<Props>> = ({
           {nextButtonText}
         </Button>
       </Box>
-    </Stack>
+    </Wrapper>
   );
 };
 

@@ -1,13 +1,17 @@
 import { type FC } from 'react';
 
 import LaunchCampaignForm from '@/components/LaunchCampaignForm';
-import PageTitle from '@/components/PageTitle';
+import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import PageWrapper from '@/components/PageWrapper';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 
 const LaunchCampaignPage: FC = () => {
+  const isMobile = useIsMobile();
+
+  useReserveLayoutBottomOffset(isMobile);
+
   return (
     <PageWrapper>
-      <PageTitle title="Launch Campaign" />
       <LaunchCampaignForm />
     </PageWrapper>
   );

@@ -78,7 +78,7 @@ const EscrowDetailsStep: FC<Props> = ({
 
   const onSubmit = async (data: CampaignFormValues) => {
     setFormValues(data);
-    handleChangeStep(4);
+    handleChangeStep((prev) => prev + 1);
   };
 
   return (

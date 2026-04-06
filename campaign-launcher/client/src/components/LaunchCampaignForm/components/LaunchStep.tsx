@@ -210,10 +210,10 @@ const LaunchStep: FC<Props> = ({
       {isMobile && !isEscrowCreated && (
         <BottomNavigation
           handleBackClick={handleBackToEdit}
-          handleNextClick={handleLaunchCampaign}
+          handleNextClick={isError ? handleTryAgainClick : handleLaunchCampaign}
           disableBackButton={isCreatingEscrow}
           disableNextButton={isCreatingEscrow}
-          nextButtonText="Go Live"
+          nextButtonText={isError ? 'Try again' : 'Go Live'}
         />
       )}
       {isMobile && isEscrowCreated && (

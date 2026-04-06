@@ -46,71 +46,51 @@ const RowValue = styled(Typography)({
   fontWeight: 500,
 });
 
-const getDailyTargetLabel = (campaignType: CampaignType) => {
-  switch (campaignType) {
-    case CampaignType.MARKET_MAKING:
-      return 'Daily volume target';
-    case CampaignType.HOLDING:
-      return 'Daily balance target';
-    case CampaignType.THRESHOLD:
-      return 'Minimum balance target';
-    default:
-      return campaignType as never;
-  }
-};
-
-const getTargetValue = (
+const getTargetInfo = (
   campaignType: CampaignType,
   formValues: CampaignFormValues
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
-      return (formValues as MarketMakingFormValues)?.daily_volume_target;
+      return {
+        label: 'Daily volume target',
+        value: (formValues as MarketMakingFormValues)?.daily_volume_target,
+        token: (formValues as MarketMakingFormValues)?.pair.split('/')[1],
+      };
     case CampaignType.HOLDING:
-      return (formValues as HoldingFormValues)?.daily_balance_target;
+      return {
+        label: 'Daily balance target',
+        value: (formValues as HoldingFormValues)?.daily_balance_target,
+        token: (formValues as HoldingFormValues)?.symbol,
+      };
     case CampaignType.THRESHOLD:
-      return (formValues as ThresholdFormValues)?.minimum_balance_target;
+      return {
+        label: 'Minimum balance target',
+        value: (formValues as ThresholdFormValues)?.minimum_balance_target,
+        token: (formValues as ThresholdFormValues)?.symbol,
+      };
   }
 };
 
-const getTargetToken = (
+const getSymbolOrPairInfo = (
   campaignType: CampaignType,
   formValues: CampaignFormValues
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
-      return (formValues as MarketMakingFormValues)?.pair.split('/')[1];
+      return {
+        label: 'Pair',
+        value: (formValues as MarketMakingFormValues)?.pair,
+      };
     case CampaignType.HOLDING:
-      return (formValues as HoldingFormValues)?.symbol;
+      return {
+        label: 'Symbol',
+        value: (formValues as HoldingFormValues)?.symbol,
+      };
     case CampaignType.THRESHOLD:
-      return (formValues as ThresholdFormValues)?.symbol;
-  }
-};
-
-const getSymbolOrPairLabel = (campaignType: CampaignType) => {
-  switch (campaignType) {
-    case CampaignType.MARKET_MAKING:
-      return 'Pair';
-    case CampaignType.HOLDING:
-      return 'Symbol';
-    case CampaignType.THRESHOLD:
-      return 'Symbol';
-  }
-};
-
-const getSymbolOrPair = (
-  campaignType: CampaignType,
-  formValues: CampaignFormValues
-) => {
-  switch (campaignType) {
-    case CampaignType.MARKET_MAKING:
-      return (formValues as MarketMakingFormValues)?.pair;
-    case CampaignType.HOLDING:
-      return (formValues as HoldingFormValues)?.symbol;
-    case CampaignType.THRESHOLD:
-      return (formValues as ThresholdFormValues)?.symbol;
-    default:
-      return 0;
+      return {
+        label: 'Symbol',
+      };
   }
 };
 
@@ -125,19 +105,19 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
   const isLastStep = step === 5;
 
   const symbolOrPairLabel = campaignType
-    ? getSymbolOrPairLabel(campaignType)
+    ? getSymbolOrPairInfo(campaignType, formValues as CampaignFormValues).label
     : '';
 
   const symbolOrPair = campaignType
-    ? getSymbolOrPair(campaignType, formValues as CampaignFormValues)
+    ? getSymbolOrPairInfo(campaignType, formValues as CampaignFormValues).value
     : '';
 
   const targetValue = campaignType
-    ? getTargetValue(campaignType, formValues as CampaignFormValues)
+    ? getTargetInfo(campaignType, formValues as CampaignFormValues).value
     : '';
 
   const targetToken = campaignType
-    ? getTargetToken(campaignType, formValues as CampaignFormValues)
+    ? getTargetInfo(campaignType, formValues as CampaignFormValues).token
     : '';
 
   return (
@@ -186,7 +166,9 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
           </Row>
           <Row>
             <RowName>
-              {campaignType ? getDailyTargetLabel(campaignType) : ''}
+              {campaignType
+                ? getTargetInfo(campaignType, formValues).label
+                : ''}
             </RowName>
             <RowValue>
               {targetValue || '-'} {targetToken}
