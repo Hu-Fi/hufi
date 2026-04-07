@@ -532,25 +532,30 @@ export class CampaignsService implements OnModuleDestroy {
                 campaign.address,
               );
             endDate = cancellationRequestedAt;
-          } else {
-            const cyclesToTimestamp = Math.min(
-              Date.now(),
-              campaign.endDate.valueOf(),
+            endDate = new Date(
+              Math.min(
+                cancellationRequestedAt.valueOf(),
+                campaign.endDate.valueOf(),
+              ),
             );
-            const cyclesPassed = Math.floor(
-              dayjs(cyclesToTimestamp).diff(startDate, 'day', false) /
-                CAMPAIGNS_DAILY_CYCLE,
-            );
-            endDate = dayjs(startDate)
-              .add(cyclesPassed * CAMPAIGNS_DAILY_CYCLE, 'days')
-              .toDate();
-          }
-
-          /**
-           * Just a safety belt, just in case cancellation requested after
-           */
-          if (endDate > campaign.endDate) {
+          } else if (campaign.endDate <= new Date()) {
             endDate = campaign.endDate;
+          } else {
+            const fullCyclesPassed = Math.floor(
+              dayjs().diff(startDate, 'day', false) / CAMPAIGNS_DAILY_CYCLE,
+            );
+            if (fullCyclesPassed === 0) {
+              logger.warn(
+                "Can't check progress for period that is not finished yet",
+                {
+                  startDate,
+                },
+              );
+              return;
+            }
+            endDate = dayjs(startDate)
+              .add(fullCyclesPassed * CAMPAIGNS_DAILY_CYCLE, 'days')
+              .toDate();
           }
 
           // safety-belt
@@ -594,11 +599,21 @@ export class CampaignsService implements OnModuleDestroy {
           const newResults: IntermediateResult[] = [];
           let totalRewardPool = new Decimal(0);
           let nextCycleStart = startDate;
-          while (dayjs(nextCycleStart).isBefore(endDate)) {
+          do {
+            let nextCycleEnd = dayjs(nextCycleStart)
+              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
+              .toDate();
+            if (nextCycleEnd > endDate) {
+              /**
+               * In case campaign duration is not multiple of cycle duration
+               */
+              nextCycleEnd = endDate;
+            }
+
             const cycleProgress = await this.checkCampaignProgressForPeriod(
               campaign,
               nextCycleStart,
-              dayjs(nextCycleStart).add(CAMPAIGNS_DAILY_CYCLE, 'day').toDate(),
+              nextCycleEnd,
               {
                 excludeIneligible:
                   isThresholdCampaign(campaign) &&
@@ -635,18 +650,19 @@ export class CampaignsService implements OnModuleDestroy {
             nextCycleStart = dayjs(nextCycleStart)
               .add(CAMPAIGNS_DAILY_CYCLE, 'day')
               .toDate();
-          }
+          } while (nextCycleStart < endDate);
+
+          logger.info('Going to record campaign progress', {
+            from: startDate.toISOString(),
+            to: endDate.toISOString(),
+            reserved_funds: totalRewardPool.toString(),
+          });
 
           const fundsToReserve = ethers.parseUnits(
             totalRewardPool.toString(),
             campaign.fundTokenDecimals,
           );
-
-          logger.info('Going to record campaign progress', {
-            from: startDate.toISOString(),
-            to: endDate.toISOString(),
-            reserved_funds: fundsToReserve,
-          });
+          intermediateResults.results.push(...newResults);
 
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(

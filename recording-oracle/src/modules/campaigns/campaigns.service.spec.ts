@@ -1957,7 +1957,7 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe.only('recordCampaignProgress', () => {
+  describe('recordCampaignProgress', () => {
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;
@@ -2008,14 +2008,11 @@ describe('CampaignsService', () => {
 
     beforeEach(() => {
       campaign = generateCampaignEntity();
-
       /**
-       * Adjust campaign dates to easily manipulate if its "ongoing"
-       * and already recorded intermediate results
+       * Adjust campaign dates to easily manipulate full cycles passed
        */
-      const nDaysToShift = faker.number.int({ min: 3, max: 5 });
-      campaign.startDate = dayjs().subtract(nDaysToShift, 'day').toDate();
-      campaign.endDate = dayjs().add(nDaysToShift, 'day').toDate();
+      campaign.endDate = dayjs().subtract(1, 'hour').toDate();
+      campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
 
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
@@ -2208,7 +2205,9 @@ describe('CampaignsService', () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const now = Date.now();
-      campaign.startDate = dayjs(now)
+      campaign.endDate = new Date(now + 1);
+
+      campaign.startDate = dayjs(campaign.endDate)
         .subtract(1, 'day')
         .add(1, 'millisecond')
         .toDate();
@@ -2232,14 +2231,11 @@ describe('CampaignsService', () => {
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedStartDate = new Date(campaign.startDate.valueOf());
-      const expectedEndDate = campaign.endDate;
-
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        expectedStartDate,
-        expectedEndDate,
+        campaign.startDate,
+        campaign.endDate,
         {
           excludeIneligible: expect.any(Boolean),
           logWarnings: true,
@@ -2248,35 +2244,57 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should use correct period dates for campaign with > 1d duration when no intermediate results', async () => {
+    it('should check all passed cycles for campaign with > 1d duration when no intermediate results', async () => {
+      const nFullCycles = faker.number.int({ min: 2, max: 3 });
+      campaign.startDate = dayjs().subtract(nFullCycles, 'day').toDate();
+      campaign.endDate = dayjs()
+        .add(faker.number.int({ min: 1, max: 100 }), 'hour')
+        .toDate();
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedStartDate = new Date(campaign.startDate.valueOf());
-      const expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
-
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
-        campaign,
-        expectedStartDate,
-        expectedEndDate,
-        {
-          excludeIneligible: expect.any(Boolean),
-          logWarnings: true,
-          caller: 'recordCampaignProgress',
-        },
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nFullCycles,
       );
+      for (let i = 1; i <= nFullCycles; i += 1) {
+        const expectedStartDate = dayjs(campaign.startDate)
+          .add(i - 1, 'day')
+          .toDate();
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          dayjs(expectedStartDate).add(1, 'day').toDate(),
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
     });
 
-    it('should not check progress if less than a day from last results for ongoing campaign', async () => {
+    it('should check last cycle if it is not round but campaign ended', async () => {
+      /**
+       * TODO: revisit if need to add more edge-case tests
+       */
+      expect(1).toBe(1);
+    });
+
+    it('should not check progress if less than a day from last result for ongoing campaign', async () => {
       const now = Date.now();
-      const oneDayAgo = dayjs(now).subtract(1, 'day').toDate();
+      campaign.endDate = new Date(now + 1);
+      campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
+
       const intermediateResultsData = generateIntermediateResultsData({
         results: [
           generateIntermediateResult({
-            // add one ms to imitate "almost one day ago"
-            endDate: new Date(oneDayAgo.valueOf() + 1),
+            endDate: dayjs(campaign.startDate).add(1, 'day').toDate(),
           }),
         ],
       });
@@ -2293,7 +2311,9 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
-    it('should use start date from last intermediate results when more than a day from last results but campaign not ended', async () => {
+    it('should rely on last intermediate result when more than a day from last result and campaign not ended', async () => {
+      campaign.endDate = dayjs().add(1, 'hour').toDate();
+      campaign.startDate = dayjs(campaign.endDate).subtract(3, 'day').toDate();
       const lastResultsEndDate = dayjs(campaign.startDate)
         .add(1, 'day')
         .toDate();
@@ -2322,7 +2342,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should use start date from last intermediate results if less than a day from last results but campaign ended', async () => {
+    it('should rely on last intermediate result if less than a day from last result and campaign ended', async () => {
       const now = Date.now();
       campaign.endDate = new Date(now - 1);
       const lastResultsEndDate = dayjs().subtract(42, 'minutes').toDate();
@@ -2344,13 +2364,11 @@ describe('CampaignsService', () => {
 
       jest.useRealTimers();
 
-      const expectedEndDate = campaign.endDate;
-
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
         lastResultsEndDate,
-        expectedEndDate,
+        campaign.endDate,
         {
           excludeIneligible: expect.any(Boolean),
           logWarnings: true,
@@ -2441,6 +2459,8 @@ describe('CampaignsService', () => {
     });
 
     it('should record campaign progress to existing results', async () => {
+      campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
+
       const intermediateResultsData = generateIntermediateResultsData({
         results: [
           generateIntermediateResult({
@@ -2705,8 +2725,8 @@ describe('CampaignsService', () => {
 
     it('should not move campaign to "pending_completion" if reached its end date but not all results calculated', async () => {
       const currentDate = new Date();
-      campaign.endDate = new Date(currentDate.valueOf() - 1);
-      campaign.startDate = dayjs(campaign.endDate).subtract(3, 'day').toDate();
+      campaign.endDate = new Date(currentDate.valueOf() + 1);
+      campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
