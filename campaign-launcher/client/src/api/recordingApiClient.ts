@@ -226,12 +226,7 @@ export class RecordingApiClient extends HttpClient {
     campaign_address: string
   ): Promise<LeaderboardResponse> {
     const response = await this.get<LeaderboardResponse>(
-      `/campaigns/${chain_id}-${campaign_address}/leaderboard`,
-      {
-        params: {
-          rank_by: 'current_progress',
-        },
-      }
+      `/campaigns/${chain_id}-${campaign_address}/leaderboard`
     );
     return response;
   }

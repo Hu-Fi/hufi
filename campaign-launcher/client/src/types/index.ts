@@ -112,11 +112,15 @@ export type CampaignsResponse = {
 export type LeaderboardEntry = {
   address: EvmAddress;
   result: number;
+  score: number;
+  estimated_reward: number;
   rank: number;
 };
 
 export type LeaderboardResponse = {
   data: LeaderboardEntry[];
+  total: number;
+  updated_at: string;
 };
 
 type BaseManifestDto = {
