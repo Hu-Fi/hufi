@@ -142,6 +142,8 @@ export type CampaignsQueryParams = {
   chain_id: ChainId;
   status?: CampaignStatus;
   launcher?: string;
+  type?: CampaignType[];
+  exchange?: string[];
   limit?: number;
   skip?: number;
 };

@@ -85,6 +85,8 @@ const Campaigns: FC = () => {
     chain_id: appliedFilters.network,
     status: statusFilter,
     launcher: launcherFilter,
+    type: appliedFilters.campaignTypes,
+    exchange: appliedFilters.exchanges,
     limit,
     skip,
   }) as CampaignsQueryParams;
@@ -101,7 +103,14 @@ const Campaigns: FC = () => {
 
   const isAllTab = !isJoinedTab && !isHostedTab;
 
-  const commonKeys = [appliedFilters.network, statusFilter, limit, skip];
+  const commonKeys = [
+    appliedFilters.network,
+    statusFilter,
+    appliedFilters.campaignTypes,
+    appliedFilters.exchanges,
+    limit,
+    skip,
+  ];
   const activeKey = isJoinedTab
     ? [
         QUERY_KEYS.JOINED_CAMPAIGNS,

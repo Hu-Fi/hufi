@@ -10,10 +10,18 @@ import { useNetwork } from '@/providers/NetworkProvider';
 import type { CampaignsQueryParams } from '@/types';
 
 export const useCampaigns = (params: CampaignsQueryParams) => {
-  const { chain_id, status, limit, skip } = params;
+  const { chain_id, status, type, exchange, limit, skip } = params;
 
   return useQuery({
-    queryKey: [QUERY_KEYS.ALL_CAMPAIGNS, chain_id, status, limit, skip],
+    queryKey: [
+      QUERY_KEYS.ALL_CAMPAIGNS,
+      chain_id,
+      status,
+      type,
+      exchange,
+      limit,
+      skip,
+    ],
     queryFn: ({ signal }) => launcherApi.getCampaigns(params, signal),
     enabled: !!chain_id,
     placeholderData: keepPreviousData,
@@ -21,7 +29,7 @@ export const useCampaigns = (params: CampaignsQueryParams) => {
 };
 
 export const useHostedCampaigns = (params: CampaignsQueryParams) => {
-  const { chain_id, status, launcher, limit, skip } = params;
+  const { chain_id, status, launcher, type, exchange, limit, skip } = params;
 
   return useQuery({
     queryKey: [
@@ -29,6 +37,8 @@ export const useHostedCampaigns = (params: CampaignsQueryParams) => {
       launcher,
       chain_id,
       status,
+      type,
+      exchange,
       limit,
       skip,
     ],
