@@ -22,14 +22,23 @@ import { type LeaderboardEntry } from '@/types';
 
 import LeaderboardList from './List';
 
+import { formatActualOnDate } from '.';
+
 type Props = {
   open: boolean;
   onClose: () => void;
   data: LeaderboardEntry[];
+  updatedAt: string;
   symbol: string;
 };
 
-const LeaderboardOverlay: FC<Props> = ({ open, onClose, data, symbol }) => {
+const LeaderboardOverlay: FC<Props> = ({
+  open,
+  onClose,
+  data,
+  updatedAt,
+  symbol,
+}) => {
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
   const isMobile = useIsMobile();
@@ -79,6 +88,9 @@ const LeaderboardOverlay: FC<Props> = ({ open, onClose, data, symbol }) => {
             fontWeight={700}
           >
             {`Leaderboard (${symbol})`}
+          </Typography>
+          <Typography fontSize="12px" fontWeight={500} lineHeight={1} mt={0.5}>
+            Actual on: {formatActualOnDate(updatedAt)}
           </Typography>
           <TextField
             fullWidth

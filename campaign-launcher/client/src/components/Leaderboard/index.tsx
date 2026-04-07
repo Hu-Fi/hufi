@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { type LeaderboardResponse, type Campaign } from '@/types';
 import { formatAddress, getCompactNumberParts } from '@/utils';
+import dayjs from '@/utils/dayjs';
 
 import LeaderboardList from './List';
 import MyEntryLabel from './MyEntryLabel';
@@ -78,6 +79,17 @@ const calculateListSlice = (
   return [start, end];
 };
 
+export const formatActualOnDate = (date: string) => {
+  const value = dayjs(date);
+  const localTime = value.format('HH:mm');
+
+  if (value.isSame(dayjs(), 'day')) {
+    return localTime;
+  }
+
+  return `${value.format('Do MMM')} ${localTime}`;
+};
+
 const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
@@ -95,15 +107,35 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
 
   return (
     <Stack py={3} gap={3}>
-      <Typography
-        component="h6"
-        variant="body1"
-        fontWeight={600}
-        letterSpacing={3.2}
-        textTransform="uppercase"
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        gap={2}
       >
-        Leaderboard
-      </Typography>
+        <Typography
+          component="h6"
+          color={isMobile ? 'white' : 'text.primary'}
+          fontSize={{ xs: '20px', md: '16px' }}
+          fontWeight={{ xs: 500, md: 600 }}
+          letterSpacing={{ xs: 0, md: 3.2 }}
+          textTransform={{ xs: 'none', md: 'uppercase' }}
+        >
+          Leaderboard
+        </Typography>
+        <Typography
+          component="p"
+          fontSize={{ xs: '12px', md: '16px' }}
+          fontWeight={500}
+          lineHeight={1}
+          sx={{
+            opacity: 0.6,
+          }}
+        >
+          Actual on: {formatActualOnDate(leaderboard.updated_at)}
+        </Typography>
+      </Box>
+
       <Paper
         elevation={0}
         sx={{
@@ -287,6 +319,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         open={isOverlayOpen}
         onClose={() => setIsOverlayOpen(false)}
         data={leaderboard?.data || []}
+        updatedAt={leaderboard.updated_at}
         symbol={campaign.symbol}
       />
     </Stack>
