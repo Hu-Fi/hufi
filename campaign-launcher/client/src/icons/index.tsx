@@ -283,3 +283,108 @@ export const CopyIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const MobileBottomNavIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 36 35" fill="none">
+      <path
+        d="M15 25C17.2091 25 19 26.7909 19 29V31C19 33.2091 17.2091 35 15 35H8C5.79086 35 4 33.2091 4 31V29C4 26.7909 5.79086 25 8 25H15ZM32 17C34.2091 17 36 18.7909 36 21V31C36 33.2091 34.2091 35 32 35H25C22.7909 35 21 33.2091 21 31V21C21 18.7909 22.7909 17 25 17H32ZM15 5C17.2091 5 19 6.79086 19 9V19C19 21.2091 17.2091 23 15 23H8C5.79086 23 4 21.2091 4 19V9C4 6.79086 5.79086 5 8 5H15ZM32 5C34.2091 5 36 6.79086 36 9V11C36 13.2091 34.2091 15 32 15H25C22.7909 15 21 13.2091 21 11V9C21 6.79086 22.7909 5 25 5H32Z"
+        fillOpacity="0.1"
+      />
+      <rect
+        x="0.5"
+        y="0.5"
+        width="14"
+        height="17"
+        rx="3.5"
+        stroke="currentColor"
+      />
+      <rect
+        x="0.5"
+        y="20.5"
+        width="14"
+        height="9"
+        rx="3.5"
+        stroke="currentColor"
+      />
+      <rect
+        x="31.5"
+        y="29.5"
+        width="14"
+        height="17"
+        rx="3.5"
+        transform="rotate(-180 31.5 29.5)"
+        stroke="currentColor"
+      />
+      <rect
+        x="31.5"
+        y="9.5"
+        width="14"
+        height="9"
+        rx="3.5"
+        transform="rotate(-180 31.5 9.5)"
+        stroke="currentColor"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_1154_3379"
+          x1="8"
+          y1="6.5"
+          x2="20"
+          y2="35"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="currentColor" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0.13" />
+        </linearGradient>
+      </defs>
+    </SvgIcon>
+  );
+};
+
+export const WarningIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 20 20" fill="none">
+      <path
+        d="M4.43411 8.06683C6.4455 4.50771 7.4512 2.72815 8.83123 2.27006C9.59044 2.01805 10.4083 2.01805 11.1675 2.27006C12.5475 2.72815 13.5532 4.50771 15.5646 8.06683C17.576 11.6259 18.5817 13.4055 18.28 14.8555C18.114 15.6532 17.7051 16.3768 17.1119 16.9225C16.0335 17.9144 14.0221 17.9144 9.99935 17.9144C5.97655 17.9144 3.96516 17.9144 2.88682 16.9225C2.29358 16.3768 1.88467 15.6532 1.7187 14.8555C1.41701 13.4055 2.42271 11.6259 4.43411 8.06683Z"
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity="0.85"
+        strokeWidth="1.6625"
+      />
+      <path
+        d="M10.2005 14.1662V10.8328C10.2005 10.44 10.2005 10.2436 10.0785 10.1216C9.95644 9.99951 9.76002 9.99951 9.36719 9.99951"
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity="0.85"
+        strokeWidth="1.6625"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.99203 7.49951H9.99951"
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity="0.85"
+        strokeWidth="1.6625"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const RefreshIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M14 8C14 9.18669 13.6481 10.3467 12.9888 11.3334C12.3295 12.3201 11.3925 13.0892 10.2961 13.5433C9.19975 13.9974 7.99335 14.1162 6.82946 13.8847C5.66558 13.6532 4.59648 13.0818 3.75736 12.2426C2.91825 11.4035 2.3468 10.3344 2.11529 9.17054C1.88378 8.00666 2.0026 6.80026 2.45673 5.7039C2.91085 4.60754 3.67989 3.67047 4.66658 3.01118C5.65328 2.35189 6.81331 2 8 2C9.68 2 11.2867 2.66667 12.4933 3.82667L14 5.33333M14 5.33333V2M14 5.33333H10.6667"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.33333"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
