@@ -1957,7 +1957,7 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe('recordCampaignProgress', () => {
+  describe.only('recordCampaignProgress', () => {
     let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
     let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
     let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;

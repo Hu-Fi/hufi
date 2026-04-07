@@ -45,14 +45,6 @@ export function calculateRewardPool(
   );
 
   if (nRewardCycles > CAMPAIGNS_DAILY_CYCLE) {
-    /**
-     * TODO: handle "to_cancel" campaigns where cycle duration is > 1 day.
-     *
-     * Such can happend if RecO wasn't able to record results for a cycle in time
-     * and cancellation request came in after the end of that cycle.
-     * In that case we can't go cycle-by-cycly because `storeResults` can be called
-     * only once for `to_cancel` escrows, so we need to have a special handling for that case.
-     */
     throw new Error(
       `Unexpected number of reward cycles in progress period: ${nRewardCycles}`,
     );
