@@ -16,7 +16,7 @@ type JoinedCampaignsParams = Partial<Omit<CampaignsQueryParams, 'launcher'>>;
 
 export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
   const { isAuthenticated } = useWeb3Auth();
-  const { status, limit, skip, chain_id } = params;
+  const { chain_id, status, type, exchange, limit, skip } = params;
 
   return useQuery({
     queryKey: [
@@ -24,6 +24,8 @@ export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
       isAuthenticated,
       chain_id,
       status,
+      type,
+      exchange,
       limit,
       skip,
       AUTHED_QUERY_TAG,

@@ -12,12 +12,12 @@ import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
 import { ROUTES } from '@/constants';
-import { useJoinedCampaigns } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import usePagination from '@/hooks/usePagination';
 import { ChevronIcon } from '@/icons';
-import { config as wagmiConfig } from '@/providers/WagmiProvider';
+import { useAuthedUserData } from '@/providers/AuthedUserData';
+import { useNetwork } from '@/providers/NetworkProvider';
 import {
   type CampaignsQueryParams,
   CampaignStatus,
@@ -51,6 +51,8 @@ const LinkToCampaigns = () => (
 const Dashboard: FC = () => {
   const [view, setView] = useState<'grid' | 'table'>('grid');
 
+  const { isJoinedCampaignsLoading } = useAuthedUserData();
+  const { appChainId } = useNetwork();
   const isMobile = useIsMobile();
   useReserveLayoutBottomOffset(isMobile);
   const {
@@ -60,7 +62,7 @@ const Dashboard: FC = () => {
   const isGridView = view === 'grid';
 
   const queryParams = filterFalsyQueryParams({
-    chain_id: wagmiConfig.chains[0]?.id ?? null,
+    chain_id: appChainId,
     status: CampaignStatus.ACTIVE,
     limit,
     skip,
@@ -71,9 +73,6 @@ const Dashboard: FC = () => {
     isLoading: isCampaignsLoading,
     isFetching: isCampaignsFetching,
   } = useCampaigns(queryParams);
-
-  const { isLoading: isJoinedCampaignsLoading } =
-    useJoinedCampaigns(queryParams);
 
   const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
 

@@ -265,13 +265,20 @@ export const calculateHash = async (
 };
 
 export const filterFalsyQueryParams = (
-  params: Record<string, string | number | undefined>
-): Record<string, string | number> => {
-  const result: Record<string, string | number> = {};
+  params: Record<string, string | number | string[] | undefined>
+): Record<string, string | number | string[]> => {
+  const result: ReturnType<typeof filterFalsyQueryParams> = {};
 
   for (const [key, value] of Object.entries(params)) {
-    if (value) {
-      result[key] = value;
+    if (Array.isArray(value)) {
+      const filteredValues = value.filter(Boolean);
+      if (filteredValues.length > 0) {
+        result[key] = filteredValues;
+      }
+    } else {
+      if (value) {
+        result[key] = value;
+      }
     }
   }
 
