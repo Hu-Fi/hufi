@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 
 import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import StakeProtectedRoute from '@/components/StakeProtectedRoute';
+import WalletProtectedRoute from '@/components/WalletProtectedRoute';
 import { ROUTES } from '@/constants';
 import Campaign from '@/pages/Campaign';
 import Dashboard from '@/pages/Dashboard';
@@ -19,7 +19,6 @@ import { NetworkProvider } from '@/providers/NetworkProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
 import SignerProvider from '@/providers/SignerProvider';
-import StakeProvider from '@/providers/StakeProvider';
 import ThemeProvider from '@/providers/ThemeProvider';
 import WagmiProvider from '@/providers/WagmiProvider';
 import { Web3AuthProvider } from '@/providers/Web3AuthProvider';
@@ -37,41 +36,39 @@ const App: FC = () => {
                     <Web3AuthProvider>
                       <AuthedUserDataProvider>
                         <ExchangesProvider>
-                          <StakeProvider>
-                            <LocalizationProvider
-                              dateAdapter={AdapterDayjs}
-                              adapterLocale="en"
-                            >
-                              <Layout>
-                                <Routes>
-                                  <Route
-                                    path={ROUTES.DASHBOARD}
-                                    element={<Dashboard />}
-                                  />
-                                  <Route
-                                    path={ROUTES.CAMPAIGN_DETAILS}
-                                    element={<Campaign />}
-                                  />
-                                  <Route
-                                    path={ROUTES.MANAGE_API_KEYS}
-                                    element={
-                                      <ProtectedRoute>
-                                        <ManageApiKeysPage />
-                                      </ProtectedRoute>
-                                    }
-                                  />
-                                  <Route
-                                    path={ROUTES.LAUNCH_CAMPAIGN}
-                                    element={
-                                      <StakeProtectedRoute>
-                                        <LaunchCampaignPage />
-                                      </StakeProtectedRoute>
-                                    }
-                                  />
-                                </Routes>
-                              </Layout>
-                            </LocalizationProvider>
-                          </StakeProvider>
+                          <LocalizationProvider
+                            dateAdapter={AdapterDayjs}
+                            adapterLocale="en"
+                          >
+                            <Layout>
+                              <Routes>
+                                <Route
+                                  path={ROUTES.DASHBOARD}
+                                  element={<Dashboard />}
+                                />
+                                <Route
+                                  path={ROUTES.CAMPAIGN_DETAILS}
+                                  element={<Campaign />}
+                                />
+                                <Route
+                                  path={ROUTES.MANAGE_API_KEYS}
+                                  element={
+                                    <ProtectedRoute>
+                                      <ManageApiKeysPage />
+                                    </ProtectedRoute>
+                                  }
+                                />
+                                <Route
+                                  path={ROUTES.LAUNCH_CAMPAIGN}
+                                  element={
+                                    <WalletProtectedRoute>
+                                      <LaunchCampaignPage />
+                                    </WalletProtectedRoute>
+                                  }
+                                />
+                              </Routes>
+                            </Layout>
+                          </LocalizationProvider>
                         </ExchangesProvider>
                       </AuthedUserDataProvider>
                     </Web3AuthProvider>
