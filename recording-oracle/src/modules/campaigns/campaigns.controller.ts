@@ -35,7 +35,6 @@ import {
   ListJoinedCampaignsQueryDto,
   ListJoinedCampaignsSuccessDto,
   CampaignLeaderboardResponseDto,
-  GetLeaderboardQueryDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
 import { CampaignNotFoundError } from './campaigns.errors';
@@ -108,8 +107,10 @@ export class CampaignsController {
     const campaigns = await this.participationsRepository.findByUserId(
       request.user.id,
       {
-        chaindId: query.chainId,
+        chainId: query.chainId,
         statuses,
+        types: query.type,
+        exchanges: query.exchange,
         limit: limit + 1,
         skip: query.skip,
       },
@@ -252,14 +253,16 @@ export class CampaignsController {
   @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/leaderboard`)
   async getCampaignLeaderboard(
     @Param() { chainId, campaignAddress }: CampaignParamsDto,
-    @Query() { rankBy }: GetLeaderboardQueryDto,
   ): Promise<CampaignLeaderboardResponseDto> {
-    const data = await this.campaignsService.getCampaignLeaderboard(
+    const leaderboardData = await this.campaignsService.getCampaignLeaderboard(
       chainId,
       campaignAddress,
-      rankBy,
     );
 
-    return { data };
+    return {
+      data: leaderboardData.entries,
+      total: leaderboardData.total,
+      updatedAt: leaderboardData.updatedAt.toISOString(),
+    };
   }
 }

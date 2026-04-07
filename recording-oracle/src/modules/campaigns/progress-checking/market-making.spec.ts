@@ -210,6 +210,19 @@ describe('MarketMakingProgressChecker', () => {
         progressCheckerSetup.periodEnd.valueOf(),
       );
     });
+
+    it('should throw when total exceeds max safe integer', async () => {
+      fetchMyTrades.mockResolvedValueOnce([
+        generateTrade({
+          cost: Number.MAX_SAFE_INTEGER,
+          takerOrMaker: TakerOrMakerFlag.MAKER,
+        }),
+      ]);
+
+      await expect(
+        resultsChecker.checkForParticipant(participantInfo),
+      ).rejects.toThrow('Participants total value number overflow');
+    });
   });
 
   describe('abuse detection', () => {

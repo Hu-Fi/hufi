@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 
 import { CampaignEntity } from './campaign.entity';
-import { PROGRESS_PERIOD_DAYS } from './constants';
+import { CAMPAIGNS_DAILY_CYCLE } from './constants';
 import { CampaignStatus } from './types';
 
 @Injectable()
@@ -29,7 +29,7 @@ export class CampaignsRepository extends Repository<CampaignEntity> {
 
   async findForProgressRecording(): Promise<CampaignEntity[]> {
     const now = new Date();
-    const timeAgo = dayjs().subtract(PROGRESS_PERIOD_DAYS, 'day').toDate();
+    const timeAgo = dayjs().subtract(CAMPAIGNS_DAILY_CYCLE, 'day').toDate();
 
     const results = await this.createQueryBuilder('campaign')
       .where(

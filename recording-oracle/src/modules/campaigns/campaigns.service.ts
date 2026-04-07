@@ -6,7 +6,6 @@ import {
   EscrowStatus,
   EscrowUtils,
   OrderDirection,
-  TransactionUtils,
 } from '@human-protocol/sdk';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
@@ -19,11 +18,13 @@ import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import { LRUCache } from 'lru-cache';
 import ms from 'ms';
 
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import * as cryptoUtils from '@/common/utils/crypto';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
 import * as httpUtils from '@/common/utils/http';
@@ -62,7 +63,7 @@ import { CampaignsRepository } from './campaigns.repository';
 import {
   CAMPAIGN_PERMISSIONS_MAP,
   CampaignServiceJob,
-  PROGRESS_PERIOD_DAYS,
+  CAMPAIGNS_DAILY_CYCLE,
 } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -71,17 +72,16 @@ import {
   UserAlreadyJoinedError,
 } from './participations';
 import {
-  type CampaignProgressChecker,
   CampaignProgressCheckerSetup,
   CampaignProgressMeta,
   HoldingProgressChecker,
   MarketMakingProgressChecker,
   ProgressCheckResult,
   ThresholdProgressChecker,
+  type CampaignProgressChecker,
+  type HoldingMeta,
 } from './progress-checking';
-import { HoldingMeta } from './progress-checking/holding';
-import { MarketMakingMeta } from './progress-checking/market-making';
-import { ThresholdMeta } from './progress-checking/threshold';
+import * as rewardsUtils from './rewards.utils';
 import {
   isCompetitiveMarketMakingCampaign,
   isHoldingCampaign,
@@ -98,7 +98,6 @@ import {
   CampaignType,
   IntermediateResult,
   IntermediateResultsData,
-  LeaderboardRanking,
   ParticipantOutcome,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
@@ -108,6 +107,11 @@ export class CampaignsService implements OnModuleDestroy {
   private readonly logger = logger.child({
     context: CampaignsService.name,
   });
+
+  private readonly prefinalResultsCache = new LRUCache<
+    string,
+    IntermediateResultsData
+  >({ max: 100 });
 
   constructor(
     private readonly campaignsCache: CampaignsCache,
@@ -530,7 +534,7 @@ export class CampaignsService implements OnModuleDestroy {
             endDate = cancellationRequestedAt;
           } else {
             endDate = dayjs(startDate)
-              .add(PROGRESS_PERIOD_DAYS, 'day')
+              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
               .toDate();
 
             const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
@@ -605,68 +609,21 @@ export class CampaignsService implements OnModuleDestroy {
             },
           );
 
-          let rewardPool: string;
-          if (isCompetitiveMarketMakingCampaign(campaign)) {
-            const shouldReserveFunds =
-              escrowStatus === EscrowStatus.ToCancel ||
-              endDate.valueOf() === campaign.endDate.valueOf();
-            rewardPool = shouldReserveFunds
-              ? new Decimal(campaign.fundAmount)
-                  .toDecimalPlaces(
-                    campaign.fundTokenDecimals,
-                    Decimal.ROUND_DOWN,
-                  )
-                  .toString()
-              : '0';
-          } else {
-            let periodDurationDays = PROGRESS_PERIOD_DAYS;
-            if (escrowStatus === EscrowStatus.ToCancel) {
-              periodDurationDays = Math.ceil(
-                dayjs(endDate).diff(startDate, 'days', true),
-              );
-            }
-
-            let progressValue: number;
-            let progressValueTarget: number;
-            if (isMarketMakingCampaign(campaign)) {
-              progressValue = (progress.meta as MarketMakingMeta).total_volume;
-              progressValueTarget = campaign.details.dailyVolumeTarget;
-            } else if (isHoldingCampaign(campaign)) {
-              progressValue = (progress.meta as HoldingMeta).total_balance;
-              progressValueTarget = campaign.details.dailyBalanceTarget;
-            } else if (isThresholdCampaign(campaign)) {
+          const rewardPool = rewardsUtils.calculateRewardPool(
+            campaign,
+            progress,
+          );
+          if (escrowStatus !== EscrowStatus.ToCancel) {
+            const dailyReward = rewardsUtils.calculateDailyReward(campaign);
+            if (Decimal(rewardPool).greaterThan(dailyReward)) {
               /**
-               * 'total_score' in this case is the number of eligible participants in current cycle,
-               * so when calculating reward pool we are going to distribute equal portion
-               * of daily reward to each participant that reached the threshold,
-               * where equal portion is defined as `dailyReward / maxParticipants`
+               * Safety-belt
+               * Should not be possible for non-cancelled campaign
                */
-              // prettier-ignore
-              const nEligibleParticipants = (progress.meta as ThresholdMeta).total_score;
-              if (
-                campaign.details.maxParticipants &&
-                nEligibleParticipants > campaign.details.maxParticipants
-              ) {
-                // safety-belt
-                throw new Error(
-                  `Unexpected number of eligible participants: ${nEligibleParticipants}, max allowed: ${campaign.details.maxParticipants}`,
-                );
-              }
-              progressValue = nEligibleParticipants;
-              progressValueTarget = campaign.details.maxParticipants || 1;
-            } else {
               throw new Error(
-                `Unknown campaign type for reward pool calculation: ${campaign.type}`,
+                'Calculated reward pool is greater than daily reward',
               );
             }
-
-            rewardPool = this.calculateRewardPool({
-              baseRewardPool: this.calculateDailyReward(campaign),
-              maxRewardPoolRatio: periodDurationDays,
-              progressValueTarget,
-              progressValue,
-              fundTokenDecimals: campaign.fundTokenDecimals,
-            });
           }
 
           const intermediateResult: IntermediateResult = {
@@ -932,40 +889,6 @@ export class CampaignsService implements OnModuleDestroy {
     return JSON.parse(intermediateResults.toString());
   }
 
-  calculateDailyReward(campaign: CampaignEntity): string {
-    const campaignDurationDays = Math.ceil(
-      dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
-    );
-
-    const fundAmount = new Decimal(campaign.fundAmount);
-
-    const dailyReward = fundAmount.div(campaignDurationDays);
-
-    return dailyReward
-      .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-      .toString();
-  }
-
-  calculateRewardPool(input: {
-    baseRewardPool: string;
-    maxRewardPoolRatio: number;
-    progressValueTarget: number;
-    progressValue: number;
-    fundTokenDecimals: number;
-  }): string {
-    const rewardRatio = Math.min(
-      input.progressValue / input.progressValueTarget,
-      input.maxRewardPoolRatio,
-    );
-
-    const baseRewardPool = new Decimal(input.baseRewardPool);
-    const rewardPool = baseRewardPool.mul(rewardRatio);
-
-    return rewardPool
-      .toDecimalPlaces(input.fundTokenDecimals, Decimal.ROUND_DOWN)
-      .toString();
-  }
-
   private async recordCampaignIntermediateResults(
     intermediateResults: IntermediateResultsData,
     fundsToReserve: bigint,
@@ -974,10 +897,7 @@ export class CampaignsService implements OnModuleDestroy {
     const campaignAddress = intermediateResults.address;
 
     const stringifiedResults = JSON.stringify(intermediateResults);
-    const resultsHash = crypto
-      .createHash('sha256')
-      .update(stringifiedResults)
-      .digest('hex');
+    const resultsHash = cryptoUtils.hashString(stringifiedResults, 'sha256');
 
     const fileName = `${campaignAddress}/${resultsHash}.json`;
 
@@ -1178,6 +1098,9 @@ export class CampaignsService implements OnModuleDestroy {
     };
   }
 
+  /**
+   * TODO: deprecate this functionality once we use leaderboards data on UI
+   */
   async getUserProgress(
     userId: string,
     evmAddress: string,
@@ -1465,11 +1388,11 @@ export class CampaignsService implements OnModuleDestroy {
 
     // Calculate start of the active timeframe (end is now)
     const timeframesPassed = Math.floor(
-      dayjs(now).diff(campaign.startDate, 'day', false) / PROGRESS_PERIOD_DAYS,
+      dayjs(now).diff(campaign.startDate, 'day', false) / CAMPAIGNS_DAILY_CYCLE,
     );
 
     const timeframeStart = dayjs(campaign.startDate)
-      .add(timeframesPassed * PROGRESS_PERIOD_DAYS, 'day')
+      .add(timeframesPassed * CAMPAIGNS_DAILY_CYCLE, 'day')
       .toDate();
 
     let timeframeEnd: Date;
@@ -1536,8 +1459,11 @@ export class CampaignsService implements OnModuleDestroy {
   async getCampaignLeaderboard(
     chainId: number,
     campaignAddress: string,
-    rankBy: LeaderboardRanking,
-  ): Promise<LeaderboardEntry[]> {
+  ): Promise<{
+    entries: LeaderboardEntry[];
+    total: number;
+    updatedAt: Date;
+  }> {
     const campaign = await this.findOneByChainIdAndAddress(
       chainId,
       campaignAddress,
@@ -1547,116 +1473,13 @@ export class CampaignsService implements OnModuleDestroy {
        * It might be that campaign escrow is not synced yet,
        * so return empty results in this case
        */
-      return [];
+      return {
+        entries: [],
+        total: 0,
+        updatedAt: new Date(),
+      };
     }
 
-    let leaderboardEntries: LeaderboardEntry[];
-    switch (rankBy) {
-      case LeaderboardRanking.TOTAL_REWARDS:
-        leaderboardEntries = await this.getRewardsLeaderboardEntries(campaign);
-        break;
-      case LeaderboardRanking.CURRENT_PROGRESS:
-        leaderboardEntries =
-          await this.getCurrentProgressLeaderboardEntries(campaign);
-        break;
-      default:
-        throw new Error(`Leaderboard ranking by "${rankBy}" is not supported`);
-    }
-
-    leaderboardEntries = leaderboardEntries.map(({ address, result }) => ({
-      address: ethers.getAddress(address),
-      result,
-    }));
-
-    return _.orderBy(leaderboardEntries, 'result', 'desc');
-  }
-
-  private async getRewardsLeaderboardEntries(
-    campaign: CampaignEntity,
-  ): Promise<LeaderboardEntry[]> {
-    if (!campaign.resultsCutoffAt) {
-      return [];
-    }
-
-    const participantAdresses = new Set<string>();
-
-    const intermediateResultsData =
-      await this.retrieveCampaignIntermediateResults(campaign);
-
-    for (const intermediateResult of intermediateResultsData?.results || []) {
-      for (const outcomesBatch of intermediateResult.participants_outcomes_batches) {
-        for (const participantOutcome of outcomesBatch.results) {
-          participantAdresses.add(participantOutcome.address);
-        }
-      }
-    }
-
-    if (participantAdresses.size === 0) {
-      return [];
-    }
-
-    const leaderboardEntriesMap: {
-      /**
-       * Subgraph returns lowercased data, so use same here
-       */
-      [lowercasedAddress: string]: bigint;
-    } = {};
-    for (const address of participantAdresses) {
-      leaderboardEntriesMap[address.toLowerCase()] = 0n;
-    }
-
-    let nTxsChecked = 0;
-    do {
-      const transactions = await TransactionUtils.getTransactions({
-        chainId: campaign.chainId,
-        fromAddress: campaign.address,
-        toAddress: campaign.address,
-        method: 'bulkTransfer',
-        first: 100,
-        skip: nTxsChecked,
-      });
-
-      if (transactions.length === 0) {
-        break;
-      }
-
-      for (const tx of transactions) {
-        for (const internalTx of tx.internalTransactions) {
-          const receiverAddress = internalTx.receiver || '';
-          if (leaderboardEntriesMap[receiverAddress] === undefined) {
-            /**
-             * Oracle fees and launcher refunds are also
-             * in array of internal transactions
-             */
-            continue;
-          }
-
-          leaderboardEntriesMap[receiverAddress] += internalTx.value;
-        }
-      }
-
-      nTxsChecked += transactions.length;
-      // eslint-disable-next-line no-constant-condition
-    } while (true);
-
-    const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, totalRewards] of Object.entries(
-      leaderboardEntriesMap,
-    )) {
-      leaderboardEntries.push({
-        address,
-        result: Number(
-          ethers.formatUnits(totalRewards, campaign.fundTokenDecimals),
-        ),
-      });
-    }
-
-    return leaderboardEntries;
-  }
-
-  private async getCurrentProgressLeaderboardEntries(
-    campaign: CampaignEntity,
-  ): Promise<LeaderboardEntry[]> {
     if (
       [CampaignStatus.CANCELLED, CampaignStatus.COMPLETED].includes(
         campaign.status,
@@ -1669,51 +1492,85 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     let resultsToInspect: ParticipantOutcome[] = [];
+    let estimatedRewardPool: string;
+    let updatedAt: Date;
     if (
       [
         CampaignStatus.PENDING_CANCELLATION,
         CampaignStatus.PENDING_COMPLETION,
       ].includes(campaign.status)
     ) {
-      const intermediateResultsData =
-        await this.retrieveCampaignIntermediateResults(campaign);
+      if (!this.prefinalResultsCache.has(campaign.id)) {
+        const intermediateResultsData =
+          await this.retrieveCampaignIntermediateResults(campaign);
+        this.prefinalResultsCache.set(campaign.id, intermediateResultsData!);
+      }
 
-      const latestIntermediateResult = intermediateResultsData!.results.at(-1)!;
+      const latestIntermediateResult = this.prefinalResultsCache
+        .get(campaign.id)!
+        .results.at(-1)!;
       for (const outcomesBatch of latestIntermediateResult.participants_outcomes_batches) {
         resultsToInspect.push(...outcomesBatch.results);
       }
+      estimatedRewardPool = latestIntermediateResult.reserved_funds;
+      updatedAt = new Date(latestIntermediateResult.to);
     } else {
       const cachedInterimResults = await this.campaignsCache.getInterimProgress(
         campaign.id,
       );
-      resultsToInspect = cachedInterimResults?.participants_outcomes || [];
+
+      if (cachedInterimResults) {
+        resultsToInspect = cachedInterimResults.participants_outcomes;
+        estimatedRewardPool = rewardsUtils.calculateRewardPool(
+          campaign,
+          cachedInterimResults,
+        );
+        updatedAt = new Date(cachedInterimResults.to);
+      } else {
+        resultsToInspect = [];
+        estimatedRewardPool = '0';
+        updatedAt = new Date();
+      }
     }
 
-    const leaderboardEntriesMap: {
-      [lowercasedAddress: string]: Decimal;
-    } = {};
-
-    for (const participantOutcome of resultsToInspect) {
-      leaderboardEntriesMap[participantOutcome.address] = (
-        leaderboardEntriesMap[participantOutcome.address] || new Decimal(0)
-      ).add(participantOutcome.score);
-    }
+    const estimatedRewards = isCompetitiveMarketMakingCampaign(campaign)
+      ? rewardsUtils.estimateCompetitiveRewards(
+          resultsToInspect,
+          estimatedRewardPool,
+          campaign,
+        )
+      : rewardsUtils.estimateRewards(resultsToInspect, estimatedRewardPool);
 
     const leaderboardEntries: LeaderboardEntry[] = [];
-    for (const [address, currentScore] of Object.entries(
-      leaderboardEntriesMap,
-    )) {
+    let total = 0;
+    for (const participantOutcome of resultsToInspect) {
+      let result: number;
+      if (
+        isMarketMakingCampaign(campaign) ||
+        isCompetitiveMarketMakingCampaign(campaign)
+      ) {
+        result = participantOutcome.total_volume as number;
+      } else if (isHoldingCampaign(campaign) || isThresholdCampaign(campaign)) {
+        result = participantOutcome.token_balance as number;
+      } else {
+        throw new Error(
+          `Unknown campaign type for leaderboard calculation: ${campaign.type}`,
+        );
+      }
+
+      total += result;
       leaderboardEntries.push({
-        address,
-        result: Number(
-          currentScore.toDecimalPlaces(
-            campaign.fundTokenDecimals,
-            Decimal.ROUND_DOWN,
-          ),
-        ),
+        address: participantOutcome.address,
+        score: participantOutcome.score,
+        result,
+        estimatedReward: estimatedRewards[participantOutcome.address],
       });
     }
 
-    return leaderboardEntries;
+    return {
+      entries: _.orderBy(leaderboardEntries, 'score', 'desc'),
+      total,
+      updatedAt,
+    };
   }
 }

@@ -89,6 +89,13 @@ export class MarketMakingProgressChecker implements CampaignProgressChecker<
      */
     this.totalVolumeMeta += totalVolume;
 
+    if (this.totalVolumeMeta >= Number.MAX_SAFE_INTEGER) {
+      /**
+       * Safety-belt to refactor to decimal.js in case if values are too big
+       */
+      throw new Error('Participants total value number overflow');
+    }
+
     return { abuseDetected: false, score, total_volume: totalVolume };
   }
 

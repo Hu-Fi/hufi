@@ -47,6 +47,8 @@ export class CampaignsController {
       {
         launcherAddress: query.launcher,
         statuses: query.status ? [query.status] : [],
+        types: query.type ? query.type : [],
+        exchanges: query.exchange ? query.exchange : [],
       },
       {
         limit: limit + 1,

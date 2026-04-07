@@ -1,4 +1,3 @@
-import * as crypto from 'crypto';
 import { Readable } from 'stream';
 
 import { faker } from '@faker-js/faker';
@@ -6,6 +5,7 @@ import nock from 'nock';
 
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
+import * as cryptoUtils from './crypto';
 import * as httpUtils from './http';
 
 describe('HTTP utilities', () => {
@@ -117,10 +117,7 @@ describe('HTTP utilities', () => {
     it('should throw when downloaded file hash is not valid', async () => {
       const fileUrl = faker.internet.url();
       const fileContent = faker.string.sample();
-      const fileHash = crypto
-        .createHash('sha256')
-        .update(fileContent)
-        .digest('hex');
+      const fileHash = cryptoUtils.hashString(fileContent, 'sha256');
 
       const scope = nock(fileUrl)
         .get('/')
@@ -146,10 +143,7 @@ describe('HTTP utilities', () => {
     it('should return file content when hash is valid', async () => {
       const fileUrl = faker.internet.url();
       const fileContent = faker.string.sample();
-      const fileHash = crypto
-        .createHash('sha1')
-        .update(fileContent)
-        .digest('hex');
+      const fileHash = cryptoUtils.hashString(fileContent, 'sha1');
 
       const scope = nock(fileUrl)
         .get('/')

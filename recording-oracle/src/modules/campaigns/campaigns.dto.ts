@@ -17,15 +17,16 @@ import {
 import {
   ChainIds,
   DEFAULT_PAGINATION_LIMIT,
+  ExchangeName,
   type ChainId,
 } from '@/common/constants';
+import { parseQueryArray } from '@/common/utils/transformer';
 
 import {
   CampaignDetails,
   CampaignType,
   CampaignJoinStatus,
   ReturnedCampaignStatus,
-  LeaderboardRanking,
 } from './types';
 
 export class JoinCampaignDto {
@@ -152,6 +153,26 @@ export class ListJoinedCampaignsQueryDto {
   status?: ReturnedCampaignStatus;
 
   @ApiPropertyOptional({
+    description: 'Campaign types',
+    isArray: true,
+    enum: CampaignType,
+  })
+  @IsOptional()
+  @Transform(parseQueryArray)
+  @IsEnum(CampaignType, { each: true })
+  type?: CampaignType[];
+
+  @ApiPropertyOptional({
+    description: 'Exchanges',
+    isArray: true,
+    enum: ExchangeName,
+  })
+  @IsOptional()
+  @Transform(parseQueryArray)
+  @IsEnum(ExchangeName, { each: true })
+  exchange?: ExchangeName[];
+
+  @ApiPropertyOptional({
     default: DEFAULT_PAGINATION_LIMIT,
   })
   @IsOptional()
@@ -265,28 +286,26 @@ export class GetUserProgressResponseDto {
   totalMeta: object;
 }
 
-export class GetLeaderboardQueryDto {
-  @ApiProperty({
-    name: 'rank_by',
-    enum: LeaderboardRanking,
-  })
-  @IsEnum(LeaderboardRanking)
-  rankBy: LeaderboardRanking;
-}
-
 export class LeaderboardEntry {
   @ApiProperty()
   address: string;
 
+  @ApiProperty()
+  score: number;
+
   @ApiProperty({
     description: `
-      This field represents different value based on chosen ranking mode and can be:
-        - total rewards earned by participant
-        - current score on market making campaign
-        - current amount of held tokens
+      This field represents different value based on the campaign type and can be:
+        - generated volume for "market making" campaigns
+        - balance / held tokens for "holding" and "threshold" campaigns
     `,
   })
   result: number;
+
+  @ApiProperty({
+    name: 'estimated_reward',
+  })
+  estimatedReward: number;
 }
 
 export class CampaignLeaderboardResponseDto {
@@ -295,4 +314,12 @@ export class CampaignLeaderboardResponseDto {
     isArray: true,
   })
   data: LeaderboardEntry[];
+
+  @ApiProperty()
+  total: number;
+
+  @ApiProperty({
+    name: 'updated_at',
+  })
+  updatedAt: string;
 }
