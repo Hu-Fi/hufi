@@ -13,10 +13,9 @@ const ModalSuccess: FC<PropsWithChildren> = ({ children }) => {
         alignItems="center"
         width="fit-content"
         flexShrink={0}
-        mb={1}
-        p="3px"
+        p="12px"
         color="white"
-        bgcolor="success.main"
+        bgcolor="#1a926e"
         borderRadius={100}
       >
         <SuccessIcon sx={{ width: 34, height: 34 }} />

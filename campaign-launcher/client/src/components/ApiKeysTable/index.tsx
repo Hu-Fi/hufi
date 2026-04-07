@@ -11,7 +11,7 @@ import EditApiKeyDialog from '@/components/EditApiKeyDialog';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import { useRevalidateExchangeApiKey } from '@/hooks/recording-oracle/exchangeApiKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { DeleteIcon, EditIcon } from '@/icons';
+import { DeleteIcon, EditIcon, NoKeysIcon } from '@/icons';
 import type { ExchangeApiKeyData } from '@/types';
 import { formatAddress } from '@/utils';
 
@@ -235,7 +235,12 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Typography variant="body2" fontWeight={500}>
+                  <NoKeysIcon sx={{ fontSize: 48 }} />
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="text.secondary"
+                  >
                     No key is set at the moment
                   </Typography>
                 </Box>

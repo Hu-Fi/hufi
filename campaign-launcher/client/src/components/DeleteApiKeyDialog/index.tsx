@@ -55,7 +55,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
         maxWidth={{ xs: '100%', md: 350 }}
         height="100%"
       >
-        <WarningIcon sx={{ width: 60, height: 60, mb: 2 }} />
+        <WarningIcon sx={{ fontSize: 60, mb: 2, color: '#b98c08' }} />
         <Typography variant="h6" mb={2} fontWeight={700}>
           Delete API key?
         </Typography>

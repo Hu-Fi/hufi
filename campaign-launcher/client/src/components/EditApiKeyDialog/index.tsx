@@ -10,41 +10,22 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
-import * as yup from 'yup';
 
+import {
+  type APIKeyFormValues,
+  validationSchema,
+} from '@/components/AddApiKeyDialog';
+import FormExchangeSelect from '@/components/FormExchangeSelect';
+import {
+  ModalError,
+  ModalLoading,
+  ModalSuccess,
+} from '@/components/ModalState';
+import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { ExchangeType } from '@/types';
-
-import FormExchangeSelect from '../FormExchangeSelect';
-import { ModalError, ModalLoading, ModalSuccess } from '../ModalState';
-import ResponsiveOverlay from '../ResponsiveOverlay';
-
-type APIKeyFormValues = {
-  apiKey: string;
-  secret: string;
-  exchange: string;
-  memo?: string;
-};
-
-const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
-  apiKey: yup.string().required('Required').trim().max(50, 'Max 50 characters'),
-  secret: yup
-    .string()
-    .required('Required')
-    .trim()
-    .max(200, 'Max 200 characters'),
-  memo: yup
-    .string()
-    .when('exchange', {
-      is: 'bitmart',
-      then: (schema) => schema.required('Required'),
-      otherwise: (schema) => schema.optional(),
-    })
-    .trim()
-    .max(32, 'Max 32 characters'),
-  exchange: yup.string().required('Required'),
-});
+import { scrollToFirstErrorFieldOnMobile } from '@/utils';
 
 type Props = {
   open: boolean;
@@ -103,6 +84,10 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
       });
     }
   }, [open, exchangeName, reset]);
+
+  useEffect(() => {
+    scrollToFirstErrorFieldOnMobile(isMobile, errors);
+  }, [isMobile, errors]);
 
   const handleClose = () => {
     if (isPending) return;

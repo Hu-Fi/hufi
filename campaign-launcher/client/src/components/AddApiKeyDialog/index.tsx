@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { useEffect, type FC } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -12,22 +12,26 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
+import FormExchangeSelect from '@/components/FormExchangeSelect';
+import {
+  ModalError,
+  ModalLoading,
+  ModalSuccess,
+} from '@/components/ModalState';
+import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { usePostExchangeApiKey } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { ExchangeType } from '@/types';
+import { scrollToFirstErrorFieldOnMobile } from '@/utils';
 
-import FormExchangeSelect from '../FormExchangeSelect';
-import { ModalError, ModalLoading, ModalSuccess } from '../ModalState';
-import ResponsiveOverlay from '../ResponsiveOverlay';
-
-type APIKeyFormValues = {
+export type APIKeyFormValues = {
   apiKey: string;
   secret: string;
   exchange: string;
   memo?: string;
 };
 
-const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
+export const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
   apiKey: yup
     .string()
     .required('Required')
@@ -87,6 +91,10 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
   const selectedExchange = watch('exchange');
   const isBitmart = selectedExchange === 'bitmart';
 
+  useEffect(() => {
+    scrollToFirstErrorFieldOnMobile(isMobile, errors);
+  }, [isMobile, errors]);
+
   const handleClose = () => {
     if (isPending) return;
     reset();
@@ -141,7 +149,12 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
           overflow="auto"
         >
           {isPending && (
-            <Stack alignItems="center" justifyContent="center" flex={1} gap={3}>
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              flex={1}
+              gap={2.5}
+            >
               <ModalLoading />
               <Typography variant="subtitle2" textAlign="center">
                 Connecting API key...
@@ -277,7 +290,12 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             </Stack>
           )}
           {isSuccess && (
-            <Stack alignItems="center" justifyContent="center" flex={1} gap={3}>
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              flex={1}
+              gap={2.5}
+            >
               <ModalSuccess>
                 <Typography
                   variant="subtitle2"
@@ -285,7 +303,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                   mb={1}
                   textAlign="center"
                 >
-                  You have successfully added your API key
+                  API Key Connected
                 </Typography>
               </ModalSuccess>
             </Stack>
