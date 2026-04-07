@@ -44,6 +44,7 @@ const RowValue = styled(Typography)({
   color: '#ffffff',
   fontSize: '14px',
   fontWeight: 500,
+  textAlign: 'right',
 });
 
 const getTargetInfo = (
@@ -104,6 +105,8 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
 
   const isLastStep = step === 5;
 
+  const showFormValues = step > 3;
+
   const symbolOrPairLabel = campaignType
     ? getSymbolOrPairInfo(campaignType, formValues as CampaignFormValues).label
     : '';
@@ -127,7 +130,7 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
         gridArea: 'aside',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '90px',
+        minHeight: '50px',
         height: 'fit-content',
         py: 1,
         px: 2,
@@ -152,16 +155,18 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
         <>
           <Row>
             <RowName>Exchange</RowName>
-            <RowValue>{exchangeName || '-'}</RowValue>
+            <RowValue>{showFormValues ? exchangeName : '-'}</RowValue>
           </Row>
           <Row>
             <RowName>{symbolOrPairLabel}</RowName>
-            <RowValue>{symbolOrPair || '-'}</RowValue>
+            <RowValue>{showFormValues ? symbolOrPair : '-'}</RowValue>
           </Row>
           <Row>
             <RowName>Fund Token</RowName>
             <RowValue>
-              {getTokenInfo(formValues?.fund_token || '')?.label || '-'}
+              {showFormValues
+                ? getTokenInfo(formValues?.fund_token || '')?.label
+                : '-'}
             </RowValue>
           </Row>
           <Row>
@@ -171,13 +176,13 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
                 : ''}
             </RowName>
             <RowValue>
-              {targetValue || '-'} {targetToken}
+              {showFormValues ? `${targetValue} ${targetToken}` : '-'}
             </RowValue>
           </Row>
           <Row>
             <RowName>Start Date</RowName>
             <RowValue>
-              {formValues?.start_date
+              {showFormValues && formValues?.start_date
                 ? dayjs(formValues?.start_date).format('Do MMM YYYY HH:mm')
                 : '-'}
             </RowValue>
@@ -185,7 +190,7 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
           <Row>
             <RowName>End Date</RowName>
             <RowValue>
-              {formValues?.end_date
+              {showFormValues && formValues?.end_date
                 ? dayjs(formValues?.end_date).format('Do MMM YYYY HH:mm')
                 : '-'}
             </RowValue>

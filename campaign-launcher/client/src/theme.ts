@@ -1,5 +1,5 @@
 import { createTheme, type PaletteMode } from '@mui/material/styles';
-import type {} from '@mui/x-date-pickers/themeAugmentation';
+import type {} from '@mui/x-date-pickers/themeAugmentation'; // needed for the date pickers customization
 
 declare module '@mui/material/styles' {
   interface Theme {

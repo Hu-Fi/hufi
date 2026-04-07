@@ -104,6 +104,7 @@ const LaunchStep: FC<Props> = ({
         <Typography
           variant="h6"
           color="white"
+          mx="auto"
           fontSize={{ xs: '18px', md: '20px' }}
           fontWeight={{ xs: 700, md: 600 }}
         >

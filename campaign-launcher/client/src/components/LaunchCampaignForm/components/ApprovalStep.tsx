@@ -189,6 +189,8 @@ const ApprovalStep: FC<Props> = ({
 
   const inputAdornmentLabel = getTokenInfo(fundToken)?.label || '';
 
+  const hasValidationErrors = Object.keys(errors).length > 0;
+
   return (
     <>
       <Stack width="100%" mt={4} gridArea="main">
@@ -452,7 +454,7 @@ const ApprovalStep: FC<Props> = ({
       <BottomNavigation
         formId={formId}
         nextButtonText={isMobile ? 'Confirm' : 'Confirm & Preview'}
-        disableNextButton={isLoading || isApproving}
+        disableNextButton={isLoading || isApproving || hasValidationErrors}
         disableBackButton={isLoading || isApproving}
         handleNextClick={() => {}}
         handleBackClick={handleBackClick}

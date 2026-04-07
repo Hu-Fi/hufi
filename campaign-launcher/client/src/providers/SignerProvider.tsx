@@ -14,13 +14,23 @@ import { type Config, useConnection, useWalletClient } from 'wagmi';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
 
-type SignerContextType = {
-  signer: JsonRpcSigner | undefined;
+type SignerReadyContextType = {
+  signer: JsonRpcSigner;
+  isSignerReady: true;
   status: SignerStatus;
   isSignerPending: boolean;
-  isSignerReady: boolean;
   isSignerMissing: boolean;
 };
+
+type SignerNotReadyContextType = {
+  signer: undefined;
+  isSignerReady: false;
+  status: SignerStatus;
+  isSignerPending: boolean;
+  isSignerMissing: boolean;
+};
+
+type SignerContextType = SignerReadyContextType | SignerNotReadyContextType;
 
 const SignerContext = createContext<SignerContextType | undefined>(undefined);
 
@@ -107,20 +117,31 @@ const SignerProvider: FC<PropsWithChildren> = ({ children }) => {
     appChainId,
   ]);
 
-  const value = useMemo(
-    () => ({
-      signer,
+  const value = useMemo<SignerContextType>(() => {
+    const isSignerReady =
+      !isSwitching && status === SignerStatus.READY && !!signer;
+    const isSignerMissing =
+      status === SignerStatus.DISCONNECTED || status === SignerStatus.ERROR;
+    const isSignerPending = !isSignerReady && !isSignerMissing;
+
+    if (isSignerReady) {
+      return {
+        signer,
+        status,
+        isSignerReady: true,
+        isSignerMissing,
+        isSignerPending,
+      };
+    }
+
+    return {
+      signer: undefined,
       status,
-      isSignerPending:
-        status === SignerStatus.CREATING ||
-        status === SignerStatus.IDLE ||
-        status === SignerStatus.UNAVAILABLE,
-      isSignerReady: !isSwitching && status === SignerStatus.READY,
-      isSignerMissing:
-        status === SignerStatus.DISCONNECTED || status === SignerStatus.ERROR,
-    }),
-    [signer, status, isSwitching]
-  );
+      isSignerReady: false,
+      isSignerMissing,
+      isSignerPending,
+    };
+  }, [signer, status, isSwitching]);
 
   return (
     <SignerContext.Provider value={value}>{children}</SignerContext.Provider>

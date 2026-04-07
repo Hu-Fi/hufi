@@ -14,7 +14,6 @@ import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { ArrowLeftIcon, RefreshIcon, WarningIcon } from '@/icons';
-import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { useSignerContext } from '@/providers/SignerProvider';
 import { config as wagmiConfig } from '@/providers/WagmiProvider';
@@ -26,8 +25,9 @@ const STAKING_DASHBOARD_URL = import.meta.env.VITE_APP_STAKING_DASHBOARD_URL;
 
 const NotStakedWarning: FC<{
   handleRefresh: () => void;
+  isCheckingStake: boolean;
   warningRef: RefObject<HTMLDivElement | null>;
-}> = ({ handleRefresh, warningRef }) => {
+}> = ({ handleRefresh, isCheckingStake, warningRef }) => {
   return (
     <Stack
       ref={warningRef}
@@ -68,6 +68,7 @@ const NotStakedWarning: FC<{
         <Button
           variant="text"
           size="large"
+          disabled={isCheckingStake}
           onClick={handleRefresh}
           sx={{ color: 'white', gap: 1.5 }}
         >
@@ -100,7 +101,6 @@ const NetworkStep: FC<Props> = ({
   }));
   const { setAppChainId } = useNetwork();
   const { signer, isSignerReady, isSignerMissing } = useSignerContext();
-  const { activeAddress } = useActiveAccount();
   const isMobile = useIsMobile();
   const { showError } = useNotification();
 
@@ -123,13 +123,19 @@ const NetworkStep: FC<Props> = ({
       return;
     }
 
-    if (isCheckingStake && isSignerReady && signer && activeAddress) {
+    if (isCheckingStake && isSignerReady) {
       (async () => {
         try {
           const stakingClient = await StakingClient.build(signer);
-          const stakedAmount = await stakingClient.getStakerInfo(activeAddress);
+          const stakedAmount = await stakingClient.getStakerInfo(
+            signer.address
+          );
           if (Number(stakedAmount.stakedAmount) > 0) {
-            handleChangeStep((prev) => prev + 1);
+            if (showNotStakedWarning) {
+              setShowNotStakedWarning(false);
+            } else {
+              handleChangeStep((prev) => prev + 1);
+            }
           } else {
             setShowNotStakedWarning(true);
           }
@@ -143,12 +149,12 @@ const NetworkStep: FC<Props> = ({
     }
   }, [
     isCheckingStake,
-    activeAddress,
     isSignerReady,
     signer,
     handleChangeStep,
     isSignerMissing,
     showError,
+    showNotStakedWarning,
   ]);
 
   useEffect(() => {
@@ -197,17 +203,19 @@ const NetworkStep: FC<Props> = ({
           <NotStakedWarning
             warningRef={warningRef}
             handleRefresh={() => setIsCheckingStake(true)}
+            isCheckingStake={isCheckingStake}
           />
         )}
       </Stack>
       <BottomNavigation
         handleNextClick={() => chainId && handleNextClick(chainId)}
-        disableNextButton={!chainId || isCheckingStake}
+        disableNextButton={!chainId || isCheckingStake || showNotStakedWarning}
       >
         {!isMobile && showNotStakedWarning && (
           <NotStakedWarning
             warningRef={warningRef}
             handleRefresh={() => setIsCheckingStake(true)}
+            isCheckingStake={isCheckingStake}
           />
         )}
       </BottomNavigation>
