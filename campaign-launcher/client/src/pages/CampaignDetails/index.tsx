@@ -110,7 +110,7 @@ const CampaignDetails: FC = () => {
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
         isJoined={isJoined}
-        totalParticipants={leaderboard?.total || 0}
+        totalParticipants={leaderboard?.data.length || 0}
       />
       {isOngoingCampaign && <CycleInfoSection campaign={campaignData} />}
       {showJoinCampaignButton && (
