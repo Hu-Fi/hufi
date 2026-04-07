@@ -7,8 +7,6 @@ import {
   FormControl,
   FormHelperText,
   InputAdornment,
-  inputBaseClasses,
-  InputLabel,
   MenuItem,
   Select,
   Stack,
@@ -35,14 +33,19 @@ import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
-import { ExchangeInfoTooltip } from './';
-
 type Props = {
   control: Control<MarketMakingFormValues>;
   errors: FieldErrors<MarketMakingFormValues>;
   watch: UseFormWatch<MarketMakingFormValues>;
   trigger: UseFormTrigger<MarketMakingFormValues>;
   campaignType: CampaignType;
+};
+
+const labelStyles = {
+  color: 'white',
+  mb: 1.5,
+  lineHeight: '100%',
+  letterSpacing: '0px',
 };
 
 const MarketMakingForm: FC<Props> = ({
@@ -62,37 +65,29 @@ const MarketMakingForm: FC<Props> = ({
   return (
     <>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
-        <Box display="flex" gap={1} width="100%">
-          <FormControl
-            error={!!errors.exchange}
-            sx={{
-              width: '100%',
-              mb: errors.exchange ? 2 : 0,
-              '& .MuiFormHelperText-root': {
-                position: 'absolute',
-                bottom: 0,
-                mb: { xs: -3, md: -2 },
-              },
-            }}
-          >
-            <Controller
-              name="exchange"
-              control={control}
-              render={({ field }) => (
-                <FormExchangeSelect<MarketMakingFormValues, 'exchange'>
-                  field={field}
-                  campaignType={campaignType}
-                  error={!!errors.exchange}
-                />
-              )}
-            />
-            {errors.exchange && (
-              <FormHelperText>{errors.exchange.message}</FormHelperText>
+        <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Exchange
+          </Typography>
+          <Controller
+            name="exchange"
+            control={control}
+            render={({ field }) => (
+              <FormExchangeSelect<MarketMakingFormValues, 'exchange'>
+                field={field}
+                campaignType={campaignType}
+                error={!!errors.exchange}
+              />
             )}
-          </FormControl>
-          <ExchangeInfoTooltip />
-        </Box>
+          />
+          {errors.exchange && (
+            <FormHelperText>{errors.exchange.message}</FormHelperText>
+          )}
+        </FormControl>
         <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Trading Pair
+          </Typography>
           <Controller
             name="pair"
             control={control}
@@ -120,7 +115,7 @@ const MarketMakingForm: FC<Props> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Trading Pair"
+                      placeholder="Select"
                       error={!!errors.pair}
                       slotProps={{
                         input: {
@@ -145,7 +140,7 @@ const MarketMakingForm: FC<Props> = ({
                         component="li"
                         sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
                       >
-                        <CryptoPairEntity symbol={option} />
+                        <CryptoPairEntity symbol={option} size="xs" />
                       </Box>
                     );
                   }}
@@ -167,12 +162,14 @@ const MarketMakingForm: FC<Props> = ({
             width: '100%',
           }}
         >
+          <Typography variant="h6" sx={labelStyles}>
+            Start Date
+          </Typography>
           <Controller
             name="start_date"
             control={control}
             render={({ field }) => (
               <MobileDateTimePicker
-                label="Start Date"
                 format="DD-MM-YYYY HH:mm"
                 ampm={false}
                 disablePast
@@ -186,6 +183,7 @@ const MarketMakingForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.start_date,
+                    placeholder: 'Select',
                   },
                 }}
               />
@@ -201,12 +199,14 @@ const MarketMakingForm: FC<Props> = ({
             width: '100%',
           }}
         >
+          <Typography variant="h6" sx={labelStyles}>
+            End Date
+          </Typography>
           <Controller
             name="end_date"
             control={control}
             render={({ field }) => (
               <MobileDateTimePicker
-                label="End Date"
                 format="DD-MM-YYYY HH:mm"
                 ampm={false}
                 disablePast
@@ -221,6 +221,7 @@ const MarketMakingForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.end_date,
+                    placeholder: 'Select',
                   },
                 }}
               />
@@ -233,15 +234,16 @@ const MarketMakingForm: FC<Props> = ({
       </Stack>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
+          <Typography variant="h6" sx={labelStyles}>
+            Fund Token
+          </Typography>
           <Controller
             name="fund_token"
             control={control}
             render={({ field }) => (
               <Select
-                labelId="fund-token-select-label"
+                aria-label="Fund Token Select"
                 id="fund-token-select"
-                label="Fund Token"
                 MenuProps={{
                   PaperProps: {
                     elevation: 4,
@@ -254,7 +256,7 @@ const MarketMakingForm: FC<Props> = ({
               >
                 {FUND_TOKENS.map((token) => (
                   <MenuItem key={token} value={token}>
-                    <CryptoEntity symbol={token} />
+                    <CryptoEntity symbol={token} size="xs" />
                   </MenuItem>
                 ))}
               </Select>
@@ -268,13 +270,15 @@ const MarketMakingForm: FC<Props> = ({
           error={!!errors.daily_volume_target}
           sx={{ width: '100%' }}
         >
+          <Typography variant="h6" sx={labelStyles}>
+            Daily Volume Target
+          </Typography>
           <Controller
             name="daily_volume_target"
             control={control}
             render={({ field }) => (
               <TextField
                 id="daily-volume-target-input"
-                label="Daily Volume Target"
                 placeholder="1"
                 type="number"
                 error={!!errors.daily_volume_target}
@@ -307,10 +311,12 @@ const MarketMakingForm: FC<Props> = ({
                           height: '23px',
                           opacity: 0,
                           pointerEvents: 'none',
-                          [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
-                            {
-                              opacity: 1,
-                            },
+                          '.Mui-focused &': {
+                            opacity: 1,
+                          },
+                          'input:not(:placeholder-shown) ~ &': {
+                            opacity: 1,
+                          },
                         }}
                       >
                         <Typography variant="body1" color="text.primary">

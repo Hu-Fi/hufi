@@ -1,24 +1,34 @@
-import { type FC } from 'react';
+import { type SetStateAction, type Dispatch, type FC } from 'react';
 
-import { Box, Button, CircularProgress, Paper, Stack } from '@mui/material';
+import { type ChainId } from '@human-protocol/sdk';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { useNavigate } from 'react-router';
 
+import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import useCreateEscrow from '@/hooks/useCreateEscrow';
-import { useNetwork } from '@/providers/NetworkProvider';
 import { type CampaignFormValues } from '@/types';
 import { constructCampaignDetails } from '@/utils';
 
-import { SummaryCard, ErrorView, FinalView } from '.';
+import { SummaryCard, ErrorView, FinalView, BottomNavigation } from '.';
 
 type Props = {
+  chainId: ChainId;
   fundAmount: string;
   formValues: CampaignFormValues;
-  handleChangeStep: (step: number) => void;
+  handleChangeStep: Dispatch<SetStateAction<number>>;
   handleStartOver: () => void;
 };
 
 const LaunchStep: FC<Props> = ({
+  chainId,
   fundAmount,
   formValues,
   handleChangeStep,
@@ -34,11 +44,10 @@ const LaunchStep: FC<Props> = ({
   } = useCreateEscrow();
 
   const navigate = useNavigate();
-  const { appChainId } = useNetwork();
   const isMobile = useIsMobile();
 
   const handleBackToEdit = () => {
-    handleChangeStep(3);
+    handleChangeStep((prev) => prev - 1);
   };
 
   const handleLaunchCampaign = async () => {
@@ -79,7 +88,7 @@ const LaunchStep: FC<Props> = ({
       reputationOracleFee: reputationOracleFee,
     };
     const payload = constructCampaignDetails({
-      chainId: appChainId,
+      chainId,
       address: escrowAddress,
       data: formData,
       tokenDecimals,
@@ -90,80 +99,131 @@ const LaunchStep: FC<Props> = ({
   };
 
   return (
-    <Paper
-      elevation={24}
-      sx={{
-        width: { xs: '100%', md: '600px' },
-        mx: 'auto',
-        mt: 0,
-        maxHeight: '500px',
-        gap: 2,
-        bgcolor: 'background.default',
-        boxShadow: 'none',
-        borderRadius: '20px',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
-      {isEscrowCreated && (
-        <FinalView
-          campaignType={formValues.type}
-          onViewDetails={onViewCampaignDetailsClick}
-          handleStartOver={onStartOverClick}
-        />
+    <>
+      {!isEscrowCreated && (
+        <Typography
+          variant="h6"
+          color="white"
+          mx="auto"
+          fontSize={{ xs: '18px', md: '20px' }}
+          fontWeight={{ xs: 700, md: 600 }}
+        >
+          One final look before you initiate the campaign
+        </Typography>
       )}
-      {isError && <ErrorView onRetry={handleTryAgainClick} />}
-      {isCreatingEscrow && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          width="100%"
-          height="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
+      <Stack width="100%" mt={5}>
+        <Paper
+          elevation={0}
           sx={{
-            background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 1,
-            backdropFilter: 'blur(1px)',
+            width: { xs: '100%', md: '500px' },
+            mx: 'auto',
+            height: 'fit-content',
+            gap: 2,
+            bgcolor: '#251d47',
+            borderRadius: '8px',
+            border: '1px solid #433679',
+            overflow: 'hidden',
+            position: 'relative',
           }}
         >
-          <CircularProgress size={80} />
-        </Box>
-      )}
-      {!isError && !isEscrowCreated && (
-        <>
-          <SummaryCard
-            step={4}
-            fundAmount={fundAmount}
-            formValues={formValues}
-          />
-          <Stack direction="row" justifyContent="space-between" mt={4} gap={0}>
-            <Button
-              size={isMobile ? 'medium' : 'large'}
-              variant="contained"
-              disabled={isCreatingEscrow}
-              sx={{ borderRadius: '0px', flex: 1, boxShadow: 'none' }}
-              onClick={handleBackToEdit}
+          {isEscrowCreated && (
+            <FinalView
+              campaignType={formValues.type}
+              onViewDetails={onViewCampaignDetailsClick}
+              handleStartOver={onStartOverClick}
+            />
+          )}
+          {isError && <ErrorView onRetry={handleTryAgainClick} />}
+          {isCreatingEscrow && (
+            <Box
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              width="100%"
+              height="100%"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 1,
+                backdropFilter: 'blur(1px)',
+              }}
             >
-              Back to Edit
-            </Button>
-            <Button
-              size={isMobile ? 'medium' : 'large'}
-              variant="contained"
-              disabled={isCreatingEscrow}
-              sx={{ borderRadius: '0px', flex: 1, boxShadow: 'none' }}
-              onClick={handleLaunchCampaign}
-            >
-              Launch Campaign
-            </Button>
-          </Stack>
-        </>
+              <CircularProgress size={80} />
+            </Box>
+          )}
+          {!isError && !isEscrowCreated && (
+            <>
+              <SummaryCard
+                step={5}
+                chainId={chainId}
+                fundAmount={fundAmount}
+                formValues={formValues}
+              />
+              {!isMobile && (
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  mt={0}
+                  py={1.5}
+                  px={2}
+                  gap={1.5}
+                  bgcolor="#302854"
+                >
+                  <Button
+                    size="large"
+                    variant="outlined"
+                    disabled={isCreatingEscrow}
+                    sx={{
+                      borderRadius: '4px',
+                      flex: 1,
+                      color: 'white',
+                      borderColor: '#433679',
+                    }}
+                    onClick={handleBackToEdit}
+                  >
+                    Back to Edit
+                  </Button>
+                  <Button
+                    size="large"
+                    variant="contained"
+                    color="error"
+                    disabled={isCreatingEscrow}
+                    sx={{
+                      borderRadius: '4px',
+                      flex: 1,
+                      boxShadow: 'none',
+                      '&:hover': { boxShadow: 'none' },
+                    }}
+                    onClick={handleLaunchCampaign}
+                  >
+                    Go Live
+                  </Button>
+                </Stack>
+              )}
+            </>
+          )}
+        </Paper>
+      </Stack>
+      {isMobile && !isEscrowCreated && (
+        <BottomNavigation
+          handleBackClick={handleBackToEdit}
+          handleNextClick={isError ? handleTryAgainClick : handleLaunchCampaign}
+          disableBackButton={isCreatingEscrow}
+          disableNextButton={isCreatingEscrow}
+          nextButtonText={isError ? 'Try again' : 'Go Live'}
+        />
       )}
-    </Paper>
+      {isMobile && isEscrowCreated && (
+        <BottomNavigation
+          handleNextClick={() => navigate(ROUTES.DASHBOARD)}
+          nextButtonText="Back to Dashboard"
+        />
+      )}
+    </>
   );
 };
 

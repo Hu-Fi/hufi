@@ -1,4 +1,4 @@
-import { type FC, useEffect } from 'react';
+import { type Dispatch, type FC, type SetStateAction, useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Stack } from '@mui/material';
@@ -25,20 +25,20 @@ import {
   ThresholdForm,
   HoldingForm,
   BottomNavigation,
-  SummaryCard,
 } from '.';
 
 type Props = {
   formValues: CampaignFormValues;
   setFormValues: (values: CampaignFormValues) => void;
-  handleChangeStep: (step: number) => void;
+  handleChangeStep: Dispatch<SetStateAction<number>>;
 };
 
-const SecondStep: FC<Props> = ({
+const EscrowDetailsStep: FC<Props> = ({
   formValues,
   setFormValues,
   handleChangeStep,
 }) => {
+  const formId = 'escrow-details-form';
   const isMobile = useIsMobile();
 
   const {
@@ -53,6 +53,8 @@ const SecondStep: FC<Props> = ({
     defaultValues: formValues,
     shouldFocusError: isMobile,
   });
+
+  const campaignType = formValues.type as CampaignType;
 
   useEffect(() => {
     if (isMobile && Object.keys(errors).length > 0) {
@@ -70,17 +72,19 @@ const SecondStep: FC<Props> = ({
     }
   }, [isMobile, errors]);
 
-  const campaignType = formValues.type as CampaignType;
+  const handleBackClick = () => {
+    handleChangeStep((prev) => prev - 1);
+  };
 
   const onSubmit = async (data: CampaignFormValues) => {
     setFormValues(data);
-    handleChangeStep(3);
+    handleChangeStep((prev) => prev + 1);
   };
 
   return (
     <>
-      <Stack width="100%" mt={0}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+      <Stack mt={4} width="100%" gridArea="main">
+        <form id={formId} onSubmit={handleSubmit(onSubmit)}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -125,18 +129,16 @@ const SecondStep: FC<Props> = ({
                 />
               )}
             </Stack>
-            {!isMobile && <SummaryCard step={2} formValues={formValues} />}
           </Stack>
-          <BottomNavigation
-            step={2}
-            nextButtonType="submit"
-            handleNextClick={() => {}}
-            handleBackClick={() => handleChangeStep(1)}
-          />
         </form>
       </Stack>
+      <BottomNavigation
+        formId={formId}
+        handleNextClick={() => {}}
+        handleBackClick={handleBackClick}
+      />
     </>
   );
 };
 
-export default SecondStep;
+export default EscrowDetailsStep;
