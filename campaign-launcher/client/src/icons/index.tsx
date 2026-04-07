@@ -388,3 +388,34 @@ export const RefreshIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const NoKeysIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 47 47" fill="none">
+      <circle
+        cx="22.8478"
+        cy="23.7223"
+        r="16.8146"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <rect
+        x="33.5312"
+        y="10.46"
+        width="2.87378"
+        height="32.6271"
+        transform="rotate(45 33.5312 10.46)"
+        fill="currentColor"
+      />
+      <rect
+        x="10.4092"
+        y="12.6621"
+        width="2.87756"
+        height="32.6271"
+        transform="rotate(-45 10.4092 12.6621)"
+        fill="current Color"
+      />
+    </SvgIcon>
+  );
+};

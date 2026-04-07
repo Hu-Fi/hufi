@@ -1,5 +1,6 @@
 import { NETWORKS, type ChainId } from '@human-protocol/sdk';
 import { ethers, formatUnits } from 'ethers';
+import type { FieldErrors } from 'react-hook-form';
 
 import {
   USDC_CONTRACT_ADDRESS,
@@ -299,4 +300,23 @@ export const isExceedingMaximumInteger = (value: string | number): boolean => {
   return Boolean(
     value && !isNaN(numValue) && numValue > Number.MAX_SAFE_INTEGER
   );
+};
+
+export const scrollToFirstErrorFieldOnMobile = <T extends object>(
+  isMobile: boolean,
+  errors: FieldErrors<T>
+) => {
+  if (!isMobile || Object.keys(errors).length === 0) return;
+
+  const firstErrorField = Object.keys(errors)[0];
+  const errorElement = document.querySelector(
+    `[name="${firstErrorField}"]`
+  ) as HTMLElement | null;
+
+  if (errorElement) {
+    errorElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }
 };

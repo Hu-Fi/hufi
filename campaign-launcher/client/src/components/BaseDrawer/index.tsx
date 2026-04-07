@@ -45,7 +45,7 @@ const BaseDrawer: FC<PropsWithChildren<Props>> = ({
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
             border: 'none',
-            maxHeight: '75dvh',
+            height: '75dvh',
             ...sx,
           },
         },

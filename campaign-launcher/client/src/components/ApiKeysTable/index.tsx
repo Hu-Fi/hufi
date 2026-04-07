@@ -6,17 +6,18 @@ import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
 import CustomTooltip from '@/components/CustomTooltip';
+import DeleteApiKeyDialog from '@/components/DeleteApiKeyDialog';
+import EditApiKeyDialog from '@/components/EditApiKeyDialog';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
-import DeleteApiKeyModal from '@/components/modals/DeleteApiKeyModal';
-import EditApiKeyModal from '@/components/modals/EditApiKeyModal';
 import { useRevalidateExchangeApiKey } from '@/hooks/recording-oracle/exchangeApiKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { DeleteIcon, EditIcon } from '@/icons';
+import { DeleteIcon, EditIcon, NoKeysIcon } from '@/icons';
 import type { ExchangeApiKeyData } from '@/types';
 import { formatAddress } from '@/utils';
 
 type ApiKeysTableProps = {
   data: ExchangeApiKeyData[] | undefined;
+  isLoading: boolean;
 };
 
 const MissingPermissionsTooltip: FC<{ missingPermissions: string[] }> = ({
@@ -48,7 +49,7 @@ const MissingPermissionsTooltip: FC<{ missingPermissions: string[] }> = ({
   );
 };
 
-const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
+const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
   const [editingItem, setEditingItem] = useState('');
   const [deletingItem, setDeletingItem] = useState('');
 
@@ -67,14 +68,6 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
 
   const handleClickOnDelete = (exchangeName: string) => {
     setDeletingItem(exchangeName);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditingItem('');
-  };
-
-  const handleCloseDeleteModal = () => {
-    setDeletingItem('');
   };
 
   const rows = data?.map(
@@ -102,8 +95,10 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         return (
           <Box display="flex" alignItems="center" gap={1}>
             <Typography
-              variant={isMobile ? 'body2' : 'body1'}
+              variant="body2"
               textTransform="capitalize"
+              fontWeight={500}
+              lineHeight="100%"
             >
               {exchangeName}
             </Typography>
@@ -125,7 +120,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
         const isBitmart = params.row.exchangeName === 'bitmart';
         return (
           <Box display="flex" alignItems="center">
-            <Typography variant={isMobile ? 'body2' : 'body1'}>
+            <Typography variant="body2" fontWeight={500} lineHeight="100%">
               {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
             </Typography>
             {isBitmart && !!params.row.extras?.api_key_memo && (
@@ -156,7 +151,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
     {
       field: 'actions',
       headerName: '',
-      width: isMobile ? 110 : 96,
+      width: isMobile ? 110 : 126,
       renderCell: (params) => {
         const { exchangeName, isValid } = params.row;
         return (
@@ -201,11 +196,15 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
   ];
 
   return (
-    <Box width="100%" overflow="hidden">
+    <Box
+      width={{ xs: 'calc(100% + 32px)', md: '100%' }}
+      overflow="hidden"
+      mx={{ xs: -2, md: 0 }}
+    >
       <DataGrid
         columns={columns}
-        rows={rows}
-        columnHeaderHeight={52}
+        rows={rows || []}
+        columnHeaderHeight={40}
         scrollbarSize={0}
         disableColumnFilter
         disableColumnMenu
@@ -224,24 +223,53 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             },
           },
         }}
+        loading={isLoading}
+        slots={{
+          loadingOverlay: undefined,
+          noRowsOverlay: !isLoading
+            ? () => (
+                <Box
+                  display="flex"
+                  width="100%"
+                  height="100%"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <NoKeysIcon sx={{ fontSize: 48 }} />
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="text.secondary"
+                  >
+                    No key is set at the moment
+                  </Typography>
+                </Box>
+              )
+            : undefined,
+        }}
         sx={{
           border: 'none',
           bgcolor: 'inherit',
+          borderRadius: '0px',
           '& .MuiDataGrid-main': {
-            p: isMobile ? 0 : 4,
-            borderRadius: '16px',
+            p: isMobile ? 0 : 0,
             width: '100%',
-            height: '450px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            background:
-              'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 100%), #100735',
+            height: '400px',
+            background: 'background.default',
           },
           '& .MuiDataGrid-cell': {
+            display: 'flex',
+            alignItems: 'center',
             borderTop: 'none',
-            p: isMobile ? 1.5 : 2,
+            py: 1.5,
+            px: 2,
             overflow: 'visible !important',
             '&[data-field="actions"]': {
-              px: isMobile ? 1 : 0,
+              px: isMobile ? 1 : 2,
+              justifyContent: 'flex-end',
+            },
+            '&[data-field="apiKey"]': {
+              px: 0,
             },
           },
           '& .MuiDataGrid-cellEmpty': {
@@ -251,13 +279,17 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
             bgcolor: 'transparent',
           },
           '& .MuiDataGrid-columnHeader': {
-            backgroundColor: 'rgba(255, 255, 255, 0.12) !important',
-            fontSize: '12px',
-            fontWeight: 400,
-            p: isMobile ? 1.5 : 2,
+            backgroundColor: '#251d47',
+            fontSize: '14px',
+            lineHeight: '14px',
+            fontWeight: 500,
+            py: 1.5,
+            px: 2,
             overflow: 'visible !important',
-            textTransform: 'uppercase',
             borderBottom: 'none !important',
+            '&[data-field="apiKey"]': {
+              px: 0,
+            },
           },
           '& .MuiDataGrid-row': {
             borderTop: '1px solid rgba(255, 255, 255, 0.04)',
@@ -279,14 +311,14 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data }) => {
           },
         }}
       />
-      <EditApiKeyModal
+      <EditApiKeyDialog
         open={!!editingItem}
-        onClose={handleCloseEditModal}
+        onClose={() => setEditingItem('')}
         exchangeName={editingItem}
       />
-      <DeleteApiKeyModal
+      <DeleteApiKeyDialog
         open={!!deletingItem}
-        onClose={handleCloseDeleteModal}
+        onClose={() => setDeletingItem('')}
         exchangeName={deletingItem}
       />
     </Box>
