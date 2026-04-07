@@ -17,6 +17,7 @@ import {
   type ThresholdFormValues,
   type HoldingFormValues,
 } from '@/types';
+import { scrollToFirstErrorFieldOnMobile } from '@/utils';
 
 import { campaignValidationSchema } from '../validation';
 
@@ -57,19 +58,7 @@ const EscrowDetailsStep: FC<Props> = ({
   const campaignType = formValues.type as CampaignType;
 
   useEffect(() => {
-    if (isMobile && Object.keys(errors).length > 0) {
-      const firstErrorField = Object.keys(errors)[0];
-      const errorElement = document.querySelector(
-        `[name="${firstErrorField}"]`
-      ) as HTMLElement;
-
-      if (errorElement) {
-        errorElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
-    }
+    scrollToFirstErrorFieldOnMobile(isMobile, errors);
   }, [isMobile, errors]);
 
   const handleBackClick = () => {
