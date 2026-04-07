@@ -107,7 +107,7 @@ export class CampaignsController {
     const campaigns = await this.participationsRepository.findByUserId(
       request.user.id,
       {
-        chaindId: query.chainId,
+        chainId: query.chainId,
         statuses,
         types: query.type,
         exchanges: query.exchange,

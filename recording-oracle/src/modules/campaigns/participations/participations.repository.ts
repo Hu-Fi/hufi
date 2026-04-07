@@ -33,7 +33,7 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
   async findByUserId(
     userId: string,
     options: {
-      chaindId?: ChainId;
+      chainId?: ChainId;
       statuses?: CampaignStatus[];
       types?: CampaignType[];
       exchanges?: ExchangeName[];
@@ -45,9 +45,9 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
       .leftJoinAndSelect('participation.campaign', 'campaign')
       .where('participation.userId = :userId', { userId });
 
-    if (options.chaindId) {
+    if (options.chainId) {
       query.andWhere('campaign.chainId = :chainId', {
-        chainId: options.chaindId,
+        chainId: options.chainId,
       });
     }
 
