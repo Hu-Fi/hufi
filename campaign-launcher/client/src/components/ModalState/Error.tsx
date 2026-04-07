@@ -15,6 +15,8 @@ const ModalError: FC<Props> = ({ message }) => {
         display="flex"
         justifyContent="center"
         alignItems="center"
+        width="fit-content"
+        flexShrink={0}
         mb={1}
         p="3px"
         color="white"
