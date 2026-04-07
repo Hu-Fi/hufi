@@ -123,8 +123,17 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           borderBottom={showList ? '1px solid #3a2e6f' : 'none'}
         >
           {leaderboard?.data.slice(0, 3)?.map((entry) => {
-            const { rank, address, result } = entry;
-            const { value, suffix, decimals } = getCompactNumberParts(result);
+            const { rank, address, result, score } = entry;
+            const {
+              value: resultValue,
+              suffix: resultSuffix,
+              decimals: resultDecimals,
+            } = getCompactNumberParts(result);
+            const {
+              value: scoreValue,
+              suffix: scoreSuffix,
+              decimals: scoreDecimals,
+            } = getCompactNumberParts(score);
             const isMyEntry =
               address.toLowerCase() === activeAddress?.toLowerCase();
             return (
@@ -214,10 +223,10 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                       lineHeight={1}
                     >
                       <FormattedNumber
-                        value={value}
-                        decimals={decimals}
+                        value={resultValue}
+                        decimals={resultDecimals}
                         prefix="$"
-                        suffix={suffix}
+                        suffix={resultSuffix}
                       />
                     </Typography>
                     <Typography
@@ -252,9 +261,9 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                       lineHeight={1}
                     >
                       <FormattedNumber
-                        value={value}
-                        decimals={decimals}
-                        suffix={suffix}
+                        value={scoreValue}
+                        decimals={scoreDecimals}
+                        suffix={scoreSuffix}
                       />
                     </Typography>
                   </Box>

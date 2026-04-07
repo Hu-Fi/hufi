@@ -17,8 +17,17 @@ type Props = {
 const LeaderboardList = memo(({ data, activeAddress }: Props) => (
   <Stack flex={1} minHeight={0} overflow="auto">
     {data.map((entry) => {
-      const { address, rank, result } = entry;
-      const { value, suffix, decimals } = getCompactNumberParts(result);
+      const { address, rank, result, score } = entry;
+      const {
+        value: resultValue,
+        suffix: resultSuffix,
+        decimals: resultDecimals,
+      } = getCompactNumberParts(result);
+      const {
+        value: scoreValue,
+        suffix: scoreSuffix,
+        decimals: scoreDecimals,
+      } = getCompactNumberParts(score);
       const isMyEntry = address.toLowerCase() === activeAddress?.toLowerCase();
       return (
         <Box
@@ -51,9 +60,9 @@ const LeaderboardList = memo(({ data, activeAddress }: Props) => (
             <Stack alignItems="center">
               <Typography variant="body2" color="white" fontWeight={500}>
                 <FormattedNumber
-                  value={value}
-                  decimals={decimals}
-                  suffix={suffix}
+                  value={scoreValue}
+                  decimals={scoreDecimals}
+                  suffix={scoreSuffix}
                 />
               </Typography>
               <Typography variant="caption">Score</Typography>
@@ -61,10 +70,10 @@ const LeaderboardList = memo(({ data, activeAddress }: Props) => (
             <Stack alignItems="center">
               <Typography variant="body2" color="white" fontWeight={500}>
                 <FormattedNumber
-                  value={value}
+                  value={resultValue}
                   prefix="$"
-                  decimals={decimals}
-                  suffix={suffix}
+                  decimals={resultDecimals}
+                  suffix={resultSuffix}
                 />
               </Typography>
               <Typography variant="caption">Volume</Typography>
