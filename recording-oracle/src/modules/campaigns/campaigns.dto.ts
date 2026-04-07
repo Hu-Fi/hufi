@@ -17,8 +17,10 @@ import {
 import {
   ChainIds,
   DEFAULT_PAGINATION_LIMIT,
+  ExchangeName,
   type ChainId,
 } from '@/common/constants';
+import { parseQueryArray } from '@/common/utils/transformer';
 
 import {
   CampaignDetails,
@@ -149,6 +151,26 @@ export class ListJoinedCampaignsQueryDto {
   @IsOptional()
   @IsEnum(ReturnedCampaignStatus)
   status?: ReturnedCampaignStatus;
+
+  @ApiPropertyOptional({
+    description: 'Campaign types',
+    isArray: true,
+    enum: CampaignType,
+  })
+  @IsOptional()
+  @Transform(parseQueryArray)
+  @IsEnum(CampaignType, { each: true })
+  type?: CampaignType[];
+
+  @ApiPropertyOptional({
+    description: 'Exchanges',
+    isArray: true,
+    enum: ExchangeName,
+  })
+  @IsOptional()
+  @Transform(parseQueryArray)
+  @IsEnum(ExchangeName, { each: true })
+  exchange?: ExchangeName[];
 
   @ApiPropertyOptional({
     default: DEFAULT_PAGINATION_LIMIT,

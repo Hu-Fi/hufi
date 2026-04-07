@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import { DataSource, Repository } from 'typeorm';
 
-import { type ChainId } from '@/common/constants';
+import { ExchangeName, type ChainId } from '@/common/constants';
 import { isFiniteNumber } from '@/common/utils/type-guard';
 import type { UserEntity } from '@/modules/users';
 
 import { CampaignEntity } from '../campaign.entity';
-import { CampaignStatus } from '../types';
+import { CampaignStatus, CampaignType } from '../types';
 import { ParticipationEntity } from './participation.entity';
 import { MaxParticipantsError } from './participations.errors';
 import { type CampaignParticipant } from './types';
@@ -35,6 +35,8 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
     options: {
       chaindId?: ChainId;
       statuses?: CampaignStatus[];
+      types?: CampaignType[];
+      exchanges?: ExchangeName[];
       limit?: number;
       skip?: number;
     } = {},
@@ -52,6 +54,18 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
     if (options.statuses?.length) {
       query.andWhere('campaign.status IN (:...statuses)', {
         statuses: options.statuses,
+      });
+    }
+
+    if (options.exchanges?.length) {
+      query.andWhere('campaign.exchangeName IN (:...exchanges)', {
+        exchanges: options.exchanges,
+      });
+    }
+
+    if (options.types?.length) {
+      query.andWhere('campaign.type IN (:...types)', {
+        types: options.types,
       });
     }
 

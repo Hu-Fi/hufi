@@ -109,6 +109,8 @@ export class CampaignsController {
       {
         chaindId: query.chainId,
         statuses,
+        types: query.type,
+        exchanges: query.exchange,
         limit: limit + 1,
         skip: query.skip,
       },
