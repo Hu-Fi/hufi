@@ -148,16 +148,17 @@ const CampaignStats: FC<Props> = ({
     campaign.status === CampaignStatus.TO_CANCEL &&
     campaign.reserved_funds !== campaign.balance;
 
-  const showUserPerformance =
-    isAuthenticated &&
-    isJoined &&
-    (isOngoingCampaign || hasProgressBeforeCancel);
-
   const totalParticipants = leaderboard?.data.length || 0;
 
   const userRank = leaderboard?.data.find(
     (entry) => entry.address.toLowerCase() === activeAddress?.toLowerCase()
   )?.rank;
+
+  const showUserPerformance =
+    isAuthenticated &&
+    isJoined &&
+    !!userRank &&
+    (isOngoingCampaign || hasProgressBeforeCancel);
 
   const exchangeName =
     exchangesMap.get(campaign.exchange_name)?.display_name ||
