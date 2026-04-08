@@ -2,10 +2,9 @@ import { memo } from 'react';
 
 import { Box, Stack, Typography } from '@mui/material';
 
+import FormattedNumber from '@/components/FormattedNumber';
 import { type EvmAddress, type LeaderboardEntry } from '@/types';
 import { formatAddress, getCompactNumberParts } from '@/utils';
-
-import FormattedNumber from '../FormattedNumber';
 
 import MyEntryLabel from './MyEntryLabel';
 

@@ -13,11 +13,6 @@ import LeaderboardList from './List';
 import MyEntryLabel from './MyEntryLabel';
 import LeaderboardOverlay from './Overlay';
 
-type Props = {
-  campaign: Campaign;
-  leaderboard: LeaderboardResponse;
-};
-
 const ViewAllButton = ({ handleClick }: { handleClick: () => void }) => (
   <Box
     display="flex"
@@ -90,6 +85,11 @@ export const formatActualOnDate = (date: string) => {
   return `${value.format('Do MMM')} ${localTime}`;
 };
 
+type Props = {
+  campaign: Campaign;
+  leaderboard: LeaderboardResponse;
+};
+
 const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
@@ -97,13 +97,12 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   const isMobile = useIsMobile();
 
   const [listStart, listEnd] = calculateListSlice(
-    leaderboard?.data || [],
+    leaderboard.data,
     activeAddress
   );
 
-  const showList = !!leaderboard?.data?.length && leaderboard.data.length > 3;
-  const showViewAllButton =
-    !!leaderboard?.data?.length && leaderboard.data.length > 8;
+  const showList = leaderboard.data.length > 3;
+  const showViewAllButton = leaderboard.data.length > 8;
 
   return (
     <Stack py={3} gap={3}>
@@ -135,7 +134,6 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           Actual on: {formatActualOnDate(leaderboard.updated_at)}
         </Typography>
       </Box>
-
       <Paper
         elevation={0}
         sx={{
@@ -154,7 +152,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           gap={{ xs: 0, md: 2 }}
           borderBottom={showList ? '1px solid #3a2e6f' : 'none'}
         >
-          {leaderboard?.data.slice(0, 3)?.map((entry) => {
+          {leaderboard.data.slice(0, 3).map((entry) => {
             const { rank, address, result, score } = entry;
             const {
               value: resultValue,
@@ -307,7 +305,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         <Stack position="relative">
           {showList && (
             <LeaderboardList
-              data={leaderboard?.data.slice(listStart, listEnd) || []}
+              data={leaderboard.data.slice(listStart, listEnd)}
             />
           )}
           {showViewAllButton && (
@@ -318,7 +316,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
       <LeaderboardOverlay
         open={isOverlayOpen}
         onClose={() => setIsOverlayOpen(false)}
-        data={leaderboard?.data || []}
+        data={leaderboard.data}
         updatedAt={leaderboard.updated_at}
         symbol={campaign.symbol}
       />
