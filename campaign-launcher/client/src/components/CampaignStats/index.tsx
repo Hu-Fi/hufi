@@ -6,22 +6,22 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CancelIcon } from '@/icons';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import { CampaignStatus, type CampaignDetails } from '@/types';
 import {
+  CampaignStatus,
+  type LeaderboardResponse,
+  type CampaignDetails,
+} from '@/types';
+import {
+  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
 } from '@/utils';
-
-type Props = {
-  campaign: CampaignDetails | null | undefined;
-  isJoined: boolean;
-  isCampaignLoading: boolean;
-  totalParticipants: number;
-};
+import dayjs from '@/utils/dayjs';
 
 export const StatsCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'withBorder',
@@ -109,21 +109,35 @@ const renderSkeletonBlocks = (isMobile: boolean) => {
   );
 };
 
+const formatCancellationRequestedAt = (date: number) => {
+  return dayjs(date).format('Do MMM YYYY HH:mm');
+};
+
+type Props = {
+  campaign: CampaignDetails | null | undefined;
+  isJoined: boolean;
+  isCampaignLoading: boolean;
+  leaderboard?: LeaderboardResponse;
+};
+
 const CampaignStats: FC<Props> = ({
   campaign,
   isJoined,
   isCampaignLoading,
-  totalParticipants,
+  leaderboard,
 }) => {
   const { exchangesMap } = useExchangesContext();
-  const isMobile = useIsMobile();
   const { isAuthenticated } = useWeb3Auth();
+  const { activeAddress } = useActiveAccount();
+  const isMobile = useIsMobile();
 
   if (isCampaignLoading) return renderSkeletonBlocks(isMobile);
 
   if (!campaign) return null;
 
-  const isCancelled = campaign.status === CampaignStatus.CANCELLED;
+  const isCancelled =
+    campaign.status === CampaignStatus.CANCELLED &&
+    !!campaign.cancellation_requested_at;
 
   const isOngoingCampaign =
     campaign.status === CampaignStatus.ACTIVE &&
@@ -139,11 +153,22 @@ const CampaignStats: FC<Props> = ({
     isJoined &&
     (isOngoingCampaign || hasProgressBeforeCancel);
 
+  const totalParticipants = leaderboard?.data.length || 0;
+
+  const userRank = leaderboard?.data.find(
+    (entry) => entry.address.toLowerCase() === activeAddress?.toLowerCase()
+  )?.rank;
+
   const exchangeName =
     exchangesMap.get(campaign.exchange_name)?.display_name ||
     campaign.exchange_name;
 
   const targetInfo = getTargetInfo(campaign);
+  const {
+    value: targetValue,
+    suffix: targetSuffix,
+    decimals: targetDecimals,
+  } = getCompactNumberParts(targetInfo.value || 0);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
@@ -187,9 +212,11 @@ const CampaignStats: FC<Props> = ({
               Campaign Cancelled
             </Typography>
           </Box>
-          {/* TODO: use cancelled_at and format date */}
           <Typography ml={6} color="#a0a0a0">
-            Cancelled on {campaign.end_date}
+            Cancelled on{' '}
+            {formatCancellationRequestedAt(
+              campaign.cancellation_requested_at || 0
+            )}
           </Typography>
         </Stack>
       )}
@@ -235,25 +262,24 @@ const CampaignStats: FC<Props> = ({
             <CardName variant="subtitle2">{targetInfo.label}</CardName>
             <CardValue>
               <FormattedNumber
-                value={targetInfo.value}
-                decimals={3}
-                suffix={` ${targetTokenSymbol}`}
+                value={targetValue}
+                decimals={targetDecimals}
+                suffix={targetSuffix + ' ' + targetTokenSymbol}
               />
             </CardValue>
           </StatsCard>
         </Grid>
-        {showUserPerformance ? (
+        {isOngoingCampaign && (
           <Grid size={{ xs: 6, md: 4 }} display="flex">
             <StatsCard withBorder>
-              <CardName variant="subtitle2">Ranking</CardName>
-              <CardValue>14 / 81</CardValue>
-            </StatsCard>
-          </Grid>
-        ) : (
-          <Grid size={{ xs: 6, md: 4 }} display="flex">
-            <StatsCard withBorder>
-              <CardName variant="subtitle2">Total Participants</CardName>
-              <CardValue>{totalParticipants}</CardValue>
+              <CardName variant="subtitle2">
+                {showUserPerformance ? 'Ranking' : 'Total Participants'}
+              </CardName>
+              <CardValue>
+                {showUserPerformance
+                  ? `${userRank} / ${totalParticipants}`
+                  : totalParticipants}
+              </CardValue>
             </StatsCard>
           </Grid>
         )}
