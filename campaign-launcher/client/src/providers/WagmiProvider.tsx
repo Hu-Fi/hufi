@@ -1,53 +1,83 @@
 import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
+import { http, WagmiProvider as WWagmiProvider } from 'wagmi';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import type { ConnectMethod } from '@reown/appkit-controllers';
+import type { AppKitNetwork } from '@reown/appkit/networks';
 import {
+  localhost as defaultLocalhost,
+  defineChain,
   mainnet,
-  localhost,
   polygon,
   polygonAmoy,
   sepolia,
-} from 'wagmi/chains';
-import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
+} from '@reown/appkit/networks';
+import { AppKitProvider } from '@reown/appkit/react';
+import { coinbaseWallet } from '@wagmi/connectors';
 
+import logo from '@/assets/logo.svg';
 import { isMainnet } from '@/constants';
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
+const legalUrl = import.meta.env.VITE_APP_LEGAL_URL;
 
-export const config = isMainnet
-  ? createConfig({
-      chains: [polygon, mainnet],
-      connectors: [
-        walletConnect({ projectId }),
-        coinbaseWallet({ appName: 'HuFi' }),
-      ],
-      syncConnectedChain: false,
-      transports: {
-        [polygon.id]: http(),
-        [mainnet.id]: http(),
-      },
-    })
-  : createConfig({
-      chains: [
-        polygonAmoy,
-        sepolia,
-        {
-          ...localhost,
-          id: ChainId.LOCALHOST,
-        },
-      ],
-      connectors: [
-        walletConnect({ projectId }),
-        coinbaseWallet({ appName: 'HuFi' }),
-      ],
-      syncConnectedChain: false,
-      transports: {
-        [polygonAmoy.id]: http(),
-        [sepolia.id]: http(),
-        [ChainId.LOCALHOST]: http(),
-      },
-    });
+const localhost = defineChain({
+  ...defaultLocalhost,
+  id: ChainId.LOCALHOST,
+  chainNamespace: 'eip155',
+  caipNetworkId: `eip155:${ChainId.LOCALHOST}`,
+});
+
+const mainnetNetworks: [AppKitNetwork, AppKitNetwork] = [polygon, mainnet];
+const testnetNetworks: [AppKitNetwork, AppKitNetwork, AppKitNetwork] = [
+  polygonAmoy,
+  sepolia,
+  localhost,
+];
+
+const networks = isMainnet ? mainnetNetworks : testnetNetworks;
+
+const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId,
+  connectors: [coinbaseWallet({ appName: 'HuFi' })],
+  syncConnectedChain: false,
+  transports: {
+    [polygon.id]: http(),
+    [mainnet.id]: http(),
+    [polygonAmoy.id]: http(),
+    [sepolia.id]: http(),
+    [ChainId.LOCALHOST]: http(),
+  },
+});
+
+export const config = wagmiAdapter.wagmiConfig;
+
+const metadata = {
+  name: 'HuFi',
+  description: 'HuFi Campaign Launcher',
+  url: window.location.origin,
+  icons: [logo],
+};
+
+const appKitConfig = {
+  adapters: [wagmiAdapter],
+  networks,
+  projectId,
+  metadata,
+  termsConditionsUrl: legalUrl,
+  privacyPolicyUrl: legalUrl,
+  features: {
+    email: false,
+    socials: false as const,
+    history: false,
+    swaps: false,
+    onramp: false,
+    send: false,
+    connectMethodsOrder: ['wallet'] as ConnectMethod[],
+  },
+};
 
 const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
   const initialState = {
@@ -58,9 +88,11 @@ const WagmiProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   return (
-    <WWagmiProvider config={config} initialState={initialState}>
-      {children}
-    </WWagmiProvider>
+    <AppKitProvider {...appKitConfig}>
+      <WWagmiProvider config={config} initialState={initialState}>
+        {children}
+      </WWagmiProvider>
+    </AppKitProvider>
   );
 };
 
