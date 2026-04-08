@@ -6,7 +6,7 @@ import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
 import CampaignTypeLabel from '@/components/CampaignTypeLabel';
 import CustomTooltip from '@/components/CustomTooltip';
-import JoinCampaign from '@/components/JoinCampaign';
+import JoinCampaignButton from '@/components/JoinCampaignButton';
 import ChartModal from '@/components/modals/ChartModal';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CalendarIcon } from '@/icons';
@@ -31,13 +31,7 @@ type Props = {
   isJoinStatusLoading: boolean;
 };
 
-const CampaignInfo: FC<Props> = ({
-  campaign,
-  isCampaignLoading,
-  joinStatus,
-  joinedAt,
-  isJoinStatusLoading,
-}) => {
+const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading }) => {
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
 
   const isMobile = useIsMobile();
@@ -78,14 +72,7 @@ const CampaignInfo: FC<Props> = ({
           startDate={campaign.start_date}
           endDate={campaign.end_date}
         />
-        {isMobile && (
-          <JoinCampaign
-            campaign={campaign}
-            joinStatus={joinStatus}
-            joinedAt={joinedAt}
-            isJoinStatusLoading={isJoinStatusLoading}
-          />
-        )}
+        {isMobile && <JoinCampaignButton campaign={campaign} />}
       </Box>
       <Box order={{ xs: 3, md: 2 }}>
         <CampaignAddress

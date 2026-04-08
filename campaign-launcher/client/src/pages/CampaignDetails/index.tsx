@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';
-import JoinCampaign from '@/components/JoinCampaign';
+import JoinCampaignButton from '@/components/JoinCampaignButton';
 import PageTitle from '@/components/PageTitle';
 import PageWrapper from '@/components/PageWrapper';
 import { useCheckCampaignJoinStatus } from '@/hooks/recording-oracle';
@@ -50,12 +50,7 @@ const CampaignDetails: FC = () => {
     <PageWrapper>
       <PageTitle title="Campaign Data">
         {!isMobile && campaignData && (
-          <JoinCampaign
-            campaign={campaignData}
-            joinStatus={joinStatusInfo?.status}
-            joinedAt={joinStatusInfo?.joined_at}
-            isJoinStatusLoading={isJoinStatusLoading}
-          />
+          <JoinCampaignButton campaign={campaignData} />
         )}
       </PageTitle>
       {isCampaignLoading && !isMobile && (
