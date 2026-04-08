@@ -643,22 +643,22 @@ export class CampaignsService implements OnModuleDestroy {
             nextCycleStart = nextCycleEnd;
           } while (nextCycleStart < endDate);
 
+          const fundsToReserve = rewardsUtils.formatRewardValue(
+            totalRewardPool,
+            campaign.fundTokenDecimals,
+          );
           logger.info('Going to record campaign progress', {
             from: startDate.toISOString(),
             to: endDate.toISOString(),
-            reserved_funds: totalRewardPool.toString(),
+            reserved_funds: fundsToReserve,
           });
 
-          const fundsToReserve = ethers.parseUnits(
-            totalRewardPool.toString(),
-            campaign.fundTokenDecimals,
-          );
           intermediateResults.results.push(...newResults);
 
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(
               intermediateResults,
-              fundsToReserve,
+              ethers.parseUnits(fundsToReserve, campaign.fundTokenDecimals),
             );
 
           for (const intermediateResult of newResults) {

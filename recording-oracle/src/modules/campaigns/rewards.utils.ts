@@ -22,6 +22,15 @@ import type {
   ParticipantOutcome,
 } from './types';
 
+export function formatRewardValue(
+  rewardValue: Decimal,
+  fundTokenDecimals: number,
+): string {
+  return rewardValue
+    .toDecimalPlaces(fundTokenDecimals, Decimal.ROUND_DOWN)
+    .toString();
+}
+
 export function calculateDailyReward(campaign: CampaignEntity): string {
   const campaignDurationDays = Math.ceil(
     dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
@@ -31,9 +40,7 @@ export function calculateDailyReward(campaign: CampaignEntity): string {
 
   const dailyReward = fundAmount.div(campaignDurationDays);
 
-  return dailyReward
-    .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-    .toString();
+  return formatRewardValue(dailyReward, campaign.fundTokenDecimals);
 }
 
 export function calculateRewardPool(
@@ -103,9 +110,7 @@ export function calculateRewardPool(
 
   const rewardPool = Decimal.mul(dailyReward, progressRatio);
 
-  return rewardPool
-    .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
-    .toString();
+  return formatRewardValue(rewardPool, campaign.fundTokenDecimals);
 }
 
 export function estimateRewards(
@@ -201,12 +206,13 @@ export function estimateCompetitiveRewards(
 
     const rewardPerParticipant = Decimal.mul(rewardPool, totalRewardPercent)
       .div(100)
-      .div(nTiedResults)
-      .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN);
+      .div(nTiedResults);
 
     if (rewardPerParticipant.greaterThan(0)) {
       for (const tiedResult of tiedResults) {
-        estimatedRewards[tiedResult.address] = rewardPerParticipant.toNumber();
+        estimatedRewards[tiedResult.address] = Number(
+          formatRewardValue(rewardPerParticipant, campaign.fundTokenDecimals),
+        );
       }
     }
 

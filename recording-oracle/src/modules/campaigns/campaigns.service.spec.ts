@@ -2530,7 +2530,6 @@ describe('CampaignsService', () => {
 
     it('should check all passed cycles for campaign with > 1d duration and cancellation request', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       const cancellationRequestedAt = new Date(campaign.endDate.valueOf() - 1);
       spyOnGetCancellationRequestDate.mockResolvedValueOnce(
         cancellationRequestedAt,
