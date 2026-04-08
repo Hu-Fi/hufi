@@ -1,13 +1,13 @@
 import type { FC } from 'react';
 
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router';
-import { useConnection } from 'wagmi';
 
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
+import JoinCampaignButton from '@/components/JoinCampaignButton';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { ArrowLeftIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
@@ -77,7 +77,6 @@ const CampaignsTable: FC<Props> = ({
 }) => {
   const { exchangesMap } = useExchangesContext();
   const navigate = useNavigate();
-  const { isConnected } = useConnection();
 
   const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
 
@@ -203,6 +202,7 @@ const CampaignsTable: FC<Props> = ({
             alignItems="center"
             flex={1}
             gap={1}
+            sx={{ '& > :nth-of-type(2)': { flex: 1 } }}
           >
             <IconButton
               disableRipple
@@ -219,16 +219,7 @@ const CampaignsTable: FC<Props> = ({
             >
               <ArrowLeftIcon sx={{ transform: 'rotate(135deg)' }} />
             </IconButton>
-            {isConnected && (
-              <Button
-                variant="contained"
-                size="large"
-                color="error"
-                sx={{ width: 120 }}
-              >
-                Join
-              </Button>
-            )}
+            <JoinCampaignButton campaign={params.row} />
           </Box>
         );
       },

@@ -1,15 +1,13 @@
 import type { FC } from 'react';
 
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import { useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router';
-import { useConnection } from 'wagmi';
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
-import { QUERY_KEYS } from '@/constants/queryKeys';
+import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { type Campaign } from '@/types';
 import {
@@ -28,20 +26,7 @@ type Props = {
 
 const CampaignCard: FC<Props> = ({ campaign }) => {
   const { fund_amount, fund_token_decimals } = campaign;
-  const { isConnected } = useConnection();
-  const queryClient = useQueryClient();
   const { exchangesMap } = useExchangesContext();
-
-  const joinedCampaignsQueries = queryClient.getQueriesData<{
-    results?: Campaign[];
-  }>({
-    queryKey: [QUERY_KEYS.JOINED_CAMPAIGNS],
-  });
-  const isAlreadyJoined = joinedCampaignsQueries.some(([, cachedData]) =>
-    (cachedData?.results ?? []).some(
-      (joinedCampaign) => joinedCampaign.address === campaign.address
-    )
-  );
 
   const exchangeName = exchangesMap.get(campaign.exchange_name)?.display_name;
 
@@ -193,7 +178,12 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           </Typography>
         </Box>
       </Stack>
-      <Box display="flex" justifyContent="space-between" gap={1.5}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        gap={1.5}
+        sx={{ '& > .MuiButton-root': { flex: 1 } }}
+      >
         <Button
           component={RouterLink}
           to={`/campaign-details/${campaign.address}`}
@@ -205,20 +195,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
         >
           View Details
         </Button>
-        {isConnected && !isAlreadyJoined && (
-          <Button
-            variant="contained"
-            size="large"
-            color="primary"
-            fullWidth
-            sx={{
-              color: 'white',
-              bgcolor: 'error.main',
-            }}
-          >
-            Join
-          </Button>
-        )}
+        <JoinCampaignButton campaign={campaign} />
       </Box>
     </Paper>
   );
