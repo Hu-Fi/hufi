@@ -8,6 +8,7 @@ import CampaignStats from '@/components/CampaignStats';
 import CycleInfoSection from '@/components/CycleInfoSection';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
+import Leaderboard from '@/components/Leaderboard';
 import PageWrapper from '@/components/PageWrapper';
 import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
 import { useGetLeaderboard } from '@/hooks/recording-oracle/campaign';
@@ -15,7 +16,12 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { CampaignStatus, type Campaign, type EvmAddress } from '@/types';
+import {
+  CampaignStatus,
+  CampaignType,
+  type Campaign,
+  type EvmAddress,
+} from '@/types';
 import { isCampaignDetails } from '@/utils';
 
 const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
@@ -99,6 +105,12 @@ const CampaignDetails: FC = () => {
 
   useReserveLayoutBottomOffset(showJoinCampaignButton);
 
+  const showLeaderboard =
+    isOngoingCampaign &&
+    campaignData.type !== CampaignType.THRESHOLD &&
+    leaderboard &&
+    leaderboard.data.length > 0;
+
   return (
     <PageWrapper>
       <CampaignInfo
@@ -117,6 +129,9 @@ const CampaignDetails: FC = () => {
           campaign={campaignData}
           totalGenerated={leaderboard?.total || 0}
         />
+      )}
+      {showLeaderboard && (
+        <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
       )}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>

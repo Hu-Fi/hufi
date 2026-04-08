@@ -11,7 +11,7 @@ import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import {
   CampaignStatus,
-  type LeaderboardResponse,
+  type Leaderboard,
   type CampaignDetails,
 } from '@/types';
 import {
@@ -117,7 +117,7 @@ type Props = {
   campaign: CampaignDetails | null | undefined;
   isJoined: boolean;
   isCampaignLoading: boolean;
-  leaderboard?: LeaderboardResponse;
+  leaderboard?: Leaderboard;
 };
 
 const CampaignStats: FC<Props> = ({
