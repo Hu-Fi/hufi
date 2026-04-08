@@ -5,10 +5,15 @@ import { Box, Grid, Stack, Typography } from '@mui/material';
 import { CardName, CardValue, StatsCard } from '@/components/CampaignStats';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { type Campaign } from '@/types';
-import { formatTokenAmount } from '@/utils';
+import {
+  formatTokenAmount,
+  getDailyTargetTokenSymbol,
+  getTokenInfo,
+} from '@/utils';
 
 type Props = {
   campaign: Campaign;
+  totalGenerated: number;
 };
 
 const CYCLE_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -76,7 +81,7 @@ const useCycleTimeline = (startDate: string, endDate: string) => {
   return cycleTimeInfo;
 };
 
-const CycleInfoSection: FC<Props> = ({ campaign }) => {
+const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
   const isMobile = useIsMobile();
 
   const cycleTimeline = useCycleTimeline(
@@ -87,6 +92,9 @@ const CycleInfoSection: FC<Props> = ({ campaign }) => {
     campaign.fund_amount,
     campaign.fund_token_decimals
   );
+
+  const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
+  const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
     <Stack
@@ -142,7 +150,7 @@ const CycleInfoSection: FC<Props> = ({ campaign }) => {
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
             <CardName>Cycle Reward Pool</CardName>
-            <CardValue>
+            <CardValue color="#46db99">
               {rewardPool} {campaign.fund_token_symbol}
             </CardValue>
           </StatsCard>
@@ -150,14 +158,16 @@ const CycleInfoSection: FC<Props> = ({ campaign }) => {
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
             <CardName>Ends in</CardName>
-            <CardValue>{cycleTimeline.remainingTime}</CardValue>
+            <CardValue color="text.primary">
+              {cycleTimeline.remainingTime}
+            </CardValue>
           </StatsCard>
         </Grid>
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
-            <CardName>Current Cycle</CardName>
+            <CardName>Total Generated Volume</CardName>
             <CardValue>
-              {cycleTimeline.currentCycle} / {cycleTimeline.totalCycles}
+              {totalGenerated} {targetTokenSymbol}
             </CardValue>
           </StatsCard>
         </Grid>
