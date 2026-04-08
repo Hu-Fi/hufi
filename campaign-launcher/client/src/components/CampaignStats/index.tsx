@@ -67,8 +67,10 @@ export const CardName = styled(Typography)(({ theme }) => ({
   },
 }));
 
-export const CardValue = styled(Typography)(({ theme }) => ({
-  color: 'white',
+export const CardValue = styled(Typography, {
+  shouldForwardProp: (prop) => prop !== 'color',
+})<{ color?: string }>(({ theme, color = 'white' }) => ({
+  color,
   fontSize: '36px',
   fontWeight: 800,
   lineHeight: '100%',
