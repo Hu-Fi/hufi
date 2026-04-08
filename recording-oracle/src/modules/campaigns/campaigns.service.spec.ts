@@ -2009,7 +2009,8 @@ describe('CampaignsService', () => {
     beforeEach(() => {
       campaign = generateCampaignEntity();
       /**
-       * Adjust campaign dates to easily manipulate full cycles passed
+       * Adjust campaign dates to be already ended 1-day campaign
+       * to easily manipulate inputs and check for expectations
        */
       campaign.endDate = dayjs().subtract(1, 'hour').toDate();
       campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
@@ -2224,7 +2225,6 @@ describe('CampaignsService', () => {
     it('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      campaign.endDate = new Date(Date.now() - 1);
       campaign.startDate = dayjs(campaign.endDate)
         .subtract(faker.number.int({ min: 1, max: 23 }), 'hours')
         .toDate();
@@ -2245,8 +2245,18 @@ describe('CampaignsService', () => {
     });
 
     it('should check all passed cycles for campaign with > 1d duration when no intermediate results', async () => {
-      const nFullCycles = faker.number.int({ min: 2, max: 3 });
-      campaign.startDate = dayjs().subtract(nFullCycles, 'day').toDate();
+      const nFullCycles = faker.number.int({ min: 2, max: 5 });
+      /**
+       * Set campaign start date to be nFullCycles days and 1ms ago to make sure
+       * that only full cycles are checked, and not including last partial cycle (if any)
+       */
+      campaign.startDate = dayjs()
+        .subtract(nFullCycles, 'day')
+        .subtract(1, 'ms')
+        .toDate();
+      /**
+       * Campaign not ended yet to make sure endDate is last full cycle end
+       */
       campaign.endDate = dayjs()
         .add(faker.number.int({ min: 1, max: 100 }), 'hour')
         .toDate();
@@ -2280,13 +2290,47 @@ describe('CampaignsService', () => {
     });
 
     it('should check last cycle if it is not round but campaign ended', async () => {
-      /**
-       * TODO: revisit if need to add more edge-case tests
-       */
-      expect(1).toBe(1);
+      const nFullCycles = faker.number.int({ min: 2, max: 5 });
+      campaign.startDate = dayjs(campaign.endDate)
+        .subtract(nFullCycles, 'day')
+        .subtract(faker.number.int({ min: 1, max: 23 }), 'hour')
+        .toDate();
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const nTotalCycles = nFullCycles + 1;
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nTotalCycles,
+      );
+      for (let i = 1; i <= nTotalCycles; i += 1) {
+        const expectedStartDate = dayjs(campaign.startDate)
+          .add(i - 1, 'day')
+          .toDate();
+        let expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
+        if (i === nTotalCycles) {
+          expectedEndDate = campaign.endDate;
+        }
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          expectedEndDate,
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
     });
 
-    it('should not check progress if less than a day from last result for ongoing campaign', async () => {
+    it('should not check progress if less than a day from last intermediate result for ongoing campaign', async () => {
       const now = Date.now();
       campaign.endDate = new Date(now + 1);
       campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
@@ -2377,6 +2421,68 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should check all passed cycles for campaign with > 1d duration and existing intermediate results', async () => {
+      const nFullCycles = faker.number.int({ min: 2, max: 5 });
+      /**
+       * Set campaign start date to be nFullCycles days and 1ms ago to make sure
+       * that only full cycles are checked, and not including last partial cycle (if any)
+       */
+      campaign.startDate = dayjs()
+        .subtract(nFullCycles, 'day')
+        .subtract(1, 'ms')
+        .toDate();
+      /**
+       * Campaign not ended yet to make sure endDate is last full cycle end
+       */
+      campaign.endDate = dayjs()
+        .add(faker.number.int({ min: 1, max: 100 }), 'hour')
+        .toDate();
+
+      const lastResultsEndDate = dayjs(campaign.startDate)
+        .add(1, 'day')
+        .toDate();
+      const intermediateResultsData = generateIntermediateResultsData({
+        results: [
+          generateIntermediateResult({
+            endDate: lastResultsEndDate,
+          }),
+        ],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      /**
+       * First is covered by intermediate result
+       */
+      const nNewCycles = nFullCycles - 1;
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nNewCycles,
+      );
+      for (let i = 1; i <= nNewCycles; i += 1) {
+        const expectedStartDate = dayjs(lastResultsEndDate)
+          .add(i - 1, 'day')
+          .toDate();
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          dayjs(expectedStartDate).add(1, 'day').toDate(),
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
+    });
+
     it('should use campaign end date if cancellation requested after campaign end date', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -2420,6 +2526,52 @@ describe('CampaignsService', () => {
           caller: 'recordCampaignProgress',
         },
       );
+    });
+
+    it('should check all passed cycles for campaign with > 1d duration and cancellation request', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      const cancellationRequestedAt = new Date(campaign.endDate.valueOf() - 1);
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
+      );
+
+      const nCycles = faker.number.int({ min: 2, max: 5 });
+      campaign.startDate = dayjs(campaign.endDate)
+        .subtract(nCycles, 'day')
+        .toDate();
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nCycles,
+      );
+      for (let i = 1; i <= nCycles; i += 1) {
+        const expectedStartDate = dayjs(campaign.startDate)
+          .add(i - 1, 'day')
+          .toDate();
+        let expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
+        if (i === nCycles) {
+          expectedEndDate = cancellationRequestedAt;
+        }
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          expectedEndDate,
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
     });
 
     it('should record campaign progress when no results yet', async () => {

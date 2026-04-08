@@ -531,7 +531,6 @@ export class CampaignsService implements OnModuleDestroy {
                 campaign.chainId,
                 campaign.address,
               );
-            endDate = cancellationRequestedAt;
             endDate = new Date(
               Math.min(
                 cancellationRequestedAt.valueOf(),
@@ -545,12 +544,6 @@ export class CampaignsService implements OnModuleDestroy {
               dayjs().diff(startDate, 'day', false) / CAMPAIGNS_DAILY_CYCLE,
             );
             if (fullCyclesPassed === 0) {
-              logger.warn(
-                "Can't check progress for period that is not finished yet",
-                {
-                  startDate,
-                },
-              );
               return;
             }
             endDate = dayjs(startDate)
@@ -647,9 +640,7 @@ export class CampaignsService implements OnModuleDestroy {
 
             newResults.push(intermediateResult);
             totalRewardPool = totalRewardPool.add(rewardPool);
-            nextCycleStart = dayjs(nextCycleStart)
-              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
-              .toDate();
+            nextCycleStart = nextCycleEnd;
           } while (nextCycleStart < endDate);
 
           logger.info('Going to record campaign progress', {
