@@ -2874,10 +2874,9 @@ describe('CampaignsService', () => {
       expect(secondBatch.results[0]).toEqual(participantOutcomes[2]);
     });
 
-    it('should not move campaign to "pending_completion" if reached its end date but not all results calculated', async () => {
+    it('should not move campaign to "pending_completion" when not all results calculated', async () => {
       const currentDate = new Date();
       campaign.endDate = new Date(currentDate.valueOf() + 1);
-      campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
