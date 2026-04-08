@@ -56,7 +56,7 @@ const StyledLink = ({
         py: { xs: 0, md: 1 },
         textDecoration: 'none',
         color: { xs: 'text.primary', md: isActive ? 'white' : '#6b6490' },
-        fontWeight: 600,
+        fontWeight: isActive ? 600 : 400,
         fontSize: '14px',
         bgcolor: isActive ? 'rgba(255, 255, 255, 0.07)' : 'transparent',
         borderRadius: '10px',
