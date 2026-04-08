@@ -328,6 +328,24 @@ export const scrollToFirstErrorFieldOnMobile = <T extends object>(
   }
 };
 
+export const getCompactNumberParts = (initialValue: number) => {
+  const shouldUseDoubleKNotation = initialValue >= 1000000;
+  const shouldUseKNotation = initialValue >= 1000 && !shouldUseDoubleKNotation;
+  const value = shouldUseDoubleKNotation
+    ? initialValue / 1000000
+    : shouldUseKNotation
+      ? initialValue / 1000
+      : initialValue;
+  const suffix = shouldUseDoubleKNotation
+    ? 'kk'
+    : shouldUseKNotation
+      ? 'k'
+      : '';
+  const decimals = suffix ? (Number.isInteger(value) ? 0 : 1) : 2;
+
+  return { value, suffix, decimals };
+};
+
 export const getTargetInfo = (campaign: Campaign) => {
   switch (campaign.type) {
     case CampaignType.MARKET_MAKING:
