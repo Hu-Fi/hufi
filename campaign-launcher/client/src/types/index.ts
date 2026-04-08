@@ -82,6 +82,7 @@ export type Campaign = {
   launcher: string;
   recording_oracle: string;
   reputation_oracle: string;
+  cancellation_requested_at: number | null;
   start_date: string;
   status: CampaignStatus;
   symbol: string;

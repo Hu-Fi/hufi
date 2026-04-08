@@ -3,10 +3,12 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 
 import { CardName, CardValue, StatsCard } from '@/components/CampaignStats';
+import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { type Campaign } from '@/types';
+import { CampaignType, type Campaign } from '@/types';
 import {
   formatTokenAmount,
+  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTokenInfo,
 } from '@/utils';
@@ -81,6 +83,17 @@ const useCycleTimeline = (startDate: string, endDate: string) => {
   return cycleTimeInfo;
 };
 
+const getTotalGeneratedCardTitle = (campaignType: CampaignType) => {
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      return 'Total Generated Volume';
+    case CampaignType.THRESHOLD:
+      return 'Total Generated Balance';
+    case CampaignType.HOLDING:
+      return 'Total Held Amount';
+  }
+};
+
 const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
   const isMobile = useIsMobile();
 
@@ -95,6 +108,12 @@ const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
+
+  const {
+    value: totalGeneratedValue,
+    suffix: totalGeneratedSuffix,
+    decimals: totalGeneratedDecimals,
+  } = getCompactNumberParts(totalGenerated);
 
   return (
     <Stack
@@ -165,9 +184,13 @@ const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
         </Grid>
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
-            <CardName>Total Generated Volume</CardName>
+            <CardName>{getTotalGeneratedCardTitle(campaign.type)}</CardName>
             <CardValue>
-              {totalGenerated} {targetTokenSymbol}
+              <FormattedNumber
+                value={totalGeneratedValue}
+                decimals={totalGeneratedDecimals}
+                suffix={totalGeneratedSuffix + ' ' + targetTokenSymbol}
+              />
             </CardValue>
           </StatsCard>
         </Grid>
