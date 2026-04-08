@@ -10,7 +10,7 @@ import MyEntryLabel from './MyEntryLabel';
 
 type Props = {
   data: LeaderboardEntry[];
-  activeAddress?: EvmAddress;
+  activeAddress: EvmAddress | undefined;
 };
 
 const LeaderboardList = memo(({ data, activeAddress }: Props) => (

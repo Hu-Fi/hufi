@@ -12,7 +12,7 @@ import type {
   CampaignsResponse,
   UserProgress,
   CheckCampaignJoinStatusResponse,
-  LeaderboardResponse,
+  LeaderboardResponseDto,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -224,8 +224,8 @@ export class RecordingApiClient extends HttpClient {
   async getLeaderboard(
     chain_id: ChainId,
     campaign_address: string
-  ): Promise<LeaderboardResponse> {
-    const response = await this.get<LeaderboardResponse>(
+  ): Promise<LeaderboardResponseDto> {
+    const response = await this.get<LeaderboardResponseDto>(
       `/campaigns/${chain_id}-${campaign_address}/leaderboard`
     );
     return response;

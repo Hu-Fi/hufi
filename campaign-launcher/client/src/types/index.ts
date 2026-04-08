@@ -110,18 +110,25 @@ export type CampaignsResponse = {
   has_more: boolean;
 };
 
-export type LeaderboardEntry = {
+export type LeaderboardEntryDto = {
   address: EvmAddress;
   result: number;
   score: number;
   estimated_reward: number;
+};
+
+export type LeaderboardEntry = LeaderboardEntryDto & {
   rank: number;
 };
 
-export type LeaderboardResponse = {
-  data: LeaderboardEntry[];
+export type LeaderboardResponseDto = {
+  data: LeaderboardEntryDto[];
   total: number;
   updated_at: string;
+};
+
+export type Leaderboard = Omit<LeaderboardResponseDto, 'data'> & {
+  data: LeaderboardEntry[];
 };
 
 type BaseManifestDto = {

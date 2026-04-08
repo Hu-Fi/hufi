@@ -1,11 +1,11 @@
-import { useState, type FC } from 'react';
+import { useMemo, useState, type FC } from 'react';
 
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { type LeaderboardResponse, type Campaign } from '@/types';
+import { type Leaderboard, type Campaign } from '@/types';
 import { formatAddress, getCompactNumberParts } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -13,7 +13,7 @@ import LeaderboardList from './List';
 import MyEntryLabel from './MyEntryLabel';
 import LeaderboardOverlay from './Overlay';
 
-const ViewAllButton = ({ handleClick }: { handleClick: () => void }) => (
+const ViewAllButton = ({ onClick }: { onClick: () => void }) => (
   <Box
     display="flex"
     alignItems="end"
@@ -32,9 +32,8 @@ const ViewAllButton = ({ handleClick }: { handleClick: () => void }) => (
   >
     <Button
       variant="outlined"
-      disableRipple
       fullWidth
-      onClick={handleClick}
+      onClick={onClick}
       sx={{
         color: 'white',
         borderColor: 'error.main',
@@ -87,7 +86,7 @@ export const formatActualOnDate = (date: string) => {
 
 type Props = {
   campaign: Campaign;
-  leaderboard: LeaderboardResponse;
+  leaderboard: Leaderboard;
 };
 
 const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
@@ -96,9 +95,9 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   const { activeAddress } = useActiveAccount();
   const isMobile = useIsMobile();
 
-  const [listStart, listEnd] = calculateListSlice(
-    leaderboard.data,
-    activeAddress
+  const [listStart, listEnd] = useMemo(
+    () => calculateListSlice(leaderboard.data, activeAddress),
+    [leaderboard.data, activeAddress]
   );
 
   const showList = leaderboard.data.length > 3;
@@ -306,10 +305,11 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           {showList && (
             <LeaderboardList
               data={leaderboard.data.slice(listStart, listEnd)}
+              activeAddress={activeAddress}
             />
           )}
           {showViewAllButton && (
-            <ViewAllButton handleClick={() => setIsOverlayOpen(true)} />
+            <ViewAllButton onClick={() => setIsOverlayOpen(true)} />
           )}
         </Stack>
       </Paper>
