@@ -13,11 +13,11 @@ import { type Campaign } from '@/types';
 import {
   formatTokenAmount,
   getChainIcon,
+  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
-  getCompactNumberParts,
 } from '@/utils';
 
 type Props = {
