@@ -21,7 +21,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@human-protocol/sdk": "^7.1.0",
     "@metamask/sdk": "~0.34.0",
-    "@mui/icons-material": "^7.3.6",
+    "@mui/icons-material": "^9.0.0",
     "@mui/material": "^7.3.6",
     "@mui/x-data-grid": "^8.21.0",
     "@mui/x-date-pickers": "^8.21.0",
