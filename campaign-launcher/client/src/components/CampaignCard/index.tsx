@@ -15,29 +15,12 @@ import { type Campaign } from '@/types';
 import {
   formatTokenAmount,
   getChainIcon,
+  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
 } from '@/utils';
-
-const getDisplayTargetData = (targetValue: number) => {
-  const shouldUseDoubleKNotation = targetValue >= 1000000;
-  const shouldUseKNotation = targetValue >= 1000 && !shouldUseDoubleKNotation;
-  const value = shouldUseDoubleKNotation
-    ? targetValue / 1000000
-    : shouldUseKNotation
-      ? targetValue / 1000
-      : targetValue;
-  const suffix = shouldUseDoubleKNotation
-    ? 'kk'
-    : shouldUseKNotation
-      ? 'k'
-      : '';
-  const decimals = suffix ? 1 : 3;
-
-  return { value, suffix, decimals };
-};
 
 type Props = {
   campaign: Campaign;
@@ -68,7 +51,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
     value: displayTargetValue,
     suffix: displayTargetSuffix,
     decimals: displayTargetDecimals,
-  } = getDisplayTargetData(targetValue);
+  } = getCompactNumberParts(targetValue);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
