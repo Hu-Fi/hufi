@@ -12,7 +12,7 @@ type Props = {
 };
 
 const LaunchCampaignButton: FC<Props> = ({
-  size,
+  size = 'medium',
   sx,
   handleCallbackOnClick,
 }) => {
