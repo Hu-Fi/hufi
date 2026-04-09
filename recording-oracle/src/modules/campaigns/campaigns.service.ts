@@ -1534,9 +1534,24 @@ export class CampaignsService implements OnModuleDestroy {
         );
         updatedAt = new Date(cachedInterimResults.to);
       } else {
-        resultsToInspect = [];
-        estimatedRewardPool = '0';
-        updatedAt = new Date();
+        const zeroEntries: LeaderboardEntry[] = [];
+        const participants =
+          await this.participationsRepository.findCampaignParticipants(
+            campaign.id,
+          );
+        for (const participant of participants) {
+          zeroEntries.push({
+            address: participant.evmAddress,
+            score: 0,
+            result: 0,
+            estimatedReward: 0,
+          });
+        }
+        return {
+          entries: zeroEntries,
+          total: 0,
+          updatedAt: new Date(),
+        };
       }
     }
 
