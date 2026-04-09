@@ -138,6 +138,6 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
     if (error instanceof Error) {
       throw new Error(`Invalid manifest schema: ${error.message}`);
     }
-    throw new Error('Invalid manifest schema');
+    throw new Error('Invalid manifest schema', { cause: error });
   }
 }

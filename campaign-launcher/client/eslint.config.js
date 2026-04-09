@@ -110,7 +110,8 @@ export default defineConfig(
         {
           "usePrettierrc": true,
         }
-      ]
+      ],
+      'preserve-caught-error': 'off',
     },
   }
 );

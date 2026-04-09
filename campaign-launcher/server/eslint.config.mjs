@@ -48,6 +48,7 @@ export default tseslint.config(
           groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
         },
       ],
+      'preserve-caught-error': 'off',
     },
     settings: {
       'import/resolver': {
