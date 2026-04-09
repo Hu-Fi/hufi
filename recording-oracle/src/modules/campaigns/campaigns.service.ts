@@ -531,31 +531,24 @@ export class CampaignsService implements OnModuleDestroy {
                 campaign.chainId,
                 campaign.address,
               );
-            endDate = cancellationRequestedAt;
+            endDate = new Date(
+              Math.min(
+                cancellationRequestedAt.valueOf(),
+                campaign.endDate.valueOf(),
+              ),
+            );
+          } else if (campaign.endDate <= new Date()) {
+            endDate = campaign.endDate;
           } else {
-            endDate = dayjs(startDate)
-              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
-              .toDate();
-
-            const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
-            if (isOngoingCampaign && endDate.valueOf() > Date.now()) {
-              /**
-               * If campaign is ongoing - check results only once per period.
-               * Otherwise - let it record results immediately to reduce the wait.
-               */
-              logger.warn(
-                "Can't check progress for period that is not finished yet",
-                {
-                  startDate,
-                  endDate,
-                },
-              );
+            const fullCyclesPassed = Math.floor(
+              dayjs().diff(startDate, 'day', false) / CAMPAIGNS_DAILY_CYCLE,
+            );
+            if (fullCyclesPassed === 0) {
               return;
             }
-          }
-
-          if (endDate > campaign.endDate) {
-            endDate = campaign.endDate;
+            endDate = dayjs(startDate)
+              .add(fullCyclesPassed * CAMPAIGNS_DAILY_CYCLE, 'days')
+              .toDate();
           }
 
           // safety-belt
@@ -596,84 +589,98 @@ export class CampaignsService implements OnModuleDestroy {
             }
           }
 
-          const progress = await this.checkCampaignProgressForPeriod(
-            campaign,
-            startDate,
-            endDate,
-            {
-              excludeIneligible:
-                isThresholdCampaign(campaign) &&
-                isFiniteNumber(campaign.details.maxParticipants),
-              logWarnings: true,
-              caller: this.recordCampaignProgress.name,
-            },
-          );
-
-          const rewardPool = rewardsUtils.calculateRewardPool(
-            campaign,
-            progress,
-          );
-          if (escrowStatus !== EscrowStatus.ToCancel) {
-            const dailyReward = rewardsUtils.calculateDailyReward(campaign);
-            if (Decimal(rewardPool).greaterThan(dailyReward)) {
+          const newResults: IntermediateResult[] = [];
+          let totalRewardPool = new Decimal(0);
+          let nextCycleStart = startDate;
+          do {
+            let nextCycleEnd = dayjs(nextCycleStart)
+              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
+              .toDate();
+            if (nextCycleEnd > endDate) {
               /**
-               * Safety-belt
-               * Should not be possible for non-cancelled campaign
+               * In case campaign duration is not multiple of cycle duration
                */
-              throw new Error(
-                'Calculated reward pool is greater than daily reward',
-              );
+              nextCycleEnd = endDate;
             }
-          }
 
-          const intermediateResult: IntermediateResult = {
-            from: progress.from,
-            to: progress.to,
-            reserved_funds: rewardPool,
-            participants_outcomes_batches: [],
-            ...progress.meta,
-          };
-          for (const chunk of _.chunk(
-            progress.participants_outcomes,
-            ESCROW_BULK_PAYOUT_MAX_ITEMS,
-          )) {
-            intermediateResult.participants_outcomes_batches.push({
-              id: crypto.randomUUID(),
-              results: chunk,
-            });
-          }
+            const cycleProgress = await this.checkCampaignProgressForPeriod(
+              campaign,
+              nextCycleStart,
+              nextCycleEnd,
+              {
+                excludeIneligible:
+                  isThresholdCampaign(campaign) &&
+                  isFiniteNumber(campaign.details.maxParticipants),
+                logWarnings: true,
+                caller: this.recordCampaignProgress.name,
+              },
+            );
 
-          intermediateResults.results.push(intermediateResult);
-          const fundsToReserve = ethers.parseUnits(
-            rewardPool.toString(),
+            const rewardPool = rewardsUtils.calculateRewardPool(
+              campaign,
+              cycleProgress,
+            );
+
+            const intermediateResult: IntermediateResult = {
+              from: cycleProgress.from,
+              to: cycleProgress.to,
+              reserved_funds: rewardPool,
+              participants_outcomes_batches: [],
+              ...cycleProgress.meta,
+            };
+            for (const chunk of _.chunk(
+              cycleProgress.participants_outcomes,
+              ESCROW_BULK_PAYOUT_MAX_ITEMS,
+            )) {
+              intermediateResult.participants_outcomes_batches.push({
+                id: crypto.randomUUID(),
+                results: chunk,
+              });
+            }
+
+            newResults.push(intermediateResult);
+            totalRewardPool = totalRewardPool.add(rewardPool);
+            nextCycleStart = nextCycleEnd;
+          } while (nextCycleStart < endDate);
+
+          const fundsToReserve = rewardsUtils.formatRewardValue(
+            totalRewardPool,
             campaign.fundTokenDecimals,
           );
-
           logger.info('Going to record campaign progress', {
-            from: progress.from,
-            to: progress.to,
-            reserved_funds: rewardPool,
+            from: startDate.toISOString(),
+            to: endDate.toISOString(),
+            reserved_funds: fundsToReserve,
           });
+
+          intermediateResults.results.push(...newResults);
 
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(
               intermediateResults,
-              fundsToReserve,
+              ethers.parseUnits(fundsToReserve, campaign.fundTokenDecimals),
             );
 
-          logger.info('Campaign progress recorded', {
-            from: progress.from,
-            to: progress.to,
-            reserved_funds: rewardPool,
-            ...progress.meta,
-            resultsUrl: storedResultsMeta.url,
-          });
+          for (const intermediateResult of newResults) {
+            logger.info(
+              'Campaign progress recorded',
+              Object.assign(
+                {
+                  resultsUrl: storedResultsMeta.url,
+                },
+                intermediateResult,
+                {
+                  participants_outcomes_batches: undefined,
+                },
+              ),
+            );
 
-          if (
-            isMarketMakingCampaign(campaign) ||
-            isCompetitiveMarketMakingCampaign(campaign)
-          ) {
-            void this.recordGeneratedVolume(campaign, intermediateResult);
+            if (
+              isMarketMakingCampaign(campaign) ||
+              isCompetitiveMarketMakingCampaign(campaign)
+            ) {
+              void this.recordGeneratedVolume(campaign, intermediateResult);
+            }
           }
 
           if (escrowStatus === EscrowStatus.ToCancel) {
