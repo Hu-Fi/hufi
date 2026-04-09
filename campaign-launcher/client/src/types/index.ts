@@ -149,7 +149,7 @@ export type LeaderboardResponseDto = {
   updated_at: string;
 };
 
-export type Leaderboard = Omit<LeaderboardResponseDto, 'data'> & {
+export type LeaderboardData = Omit<LeaderboardResponseDto, 'data'> & {
   data: LeaderboardEntry[];
 };
 

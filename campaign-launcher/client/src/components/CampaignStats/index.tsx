@@ -11,7 +11,7 @@ import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import {
   CampaignStatus,
-  type Leaderboard,
+  type LeaderboardData,
   type CampaignDetails,
 } from '@/types';
 import {
@@ -117,7 +117,7 @@ type Props = {
   campaign: CampaignDetails | null | undefined;
   isJoined: boolean;
   isCampaignLoading: boolean;
-  leaderboard?: Leaderboard;
+  leaderboard?: LeaderboardData;
 };
 
 const CampaignStats: FC<Props> = ({
@@ -176,6 +176,7 @@ const CampaignStats: FC<Props> = ({
 
   return (
     <Stack
+      component="section"
       mx={{ xs: -2, md: 0 }}
       px={{ xs: 2, md: 0 }}
       pt={3}

@@ -10,11 +10,11 @@ type Props = {
   campaign: Campaign;
 };
 
-const CancelCampaignButton: FC<Props> = ({ campaign }) => {
+const CancelCampaignSection: FC<Props> = ({ campaign }) => {
   const [openDialog, setOpenDialog] = useState(false);
 
   return (
-    <Box width={{ xs: '100%', md: '60%' }}>
+    <Box component="section" width={{ xs: '100%', md: '60%' }}>
       <Typography
         component="span"
         display="inline"
@@ -54,4 +54,4 @@ const CancelCampaignButton: FC<Props> = ({ campaign }) => {
   );
 };
 
-export default CancelCampaignButton;
+export default CancelCampaignSection;

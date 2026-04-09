@@ -10,7 +10,11 @@ import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import type { EvmAddress, CampaignsQueryParams, Leaderboard } from '@/types';
+import type {
+  EvmAddress,
+  CampaignsQueryParams,
+  LeaderboardData,
+} from '@/types';
 
 type JoinedCampaignsParams = Partial<Omit<CampaignsQueryParams, 'launcher'>>;
 
@@ -89,7 +93,7 @@ export const useGetLeaderboard = ({
     queryKey: [QUERY_KEYS.LEADERBOARD, appChainId, address],
     queryFn: () => recordingApi.getLeaderboard(appChainId, address),
     enabled: enabled && !!appChainId && !!address,
-    select: (data): Leaderboard => ({
+    select: (data): LeaderboardData => ({
       ...data,
       data: data.data.map((entry, idx) => ({
         ...entry,

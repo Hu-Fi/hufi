@@ -117,6 +117,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
 
   return (
     <Stack
+      component="section"
       mx={{ xs: -2, md: 0 }}
       px={{ xs: 2, md: 0 }}
       pt={3}

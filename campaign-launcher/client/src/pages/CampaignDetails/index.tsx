@@ -4,8 +4,9 @@ import { Box } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
+import CampaignResultsSection from '@/components/CampaignResultsSection';
 import CampaignStats from '@/components/CampaignStats';
-import CancelCampaignButton from '@/components/CancelCampaignButton';
+import CancelCampaignSection from '@/components/CancelCampaignSection';
 import CycleInfoSection from '@/components/CycleInfoSection';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
@@ -149,8 +150,9 @@ const CampaignDetails: FC = () => {
       {showLeaderboard && (
         <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
       )}
+      {!!campaign && <CampaignResultsSection campaign={campaign} />}
       {showCancelCampaignButton && (
-        <CancelCampaignButton campaign={campaignData as Campaign} />
+        <CancelCampaignSection campaign={campaignData as Campaign} />
       )}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>

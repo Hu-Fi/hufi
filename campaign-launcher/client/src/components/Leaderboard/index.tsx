@@ -5,7 +5,7 @@ import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { type Leaderboard, type Campaign } from '@/types';
+import { type LeaderboardData, type Campaign } from '@/types';
 import { formatAddress, getCompactNumberParts } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -86,7 +86,7 @@ export const formatActualOnDate = (date: string) => {
 
 type Props = {
   campaign: Campaign;
-  leaderboard: Leaderboard;
+  leaderboard: LeaderboardData;
 };
 
 const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
@@ -104,7 +104,14 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   const showViewAllButton = leaderboard.data.length > 8;
 
   return (
-    <Stack py={3} gap={3}>
+    <Stack
+      component="section"
+      py={3}
+      mx={{ xs: -2, md: 0 }}
+      px={{ xs: 2, md: 0 }}
+      gap={3}
+      borderBottom="1px solid #473C74"
+    >
       <Box
         display="flex"
         alignItems="center"
