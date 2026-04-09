@@ -5042,6 +5042,14 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
+        const participants = Array.from(
+          { length: faker.number.int({ min: 3, max: 5 }) },
+          () => generateCampaignParticipant(campaign),
+        );
+        mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
+          participants,
+        );
+
         const data = await campaignsService.getCampaignLeaderboard(
           campaign.chainId,
           campaign.address,
@@ -5050,8 +5058,22 @@ describe('CampaignsService', () => {
         expect(data).toEqual({
           updatedAt: now,
           total: 0,
-          entries: [],
+          entries: expect.any(Array),
         });
+        expect(data.entries).toHaveLength(participants.length);
+        const entriesByParticipant = _.keyBy(
+          data.entries,
+          (entry) => entry.address,
+        );
+        for (const { evmAddress } of participants) {
+          const entry = entriesByParticipant[evmAddress];
+          expect(entry).toEqual({
+            address: evmAddress,
+            score: 0,
+            result: 0,
+            estimatedReward: 0,
+          });
+        }
       },
     );
   });
