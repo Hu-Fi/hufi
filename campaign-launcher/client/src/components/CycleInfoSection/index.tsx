@@ -170,7 +170,11 @@ const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
           <StatsCard withBorder>
             <CardName>Cycle Reward Pool</CardName>
             <CardValue color="#46db99">
-              {rewardPool} {campaign.fund_token_symbol}
+              <FormattedNumber
+                value={rewardPool / cycleTimeline.totalCycles}
+                decimals={2}
+                suffix={` ${campaign.fund_token_symbol}`}
+              />
             </CardValue>
           </StatsCard>
         </Grid>

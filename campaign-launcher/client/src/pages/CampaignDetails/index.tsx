@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
 import CampaignStats from '@/components/CampaignStats';
+import CancelCampaignButton from '@/components/CancelCampaignButton';
 import CycleInfoSection from '@/components/CycleInfoSection';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
@@ -16,6 +17,7 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
+import { useSignerContext } from '@/providers/SignerProvider';
 import {
   CampaignStatus,
   CampaignType,
@@ -51,6 +53,7 @@ const CampaignDetails: FC = () => {
   const { address } = useParams() as { address: EvmAddress };
   const [searchParams] = useSearchParams();
 
+  const { signer } = useSignerContext();
   const { joinedCampaigns } = useAuthedUserData();
   const { exchangesMap } = useExchangesContext();
   const isMobile = useIsMobile();
@@ -111,6 +114,11 @@ const CampaignDetails: FC = () => {
     leaderboard &&
     leaderboard.data.length > 0;
 
+  const showCancelCampaignButton =
+    !!campaign &&
+    campaign.status === CampaignStatus.ACTIVE &&
+    campaign.launcher.toLowerCase() === signer?.address?.toLowerCase();
+
   return (
     <PageWrapper>
       <CampaignInfo
@@ -132,6 +140,9 @@ const CampaignDetails: FC = () => {
       )}
       {showLeaderboard && (
         <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
+      )}
+      {showCancelCampaignButton && (
+        <CancelCampaignButton campaign={campaignData as Campaign} />
       )}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>
