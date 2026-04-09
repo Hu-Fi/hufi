@@ -5,7 +5,7 @@ import { Box, Grid, Stack, Typography } from '@mui/material';
 import { CardName, CardValue, StatsCard } from '@/components/CampaignStats';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { CampaignType, type Campaign } from '@/types';
+import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
   formatTokenAmount,
   getCompactNumberParts,
@@ -15,7 +15,7 @@ import {
 
 type Props = {
   campaign: Campaign;
-  totalGenerated: number;
+  leaderboard: LeaderboardData;
 };
 
 const CYCLE_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -87,15 +87,15 @@ const getTotalGeneratedCardTitle = (campaignType: CampaignType) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
       return 'Total Generated Volume';
-    case CampaignType.THRESHOLD:
-      return 'Total Generated Balance';
     case CampaignType.HOLDING:
-      return 'Total Held Amount';
+      return 'Total Generated Balance';
   }
 };
 
-const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
+const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
   const isMobile = useIsMobile();
+
+  const isThreshold = campaign.type === CampaignType.THRESHOLD;
 
   const cycleTimeline = useCycleTimeline(
     campaign.start_date,
@@ -113,7 +113,11 @@ const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
     value: totalGeneratedValue,
     suffix: totalGeneratedSuffix,
     decimals: totalGeneratedDecimals,
-  } = getCompactNumberParts(totalGenerated);
+  } = getCompactNumberParts(leaderboard.total);
+
+  const eligibleParticipants = leaderboard.data.filter(
+    (entry) => entry.score > 0
+  );
 
   return (
     <Stack
@@ -189,13 +193,21 @@ const CycleInfoSection: FC<Props> = ({ campaign, totalGenerated }) => {
         </Grid>
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
-            <CardName>{getTotalGeneratedCardTitle(campaign.type)}</CardName>
+            <CardName>
+              {isThreshold
+                ? 'Eligible Participants'
+                : getTotalGeneratedCardTitle(campaign.type)}
+            </CardName>
             <CardValue>
-              <FormattedNumber
-                value={totalGeneratedValue}
-                decimals={totalGeneratedDecimals}
-                suffix={totalGeneratedSuffix + ' ' + targetTokenSymbol}
-              />
+              {isThreshold ? (
+                eligibleParticipants.length
+              ) : (
+                <FormattedNumber
+                  value={totalGeneratedValue}
+                  decimals={totalGeneratedDecimals}
+                  suffix={totalGeneratedSuffix + ' ' + targetTokenSymbol}
+                />
+              )}
             </CardValue>
           </StatsCard>
         </Grid>

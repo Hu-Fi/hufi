@@ -141,11 +141,8 @@ const CampaignDetails: FC = () => {
         isJoined={isJoined}
         leaderboard={leaderboard}
       />
-      {isOngoingCampaign && (
-        <CycleInfoSection
-          campaign={campaignData}
-          totalGenerated={leaderboard?.total || 0}
-        />
+      {isOngoingCampaign && !!leaderboard && (
+        <CycleInfoSection campaign={campaignData} leaderboard={leaderboard} />
       )}
       {showLeaderboard && (
         <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
