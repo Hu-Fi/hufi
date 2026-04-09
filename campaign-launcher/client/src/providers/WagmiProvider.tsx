@@ -1,9 +1,6 @@
 import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { http, WagmiProvider as WWagmiProvider } from 'wagmi';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import type { ConnectMethod } from '@reown/appkit-controllers';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import {
   localhost as defaultLocalhost,
@@ -14,13 +11,16 @@ import {
   sepolia,
 } from '@reown/appkit/networks';
 import { AppKitProvider } from '@reown/appkit/react';
-import { coinbaseWallet } from '@wagmi/connectors';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import type { ConnectMethod } from '@reown/appkit-controllers';
+import { http, WagmiProvider as WWagmiProvider } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
 import { isMainnet } from '@/constants';
 
 const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
-const legalUrl = import.meta.env.VITE_APP_LEGAL_URL;
+const termsUrl = import.meta.env.VITE_APP_TERMS_URL;
+const privacyUrl = import.meta.env.VITE_APP_PRIVACY_URL;
 
 const localhost = defineChain({
   ...defaultLocalhost,
@@ -41,7 +41,6 @@ const networks = isMainnet ? mainnetNetworks : testnetNetworks;
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId,
-  connectors: [coinbaseWallet({ appName: 'HuFi' })],
   syncConnectedChain: false,
   transports: {
     [polygon.id]: http(),
@@ -66,8 +65,8 @@ const appKitConfig = {
   networks,
   projectId,
   metadata,
-  termsConditionsUrl: legalUrl,
-  privacyPolicyUrl: legalUrl,
+  termsConditionsUrl: termsUrl,
+  privacyPolicyUrl: privacyUrl,
   features: {
     email: false,
     socials: false as const,

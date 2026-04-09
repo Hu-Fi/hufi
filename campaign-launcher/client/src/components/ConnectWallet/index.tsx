@@ -1,7 +1,7 @@
 import { type FC, useEffect, useRef } from 'react';
 
-import { useAppKit } from '@reown/appkit/react';
 import { Button } from '@mui/material';
+import { useAppKit } from '@reown/appkit/react';
 import { useConnection } from 'wagmi';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
