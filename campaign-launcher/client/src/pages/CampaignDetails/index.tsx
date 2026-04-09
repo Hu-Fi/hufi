@@ -12,7 +12,10 @@ import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import Leaderboard from '@/components/Leaderboard';
 import PageWrapper from '@/components/PageWrapper';
 import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
-import { useGetLeaderboard } from '@/hooks/recording-oracle/campaign';
+import {
+  useCheckCampaignJoinStatus,
+  useGetLeaderboard,
+} from '@/hooks/recording-oracle/campaign';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
@@ -66,6 +69,9 @@ const CampaignDetails: FC = () => {
     enabled: campaign?.status === CampaignStatus.ACTIVE,
   });
 
+  const { data: joinStatusInfo, isLoading: isJoinStatusLoading } =
+    useCheckCampaignJoinStatus(address);
+
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
     if (!encodedData) return undefined;
@@ -89,9 +95,9 @@ const CampaignDetails: FC = () => {
   const isJoined = useMemo(() => {
     return !!joinedCampaigns?.results.some(
       (joinedCampaign) =>
-        joinedCampaign.address.toLowerCase() === campaign?.address.toLowerCase()
+        joinedCampaign.address.toLowerCase() === address.toLowerCase()
     );
-  }, [joinedCampaigns?.results, campaign?.address]);
+  }, [joinedCampaigns?.results, address]);
 
   const exchangeInfo = exchangesMap.get(campaign?.exchange_name || '');
 
@@ -125,6 +131,8 @@ const CampaignDetails: FC = () => {
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
         isJoined={isJoined}
+        joinedAt={joinStatusInfo?.joined_at}
+        isJoinStatusLoading={isJoinStatusLoading}
       />
       <CampaignStats
         campaign={campaignData}

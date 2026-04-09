@@ -22,6 +22,10 @@ const formatDate = (dateString: string): string => {
   return dayjs(dateString).format('Do MMM YYYY');
 };
 
+const formatJoinTime = (dateString: string): string => {
+  return dayjs(dateString).format('HH:mm');
+};
+
 const DividerStyled = styled(MuiDivider)({
   borderColor: 'rgba(255, 255, 255, 0.3)',
   height: 16,
@@ -32,9 +36,17 @@ type Props = {
   campaign: CampaignDetails | null | undefined;
   isCampaignLoading: boolean;
   isJoined: boolean;
+  joinedAt: string | undefined;
+  isJoinStatusLoading: boolean;
 };
 
-const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
+const CampaignInfo: FC<Props> = ({
+  campaign,
+  isCampaignLoading,
+  isJoined,
+  joinedAt,
+  isJoinStatusLoading,
+}) => {
   const isMobile = useIsMobile();
   const { activeAddress } = useActiveAccount();
 
@@ -47,6 +59,9 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
         <Stack mx={-2} px={2} pb={4} gap={2} borderBottom="1px solid #473C74">
           <Skeleton variant="text" width="100%" height={32} />
           <Skeleton variant="text" width="100%" height={48} />
+          {isJoined && (
+            <Skeleton variant="rectangular" width="100%" height={39} />
+          )}
         </Stack>
       );
     }
@@ -55,6 +70,9 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
       <Stack gap={3.5}>
         <Skeleton variant="text" width="100%" height={42} />
         <Skeleton variant="text" width="100%" height={32} />
+        {isJoined && (
+          <Skeleton variant="rectangular" width="100%" height={39} />
+        )}
       </Stack>
     );
   }
@@ -174,6 +192,36 @@ const CampaignInfo: FC<Props> = ({ campaign, isCampaignLoading, isJoined }) => {
           {oracleFee}% Oracle fees
         </Typography>
       </Box>
+      {!isJoinStatusLoading && joinedAt && (
+        <Box
+          display="flex"
+          alignItems="center"
+          gap={2}
+          justifyContent="space-between"
+          px={2}
+          py={1}
+          bgcolor="rgba(212, 207, 255, 0.15)"
+          borderRadius="8px"
+          border="1px solid rgba(255, 255, 255, 0.07)"
+        >
+          <Typography
+            color="#a496c2"
+            fontSize={12}
+            fontWeight={600}
+            lineHeight="150%"
+            letterSpacing="1.5px"
+            textTransform="uppercase"
+          >
+            Joined at
+          </Typography>
+          <Typography fontSize={14} fontWeight={500} lineHeight="150%">
+            {' '}
+            {formatDate(joinedAt)}
+            {', '}
+            {formatJoinTime(joinedAt)}
+          </Typography>
+        </Box>
+      )}
     </Stack>
   );
 };
