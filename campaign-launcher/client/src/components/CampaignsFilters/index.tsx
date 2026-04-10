@@ -24,7 +24,7 @@ const FiltersCountStyled = styled('div')({
 });
 
 export type CampaignsFiltersSelection = {
-  campaignTypes: (CampaignType | '')[];
+  campaignTypes: (CampaignType | 'all')[];
   exchanges: string[];
   network: number;
 };

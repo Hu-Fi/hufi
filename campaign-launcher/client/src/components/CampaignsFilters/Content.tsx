@@ -1,4 +1,4 @@
-import { type FC, type FormEvent, useEffect, useState } from 'react';
+import { type FC, type SubmitEvent, useEffect, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/Check';
 import {
@@ -71,6 +71,8 @@ const networkOptions = wagmiConfig.chains.map((chain) => ({
   label: chain.name,
 }));
 
+const ALL_OPTION_VALUE = 'all' as const;
+
 type Props = {
   appliedFilters: CampaignsFiltersSelection;
   isOpen: boolean;
@@ -78,6 +80,8 @@ type Props = {
   onAppliedFiltersCountChange: (count: number) => void;
   onClose: () => void;
 };
+
+type MultiSelectSection = 'campaignTypes' | 'exchanges';
 
 const CampaignsFiltersContent: FC<Props> = ({
   appliedFilters,
@@ -96,29 +100,34 @@ const CampaignsFiltersContent: FC<Props> = ({
     value: name,
     label: display_name,
   }));
+  const campaignTypeValues = campaignTypeOptions.map((option) => option.value);
+  const exchangeValues = exchangeOptions.map((option) => option.value);
+  const sectionOptions: Record<MultiSelectSection, string[]> = {
+    campaignTypes: campaignTypeValues,
+    exchanges: exchangeValues,
+  };
 
-  const isAllCampaignTypesSelected = draftFilters.campaignTypes.includes('');
-  const isAllExchangesSelected = draftFilters.exchanges.includes('');
+  const isAllCampaignTypesSelected =
+    draftFilters.campaignTypes.includes(ALL_OPTION_VALUE);
+  const isAllExchangesSelected =
+    draftFilters.exchanges.includes(ALL_OPTION_VALUE);
 
-  const toggleAll = (section: keyof CampaignsFiltersSelection) => {
+  const toggleAll = (section: MultiSelectSection) => {
     const currentValues = draftFilters[section] as string[];
-    const isAllSelected = currentValues.includes('');
+    const isAllSelected = currentValues.includes(ALL_OPTION_VALUE);
 
     setDraftFilters((previous) => ({
       ...previous,
-      [section]: isAllSelected ? [] : [''],
+      [section]: isAllSelected ? [] : [ALL_OPTION_VALUE],
     }));
   };
 
-  const toggleOption = (
-    section: keyof CampaignsFiltersSelection,
-    value: string,
-    options: string[]
-  ) => {
+  const toggleOption = (value: string, section: MultiSelectSection) => {
+    const options = sectionOptions[section];
     const currentValues = draftFilters[section] as string[];
     let nextValues: string[];
 
-    if (currentValues.includes('')) {
+    if (currentValues.includes(ALL_OPTION_VALUE)) {
       nextValues = options.filter((option) => option !== value);
     } else if (currentValues.includes(value)) {
       nextValues = currentValues.filter(
@@ -130,22 +139,23 @@ const CampaignsFiltersContent: FC<Props> = ({
 
     setDraftFilters((previous) => ({
       ...previous,
-      [section]: nextValues.length === options.length ? [''] : nextValues,
+      [section]:
+        nextValues.length === options.length ? [ALL_OPTION_VALUE] : nextValues,
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     let nextFiltersCount = 0;
 
-    if (draftFilters.campaignTypes.includes('')) {
+    if (draftFilters.campaignTypes.includes(ALL_OPTION_VALUE)) {
       nextFiltersCount += campaignTypeOptions.length;
     } else {
       nextFiltersCount += draftFilters.campaignTypes.length;
     }
 
-    if (draftFilters.exchanges.includes('')) {
+    if (draftFilters.exchanges.includes(ALL_OPTION_VALUE)) {
       nextFiltersCount += exchangeOptions.length;
     } else {
       nextFiltersCount += draftFilters.exchanges.length;
@@ -271,13 +281,7 @@ const CampaignsFiltersContent: FC<Props> = ({
                 />
               }
               slotProps={labelSlotProps}
-              onChange={() =>
-                toggleOption(
-                  'campaignTypes',
-                  value,
-                  campaignTypeOptions.map((option) => option.value)
-                )
-              }
+              onChange={() => toggleOption(value, 'campaignTypes')}
             />
           ))}
         </Stack>
@@ -320,13 +324,7 @@ const CampaignsFiltersContent: FC<Props> = ({
                 />
               }
               slotProps={labelSlotProps}
-              onChange={() =>
-                toggleOption(
-                  'exchanges',
-                  value,
-                  exchangeOptions.map((option) => option.value)
-                )
-              }
+              onChange={() => toggleOption(value, 'exchanges')}
             />
           ))}
         </Stack>

@@ -81,12 +81,19 @@ const Campaigns: FC = () => {
     return undefined;
   }, [tabFilter, historyViewFilter, activeAddress]);
 
+  const selectedCampaignTypes = appliedFilters.campaignTypes.filter(
+    (campaignType) => campaignType !== 'all'
+  );
+  const selectedExchanges = appliedFilters.exchanges.filter(
+    (exchange) => exchange !== 'all'
+  );
+
   const queryParams = filterFalsyQueryParams({
     chain_id: appliedFilters.network,
     status: statusFilter,
     launcher: launcherFilter,
-    type: appliedFilters.campaignTypes,
-    exchange: appliedFilters.exchanges,
+    type: selectedCampaignTypes,
+    exchange: selectedExchanges,
     limit,
     skip,
   }) as CampaignsQueryParams;
@@ -106,8 +113,8 @@ const Campaigns: FC = () => {
   const commonKeys = [
     appliedFilters.network,
     statusFilter,
-    appliedFilters.campaignTypes,
-    appliedFilters.exchanges,
+    selectedCampaignTypes,
+    selectedExchanges,
     limit,
     skip,
   ];
