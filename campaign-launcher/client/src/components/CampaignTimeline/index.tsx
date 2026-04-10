@@ -1,32 +1,62 @@
 import { type FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
+import dayjs from 'dayjs';
 
-import { useCampaignTimeline } from '@/hooks/useCampaignTimeline';
-import { type Campaign } from '@/types';
+import { CampaignStatus, type Campaign } from '@/types';
 
 type Props = {
   campaign: Campaign;
   direction?: 'row' | 'column';
 };
 
-const mapLabelToColor = (label: string) => {
-  switch (label) {
-    case 'Starts on':
-      return '#43ba96';
-    case 'Ends on':
-      return '#b98c08';
-    case 'Cancelled on':
-      return '#ff6262';
-    case 'Ended on':
-      return '#d4cfff';
-    default:
-      return 'transparent';
+const DATE_FORMAT = 'Do MMM YYYY';
+
+const getTimelineInfo = (campaign: Campaign | null | undefined) => {
+  if (!campaign) {
+    return {
+      label: '',
+      value: '',
+      color: 'transparent',
+    };
   }
+  const nowDate = dayjs();
+  const startDate = dayjs(campaign.start_date);
+  const endDate = dayjs(campaign.end_date);
+
+  if (endDate.isBefore(nowDate)) {
+    if (campaign.status === CampaignStatus.CANCELLED) {
+      return {
+        label: 'Cancelled on',
+        value: endDate.format(DATE_FORMAT),
+        color: '#ff6262',
+      };
+    }
+
+    return {
+      label: 'Ended on',
+      value: endDate.format(DATE_FORMAT),
+      color: '#d4cfff',
+    };
+  }
+
+  if (nowDate.isBefore(startDate)) {
+    return {
+      label: 'Starts on',
+      value: startDate.format(DATE_FORMAT),
+      color: '#43ba96',
+    };
+  }
+
+  return {
+    label: 'Ends on',
+    value: endDate.format(DATE_FORMAT),
+    color: '#b98c08',
+  };
 };
 
 const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
-  const timeline = useCampaignTimeline(campaign);
+  const timeline = getTimelineInfo(campaign);
   const isRow = direction === 'row';
   return (
     <Box
@@ -46,15 +76,15 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
         <Box
           width={6}
           height={6}
-          bgcolor={mapLabelToColor(timeline.label)}
+          bgcolor={timeline.color}
           borderRadius="50%"
           border="3px solid"
-          borderColor={mapLabelToColor(timeline.label)}
+          borderColor={timeline.color}
         />
         <Typography
           component="p"
           variant={isRow ? 'caption' : 'subtitle2'}
-          color={mapLabelToColor(timeline.label)}
+          color={timeline.color}
           fontWeight={700}
           lineHeight="150%"
           letterSpacing="0.15px"
