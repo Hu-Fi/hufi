@@ -69,7 +69,10 @@ export class ParticipationsRepository extends Repository<ParticipationEntity> {
       });
     }
 
-    query.orderBy('campaign.startDate').skip(options.skip).limit(options.limit);
+    query
+      .orderBy('campaign.createdAt', 'DESC')
+      .skip(options.skip)
+      .limit(options.limit);
 
     const participations = await query.getMany();
 
