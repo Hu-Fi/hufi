@@ -68,9 +68,9 @@ const Campaigns: FC = () => {
 
   const statusFilter = useMemo(() => {
     if (tabFilter === TabFilter.HISTORY) {
-      return CampaignStatus.COMPLETED;
+      return [CampaignStatus.COMPLETED, CampaignStatus.CANCELLED];
     }
-    return CampaignStatus.ACTIVE;
+    return [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL];
   }, [tabFilter]);
 
   const launcherFilter = useMemo(() => {

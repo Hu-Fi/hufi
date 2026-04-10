@@ -112,7 +112,7 @@ const CampaignsFiltersContent: FC<Props> = ({
   const isAllExchangesSelected =
     draftFilters.exchanges.includes(ALL_OPTION_VALUE);
 
-  const toggleAll = (section: MultiSelectSection) => {
+  const handleToggleAll = (section: MultiSelectSection) => {
     const currentValues = draftFilters[section] as string[];
     const isAllSelected = currentValues.includes(ALL_OPTION_VALUE);
 
@@ -122,7 +122,7 @@ const CampaignsFiltersContent: FC<Props> = ({
     }));
   };
 
-  const toggleOption = (value: string, section: MultiSelectSection) => {
+  const handleToggleOption = (value: string, section: MultiSelectSection) => {
     const options = sectionOptions[section];
     const currentValues = draftFilters[section] as string[];
     let nextValues: string[];
@@ -263,7 +263,7 @@ const CampaignsFiltersContent: FC<Props> = ({
               />
             }
             slotProps={labelSlotProps}
-            onChange={() => toggleAll('campaignTypes')}
+            onChange={() => handleToggleAll('campaignTypes')}
           />
           {campaignTypeOptions.map(({ label, value }) => (
             <FormControlLabel
@@ -281,7 +281,7 @@ const CampaignsFiltersContent: FC<Props> = ({
                 />
               }
               slotProps={labelSlotProps}
-              onChange={() => toggleOption(value, 'campaignTypes')}
+              onChange={() => handleToggleOption(value, 'campaignTypes')}
             />
           ))}
         </Stack>
@@ -306,7 +306,7 @@ const CampaignsFiltersContent: FC<Props> = ({
               />
             }
             slotProps={labelSlotProps}
-            onChange={() => toggleAll('exchanges')}
+            onChange={() => handleToggleAll('exchanges')}
           />
           {exchangeOptions.map(({ label, value }) => (
             <FormControlLabel
@@ -324,7 +324,7 @@ const CampaignsFiltersContent: FC<Props> = ({
                 />
               }
               slotProps={labelSlotProps}
-              onChange={() => toggleOption(value, 'exchanges')}
+              onChange={() => handleToggleOption(value, 'exchanges')}
             />
           ))}
         </Stack>
