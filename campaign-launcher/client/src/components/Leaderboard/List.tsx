@@ -36,8 +36,7 @@ const LeaderboardList = memo(
           suffix: scoreSuffix,
           decimals: scoreDecimals,
         } = getCompactNumberParts(score);
-        const isMyEntry =
-          address.toLowerCase() === activeAddress?.toLowerCase();
+        const isMyEntry = address === activeAddress;
         return (
           <Box
             key={address}

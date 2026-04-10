@@ -50,8 +50,7 @@ const CampaignInfo: FC<Props> = ({
   const isMobile = useIsMobile();
   const { activeAddress } = useActiveAccount();
 
-  const isHosted =
-    campaign?.launcher?.toLowerCase() === activeAddress?.toLowerCase();
+  const isHosted = campaign?.launcher === activeAddress;
 
   if (isCampaignLoading) {
     if (isMobile) {

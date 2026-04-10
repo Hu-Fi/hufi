@@ -45,9 +45,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const isAlreadyJoined = useMemo(
     () =>
       !!joinedCampaigns?.results.some(
-        (joinedCampaign) =>
-          joinedCampaign.address.toLowerCase() ===
-          campaign.address.toLowerCase()
+        (joinedCampaign) => joinedCampaign.address === campaign.address
       ),
     [joinedCampaigns?.results, campaign.address]
   );

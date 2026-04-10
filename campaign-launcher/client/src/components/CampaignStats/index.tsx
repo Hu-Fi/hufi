@@ -151,7 +151,7 @@ const CampaignStats: FC<Props> = ({
   const totalParticipants = leaderboard?.data.length || 0;
 
   const userRank = leaderboard?.data.find(
-    (entry) => entry.address.toLowerCase() === activeAddress?.toLowerCase()
+    (entry) => entry.address === activeAddress
   )?.rank;
 
   const showUserPerformance =

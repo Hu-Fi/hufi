@@ -1,6 +1,7 @@
 import { type FC, type PropsWithChildren, useMemo } from 'react';
 
 import { Box } from '@mui/material';
+import { getAddress } from 'ethers';
 import { useParams, useSearchParams } from 'react-router';
 
 import CampaignInfo from '@/components/CampaignInfo';
@@ -21,7 +22,6 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { useSignerContext } from '@/providers/SignerProvider';
 import {
   CampaignStatus,
   CampaignType,
@@ -57,13 +57,14 @@ const CampaignDetails: FC = () => {
   const { address } = useParams() as { address: EvmAddress };
   const [searchParams] = useSearchParams();
 
-  const { signer } = useSignerContext();
+  const normalizedAddress = getAddress(address) as EvmAddress;
+
   const { joinedCampaigns } = useAuthedUserData();
   const { exchangesMap } = useExchangesContext();
   const isMobile = useIsMobile();
 
   const { data: campaign, isFetching: isCampaignLoading } =
-    useCampaignDetails(address);
+    useCampaignDetails(normalizedAddress);
 
   const { data: leaderboard } = useGetLeaderboard({
     address: campaign?.address || '',
@@ -71,7 +72,7 @@ const CampaignDetails: FC = () => {
   });
 
   const { data: joinStatusInfo, isLoading: isJoinStatusLoading } =
-    useCheckCampaignJoinStatus(address);
+    useCheckCampaignJoinStatus(normalizedAddress);
 
   const parsedData = useMemo(() => {
     const encodedData = searchParams.get('data');
@@ -95,10 +96,9 @@ const CampaignDetails: FC = () => {
 
   const isJoined = useMemo(() => {
     return !!joinedCampaigns?.results.some(
-      (joinedCampaign) =>
-        joinedCampaign.address.toLowerCase() === address.toLowerCase()
+      (joinedCampaign) => joinedCampaign.address === normalizedAddress
     );
-  }, [joinedCampaigns?.results, address]);
+  }, [joinedCampaigns?.results, normalizedAddress]);
 
   const exchangeInfo = exchangesMap.get(campaign?.exchange_name || '');
 
@@ -120,10 +120,6 @@ const CampaignDetails: FC = () => {
     campaignData.type !== CampaignType.THRESHOLD &&
     leaderboard &&
     leaderboard.data.length > 0;
-
-  const showCancelCampaignButton =
-    !!campaign &&
-    campaign.launcher.toLowerCase() === signer?.address?.toLowerCase();
 
   return (
     <PageWrapper>
@@ -147,7 +143,7 @@ const CampaignDetails: FC = () => {
         <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
       )}
       {!!campaign && <CampaignResultsSection campaign={campaign} />}
-      {showCancelCampaignButton && (
+      {!!campaign && (
         <CancelCampaignSection campaign={campaignData as Campaign} />
       )}
       {showJoinCampaignButton && (
