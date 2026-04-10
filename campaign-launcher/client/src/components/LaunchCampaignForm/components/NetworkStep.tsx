@@ -177,6 +177,7 @@ const NetworkStep: FC<Props> = ({
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     height: { xs: 130, md: 160 },
                     py: 3,
                     px: 3,

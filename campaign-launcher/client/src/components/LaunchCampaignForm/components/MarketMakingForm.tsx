@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC, KeyboardEvent, WheelEvent } from 'react';
 
 import {
   Autocomplete,
@@ -26,6 +26,7 @@ import {
 import CryptoEntity from '@/components/CryptoEntity';
 import CryptoPairEntity from '@/components/CryptoPairEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
+import { MAX_NUMBER_INPUT_LENGTH } from '@/constants';
 import { FUND_TOKENS } from '@/constants/tokens';
 import { useTradingPairs } from '@/hooks/useTradingPairs';
 import type { CampaignType, MarketMakingFormValues } from '@/types';
@@ -284,6 +285,9 @@ const MarketMakingForm: FC<Props> = ({
                 error={!!errors.daily_volume_target}
                 {...field}
                 onChange={(e) => {
+                  if (e.target.value.length > MAX_NUMBER_INPUT_LENGTH) {
+                    return;
+                  }
                   const value = formatInputValue(e.target.value);
                   if (isExceedingMaximumInteger(value)) {
                     return;
@@ -292,9 +296,17 @@ const MarketMakingForm: FC<Props> = ({
                 }}
                 slotProps={{
                   htmlInput: {
+                    onWheel: (e: WheelEvent<HTMLInputElement>) => {
+                      e.currentTarget.blur();
+                    },
+                    onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                      }
+                    },
                     sx: {
                       fieldSizing: 'content',
-                      maxWidth: '12ch',
+                      maxWidth: '16ch',
                       minWidth: '1ch',
                       width: 'unset',
                     },
