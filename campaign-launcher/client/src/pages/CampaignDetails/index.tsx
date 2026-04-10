@@ -123,7 +123,6 @@ const CampaignDetails: FC = () => {
 
   const showCancelCampaignButton =
     !!campaign &&
-    campaign.status === CampaignStatus.ACTIVE &&
     campaign.launcher.toLowerCase() === signer?.address?.toLowerCase();
 
   return (

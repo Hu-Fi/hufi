@@ -18,7 +18,7 @@ import {
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { type LeaderboardEntry } from '@/types';
+import { type CampaignType, type LeaderboardEntry } from '@/types';
 
 import LeaderboardList from './List';
 
@@ -30,6 +30,8 @@ type Props = {
   data: LeaderboardEntry[];
   updatedAt: string;
   symbol: string;
+  campaignType: CampaignType;
+  tokenSymbol: string;
 };
 
 const LeaderboardOverlay: FC<Props> = ({
@@ -38,6 +40,8 @@ const LeaderboardOverlay: FC<Props> = ({
   data,
   updatedAt,
   symbol,
+  campaignType,
+  tokenSymbol,
 }) => {
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
@@ -126,7 +130,12 @@ const LeaderboardOverlay: FC<Props> = ({
             }}
           />
         </Box>
-        <LeaderboardList data={filteredData} activeAddress={activeAddress} />
+        <LeaderboardList
+          data={filteredData}
+          activeAddress={activeAddress}
+          campaignType={campaignType}
+          tokenSymbol={tokenSymbol}
+        />
       </Stack>
     </ResponsiveOverlay>
   );

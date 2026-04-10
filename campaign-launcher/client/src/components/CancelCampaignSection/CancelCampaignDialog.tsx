@@ -1,10 +1,10 @@
-import { useState, type FC } from 'react';
+import { useCallback, useState, type FC } from 'react';
 
 import { EscrowClient } from '@human-protocol/sdk';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { ModalLoading } from '@/components/ModalState';
+import { ModalLoading, ModalSuccess } from '@/components/ModalState';
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNotification } from '@/hooks/useNotification';
@@ -18,12 +18,16 @@ type Props = {
   campaign: Campaign;
 };
 
+// TODO: Update the copy
 const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isCancelled, setIsCancelled] = useState(false);
 
   const { isSignerReady, signer } = useSignerContext();
   const { showError } = useNotification();
   const queryClient = useQueryClient();
+
+  const isIdle = !isCancelling && !isCancelled;
 
   const handleCancelCampaign = async () => {
     if (!isSignerReady || isCancelling) return;
@@ -32,14 +36,14 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
     try {
       const client = await EscrowClient.build(signer);
       await client.requestCancellation(campaign.address);
-      await queryClient.invalidateQueries({
+      setIsCancelled(true);
+      queryClient.invalidateQueries({
         queryKey: [
           QUERY_KEYS.CAMPAIGN_DETAILS,
           campaign.chain_id,
           campaign.address,
         ],
       });
-      onClose();
     } catch (error) {
       console.error('Failed to cancel campaign', error);
       showError('Failed to cancel campaign');
@@ -48,13 +52,20 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
     }
   };
 
+  const handleClose = useCallback(() => {
+    if (isCancelled) {
+      setIsCancelled(false);
+    }
+    onClose();
+  }, [onClose, isCancelled]);
+
   return (
     <ResponsiveOverlay
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       isLoading={isCancelling}
       desktopSx={{ px: 0, pt: 6, pb: 0 }}
-      mobileSx={{ px: 0, pt: 3, pb: 0, height: '270px' }}
+      mobileSx={{ px: 0, pt: 3, pb: 0, height: '300px' }}
       closeButtonSx={{
         top: { xs: 24, md: 48 },
         right: { xs: 16, md: 32 },
@@ -77,9 +88,24 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           />
           Cancel Campaign
         </Typography>
-        {isCancelling ? (
-          <ModalLoading />
-        ) : (
+        {isCancelling && <ModalLoading />}
+        {isCancelled && (
+          <Stack
+            alignItems="center"
+            textAlign="center"
+            mx="auto"
+            width="fit-content"
+            gap={1}
+          >
+            <ModalSuccess>
+              {/* TODO: we may need to update the docs and reference to the docs here */}
+              <Typography variant="body1" py={1} mb={1} textAlign="center">
+                Cancellation successfully requested. Updates might take a while.
+              </Typography>
+            </ModalSuccess>
+          </Stack>
+        )}
+        {isIdle && (
           <Typography
             fontSize={{ xs: 14, md: 16 }}
             fontWeight={500}
@@ -98,14 +124,27 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
         px={{ xs: 2, md: 4 }}
         borderTop="1px solid #3a2e6f"
       >
-        <Button
-          size="large"
-          variant="contained"
-          onClick={handleCancelCampaign}
-          sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
-        >
-          Cancel Campaign
-        </Button>
+        {isCancelled && (
+          <Button
+            size="large"
+            variant="contained"
+            onClick={handleClose}
+            sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
+          >
+            Close
+          </Button>
+        )}
+        {!isCancelled && (
+          <Button
+            size="large"
+            variant="contained"
+            disabled={isCancelling}
+            onClick={handleCancelCampaign}
+            sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
+          >
+            Cancel Campaign
+          </Button>
+        )}
       </Box>
     </ResponsiveOverlay>
   );

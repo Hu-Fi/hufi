@@ -12,33 +12,11 @@ import {
   getDailyTargetTokenSymbol,
   getTokenInfo,
 } from '@/utils';
+import dayjs from '@/utils/dayjs';
 
 type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
-};
-
-const CYCLE_DURATION_MS = 24 * 60 * 60 * 1000;
-
-const formatDuration = (milliseconds: number) => {
-  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours.toString().padStart(2, '0')}h:${minutes
-      .toString()
-      .padStart(2, '0')}m:${seconds.toString().padStart(2, '0')}s`;
-  }
-
-  if (minutes > 0) {
-    return `${minutes.toString().padStart(2, '0')}m:${seconds
-      .toString()
-      .padStart(2, '0')}s`;
-  }
-
-  return `${seconds}s`;
 };
 
 const useCycleTimeline = (startDate: string, endDate: string) => {
@@ -55,28 +33,30 @@ const useCycleTimeline = (startDate: string, endDate: string) => {
   }, []);
 
   const cycleTimeInfo = useMemo(() => {
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    const nowDate = dayjs(now);
 
-    const totalCycles = Math.ceil((end - start) / CYCLE_DURATION_MS);
-    const effectiveNow = Math.min(Math.max(now, start), end);
-    const elapsedSinceStart = effectiveNow - start;
+    const totalCycles = Math.max(1, Math.ceil(end.diff(start, 'day', true)));
+    const effectiveNow = dayjs(
+      Math.min(Math.max(nowDate.valueOf(), start.valueOf()), end.valueOf())
+    );
     const currentCycle = Math.min(
       totalCycles,
-      Math.floor(elapsedSinceStart / CYCLE_DURATION_MS) + 1
+      Math.floor(effectiveNow.diff(start, 'day', true)) + 1
     );
-
-    const currentCycleStart = start + (currentCycle - 1) * CYCLE_DURATION_MS;
-    const currentCycleEnd = Math.min(
-      currentCycleStart + CYCLE_DURATION_MS,
-      end
-    );
-    const remainingMs = Math.max(0, currentCycleEnd - now);
+    const cycleEndCandidate = start.add(currentCycle, 'day');
+    const currentCycleEnd = cycleEndCandidate.isBefore(end)
+      ? cycleEndCandidate
+      : end;
+    const remainingMs = Math.max(0, currentCycleEnd.diff(nowDate));
 
     return {
       currentCycle,
       totalCycles,
-      remainingTime: formatDuration(remainingMs),
+      remainingTime: dayjs
+        .duration(Math.max(0, remainingMs))
+        .format('HH[h]:mm[m]:ss[s]'),
     };
   }, [startDate, endDate, now]);
 

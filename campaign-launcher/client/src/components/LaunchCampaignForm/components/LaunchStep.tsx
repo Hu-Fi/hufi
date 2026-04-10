@@ -89,7 +89,7 @@ const LaunchStep: FC<Props> = ({
     };
     const payload = constructCampaignDetails({
       chainId,
-      address: escrowAddress,
+      address: escrowAddress.toLowerCase(),
       data: formData,
       tokenDecimals,
       fees,

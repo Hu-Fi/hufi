@@ -5,8 +5,13 @@ import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { type LeaderboardData, type Campaign } from '@/types';
-import { formatAddress, getCompactNumberParts } from '@/utils';
+import { type LeaderboardData, type Campaign, CampaignType } from '@/types';
+import {
+  formatAddress,
+  getCompactNumberParts,
+  getDailyTargetTokenSymbol,
+  getTokenInfo,
+} from '@/utils';
 import dayjs from '@/utils/dayjs';
 
 import LeaderboardList from './List';
@@ -84,6 +89,16 @@ export const formatActualOnDate = (date: string) => {
   return `${value.format('Do MMM')} ${localTime}`;
 };
 
+export const getTargetLabel = (campaignType: CampaignType): string => {
+  switch (campaignType) {
+    case CampaignType.MARKET_MAKING:
+      return 'Volume';
+    case CampaignType.HOLDING:
+      return 'Balance';
+    default:
+      return 'Volume';
+  }
+};
 type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
@@ -102,6 +117,9 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
 
   const showList = leaderboard.data.length > 3;
   const showViewAllButton = leaderboard.data.length > 8;
+
+  const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
+  const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   return (
     <Stack
@@ -261,8 +279,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                       <FormattedNumber
                         value={resultValue}
                         decimals={resultDecimals}
-                        prefix="$"
-                        suffix={resultSuffix}
+                        suffix={resultSuffix + ' ' + targetTokenSymbol}
                       />
                     </Typography>
                     <Typography
@@ -272,7 +289,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                       fontWeight={500}
                       lineHeight={1}
                     >
-                      Volume
+                      {getTargetLabel(campaign.type)}
                     </Typography>
                   </Box>
                   <Box
@@ -313,6 +330,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
             <LeaderboardList
               data={leaderboard.data.slice(listStart, listEnd)}
               activeAddress={activeAddress}
+              campaignType={campaign.type}
+              tokenSymbol={targetTokenSymbol || ''}
             />
           )}
           {showViewAllButton && (
@@ -326,6 +345,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         data={leaderboard.data}
         updatedAt={leaderboard.updated_at}
         symbol={campaign.symbol}
+        campaignType={campaign.type}
+        tokenSymbol={targetTokenSymbol || ''}
       />
     </Stack>
   );

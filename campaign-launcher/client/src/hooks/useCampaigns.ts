@@ -1,8 +1,4 @@
-import {
-  keepPreviousData,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { launcherApi } from '@/api';
 import { QUERY_KEYS } from '@/constants/queryKeys';
@@ -50,11 +46,6 @@ export const useHostedCampaigns = (params: CampaignsQueryParams) => {
 
 export const useCampaignDetails = (address: string) => {
   const { appChainId } = useNetwork();
-  const queryClient = useQueryClient();
-
-  queryClient.removeQueries({
-    queryKey: [QUERY_KEYS.CAMPAIGN_DAILY_PAID_AMOUNTS, appChainId, address],
-  });
 
   return useQuery({
     queryKey: [QUERY_KEYS.CAMPAIGN_DETAILS, appChainId, address],

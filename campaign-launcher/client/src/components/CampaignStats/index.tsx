@@ -13,6 +13,7 @@ import {
   CampaignStatus,
   type LeaderboardData,
   type CampaignDetails,
+  CampaignType,
 } from '@/types';
 import {
   getCompactNumberParts,
@@ -135,9 +136,8 @@ const CampaignStats: FC<Props> = ({
 
   if (!campaign) return null;
 
-  const isCancelled =
-    campaign.status === CampaignStatus.CANCELLED &&
-    !!campaign.cancellation_requested_at;
+  const isCancelled = campaign.status === CampaignStatus.CANCELLED;
+  const isThresholdCampaign = campaign.type === CampaignType.THRESHOLD;
 
   const isOngoingCampaign =
     campaign.status === CampaignStatus.ACTIVE &&
@@ -157,6 +157,7 @@ const CampaignStats: FC<Props> = ({
   const showUserPerformance =
     isAuthenticated &&
     isJoined &&
+    !isThresholdCampaign &&
     !!userRank &&
     (isOngoingCampaign || hasProgressBeforeCancel);
 
