@@ -44,3 +44,5 @@ export const UNLIMITED_AMOUNT = 'unlimited';
 export const MOBILE_BOTTOM_NAV_HEIGHT = 90;
 
 export const MAX_NUMBER_INPUT_LENGTH = 16;
+
+export const PERSISTED_CAMPAIGNS_VIEW_KEY = 'campaigns-view';

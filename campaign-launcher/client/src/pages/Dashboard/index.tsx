@@ -11,7 +11,7 @@ import FAQ from '@/components/FAQ';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
-import { ROUTES } from '@/constants';
+import { PERSISTED_CAMPAIGNS_VIEW_KEY, ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import usePagination from '@/hooks/usePagination';
@@ -49,7 +49,10 @@ const LinkToCampaigns = () => (
 );
 
 const Dashboard: FC = () => {
-  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [view, setView] = useState<'grid' | 'table'>(() => {
+    const persistedView = localStorage.getItem(PERSISTED_CAMPAIGNS_VIEW_KEY);
+    return persistedView === 'table' ? 'table' : 'grid';
+  });
 
   const { isJoinedCampaignsLoading } = useAuthedUserData();
   const { appChainId } = useNetwork();

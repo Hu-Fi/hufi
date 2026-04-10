@@ -18,7 +18,7 @@ import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import PageWrapper from '@/components/PageWrapper';
-import { ROUTES } from '@/constants';
+import { ROUTES, PERSISTED_CAMPAIGNS_VIEW_KEY } from '@/constants';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import usePagination from '@/hooks/usePagination';
@@ -36,7 +36,10 @@ import { filterFalsyQueryParams } from '@/utils';
 
 const Campaigns: FC = () => {
   const { appChainId } = useNetwork();
-  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [view, setView] = useState<'grid' | 'table'>(() => {
+    const persistedView = localStorage.getItem(PERSISTED_CAMPAIGNS_VIEW_KEY);
+    return persistedView === 'table' ? 'table' : 'grid';
+  });
   const [tabFilter, setTabFilter] = useState<TabFilter>(TabFilter.ACTIVE);
   const [historyViewFilter, setHistoryViewFilter] = useState<HistoryViewFilter>(
     HistoryViewFilter.ALL
