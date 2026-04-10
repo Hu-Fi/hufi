@@ -147,10 +147,12 @@ export class ListJoinedCampaignsQueryDto {
 
   @ApiPropertyOptional({
     enum: ReturnedCampaignStatus,
+    isArray: true,
   })
   @IsOptional()
-  @IsEnum(ReturnedCampaignStatus)
-  status?: ReturnedCampaignStatus;
+  @Transform(parseQueryArray)
+  @IsEnum(ReturnedCampaignStatus, { each: true })
+  status?: ReturnedCampaignStatus[];
 
   @ApiPropertyOptional({
     description: 'Campaign types',
