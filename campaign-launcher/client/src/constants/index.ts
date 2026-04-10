@@ -41,3 +41,5 @@ export const DEFAULT_TABLE_PAGE_SIZE = 10;
 export const UNLIMITED_AMOUNT = 'unlimited';
 
 export const MOBILE_BOTTOM_NAV_HEIGHT = 90;
+
+export const MAX_NUMBER_INPUT_LENGTH = 16;
