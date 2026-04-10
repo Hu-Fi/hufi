@@ -37,11 +37,13 @@ export class GetCampaignsQueryDto {
 
   @ApiPropertyOptional({
     description: 'Status of campaign escrow',
+    isArray: true,
     enum: CampaignStatus,
   })
   @IsOptional()
-  @IsEnum(CampaignStatus)
-  status?: CampaignStatus;
+  @Transform(parseQueryArray)
+  @IsEnum(CampaignStatus, { each: true })
+  status?: CampaignStatus[];
 
   @ApiPropertyOptional({
     description: 'Campaign types',
