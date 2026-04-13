@@ -6,6 +6,7 @@ import { Link as RouterLink } from 'react-router';
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
+import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
@@ -15,6 +16,7 @@ import {
   getChainIcon,
   getCompactNumberParts,
   getDailyTargetTokenSymbol,
+  getNetworkName,
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
@@ -91,14 +93,16 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             {mapTypeToLabel(campaign.type)}
           </Typography>
         </Box>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          gap={1}
-          sx={{ '& > svg': { fontSize: '20px' } }}
-        >
-          {getChainIcon(campaign.chain_id)}
+        <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+          <CustomTooltip
+            arrow
+            title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
+            placement="top"
+          >
+            <Box display="flex" sx={{ '& > svg': { fontSize: '20px' } }}>
+              {getChainIcon(campaign.chain_id)}
+            </Box>
+          </CustomTooltip>
           <CampaignAddress
             address={campaign.address}
             chainId={campaign.chain_id}
