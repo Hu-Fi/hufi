@@ -11,12 +11,8 @@ import type {
   ExchangeApiKeyData,
   UserProgress,
   CheckCampaignJoinStatusResponse,
-<<<<<<< HEAD
   JoinedCampaignsResponse,
-  LeaderboardResponse,
-=======
   LeaderboardResponseDto,
->>>>>>> b54af9a7 ([Campaign Launcher UI] Leaderboard (#835))
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
