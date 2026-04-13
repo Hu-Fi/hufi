@@ -16,6 +16,7 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { Campaign } from '@/types';
 import {
   formatTokenAmount,
+  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
@@ -122,10 +123,14 @@ const CampaignsTable: FC<Props> = ({
       flex: 1,
       minWidth: 140,
       renderCell: (params) => {
-        const exchangeName = exchangesMap.get(
-          params.row.exchange_name
-        )?.display_name;
-        return <Typography color="white">{exchangeName}</Typography>;
+        const exchangeName =
+          exchangesMap.get(params.row.exchange_name)?.display_name ||
+          params.row.exchange_name;
+        return (
+          <Typography color="white" textTransform="capitalize">
+            {exchangeName}
+          </Typography>
+        );
       },
     },
     {
@@ -148,6 +153,10 @@ const CampaignsTable: FC<Props> = ({
           params.row.symbol
         );
         const { label: targetTokenSymbol } = getTokenInfo(targetToken);
+        const targetValue = getTargetInfo(params.row).value;
+        const { value, decimals, suffix } = getCompactNumberParts(
+          targetValue || 0
+        );
         return (
           <Typography
             component="p"
@@ -156,7 +165,11 @@ const CampaignsTable: FC<Props> = ({
             fontSize={16}
             fontWeight={700}
           >
-            {getTargetInfo(params.row).value} {targetTokenSymbol}
+            <FormattedNumber
+              value={value}
+              decimals={decimals}
+              suffix={suffix + ' ' + targetTokenSymbol}
+            />
           </Typography>
         );
       },

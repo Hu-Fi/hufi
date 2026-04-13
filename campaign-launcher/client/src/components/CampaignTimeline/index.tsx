@@ -66,6 +66,7 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
     >
       <Typography
         variant="caption"
+        fontSize={14}
         color="text.secondary"
         letterSpacing="0.15px"
         mr={isRow ? 1 : 0}
@@ -82,9 +83,8 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
           borderColor={timeline.color}
         />
         <Typography
-          component="p"
-          variant={isRow ? 'caption' : 'subtitle2'}
           color={timeline.color}
+          fontSize={14}
           fontWeight={700}
           lineHeight="150%"
           letterSpacing="0.15px"

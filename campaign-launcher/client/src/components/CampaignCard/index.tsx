@@ -28,7 +28,9 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
   const { fund_amount, fund_token_decimals } = campaign;
   const { exchangesMap } = useExchangesContext();
 
-  const exchangeName = exchangesMap.get(campaign.exchange_name)?.display_name;
+  const exchangeName =
+    exchangesMap.get(campaign.exchange_name)?.display_name ||
+    campaign.exchange_name;
 
   const targetInfo = getTargetInfo(campaign);
   const targetValue = Number(targetInfo.value || 0);
@@ -103,8 +105,12 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
         <Box display="flex" alignItems="center" gap={1}>
           <Typography
             variant="caption"
-            color="text.secondary"
+            color="white"
+            fontSize={16}
+            fontWeight={600}
+            lineHeight="150%"
             letterSpacing="0.15px"
+            textTransform="capitalize"
           >
             {exchangeName}
           </Typography>
@@ -136,9 +142,11 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           bgcolor="#2d284e"
         >
           <Typography
-            variant="caption"
-            color="text.primary"
-            fontWeight={500}
+            color="#a29dca"
+            fontSize={10}
+            lineHeight="135%"
+            fontWeight={700}
+            letterSpacing="1.2px"
             textTransform="uppercase"
           >
             {targetInfo.label}
@@ -163,9 +171,11 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           bgcolor="#2d284e"
         >
           <Typography
-            variant="caption"
-            color="text.primary"
-            fontWeight={500}
+            color="#a29dca"
+            fontSize={10}
+            lineHeight="135%"
+            fontWeight={700}
+            letterSpacing="1.2px"
             textTransform="uppercase"
           >
             Reward pool
