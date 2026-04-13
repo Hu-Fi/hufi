@@ -9,7 +9,7 @@ import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { type Campaign } from '@/types';
+import { type JoinedCampaign, type Campaign } from '@/types';
 import {
   formatTokenAmount,
   getChainIcon,
@@ -20,12 +20,18 @@ import {
   mapTypeToLabel,
 } from '@/utils';
 
-type Props = {
-  campaign: Campaign;
-};
+type Props =
+  | {
+      campaign: JoinedCampaign;
+      isJoinedCampaign: true;
+    }
+  | {
+      campaign: Campaign;
+      isJoinedCampaign: false;
+    };
 
-const CampaignCard: FC<Props> = ({ campaign }) => {
-  const { fund_amount, fund_token_decimals } = campaign;
+const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
+  const { fund_amount } = campaign;
   const { exchangesMap } = useExchangesContext();
 
   const exchangeName =
@@ -42,6 +48,16 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
+
+  const _rewardValue = isJoinedCampaign
+    ? fund_amount
+    : formatTokenAmount(fund_amount.toString(), campaign.fund_token_decimals);
+
+  const {
+    value: rewardValue,
+    suffix: rewardSuffix,
+    decimals: rewardDecimals,
+  } = getCompactNumberParts(Number(_rewardValue));
 
   return (
     <Paper
@@ -134,8 +150,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
           display="flex"
           flexDirection="column"
           flex={1}
-          px={2}
-          py={1.5}
+          p={{ xs: 1.5, md: 2 }}
           gap={1.5}
           borderRadius="8px"
           border="1px solid #433679"
@@ -155,8 +170,17 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
             <FormattedNumber
               value={displayTargetValue}
               decimals={displayTargetDecimals}
-              suffix={displayTargetSuffix + ' ' + targetTokenSymbol}
+              suffix={`${displayTargetSuffix} `}
             />
+            <Typography
+              component="span"
+              color="text.primary"
+              fontSize={{ xs: 12, md: 16 }}
+              fontWeight={600}
+              lineHeight="150%"
+            >
+              {targetTokenSymbol}
+            </Typography>
           </Typography>
         </Box>
         <Box
@@ -181,10 +205,41 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
             Reward pool
           </Typography>
           <Typography variant="h6" color="white" fontWeight={700}>
-            <FormattedNumber
-              value={formatTokenAmount(fund_amount, fund_token_decimals)}
-              prefix="$ "
-            />
+            {isJoinedCampaign ? (
+              <>
+                <FormattedNumber
+                  value={rewardValue}
+                  decimals={rewardDecimals}
+                  suffix={`${rewardSuffix} `}
+                />
+                <Typography
+                  component="span"
+                  color="text.primary"
+                  fontSize={{ xs: 12, md: 16 }}
+                  fontWeight={600}
+                  lineHeight="150%"
+                >
+                  {campaign.fund_token.toUpperCase()}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <FormattedNumber
+                  value={rewardValue}
+                  decimals={rewardDecimals}
+                  suffix={`${rewardSuffix} `}
+                />
+                <Typography
+                  component="span"
+                  color="text.primary"
+                  fontSize={{ xs: 12, md: 16 }}
+                  fontWeight={600}
+                  lineHeight="150%"
+                >
+                  {campaign.fund_token_symbol.toUpperCase()}
+                </Typography>
+              </>
+            )}
           </Typography>
         </Box>
       </Stack>
@@ -205,7 +260,7 @@ const CampaignCard: FC<Props> = ({ campaign }) => {
         >
           View Details
         </Button>
-        <JoinCampaignButton campaign={campaign} />
+        <JoinCampaignButton campaign={campaign as Campaign} />
       </Box>
     </Paper>
   );

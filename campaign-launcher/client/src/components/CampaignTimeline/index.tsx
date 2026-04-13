@@ -3,16 +3,18 @@ import { type FC } from 'react';
 import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 
-import { CampaignStatus, type Campaign } from '@/types';
+import { CampaignStatus, type JoinedCampaign, type Campaign } from '@/types';
 
 type Props = {
-  campaign: Campaign;
+  campaign: Campaign | JoinedCampaign;
   direction?: 'row' | 'column';
 };
 
 const DATE_FORMAT = 'Do MMM YYYY';
 
-const getTimelineInfo = (campaign: Campaign | null | undefined) => {
+const getTimelineInfo = (
+  campaign: Campaign | JoinedCampaign | null | undefined
+) => {
   if (!campaign) {
     return {
       label: '',

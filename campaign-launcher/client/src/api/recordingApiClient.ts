@@ -9,9 +9,9 @@ import axios, { AxiosError } from 'axios';
 import type {
   EvmAddress,
   ExchangeApiKeyData,
-  CampaignsResponse,
   UserProgress,
   CheckCampaignJoinStatusResponse,
+  JoinedCampaignsResponse,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -164,8 +164,8 @@ export class RecordingApiClient extends HttpClient {
   async getJoinedCampaigns(
     params: Record<string, string | number | string[]>,
     signal?: AbortSignal
-  ): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns', {
+  ): Promise<JoinedCampaignsResponse> {
+    const response = await this.get<JoinedCampaignsResponse>('/campaigns', {
       params,
       signal,
     });

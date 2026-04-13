@@ -5,7 +5,6 @@ import { Box, Button } from '@mui/material';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useHostedCampaigns } from '@/hooks/useCampaigns';
 import type { Campaign, CampaignsQueryParams } from '@/types';
-import { CampaignsTabFilter as TabFilter } from '@/types';
 
 type Props = {
   isGridView: boolean;
@@ -41,7 +40,7 @@ const HostedCampaigns: FC<Props> = ({
         isGridView={isGridView}
         isLoading={isLoading}
         isFetching={isFetching}
-        tabFilter={TabFilter.HOSTED}
+        isHostedCampaigns
       />
       {showLoadMore && (
         <Box

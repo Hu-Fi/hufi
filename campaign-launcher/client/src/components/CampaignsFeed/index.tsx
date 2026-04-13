@@ -10,14 +10,15 @@ import {
   DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE,
 } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { type Campaign, CampaignsTabFilter as TabFilter } from '@/types';
+import { type Campaign, type JoinedCampaign } from '@/types';
 
 type Props = {
-  data: Campaign[];
+  data: Campaign[] | JoinedCampaign[];
   isGridView: boolean;
   isLoading: boolean;
   isFetching: boolean;
-  tabFilter: TabFilter;
+  isHostedCampaigns?: boolean;
+  isJoinedCampaigns?: boolean;
 };
 
 const CampaignsFeed: FC<Props> = ({
@@ -25,7 +26,8 @@ const CampaignsFeed: FC<Props> = ({
   isGridView,
   isLoading,
   isFetching,
-  tabFilter,
+  isHostedCampaigns = false,
+  isJoinedCampaigns = false,
 }) => {
   const isMobile = useIsMobile();
   const pageSize = isMobile
@@ -61,7 +63,17 @@ const CampaignsFeed: FC<Props> = ({
               ))}
             {data?.map((campaign) => (
               <Grid key={campaign.address} size={{ xs: 12, sm: 6, md: 4 }}>
-                <CampaignCard campaign={campaign} />
+                {isJoinedCampaigns ? (
+                  <CampaignCard
+                    campaign={campaign as JoinedCampaign}
+                    isJoinedCampaign
+                  />
+                ) : (
+                  <CampaignCard
+                    campaign={campaign as Campaign}
+                    isJoinedCampaign={false}
+                  />
+                )}
               </Grid>
             ))}
           </Grid>
@@ -70,8 +82,8 @@ const CampaignsFeed: FC<Props> = ({
         <CampaignsTable
           data={data}
           isFetching={isLoading || isFetching}
-          isJoinedCampaigns={tabFilter === TabFilter.JOINED}
-          isMyCampaigns={tabFilter === TabFilter.HOSTED}
+          isJoinedCampaigns={isJoinedCampaigns}
+          isHostedCampaigns={isHostedCampaigns}
         />
       )}
     </>

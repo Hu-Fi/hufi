@@ -4,11 +4,7 @@ import { Box, Button } from '@mui/material';
 
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useCampaigns } from '@/hooks/useCampaigns';
-import {
-  type Campaign,
-  type CampaignsQueryParams,
-  CampaignsTabFilter as TabFilter,
-} from '@/types';
+import { type Campaign, type CampaignsQueryParams } from '@/types';
 
 type Props = {
   isGridView: boolean;
@@ -41,7 +37,6 @@ const AllCampaigns: FC<Props> = ({ isGridView, queryParams, setNextPage }) => {
         isGridView={isGridView}
         isLoading={isLoading}
         isFetching={isFetching}
-        tabFilter={TabFilter.ACTIVE}
       />
       {showLoadMore && (
         <Box

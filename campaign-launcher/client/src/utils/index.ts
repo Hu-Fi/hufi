@@ -15,6 +15,7 @@ import createAppTheme from '@/theme';
 import {
   CampaignStatus,
   CampaignType,
+  type JoinedCampaign,
   type Campaign,
   type CampaignDetails,
   type CampaignFormValues,
@@ -346,7 +347,7 @@ export const getCompactNumberParts = (initialValue: number) => {
   return { value, suffix, decimals };
 };
 
-export const getTargetInfo = (campaign: Campaign) => {
+export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
   switch (campaign.type) {
     case CampaignType.MARKET_MAKING:
       return {

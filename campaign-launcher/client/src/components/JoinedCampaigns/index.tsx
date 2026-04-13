@@ -4,8 +4,7 @@ import { Box, Button } from '@mui/material';
 
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useJoinedCampaigns } from '@/hooks/recording-oracle';
-import type { Campaign, CampaignsQueryParams } from '@/types';
-import { CampaignsTabFilter as TabFilter } from '@/types';
+import type { CampaignsQueryParams, JoinedCampaign } from '@/types';
 
 type Props = {
   queryParams: CampaignsQueryParams;
@@ -18,7 +17,7 @@ const JoinedCampaigns: FC<Props> = ({
   isGridView,
   setNextPage,
 }) => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaigns, setCampaigns] = useState<JoinedCampaign[]>([]);
 
   const { data, isLoading, isFetching } = useJoinedCampaigns(queryParams);
 
@@ -42,7 +41,7 @@ const JoinedCampaigns: FC<Props> = ({
         isGridView={isGridView}
         isLoading={isLoading}
         isFetching={isFetching}
-        tabFilter={TabFilter.JOINED}
+        isJoinedCampaigns
       />
       {showLoadMore && (
         <Box

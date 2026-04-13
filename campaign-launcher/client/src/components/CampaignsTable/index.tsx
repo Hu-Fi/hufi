@@ -13,7 +13,7 @@ import { ArrowLeftIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import type { Campaign } from '@/types';
+import type { Campaign, JoinedCampaign } from '@/types';
 import {
   formatTokenAmount,
   getCompactNumberParts,
@@ -24,13 +24,13 @@ import {
 } from '@/utils';
 
 type Props = {
-  data: Campaign[] | undefined;
+  data: Campaign[] | JoinedCampaign[] | undefined;
   isFetching?: boolean;
+  isHostedCampaigns?: boolean;
   isJoinedCampaigns?: boolean;
-  isMyCampaigns?: boolean;
 };
 
-const MyCampaignsNoRows: FC = () => {
+const HostedCampaignsNoRows: FC = () => {
   const { isSignerReady } = useSignerContext();
 
   if (!isSignerReady) {
@@ -73,13 +73,13 @@ const JoinedCampaignsNoRows: FC = () => {
 const CampaignsTable: FC<Props> = ({
   data,
   isFetching = false,
+  isHostedCampaigns = false,
   isJoinedCampaigns = false,
-  isMyCampaigns = false,
 }) => {
   const { exchangesMap } = useExchangesContext();
   const navigate = useNavigate();
 
-  const isAllCampaigns = !isJoinedCampaigns && !isMyCampaigns;
+  const isAllCampaigns = !isJoinedCampaigns && !isHostedCampaigns;
 
   const columns: GridColDef[] = [
     {
@@ -211,7 +211,7 @@ const CampaignsTable: FC<Props> = ({
         return (
           <Box
             display="flex"
-            justifyContent="center"
+            justifyContent="flex-start"
             alignItems="center"
             flex={1}
             gap={1}
@@ -278,7 +278,7 @@ const CampaignsTable: FC<Props> = ({
             px={2}
             gap={5}
           >
-            {isMyCampaigns && <MyCampaignsNoRows />}
+            {isHostedCampaigns && <HostedCampaignsNoRows />}
             {isJoinedCampaigns && <JoinedCampaignsNoRows />}
             {isAllCampaigns && (
               <Typography variant="subtitle2" component="p">
@@ -317,9 +317,6 @@ const CampaignsTable: FC<Props> = ({
           textTransform: 'uppercase',
           cursor: 'default',
           bgcolor: 'transparent',
-          '&[data-field="action"] .MuiDataGrid-columnHeaderTitleContainer': {
-            justifyContent: 'center',
-          },
         },
         '& .MuiDataGrid-columnHeaderTitle': {
           color: '#716c8b',

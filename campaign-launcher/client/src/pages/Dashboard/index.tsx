@@ -18,11 +18,7 @@ import usePagination from '@/hooks/usePagination';
 import { ChevronIcon } from '@/icons';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useNetwork } from '@/providers/NetworkProvider';
-import {
-  type CampaignsQueryParams,
-  CampaignStatus,
-  CampaignsTabFilter as TabFilter,
-} from '@/types';
+import { type CampaignsQueryParams, CampaignStatus } from '@/types';
 import { filterFalsyQueryParams } from '@/utils';
 
 const LinkToCampaigns = () => (
@@ -102,7 +98,6 @@ const Dashboard: FC = () => {
         isGridView={view === 'grid'}
         isLoading={isLoading}
         isFetching={isCampaignsFetching}
-        tabFilter={TabFilter.ACTIVE}
       />
       {isMobile && (
         <Button

@@ -61,7 +61,6 @@ export type ExchangeApiKeyData = {
 };
 
 export type Campaign = {
-  id: string;
   address: EvmAddress;
   chain_id: number;
   details: {
@@ -90,6 +89,24 @@ export type Campaign = {
   balance: string;
 };
 
+export type JoinedCampaign = {
+  address: EvmAddress;
+  chain_id: number;
+  details: {
+    daily_volume_target?: number;
+    daily_balance_target?: number;
+    minimum_balance_target?: number;
+  };
+  end_date: string;
+  exchange_name: string;
+  fund_amount: number;
+  fund_token: string;
+  start_date: string;
+  status: CampaignStatus;
+  symbol: string;
+  type: CampaignType;
+};
+
 export type CampaignDetails = Campaign & {
   exchange_oracle_fee_percent: number;
   recording_oracle_fee_percent: number;
@@ -106,6 +123,11 @@ export type CampaignDailyPaidAmounts = {
 
 export type CampaignsResponse = {
   results: Campaign[];
+  has_more: boolean;
+};
+
+export type JoinedCampaignsResponse = {
+  results: JoinedCampaign[];
   has_more: boolean;
 };
 
