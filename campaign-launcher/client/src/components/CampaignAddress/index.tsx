@@ -24,8 +24,6 @@ const AddressLink: FC<Props> = ({ address, chainId, size }) => {
           size === 'small' ? '12px' : size === 'medium' ? '14px' : '16px',
         color: 'text.primary',
         textDecoration: 'underline',
-        textDecorationStyle: 'dotted',
-        textDecorationThickness: '12%',
         fontWeight: 600,
       }}
     >

@@ -11,6 +11,7 @@ import {
 
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignStatusLabel from '@/components/CampaignStatusLabel';
+import CustomTooltip from '@/components/CustomTooltip';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -20,6 +21,11 @@ import dayjs from '@/utils/dayjs';
 
 const formatDate = (dateString: string): string => {
   return dayjs(dateString).format('Do MMM YYYY');
+};
+
+const formatTime = (dateString: string): string => {
+  const date = dayjs(dateString);
+  return date.format('HH:mm [GMT]Z');
 };
 
 const formatJoinTime = (dateString: string): string => {
@@ -168,19 +174,55 @@ const CampaignInfo: FC<Props> = ({
             <DividerStyled orientation="vertical" flexItem />
           </>
         )}
-        <Typography
-          display="flex"
-          alignItems="center"
-          gap={1}
-          fontSize={{ xs: 14, md: 20 }}
-          fontWeight={500}
-          lineHeight="100%"
-          letterSpacing={0}
-        >
-          {formatDate(campaign.start_date)}
-          {' > '}
-          {formatDate(campaign.end_date)}
-        </Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <CustomTooltip
+            arrow
+            placement="top"
+            title={formatTime(campaign.start_date)}
+          >
+            <Typography
+              color="white"
+              fontSize={{ xs: 14, md: 20 }}
+              fontWeight={500}
+              lineHeight="100%"
+              sx={{
+                textDecoration: 'underline',
+                textDecorationStyle: 'dotted',
+                textDecorationThickness: '12%',
+              }}
+            >
+              {formatDate(campaign.start_date)}
+            </Typography>
+          </CustomTooltip>
+          <Typography
+            component="span"
+            color="error.main"
+            fontSize={{ xs: 14, md: 20 }}
+            fontWeight={500}
+            lineHeight="100%"
+          >
+            &gt;
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="top"
+            title={formatTime(campaign.end_date)}
+          >
+            <Typography
+              color="white"
+              fontSize={{ xs: 14, md: 20 }}
+              fontWeight={500}
+              lineHeight="100%"
+              sx={{
+                textDecoration: 'underline',
+                textDecorationStyle: 'dotted',
+                textDecorationThickness: '12%',
+              }}
+            >
+              {formatDate(campaign.end_date)}
+            </Typography>
+          </CustomTooltip>
+        </Box>
         <DividerStyled orientation="vertical" flexItem />
         <Typography
           fontSize={{ xs: 14, md: 20 }}
