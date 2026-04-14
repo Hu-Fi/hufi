@@ -64,7 +64,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
       campaign.exchange_name
     );
     if (exchangeInfo.type === ExchangeType.CEX && !hasEnrolledApiKey) {
-      navigate(ROUTES.MANAGE_API_KEYS);
+      navigate(`${ROUTES.MANAGE_API_KEYS}?exchange=${campaign.exchange_name}`);
       return;
     }
     try {
