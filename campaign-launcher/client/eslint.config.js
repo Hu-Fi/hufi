@@ -36,7 +36,7 @@ export default defineConfig(
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       prettier: prettierPlugin,
-      'import': importXPlugin,
+      import: importXPlugin,
     },
     settings: {
       react: {
