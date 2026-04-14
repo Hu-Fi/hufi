@@ -166,11 +166,23 @@ const CampaignsFiltersContent: FC<Props> = ({
     onClose();
   };
 
+  const handleClearAll = () => {
+    setDraftFilters({
+      campaignTypes: [],
+      exchanges: [],
+      network: appliedFilters.network,
+    });
+  };
+
   useEffect(() => {
     if (isOpen) {
       setDraftFilters(appliedFilters);
     }
   }, [isOpen, appliedFilters]);
+
+  const disableClearAll = Object.entries(draftFilters)
+    .filter(([key]) => key !== 'network')
+    .every(([, value]) => (Array.isArray(value) ? value.length === 0 : !value));
 
   return (
     <Stack
@@ -331,21 +343,37 @@ const CampaignsFiltersContent: FC<Props> = ({
       </Stack>
       <Box
         display="flex"
+        justifyContent="space-between"
+        alignItems="center"
         borderTop="1px solid #3a2e6f"
         pt={3}
         pb={4}
         px={{ xs: 2, md: 3 }}
+        gap={2}
       >
+        <Button
+          size="large"
+          variant="outlined"
+          disabled={disableClearAll}
+          fullWidth={isMobile}
+          disableRipple
+          sx={{
+            color: 'white',
+            boxShadow: 'none',
+          }}
+          onClick={handleClearAll}
+        >
+          Clear All
+        </Button>
         <Button
           type="submit"
           size="large"
           variant="contained"
+          color="error"
           fullWidth={isMobile}
           disableRipple
           sx={{
-            bgcolor: 'error.main',
             color: 'white',
-            ml: { xs: 0, md: 'auto' },
             boxShadow: 'none',
           }}
         >
