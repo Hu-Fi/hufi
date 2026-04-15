@@ -24,7 +24,10 @@ const constructDocsExchangeKeyUrl = (exchange: string) => {
   return `${baseUrl}${idx}`;
 };
 
-const DocsReference: FC<{ exchange: string }> = ({ exchange }) => {
+const DocsReference: FC<{ exchange: string; exchangeName: string }> = ({
+  exchange,
+  exchangeName,
+}) => {
   return (
     <Box mb={{ xs: 2, md: 3 }}>
       <Typography
@@ -53,7 +56,7 @@ const DocsReference: FC<{ exchange: string }> = ({ exchange }) => {
           },
         }}
       >
-        Learn how to add an API key for {exchange}
+        Learn how to add an API key for {exchangeName}
       </Link>
     </Box>
   );
@@ -128,7 +131,9 @@ const ManageApiKeysPage: FC = () => {
         </Typography>
         {!isMobile && addApiKeyCta}
       </Box>
-      {showDocsReference && <DocsReference exchange={exchangeParam} />}
+      {showDocsReference && (
+        <DocsReference exchange={exchangeParam} exchangeName={exchangeName} />
+      )}
       <ApiKeysTable data={apiKeysData} isLoading={isLoading} />
       <AddApiKeyDialog
         open={isDialogOpen}
