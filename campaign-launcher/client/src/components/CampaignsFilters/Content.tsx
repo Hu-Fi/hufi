@@ -1,4 +1,4 @@
-import { type FC, type SubmitEvent, useEffect, useState } from 'react';
+import { type FC, type SubmitEvent, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/Check';
 import {
@@ -75,20 +75,14 @@ const ALL_OPTION_VALUE = 'all' as const;
 
 type Props = {
   appliedFilters: CampaignsFiltersSelection;
-  isOpen: boolean;
   onApplyFilters: (filters: CampaignsFiltersSelection) => void;
-  onAppliedFiltersCountChange: (count: number) => void;
-  onClose: () => void;
 };
 
 type MultiSelectSection = 'campaignTypes' | 'exchanges';
 
 const CampaignsFiltersContent: FC<Props> = ({
   appliedFilters,
-  isOpen,
   onApplyFilters,
-  onAppliedFiltersCountChange,
-  onClose,
 }) => {
   const [draftFilters, setDraftFilters] =
     useState<CampaignsFiltersSelection>(appliedFilters);
@@ -146,24 +140,7 @@ const CampaignsFiltersContent: FC<Props> = ({
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    let nextFiltersCount = 0;
-
-    if (draftFilters.campaignTypes.includes(ALL_OPTION_VALUE)) {
-      nextFiltersCount += campaignTypeOptions.length;
-    } else {
-      nextFiltersCount += draftFilters.campaignTypes.length;
-    }
-
-    if (draftFilters.exchanges.includes(ALL_OPTION_VALUE)) {
-      nextFiltersCount += exchangeOptions.length;
-    } else {
-      nextFiltersCount += draftFilters.exchanges.length;
-    }
-
     onApplyFilters(draftFilters);
-    onAppliedFiltersCountChange(nextFiltersCount);
-    onClose();
   };
 
   const handleClearAll = () => {
@@ -173,12 +150,6 @@ const CampaignsFiltersContent: FC<Props> = ({
       network: appliedFilters.network,
     });
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      setDraftFilters(appliedFilters);
-    }
-  }, [isOpen, appliedFilters]);
 
   const disableClearAll = Object.entries(draftFilters)
     .filter(([key]) => key !== 'network')

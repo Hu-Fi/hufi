@@ -8,11 +8,8 @@ import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
 import FormattedNumber from '@/components/FormattedNumber';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
-import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { ArrowLeftIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { useSignerContext } from '@/providers/SignerProvider';
-import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import type { Campaign, JoinedCampaign } from '@/types';
 import {
   formatTokenAmount,
@@ -26,60 +23,16 @@ import {
 type Props = {
   data: Campaign[] | JoinedCampaign[] | undefined;
   isFetching?: boolean;
-  isHostedCampaigns?: boolean;
   isJoinedCampaigns?: boolean;
-};
-
-const HostedCampaignsNoRows: FC = () => {
-  const { isSignerReady } = useSignerContext();
-
-  if (!isSignerReady) {
-    return (
-      <Typography variant="subtitle2" component="p">
-        To see your campaigns please connect your wallet
-      </Typography>
-    );
-  }
-
-  return (
-    <>
-      <Typography variant="subtitle2" component="p">
-        At the moment you are not running any campaign.
-      </Typography>
-      <LaunchCampaignButton size="large" />
-    </>
-  );
-};
-
-const JoinedCampaignsNoRows: FC = () => {
-  const { isAuthenticated } = useWeb3Auth();
-
-  if (isAuthenticated) {
-    return (
-      <Typography variant="subtitle2" component="p">
-        At the moment you are not participating in any campaign, please see
-        Active campaigns to participate.
-      </Typography>
-    );
-  }
-
-  return (
-    <Typography variant="subtitle2" component="p">
-      To see joined campaigns please sign in
-    </Typography>
-  );
 };
 
 const CampaignsTable: FC<Props> = ({
   data,
   isFetching = false,
-  isHostedCampaigns = false,
   isJoinedCampaigns = false,
 }) => {
   const { exchangesMap } = useExchangesContext();
   const navigate = useNavigate();
-
-  const isAllCampaigns = !isJoinedCampaigns && !isHostedCampaigns;
 
   const columns: GridColDef[] = [
     {
@@ -264,30 +217,6 @@ const CampaignsTable: FC<Props> = ({
       disableRowSelectionOnClick
       hideFooter
       hideFooterPagination
-      slots={{
-        noRowsOverlay: () => (
-          <Box
-            display="flex"
-            width="100%"
-            height="184px"
-            alignItems="center"
-            justifyContent="center"
-            flexDirection={{ xs: 'column', md: 'row' }}
-            textAlign="center"
-            py={{ xs: 4, xl: 8 }}
-            px={2}
-            gap={5}
-          >
-            {isHostedCampaigns && <HostedCampaignsNoRows />}
-            {isJoinedCampaigns && <JoinedCampaignsNoRows />}
-            {isAllCampaigns && (
-              <Typography variant="subtitle2" component="p">
-                No campaigns found
-              </Typography>
-            )}
-          </Box>
-        ),
-      }}
       sx={{
         border: 'none',
         borderRadius: '18px',

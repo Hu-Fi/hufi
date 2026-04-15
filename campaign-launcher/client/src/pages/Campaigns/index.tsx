@@ -101,6 +101,20 @@ const Campaigns: FC = () => {
     skip,
   }) as CampaignsQueryParams;
 
+  const filtersCount = useMemo(() => {
+    let count = 0;
+    Object.entries(appliedFilters)
+      .filter(([key]) => key !== 'network')
+      .forEach(([_, value]) => {
+        if (Array.isArray(value)) {
+          count += Number(value.length > 0);
+        } else {
+          count += Number(!!value);
+        }
+      });
+    return count;
+  }, [appliedFilters]);
+
   const isJoinedTab =
     tabFilter === TabFilter.JOINED ||
     (tabFilter === TabFilter.HISTORY &&
@@ -218,6 +232,7 @@ const Campaigns: FC = () => {
           />
           <CampaignsFilters
             appliedFilters={appliedFilters}
+            filtersCount={filtersCount}
             handleApplyFilters={handleApplyFilters}
             isDisabled={disableFilters}
           />
@@ -240,6 +255,8 @@ const Campaigns: FC = () => {
           queryParams={queryParams}
           isGridView={isGridView}
           setNextPage={setNextPage}
+          hasActiveFilters={filtersCount > 0}
+          isHistory={tabFilter === TabFilter.HISTORY}
         />
       )}
       {isHostedTab && (
@@ -247,6 +264,8 @@ const Campaigns: FC = () => {
           queryParams={queryParams}
           isGridView={isGridView}
           setNextPage={setNextPage}
+          hasActiveFilters={filtersCount > 0}
+          isHistory={tabFilter === TabFilter.HISTORY}
         />
       )}
       {isAllTab && (
@@ -254,6 +273,8 @@ const Campaigns: FC = () => {
           queryParams={queryParams}
           isGridView={isGridView}
           setNextPage={setNextPage}
+          hasActiveFilters={filtersCount > 0}
+          isHistory={tabFilter === TabFilter.HISTORY}
         />
       )}
       <MobileBottomNav isVisible={isMobile} />

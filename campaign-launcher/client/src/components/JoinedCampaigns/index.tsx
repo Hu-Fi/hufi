@@ -2,19 +2,24 @@ import { useEffect, useState, type FC } from 'react';
 
 import { Box, Button } from '@mui/material';
 
+import CampaignsEmptyState from '@/components/CampaignsEmptyState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useJoinedCampaigns } from '@/hooks/recording-oracle';
 import type { CampaignsQueryParams, JoinedCampaign } from '@/types';
 
 type Props = {
   queryParams: CampaignsQueryParams;
+  hasActiveFilters: boolean;
   isGridView: boolean;
+  isHistory: boolean;
   setNextPage: () => void;
 };
 
 const JoinedCampaigns: FC<Props> = ({
   queryParams,
+  hasActiveFilters,
   isGridView,
+  isHistory,
   setNextPage,
 }) => {
   const [campaigns, setCampaigns] = useState<JoinedCampaign[]>([]);
@@ -34,15 +39,25 @@ const JoinedCampaigns: FC<Props> = ({
 
   const showLoadMore = isLoading || isFetching || data?.has_more;
 
+  const showEmptyState = !isLoading && !isFetching && campaigns.length === 0;
+
   return (
     <>
-      <CampaignsFeed
-        data={campaigns}
-        isGridView={isGridView}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        isJoinedCampaigns
-      />
+      {showEmptyState ? (
+        <CampaignsEmptyState
+          view="joined"
+          hasActiveFilters={hasActiveFilters}
+          isHistory={isHistory}
+        />
+      ) : (
+        <CampaignsFeed
+          data={campaigns}
+          isGridView={isGridView}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          isJoinedCampaigns
+        />
+      )}
       {showLoadMore && (
         <Box
           display="flex"

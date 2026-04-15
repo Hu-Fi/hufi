@@ -31,24 +31,30 @@ export type CampaignsFiltersSelection = {
 
 type Props = {
   appliedFilters: CampaignsFiltersSelection;
+  filtersCount: number;
   handleApplyFilters: (filters: CampaignsFiltersSelection) => void;
   isDisabled: boolean;
 };
 
 const CampaignsFilters: FC<Props> = ({
   appliedFilters,
+  filtersCount,
   handleApplyFilters,
   isDisabled,
 }) => {
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [filtersCount, setFiltersCount] = useState(0);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleOpen = () => {
-    setIsFiltersOpen(true);
+    setIsDialogOpen(true);
   };
 
   const handleClose = () => {
-    setIsFiltersOpen(false);
+    setIsDialogOpen(false);
+  };
+
+  const _handleApplyFilters = (filters: CampaignsFiltersSelection) => {
+    handleApplyFilters(filters);
+    handleClose();
   };
 
   return (
@@ -73,7 +79,7 @@ const CampaignsFilters: FC<Props> = ({
         )}
       </IconButton>
       <ResponsiveOverlay
-        open={isFiltersOpen}
+        open={isDialogOpen}
         onClose={handleClose}
         desktopSx={{
           pt: 6,
@@ -90,11 +96,8 @@ const CampaignsFilters: FC<Props> = ({
         }}
       >
         <CampaignsFiltersContent
-          isOpen={isFiltersOpen}
           appliedFilters={appliedFilters}
-          onApplyFilters={handleApplyFilters}
-          onAppliedFiltersCountChange={setFiltersCount}
-          onClose={handleClose}
+          onApplyFilters={_handleApplyFilters}
         />
       </ResponsiveOverlay>
     </>

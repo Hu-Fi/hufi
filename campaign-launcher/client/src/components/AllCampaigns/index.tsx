@@ -2,17 +2,26 @@ import { useEffect, useState, type FC } from 'react';
 
 import { Box, Button } from '@mui/material';
 
+import CampaignsEmptyState from '@/components/CampaignsEmptyState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { type Campaign, type CampaignsQueryParams } from '@/types';
 
 type Props = {
-  isGridView: boolean;
   queryParams: CampaignsQueryParams;
+  hasActiveFilters: boolean;
+  isGridView: boolean;
+  isHistory: boolean;
   setNextPage: () => void;
 };
 
-const AllCampaigns: FC<Props> = ({ isGridView, queryParams, setNextPage }) => {
+const AllCampaigns: FC<Props> = ({
+  queryParams,
+  hasActiveFilters,
+  isGridView,
+  isHistory,
+  setNextPage,
+}) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   const { data, isLoading, isFetching } = useCampaigns(queryParams);
@@ -30,14 +39,24 @@ const AllCampaigns: FC<Props> = ({ isGridView, queryParams, setNextPage }) => {
 
   const showLoadMore = isLoading || isFetching || data?.has_more;
 
+  const showEmptyState = !isLoading && !isFetching && campaigns.length === 0;
+
   return (
     <>
-      <CampaignsFeed
-        data={campaigns}
-        isGridView={isGridView}
-        isLoading={isLoading}
-        isFetching={isFetching}
-      />
+      {showEmptyState ? (
+        <CampaignsEmptyState
+          view="all"
+          hasActiveFilters={hasActiveFilters}
+          isHistory={isHistory}
+        />
+      ) : (
+        <CampaignsFeed
+          data={campaigns}
+          isGridView={isGridView}
+          isLoading={isLoading}
+          isFetching={isFetching}
+        />
+      )}
       {showLoadMore && (
         <Box
           display="flex"

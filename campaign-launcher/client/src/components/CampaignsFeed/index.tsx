@@ -17,7 +17,6 @@ type Props = {
   isGridView: boolean;
   isLoading: boolean;
   isFetching: boolean;
-  isHostedCampaigns?: boolean;
   isJoinedCampaigns?: boolean;
 };
 
@@ -26,7 +25,6 @@ const CampaignsFeed: FC<Props> = ({
   isGridView,
   isLoading,
   isFetching,
-  isHostedCampaigns = false,
   isJoinedCampaigns = false,
 }) => {
   const isMobile = useIsMobile();
@@ -83,7 +81,6 @@ const CampaignsFeed: FC<Props> = ({
           data={data}
           isFetching={isLoading || isFetching}
           isJoinedCampaigns={isJoinedCampaigns}
-          isHostedCampaigns={isHostedCampaigns}
         />
       )}
     </>
