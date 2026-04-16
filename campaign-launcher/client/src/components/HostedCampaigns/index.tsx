@@ -28,10 +28,11 @@ const HostedCampaigns: FC<Props> = ({
   const currentSkip = queryParams.skip ?? 0;
 
   useEffect(() => {
-    if (!data || isFetching) return;
+    if (!data) return;
 
     setCampaigns((prev) => {
       if (currentSkip === 0) return data.results;
+      if (isFetching) return prev;
       return [...prev, ...data.results];
     });
   }, [data, currentSkip, isFetching]);

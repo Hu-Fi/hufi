@@ -32,6 +32,8 @@ const CampaignsFeed: FC<Props> = ({
     ? DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE
     : DEFAULT_CAMPAIGNS_QUERY_LIMIT;
 
+  const showSkeletons = isLoading || (isFetching && data.length === 0);
+
   return (
     <>
       {isGridView || isMobile ? (
@@ -53,7 +55,7 @@ const CampaignsFeed: FC<Props> = ({
             />
           )}
           <Grid container spacing={3}>
-            {isLoading &&
+            {showSkeletons &&
               Array.from({ length: pageSize }).map((_, index) => (
                 <Grid key={index} size={{ xs: 12, sm: 6, md: 4 }}>
                   <SkeletonCard />

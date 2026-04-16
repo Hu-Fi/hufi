@@ -217,6 +217,7 @@ const CampaignsTable: FC<Props> = ({
       disableRowSelectionOnClick
       hideFooter
       hideFooterPagination
+      loading={isFetching}
       sx={{
         border: 'none',
         borderRadius: '18px',
