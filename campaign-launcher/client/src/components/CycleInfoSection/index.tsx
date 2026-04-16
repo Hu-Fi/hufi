@@ -3,7 +3,9 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 
 import { CardName, CardValue, StatsCard } from '@/components/CampaignStats';
+import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
+import InfoTooltipInner from '@/components/InfoTooltipInner';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
@@ -13,6 +15,59 @@ import {
   getTokenInfo,
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
+
+const IndividualRewardTooltip = () => {
+  return (
+    <CustomTooltip
+      title={
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={1.5}
+          px={{ xs: 0, md: 1 }}
+          py={{ xs: 1, md: 1.5 }}
+        >
+          <Typography
+            fontSize={14}
+            color="#161616"
+            fontWeight={500}
+            lineHeight={1}
+            letterSpacing={0}
+          >
+            For each cycle, the total reward pool is evenly distributed among
+            all eligible participants.
+          </Typography>
+          <Typography
+            fontSize={14}
+            color="#161616"
+            fontWeight={500}
+            lineHeight={1}
+            letterSpacing={0}
+          >
+            Reward per cycle = Total reward pool ÷ eligible participants
+          </Typography>
+        </Box>
+      }
+      arrow
+      placement="top"
+    >
+      <InfoTooltipInner
+        sx={{
+          width: { xs: 16, md: 24 },
+          height: { xs: 16, md: 24 },
+          px: 0.5,
+          bgcolor: 'transparent',
+          border: { xs: '1px solid', md: '2px solid' },
+          borderColor: { xs: 'text.secondary', md: '#6b6490' },
+          '& > span': {
+            fontSize: { xs: 10, md: 14 },
+            color: { xs: 'text.secondary', md: '#6b6490' },
+          },
+        }}
+      />
+    </CustomTooltip>
+  );
+};
 
 type Props = {
   campaign: Campaign;
@@ -148,7 +203,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
           </Typography>
         </Box>
       </Box>
-      <Grid container spacing={{ xs: 2, md: 3 }}>
+      <Grid container spacing={{ xs: 1.5, md: 3 }}>
         <Grid
           size={{ xs: 6, md: 4 }}
           order={{ xs: isThreshold ? 3 : 2, md: 1 }}
@@ -174,17 +229,30 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             </Grid>
             <Grid size={{ xs: 6, md: 4 }} order={{ xs: 2, md: 3 }}>
               <StatsCard withBorder>
-                <CardName>Individual Reward</CardName>
-                <CardValue color="#46db99">
-                  <FormattedNumber
-                    value={
-                      rewardPool /
-                      cycleTimeline.totalCycles /
-                      eligibleParticipants.length
-                    }
-                    decimals={2}
-                    suffix={` ${campaign.fund_token_symbol}`}
-                  />
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={{ xs: 0.75, md: 1.5 }}
+                >
+                  <CardName>Individual Reward</CardName>
+                  <IndividualRewardTooltip />
+                </Box>
+                <CardValue
+                  color={eligibleParticipants.length > 0 ? '#46db99' : 'white'}
+                >
+                  {eligibleParticipants.length > 0 ? (
+                    <FormattedNumber
+                      value={
+                        rewardPool /
+                        cycleTimeline.totalCycles /
+                        eligibleParticipants.length
+                      }
+                      decimals={2}
+                      suffix={` ${campaign.fund_token_symbol}`}
+                    />
+                  ) : (
+                    'N/A'
+                  )}
                 </CardValue>
               </StatsCard>
             </Grid>

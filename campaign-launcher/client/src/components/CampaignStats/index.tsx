@@ -52,7 +52,7 @@ export const StatsCard = styled(Box, {
 }));
 
 export const CardName = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
+  color: '#6b6490',
   fontSize: '16px',
   fontWeight: 600,
   lineHeight: '18px',
@@ -60,6 +60,7 @@ export const CardName = styled(Typography)(({ theme }) => ({
   textTransform: 'uppercase',
 
   [theme.breakpoints.down('md')]: {
+    color: theme.palette.text.secondary,
     fontSize: '14px',
     fontWeight: 400,
     lineHeight: '150%',
