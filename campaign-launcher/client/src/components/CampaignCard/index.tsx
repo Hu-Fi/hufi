@@ -191,8 +191,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           display="flex"
           flexDirection="column"
           flex={1}
-          px={2}
-          py={1.5}
+          p={{ xs: 1.5, md: 2 }}
           gap={1.5}
           borderRadius="8px"
           border="1px solid #433679"
@@ -209,41 +208,22 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             Reward pool
           </Typography>
           <Typography variant="h6" color="white" fontWeight={700}>
-            {isJoinedCampaign ? (
-              <>
-                <FormattedNumber
-                  value={rewardValue}
-                  decimals={rewardDecimals}
-                  suffix={`${rewardSuffix} `}
-                />
-                <Typography
-                  component="span"
-                  color="text.primary"
-                  fontSize={{ xs: 12, md: 16 }}
-                  fontWeight={600}
-                  lineHeight="150%"
-                >
-                  {campaign.fund_token.toUpperCase()}
-                </Typography>
-              </>
-            ) : (
-              <>
-                <FormattedNumber
-                  value={rewardValue}
-                  decimals={rewardDecimals}
-                  suffix={`${rewardSuffix} `}
-                />
-                <Typography
-                  component="span"
-                  color="text.primary"
-                  fontSize={{ xs: 12, md: 16 }}
-                  fontWeight={600}
-                  lineHeight="150%"
-                >
-                  {campaign.fund_token_symbol.toUpperCase()}
-                </Typography>
-              </>
-            )}
+            <FormattedNumber
+              value={rewardValue}
+              decimals={rewardDecimals}
+              suffix={`${rewardSuffix} `}
+            />
+            <Typography
+              component="span"
+              color="text.primary"
+              fontSize={{ xs: 12, md: 16 }}
+              fontWeight={600}
+              lineHeight="150%"
+            >
+              {isJoinedCampaign
+                ? campaign.fund_token.toUpperCase()
+                : campaign.fund_token_symbol.toUpperCase()}
+            </Typography>
           </Typography>
         </Box>
       </Stack>
