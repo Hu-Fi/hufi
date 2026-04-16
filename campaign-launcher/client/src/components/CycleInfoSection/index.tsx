@@ -58,12 +58,15 @@ const useCycleTimeline = (startDate: string, endDate: string) => {
   return cycleTimeInfo;
 };
 
-const getTotalGeneratedCardTitle = (campaignType: CampaignType) => {
+const getTotalGeneratedCardTitle = (
+  campaignType: CampaignType,
+  isMobile: boolean
+) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
-      return 'Total Generated Volume';
+      return isMobile ? 'Total Generated Vol.' : 'Total Generated Volume';
     case CampaignType.HOLDING:
-      return 'Total Generated Balance';
+      return 'Total Held';
   }
 };
 
@@ -146,10 +149,13 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         </Box>
       </Box>
       <Grid container spacing={{ xs: 2, md: 3 }}>
-        <Grid size={{ xs: 6, md: 4 }}>
+        <Grid
+          size={{ xs: 6, md: 4 }}
+          order={{ xs: isThreshold ? 3 : 2, md: 1 }}
+        >
           <StatsCard withBorder>
             <CardName>Cycle Reward Pool</CardName>
-            <CardValue color="#46db99">
+            <CardValue color={isThreshold ? 'white' : '#46db99'}>
               <FormattedNumber
                 value={rewardPool / cycleTimeline.totalCycles}
                 decimals={2}
@@ -158,31 +164,55 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             </CardValue>
           </StatsCard>
         </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
-          <StatsCard withBorder>
-            <CardName>Ends in</CardName>
-            <CardValue color="text.primary">
-              {cycleTimeline.remainingTime}
-            </CardValue>
-          </StatsCard>
-        </Grid>
-        <Grid size={{ xs: 6, md: 4 }}>
-          <StatsCard withBorder>
-            <CardName>
-              {isThreshold
-                ? 'Eligible Participants'
-                : getTotalGeneratedCardTitle(campaign.type)}
-            </CardName>
-            <CardValue>
-              {isThreshold ? (
-                eligibleParticipants.length
-              ) : (
+        {isThreshold ? (
+          <>
+            <Grid size={{ xs: 6, md: 4 }} order={{ xs: 4, md: 2 }}>
+              <StatsCard withBorder>
+                <CardName>Eligible Participants</CardName>
+                <CardValue>{eligibleParticipants.length}</CardValue>
+              </StatsCard>
+            </Grid>
+            <Grid size={{ xs: 6, md: 4 }} order={{ xs: 2, md: 3 }}>
+              <StatsCard withBorder>
+                <CardName>Individual Reward</CardName>
+                <CardValue color="#46db99">
+                  <FormattedNumber
+                    value={
+                      rewardPool /
+                      cycleTimeline.totalCycles /
+                      eligibleParticipants.length
+                    }
+                    decimals={2}
+                    suffix={` ${campaign.fund_token_symbol}`}
+                  />
+                </CardValue>
+              </StatsCard>
+            </Grid>
+          </>
+        ) : (
+          <Grid size={{ xs: 6, md: 4 }} order={{ xs: 3, md: 2 }}>
+            <StatsCard withBorder>
+              <CardName>
+                {getTotalGeneratedCardTitle(campaign.type, isMobile)}
+              </CardName>
+              <CardValue>
                 <FormattedNumber
                   value={totalGeneratedValue}
                   decimals={totalGeneratedDecimals}
                   suffix={totalGeneratedSuffix + ' ' + targetTokenSymbol}
                 />
-              )}
+              </CardValue>
+            </StatsCard>
+          </Grid>
+        )}
+        <Grid
+          size={{ xs: 6, md: 4 }}
+          order={{ xs: 1, md: isThreshold ? 4 : 3 }}
+        >
+          <StatsCard withBorder>
+            <CardName>Ends in</CardName>
+            <CardValue color="text.primary">
+              {cycleTimeline.remainingTime}
             </CardValue>
           </StatsCard>
         </Grid>

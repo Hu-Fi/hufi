@@ -126,6 +126,7 @@ const CampaignDetails: FC = () => {
       <CampaignInfo
         campaign={campaignData}
         isCampaignLoading={isCampaignLoading}
+        isOngoingCampaign={isOngoingCampaign}
         isJoined={isJoined}
         joinedAt={joinStatusInfo?.joined_at}
         isJoinStatusLoading={isJoinStatusLoading}

@@ -41,6 +41,7 @@ const DividerStyled = styled(MuiDivider)({
 type Props = {
   campaign: CampaignDetails | null | undefined;
   isCampaignLoading: boolean;
+  isOngoingCampaign: boolean;
   isJoined: boolean;
   joinedAt: string | undefined;
   isJoinStatusLoading: boolean;
@@ -49,6 +50,7 @@ type Props = {
 const CampaignInfo: FC<Props> = ({
   campaign,
   isCampaignLoading,
+  isOngoingCampaign,
   isJoined,
   joinedAt,
   isJoinStatusLoading,
@@ -174,14 +176,13 @@ const CampaignInfo: FC<Props> = ({
             <DividerStyled orientation="vertical" flexItem />
           </>
         )}
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={0.75}>
           <CustomTooltip
             arrow
             placement="top"
             title={formatTime(campaign.start_date)}
           >
             <Typography
-              color="white"
               fontSize={{ xs: 14, md: 20 }}
               fontWeight={500}
               lineHeight="100%"
@@ -209,7 +210,6 @@ const CampaignInfo: FC<Props> = ({
             title={formatTime(campaign.end_date)}
           >
             <Typography
-              color="white"
               fontSize={{ xs: 14, md: 20 }}
               fontWeight={500}
               lineHeight="100%"
@@ -233,7 +233,7 @@ const CampaignInfo: FC<Props> = ({
           {oracleFee}% Oracle fees
         </Typography>
       </Box>
-      {!isJoinStatusLoading && joinedAt && (
+      {!isJoinStatusLoading && joinedAt && isOngoingCampaign && (
         <Box
           display="flex"
           alignItems="center"

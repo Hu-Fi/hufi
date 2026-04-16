@@ -50,39 +50,52 @@ const CampaignResultsSection: FC<Props> = ({ campaign }) => {
     resultUrl = '';
   }
 
+  const renderResult = () => {
+    return (
+      <>
+        <Box
+          p={{ xs: '4px', md: '6px' }}
+          borderRadius="100%"
+          bgcolor={result.color}
+        />
+        <Typography
+          color={result.color}
+          fontSize={{ xs: '14px', md: '16px' }}
+          fontWeight={600}
+          lineHeight="150%"
+          letterSpacing={0}
+        >
+          {result.label}
+        </Typography>
+      </>
+    );
+  };
+
   return (
     <Stack component="section" py={3}>
       <Box
         display="flex"
-        flexDirection={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'flex-start', md: 'center' }}
+        alignItems={{ xs: 'center', md: 'center' }}
+        justifyContent="space-between"
         gap={{ xs: 1, md: 2 }}
+        bgcolor="rgba(212, 207, 255, 0.15)"
+        border="1px solid rgba(255, 255, 255, 0.07)"
+        borderRadius="8px"
+        p={{ xs: 1.5, md: 2 }}
       >
         <Typography
           component="h6"
-          color={isMobile ? 'white' : 'text.primary'}
-          fontSize={{ xs: 20, md: 16 }}
-          fontWeight={{ xs: 500, md: 600 }}
-          letterSpacing={{ xs: 0, md: '3.2px' }}
-          textTransform={{ xs: 'none', md: 'uppercase' }}
+          color={isMobile ? '#a496c2' : 'text.primary'}
+          fontSize={{ xs: 12, md: 16 }}
+          fontWeight={600}
+          lineHeight={{ xs: '150%', md: '100%' }}
+          letterSpacing={{ xs: '1.5px', md: '3.2px' }}
+          textTransform="uppercase"
         >
-          Previous Cycles Results History
+          Cycle Result History
         </Typography>
         <Box display="flex" alignItems="center" gap={0.5}>
-          <Box
-            p={{ xs: '4px', md: '6px' }}
-            borderRadius="100%"
-            bgcolor={result.color}
-          />
-          <Typography
-            color={result.color}
-            fontSize={{ xs: '16px', md: '20px' }}
-            fontWeight={{ xs: 500, md: 600 }}
-            lineHeight={{ xs: '150%', md: '100%' }}
-          >
-            {result.label}
-          </Typography>
-          {!!resultUrl && (
+          {resultUrl ? (
             <Link
               href={resultUrl}
               target="_blank"
@@ -90,10 +103,15 @@ const CampaignResultsSection: FC<Props> = ({ campaign }) => {
               sx={{
                 display: 'flex',
                 alignItems: 'center',
+                gap: 0.5,
+                textDecoration: 'none',
               }}
             >
-              <OpenInNewIcon sx={{ fontSize: { xs: '16px', md: '20px' } }} />
+              {renderResult()}
+              <OpenInNewIcon sx={{ fontSize: { xs: '14px', md: '16px' } }} />
             </Link>
+          ) : (
+            renderResult()
           )}
         </Box>
       </Box>

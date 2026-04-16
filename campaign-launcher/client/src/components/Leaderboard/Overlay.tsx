@@ -31,7 +31,6 @@ type Props = {
   updatedAt: string;
   symbol: string;
   campaignType: CampaignType;
-  tokenSymbol: string;
 };
 
 const LeaderboardOverlay: FC<Props> = ({
@@ -41,7 +40,6 @@ const LeaderboardOverlay: FC<Props> = ({
   updatedAt,
   symbol,
   campaignType,
-  tokenSymbol,
 }) => {
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
@@ -134,7 +132,6 @@ const LeaderboardOverlay: FC<Props> = ({
           data={filteredData}
           activeAddress={activeAddress}
           campaignType={campaignType}
-          tokenSymbol={tokenSymbol}
         />
       </Stack>
     </ResponsiveOverlay>

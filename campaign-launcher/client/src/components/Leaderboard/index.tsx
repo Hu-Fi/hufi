@@ -6,12 +6,7 @@ import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { type LeaderboardData, type Campaign, CampaignType } from '@/types';
-import {
-  formatAddress,
-  getCompactNumberParts,
-  getDailyTargetTokenSymbol,
-  getTokenInfo,
-} from '@/utils';
+import { formatAddress, getCompactNumberParts } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
 import LeaderboardList from './List';
@@ -31,8 +26,10 @@ const ViewAllButton = ({ onClick }: { onClick: () => void }) => (
     left={0}
     right={0}
     sx={{
-      background:
-        'linear-gradient(0deg, #251D47 12.72%, rgba(37, 29, 71, 0.00) 100%)',
+      background: {
+        xs: '#251d47',
+        md: 'linear-gradient(0deg, #251D47 12.72%, rgba(37, 29, 71, 0.00) 100%)',
+      },
     }}
   >
     <Button
@@ -116,16 +113,13 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   const showList = leaderboard.data.length > 3;
   const showViewAllButton = leaderboard.data.length > 8;
 
-  const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
-  const { label: targetTokenSymbol } = getTokenInfo(targetToken);
-
   return (
     <Stack
       component="section"
       py={3}
       mx={{ xs: -2, md: 0 }}
       px={{ xs: 2, md: 0 }}
-      gap={3}
+      gap={{ xs: 1, md: 3 }}
       borderBottom="1px solid #473C74"
     >
       <Box
@@ -160,22 +154,22 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         elevation={0}
         sx={{
           width: '100%',
-          bgcolor: '#251d47',
+          bgcolor: { xs: 'transparent', md: '#251d47' },
           borderRadius: '8px',
-          border: '1px solid #433679',
+          border: { xs: 'none', md: '1px solid #433679' },
           overflow: 'hidden',
         }}
       >
         <Box
           display="flex"
           alignItems="end"
-          pt={4}
+          pt={{ xs: 0, md: 4 }}
           px={{ xs: 0, md: 4 }}
           gap={{ xs: 0, md: 2 }}
           borderBottom={showList ? '1px solid #3a2e6f' : 'none'}
         >
           {leaderboard.data.slice(0, 3).map((entry) => {
-            const { rank, address, result, score } = entry;
+            const { rank, address, result, score, estimated_reward } = entry;
             const {
               value: resultValue,
               suffix: resultSuffix,
@@ -186,17 +180,22 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
               suffix: scoreSuffix,
               decimals: scoreDecimals,
             } = getCompactNumberParts(score);
+            const {
+              value: rewardValue,
+              suffix: rewardSuffix,
+              decimals: rewardDecimals,
+            } = getCompactNumberParts(estimated_reward);
             const isMyEntry = address === activeAddress;
             return (
               <Stack
                 key={address}
                 alignItems="center"
-                px={{ xs: 1.5, md: 4 }}
+                px={{ xs: 1, md: 4 }}
                 pb={{ xs: 1.5, md: 3 }}
                 flex={1}
                 maxWidth="calc(100% / 3)"
                 height={{
-                  xs: rank === 1 ? '192px' : rank === 2 ? '166px' : '148px',
+                  xs: rank === 1 ? '192px' : rank === 2 ? '173px' : '155px',
                   md: rank === 1 ? '287px' : rank === 2 ? '251px' : '214px',
                 }}
                 borderRadius="15px 15px 0 0"
@@ -247,7 +246,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                       fontWeight={600}
                       letterSpacing={{ xs: 0, md: 2 }}
                     >
-                      {formatAddress(address)}
+                      {formatAddress(address, 4, 2)}
                     </Typography>
                     {isMyEntry && <MyEntryLabel />}
                   </Stack>
@@ -256,6 +255,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   alignItems="center"
                   width="100%"
                   py={{ xs: 1, md: 1.5 }}
+                  px={{ xs: 1, md: 1.5 }}
                   gap={{ xs: 0.5, md: 1.5 }}
                   borderRadius="8px"
                   border={{ xs: 'none', md: '1px solid #433679' }}
@@ -264,56 +264,85 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   <Box
                     display="flex"
                     alignItems="center"
-                    flexDirection="column"
-                    color={isMobile ? 'white' : 'text.primary'}
+                    justifyContent="space-between"
+                    width="100%"
                   >
                     <Typography
                       component="span"
-                      fontSize={{ xs: '16px', md: '24px' }}
-                      fontWeight={{ xs: 600, md: 700 }}
+                      fontSize={{ xs: 10, md: 12 }}
+                      fontWeight={500}
+                      lineHeight={1}
+                    >
+                      {`${getTargetLabel(campaign.type)}`}
+                    </Typography>
+                    <Typography
+                      component="span"
+                      fontSize={{ xs: 12, md: 20 }}
+                      fontWeight={600}
                       lineHeight={1}
                     >
                       <FormattedNumber
                         value={resultValue}
                         decimals={resultDecimals}
-                        suffix={resultSuffix + ' ' + targetTokenSymbol}
+                        prefix="$"
+                        suffix={resultSuffix}
                       />
-                    </Typography>
-                    <Typography
-                      component="span"
-                      display={{ xs: 'none', md: 'inline' }}
-                      fontSize="12px"
-                      fontWeight={500}
-                      lineHeight={1}
-                    >
-                      {getTargetLabel(campaign.type)}
                     </Typography>
                   </Box>
                   <Box
                     display="flex"
                     alignItems="center"
-                    flexDirection={{ xs: 'row', md: 'column-reverse' }}
-                    color={isMobile ? 'white' : 'text.primary'}
+                    justifyContent="space-between"
+                    width="100%"
                   >
                     <Typography
                       component="span"
-                      fontSize="12px"
+                      fontSize={{ xs: 10, md: 12 }}
                       fontWeight={500}
                       lineHeight={1}
                       mr={{ xs: 0.5, md: 0 }}
                     >
-                      {isMobile ? 'Score:' : 'Score'}
+                      Score
                     </Typography>
                     <Typography
                       component="span"
-                      fontSize={{ xs: '12px', md: '24px' }}
-                      fontWeight={{ xs: 600, md: 700 }}
+                      fontSize={{ xs: 12, md: 20 }}
+                      fontWeight={600}
                       lineHeight={1}
                     >
                       <FormattedNumber
                         value={scoreValue}
                         decimals={scoreDecimals}
                         suffix={scoreSuffix}
+                      />
+                    </Typography>
+                  </Box>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    width="100%"
+                  >
+                    <Typography
+                      component="span"
+                      fontSize={{ xs: 10, md: 12 }}
+                      fontWeight={500}
+                      lineHeight={1}
+                      mr={{ xs: 0.5, md: 0 }}
+                    >
+                      Reward
+                    </Typography>
+                    <Typography
+                      component="span"
+                      fontSize={{ xs: 12, md: 20 }}
+                      fontWeight={600}
+                      lineHeight={1}
+                    >
+                      <FormattedNumber
+                        value={rewardValue}
+                        decimals={rewardDecimals}
+                        prefix="$"
+                        suffix={rewardSuffix}
                       />
                     </Typography>
                   </Box>
@@ -328,7 +357,6 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
               data={leaderboard.data.slice(listStart, listEnd)}
               activeAddress={activeAddress}
               campaignType={campaign.type}
-              tokenSymbol={targetTokenSymbol || ''}
             />
           )}
           {showViewAllButton && (
@@ -343,7 +371,6 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         updatedAt={leaderboard.updated_at}
         symbol={campaign.symbol}
         campaignType={campaign.type}
-        tokenSymbol={targetTokenSymbol || ''}
       />
     </Stack>
   );
