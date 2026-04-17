@@ -62,7 +62,7 @@ const Dashboard: FC = () => {
 
   const queryParams = filterFalsyQueryParams({
     chain_id: appChainId,
-    status: CampaignStatus.ACTIVE,
+    status: [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL],
     limit,
     skip,
   }) as CampaignsQueryParams;
