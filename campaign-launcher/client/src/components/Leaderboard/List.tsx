@@ -107,7 +107,6 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
               <FormattedNumber
                 value={value}
                 decimals={decimals}
-                prefix="$"
                 suffix={suffix}
               />
             </Typography>

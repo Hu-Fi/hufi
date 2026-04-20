@@ -284,7 +284,6 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                       <FormattedNumber
                         value={resultValue}
                         decimals={resultDecimals}
-                        prefix="$"
                         suffix={resultSuffix}
                       />
                     </Typography>
