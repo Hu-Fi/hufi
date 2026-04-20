@@ -35,13 +35,12 @@ const Card = styled('div', {
   },
 }));
 
-const CardTitle = styled('p')(({ theme }) => ({
+const CardTitle = styled('h5')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: 8,
   color: '#6b6490',
-  marginTop: 0,
-  marginBottom: '4px',
+  margin: 0,
   fontSize: '16px',
   fontWeight: 600,
   lineHeight: '18px',
@@ -49,7 +48,6 @@ const CardTitle = styled('p')(({ theme }) => ({
   textTransform: 'uppercase',
 
   [theme.breakpoints.down('md')]: {
-    marginBottom: '0px',
     fontWeight: 400,
     letterSpacing: '0.15px',
     lineHeight: '24px',
@@ -151,7 +149,6 @@ const DashboardWidgets: FC = () => {
               <CardTitle>
                 <LinkIcon sx={{ width: 20, height: 20 }} />
                 <Typography
-                  component="h5"
                   fontSize="20px"
                   color="white"
                   textTransform="capitalize"
