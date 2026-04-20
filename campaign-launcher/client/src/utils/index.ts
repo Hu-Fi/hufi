@@ -15,14 +15,15 @@ import createAppTheme from '@/theme';
 import {
   CampaignStatus,
   CampaignType,
+  type JoinedCampaign,
   type Campaign,
   type CampaignDetails,
   type CampaignFormValues,
 } from '@/types';
 
-export const formatAddress = (address?: string) => {
+export const formatAddress = (address?: string, start = 6, end = 5) => {
   if (!address) return '';
-  return `${address.slice(0, 6)}…${address.slice(-5)}`;
+  return `${address.slice(0, start)}…${address.slice(-end)}`;
 };
 
 export const getTokenAddress = (
@@ -265,13 +266,20 @@ export const calculateHash = async (
 };
 
 export const filterFalsyQueryParams = (
-  params: Record<string, string | number | undefined>
-): Record<string, string | number> => {
-  const result: Record<string, string | number> = {};
+  params: Record<string, string | number | string[] | undefined>
+): Record<string, string | number | string[]> => {
+  const result: ReturnType<typeof filterFalsyQueryParams> = {};
 
   for (const [key, value] of Object.entries(params)) {
-    if (value) {
-      result[key] = value;
+    if (Array.isArray(value)) {
+      const filteredValues = value.filter(Boolean);
+      if (filteredValues.length > 0) {
+        result[key] = filteredValues;
+      }
+    } else {
+      if (value) {
+        result[key] = value;
+      }
     }
   }
 
@@ -319,4 +327,65 @@ export const scrollToFirstErrorFieldOnMobile = <T extends object>(
       block: 'center',
     });
   }
+};
+
+export const getCompactNumberParts = (initialValue: number) => {
+  const shouldUseDoubleKNotation = initialValue >= 1000000;
+  const shouldUseKNotation = initialValue >= 1000 && !shouldUseDoubleKNotation;
+  const value = shouldUseDoubleKNotation
+    ? initialValue / 1000000
+    : shouldUseKNotation
+      ? initialValue / 1000
+      : initialValue;
+  const suffix = shouldUseDoubleKNotation
+    ? 'kk'
+    : shouldUseKNotation
+      ? 'k'
+      : '';
+  const decimals = suffix ? (Number.isInteger(value) ? 0 : 1) : 2;
+
+  return { value, suffix, decimals };
+};
+
+export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
+  switch (campaign.type) {
+    case CampaignType.MARKET_MAKING:
+      return {
+        label: 'Target Volume',
+        value: campaign.details.daily_volume_target,
+      };
+    case CampaignType.HOLDING:
+      return {
+        label: 'Target Balance',
+        value: campaign.details.daily_balance_target,
+      };
+    case CampaignType.THRESHOLD:
+      return {
+        label: 'Target Balance',
+        value: campaign.details.minimum_balance_target,
+      };
+    default:
+      return {
+        label: 'Target Volume',
+        value: campaign.details.daily_volume_target,
+      };
+  }
+};
+
+export const appendUniqueCampaigns = <T extends { address: string }>(
+  existingCampaigns: T[],
+  newCampaigns: T[]
+): T[] => {
+  const existingCampaignKeys = new Set(
+    existingCampaigns.map((campaign) => campaign.address)
+  );
+
+  const campaignsToAppend = newCampaigns.filter((campaign) => {
+    if (existingCampaignKeys.has(campaign.address)) return false;
+
+    existingCampaignKeys.add(campaign.address);
+    return true;
+  });
+
+  return [...existingCampaigns, ...campaignsToAppend];
 };

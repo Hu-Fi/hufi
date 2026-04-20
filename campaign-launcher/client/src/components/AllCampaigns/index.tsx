@@ -1,53 +1,82 @@
-import type { FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 
-import { CircularProgress } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
-import CampaignsTable from '@/components/CampaignsTable';
-import CampaignsTablePagination from '@/components/CampaignsTablePagination';
+import CampaignsEmptyState from '@/components/CampaignsEmptyState';
+import CampaignsFeed from '@/components/CampaignsFeed';
 import { useCampaigns } from '@/hooks/useCampaigns';
-import usePagination from '@/hooks/usePagination';
-import { useNetwork } from '@/providers/NetworkProvider';
-import { CampaignStatus, type CampaignsQueryParams } from '@/types';
-import { filterFalsyQueryParams } from '@/utils';
+import { type Campaign, type CampaignsQueryParams } from '@/types';
+import { appendUniqueCampaigns } from '@/utils';
 
 type Props = {
-  showOnlyActiveCampaigns: boolean;
+  queryParams: CampaignsQueryParams;
+  hasActiveFilters: boolean;
+  isGridView: boolean;
+  isHistory: boolean;
+  setNextPage: () => void;
 };
 
-const AllCampaigns: FC<Props> = ({ showOnlyActiveCampaigns }) => {
-  const { appChainId } = useNetwork();
-  const { params, pagination, setPageSize, setNextPage, setPrevPage } =
-    usePagination();
-  const { limit, skip } = params;
-  const { page, pageSize } = pagination;
-
-  const queryParams = filterFalsyQueryParams({
-    chain_id: appChainId,
-    status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
-    limit,
-    skip,
-  }) as CampaignsQueryParams;
+const AllCampaigns: FC<Props> = ({
+  queryParams,
+  hasActiveFilters,
+  isGridView,
+  isHistory,
+  setNextPage,
+}) => {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   const { data, isLoading, isFetching } = useCampaigns(queryParams);
 
+  const currentSkip = queryParams.skip ?? 0;
+
+  useEffect(() => {
+    if (!data) return;
+
+    setCampaigns((prev) => {
+      if (currentSkip === 0) return data.results;
+      if (isFetching) return prev;
+      return appendUniqueCampaigns(prev, data.results);
+    });
+  }, [data, currentSkip, isFetching]);
+
+  const showLoadMore = isLoading || isFetching || data?.has_more;
+
+  const showEmptyState = !isLoading && !isFetching && campaigns.length === 0;
+
   return (
     <>
-      {isLoading && (
-        <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />
+      {showEmptyState ? (
+        <CampaignsEmptyState
+          view="all"
+          hasActiveFilters={hasActiveFilters}
+          isHistory={isHistory}
+        />
+      ) : (
+        <CampaignsFeed
+          data={campaigns}
+          isGridView={isGridView}
+          isLoading={isLoading}
+          isFetching={isFetching}
+        />
       )}
-      {!isLoading && (
-        <>
-          <CampaignsTable data={data?.results || []} isFetching={isFetching} />
-          <CampaignsTablePagination
-            page={page}
-            resultsLength={data?.results?.length || 0}
-            hasMore={data?.has_more}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            setNextPage={setNextPage}
-            setPrevPage={setPrevPage}
-          />
-        </>
+      {showLoadMore && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          mx={{ xs: 0, md: 'auto' }}
+          mt={4}
+        >
+          <Button
+            variant="contained"
+            color="error"
+            disabled={isFetching || isLoading}
+            sx={{ width: { xs: '100%', md: '200px' } }}
+            onClick={setNextPage}
+          >
+            Load More
+          </Button>
+        </Box>
       )}
     </>
   );

@@ -9,12 +9,11 @@ import {
   useGetEnrolledExchanges,
   useJoinedCampaigns,
 } from '@/hooks/recording-oracle';
-import { type Campaign, CampaignStatus } from '@/types';
-
-import { useNetwork } from './NetworkProvider';
+import { useNetwork } from '@/providers/NetworkProvider';
+import { type JoinedCampaign, CampaignStatus } from '@/types';
 
 type AuthedUserDataContextType = {
-  joinedCampaigns: { results: Campaign[]; has_more: boolean } | undefined;
+  joinedCampaigns: { results: JoinedCampaign[]; has_more: boolean } | undefined;
   isJoinedCampaignsLoading: boolean;
   enrolledExchanges: string[] | undefined;
   isEnrolledExchangesLoading: boolean;

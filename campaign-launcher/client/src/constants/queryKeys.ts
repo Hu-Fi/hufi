@@ -5,7 +5,7 @@ export const QUERY_KEYS = {
   EXCHANGES_WITH_API_KEYS: 'exchanges-with-api-keys',
   ENROLLED_EXCHANGES: 'enrolled-exchanges',
   ALL_CAMPAIGNS: 'all-campaigns',
-  MY_CAMPAIGNS: 'my-campaigns',
+  HOSTED_CAMPAIGNS: 'hosted-campaigns',
   JOINED_CAMPAIGNS: 'joined-campaigns',
   CAMPAIGN_DETAILS: 'campaign-details',
   CAMPAIGNS_STATS: 'campaigns-stats',
@@ -14,5 +14,5 @@ export const QUERY_KEYS = {
   EXCHANGE_CURRENCIES: 'exchange-currencies',
   USER_PROGRESS: 'user-progress',
   CHECK_CAMPAIGN_JOIN_STATUS: 'check-campaign-join-status',
-  CAMPAIGN_DAILY_PAID_AMOUNTS: 'campaign-daily-paid-amounts',
+  LEADERBOARD: 'leaderboard',
 };
