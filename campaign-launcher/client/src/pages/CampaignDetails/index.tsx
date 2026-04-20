@@ -144,9 +144,7 @@ const CampaignDetails: FC = () => {
         <Leaderboard campaign={campaignData} leaderboard={leaderboard} />
       )}
       {!!campaign && <CampaignResultsSection campaign={campaign} />}
-      {!!campaign && (
-        <CancelCampaignSection campaign={campaignData as Campaign} />
-      )}
+      {!!campaignData && <CancelCampaignSection campaign={campaignData} />}
       {showJoinCampaignButton && (
         <BottomButtonWrapper>
           <JoinCampaignButton campaign={campaignData as Campaign} />

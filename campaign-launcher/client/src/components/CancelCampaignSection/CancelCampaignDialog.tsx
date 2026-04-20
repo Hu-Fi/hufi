@@ -40,7 +40,7 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
       queryClient.setQueryData(
         [QUERY_KEYS.CAMPAIGN_DETAILS, campaign.chain_id, campaign.address],
         (old: Campaign | undefined) => ({
-          ...(old || campaign),
+          ...(old ?? campaign),
           status: CampaignStatus.TO_CANCEL,
         })
       );
