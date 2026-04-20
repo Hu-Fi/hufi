@@ -2,7 +2,7 @@
 import eslint from '@eslint/js';
 import globals from 'globals';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-import importXPlugin from 'eslint-plugin-import-x';
+import { importX as importXPlugin } from 'eslint-plugin-import-x';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import tseslint from 'typescript-eslint';
 
@@ -26,7 +26,7 @@ export default tseslint.config(
       },
     },
     plugins: {
-      'import': importXPlugin,
+      'import-x': importXPlugin,
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -41,7 +41,7 @@ export default tseslint.config(
         "varsIgnorePattern": "^_",
         "ignoreRestSiblings": true
       }],
-      'import/order': [
+      'import-x/order': [
         'warn',
         {
           alphabetize: { order: 'asc', caseInsensitive: true },
