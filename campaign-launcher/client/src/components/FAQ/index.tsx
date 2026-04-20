@@ -70,7 +70,7 @@ const FAQ: FC = () => {
             }
           >
             <Typography variant="body2" color="white" fontWeight={600}>
-              How Do I Add an API Key?
+              How do I add an API key?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -134,7 +134,7 @@ const FAQ: FC = () => {
             }
           >
             <Typography variant="body2" color="white" fontWeight={600}>
-              How Do I Stake HMT
+              How do I stake HMT?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -199,7 +199,7 @@ const FAQ: FC = () => {
             }
           >
             <Typography variant="body2" color="white" fontWeight={600}>
-              How Are Campaign Rewards Distributed?
+              How are campaign rewards distributed?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
