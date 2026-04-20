@@ -10,7 +10,7 @@ import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useNotification } from '@/hooks/useNotification';
 import { WarningIcon } from '@/icons';
 import { useSignerContext } from '@/providers/SignerProvider';
-import { type Campaign } from '@/types';
+import { CampaignStatus, type Campaign } from '@/types';
 
 type Props = {
   open: boolean;
@@ -37,13 +37,13 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
       const client = await EscrowClient.build(signer);
       await client.requestCancellation(campaign.address);
       setIsCancelled(true);
-      queryClient.invalidateQueries({
-        queryKey: [
-          QUERY_KEYS.CAMPAIGN_DETAILS,
-          campaign.chain_id,
-          campaign.address,
-        ],
-      });
+      queryClient.setQueryData(
+        [QUERY_KEYS.CAMPAIGN_DETAILS, campaign.chain_id, campaign.address],
+        (old: Campaign | undefined) => ({
+          ...(old || campaign),
+          status: CampaignStatus.TO_CANCEL,
+        })
+      );
     } catch (error) {
       console.error('Failed to cancel campaign', error);
       showError('Failed to cancel campaign');
