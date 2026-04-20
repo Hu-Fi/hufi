@@ -389,7 +389,7 @@ export const CopyIcon: FC<SvgIconProps> = (props) => {
   );
 };
 
-export const MobileBottomNavIcon: FC<SvgIconProps> = (props) => {
+export const MobileBottomNavDashboardIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 36 35" fill="none">
       <path
@@ -440,6 +440,60 @@ export const MobileBottomNavIcon: FC<SvgIconProps> = (props) => {
           gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="currentColor" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0.13" />
+        </linearGradient>
+      </defs>
+    </SvgIcon>
+  );
+};
+
+export const MobileBottomNavCampaignsIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 36 36" fill="none">
+      <g clip-path="url(#clip0_2502_11391)">
+        <path
+          d="M19.1759 9.23877L12.9289 18.3768C12.4481 19.0801 11.7836 19.5704 10.9655 19.8263C10.43 19.9939 10.1623 20.0776 9.95877 20.166C7.4319 21.264 7.03757 23.9933 8.2832 26.1508L8.9668 27.3348C10.2124 29.4923 12.7732 30.5154 14.9875 28.8761C15.1658 28.7441 15.3723 28.5541 15.7851 28.1741C16.4158 27.5936 17.1727 27.2632 18.0221 27.1985L29.0594 26.3574C31.5931 26.1643 32.8599 26.0678 33.7516 25.0581C34.6432 24.0485 34.563 23.033 34.4027 21.0019C33.9622 15.4245 31.0955 10.4592 26.4856 7.28913C24.8068 6.1347 23.9674 5.55748 22.6472 5.82485C21.327 6.09223 20.61 7.14108 19.1759 9.23877Z"
+          fill="url(#paint0_linear_2502_11391)"
+        />
+        <path
+          d="M16.1095 5.94697L9.86249 15.085C9.38169 15.7883 8.7172 16.2785 7.89904 16.5345C7.36361 16.702 7.09586 16.7858 6.89237 16.8742C4.3655 17.9722 3.97116 20.7015 5.21679 22.859L5.90039 24.043C7.14603 26.2005 9.70682 27.2236 11.9211 25.5843C12.0994 25.4523 12.3059 25.2622 12.7186 24.8823C13.3494 24.3018 14.1063 23.9714 14.9557 23.9067L25.993 23.0656C28.5267 22.8725 29.7935 22.776 30.6852 21.7663C31.5768 20.7567 31.4966 19.7411 31.3362 17.7101C30.8958 12.1327 28.0291 7.16741 23.4192 3.99733C21.7404 2.84289 20.901 2.26567 19.5808 2.53304C18.2606 2.80042 17.5436 3.84927 16.1095 5.94697Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M19.4838 31.1662L21.7177 31.4354C23.63 31.6658 24.5861 31.781 25.1661 31.5124C25.9395 31.1543 26.4441 30.39 26.4697 29.5381C26.4888 28.8992 26.0073 28.0652 25.0442 26.3971L24.6692 25.7476L15 27L16.125 28.9486C17.0414 30.5358 17.6643 30.947 19.4838 31.1662Z"
+          fill="url(#paint1_linear_2502_11391)"
+        />
+        <path
+          d="M23.0489 23.7452L23.4239 24.3947C24.3869 26.0628 24.8685 26.8968 24.8493 27.5357C24.8238 28.3876 24.3191 29.1519 23.5458 29.51C22.9658 29.7786 22.0096 29.6634 20.0973 29.433L17.8635 29.1638C16.0439 28.9446 15.421 28.5334 14.5046 26.9461L13.3796 24.9976"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M13.6543 23.9731L9.1543 16.1789"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      <defs>
+        <linearGradient
+          id="paint0_linear_2502_11391"
+          x1="14.6913"
+          y1="10.25"
+          x2="25.9413"
+          y2="29.7356"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="currentColor" stopOpacity="0.13" />
           <stop offset="1" stopColor="currentColor" stopOpacity="0.13" />
         </linearGradient>
       </defs>

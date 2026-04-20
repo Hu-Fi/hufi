@@ -4,11 +4,22 @@ import { Box, Link as MuiLink, Paper, Typography } from '@mui/material';
 import { Link, useLocation } from 'react-router';
 
 import { MOBILE_BOTTOM_NAV_HEIGHT, ROUTES } from '@/constants';
-import { MobileBottomNavIcon } from '@/icons';
+import {
+  MobileBottomNavDashboardIcon,
+  MobileBottomNavCampaignsIcon,
+} from '@/icons';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', to: ROUTES.DASHBOARD },
-  { label: 'Campaigns', to: ROUTES.CAMPAIGNS },
+  {
+    label: 'Dashboard',
+    to: ROUTES.DASHBOARD,
+    icon: MobileBottomNavDashboardIcon,
+  },
+  {
+    label: 'Campaigns',
+    to: ROUTES.CAMPAIGNS,
+    icon: MobileBottomNavCampaignsIcon,
+  },
 ] as const;
 
 const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
@@ -40,7 +51,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
           bgcolor: 'background.default',
         }}
       >
-        {NAV_ITEMS.map(({ label, to }) => {
+        {NAV_ITEMS.map(({ label, to, icon: Icon }) => {
           const isActive = pathname === to;
           return (
             <MuiLink
@@ -67,7 +78,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
                 },
               }}
             >
-              <MobileBottomNavIcon sx={{ fontSize: 36 }} />
+              <Icon sx={{ fontSize: 36 }} />
               <Typography fontSize={12} fontWeight={500} lineHeight="100%">
                 {label}
               </Typography>
