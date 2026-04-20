@@ -172,7 +172,7 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should skip to_cancel escrow w/o canclellation request date', async () => {
+    it('should skip to_cancel escrow w/o cancellation request date', async () => {
       const expectedEscrow = generateEscrow(EscrowStatus.ToCancel);
       expectedEscrow.cancellationRequestedAt = null;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([expectedEscrow]);

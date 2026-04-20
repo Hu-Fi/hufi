@@ -69,12 +69,12 @@ export class PayoutsService {
   async runPayoutsCycleForCampaign(
     campaign: CampaignWithResults,
   ): Promise<void> {
-    const logger = this.logger.child({
+    const campaignLogger = this.logger.child({
       chainId: campaign.chainId,
       campaignAddress: ethers.getAddress(campaign.address),
     });
 
-    logger.info('Run payouts cycle for campaign');
+    campaignLogger.info('Run payouts cycle for campaign');
 
     try {
       const signer = this.web3Service.getSigner(campaign.chainId);
@@ -83,7 +83,7 @@ export class PayoutsService {
       let escrowStatus = await escrowClient.getStatus(campaign.address);
       let escrowStatusString = EscrowStatus[escrowStatus];
       if (campaign.status !== escrowStatusString) {
-        logger.warn('Campaign status mismatch, avoiding payouts', {
+        campaignLogger.warn('Campaign status mismatch, avoiding payouts', {
           campaignStatus: campaign.status,
           escrowStatus,
           escrowStatusString,
@@ -102,7 +102,7 @@ export class PayoutsService {
           campaign.cancellationRequestedAt!.valueOf() <
           campaignStartDate.valueOf()
         ) {
-          logger.info(
+          campaignLogger.info(
             'Campaign cancellation requested before campaign started, cancelling',
           );
           await escrowClient.cancel(campaign.address, {
@@ -112,7 +112,7 @@ export class PayoutsService {
         }
 
         if (!campaign.intermediateResultsUrl) {
-          logger.info(
+          campaignLogger.info(
             'Results not yet recorded for ToCancel campaign, skip it',
           );
           return;
@@ -154,7 +154,7 @@ export class PayoutsService {
          * All participants in batch got zero reward -> nothing to pay
          */
         if (rewardsBatch.rewards.length === 0) {
-          logger.debug('Skipped zero rewards batch', {
+          campaignLogger.debug('Skipped zero rewards batch', {
             batchId: rewardsBatch.id,
           });
           continue;
@@ -181,16 +181,19 @@ export class PayoutsService {
 
           totalReservedFunds = totalReservedFunds.minus(batchTotalReward);
 
-          logger.debug('Skipped rewards batch as per bulkPayoutsCount', {
-            batchId: rewardsBatch.id,
-            batchTotalReward: batchTotalReward.toString(),
-          });
+          campaignLogger.debug(
+            'Skipped rewards batch as per bulkPayoutsCount',
+            {
+              batchId: rewardsBatch.id,
+              batchTotalReward: batchTotalReward.toString(),
+            },
+          );
           continue;
         }
 
         const rewardsFileName =
           await this.writeRewardsBatchToFile(rewardsBatch);
-        logger.info('Got new rewards batch to pay', {
+        campaignLogger.info('Got new rewards batch to pay', {
           batchId: rewardsBatch.id,
           rewardsFileName,
           githubRunId: process.env.GITHUB_RUN_ID,
@@ -200,7 +203,7 @@ export class PayoutsService {
       }
 
       if (rewardsBatchesToPay.length === 0) {
-        logger.info('No new payouts for campaign');
+        campaignLogger.info('No new payouts for campaign');
         /**
          * No need to early return here: event if no rewards to pay
          * there still might be pending "competion" step. Have this log
@@ -252,12 +255,12 @@ export class PayoutsService {
           },
         );
 
-        logger.info('Rewards batch successfully paid', {
+        campaignLogger.info('Rewards batch successfully paid', {
           batchId: rewardsBatchToPay.id,
         });
       }
 
-      logger.info('Finished payouts for campaign');
+      campaignLogger.info('Finished payouts for campaign');
 
       // =================== finalization steps below ===================
 
@@ -266,7 +269,7 @@ export class PayoutsService {
       if (
         [EscrowStatus.Complete, EscrowStatus.Cancelled].includes(escrowStatus)
       ) {
-        logger.info('Campaign auto-finalized during payouts', {
+        campaignLogger.info('Campaign auto-finalized during payouts', {
           escrowStatus,
           escrowStatusString,
         });
@@ -285,20 +288,22 @@ export class PayoutsService {
         .at(-1)!
         .to.toISOString();
       if (lastResultsAt !== expectedFinalLastResultsAt) {
-        logger.info('Campaign not finished yet, skip completion', {
+        campaignLogger.info('Campaign not finished yet, skip completion', {
           lastResultsAt,
           expectedFinalLastResultsAt,
         });
         return;
       } else {
-        logger.info('Campaign finished, going to finalize', {
+        campaignLogger.info('Campaign finished, going to finalize', {
           lastResultsAt,
           expectedFinalLastResultsAt,
         });
       }
 
       if (escrowStatus === EscrowStatus.ToCancel) {
-        logger.info('Campaign ended with cancellation request, cancelling it');
+        campaignLogger.info(
+          'Campaign ended with cancellation request, cancelling it',
+        );
         const feeParams = await this.web3Service.calculateTxFees(
           campaign.chainId,
         );
@@ -317,10 +322,13 @@ export class PayoutsService {
         ].includes(escrowStatus)
       ) {
         // no auto-finalize during payouts
-        logger.info('No more payouts expected for campaign, completing it', {
-          escrowStatus,
-          escrowStatusString,
-        });
+        campaignLogger.info(
+          'No more payouts expected for campaign, completing it',
+          {
+            escrowStatus,
+            escrowStatusString,
+          },
+        );
 
         const feeParams = await this.web3Service.calculateTxFees(
           campaign.chainId,
@@ -330,15 +338,18 @@ export class PayoutsService {
           timeoutMs: this.web3ConfigService.escrowTxTimeout,
         });
       } else {
-        logger.warn('Unexpected campaign escrow status', {
+        campaignLogger.warn('Unexpected campaign escrow status', {
           escrowStatus,
           escrowStatusString,
         });
       }
     } catch (error) {
-      logger.error('Error while running payouts cycle for campaign', error);
+      campaignLogger.error(
+        'Error while running payouts cycle for campaign',
+        error,
+      );
     } finally {
-      logger.info('Finished payouts cycle for campaign');
+      campaignLogger.info('Finished payouts cycle for campaign');
     }
   }
 
@@ -559,7 +570,7 @@ export class PayoutsService {
           escrow.status === EscrowStatus[EscrowStatus.ToCancel] &&
           !escrow.cancellationRequestedAt
         ) {
-          logger.warn(
+          this.logger.warn(
             'ToCancel campaign is missing cancellation request date',
             {
               chainId,
