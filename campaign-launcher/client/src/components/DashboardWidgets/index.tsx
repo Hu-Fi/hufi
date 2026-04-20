@@ -49,7 +49,6 @@ const CardTitle = styled('p')(({ theme }) => ({
   textTransform: 'uppercase',
 
   [theme.breakpoints.down('md')]: {
-    alignItems: 'flex-start',
     marginBottom: '0px',
     fontWeight: 400,
     letterSpacing: '0.15px',
@@ -131,7 +130,8 @@ const DashboardWidgets: FC = () => {
           {isConnected ? (
             <>
               <Typography
-                variant="h5"
+                component="h5"
+                fontSize="20px"
                 color="white"
                 textTransform="capitalize"
                 lineHeight={{ xs: '150%', md: '100%' }}
@@ -140,11 +140,7 @@ const DashboardWidgets: FC = () => {
               >
                 Host Trading Campaigns in 5 Mins
               </Typography>
-              <Typography
-                variant={isMobile ? 'body2' : 'tooltip'}
-                color="text.secondary"
-                mb={{ xs: 3, md: 1.5 }}
-              >
+              <Typography variant="body2" color="text.secondary" mb={3}>
                 Set up, fund, and go live with a fully tracked trading campaign
                 in minutes.
               </Typography>
@@ -152,26 +148,20 @@ const DashboardWidgets: FC = () => {
             </>
           ) : (
             <>
-              {!isMobile && (
-                <CardTitle>
-                  <LinkIcon sx={{ width: 16, height: 16 }} />
-                  Wallet
-                </CardTitle>
-              )}
-              <Typography
-                variant="h5"
-                color="white"
-                textTransform="capitalize"
-                fontWeight={{ xs: 600, md: 800 }}
-                mb={{ xs: 1, md: 0 }}
-              >
-                Connect your wallet
-              </Typography>
-              <Typography
-                variant={isMobile ? 'body2' : 'tooltip'}
-                color="text.secondary"
-                mb={{ xs: 3, md: 1.5 }}
-              >
+              <CardTitle>
+                <LinkIcon sx={{ width: 20, height: 20 }} />
+                <Typography
+                  component="h5"
+                  fontSize="20px"
+                  color="white"
+                  textTransform="capitalize"
+                  fontWeight={{ xs: 600, md: 800 }}
+                  lineHeight="36px"
+                >
+                  Connect your wallet
+                </Typography>
+              </CardTitle>
+              <Typography variant="body2" color="text.secondary" mb={3}>
                 and join / host campaigns in minutes
               </Typography>
               <ConnectWallet size={isMobile ? 'medium' : 'large'} />
