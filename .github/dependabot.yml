@@ -42,5 +42,7 @@ updates:
         applies-to: version-updates
         patterns:
           - "react"
+          - "@types/react"
           - "react-dom"
+          - "@types/react-dom"
     open-pull-requests-limit: 5 # Reasonable number to start with
