@@ -371,3 +371,21 @@ export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
       };
   }
 };
+
+export const appendUniqueCampaigns = <T extends { address: string }>(
+  existingCampaigns: T[],
+  newCampaigns: T[]
+): T[] => {
+  const existingCampaignKeys = new Set(
+    existingCampaigns.map((campaign) => campaign.address)
+  );
+
+  const campaignsToAppend = newCampaigns.filter((campaign) => {
+    if (existingCampaignKeys.has(campaign.address)) return false;
+
+    existingCampaignKeys.add(campaign.address);
+    return true;
+  });
+
+  return [...existingCampaigns, ...campaignsToAppend];
+};

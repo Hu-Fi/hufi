@@ -90,7 +90,7 @@ const ManageApiKeysPage: FC = () => {
 
   const [searchParams] = useSearchParams();
   const { exchangesMap } = useExchangesContext();
-  const { enrolledExchanges } = useAuthedUserData();
+  const { enrolledExchanges, isEnrolledExchangesLoading } = useAuthedUserData();
 
   const exchangeParam = searchParams.get('exchange') || '';
   const exchangeName = exchangeParam
@@ -101,7 +101,9 @@ const ManageApiKeysPage: FC = () => {
   const isMobile = useIsMobile();
 
   const showDocsReference =
-    exchangeName && !enrolledExchanges?.includes(exchangeParam);
+    exchangeName &&
+    !isEnrolledExchangesLoading &&
+    !enrolledExchanges?.includes(exchangeParam);
 
   useReserveLayoutBottomOffset(isMobile);
 

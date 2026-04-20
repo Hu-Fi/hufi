@@ -6,6 +6,7 @@ import CampaignsEmptyState from '@/components/CampaignsEmptyState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useHostedCampaigns } from '@/hooks/useCampaigns';
 import type { Campaign, CampaignsQueryParams } from '@/types';
+import { appendUniqueCampaigns } from '@/utils';
 
 type Props = {
   queryParams: CampaignsQueryParams;
@@ -33,7 +34,7 @@ const HostedCampaigns: FC<Props> = ({
     setCampaigns((prev) => {
       if (currentSkip === 0) return data.results;
       if (isFetching) return prev;
-      return [...prev, ...data.results];
+      return appendUniqueCampaigns(prev, data.results);
     });
   }, [data, currentSkip, isFetching]);
 

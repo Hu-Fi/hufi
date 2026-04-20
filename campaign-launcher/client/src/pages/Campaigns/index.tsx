@@ -165,6 +165,11 @@ const Campaigns: FC = () => {
     setAppliedFilters(nextFilters);
   };
 
+  const handleChangeView = (nextView: 'grid' | 'table') => {
+    setView(nextView);
+    localStorage.setItem(PERSISTED_CAMPAIGNS_VIEW_KEY, nextView);
+  };
+
   return (
     <PageWrapper>
       <Box
@@ -240,7 +245,7 @@ const Campaigns: FC = () => {
         <CampaignsViewToggle
           isGridView={isGridView}
           disableFilters={disableFilters}
-          changeView={setView}
+          onViewChange={handleChangeView}
         />
       </Box>
       {tabFilter === TabFilter.HISTORY && (

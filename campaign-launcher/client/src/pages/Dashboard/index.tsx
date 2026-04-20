@@ -75,6 +75,11 @@ const Dashboard: FC = () => {
 
   const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
 
+  const handleChangeView = (nextView: 'grid' | 'table') => {
+    setView(nextView);
+    localStorage.setItem(PERSISTED_CAMPAIGNS_VIEW_KEY, nextView);
+  };
+
   return (
     <PageWrapper>
       <DashboardWidgets />
@@ -89,13 +94,13 @@ const Dashboard: FC = () => {
           <CampaignsViewToggle
             isGridView={isGridView}
             disableFilters={false}
-            changeView={setView}
+            onViewChange={handleChangeView}
           />
         )}
       </Box>
       <CampaignsFeed
         data={data?.results ?? []}
-        isGridView={view === 'grid'}
+        isGridView={isGridView}
         isLoading={isLoading}
         isFetching={isCampaignsFetching}
       />

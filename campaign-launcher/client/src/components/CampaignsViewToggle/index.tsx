@@ -2,25 +2,19 @@ import type { FC } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
-import { PERSISTED_CAMPAIGNS_VIEW_KEY } from '@/constants';
 import { GridViewIcon, TableViewIcon } from '@/icons';
 
 type Props = {
   isGridView: boolean;
   disableFilters: boolean;
-  changeView: (view: 'grid' | 'table') => void;
+  onViewChange: (view: 'grid' | 'table') => void;
 };
 
 const CampaignsViewToggle: FC<Props> = ({
   isGridView,
   disableFilters,
-  changeView,
+  onViewChange,
 }) => {
-  const handleChangeView = (view: 'grid' | 'table') => {
-    changeView(view);
-    localStorage.setItem(PERSISTED_CAMPAIGNS_VIEW_KEY, view);
-  };
-
   return (
     <Box
       display={{ xs: 'none', md: 'flex' }}
@@ -38,7 +32,7 @@ const CampaignsViewToggle: FC<Props> = ({
           bgcolor: isGridView ? '#251d47' : 'transparent',
           borderRadius: 0,
         }}
-        onClick={() => handleChangeView('grid')}
+        onClick={() => onViewChange('grid')}
       >
         <GridViewIcon
           sx={{
@@ -58,7 +52,7 @@ const CampaignsViewToggle: FC<Props> = ({
           bgcolor: isGridView ? 'transparent' : '#251d47',
           borderRadius: 0,
         }}
-        onClick={() => handleChangeView('table')}
+        onClick={() => onViewChange('table')}
       >
         <TableViewIcon
           sx={{
