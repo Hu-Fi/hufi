@@ -1,8 +1,9 @@
 // @ts-check
 import eslint from '@eslint/js';
 import globals from 'globals';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import { importX as importXPlugin } from 'eslint-plugin-import-x';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import * as importPlugin from 'eslint-plugin-import';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -25,7 +26,7 @@ export default tseslint.config(
       },
     },
     plugins: {
-      'import': importPlugin,
+      'import-x': importXPlugin,
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -40,7 +41,7 @@ export default tseslint.config(
         "varsIgnorePattern": "^_",
         "ignoreRestSiblings": true
       }],
-      'import/order': [
+      'import-x/order': [
         'warn',
         {
           alphabetize: { order: 'asc', caseInsensitive: true },
@@ -51,9 +52,12 @@ export default tseslint.config(
       'preserve-caught-error': 'off',
     },
     settings: {
-      'import/resolver': {
-        typescript: {},
-      },
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver({
+          alwaysTryTypes: true,
+          project: './tsconfig.json',
+        }),
+      ],
     },
   },
   {

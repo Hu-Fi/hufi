@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import prettierPlugin from 'eslint-plugin-prettier';
-import importXPlugin from 'eslint-plugin-import-x';
+import { importX as importXPlugin } from 'eslint-plugin-import-x';
 import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
@@ -36,7 +36,7 @@ export default defineConfig(
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       prettier: prettierPlugin,
-      'import': importXPlugin,
+      'import-x': importXPlugin,
     },
     settings: {
       react: {
@@ -55,7 +55,7 @@ export default defineConfig(
       'react/react-in-jsx-scope': 'off',
       'react-hooks/exhaustive-deps': 'warn',
       'react-hooks/rules-of-hooks': 'error',
-      'import/order': [
+      'import-x/order': [
         'error',
         {
           groups: [
@@ -81,8 +81,8 @@ export default defineConfig(
           },
         },
       ],
-      'import/no-duplicates': 'error',
-      'import/no-unresolved': 'error',
+      'import-x/no-duplicates': 'error',
+      'import-x/no-unresolved': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
