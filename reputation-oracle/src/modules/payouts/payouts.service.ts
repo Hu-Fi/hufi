@@ -10,7 +10,6 @@ import _ from 'lodash';
 import type { ChainId } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import * as cryptoUtils from '@/common/utils/crypto';
-import * as escrowUtils from '@/common/utils/escrow';
 import { Web3ConfigService } from '@/config';
 import logger from '@/logger';
 import { StorageService } from '@/modules/storage';
@@ -98,13 +97,11 @@ export class PayoutsService {
       );
 
       if (escrowStatus === EscrowStatus.ToCancel) {
-        const cancellationRequestedAt =
-          await escrowUtils.getCancellationRequestDate(
-            campaign.chainId,
-            campaign.address,
-          );
         const campaignStartDate = new Date(manifest.start_date);
-        if (cancellationRequestedAt.valueOf() < campaignStartDate.valueOf()) {
+        if (
+          campaign.cancellationRequestedAt!.valueOf() <
+          campaignStartDate.valueOf()
+        ) {
           logger.info(
             'Campaign cancellation requested before campaign started, cancelling',
           );
@@ -278,12 +275,8 @@ export class PayoutsService {
 
       let expectedFinalLastResultsAt: string;
       if (escrowStatus === EscrowStatus.ToCancel) {
-        const cancellationRequestedAt =
-          await escrowUtils.getCancellationRequestDate(
-            campaign.chainId,
-            campaign.address,
-          );
-        expectedFinalLastResultsAt = cancellationRequestedAt.toISOString();
+        expectedFinalLastResultsAt =
+          campaign.cancellationRequestedAt!.toISOString();
       } else {
         expectedFinalLastResultsAt = manifest.end_date;
       }
@@ -562,7 +555,19 @@ export class PayoutsService {
 
       const campaignsWithResults: CampaignWithResults[] = [];
       for (const escrow of escrows) {
-        if (escrow.status !== EscrowStatus[EscrowStatus.ToCancel]) {
+        if (
+          escrow.status === EscrowStatus[EscrowStatus.ToCancel] &&
+          !escrow.cancellationRequestedAt
+        ) {
+          logger.warn(
+            'ToCancel campaign is missing cancellation request date',
+            {
+              chainId,
+              escrowAddress: escrow.address,
+            },
+          );
+          continue;
+        } else if (escrow.status !== EscrowStatus[EscrowStatus.ToCancel]) {
           const hasIntermediateResults =
             escrow.intermediateResultsUrl && escrow.intermediateResultsHash;
           if (!hasIntermediateResults) {
@@ -593,6 +598,9 @@ export class PayoutsService {
           fundAmount: Number(
             ethers.formatUnits(escrow.totalFundedAmount, fundTokenDecimals),
           ),
+          cancellationRequestedAt: escrow.cancellationRequestedAt
+            ? new Date(escrow.cancellationRequestedAt)
+            : null,
         });
       }
 
