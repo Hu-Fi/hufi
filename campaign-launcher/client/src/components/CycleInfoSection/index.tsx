@@ -92,7 +92,7 @@ const useCycleTimeline = (startDate: string, endDate: string) => {
     const end = dayjs(endDate);
     const nowDate = dayjs(now);
 
-    const totalCycles = Math.max(1, Math.ceil(end.diff(start, 'day', true)));
+    const totalCycles = Math.ceil(end.diff(start, 'day', true));
     const fullCyclesPassed = nowDate.diff(start, 'day', false);
     const currentCycle = Math.min(totalCycles, fullCyclesPassed + 1);
     const cycleEndCandidate = start.add(currentCycle, 'day');
