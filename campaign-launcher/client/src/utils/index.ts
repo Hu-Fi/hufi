@@ -21,9 +21,9 @@ import {
   type CampaignFormValues,
 } from '@/types';
 
-export const formatAddress = (address?: string) => {
+export const formatAddress = (address?: string, start = 6, end = 5) => {
   if (!address) return '';
-  return `${address.slice(0, 6)}…${address.slice(-5)}`;
+  return `${address.slice(0, start)}…${address.slice(-end)}`;
 };
 
 export const getTokenAddress = (

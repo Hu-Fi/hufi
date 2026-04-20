@@ -81,6 +81,7 @@ export type Campaign = {
   launcher: string;
   recording_oracle: string;
   reputation_oracle: string;
+  cancellation_requested_at: number | null;
   start_date: string;
   status: CampaignStatus;
   symbol: string;
@@ -129,6 +130,27 @@ export type CampaignsResponse = {
 export type JoinedCampaignsResponse = {
   results: JoinedCampaign[];
   has_more: boolean;
+};
+
+export type LeaderboardEntryDto = {
+  address: EvmAddress;
+  result: number;
+  score: number;
+  estimated_reward: number;
+};
+
+export type LeaderboardEntry = LeaderboardEntryDto & {
+  rank: number;
+};
+
+export type LeaderboardResponseDto = {
+  data: LeaderboardEntryDto[];
+  total: number;
+  updated_at: string;
+};
+
+export type LeaderboardData = Omit<LeaderboardResponseDto, 'data'> & {
+  data: LeaderboardEntry[];
 };
 
 type BaseManifestDto = {

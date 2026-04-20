@@ -10,7 +10,11 @@ import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import type { EvmAddress, CampaignsQueryParams } from '@/types';
+import type {
+  EvmAddress,
+  CampaignsQueryParams,
+  LeaderboardData,
+} from '@/types';
 
 type JoinedCampaignsParams = Partial<Omit<CampaignsQueryParams, 'launcher'>>;
 
@@ -73,5 +77,28 @@ export const useCheckCampaignJoinStatus = (address: EvmAddress) => {
     ],
     queryFn: () => recordingApi.checkCampaignJoinStatus(appChainId, address),
     enabled: isAuthenticated && !!appChainId && !!address,
+  });
+};
+
+export const useGetLeaderboard = ({
+  address,
+  enabled = true,
+}: {
+  address: string;
+  enabled?: boolean;
+}) => {
+  const { appChainId } = useNetwork();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.LEADERBOARD, appChainId, address],
+    queryFn: () => recordingApi.getLeaderboard(appChainId, address),
+    enabled: enabled && !!appChainId && !!address,
+    select: (data): LeaderboardData => ({
+      ...data,
+      data: data.data.map((entry, idx) => ({
+        ...entry,
+        rank: idx + 1,
+      })),
+    }),
   });
 };
