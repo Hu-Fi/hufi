@@ -6,10 +6,10 @@ updates:
     schedule:
       interval: "weekly"
     target-branch: "develop"
-    
-    # Even though we use yarn, according to the documentation, value should be 'npm': 
+
+    # Even though we use yarn, according to the documentation, value should be 'npm':
     # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
-  - package-ecosystem: "npm" 
+  - package-ecosystem: "npm"
     directories:
       - "/campaign-launcher/client"
       - "/campaign-launcher/server"
@@ -25,13 +25,8 @@ updates:
     versioning-strategy: increase-if-necessary
     target-branch: "develop"
     ignore:
-        # Not compatible w/ jest: https://fakerjs.dev/guide/upgrading#incompatibility-with-jest
+      # Not compatible w/ jest: https://fakerjs.dev/guide/upgrading#incompatibility-with-jest
       - dependency-name: "@faker-js/faker"
-        versions: [">=10.0.0"]
-        # Not compatible w/ typescript-eslint atm: https://github.com/typescript-eslint/typescript-eslint/issues/11952
-      - dependency-name: "eslint"
-        versions: [">=10.0.0"]
-      - dependency-name: "@eslint/js"
         versions: [">=10.0.0"]
     # Grouping minor and patch updates to 1 PR to reduce the noise:
     # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
@@ -43,4 +38,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      react:
+        applies-to: version-updates
+        patterns:
+          - "react"
+          - "@types/react"
+          - "react-dom"
+          - "@types/react-dom"
     open-pull-requests-limit: 5 # Reasonable number to start with

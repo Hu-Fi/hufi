@@ -6,6 +6,7 @@ import hufiSdk, {
 import { EscrowClient, TransactionUtils } from '@human-protocol/sdk';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { ethers } from 'ethers';
 import _ from 'lodash';
 
 import { ChainId, ExchangeName } from '@/common/constants';
@@ -253,7 +254,7 @@ export class CampaignsService {
 
     return {
       chainId,
-      address: subgraphCampaign.id,
+      address: ethers.getAddress(subgraphCampaign.id),
       type: manifest.type as CampaignType,
       exchangeName: manifest.exchange,
       symbol,
@@ -261,17 +262,21 @@ export class CampaignsService {
       startDate: manifest.start_date.toISOString(),
       endDate: manifest.end_date.toISOString(),
       fundAmount: subgraphCampaign.fundAmount.toString(),
-      fundToken: subgraphCampaign.fundTokenAddress,
+      fundToken: ethers.getAddress(subgraphCampaign.fundTokenAddress),
       fundTokenSymbol: campaignTokenSymbol,
       fundTokenDecimals: campaignTokenDecimals,
       status:
         SUBGRAPH_CAMPAIGN_STATUS_TO_CAMPAIGN_STATUS[
           subgraphCampaign.status as SubgraphCampaignStatus
         ],
-      launcher: subgraphCampaign.creatorAddress,
-      exchangeOracle: subgraphCampaign.exchangeOracleAddress,
-      recordingOracle: subgraphCampaign.recordingOracleAddress,
-      reputationOracle: subgraphCampaign.reputationOracleAddress,
+      launcher: ethers.getAddress(subgraphCampaign.creatorAddress),
+      exchangeOracle: ethers.getAddress(subgraphCampaign.exchangeOracleAddress),
+      recordingOracle: ethers.getAddress(
+        subgraphCampaign.recordingOracleAddress,
+      ),
+      reputationOracle: ethers.getAddress(
+        subgraphCampaign.reputationOracleAddress,
+      ),
       balance: subgraphCampaign.currentBalance.toString(),
       amountPaid: subgraphCampaign.rewardsDistributed.toString(),
       intermediateResultsUrl: subgraphCampaign.intermediateResultsUrl,
