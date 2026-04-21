@@ -3247,16 +3247,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wagmi/connectors@npm:8.0.3":
-  version: 8.0.3
-  resolution: "@wagmi/connectors@npm:8.0.3"
+"@wagmi/connectors@npm:8.0.2":
+  version: 8.0.2
+  resolution: "@wagmi/connectors@npm:8.0.2"
   peerDependencies:
     "@base-org/account": ^2.5.1
     "@coinbase/wallet-sdk": ^4.3.6
     "@metamask/connect-evm": ~0.9.0
     "@safe-global/safe-apps-provider": ~0.18.6
     "@safe-global/safe-apps-sdk": ^9.1.0
-    "@wagmi/core": 3.4.4
+    "@wagmi/core": 3.4.3
     "@walletconnect/ethereum-provider": ^2.21.1
     accounts: 0.6.7
     porto: ~0.2.35
@@ -3281,13 +3281,13 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/dc0d1f4f0c503bce9f1481ba774d1cd6693dc69b5d27897d24c588eec6fc7db675daa2b4dddbd7916e6fb715215d3401684e9ea08b5c01cc648f96c394195482
+  checksum: 10c0/fcc932f923ae8771f39587c0e27f17602eb5b329069df18e7de21e0f7e6cb05548573571d635dfd1589db1dbe1421adaaff05848fa790e8c1c05a6a70db53787
   languageName: node
   linkType: hard
 
-"@wagmi/core@npm:3.4.4":
-  version: 3.4.4
-  resolution: "@wagmi/core@npm:3.4.4"
+"@wagmi/core@npm:3.4.3":
+  version: 3.4.3
+  resolution: "@wagmi/core@npm:3.4.3"
   dependencies:
     eventemitter3: "npm:5.0.1"
     mipd: "npm:0.0.7"
@@ -3307,7 +3307,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/629da99d18e3a5268ac1a37385b6701c36c254662b8207a32e606781a362c3a6a1aa05e303c3ea45c5e01ebbbcd32751a078b81c6df1de81071227529a2fb46a
+  checksum: 10c0/059cb7a49e7401108f9a2eedf2e020adb1729d138204af578f513f866922583b301f56cd70ae63b2bf295b01c7ea271f09952c4d14b856a7d4dba09230adf389
   languageName: node
   linkType: hard
 
@@ -4479,7 +4479,7 @@ __metadata:
     viem: "npm:^2.45.3"
     vite: "npm:^8.0.8"
     vite-plugin-node-polyfills: "npm:^0.26.0"
-    wagmi: "npm:^3.4.3"
+    wagmi: "npm:3.6.2"
     yup: "npm:^1.4.0"
   languageName: unknown
   linkType: soft
@@ -9995,12 +9995,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wagmi@npm:^3.4.3":
-  version: 3.6.3
-  resolution: "wagmi@npm:3.6.3"
+"wagmi@npm:3.6.2":
+  version: 3.6.2
+  resolution: "wagmi@npm:3.6.2"
   dependencies:
-    "@wagmi/connectors": "npm:8.0.3"
-    "@wagmi/core": "npm:3.4.4"
+    "@wagmi/connectors": "npm:8.0.2"
+    "@wagmi/core": "npm:3.4.3"
     use-sync-external-store: "npm:1.4.0"
   peerDependencies:
     "@tanstack/react-query": ">=5.0.0"
@@ -10010,7 +10010,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/e840f9bd4f7f91bdfd6af7a20af65a24ef7378c0859d0cbb11c1fb8171c488ce4e8a87c279a478be7d4db7d7bd507172a5ace6de9d86d6407b580d2567607231
+  checksum: 10c0/3ce730194fe500000463939477c1af5b696a50d09028890ad6e091f5cf642e8022604d83265e0db2ff3a27cae65bfdc700f28d2ce83ff86c3b44df78db586c30
   languageName: node
   linkType: hard
 
