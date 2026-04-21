@@ -299,18 +299,20 @@ export const scrollToFirstErrorFieldOnMobile = <T extends object>(
 };
 
 export const getCompactNumberParts = (initialValue: number) => {
-  const shouldUseDoubleKNotation = initialValue >= 1000000;
-  const shouldUseKNotation = initialValue >= 1000 && !shouldUseDoubleKNotation;
-  const value = shouldUseDoubleKNotation
-    ? initialValue / 1000000
-    : shouldUseKNotation
-      ? initialValue / 1000
-      : initialValue;
-  const suffix = shouldUseDoubleKNotation
-    ? 'kk'
-    : shouldUseKNotation
-      ? 'k'
-      : '';
+  const absoluteValue = Math.abs(initialValue);
+  const compactNotations = [
+    { threshold: 1000000000000, divisor: 1000000000000, suffix: 'T' },
+    { threshold: 1000000000, divisor: 1000000000, suffix: 'B' },
+    { threshold: 1000000, divisor: 1000000, suffix: 'M' },
+    { threshold: 1000, divisor: 1000, suffix: 'K' },
+  ];
+  const selectedNotation = compactNotations.find(
+    ({ threshold }) => absoluteValue >= threshold
+  );
+  const value = selectedNotation
+    ? initialValue / selectedNotation.divisor
+    : initialValue;
+  const suffix = selectedNotation?.suffix || '';
   const decimals = suffix ? (Number.isInteger(value) ? 0 : 1) : 2;
 
   return { value, suffix, decimals };
