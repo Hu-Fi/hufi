@@ -84,7 +84,7 @@ export const formatActualOnDate = (date: string) => {
   return `${value.format('Do MMM')} ${localTime}`;
 };
 
-export const getTargetLabel = (campaignType: CampaignType): string => {
+const getTargetLabel = (campaignType: CampaignType): string => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
       return 'Volume';

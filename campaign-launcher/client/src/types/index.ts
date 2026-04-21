@@ -19,12 +19,6 @@ export enum CampaignTypeNames {
   THRESHOLD = 'Threshold',
 }
 
-export enum CampaignsView {
-  ALL = 'all',
-  JOINED = 'joined',
-  MY = 'my',
-}
-
 export enum CampaignStatus {
   ACTIVE = 'active',
   TO_CANCEL = 'to_cancel',

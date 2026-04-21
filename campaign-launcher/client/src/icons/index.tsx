@@ -2,95 +2,6 @@ import type { FC } from 'react';
 
 import SvgIcon, { type SvgIconProps } from '@mui/material/SvgIcon';
 
-export const DiscordIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 32 32">
-      <path d="M24.1774 7.675C22.5591 6.8925 20.8287 6.32381 19.0197 6C18.7975 6.41512 18.538 6.97346 18.359 7.41762C16.4359 7.11874 14.5306 7.11874 12.6429 7.41762C12.464 6.97346 12.1985 6.41512 11.9743 6C10.1633 6.32381 8.431 6.89459 6.8127 7.67914C3.54859 12.7767 2.66374 17.7476 3.10616 22.648C5.2711 24.3188 7.36918 25.3338 9.43185 25.9979C9.94113 25.2736 10.3953 24.5035 10.7866 23.692C10.0414 23.3994 9.32763 23.0382 8.6532 22.6189C8.83213 22.482 9.00714 22.3387 9.17623 22.1914C13.2898 24.1798 17.7593 24.1798 21.8237 22.1914C21.9948 22.3387 22.1697 22.482 22.3467 22.6189C21.6703 23.0403 20.9546 23.4014 20.2093 23.6941C20.6006 24.5035 21.0529 25.2757 21.5641 26C23.6288 25.3358 25.7288 24.3209 27.8937 22.648C28.4129 16.9672 27.0069 12.0419 24.1774 7.675ZM11.3471 19.6343C10.1122 19.6343 9.09953 18.4429 9.09953 16.9921C9.09953 15.5413 10.0906 14.3479 11.3471 14.3479C12.6036 14.3479 13.6162 15.5392 13.5946 16.9921C13.5965 18.4429 12.6036 19.6343 11.3471 19.6343ZM19.6529 19.6343C18.418 19.6343 17.4053 18.4429 17.4053 16.9921C17.4053 15.5413 18.3963 14.3479 19.6529 14.3479C20.9093 14.3479 21.922 15.5392 21.9004 16.9921C21.9004 18.4429 20.9093 19.6343 19.6529 19.6343Z" />
-    </SvgIcon>
-  );
-};
-
-export const JobsIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 66 66">
-      <path
-        d="M66 33C66 51.2254 51.2254 66 33 66C14.7746 66 0 51.2254 0 33C0 14.7746 14.7746 0 33 0C51.2254 0 66 14.7746 66 33Z"
-        fill="url(#paint0_radial_271_3)"
-        fillOpacity="0.1"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M33 61.9304C48.9778 61.9304 61.9304 48.9778 61.9304 33C61.9304 17.0222 48.9778 4.06959 33 4.06959C17.0222 4.06959 4.06959 17.0222 4.06959 33C4.06959 48.9778 17.0222 61.9304 33 61.9304ZM33 66C51.2254 66 66 51.2254 66 33C66 14.7746 51.2254 0 33 0C14.7746 0 0 14.7746 0 33C0 51.2254 14.7746 66 33 66Z"
-        fill="url(#paint1_linear_271_3)"
-        fillOpacity="0.05"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M22.0488 28.8091V41.6684L35.1138 48.8779L48.1788 41.6684V28.3343L35.5695 21.5743L22.0488 28.8091Z"
-        fill="url(#paint2_linear_271_3)"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M32.1663 16.3135L44.9438 23.1636V37.0155L31.7939 44.2718L18.644 37.0155V23.5492L32.1663 16.3135Z"
-        stroke="#CDC7FF"
-        strokeWidth="1.24294"
-        fill="transparent"
-      />
-      <path
-        d="M18.9111 23.7869L31.8075 30.5422L45.1425 23.3922"
-        stroke="#CDC7FF"
-        strokeWidth="1.24294"
-        fill="transparent"
-      />
-      <path
-        d="M31.8123 44.2718V30.4542"
-        stroke="#CDC7FF"
-        strokeWidth="1.24294"
-        fill="transparent"
-      />
-      <defs>
-        <radialGradient
-          id="paint0_radial_271_3"
-          cx="0"
-          cy="0"
-          r="1"
-          gradientUnits="userSpaceOnUse"
-          gradientTransform="translate(33 10.6895) rotate(90) scale(55.3105)"
-        >
-          <stop stopColor="#F0F0FF" />
-          <stop stopColor="#F1F1FD" />
-          <stop offset="0.703125" stopColor="white" />
-        </radialGradient>
-        <linearGradient
-          id="paint1_linear_271_3"
-          x1="72.5261"
-          y1="66"
-          x2="77.495"
-          y2="44.1101"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#F7F8FD" />
-          <stop offset="1" stopColor="white" />
-        </linearGradient>
-        <linearGradient
-          id="paint2_linear_271_3"
-          x1="25.8308"
-          y1="26.2446"
-          x2="43.2617"
-          y2="48.1393"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#CDC7FF" stopOpacity="0.2" />
-          <stop offset="1" stopColor="#CDC7FF" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-    </SvgIcon>
-  );
-};
-
 export const AvatarIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 22 22" fill="none">
@@ -220,31 +131,6 @@ export const SuccessIcon: FC<SvgIconProps> = (props) => {
       <path
         fill="currentColor"
         d="M12.5486 22.3822L6.75689 16.5905L4.78467 18.5489L12.5486 26.3127L29.2152 9.64608L27.2569 7.68774L12.5486 22.3822Z"
-      />
-    </SvgIcon>
-  );
-};
-
-export const WalletIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M16 13C16 13.8284 16.6716 14.5 17.5 14.5C18.3284 14.5 19 13.8284 19 13C19 12.1716 18.3284 11.5 17.5 11.5C16.6716 11.5 16 12.1716 16 13Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M11 19H16C18.8284 19 20.2426 19 21.1213 18.1213C22 17.2426 22 15.8284 22 13V12C22 9.17157 22 7.75736 21.1213 6.87868C20.48 6.23738 19.5534 6.06413 18 6.01732M10 6H16C16.7641 6 17.425 6 18 6.01732M2 10C2 6.22876 2 5.34315 3.17157 4.17157C4.34315 3 6.22876 3 10 3H14.9827C15.9308 3 16.4049 3 16.7779 3.15749C17.2579 3.36014 17.6399 3.7421 17.8425 4.22208C18 4.5951 18 5.06917 18 6.01732"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M3.125 19.5L3.125 13.5M5 13.5V12M5 21V19.5M3.125 16.5H6.875M6.875 16.5C7.49632 16.5 8 17.0037 8 17.625V18.375C8 18.9963 7.49632 19.5 6.875 19.5H2M6.875 16.5C7.49632 16.5 8 15.9963 8 15.375V14.625C8 14.0037 7.49632 13.5 6.875 13.5H2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </SvgIcon>
   );

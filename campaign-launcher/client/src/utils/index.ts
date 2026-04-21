@@ -11,9 +11,7 @@ import {
 } from '@/constants';
 import { CHAIN_ICONS } from '@/constants/chainIcons';
 import { TOKENS } from '@/constants/tokens';
-import createAppTheme from '@/theme';
 import {
-  CampaignStatus,
   CampaignType,
   type JoinedCampaign,
   type Campaign,
@@ -84,35 +82,6 @@ export const formatTokenAmount = (
       : parseFloat(amountNumber.toFixed(4));
 
   return displayValue.toString();
-};
-
-const theme = createAppTheme('dark');
-
-export const mapStatusToColor = (
-  status: Campaign['status'],
-  startDate: string,
-  endDate: string
-) => {
-  const now = new Date().toISOString();
-
-  switch (status) {
-    case CampaignStatus.ACTIVE:
-      if (now < startDate) {
-        return theme.palette.warning.main;
-      } else if (now > endDate) {
-        return theme.palette.error.main;
-      } else {
-        return theme.palette.success.main;
-      }
-    case CampaignStatus.CANCELLED:
-      return theme.palette.primary.main;
-    case CampaignStatus.COMPLETED:
-      return theme.palette.secondary.main;
-    case CampaignStatus.TO_CANCEL:
-      return 'cyan';
-    default:
-      return theme.palette.primary.main;
-  }
 };
 
 export const mapTypeToLabel = (type: CampaignType) => {

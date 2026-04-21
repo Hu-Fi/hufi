@@ -133,7 +133,7 @@ const baseValidationSchema = {
     ),
 };
 
-export const marketMakingValidationSchema = yup.object({
+const marketMakingValidationSchema = yup.object({
   ...baseValidationSchema,
   pair: yup
     .string()
@@ -146,7 +146,7 @@ export const marketMakingValidationSchema = yup.object({
     .required('Daily volume target is required'),
 }) as ObjectSchema<MarketMakingFormValues>;
 
-export const holdingValidationSchema = yup.object({
+const holdingValidationSchema = yup.object({
   ...baseValidationSchema,
   symbol: yup
     .string()
@@ -159,7 +159,7 @@ export const holdingValidationSchema = yup.object({
     .required('Daily balance target is required'),
 }) as ObjectSchema<HoldingFormValues>;
 
-export const thresholdValidationSchema = yup.object({
+const thresholdValidationSchema = yup.object({
   ...baseValidationSchema,
   symbol: yup
     .string()

@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { type Campaign, CampaignStatus } from '@/types';
 
-export const mapStatusToColorAndText = (
+const mapStatusToColorAndText = (
   status: Campaign['status'],
   startDate: string,
   endDate: string
