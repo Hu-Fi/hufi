@@ -18,7 +18,6 @@ type Props = {
   campaign: Campaign;
 };
 
-// TODO: Update the copy
 const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
@@ -65,13 +64,13 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
       onClose={handleClose}
       isLoading={isCancelling}
       desktopSx={{ px: 0, pt: 6, pb: 0 }}
-      mobileSx={{ px: 0, pt: 3, pb: 0, height: '300px' }}
+      mobileSx={{ px: 0, pt: 3, pb: 0, height: '350px' }}
       closeButtonSx={{
         top: { xs: 24, md: 48 },
         right: { xs: 16, md: 32 },
       }}
     >
-      <Stack px={{ xs: 2, md: 4 }} flex={1} minHeight={150}>
+      <Stack px={{ xs: 2, md: 4 }} flex={1} minHeight={200}>
         <Typography
           variant="h5"
           display="flex"
@@ -88,7 +87,11 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           />
           Cancel Campaign
         </Typography>
-        {isCancelling && <ModalLoading />}
+        {isCancelling && (
+          <Box display="flex" my="auto">
+            <ModalLoading />
+          </Box>
+        )}
         {isCancelled && (
           <Stack
             alignItems="center"
@@ -112,9 +115,11 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
             lineHeight="20px"
             mb={4}
           >
-            Canceling this campaign will sit amet, consectetur adipiscing elit,
-            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            Ut enim ad minim veniam, quis nostrud exercitation
+            Cancelling this campaign will immediately stop it from being shown
+            as active. All user activity will no longer be recorded. Results
+            will be calculated up to the point of cancellation, and any earned
+            rewards will be distributed accordingly. Any remaining funds will be
+            returned to the creator's wallet address.
           </Typography>
         )}
       </Stack>
