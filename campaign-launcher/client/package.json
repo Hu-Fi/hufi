@@ -6,6 +6,7 @@
   "license": "AGPL-3.0",
   "type": "module",
   "scripts": {
+    "clean": "rm -rf dist node_modules/.vite",
     "start": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",

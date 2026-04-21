@@ -81,8 +81,9 @@ const Dashboard: FC = () => {
 
   const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
 
+  const campaigns = data?.results || [];
   const showEmptyState =
-    !isLoading && !isCampaignsFetching && data?.results.length === 0;
+    !isLoading && !isCampaignsFetching && campaigns.length === 0;
 
   return (
     <PageWrapper>
@@ -110,7 +111,7 @@ const Dashboard: FC = () => {
         />
       ) : (
         <CampaignsFeed
-          data={data?.results ?? []}
+          data={campaigns}
           isGridView={isGridView}
           isLoading={isLoading}
           isFetching={isCampaignsFetching}
