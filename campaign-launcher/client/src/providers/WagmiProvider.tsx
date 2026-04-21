@@ -2,13 +2,7 @@ import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
-import {
-  mainnet,
-  localhost,
-  polygon,
-  polygonAmoy,
-  sepolia,
-} from 'wagmi/chains';
+import { polygon, polygonAmoy } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
 import { isMainnet } from '@/constants';
@@ -17,7 +11,7 @@ const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
 
 export const config = isMainnet
   ? createConfig({
-      chains: [polygon, mainnet],
+      chains: [polygon],
       connectors: [
         walletConnect({ projectId }),
         coinbaseWallet({ appName: 'HuFi' }),
@@ -25,18 +19,10 @@ export const config = isMainnet
       syncConnectedChain: false,
       transports: {
         [polygon.id]: http(),
-        [mainnet.id]: http(),
       },
     })
   : createConfig({
-      chains: [
-        polygonAmoy,
-        sepolia,
-        {
-          ...localhost,
-          id: ChainId.LOCALHOST,
-        },
-      ],
+      chains: [polygonAmoy],
       connectors: [
         walletConnect({ projectId }),
         coinbaseWallet({ appName: 'HuFi' }),
@@ -44,8 +30,6 @@ export const config = isMainnet
       syncConnectedChain: false,
       transports: {
         [polygonAmoy.id]: http(),
-        [sepolia.id]: http(),
-        [ChainId.LOCALHOST]: http(),
       },
     });
 
