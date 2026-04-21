@@ -4,6 +4,7 @@ import { Box, Button, Grid, Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router';
 
 import AboutHuFi from '@/components/AboutHuFi';
+import CampaignsEmptyState from '@/components/CampaignsEmptyState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
 import DashboardWidgets from '@/components/DashboardWidgets';
@@ -73,12 +74,15 @@ const Dashboard: FC = () => {
     isFetching: isCampaignsFetching,
   } = useCampaigns(queryParams);
 
-  const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
-
   const handleChangeView = (nextView: 'grid' | 'table') => {
     setView(nextView);
     localStorage.setItem(PERSISTED_CAMPAIGNS_VIEW_KEY, nextView);
   };
+
+  const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
+
+  const showEmptyState =
+    !isLoading && !isCampaignsFetching && data?.results.length === 0;
 
   return (
     <PageWrapper>
@@ -98,12 +102,20 @@ const Dashboard: FC = () => {
           />
         )}
       </Box>
-      <CampaignsFeed
-        data={data?.results ?? []}
-        isGridView={isGridView}
-        isLoading={isLoading}
-        isFetching={isCampaignsFetching}
-      />
+      {showEmptyState ? (
+        <CampaignsEmptyState
+          view="all"
+          hasActiveFilters={false}
+          isHistory={false}
+        />
+      ) : (
+        <CampaignsFeed
+          data={data?.results ?? []}
+          isGridView={isGridView}
+          isLoading={isLoading}
+          isFetching={isCampaignsFetching}
+        />
+      )}
       {isMobile && (
         <Button
           component={RouterLink}

@@ -3,11 +3,10 @@ import type { FC } from 'react';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 
 import ConnectWallet from '@/components/ConnectWallet';
+import LaunchCampaignButton from '@/components/LaunchCampaignButton';
 import { BigFilterIcon, CampaignIcon, LockIcon } from '@/icons';
 import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-
-import LaunchCampaignButton from '../LaunchCampaignButton';
 
 type Props = {
   view: 'all' | 'joined' | 'hosted';
