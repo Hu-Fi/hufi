@@ -37,7 +37,7 @@ export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
     queryFn: ({ signal }) => recordingApi.getJoinedCampaigns(params, signal),
     staleTime: Infinity,
     enabled: isAuthenticated,
-    placeholderData: keepPreviousData,
+    placeholderData: isAuthenticated ? keepPreviousData : undefined,
   });
 };
 

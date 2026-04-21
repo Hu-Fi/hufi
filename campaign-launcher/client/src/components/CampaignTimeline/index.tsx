@@ -26,15 +26,18 @@ const getTimelineInfo = (
   const startDate = dayjs(campaign.start_date);
   const endDate = dayjs(campaign.end_date);
 
-  if (endDate.isBefore(nowDate)) {
-    if (campaign.status === CampaignStatus.CANCELLED) {
-      return {
-        label: 'Cancelled on',
-        value: endDate.format(DATE_FORMAT),
-        color: '#ff6262',
-      };
-    }
+  if (campaign.status === CampaignStatus.CANCELLED) {
+    const cancellationDate = dayjs(
+      (campaign as Campaign)?.cancellation_requested_at ?? campaign.end_date
+    );
+    return {
+      label: 'Cancelled on',
+      value: cancellationDate.format(DATE_FORMAT),
+      color: '#ff6262',
+    };
+  }
 
+  if (endDate.isBefore(nowDate)) {
     return {
       label: 'Ended on',
       value: endDate.format(DATE_FORMAT),

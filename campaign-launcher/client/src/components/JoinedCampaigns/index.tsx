@@ -30,7 +30,10 @@ const JoinedCampaigns: FC<Props> = ({
   const currentSkip = queryParams.skip ?? 0;
 
   useEffect(() => {
-    if (!data) return;
+    if (!data) {
+      setCampaigns([]);
+      return;
+    }
 
     setCampaigns((prev) => {
       if (currentSkip === 0) return data.results;
