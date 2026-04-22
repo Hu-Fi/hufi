@@ -15,19 +15,10 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 
-// TODO: rework urls on the docs
-const constructDocsExchangeKeyUrl = (exchange: string) => {
-  const baseUrl =
-    'https://docs.hu.finance/campaign-participation/api-keys/#__tabbed_1_';
-  const exchanges = ['mexc', 'gate', 'xt', 'bitmart', 'bigone'];
-  const idx = exchanges.findIndex((ex) => ex === exchange) + 1;
-  return `${baseUrl}${idx}`;
-};
+const API_KEYS_DOC_URL =
+  'https://docs.hu.finance/campaign-participation/api-keys/#how-to-create-api-keys';
 
-const DocsReference: FC<{ exchange: string; exchangeName: string }> = ({
-  exchange,
-  exchangeName,
-}) => {
+const DocsReference: FC<{ exchangeName: string }> = ({ exchangeName }) => {
   return (
     <Box mb={{ xs: 2, md: 3 }}>
       <Typography
@@ -40,7 +31,7 @@ const DocsReference: FC<{ exchange: string; exchangeName: string }> = ({
         For you to join a running campaign you must connect your API key.
       </Typography>{' '}
       <Link
-        href={constructDocsExchangeKeyUrl(exchange)}
+        href={API_KEYS_DOC_URL}
         target="_blank"
         rel="noopener noreferrer"
         sx={{
@@ -133,9 +124,7 @@ const ManageApiKeysPage: FC = () => {
         </Typography>
         {!isMobile && addApiKeyCta}
       </Box>
-      {showDocsReference && (
-        <DocsReference exchange={exchangeParam} exchangeName={exchangeName} />
-      )}
+      {showDocsReference && <DocsReference exchangeName={exchangeName} />}
       <ApiKeysTable data={apiKeysData} isLoading={isLoading} />
       <AddApiKeyDialog
         open={isDialogOpen}
