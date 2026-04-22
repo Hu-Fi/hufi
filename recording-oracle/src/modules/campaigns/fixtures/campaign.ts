@@ -90,6 +90,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     details,
     lastResultsAt: null,
     resultsCutoffAt: null,
+    cancellationRequestedAt: null,
     status: CampaignStatus.ACTIVE,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
