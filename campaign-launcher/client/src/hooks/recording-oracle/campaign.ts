@@ -1,42 +1,43 @@
 import type { ChainId } from '@human-protocol/sdk';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useNetwork } from '@/providers/NetworkProvider';
-import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import type { EvmAddress, CampaignsQueryParams } from '@/types';
-
-type JoinedCampaignsParams = Pick<
+import type {
+  EvmAddress,
   CampaignsQueryParams,
-  'status' | 'limit' | 'skip'
->;
+  LeaderboardData,
+} from '@/types';
 
-export const useGetJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
-  const { isSignerReady } = useSignerContext();
+type JoinedCampaignsParams = Partial<Omit<CampaignsQueryParams, 'launcher'>>;
+
+export const useJoinedCampaigns = (params: JoinedCampaignsParams = {}) => {
   const { isAuthenticated } = useWeb3Auth();
-  const { status, limit, skip } = params;
+  const { chain_id, status, type, exchange, limit, skip } = params;
 
   return useQuery({
     queryKey: [
       QUERY_KEYS.JOINED_CAMPAIGNS,
       isAuthenticated,
-      isSignerReady,
+      chain_id,
       status,
+      type,
+      exchange,
       limit,
       skip,
       AUTHED_QUERY_TAG,
     ],
     queryFn: ({ signal }) => recordingApi.getJoinedCampaigns(params, signal),
-    select: (data) => ({
-      ...data,
-      results: data.results.map((campaign) => ({
-        ...campaign,
-        id: campaign.address,
-      })),
-    }),
-    enabled: isAuthenticated && isSignerReady,
+    staleTime: Infinity,
+    enabled: isAuthenticated,
+    placeholderData: isAuthenticated ? keepPreviousData : undefined,
   });
 };
 
@@ -76,5 +77,28 @@ export const useCheckCampaignJoinStatus = (address: EvmAddress) => {
     ],
     queryFn: () => recordingApi.checkCampaignJoinStatus(appChainId, address),
     enabled: isAuthenticated && !!appChainId && !!address,
+  });
+};
+
+export const useGetLeaderboard = ({
+  address,
+  enabled = true,
+}: {
+  address: string;
+  enabled?: boolean;
+}) => {
+  const { appChainId } = useNetwork();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.LEADERBOARD, appChainId, address],
+    queryFn: () => recordingApi.getLeaderboard(appChainId, address),
+    enabled: enabled && !!appChainId && !!address,
+    select: (data): LeaderboardData => ({
+      ...data,
+      data: data.data.map((entry, idx) => ({
+        ...entry,
+        rank: idx + 1,
+      })),
+    }),
   });
 };

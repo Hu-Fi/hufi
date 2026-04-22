@@ -52,6 +52,9 @@ export class HttpClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      paramsSerializer: {
+        indexes: null,
+      },
     });
   }
 

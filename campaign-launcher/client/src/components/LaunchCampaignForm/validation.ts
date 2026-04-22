@@ -12,6 +12,7 @@ import {
 
 const MAX_DURATION = 100 * 24 * 60 * 60 * 1000; // 100 days
 const MIN_DURATION = 6 * 60 * 60 * 1000; // 6 hours
+const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
 
 const validateCampaignDuration = (startDate: Date, endDate: Date) => {
   const duration = endDate.getTime() - startDate.getTime();
@@ -105,7 +106,7 @@ const baseValidationSchema = {
     .required('Required')
     .test('is-future', 'Start date cannot be in the past', function (value) {
       if (!value) return true;
-      return value.getTime() > Date.now();
+      return value.getTime() + TEN_MINUTES_IN_MS > Date.now();
     })
     .test(
       'duration',
@@ -120,7 +121,7 @@ const baseValidationSchema = {
     .required('Required')
     .test('is-future', 'End date cannot be in the past', function (value) {
       if (!value) return true;
-      return value.getTime() > Date.now();
+      return value.getTime() + TEN_MINUTES_IN_MS > Date.now();
     })
     .test(
       'duration',
@@ -132,7 +133,7 @@ const baseValidationSchema = {
     ),
 };
 
-export const marketMakingValidationSchema = yup.object({
+const marketMakingValidationSchema = yup.object({
   ...baseValidationSchema,
   pair: yup
     .string()
@@ -145,7 +146,7 @@ export const marketMakingValidationSchema = yup.object({
     .required('Daily volume target is required'),
 }) as ObjectSchema<MarketMakingFormValues>;
 
-export const holdingValidationSchema = yup.object({
+const holdingValidationSchema = yup.object({
   ...baseValidationSchema,
   symbol: yup
     .string()
@@ -158,7 +159,7 @@ export const holdingValidationSchema = yup.object({
     .required('Daily balance target is required'),
 }) as ObjectSchema<HoldingFormValues>;
 
-export const thresholdValidationSchema = yup.object({
+const thresholdValidationSchema = yup.object({
   ...baseValidationSchema,
   symbol: yup
     .string()

@@ -26,31 +26,25 @@ const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
             component="img"
             src={baseIcon}
             alt={baseLabel}
+            width={getSymbolStyles(size).image.size}
+            height={getSymbolStyles(size).image.size}
+            border={getSymbolStyles(size).image.border}
             borderRadius="100%"
-            {...getSymbolStyles(size).image}
           />
           <Box
             component="img"
             src={quoteIcon}
             alt={quoteLabel}
-            marginLeft={isLarge ? -4 : -2}
+            ml={isLarge ? -4 : -2}
+            width={getSymbolStyles(size).image.size}
+            height={getSymbolStyles(size).image.size}
+            border={getSymbolStyles(size).image.border}
             borderRadius="100%"
-            {...getSymbolStyles(size).image}
           />
         </>
       )}
-      <Typography color="text.primary" {...getSymbolStyles(size).text}>
-        {isLarge ? (
-          <>
-            {baseLabel ?? base}
-            <br />
-            {quoteLabel ?? quote}
-          </>
-        ) : (
-          <>
-            {baseLabel ?? base}/{quoteLabel ?? quote}
-          </>
-        )}
+      <Typography color="white" {...getSymbolStyles(size).text}>
+        {baseLabel ?? base}/{quoteLabel ?? quote}
       </Typography>
     </Box>
   );
