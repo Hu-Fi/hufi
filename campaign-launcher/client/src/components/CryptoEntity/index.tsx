@@ -20,12 +20,13 @@ const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
           component="img"
           src={icon}
           alt={label}
-          width={getSymbolStyles(size).image.width}
+          width={getSymbolStyles(size).image.size}
+          height={getSymbolStyles(size).image.size}
           border={getSymbolStyles(size).image.border}
           borderRadius="100%"
         />
       )}
-      <Typography color="text.primary" {...getSymbolStyles(size).text}>
+      <Typography color="white" {...getSymbolStyles(size).text}>
         {label}
       </Typography>
     </Box>

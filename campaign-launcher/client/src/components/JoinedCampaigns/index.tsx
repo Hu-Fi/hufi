@@ -1,77 +1,86 @@
-import type { FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 
-import { Button, CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router';
+import { Box, Button } from '@mui/material';
 
-import CampaignsTable from '@/components/CampaignsTable';
-import CampaignsTablePagination from '@/components/CampaignsTablePagination';
-import { useGetJoinedCampaigns } from '@/hooks/recording-oracle';
-import usePagination from '@/hooks/usePagination';
-import { CampaignStatus } from '@/types';
-import { filterFalsyQueryParams } from '@/utils';
+import CampaignsEmptyState from '@/components/CampaignsEmptyState';
+import CampaignsFeed from '@/components/CampaignsFeed';
+import { useJoinedCampaigns } from '@/hooks/recording-oracle';
+import type { CampaignsQueryParams, JoinedCampaign } from '@/types';
+import { appendUniqueCampaigns } from '@/utils';
 
 type Props = {
-  showOnlyActiveCampaigns: boolean;
-  showViewAll?: boolean;
-  showPagination?: boolean;
+  queryParams: CampaignsQueryParams;
+  hasActiveFilters: boolean;
+  isGridView: boolean;
+  isHistory: boolean;
+  setNextPage: () => void;
 };
 
 const JoinedCampaigns: FC<Props> = ({
-  showOnlyActiveCampaigns,
-  showPagination = true,
-  showViewAll = false,
+  queryParams,
+  hasActiveFilters,
+  isGridView,
+  isHistory,
+  setNextPage,
 }) => {
-  const navigate = useNavigate();
-  const { params, pagination, setPageSize, setNextPage, setPrevPage } =
-    usePagination();
-  const { limit, skip } = params;
-  const { page, pageSize } = pagination;
+  const [campaigns, setCampaigns] = useState<JoinedCampaign[]>([]);
 
-  const queryParams = filterFalsyQueryParams({
-    status: showOnlyActiveCampaigns ? CampaignStatus.ACTIVE : undefined,
-    limit,
-    skip,
-  });
+  const { data, isLoading, isFetching } = useJoinedCampaigns(queryParams);
 
-  const { data, isLoading, isFetching } = useGetJoinedCampaigns(queryParams);
+  const currentSkip = queryParams.skip ?? 0;
 
-  const onViewAllClick = () => {
-    navigate('/?view=joined');
-  };
+  useEffect(() => {
+    if (!data) {
+      setCampaigns([]);
+      return;
+    }
+
+    setCampaigns((prev) => {
+      if (currentSkip === 0) return data.results;
+      if (isFetching) return prev;
+      return appendUniqueCampaigns(prev, data.results);
+    });
+  }, [data, currentSkip, isFetching]);
+
+  const showLoadMore = isLoading || isFetching || data?.has_more;
+
+  const showEmptyState = !isLoading && !isFetching && campaigns.length === 0;
 
   return (
     <>
-      {isLoading && (
-        <CircularProgress sx={{ width: '40px', height: '40px', mx: 'auto' }} />
+      {showEmptyState ? (
+        <CampaignsEmptyState
+          view="joined"
+          hasActiveFilters={hasActiveFilters}
+          isHistory={isHistory}
+        />
+      ) : (
+        <CampaignsFeed
+          data={campaigns}
+          isGridView={isGridView}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          isJoinedCampaigns
+        />
       )}
-      {!isLoading && (
-        <>
-          <CampaignsTable
-            data={data?.results || []}
-            isJoinedCampaigns={true}
-            isFetching={isFetching}
-          />
-          {showPagination && (
-            <CampaignsTablePagination
-              page={page}
-              resultsLength={data?.results?.length || 0}
-              hasMore={data?.has_more}
-              pageSize={pageSize}
-              setPageSize={setPageSize}
-              setNextPage={setNextPage}
-              setPrevPage={setPrevPage}
-            />
-          )}
-          {showViewAll && data?.has_more && (
-            <Button
-              variant="contained"
-              sx={{ width: { xs: '100%', sm: 'fit-content' } }}
-              onClick={onViewAllClick}
-            >
-              View All
-            </Button>
-          )}
-        </>
+      {showLoadMore && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          mx={{ xs: 0, md: 'auto' }}
+          mt={4}
+        >
+          <Button
+            variant="contained"
+            color="error"
+            disabled={isFetching || isLoading}
+            sx={{ width: { xs: '100%', md: '200px' } }}
+            onClick={setNextPage}
+          >
+            Load More
+          </Button>
+        </Box>
       )}
     </>
   );

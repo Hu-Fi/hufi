@@ -4,6 +4,7 @@ export const isMainnet = import.meta.env.VITE_APP_WEB3_ENV === 'mainnet';
 
 export const ROUTES = {
   DASHBOARD: '/',
+  CAMPAIGNS: '/campaigns',
   CAMPAIGN_DETAILS: '/campaign-details/:address',
   MANAGE_API_KEYS: '/manage-api-keys',
   LAUNCH_CAMPAIGN: '/launch-campaign',
@@ -33,8 +34,13 @@ export const TESTNET_CHAIN_IDS = [ChainId.SEPOLIA, ChainId.POLYGON_AMOY];
 export const MAINNET_CHAIN_IDS = [ChainId.MAINNET, ChainId.POLYGON];
 export const LOCALHOST_CHAIN_IDS = [ChainId.LOCALHOST];
 
-export const MQ_MOBILE = 'screen and (max-width: 600px)';
-
-export const DEFAULT_TABLE_PAGE_SIZE = 10;
+export const DEFAULT_CAMPAIGNS_QUERY_LIMIT = 9;
+export const DEFAULT_CAMPAIGNS_QUERY_LIMIT_MOBILE = 3;
 
 export const UNLIMITED_AMOUNT = 'unlimited';
+
+export const MOBILE_BOTTOM_NAV_HEIGHT = 90;
+
+export const MAX_NUMBER_INPUT_LENGTH = 16;
+
+export const PERSISTED_CAMPAIGNS_VIEW_KEY = 'campaigns-view';

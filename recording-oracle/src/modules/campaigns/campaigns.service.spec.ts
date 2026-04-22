@@ -791,13 +791,37 @@ describe('CampaignsService', () => {
   });
 
   describe('createCampaign', () => {
+    let chainId: number;
+    let campaignAddress: string;
+    let fundAmount: number;
+    let fundTokenSymbol: string;
+    let fundTokenDecimals: number;
+
+    let commonExpectedCampaignData: Record<string, unknown>;
+
+    beforeEach(() => {
+      chainId = generateTestnetChainId();
+      campaignAddress = faker.finance.ethereumAddress();
+      fundAmount = faker.number.float();
+      fundTokenSymbol = faker.finance.currencyCode();
+      fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
+
+      commonExpectedCampaignData = {
+        id: expect.any(String),
+        chainId,
+        address: ethers.getAddress(campaignAddress),
+        fundAmount: fundAmount.toString(),
+        fundToken: fundTokenSymbol,
+        fundTokenDecimals,
+        status: 'active',
+        lastResultsAt: null,
+        resultsCutoffAt: null,
+        cancellationRequestedAt: null,
+      };
+    });
+
     it('should create market making campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateMarketMakingCampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -807,29 +831,22 @@ describe('CampaignsService', () => {
           fundAmount,
           fundTokenSymbol,
           fundTokenDecimals,
+          cancellationRequestedAt: null,
         },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
+        ...commonExpectedCampaignData,
         type: manifest.type,
         exchangeName: manifest.exchange,
         symbol: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
         details: {
           dailyVolumeTarget: manifest.daily_volume_target,
         },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -840,12 +857,7 @@ describe('CampaignsService', () => {
     });
 
     it('should create holding campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateHoldingCampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -855,29 +867,22 @@ describe('CampaignsService', () => {
           fundAmount,
           fundTokenSymbol,
           fundTokenDecimals,
+          cancellationRequestedAt: null,
         },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
+        ...commonExpectedCampaignData,
         type: manifest.type,
         exchangeName: manifest.exchange,
         symbol: manifest.symbol,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
         details: {
           dailyBalanceTarget: manifest.daily_balance_target,
         },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -888,12 +893,7 @@ describe('CampaignsService', () => {
     });
 
     it('should create competitive market making campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateCompetitiveMarketMakingCampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -903,30 +903,23 @@ describe('CampaignsService', () => {
           fundAmount,
           fundTokenSymbol,
           fundTokenDecimals,
+          cancellationRequestedAt: null,
         },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
+        ...commonExpectedCampaignData,
         type: manifest.type,
         exchangeName: manifest.exchange,
         symbol: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
         details: {
           minVolumeRequired: manifest.min_volume_required,
           rewardsDistribution: manifest.rewards_distribution,
         },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -937,20 +930,10 @@ describe('CampaignsService', () => {
     });
 
     describe('threshold campaign creation', () => {
-      let chainId: number;
-      let campaignAddress: string;
       let manifest: ThresholdCampaignManifest;
-      let fundAmount: number;
-      let fundTokenSymbol: string;
-      let fundTokenDecimals: number;
 
       beforeEach(() => {
-        chainId = generateTestnetChainId();
-        campaignAddress = faker.finance.ethereumAddress();
         manifest = generateThresholdampaignManifest();
-        fundAmount = faker.number.float();
-        fundTokenSymbol = faker.finance.currencyCode();
-        fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
       });
 
       it('should create with proper data', async () => {
@@ -962,29 +945,22 @@ describe('CampaignsService', () => {
             fundAmount,
             fundTokenSymbol,
             fundTokenDecimals,
+            cancellationRequestedAt: null,
           },
         );
 
         expect(isUuidV4(campaign.id)).toBe(true);
 
         const expectedCampaignData = {
-          id: expect.any(String),
-          chainId,
-          address: ethers.getAddress(campaignAddress),
+          ...commonExpectedCampaignData,
           type: manifest.type,
           exchangeName: manifest.exchange,
           symbol: manifest.symbol,
           startDate: manifest.start_date,
           endDate: manifest.end_date,
-          fundAmount: fundAmount.toString(),
-          fundToken: fundTokenSymbol,
-          fundTokenDecimals,
           details: expect.objectContaining({
             minimumBalanceTarget: manifest.minimum_balance_target,
           }),
-          status: 'active',
-          lastResultsAt: null,
-          resultsCutoffAt: null,
         };
         expect(campaign).toEqual(expectedCampaignData);
 
@@ -1007,10 +983,10 @@ describe('CampaignsService', () => {
             fundAmount,
             fundTokenSymbol,
             fundTokenDecimals,
+            cancellationRequestedAt: null,
           },
         );
 
-        expect(isUuidV4(campaign.id)).toBe(true);
         expect(campaign.details).toEqual({
           minimumBalanceTarget: manifest.minimum_balance_target,
           maxParticipants: manifest.max_participants,
@@ -1031,15 +1007,52 @@ describe('CampaignsService', () => {
             fundAmount,
             fundTokenSymbol,
             fundTokenDecimals,
+            cancellationRequestedAt: null,
           },
         );
 
-        expect(isUuidV4(campaign.id)).toBe(true);
         expect(campaign.details).toEqual({
           minimumBalanceTarget: manifest.minimum_balance_target,
         });
         expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       });
+    });
+
+    it('should create to_cancel campaign with proper data', async () => {
+      const manifest = generateCampaignManifest();
+      const cancellationRequestedAt = faker.date.recent();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundTokenSymbol,
+          fundTokenDecimals,
+          cancellationRequestedAt: cancellationRequestedAt.valueOf(),
+        },
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        ...commonExpectedCampaignData,
+        type: manifest.type,
+        exchangeName: manifest.exchange,
+        symbol: expect.any(String),
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        details: expect.any(Object),
+        status: 'to_cancel',
+        cancellationRequestedAt,
+      };
+      expect(campaign).toEqual(expect.objectContaining(expectedCampaignData));
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expect.objectContaining(expectedCampaignData),
+      );
     });
   });
 
@@ -3416,9 +3429,11 @@ describe('CampaignsService', () => {
         (c) => c.status === CampaignStatus.ACTIVE,
       );
       const activeCampaign = Object.assign({}, campaigns[activeCampaignIndex]);
+      const cancellationRequestedAt = faker.date.recent();
 
       mockedEscrowUtils.getEscrow.mockResolvedValue({
         status: EscrowStatus[EscrowStatus.ToCancel],
+        cancellationRequestedAt: cancellationRequestedAt.valueOf(),
       } as IEscrow);
 
       await campaignsService.syncCampaignStatuses();
@@ -3427,6 +3442,7 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...activeCampaign,
         status: 'to_cancel',
+        cancellationRequestedAt,
       });
       expect(logger.info).toHaveBeenCalledWith(
         'Marking campaign as to_cancel',

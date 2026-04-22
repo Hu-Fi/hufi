@@ -15,29 +15,29 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'xs':
       return {
         image: {
-          width: 16,
+          size: 16,
           border: '1px solid white',
         },
         text: {
-          fontWeight: 700,
-          fontSize: 12,
+          fontWeight: 500,
+          fontSize: 16,
         },
       };
     case 'small':
       return {
         image: {
-          width: 24,
+          size: 22,
           border: '1px solid white',
         },
         text: {
-          fontWeight: 400,
-          fontSize: 16,
+          fontWeight: 600,
+          fontSize: 20,
         },
       };
     case 'medium':
       return {
         image: {
-          width: 32,
+          size: 32,
           border: '1px solid white',
         },
         text: {
@@ -48,24 +48,24 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
     case 'large':
       return {
         image: {
-          width: 72,
+          size: 32,
           border: '2px solid white',
         },
         text: {
           fontWeight: 800,
-          fontSize: 30,
-          lineHeight: '35px',
+          fontSize: 32,
+          lineHeight: '36px',
         },
       };
     default:
       return {
         image: {
-          width: 24,
+          size: 22,
           border: '1px solid white',
         },
         text: {
-          fontWeight: 400,
-          fontSize: 16,
+          fontWeight: 600,
+          fontSize: 20,
         },
       };
   }

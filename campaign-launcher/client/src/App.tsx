@@ -6,19 +6,20 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 
 import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import StakeProtectedRoute from '@/components/StakeProtectedRoute';
+import WalletProtectedRoute from '@/components/WalletProtectedRoute';
 import { ROUTES } from '@/constants';
-import Campaign from '@/pages/Campaign';
+import CampaignDetails from '@/pages/CampaignDetails';
+import Campaigns from '@/pages/Campaigns';
 import Dashboard from '@/pages/Dashboard';
 import LaunchCampaignPage from '@/pages/LaunchCampaign';
 import ManageApiKeysPage from '@/pages/ManageApiKeys';
 import ActiveAccountProvider from '@/providers/ActiveAccountProvider';
+import { AuthedUserDataProvider } from '@/providers/AuthedUserData';
 import ExchangesProvider from '@/providers/ExchangesProvider';
 import { NetworkProvider } from '@/providers/NetworkProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
 import SignerProvider from '@/providers/SignerProvider';
-import StakeProvider from '@/providers/StakeProvider';
 import ThemeProvider from '@/providers/ThemeProvider';
 import WagmiProvider from '@/providers/WagmiProvider';
 import { Web3AuthProvider } from '@/providers/Web3AuthProvider';
@@ -34,8 +35,8 @@ const App: FC = () => {
                 <ActiveAccountProvider>
                   <SignerProvider>
                     <Web3AuthProvider>
-                      <ExchangesProvider>
-                        <StakeProvider>
+                      <AuthedUserDataProvider>
+                        <ExchangesProvider>
                           <LocalizationProvider
                             dateAdapter={AdapterDayjs}
                             adapterLocale="en"
@@ -47,8 +48,12 @@ const App: FC = () => {
                                   element={<Dashboard />}
                                 />
                                 <Route
+                                  path={ROUTES.CAMPAIGNS}
+                                  element={<Campaigns />}
+                                />
+                                <Route
                                   path={ROUTES.CAMPAIGN_DETAILS}
-                                  element={<Campaign />}
+                                  element={<CampaignDetails />}
                                 />
                                 <Route
                                   path={ROUTES.MANAGE_API_KEYS}
@@ -61,16 +66,16 @@ const App: FC = () => {
                                 <Route
                                   path={ROUTES.LAUNCH_CAMPAIGN}
                                   element={
-                                    <StakeProtectedRoute>
+                                    <WalletProtectedRoute>
                                       <LaunchCampaignPage />
-                                    </StakeProtectedRoute>
+                                    </WalletProtectedRoute>
                                   }
                                 />
                               </Routes>
                             </Layout>
                           </LocalizationProvider>
-                        </StakeProvider>
-                      </ExchangesProvider>
+                        </ExchangesProvider>
+                      </AuthedUserDataProvider>
                     </Web3AuthProvider>
                   </SignerProvider>
                 </ActiveAccountProvider>

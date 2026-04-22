@@ -1,4 +1,5 @@
 import { createTheme, type PaletteMode } from '@mui/material/styles';
+import type {} from '@mui/x-date-pickers/themeAugmentation'; // needed for the date pickers customization
 
 declare module '@mui/material/styles' {
   interface Theme {
@@ -188,13 +189,13 @@ const createAppTheme = (mode: PaletteMode) => {
           },
           sizeSmall: {
             padding: '4px 10px',
-            fontSize: '13px',
-            lineHeight: '22px',
+            fontSize: '10px',
+            lineHeight: '16px',
           },
           sizeMedium: {
             padding: '6px 16px',
-            fontSize: '14px',
-            lineHeight: '24px',
+            fontSize: '12px',
+            lineHeight: '20px',
           },
           sizeLarge: {
             padding: '8px 22px',
@@ -244,6 +245,41 @@ const createAppTheme = (mode: PaletteMode) => {
               },
             '& input[type=number]': {
               MozAppearance: 'textfield',
+            },
+          },
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-input': {
+              padding: '16px 14px',
+            },
+          },
+        },
+      },
+      MuiInputBase: {
+        styleOverrides: {
+          input: {
+            color: 'white',
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#433679',
+            },
+          },
+        },
+      },
+      MuiPickersOutlinedInput: {
+        styleOverrides: {
+          root: {
+            color: 'white',
+            '& .MuiPickersOutlinedInput-notchedOutline': {
+              borderColor: '#433679',
             },
           },
         },

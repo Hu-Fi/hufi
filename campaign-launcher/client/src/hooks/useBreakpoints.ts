@@ -2,7 +2,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-export const breakpoints = {
+const breakpoints = {
   xs: '(max-width: 600px)',
   sm: '(min-width: 601px) and (max-width: 900px)',
   md: '(min-width: 901px) and (max-width: 1200px)',
@@ -50,8 +50,8 @@ const useBreakpoints = (): BreakpointResult => {
 };
 
 export const useIsMobile = () => {
-  const { xs } = useBreakpoints();
-  return xs.isActive;
+  const { xs, sm } = useBreakpoints();
+  return xs.isActive || sm.isActive;
 };
 
 export const useIsLgDesktop = () => {

@@ -2,19 +2,23 @@ import type { FC, PropsWithChildren } from 'react';
 
 import { Paper } from '@mui/material';
 
+import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
+
 const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
         display: 'flex',
-        py: { xs: 2, md: 4, xl: 8 },
-        px: { xs: 2, md: 4, xl: 13 },
+        pt: { xs: 4, md: 8 },
+        pb: { xs: 5, md: 8 },
+        px: { xs: 2, md: 0 },
         flexDirection: 'column',
-        borderRadius: { xs: '0px', md: '20px' },
         bgcolor: 'background.default',
-        minHeight: 'calc(100vh - 226px)',
-        gap: { xs: 3, md: 4, xl: 7 },
+        minHeight: {
+          xs: `calc(100vh - 62px - ${MOBILE_BOTTOM_NAV_HEIGHT}px)`, // minus header and bottom nav
+          md: 'calc(100vh - 91px)', // minus header
+        },
       }}
     >
       {children}

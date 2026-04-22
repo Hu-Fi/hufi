@@ -1,17 +1,5 @@
 import { CampaignType } from '@/types';
 
-import {
-  holdingValidationSchema,
-  marketMakingValidationSchema,
-  thresholdValidationSchema,
-} from './validation';
-
-const validationSchemasMap = {
-  [CampaignType.MARKET_MAKING]: marketMakingValidationSchema,
-  [CampaignType.HOLDING]: holdingValidationSchema,
-  [CampaignType.THRESHOLD]: thresholdValidationSchema,
-};
-
 const baseFormValues = {
   exchange: '',
   start_date: new Date(),
@@ -39,9 +27,6 @@ const defaultFormValuesMap = {
     minimum_balance_target: '',
   },
 };
-
-export const getValidationSchema = <T extends CampaignType>(campaignType: T) =>
-  validationSchemasMap[campaignType];
 
 export const getFormDefaultValues = <T extends CampaignType>(campaignType: T) =>
   defaultFormValuesMap[campaignType];

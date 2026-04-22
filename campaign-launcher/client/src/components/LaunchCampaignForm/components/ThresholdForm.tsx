@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC, KeyboardEvent, WheelEvent } from 'react';
 
 import {
   Autocomplete,
@@ -7,8 +7,6 @@ import {
   FormControl,
   FormHelperText,
   InputAdornment,
-  inputBaseClasses,
-  InputLabel,
   MenuItem,
   Select,
   Stack,
@@ -27,6 +25,7 @@ import {
 
 import CryptoEntity from '@/components/CryptoEntity';
 import FormExchangeSelect from '@/components/FormExchangeSelect';
+import { MAX_NUMBER_INPUT_LENGTH } from '@/constants';
 import { FUND_TOKENS } from '@/constants/tokens';
 import { useExchangeCurrencies } from '@/hooks/useExchangeCurrencies';
 import type { CampaignType, ThresholdFormValues } from '@/types';
@@ -34,14 +33,19 @@ import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 
-import { ExchangeInfoTooltip } from './';
-
 type Props = {
   control: Control<ThresholdFormValues>;
   errors: FieldErrors<ThresholdFormValues>;
   watch: UseFormWatch<ThresholdFormValues>;
   trigger: UseFormTrigger<ThresholdFormValues>;
   campaignType: CampaignType;
+};
+
+const labelStyles = {
+  color: 'white',
+  mb: 1.5,
+  lineHeight: '100%',
+  letterSpacing: '0px',
 };
 
 const ThresholdForm: FC<Props> = ({
@@ -60,37 +64,29 @@ const ThresholdForm: FC<Props> = ({
   return (
     <>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
-        <Box display="flex" gap={1} width="100%">
-          <FormControl
-            error={!!errors.exchange}
-            sx={{
-              width: '100%',
-              mb: errors.exchange ? 2 : 0,
-              '& .MuiFormHelperText-root': {
-                position: 'absolute',
-                bottom: 0,
-                mb: { xs: -3, md: -2 },
-              },
-            }}
-          >
-            <Controller
-              name="exchange"
-              control={control}
-              render={({ field }) => (
-                <FormExchangeSelect<ThresholdFormValues, 'exchange'>
-                  field={field}
-                  campaignType={campaignType}
-                  error={!!errors.exchange}
-                />
-              )}
-            />
-            {errors.exchange && (
-              <FormHelperText>{errors.exchange.message}</FormHelperText>
+        <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Exchange
+          </Typography>
+          <Controller
+            name="exchange"
+            control={control}
+            render={({ field }) => (
+              <FormExchangeSelect<ThresholdFormValues, 'exchange'>
+                field={field}
+                campaignType={campaignType}
+                error={!!errors.exchange}
+              />
             )}
-          </FormControl>
-          <ExchangeInfoTooltip />
-        </Box>
+          />
+          {errors.exchange && (
+            <FormHelperText>{errors.exchange.message}</FormHelperText>
+          )}
+        </FormControl>
         <FormControl error={!!errors.symbol} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Symbol
+          </Typography>
           <Controller
             name="symbol"
             control={control}
@@ -116,7 +112,6 @@ const ThresholdForm: FC<Props> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Symbol"
                       error={!!errors.symbol}
                       slotProps={{
                         input: {
@@ -141,7 +136,7 @@ const ThresholdForm: FC<Props> = ({
                         component="li"
                         sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
                       >
-                        <CryptoEntity symbol={option} />
+                        <CryptoEntity symbol={option} size="xs" />
                       </Box>
                     );
                   }}
@@ -157,18 +152,15 @@ const ThresholdForm: FC<Props> = ({
         </FormControl>
       </Stack>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
-        <FormControl
-          error={!!errors.start_date}
-          sx={{
-            width: '100%',
-          }}
-        >
+        <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            Start Date
+          </Typography>
           <Controller
             name="start_date"
             control={control}
             render={({ field }) => (
               <MobileDateTimePicker
-                label="Start Date"
                 format="DD-MM-YYYY HH:mm"
                 ampm={false}
                 disablePast
@@ -182,6 +174,7 @@ const ThresholdForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.start_date,
+                    placeholder: 'Select',
                   },
                 }}
               />
@@ -191,18 +184,15 @@ const ThresholdForm: FC<Props> = ({
             <FormHelperText>{errors.start_date.message}</FormHelperText>
           )}
         </FormControl>
-        <FormControl
-          error={!!errors.end_date}
-          sx={{
-            width: '100%',
-          }}
-        >
+        <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
+          <Typography variant="h6" sx={labelStyles}>
+            End Date
+          </Typography>
           <Controller
             name="end_date"
             control={control}
             render={({ field }) => (
               <MobileDateTimePicker
-                label="End Date"
                 format="DD-MM-YYYY HH:mm"
                 ampm={false}
                 disablePast
@@ -217,6 +207,7 @@ const ThresholdForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.end_date,
+                    placeholder: 'Select',
                   },
                 }}
               />
@@ -229,15 +220,16 @@ const ThresholdForm: FC<Props> = ({
       </Stack>
       <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <InputLabel id="fund-token-select-label">Fund Token</InputLabel>
+          <Typography variant="h6" sx={labelStyles}>
+            Fund Token
+          </Typography>
           <Controller
             name="fund_token"
             control={control}
             render={({ field }) => (
               <Select
-                labelId="fund-token-select-label"
+                aria-label="Fund Token Select"
                 id="fund-token-select"
-                label="Fund Token"
                 MenuProps={{
                   PaperProps: {
                     elevation: 4,
@@ -250,7 +242,7 @@ const ThresholdForm: FC<Props> = ({
               >
                 {FUND_TOKENS.map((token) => (
                   <MenuItem key={token} value={token}>
-                    <CryptoEntity symbol={token} />
+                    <CryptoEntity symbol={token} size="xs" />
                   </MenuItem>
                 ))}
               </Select>
@@ -264,18 +256,23 @@ const ThresholdForm: FC<Props> = ({
           error={!!errors.minimum_balance_target}
           sx={{ width: '100%' }}
         >
+          <Typography variant="h6" sx={labelStyles}>
+            Minimum Balance Target
+          </Typography>
           <Controller
             name="minimum_balance_target"
             control={control}
             render={({ field }) => (
               <TextField
                 id="minimum-balance-target-input"
-                label="Minimum Balance Target"
                 placeholder="1"
                 type="number"
                 error={!!errors.minimum_balance_target}
                 {...field}
                 onChange={(e) => {
+                  if (e.target.value.length > MAX_NUMBER_INPUT_LENGTH) {
+                    return;
+                  }
                   const value = formatInputValue(e.target.value);
                   if (isExceedingMaximumInteger(value)) {
                     return;
@@ -284,9 +281,17 @@ const ThresholdForm: FC<Props> = ({
                 }}
                 slotProps={{
                   htmlInput: {
+                    onWheel: (e: WheelEvent<HTMLInputElement>) => {
+                      e.currentTarget.blur();
+                    },
+                    onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                      }
+                    },
                     sx: {
                       fieldSizing: 'content',
-                      maxWidth: '12ch',
+                      maxWidth: '16ch',
                       minWidth: '1ch',
                       width: 'unset',
                     },
@@ -303,10 +308,12 @@ const ThresholdForm: FC<Props> = ({
                           height: '23px',
                           opacity: 0,
                           pointerEvents: 'none',
-                          [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
-                            {
-                              opacity: 1,
-                            },
+                          '.Mui-focused &': {
+                            opacity: 1,
+                          },
+                          'input:not(:placeholder-shown) ~ &': {
+                            opacity: 1,
+                          },
                         }}
                       >
                         <Typography variant="body1" color="text.primary">

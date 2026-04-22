@@ -12,18 +12,18 @@ import {
 type Props = {
   open: boolean;
   onClose: () => void;
-  elevation?: number;
   isLoading?: boolean;
   sx?: SxProps<Theme>;
+  closeButtonSx?: SxProps<Theme>;
 };
 
 const BaseModal: FC<PropsWithChildren<Props>> = ({
   open,
   onClose,
-  elevation = 0,
   isLoading = false,
-  children,
   sx,
+  closeButtonSx,
+  children,
 }) => {
   const handleClose = useCallback(() => {
     if (isLoading) return;
@@ -38,28 +38,27 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        mx: { xs: 4, md: 0 },
+        mx: 0,
       }}
       slotProps={{
         backdrop: {
           sx: {
-            background:
-              'linear-gradient(180deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.13) 100%), rgba(16, 7, 53, 0.80)',
+            backdropFilter: 'blur(7px)',
+            background: 'rgba(0, 0, 0, 0.3)',
           },
         },
       }}
     >
       <Paper
-        elevation={elevation}
+        elevation={0}
         sx={{
-          py: 5,
+          py: 6,
           px: 4,
-          width: 870,
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          bgcolor: 'background.default',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 4,
+          width: 640,
+          maxHeight: '700px',
+          overflowY: 'hidden',
+          bgcolor: '#251d47',
+          borderRadius: '20px',
           position: 'relative',
           boxShadow: 'none',
           ...sx,
@@ -70,13 +69,14 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           onClick={handleClose}
           sx={{
             p: 0,
-            color: 'text.primary',
+            color: 'white',
             position: 'absolute',
-            top: { xs: '16px', md: '40px' },
-            right: { xs: '16px', md: '32px' },
+            top: 48,
+            right: 32,
             '&:hover': {
               bgcolor: 'unset',
             },
+            ...closeButtonSx,
           }}
         >
           <CloseIcon />

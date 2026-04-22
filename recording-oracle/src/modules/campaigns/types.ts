@@ -92,6 +92,7 @@ export type CampaignEscrowInfo = {
   fundAmount: number;
   fundTokenSymbol: string;
   fundTokenDecimals: number;
+  cancellationRequestedAt: number | null;
 };
 
 export type ParticipantOutcome = {

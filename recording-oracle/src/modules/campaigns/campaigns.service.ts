@@ -251,9 +251,18 @@ export class CampaignsService implements OnModuleDestroy {
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
     newCampaign.details = details;
-    newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.lastResultsAt = null;
     newCampaign.resultsCutoffAt = null;
+
+    if (escrowInfo.cancellationRequestedAt) {
+      newCampaign.status = CampaignStatus.TO_CANCEL;
+      newCampaign.cancellationRequestedAt = new Date(
+        escrowInfo.cancellationRequestedAt,
+      );
+    } else {
+      newCampaign.status = CampaignStatus.ACTIVE;
+      newCampaign.cancellationRequestedAt = null;
+    }
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -416,6 +425,7 @@ export class CampaignsService implements OnModuleDestroy {
         ),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
+        cancellationRequestedAt: escrow.cancellationRequestedAt,
       },
     };
   }
@@ -1028,6 +1038,9 @@ export class CampaignsService implements OnModuleDestroy {
             campaignAddress: campaign.address,
           });
           campaign.status = CampaignStatus.TO_CANCEL;
+          campaign.cancellationRequestedAt = new Date(
+            escrow.cancellationRequestedAt!,
+          );
           await this.campaignsRepository.save(campaign);
         }
       }

@@ -19,12 +19,6 @@ export enum CampaignTypeNames {
   THRESHOLD = 'Threshold',
 }
 
-export enum CampaignsView {
-  ALL = 'all',
-  JOINED = 'joined',
-  MY = 'my',
-}
-
 export enum CampaignStatus {
   ACTIVE = 'active',
   TO_CANCEL = 'to_cancel',
@@ -61,7 +55,6 @@ export type ExchangeApiKeyData = {
 };
 
 export type Campaign = {
-  id: string;
   address: EvmAddress;
   chain_id: number;
   details: {
@@ -82,12 +75,31 @@ export type Campaign = {
   launcher: string;
   recording_oracle: string;
   reputation_oracle: string;
+  cancellation_requested_at: number | null;
   start_date: string;
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
   amount_paid: string;
   balance: string;
+};
+
+export type JoinedCampaign = {
+  address: EvmAddress;
+  chain_id: number;
+  details: {
+    daily_volume_target?: number;
+    daily_balance_target?: number;
+    minimum_balance_target?: number;
+  };
+  end_date: string;
+  exchange_name: string;
+  fund_amount: number;
+  fund_token: string;
+  start_date: string;
+  status: CampaignStatus;
+  symbol: string;
+  type: CampaignType;
 };
 
 export type CampaignDetails = Campaign & {
@@ -107,6 +119,32 @@ export type CampaignDailyPaidAmounts = {
 export type CampaignsResponse = {
   results: Campaign[];
   has_more: boolean;
+};
+
+export type JoinedCampaignsResponse = {
+  results: JoinedCampaign[];
+  has_more: boolean;
+};
+
+export type LeaderboardEntryDto = {
+  address: EvmAddress;
+  result: number;
+  score: number;
+  estimated_reward: number;
+};
+
+export type LeaderboardEntry = LeaderboardEntryDto & {
+  rank: number;
+};
+
+export type LeaderboardResponseDto = {
+  data: LeaderboardEntryDto[];
+  total: number;
+  updated_at: string;
+};
+
+export type LeaderboardData = Omit<LeaderboardResponseDto, 'data'> & {
+  data: LeaderboardEntry[];
 };
 
 type BaseManifestDto = {
@@ -142,6 +180,8 @@ export type CampaignsQueryParams = {
   chain_id: ChainId;
   status?: CampaignStatus;
   launcher?: string;
+  type?: CampaignType[];
+  exchange?: string[];
   limit?: number;
   skip?: number;
 };
@@ -235,4 +275,17 @@ export type CheckCampaignJoinStatusResponse = {
 export enum AllowanceType {
   UNLIMITED = 'unlimited',
   CUSTOM = 'custom',
+}
+
+export enum CampaignsTabFilter {
+  ACTIVE = 'active',
+  JOINED = 'joined',
+  HOSTED = 'hosted',
+  HISTORY = 'history',
+}
+
+export enum HistoryViewFilter {
+  ALL = 'all',
+  JOINED = 'joined',
+  HOSTED = 'hosted',
 }

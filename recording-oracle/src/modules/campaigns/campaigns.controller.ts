@@ -132,6 +132,9 @@ export class CampaignsController {
           details: campaign.details,
           status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],
           processingStatus: campaign.status,
+          cancellationRequestedAt: campaign.cancellationRequestedAt
+            ? campaign.cancellationRequestedAt.valueOf()
+            : null,
         }))
         .slice(0, limit),
     };
