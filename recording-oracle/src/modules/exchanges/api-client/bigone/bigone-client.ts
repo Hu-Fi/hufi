@@ -13,13 +13,13 @@ import * as httpUtils from '@/common/utils/http';
 import type { Logger } from '@/logger';
 import logger from '@/logger';
 
-import {
+import type {
   CexApiClientInitOptions,
   ExchangeApiClient,
 } from '../exchange-api-client.interface';
 import {
   ExchangePermission,
-  RequiredAccessCheckResult,
+  type RequiredAccessCheckResult,
   type AccountBalance,
   type Trade,
 } from '../types';

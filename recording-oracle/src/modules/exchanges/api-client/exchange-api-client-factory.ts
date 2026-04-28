@@ -155,6 +155,8 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
 
     if (exchangeName === ExchangeName.BIGONE) {
       cexApiClient = new BigoneClient(clientInitOptions);
+    } else if (exchangeName === ExchangeName.KRAKEN) {
+      throw new Error('Client not implemented');
     } else {
       /**
        * Add extra options per exchange if needed
