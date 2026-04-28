@@ -267,7 +267,7 @@ export class BigoneClient implements ExchangeApiClient {
       ({ data: apiTrades, page_token: nextPageToken } =
         await this._fetchMyTrades(assetPairName, nextPageToken));
 
-      const mappedTrades = [];
+      const mappedTrades: Trade[] = [];
       for (const apiTrade of apiTrades) {
         if (apiTrade.created_at >= sinceIso && apiTrade.created_at < untilIso) {
           mappedTrades.push(bigoneUtils.mapTrade(apiTrade));

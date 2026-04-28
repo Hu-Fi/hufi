@@ -1,10 +1,13 @@
 import crypto from 'crypto';
+import { setTimeout as delay } from 'timers/promises';
 
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { parse as csvParse } from 'csv-parse';
 
 import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
+import * as httpUtils from '@/common/utils/http';
 import type { Logger } from '@/logger';
 import logger from '@/logger';
 
@@ -22,17 +25,22 @@ import * as apiClientUtils from '../utils';
 import {
   API_KEY_HEADER,
   API_SIGNATURE_HEADER,
+  API_TIMEOUT,
   BASE_API_URL,
   DEPOSIT_METHODS,
+  PARSED_TRADES_BATCH_SIZE,
+  REPORT_POLLING_INTERVAL,
+  REPORT_POLLING_TIMEOUT,
 } from './constants';
 import {
-  ApiPermissionError,
   KrakenApiAccessError,
+  KrakenApiError,
   KrakenClientError,
 } from './error';
 import type {
   DepositAddressesResponse,
   ExtendedBalanceResponse,
+  ReportCsvRow,
 } from './types';
 import * as krakenUtils from './utils';
 
@@ -53,7 +61,10 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
       try {
         return await original.apply(this, args);
       } catch (error) {
-        if (error instanceof ApiPermissionError) {
+        if (
+          error instanceof KrakenApiError &&
+          krakenUtils.isApiPermissionErrorCode(error.code)
+        ) {
           if (this.loggingConfig.logPermissionErrors) {
             this.logger.info('Failed to access exchange API', {
               method: propertyKey,
@@ -108,6 +119,7 @@ export class KrakenClient implements ExchangeApiClient {
 
     this.apiClient = axios.create({
       baseURL: BASE_API_URL,
+      timeout: API_TIMEOUT,
     });
 
     this.loggingConfig = {
@@ -204,11 +216,7 @@ export class KrakenClient implements ExchangeApiClient {
         const responseErrorCode: string =
           responseData.error?.[0] || response.status;
 
-        if (krakenUtils.isApiPermissionCode(responseErrorCode)) {
-          throw new ApiPermissionError(responseErrorCode);
-        }
-
-        throw new KrakenClientError('API request error', responseErrorCode);
+        throw new KrakenApiError('API response error', responseErrorCode);
       }
 
       if (responseData.result) {
@@ -217,8 +225,21 @@ export class KrakenClient implements ExchangeApiClient {
         return responseData as T;
       }
     } catch (error) {
-      console.error('Unexpected kraken request error', error);
-      throw new Error('Kraken API request failed');
+      if (error instanceof KrakenApiError) {
+        throw error;
+      }
+
+      let formattedError = error;
+      if (error instanceof AxiosError) {
+        formattedError = httpUtils.formatAxiosError(error);
+      }
+
+      const errorMessage = 'Failed to make API request';
+      this.logger.error(errorMessage, {
+        error: formattedError,
+        path,
+      });
+      throw new KrakenClientError(errorMessage);
     }
   }
 
@@ -251,22 +272,125 @@ export class KrakenClient implements ExchangeApiClient {
     );
   }
 
+  private async requestTradesReport(
+    since: number,
+    until: number,
+  ): Promise<string> {
+    /**
+     * API is [starttm, endtm), but contains trade time in microseconds,
+     * so use [since, until] seconds range to get all trades for boundary seconds
+     * and filter out trades not within [since, until) ms range when processing report.
+     */
+    const starttm = Math.floor(since.valueOf() / 1000);
+    const endtm = Math.ceil(until.valueOf() / 1000);
+
+    const result = await this.makeRequest<{ id: string }>(
+      'POST',
+      '/0/private/AddExport',
+      {
+        data: {
+          report: 'trades',
+          fields: 'txid,time,pair,type,price,vol,cost,ordertype,misc',
+          format: 'CSV',
+          description: `HuFi Recording Oracle export at ${new Date().toISOString()}`,
+          starttm,
+          endtm,
+        },
+      },
+    );
+
+    return result.id;
+  }
+
   /**
    * Just a wrapper to correctly apply class decorators
    * w/o necessity to handle "Promise or Generator" cases
    * in decorator itself
    */
   @CatchApiPermissionErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-  private async _fetchMyTrades() {
-    throw new Error('Method not implemented.');
+  private async _fetchMyTrades(since: number, until: number) {
+    const reportId = await this.requestTradesReport(since, until);
+
+    let reportZip: Buffer | undefined;
+    const reportPollingStartTime = Date.now();
+    while (!reportZip) {
+      const elapsedTime = Date.now() - reportPollingStartTime;
+      if (elapsedTime > REPORT_POLLING_TIMEOUT) {
+        const errorMessage = 'Report processing timeout exceeded';
+        this.logger.error(errorMessage, {
+          reportId,
+          since,
+          until,
+        });
+        throw new KrakenClientError(errorMessage);
+      }
+
+      await delay(REPORT_POLLING_INTERVAL);
+
+      try {
+        reportZip = await this.makeRequest<Buffer>(
+          'POST',
+          '/0/private/RetrieveExport',
+          {
+            data: { id: reportId },
+          },
+        );
+      } catch (error) {
+        if (krakenUtils.isReportNotReadyError(error)) {
+          continue;
+        }
+
+        this.logger.error('Failed to fetch trades report', {
+          reportId,
+          since,
+          until,
+          errorDetails: error,
+        });
+        throw error;
+      }
+    }
+
+    const reportCsvStream = await krakenUtils.unzipReportCsv(reportZip);
+    return reportCsvStream.pipe(
+      csvParse({
+        delimiter: ',',
+        columns: true,
+      }),
+    );
   }
 
-  fetchMyTrades(
+  async *fetchMyTrades(
     symbol: string,
     since: number,
     until: number,
   ): AsyncGenerator<Trade[]> {
-    throw new Error('Method not implemented.');
+    const parsedReportStream = await this._fetchMyTrades(since, until);
+
+    let trades: Trade[] = [];
+    for await (const csvLine of parsedReportStream as AsyncIterable<ReportCsvRow>) {
+      const trade = krakenUtils.mapReportRowToTrade(csvLine);
+      if (trade.symbol !== symbol) {
+        continue;
+      }
+      if (trade.timestamp < since || trade.timestamp >= until) {
+        continue;
+      }
+
+      trades.push(trade);
+
+      if (trades.length === PARSED_TRADES_BATCH_SIZE) {
+        yield trades;
+        trades = [];
+      }
+    }
+
+    /**
+     * Yield the remaining trades that didn't fill up the last batch
+     * or all trades if the total number is less than the batch size.
+     */
+    if (trades.length > 0) {
+      yield trades;
+    }
   }
 
   @CatchApiPermissionErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)

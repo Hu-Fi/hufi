@@ -4,7 +4,8 @@ export const BASE_API_URL = 'https://api.kraken.com';
 export const API_KEY_HEADER = 'API-Key';
 export const API_SIGNATURE_HEADER = 'API-Sign';
 
-export const REPORT_PROCESSING_TIMEOUT = ms('30 seconds');
+export const REPORT_POLLING_INTERVAL = ms('3 seconds');
+export const REPORT_POLLING_TIMEOUT = ms('30 seconds');
 export const API_TIMEOUT = ms('5 seconds');
 
 export enum ApiPermissionErrorCode {
@@ -28,3 +29,5 @@ export const DEPOSIT_METHODS: Record<string, string> = {
   ETH: 'Ether (Hex)',
   USDT: 'Tether USDT (SPL)',
 } as const;
+
+export const PARSED_TRADES_BATCH_SIZE = 100;

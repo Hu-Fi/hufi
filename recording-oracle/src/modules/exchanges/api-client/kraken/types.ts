@@ -13,3 +13,16 @@ export type DepositAddressesResponse = Array<{
   new: boolean;
   tag: string;
 }>;
+
+// https://support.kraken.com/articles/360001184886-how-to-interpret-trades-history-fields
+export type ReportCsvRow = {
+  txid: string;
+  time: string;
+  pair: string;
+  type: 'buy' | 'sell';
+  price: string;
+  vol: string;
+  cost: string;
+  ordertype: string;
+  misc: string;
+};

@@ -25,6 +25,7 @@ import type {
   ExchangeApiClient,
 } from './exchange-api-client.interface';
 import { HyperliquidClient } from './hyperliquid';
+import { KrakenClient } from './kraken';
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
 
@@ -156,7 +157,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     if (exchangeName === ExchangeName.BIGONE) {
       cexApiClient = new BigoneClient(clientInitOptions);
     } else if (exchangeName === ExchangeName.KRAKEN) {
-      throw new Error('Client not implemented');
+      cexApiClient = new KrakenClient(clientInitOptions);
     } else {
       /**
        * Add extra options per exchange if needed

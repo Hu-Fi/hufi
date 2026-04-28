@@ -1,15 +1,21 @@
 import { ExchangeName } from '@/common/constants';
+import { BaseError } from '@/common/errors/base';
 
 import { ExchangeApiAccessError, ExchangeApiClientError } from '../errors';
 import { ExchangePermission } from '../types';
-import { ApiPermissionErrorCode } from './constants';
 
 export class KrakenClientError extends ExchangeApiClientError {
+  constructor(message: string) {
+    super(message, ExchangeName.KRAKEN);
+  }
+}
+
+export class KrakenApiError extends KrakenClientError {
   constructor(
     message: string,
     readonly code: string,
   ) {
-    super(message, ExchangeName.KRAKEN);
+    super(message);
   }
 }
 
@@ -19,8 +25,8 @@ export class KrakenApiAccessError extends ExchangeApiAccessError {
   }
 }
 
-export class ApiPermissionError extends KrakenClientError {
-  constructor(errorCode: ApiPermissionErrorCode) {
-    super('API permission denied', errorCode);
+export class ReportProcessingError extends BaseError {
+  constructor(cause: unknown) {
+    super('Failed to process report', cause);
   }
 }
