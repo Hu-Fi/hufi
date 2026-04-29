@@ -11,17 +11,20 @@ export class KrakenClientError extends ExchangeApiClientError {
 }
 
 export class KrakenApiError extends KrakenClientError {
-  constructor(
-    message: string,
-    readonly code: string,
-  ) {
-    super(message);
+  constructor(readonly code: string) {
+    super('API response error');
   }
 }
 
 export class KrakenApiAccessError extends ExchangeApiAccessError {
   constructor(permission: ExchangePermission, cause: string) {
     super(ExchangeName.KRAKEN, permission, cause);
+  }
+}
+
+export class KrakenApiKeyNonceWindowError extends KrakenClientError {
+  constructor(nonce_window: number) {
+    super(`API key nonce window is too small: ${nonce_window}`);
   }
 }
 

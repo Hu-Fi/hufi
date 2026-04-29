@@ -12,10 +12,13 @@ import {
 import { KrakenApiError, ReportProcessingError } from './error';
 import { type ReportCsvRow } from './types';
 
-export function isApiPermissionErrorCode(
-  errorCode: string,
-): errorCode is ApiPermissionErrorCode {
-  return ApiPermissionErrorCodes.includes(errorCode as ApiPermissionErrorCode);
+export function isApiPermissionError(
+  error: unknown,
+): error is KrakenApiError & { code: ApiPermissionErrorCode } {
+  return (
+    error instanceof KrakenApiError &&
+    ApiPermissionErrorCodes.includes(error.code as ApiPermissionErrorCode)
+  );
 }
 
 export function isReportNotReadyError(error: unknown): boolean {

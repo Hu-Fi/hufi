@@ -5,7 +5,7 @@ import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import axios, { AxiosError } from 'axios';
 import { parse as csvParse } from 'csv-parse';
 
-import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
+import { ExchangeName } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
 import * as httpUtils from '@/common/utils/http';
 import type { Logger } from '@/logger';
@@ -28,6 +28,7 @@ import {
   API_TIMEOUT,
   BASE_API_URL,
   DEPOSIT_METHODS,
+  MIN_NONCE_WINDOW,
   PARSED_TRADES_BATCH_SIZE,
   REPORT_POLLING_INTERVAL,
   REPORT_POLLING_TIMEOUT,
@@ -35,12 +36,15 @@ import {
 import {
   KrakenApiAccessError,
   KrakenApiError,
+  KrakenApiKeyNonceWindowError,
   KrakenClientError,
 } from './error';
-import type {
-  DepositAddressesResponse,
-  ExtendedBalanceResponse,
-  ReportCsvRow,
+import {
+  ApiKeyPermission,
+  type ApiKeyInfoResponse,
+  type DepositAddressesResponse,
+  type ExtendedBalanceResponse,
+  type ReportCsvRow,
 } from './types';
 import * as krakenUtils from './utils';
 
@@ -61,14 +65,14 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
       try {
         return await original.apply(this, args);
       } catch (error) {
-        if (
-          error instanceof KrakenApiError &&
-          krakenUtils.isApiPermissionErrorCode(error.code)
-        ) {
+        if (krakenUtils.isApiPermissionError(error)) {
           if (this.loggingConfig.logPermissionErrors) {
             this.logger.info('Failed to access exchange API', {
               method: propertyKey,
-              errorDetails: error,
+              errorDetails: {
+                message: error.message,
+                code: error.code,
+              },
             });
           }
 
@@ -84,7 +88,7 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
 }
 
 export class KrakenClient implements ExchangeApiClient {
-  readonly exchangeName = ExchangeName.BIGONE;
+  readonly exchangeName = ExchangeName.KRAKEN;
   readonly apiClient: AxiosInstance;
 
   private readonly apiKey: string;
@@ -216,7 +220,7 @@ export class KrakenClient implements ExchangeApiClient {
         const responseErrorCode: string =
           responseData.error?.[0] || response.status;
 
-        throw new KrakenApiError('API response error', responseErrorCode);
+        throw new KrakenApiError(responseErrorCode);
       }
 
       if (responseData.result) {
@@ -246,32 +250,74 @@ export class KrakenClient implements ExchangeApiClient {
   async checkRequiredAccess(
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult> {
+    const apiKeyPermissions = new Set<string>();
+    try {
+      const { nonce_window, permissions } = await this.fetchApiKeyInfo();
+      if (nonce_window < MIN_NONCE_WINDOW) {
+        throw new KrakenApiKeyNonceWindowError(nonce_window);
+      }
+
+      for (const apiKeyPermission of permissions) {
+        apiKeyPermissions.add(apiKeyPermission);
+      }
+    } catch (error) {
+      if (
+        krakenUtils.isApiPermissionError(error) ||
+        error instanceof KrakenApiKeyNonceWindowError
+      ) {
+        if (this.loggingConfig.logPermissionErrors) {
+          this.logger.info('Invalid API key configuration', {
+            errorDetails: {
+              message: error.message,
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              code: error.code,
+            },
+          });
+        }
+        return {
+          success: false,
+          missing: permissionsToCheck,
+        };
+      }
+      throw error;
+    }
+
     const permissionCheckHandlers: Record<
       ExchangePermission,
       () => Promise<boolean>
     > = {
-      [ExchangePermission.VIEW_ACCOUNT_BALANCE]: () =>
-        apiClientUtils.permissionCheckHandler(this.fetchBalance()),
-      [ExchangePermission.VIEW_DEPOSIT_ADDRESS]: () =>
-        apiClientUtils.permissionCheckHandler(
-          this.fetchDepositAddress(ETH_TOKEN_SYMBOL),
-        ),
-      [ExchangePermission.VIEW_SPOT_TRADING_HISTORY]: () =>
-        apiClientUtils.permissionCheckHandler(
-          this.makeRequest('POST', '/0/private/ExportStatus', {
-            data: {
-              report: 'trades',
-            },
-          }),
-        ),
+      [ExchangePermission.VIEW_ACCOUNT_BALANCE]: async () =>
+        apiKeyPermissions.has(ApiKeyPermission.QUERY_FUNDS),
+      [ExchangePermission.VIEW_DEPOSIT_ADDRESS]: async () =>
+        apiKeyPermissions.has(ApiKeyPermission.QUERY_FUNDS),
+      [ExchangePermission.VIEW_SPOT_TRADING_HISTORY]: async () =>
+        [
+          ApiKeyPermission.QUERY_OPEN_TRADES,
+          ApiKeyPermission.QUERY_CLOSED_TRADES,
+          ApiKeyPermission.EXPORT_DATA,
+        ].every((perm) => apiKeyPermissions.has(perm)),
     };
 
-    return await apiClientUtils.checkRequiredAccess(
+    return apiClientUtils.checkRequiredAccess(
       permissionsToCheck,
       permissionCheckHandlers,
     );
   }
 
+  private async fetchApiKeyInfo() {
+    const apiKeyInfo = await this.makeRequest<ApiKeyInfoResponse>(
+      'POST',
+      '/0/private/GetApiKeyInfo',
+    );
+
+    return {
+      ...apiKeyInfo,
+      nonce_window: Number(apiKeyInfo.nonce_window),
+    };
+  }
+
+  @CatchApiPermissionErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
   private async requestTradesReport(
     since: number,
     until: number,
@@ -344,7 +390,7 @@ export class KrakenClient implements ExchangeApiClient {
           reportId,
           since,
           until,
-          errorDetails: error,
+          error,
         });
         throw error;
       }
@@ -362,6 +408,7 @@ export class KrakenClient implements ExchangeApiClient {
     };
   }
 
+  @CatchApiPermissionErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
   private async removeReport(reportId: string): Promise<void> {
     try {
       await this.makeRequest('POST', '/0/private/RemoveExport', {
@@ -377,7 +424,7 @@ export class KrakenClient implements ExchangeApiClient {
     } catch (error) {
       this.logger.error('Failed to remove report', {
         reportId,
-        errorDetails: error,
+        error,
       });
     }
   }

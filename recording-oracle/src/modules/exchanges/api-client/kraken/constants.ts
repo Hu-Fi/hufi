@@ -3,6 +3,7 @@ import ms from 'ms';
 export const BASE_API_URL = 'https://api.kraken.com';
 export const API_KEY_HEADER = 'API-Key';
 export const API_SIGNATURE_HEADER = 'API-Sign';
+export const MIN_NONCE_WINDOW = 5000;
 
 export const REPORT_POLLING_INTERVAL = ms('3 seconds');
 export const REPORT_POLLING_TIMEOUT = ms('30 seconds');
