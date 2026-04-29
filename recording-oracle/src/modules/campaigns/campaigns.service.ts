@@ -24,6 +24,7 @@ import ms from 'ms';
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
@@ -438,22 +439,21 @@ export class CampaignsService implements OnModuleDestroy {
     this.logger.debug('Campaigns progress recording job started');
 
     try {
-      /**
-       * Atm we don't expect many active campaigns
-       * so it's fine to get all at once, but later
-       * we might need to query them in batches or as stream.
-       */
       const campaignsToCheck =
         await this.campaignsRepository.findForProgressRecording();
-
+      /**
+       * In case some exchange processing is slow or stuck for some reason
+       * we don't want it to block recording progress for all campaigns,
+       * so process them in parallel with limited concurrency.
+       *
+       * At the same time, concurrency should be litter to avoid confflicts
+       * for web3 nonce when making storeResults calls, so go safe here.
+       */
+      const promisePool = new controlFlow.PromisePool({ concurrency: 2 });
       for (const campaign of campaignsToCheck) {
-        /**
-         * Right now for simplicity process sequentially.
-         * Later we can add "fastq" usage for parallel processing
-         * and "backpressured" adding to the queue.
-         */
-        await this.recordCampaignProgress(campaign);
+        await promisePool.add(() => this.recordCampaignProgress(campaign));
       }
+      await promisePool.onIdle();
     } catch (error) {
       this.logger.error('Error while recording campaigns progress', error);
     }
@@ -1318,57 +1318,63 @@ export class CampaignsService implements OnModuleDestroy {
           const campaignsToRefresh =
             await this.campaignsRepository.findOngoingCampaigns();
 
-          for (const campaign of campaignsToRefresh) {
-            /**
-             * Right now for simplicity process sequentially.
-             * Later we can add "fastq" usage for parallel processing
-             * and "backpressured" adding to the queue.
-             */
-            const campaignLogger = logger.child({
-              campaignId: campaign.id,
-              chainId: campaign.chainId,
-              campaignAddress: campaign.address,
-            });
-            const isCampaignEndingSoon = dayjs()
-              .add(5, 'minute')
-              .isSameOrAfter(campaign.endDate);
-            if (isCampaignEndingSoon) {
-              campaignLogger.debug(
-                'Campaign ends soon, skip interim progress cache refresh',
-              );
-              continue;
-            }
+          /**
+           * In case some exchange processing is slow or stuck for some reason
+           * we don't want it to block refreshing cache for all campaigns,
+           * so process them in parallel with limited concurrency.
+           */
+          const promisePool = new controlFlow.PromisePool({ concurrency: 2 });
 
-            try {
-              const timeframe = await this.getActiveTimeframe(campaign);
-              if (!timeframe) {
+          for (const campaign of campaignsToRefresh) {
+            await promisePool.add(async () => {
+              const campaignLogger = this.logger.child({
+                campaignId: campaign.id,
+                chainId: campaign.chainId,
+                campaignAddress: campaign.address,
+              });
+              const isCampaignEndingSoon = dayjs()
+                .add(5, 'minute')
+                .isSameOrAfter(campaign.endDate);
+              if (isCampaignEndingSoon) {
                 campaignLogger.debug(
-                  'No active timeframe, skip interim progress cache refresh',
+                  'Campaign ends soon, skip interim progress cache refresh',
                 );
-                continue;
+                return;
               }
-              const progress = await this.checkCampaignProgressForPeriod(
-                campaign,
-                timeframe.start,
-                timeframe.end,
-                {
-                  caller: this.refreshInterimProgressCache.name,
-                },
-              );
-              await this.campaignsCache.setInterimProgress(
-                campaign.id,
-                progress,
-                campaign.endDate,
-              );
-            } catch (error) {
-              campaignLogger.error(
-                'Failed to get interim progress for campaign',
-                {
-                  error,
-                },
-              );
-            }
+
+              try {
+                const timeframe = await this.getActiveTimeframe(campaign);
+                if (!timeframe) {
+                  campaignLogger.debug(
+                    'No active timeframe, skip interim progress cache refresh',
+                  );
+                  return;
+                }
+                const progress = await this.checkCampaignProgressForPeriod(
+                  campaign,
+                  timeframe.start,
+                  timeframe.end,
+                  {
+                    caller: this.refreshInterimProgressCache.name,
+                  },
+                );
+                await this.campaignsCache.setInterimProgress(
+                  campaign.id,
+                  progress,
+                  campaign.endDate,
+                );
+              } catch (error) {
+                campaignLogger.error(
+                  'Failed to get interim progress for campaign',
+                  {
+                    error,
+                  },
+                );
+              }
+            });
           }
+
+          await promisePool.onIdle();
         } catch (error) {
           this.logger.error(
             'Error while refreshing interim progress cache',
