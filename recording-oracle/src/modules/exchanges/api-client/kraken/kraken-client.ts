@@ -308,7 +308,7 @@ export class KrakenClient implements ExchangeApiClient {
    * in decorator itself
    */
   @CatchApiPermissionErrors(ExchangePermission.VIEW_SPOT_TRADING_HISTORY)
-  private async _fetchMyTrades(since: number, until: number) {
+  private async fetchTradesReport(since: number, until: number) {
     const reportId = await this.requestTradesReport(since, until);
 
     let reportZip: Buffer | undefined;
@@ -351,12 +351,35 @@ export class KrakenClient implements ExchangeApiClient {
     }
 
     const reportCsvStream = await krakenUtils.unzipReportCsv(reportZip);
-    return reportCsvStream.pipe(
-      csvParse({
-        delimiter: ',',
-        columns: true,
-      }),
-    );
+    return {
+      id: reportId,
+      parsedCsvStream: reportCsvStream.pipe(
+        csvParse({
+          delimiter: ',',
+          columns: true,
+        }),
+      ) as AsyncIterable<ReportCsvRow>,
+    };
+  }
+
+  private async removeReport(reportId: string): Promise<void> {
+    try {
+      await this.makeRequest('POST', '/0/private/RemoveExport', {
+        data: {
+          id: reportId,
+          /**
+           * Assume we will be removing only processed reports,
+           * otherwise we need to "close" instead if not processed yet.
+           */
+          type: 'delete',
+        },
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove report', {
+        reportId,
+        errorDetails: error,
+      });
+    }
   }
 
   async *fetchMyTrades(
@@ -364,10 +387,10 @@ export class KrakenClient implements ExchangeApiClient {
     since: number,
     until: number,
   ): AsyncGenerator<Trade[]> {
-    const parsedReportStream = await this._fetchMyTrades(since, until);
+    const report = await this.fetchTradesReport(since, until);
 
     let trades: Trade[] = [];
-    for await (const csvLine of parsedReportStream as AsyncIterable<ReportCsvRow>) {
+    for await (const csvLine of report.parsedCsvStream) {
       const trade = krakenUtils.mapReportRowToTrade(csvLine);
       if (trade.symbol !== symbol) {
         continue;
@@ -391,6 +414,13 @@ export class KrakenClient implements ExchangeApiClient {
     if (trades.length > 0) {
       yield trades;
     }
+
+    /**
+     * We should cleanup after ourselves to avoid polluting UI for user
+     * "await" this to ensure we also cleanup when fetching trades from some
+     * script. It's fine because we have timeouts for it and it's fail-safe
+     */
+    await this.removeReport(report.id);
   }
 
   @CatchApiPermissionErrors(ExchangePermission.VIEW_ACCOUNT_BALANCE)

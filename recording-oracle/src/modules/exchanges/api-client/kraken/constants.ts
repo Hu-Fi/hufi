@@ -25,9 +25,16 @@ export const ApiErrorCode = {
   REPORT_NOT_READY: 'EExport:Not ready',
 } as const;
 
+/**
+ * On how to get a full list of valid methods if something changes:
+ * https://docs.kraken.com/api/docs/rest-api/get-deposit-methods
+ */
 export const DEPOSIT_METHODS: Record<string, string> = {
+  BTC: 'Bitcoin',
   ETH: 'Ether (Hex)',
-  USDT: 'Tether USDT (SPL)',
+  USDT: 'Tether USD (SPL)',
+  USDC: 'USDC (SPL)',
+  POL: 'POL - Polygon (Unified)',
 } as const;
 
 export const PARSED_TRADES_BATCH_SIZE = 100;
