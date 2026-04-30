@@ -446,7 +446,7 @@ export class CampaignsService implements OnModuleDestroy {
        * we don't want it to block recording progress for all campaigns,
        * so process them in parallel with limited concurrency.
        *
-       * At the same time, concurrency should be litter to avoid confflicts
+       * At the same time, concurrency should be little to avoid conflicts
        * for web3 nonce when making storeResults calls, so go safe here.
        */
       const promisePool = new controlFlow.PromisePool({ concurrency: 2 });

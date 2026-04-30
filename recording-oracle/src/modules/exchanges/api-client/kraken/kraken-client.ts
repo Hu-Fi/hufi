@@ -210,7 +210,8 @@ export class KrakenClient implements ExchangeApiClient {
       });
 
       let responseData;
-      if (response.headers['content-type'] === 'application/json') {
+      const contentType = String(response.headers['content-type']);
+      if (contentType.startsWith('application/json')) {
         responseData = JSON.parse(Buffer.from(response.data).toString('utf-8'));
       } else {
         responseData = Buffer.from(response.data);

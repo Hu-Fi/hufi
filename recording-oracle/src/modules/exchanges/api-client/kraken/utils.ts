@@ -36,7 +36,6 @@ export function trimZipZeroBytes(zipBuffer: Buffer): Buffer {
    */
   const maxEOCDSearch = Math.min(zipBuffer.length, 0xffff + MIN_EOCD_SIZE);
 
-  // Scan backwards for EOCD
   let eocdIndex = -1;
   for (
     let i = zipBuffer.length - maxEOCDSearch;
@@ -76,7 +75,7 @@ export function unzipReportCsv(reportZip: Buffer): Promise<ReadableStream> {
         return reject(new ReportProcessingError(err.message));
       }
 
-      if (zipfile.entryCount > 1) {
+      if (zipfile.entryCount !== 1) {
         return reject(
           new ReportProcessingError(
             `Unexpected number of csv files in report zip: ${zipfile.entryCount}`,
@@ -105,7 +104,9 @@ export function unzipReportCsv(reportZip: Buffer): Promise<ReadableStream> {
           return resolve(csvReadStream);
         });
       });
-      zipfile.on('error', reject);
+      zipfile.on('error', (err) =>
+        reject(new ReportProcessingError(err.message)),
+      );
 
       zipfile.readEntry();
     });

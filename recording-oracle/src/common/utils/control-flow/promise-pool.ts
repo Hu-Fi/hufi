@@ -19,8 +19,7 @@ export interface PromisePoolOptions {
    * Once the queue reaches this size, further add() calls are backpressured
    * until a running task finishes or queue capacity becomes available.
    *
-   * A value of 0 means do not admit any tasks into the waiting queue: add()
-   * will pause until the task can start immediately.
+   * When provided, this must be a positive integer.
    */
   backpressureLimit?: number;
 }
