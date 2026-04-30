@@ -120,9 +120,7 @@ export class CcxtExchangeClient implements ExchangeApiClient {
     }
 
     this.sandbox = Boolean(sandbox);
-    if (this.sandbox) {
-      this.ccxtClient.setSandboxMode(true);
-    }
+    this.ccxtClient.setSandboxMode(this.sandbox);
 
     this.loggingConfig = {
       ...this.loggingConfig,

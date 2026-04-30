@@ -56,18 +56,18 @@ export class HyperliquidClient implements ExchangeApiClient {
     this.userEvmAddress = userEvmAddress;
     this.sandbox = Boolean(sandbox);
 
-    this.ccxtClient = new ccxt.hyperliquid(
-      _.merge({}, BASE_CCXT_CLIENT_OPTIONS, {
-        options: {
-          defaultType: 'spot',
-        },
-      }),
-    );
+    /**
+     * For the application use shared preloaded ccxt client,
+     * so that we can rely on ccxt's internal rate-limiter.
+     * It's necessary because Hyperliquid's rate-limit is IP-based.
+     */
     if (preloadedExchangeClient) {
-      this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
-    }
-    if (this.sandbox) {
-      this.ccxtClient.setSandboxMode(true);
+      this.ccxtClient = preloadedExchangeClient;
+      this.sandbox = preloadedExchangeClient.isSandboxModeEnabled;
+    } else {
+      this.ccxtClient = new ccxt.hyperliquid({ ...BASE_CCXT_CLIENT_OPTIONS });
+      this.sandbox = Boolean(sandbox);
+      this.ccxtClient.setSandboxMode(this.sandbox);
     }
 
     this.logger = logger.child({
