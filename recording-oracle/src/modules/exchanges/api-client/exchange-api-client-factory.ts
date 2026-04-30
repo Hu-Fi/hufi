@@ -24,7 +24,10 @@ import type {
   DexApiClientInitOptions,
   ExchangeApiClient,
 } from './exchange-api-client.interface';
-import { HyperliquidClient } from './hyperliquid';
+import {
+  BASE_HYPERLIQUID_CLIENT_OPTIONS,
+  HyperliquidClient,
+} from './hyperliquid';
 import { KrakenClient } from './kraken';
 import { PancakeswapClient } from './pancakeswap';
 import { ExchangeExtras } from './types';
@@ -107,7 +110,17 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
         ) as CcxtExchange;
       } else {
         const exchangeClass = ccxt[exchangeName];
-        ccxtClient = new exchangeClass({ ...BASE_CCXT_CLIENT_OPTIONS });
+        let clientOptions: Record<string, unknown>;
+        switch (exchangeName) {
+          case ExchangeName.HYPERLIQUID: {
+            clientOptions = { ...BASE_HYPERLIQUID_CLIENT_OPTIONS };
+            break;
+          }
+          default:
+            clientOptions = { ...BASE_CCXT_CLIENT_OPTIONS };
+            break;
+        }
+        ccxtClient = new exchangeClass(clientOptions);
       }
 
       if (this.exchangesConfigService.useSandbox) {
