@@ -121,14 +121,10 @@ describe('CcxtExchangeClient', () => {
 
         const expectedSandboxMode = Boolean(sandboxParam);
         expect(ccxtExchangeClient.sandbox).toBe(expectedSandboxMode);
-        if (expectedSandboxMode) {
-          expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(1);
-          expect(mockedExchange.setSandboxMode).toHaveBeenCalledWith(
-            expectedSandboxMode,
-          );
-        } else {
-          expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(0);
-        }
+        expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.setSandboxMode).toHaveBeenCalledWith(
+          expectedSandboxMode,
+        );
       },
     );
 

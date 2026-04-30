@@ -12,8 +12,9 @@ export function mapAssetPairToSymbol(symbol: string): string {
 export function mapTrade(trade: ApiTrade): Trade {
   const mapped: Trade = {
     id: `${trade.id}`,
-    symbol: mapAssetPairToSymbol(trade.asset_pair_name),
     timestamp: new Date(trade.created_at).valueOf(),
+    symbol: mapAssetPairToSymbol(trade.asset_pair_name),
+    side: trade.side === 'BID' ? TradingSide.BUY : TradingSide.SELL,
     /**
      * If taker_fee is null - then the order wasn't filled instantly
      * and it's considered a "market maker" behavior.
@@ -28,7 +29,6 @@ export function mapTrade(trade: ApiTrade): Trade {
      * If it was a SELF_TRADING - always consider it as a "sell"
      * to reflect the maker/taker behavior and have correct score later.
      */
-    side: trade.side === 'BID' ? TradingSide.BUY : TradingSide.SELL,
     price: Number(trade.price),
     amount: Number(trade.amount),
     cost: -1,

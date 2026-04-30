@@ -1,6 +1,7 @@
 import { Logger as ValkeyLogger } from '@valkey/valkey-glide';
 import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import dayjsCustomParseFormat from 'dayjs/plugin/customParseFormat';
+import dayjsIsSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import Decimal from 'decimal.js';
 
 /**
@@ -12,6 +13,7 @@ Decimal.set({
   toExpPos: 60,
 });
 
-dayjs.extend(isSameOrAfter);
+dayjs.extend(dayjsCustomParseFormat);
+dayjs.extend(dayjsIsSameOrAfter);
 
 ValkeyLogger.setLoggerConfig('off');

@@ -63,14 +63,12 @@ describe('HyperliquidClient', () => {
         sandbox: sandboxParam,
       });
 
-      const expectedSandbox = Boolean(sandboxParam);
-      expect(client.sandbox).toBe(expectedSandbox);
-      if (expectedSandbox) {
-        expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(1);
-        expect(mockedExchange.setSandboxMode).toHaveBeenCalledWith(true);
-      } else {
-        expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(0);
-      }
+      const expectedSandboxMode = Boolean(sandboxParam);
+      expect(client.sandbox).toBe(expectedSandboxMode);
+      expect(mockedExchange.setSandboxMode).toHaveBeenCalledTimes(1);
+      expect(mockedExchange.setSandboxMode).toHaveBeenCalledWith(
+        expectedSandboxMode,
+      );
     },
   );
 

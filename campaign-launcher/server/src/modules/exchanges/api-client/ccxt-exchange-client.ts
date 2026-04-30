@@ -2,6 +2,8 @@ import * as ccxt from 'ccxt';
 import type { Exchange } from 'ccxt';
 import _ from 'lodash';
 
+import { ExchangeName } from '@/common/constants';
+
 import { BaseExchangeApiClient } from './base-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 
@@ -16,7 +18,23 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     super(exchangeName);
 
     const exchangeClass = ccxt[exchangeName];
-    this.ccxtClient = new exchangeClass(_.merge({}, BASE_CCXT_CLIENT_OPTIONS));
+    let perExchangeClientOptions: Record<string, unknown> = {};
+
+    switch (exchangeName) {
+      case ExchangeName.HYPERLIQUID:
+        perExchangeClientOptions = {
+          options: {
+            fetchMarkets: {
+              types: ['spot'],
+            },
+          },
+        };
+        break;
+    }
+
+    this.ccxtClient = new exchangeClass(
+      _.merge({}, BASE_CCXT_CLIENT_OPTIONS, perExchangeClientOptions),
+    );
   }
 
   protected get tradingPairs() {
