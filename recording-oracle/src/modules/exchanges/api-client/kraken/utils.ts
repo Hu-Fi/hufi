@@ -28,7 +28,7 @@ export function isReportNotReadyError(error: unknown): boolean {
   );
 }
 
-function trimZipZeroBytes(zipBuffer: Buffer): Buffer {
+export function trimZipZeroBytes(zipBuffer: Buffer): Buffer {
   const EOCD_SIG = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
   const MIN_EOCD_SIZE = 22;
   /**
@@ -112,11 +112,11 @@ export function unzipReportCsv(reportZip: Buffer): Promise<ReadableStream> {
   });
 }
 
-function normalizeTimestamp(rawTs: string): string {
+export function normalizeTimestamp(rawTs: string): string {
   const [_upToMsPart, msPart] = rawTs.split('.');
 
   if (!msPart) {
-    throw new Error('Unexpected format');
+    return rawTs + '.000Z';
   }
 
   let normalized: string;
@@ -129,6 +129,7 @@ function normalizeTimestamp(rawTs: string): string {
   return normalized + 'Z';
 }
 
+// https://support.kraken.com/articles/360001184886-how-to-interpret-trades-history-fields
 export function mapReportRowToTrade(csvTrade: ReportCsvRow): Trade {
   const timestamp = dayjs(
     normalizeTimestamp(csvTrade.time),
