@@ -438,19 +438,6 @@ export class KrakenClient implements ExchangeApiClient {
 
     let trades: Trade[] = [];
     for await (const csvLine of report.parsedCsvStream) {
-      if (csvLine.pair.indexOf('/') === -1) {
-        /**
-         * TradeHistory and report API have different formats for pair, e.g.:
-         * - trade history: "CCDUSD"
-         * - report: "CCD/USD"
-         *
-         * "BASE/QUOTE" is our common format for symbols, so have this safety-belt
-         * to avoid potential loss of results due to unexpected format change.
-         */
-        throw new KrakenClientError(
-          `Unexpected pair format in report: ${csvLine.pair}`,
-        );
-      }
       const trade = krakenUtils.mapReportRowToTrade(csvLine);
       if (trade.symbol !== symbol) {
         continue;

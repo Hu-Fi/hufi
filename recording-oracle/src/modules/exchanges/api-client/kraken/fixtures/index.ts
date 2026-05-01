@@ -17,10 +17,9 @@ export function generateTradeTime(date = faker.date.past()): {
 
   return {
     formatted: `${baseTime}.${msPart}`,
-    timestamp: dayjs(
-      `${baseTime}.${msPart.substring(0, 3)}Z`,
-      `${BASE_TIME_FORMAT}.SSSZ`,
-    ).valueOf(),
+    timestamp: dayjs
+      .utc(`${baseTime}.${msPart.substring(0, 3)}`, `${BASE_TIME_FORMAT}.SSS`)
+      .valueOf(),
   };
 }
 
@@ -54,7 +53,7 @@ export function generateCsvTradeLine(
       .join('-')
       .toUpperCase(),
     time: tradeTime.formatted,
-    pair: `${faker.finance.currencyCode()}-${faker.finance.currencyCode()}`,
+    pair: `${faker.finance.currencyCode()}/${faker.finance.currencyCode()}`,
     type: faker.helpers.arrayElement(['buy', 'sell'] as const),
     price: price.toString(),
     vol: amount.toString(),
