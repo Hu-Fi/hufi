@@ -46,6 +46,7 @@
     "ccxt": "^4.5.37",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "csv-parse": "^6.2.1",
     "dayjs": "^1.11.19",
     "decimal.js": "^10.6.0",
     "ethers": "~6.16.0",
@@ -65,7 +66,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.28",
-    "typeorm-naming-strategies": "^4.1.0"
+    "typeorm-naming-strategies": "^4.1.0",
+    "yauzl": "^3.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

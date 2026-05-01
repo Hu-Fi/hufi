@@ -62,6 +62,11 @@ export class ExchangesConfigService {
         ...getExchangeMetaFromCcxt(ExchangeName.HYPERLIQUID),
         type: ExchangeType.DEX,
       },
+      [ExchangeName.KRAKEN]: {
+        enabled: this.configService.get('FEATURE_KRAKEN', 'true') === 'true',
+        ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
+        type: ExchangeType.CEX,
+      },
       [ExchangeName.MEXC]: {
         enabled: this.configService.get('FEATURE_MEXC', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.MEXC),
