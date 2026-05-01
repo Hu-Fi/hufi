@@ -217,11 +217,10 @@ export class KrakenClient implements ExchangeApiClient {
         responseData = Buffer.from(response.data);
       }
 
-      if (response.status > 299 || responseData.error?.length > 0) {
-        const responseErrorCode: string =
-          responseData.error?.[0] || response.status;
-
-        throw new KrakenApiError(responseErrorCode);
+      const errorInResponse: string = responseData.error?.[0] || '';
+      // https://docs.kraken.com/api/docs/guides/spot-rest-intro#error-details
+      if (response.status > 299 || errorInResponse.startsWith('E')) {
+        throw new KrakenApiError(errorInResponse || response.status.toString());
       }
 
       if (responseData.result) {
