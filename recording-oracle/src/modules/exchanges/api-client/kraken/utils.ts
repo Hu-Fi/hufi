@@ -117,7 +117,7 @@ export function normalizeTimestamp(rawTs: string): string {
   const [_upToMsPart, msPart] = rawTs.split('.');
 
   if (!msPart) {
-    return rawTs + '.000Z';
+    return rawTs + '.000';
   }
 
   let normalized: string;
@@ -127,15 +127,31 @@ export function normalizeTimestamp(rawTs: string): string {
     normalized = rawTs + '0'.repeat(3 - msPart.length);
   }
 
-  return normalized + 'Z';
+  return normalized;
 }
 
 // https://support.kraken.com/articles/360001184886-how-to-interpret-trades-history-fields
 export function mapReportRowToTrade(csvTrade: ReportCsvRow): Trade {
-  const timestamp = dayjs(
+  if (csvTrade.pair.indexOf('/') === -1) {
+    /**
+     * TradeHistory and report API have different formats for pair, e.g.:
+     * - trade history: "CCDUSD"
+     * - report: "CCD/USD"
+     *
+     * "BASE/QUOTE" is our common format for symbols, so have this safety-belt
+     * to avoid potential loss of results due to unexpected format change.
+     */
+    throw new Error(`Unexpected pair format in report: ${csvTrade.pair}`);
+  }
+
+  const timestamp = dayjs.utc(
     normalizeTimestamp(csvTrade.time),
-    'YYYY-MM-DD HH:mm:ss.SSSZ',
+    'YYYY-MM-DD HH:mm:ss.SSS',
+    true,
   );
+  if (!timestamp.isValid()) {
+    throw new Error(`Invalid timestamp format in report: ${csvTrade.time}`);
+  }
 
   return {
     id: csvTrade.txid,

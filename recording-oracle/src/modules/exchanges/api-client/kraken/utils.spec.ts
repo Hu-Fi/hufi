@@ -67,21 +67,21 @@ describe('Kraken client utils', () => {
 
     it('should pad timestamp when no fractional digits', () => {
       expect(normalizeTimestamp(baseKrakenTimestamp)).toBe(
-        `${baseKrakenTimestamp}.000Z`,
+        `${baseKrakenTimestamp}.000`,
       );
     });
 
     it('should normalize a timestamp with more than 3 fractional digits by truncating', () => {
       const msPart = faker.number.int({ min: 1000 }).toString();
       expect(normalizeTimestamp(`${baseKrakenTimestamp}.${msPart}`)).toBe(
-        `${baseKrakenTimestamp}.${msPart.slice(0, 3)}Z`,
+        `${baseKrakenTimestamp}.${msPart.slice(0, 3)}`,
       );
     });
 
-    it('should normalize a timestamp with exactly 3 fractional digits unchanged', () => {
-      const msPart = faker.number.int({ min: 0, max: 999 }).toString();
+    it('should keep timestamp with exactly 3 fractional digits unchanged', () => {
+      const msPart = faker.number.int({ min: 100, max: 999 }).toString();
       expect(normalizeTimestamp(`${baseKrakenTimestamp}.${msPart}`)).toBe(
-        `${baseKrakenTimestamp}.${msPart}Z`,
+        `${baseKrakenTimestamp}.${msPart}`,
       );
     });
 
@@ -89,7 +89,7 @@ describe('Kraken client utils', () => {
       const msPart = faker.number.int({ min: 1, max: 99 }).toString();
 
       expect(normalizeTimestamp(`${baseKrakenTimestamp}.${msPart}`)).toBe(
-        `${baseKrakenTimestamp}.${msPart.padEnd(3, '0')}Z`,
+        `${baseKrakenTimestamp}.${msPart.padEnd(3, '0')}`,
       );
     });
   });
@@ -149,6 +149,25 @@ describe('Kraken client utils', () => {
   });
 
   describe('mapReportRowToTrade', () => {
+    it('should throw when report pair is not in BASE/QUOTE format', () => {
+      const csvTrade = generateCsvTradeLine({
+        pair: `${faker.finance.currencyCode()}${faker.finance.currencyCode()}`,
+      });
+
+      expect(() => mapReportRowToTrade(csvTrade)).toThrow(
+        `Unexpected pair format in report: ${csvTrade.pair}`,
+      );
+    });
+
+    it('should throw when report timestamp cannot be parsed', () => {
+      const csvTrade = generateCsvTradeLine();
+      csvTrade.time = new Date(csvTrade.__timestamp).toISOString();
+
+      expect(() => mapReportRowToTrade(csvTrade)).toThrow(
+        `Invalid timestamp format in report: ${csvTrade.time}`,
+      );
+    });
+
     it('should correctly map base data from csv row to trade', () => {
       const csvTrade = generateCsvTradeLine();
 
