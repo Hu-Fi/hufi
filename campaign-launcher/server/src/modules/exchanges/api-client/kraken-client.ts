@@ -40,9 +40,20 @@ export class KrakenClient extends BaseExchangeApiClient {
 
     const updatedAssets: string[] = [];
     for (const [assetSymbol, assetInfo] of Object.entries(data.result)) {
-      if (assetInfo.status === 'enabled') {
-        updatedAssets.push(assetSymbol);
+      if (assetInfo.status !== 'enabled') {
+        continue;
       }
+
+      /**
+       * https://support.kraken.com/articles/360039879471-what-is-asset-s-and-asset-m-?
+       * Technically it's possible to have "." in crypto symbol, but for simplicity
+       * filter out all assets with "." to exlcude Kraken internal assets for "Migration".
+       */
+      if (assetSymbol.indexOf('.') > -1) {
+        continue;
+      }
+
+      updatedAssets.push(assetSymbol);
     }
     this.assets = updatedAssets;
   }
@@ -60,16 +71,15 @@ export class KrakenClient extends BaseExchangeApiClient {
     }
 
     const updatedTradeableAssetPairs: string[] = [];
-    for (const [assetPair, assetPairInfo] of Object.entries(data.result)) {
-      if (assetPairInfo.status === 'online') {
-        let assetPairName: string;
-        if (assetPairInfo.wsname) {
-          assetPairName = assetPairInfo.wsname;
-        } else {
-          const quoteAltName = assetPair.slice(assetPairInfo.base.length);
-          assetPairName = `${assetPairInfo.base}/${quoteAltName}`;
-        }
-        updatedTradeableAssetPairs.push(assetPairName);
+    for (const [_assetPair, assetPairInfo] of Object.entries(data.result)) {
+      /**
+       * Assert pair name itself is in BASEQUOTE format and in order to put "/"
+       * we have to map base and quote assets correctly (e.g. XXDG -> XDG, ZUSD -> USD).
+       * To simplify this - rely on wsname field which is in BASE/QUOTE format
+       * and contains (presumably) already mapped asset names.
+       */
+      if (assetPairInfo.status === 'online' && assetPairInfo.wsname) {
+        updatedTradeableAssetPairs.push(assetPairInfo.wsname);
       }
     }
     this.tradeableAssetPairs = updatedTradeableAssetPairs;
