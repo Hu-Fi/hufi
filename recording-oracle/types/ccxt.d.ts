@@ -85,6 +85,7 @@ declare module 'ccxt' {
       [extraCredential: string]: boolean;
     };
     setSandboxMode(enabled: boolean): void;
+    isSandboxModeEnabled: boolean;
     loadMarkets(reload = false): Promise<void>;
     setMarketsFromExchange(sourceExchange: unknown): void;
     checkRequiredCredentials(throwError?: boolean): boolean;

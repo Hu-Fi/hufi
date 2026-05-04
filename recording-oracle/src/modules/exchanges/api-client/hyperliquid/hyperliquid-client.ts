@@ -1,14 +1,12 @@
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
 import { ethers } from 'ethers';
-import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
 import { MethodNotImplementedError } from '@/common/errors/base';
 import type { Logger } from '@/logger';
 import logger from '@/logger';
 
-import { BASE_CCXT_CLIENT_OPTIONS } from '../ccxt';
 import * as ccxtClientUtils from '../ccxt/utils';
 import { ExchangeApiClientError } from '../errors';
 import {
@@ -17,7 +15,10 @@ import {
 } from '../exchange-api-client.interface';
 import { type RequiredAccessCheckResult, type Trade } from '../types';
 import * as apiClientUtils from '../utils';
-import { HYPERLIQUID_TRADES_PAGE_LIMIT } from './constants';
+import {
+  BASE_HYPERLIQUID_CLIENT_OPTIONS,
+  HYPERLIQUID_TRADES_PAGE_LIMIT,
+} from './constants';
 
 export interface HyperliquidClientInitOptions extends DexApiClientInitOptions {
   sandbox?: boolean;
@@ -56,18 +57,20 @@ export class HyperliquidClient implements ExchangeApiClient {
     this.userEvmAddress = userEvmAddress;
     this.sandbox = Boolean(sandbox);
 
-    this.ccxtClient = new ccxt.hyperliquid(
-      _.merge({}, BASE_CCXT_CLIENT_OPTIONS, {
-        options: {
-          defaultType: 'spot',
-        },
-      }),
-    );
+    /**
+     * For the application use shared preloaded ccxt client,
+     * so that we can rely on ccxt's internal rate-limiter.
+     * It's necessary because Hyperliquid's rate-limit is IP-based.
+     */
     if (preloadedExchangeClient) {
-      this.ccxtClient.setMarketsFromExchange(preloadedExchangeClient);
-    }
-    if (this.sandbox) {
-      this.ccxtClient.setSandboxMode(true);
+      this.ccxtClient = preloadedExchangeClient;
+      this.sandbox = preloadedExchangeClient.isSandboxModeEnabled;
+    } else {
+      this.ccxtClient = new ccxt.hyperliquid({
+        ...BASE_HYPERLIQUID_CLIENT_OPTIONS,
+      });
+      this.sandbox = Boolean(sandbox);
+      this.ccxtClient.setSandboxMode(this.sandbox);
     }
 
     this.logger = logger.child({
