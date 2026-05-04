@@ -60,7 +60,7 @@
     "prettier": "^3.8.1",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1",
-    "vite": "8.0.9",
+    "vite": "8.0.10",
     "vite-plugin-node-polyfills": "^0.26.0"
   },
   "lint-staged": {
