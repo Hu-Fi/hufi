@@ -32,11 +32,11 @@ const ConnectWallet: FC<Props> = ({ size = 'large', handleClickCallback }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const { isConnecting } = useActiveAccount();
+  const connectors = useConnectors();
   const connect = useConnect();
   const disconnect = useDisconnect();
   const { setShowSignInPrompt } = useWeb3Auth();
   const isMobile = useIsMobile();
-  const connectors = useConnectors();
 
   const handleConnectWalletButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(e.currentTarget);
