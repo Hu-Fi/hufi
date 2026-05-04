@@ -484,12 +484,11 @@ export class KrakenClient implements ExchangeApiClient {
       const credit = Number(amounts.credit || '0');
       const credit_used = Number(amounts.credit_used || '0');
 
-      const free = balance + credit - credit_used - hold_trade;
-      const used = hold_trade;
+      const totalBalance = balance + credit - credit_used;
       accountBalance[asset] = {
-        total: free + used,
-        free,
-        used,
+        total: totalBalance,
+        free: totalBalance - hold_trade,
+        used: hold_trade,
       };
     }
     return accountBalance;
