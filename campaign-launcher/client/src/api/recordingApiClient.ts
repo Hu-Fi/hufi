@@ -9,9 +9,10 @@ import axios, { AxiosError } from 'axios';
 import type {
   EvmAddress,
   ExchangeApiKeyData,
-  CampaignsResponse,
   UserProgress,
   CheckCampaignJoinStatusResponse,
+  JoinedCampaignsResponse,
+  LeaderboardResponseDto,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -162,10 +163,10 @@ export class RecordingApiClient extends HttpClient {
   }
 
   async getJoinedCampaigns(
-    params: Record<string, string | number>,
+    params: Record<string, string | number | string[]>,
     signal?: AbortSignal
-  ): Promise<CampaignsResponse> {
-    const response = await this.get<CampaignsResponse>('/campaigns', {
+  ): Promise<JoinedCampaignsResponse> {
+    const response = await this.get<JoinedCampaignsResponse>('/campaigns', {
       params,
       signal,
     });
@@ -218,5 +219,15 @@ export class RecordingApiClient extends HttpClient {
     );
 
     return response || null;
+  }
+
+  async getLeaderboard(
+    chain_id: ChainId,
+    campaign_address: string
+  ): Promise<LeaderboardResponseDto> {
+    const response = await this.get<LeaderboardResponseDto>(
+      `/campaigns/${chain_id}-${campaign_address}/leaderboard`
+    );
+    return response;
   }
 }

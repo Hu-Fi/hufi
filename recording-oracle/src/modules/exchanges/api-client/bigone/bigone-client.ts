@@ -13,13 +13,13 @@ import * as httpUtils from '@/common/utils/http';
 import type { Logger } from '@/logger';
 import logger from '@/logger';
 
-import {
+import type {
   CexApiClientInitOptions,
   ExchangeApiClient,
 } from '../exchange-api-client.interface';
 import {
   ExchangePermission,
-  RequiredAccessCheckResult,
+  type RequiredAccessCheckResult,
   type AccountBalance,
   type Trade,
 } from '../types';
@@ -267,7 +267,7 @@ export class BigoneClient implements ExchangeApiClient {
       ({ data: apiTrades, page_token: nextPageToken } =
         await this._fetchMyTrades(assetPairName, nextPageToken));
 
-      const mappedTrades = [];
+      const mappedTrades: Trade[] = [];
       for (const apiTrade of apiTrades) {
         if (apiTrade.created_at >= sinceIso && apiTrade.created_at < untilIso) {
           mappedTrades.push(bigoneUtils.mapTrade(apiTrade));

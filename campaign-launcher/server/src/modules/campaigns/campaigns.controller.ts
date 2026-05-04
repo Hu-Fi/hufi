@@ -46,7 +46,7 @@ export class CampaignsController {
       chainId,
       {
         launcherAddress: query.launcher,
-        statuses: query.status ? [query.status] : [],
+        statuses: query.status ? query.status : [],
         types: query.type ? query.type : [],
         exchanges: query.exchange ? query.exchange : [],
       },

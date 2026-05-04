@@ -1,31 +1,29 @@
+import ApprovalStep from './ApprovalStep';
 import BottomNavigation from './BottomNavigation';
+import CampaignTypeStep from './CampaignTypeStep';
 import ErrorView from './ErrorView';
-import ExchangeInfoTooltip from './ExchangeInfoTooltip';
+import EscrowDetailsStep from './EscrowDetailsStep';
 import FinalView from './FinalView';
-import FirstStep from './FirstStep';
 import HoldingForm from './HoldingForm';
 import LaunchStep from './LaunchStep';
 import MarketMakingForm from './MarketMakingForm';
-import SecondStep from './SecondStep';
+import NetworkStep from './NetworkStep';
 import StepsIndicator from './StepsIndicator';
 import SummaryCard from './SummaryCard';
-import ThirdStep from './ThirdStep';
 import ThresholdForm from './ThresholdForm';
-import TopNavigation from './TopNavigation';
 
 export {
+  ApprovalStep,
   BottomNavigation,
+  CampaignTypeStep,
   ErrorView,
-  ExchangeInfoTooltip,
+  EscrowDetailsStep,
   FinalView,
-  FirstStep,
   HoldingForm,
   LaunchStep,
   MarketMakingForm,
-  SecondStep,
+  NetworkStep,
   StepsIndicator,
   SummaryCard,
-  ThirdStep,
   ThresholdForm,
-  TopNavigation,
 };

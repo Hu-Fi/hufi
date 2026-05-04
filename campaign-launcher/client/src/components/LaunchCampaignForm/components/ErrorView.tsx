@@ -15,15 +15,16 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
   return (
     <Stack alignItems="center" textAlign="center" p={2}>
       <ModalError message="Something went wrong, please try again." />
-      <Button
-        size="large"
-        variant="contained"
-        fullWidth={isMobile}
-        sx={{ mt: 4, mx: 'auto' }}
-        onClick={onRetry}
-      >
-        Try again
-      </Button>
+      {!isMobile && (
+        <Button
+          size="large"
+          variant="outlined"
+          sx={{ mt: 4, mx: 'auto', color: 'white', borderColor: '#433679' }}
+          onClick={onRetry}
+        >
+          Try again
+        </Button>
+      )}
     </Stack>
   );
 };

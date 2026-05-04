@@ -791,13 +791,37 @@ describe('CampaignsService', () => {
   });
 
   describe('createCampaign', () => {
+    let chainId: number;
+    let campaignAddress: string;
+    let fundAmount: number;
+    let fundTokenSymbol: string;
+    let fundTokenDecimals: number;
+
+    let commonExpectedCampaignData: Record<string, unknown>;
+
+    beforeEach(() => {
+      chainId = generateTestnetChainId();
+      campaignAddress = faker.finance.ethereumAddress();
+      fundAmount = faker.number.float();
+      fundTokenSymbol = faker.finance.currencyCode();
+      fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
+
+      commonExpectedCampaignData = {
+        id: expect.any(String),
+        chainId,
+        address: ethers.getAddress(campaignAddress),
+        fundAmount: fundAmount.toString(),
+        fundToken: fundTokenSymbol,
+        fundTokenDecimals,
+        status: 'active',
+        lastResultsAt: null,
+        resultsCutoffAt: null,
+        cancellationRequestedAt: null,
+      };
+    });
+
     it('should create market making campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateMarketMakingCampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -807,29 +831,22 @@ describe('CampaignsService', () => {
           fundAmount,
           fundTokenSymbol,
           fundTokenDecimals,
+          cancellationRequestedAt: null,
         },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
+        ...commonExpectedCampaignData,
         type: manifest.type,
         exchangeName: manifest.exchange,
         symbol: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
         details: {
           dailyVolumeTarget: manifest.daily_volume_target,
         },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -840,12 +857,7 @@ describe('CampaignsService', () => {
     });
 
     it('should create holding campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateHoldingCampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -855,29 +867,22 @@ describe('CampaignsService', () => {
           fundAmount,
           fundTokenSymbol,
           fundTokenDecimals,
+          cancellationRequestedAt: null,
         },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
+        ...commonExpectedCampaignData,
         type: manifest.type,
         exchangeName: manifest.exchange,
         symbol: manifest.symbol,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
         details: {
           dailyBalanceTarget: manifest.daily_balance_target,
         },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -888,12 +893,7 @@ describe('CampaignsService', () => {
     });
 
     it('should create competitive market making campaign with proper data', async () => {
-      const chainId = generateTestnetChainId();
-      const campaignAddress = faker.finance.ethereumAddress();
       const manifest = generateCompetitiveMarketMakingCampaignManifest();
-      const fundAmount = faker.number.float();
-      const fundTokenSymbol = faker.finance.currencyCode();
-      const fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
       const campaign = await campaignsService.createCampaign(
         chainId,
@@ -903,30 +903,23 @@ describe('CampaignsService', () => {
           fundAmount,
           fundTokenSymbol,
           fundTokenDecimals,
+          cancellationRequestedAt: null,
         },
       );
 
       expect(isUuidV4(campaign.id)).toBe(true);
 
       const expectedCampaignData = {
-        id: expect.any(String),
-        chainId,
-        address: ethers.getAddress(campaignAddress),
+        ...commonExpectedCampaignData,
         type: manifest.type,
         exchangeName: manifest.exchange,
         symbol: manifest.pair,
         startDate: manifest.start_date,
         endDate: manifest.end_date,
-        fundAmount: fundAmount.toString(),
-        fundToken: fundTokenSymbol,
-        fundTokenDecimals,
         details: {
           minVolumeRequired: manifest.min_volume_required,
           rewardsDistribution: manifest.rewards_distribution,
         },
-        status: 'active',
-        lastResultsAt: null,
-        resultsCutoffAt: null,
       };
       expect(campaign).toEqual(expectedCampaignData);
 
@@ -937,20 +930,10 @@ describe('CampaignsService', () => {
     });
 
     describe('threshold campaign creation', () => {
-      let chainId: number;
-      let campaignAddress: string;
       let manifest: ThresholdCampaignManifest;
-      let fundAmount: number;
-      let fundTokenSymbol: string;
-      let fundTokenDecimals: number;
 
       beforeEach(() => {
-        chainId = generateTestnetChainId();
-        campaignAddress = faker.finance.ethereumAddress();
         manifest = generateThresholdampaignManifest();
-        fundAmount = faker.number.float();
-        fundTokenSymbol = faker.finance.currencyCode();
-        fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
       });
 
       it('should create with proper data', async () => {
@@ -962,29 +945,22 @@ describe('CampaignsService', () => {
             fundAmount,
             fundTokenSymbol,
             fundTokenDecimals,
+            cancellationRequestedAt: null,
           },
         );
 
         expect(isUuidV4(campaign.id)).toBe(true);
 
         const expectedCampaignData = {
-          id: expect.any(String),
-          chainId,
-          address: ethers.getAddress(campaignAddress),
+          ...commonExpectedCampaignData,
           type: manifest.type,
           exchangeName: manifest.exchange,
           symbol: manifest.symbol,
           startDate: manifest.start_date,
           endDate: manifest.end_date,
-          fundAmount: fundAmount.toString(),
-          fundToken: fundTokenSymbol,
-          fundTokenDecimals,
           details: expect.objectContaining({
             minimumBalanceTarget: manifest.minimum_balance_target,
           }),
-          status: 'active',
-          lastResultsAt: null,
-          resultsCutoffAt: null,
         };
         expect(campaign).toEqual(expectedCampaignData);
 
@@ -1007,10 +983,10 @@ describe('CampaignsService', () => {
             fundAmount,
             fundTokenSymbol,
             fundTokenDecimals,
+            cancellationRequestedAt: null,
           },
         );
 
-        expect(isUuidV4(campaign.id)).toBe(true);
         expect(campaign.details).toEqual({
           minimumBalanceTarget: manifest.minimum_balance_target,
           maxParticipants: manifest.max_participants,
@@ -1031,15 +1007,52 @@ describe('CampaignsService', () => {
             fundAmount,
             fundTokenSymbol,
             fundTokenDecimals,
+            cancellationRequestedAt: null,
           },
         );
 
-        expect(isUuidV4(campaign.id)).toBe(true);
         expect(campaign.details).toEqual({
           minimumBalanceTarget: manifest.minimum_balance_target,
         });
         expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       });
+    });
+
+    it('should create to_cancel campaign with proper data', async () => {
+      const manifest = generateCampaignManifest();
+      const cancellationRequestedAt = faker.date.recent();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundTokenSymbol,
+          fundTokenDecimals,
+          cancellationRequestedAt: cancellationRequestedAt.valueOf(),
+        },
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        ...commonExpectedCampaignData,
+        type: manifest.type,
+        exchangeName: manifest.exchange,
+        symbol: expect.any(String),
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        details: expect.any(Object),
+        status: 'to_cancel',
+        cancellationRequestedAt,
+      };
+      expect(campaign).toEqual(expect.objectContaining(expectedCampaignData));
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expect.objectContaining(expectedCampaignData),
+      );
     });
   });
 
@@ -2008,14 +2021,12 @@ describe('CampaignsService', () => {
 
     beforeEach(() => {
       campaign = generateCampaignEntity();
-
       /**
-       * Adjust campaign dates to easily manipulate if its "ongoing"
-       * and already recorded intermediate results
+       * Adjust campaign dates to be already ended 1-day campaign
+       * to easily manipulate inputs and check for expectations
        */
-      const nDaysToShift = faker.number.int({ min: 3, max: 5 });
-      campaign.startDate = dayjs().subtract(nDaysToShift, 'day').toDate();
-      campaign.endDate = dayjs().add(nDaysToShift, 'day').toDate();
+      campaign.endDate = dayjs().subtract(1, 'hour').toDate();
+      campaign.startDate = dayjs(campaign.endDate).subtract(1, 'day').toDate();
 
       mockPgAdvisoryLock.withLock.mockImplementationOnce(async (_key, fn) => {
         await fn();
@@ -2208,7 +2219,9 @@ describe('CampaignsService', () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const now = Date.now();
-      campaign.startDate = dayjs(now)
+      campaign.endDate = new Date(now + 1);
+
+      campaign.startDate = dayjs(campaign.endDate)
         .subtract(1, 'day')
         .add(1, 'millisecond')
         .toDate();
@@ -2225,21 +2238,17 @@ describe('CampaignsService', () => {
     it('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      campaign.endDate = new Date(Date.now() - 1);
       campaign.startDate = dayjs(campaign.endDate)
         .subtract(faker.number.int({ min: 1, max: 23 }), 'hours')
         .toDate();
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedStartDate = new Date(campaign.startDate.valueOf());
-      const expectedEndDate = campaign.endDate;
-
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
-        expectedStartDate,
-        expectedEndDate,
+        campaign.startDate,
+        campaign.endDate,
         {
           excludeIneligible: expect.any(Boolean),
           logWarnings: true,
@@ -2248,35 +2257,101 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should use correct period dates for campaign with > 1d duration when no intermediate results', async () => {
+    it('should check all passed cycles for campaign with > 1d duration when no intermediate results', async () => {
+      const nFullCycles = faker.number.int({ min: 2, max: 5 });
+      /**
+       * Set campaign start date to be nFullCycles days and 1ms ago to make sure
+       * that only full cycles are checked, and not including last partial cycle (if any)
+       */
+      campaign.startDate = dayjs()
+        .subtract(nFullCycles, 'day')
+        .subtract(1, 'ms')
+        .toDate();
+      /**
+       * Campaign not ended yet to make sure endDate is last full cycle end
+       */
+      campaign.endDate = dayjs()
+        .add(faker.number.int({ min: 1, max: 100 }), 'hour')
+        .toDate();
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedStartDate = new Date(campaign.startDate.valueOf());
-      const expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
-
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
-      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
-        campaign,
-        expectedStartDate,
-        expectedEndDate,
-        {
-          excludeIneligible: expect.any(Boolean),
-          logWarnings: true,
-          caller: 'recordCampaignProgress',
-        },
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nFullCycles,
       );
+      for (let i = 1; i <= nFullCycles; i += 1) {
+        const expectedStartDate = dayjs(campaign.startDate)
+          .add(i - 1, 'day')
+          .toDate();
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          dayjs(expectedStartDate).add(1, 'day').toDate(),
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
     });
 
-    it('should not check progress if less than a day from last results for ongoing campaign', async () => {
+    it('should check last cycle if it is not round but campaign ended', async () => {
+      const nFullCycles = faker.number.int({ min: 2, max: 5 });
+      campaign.startDate = dayjs(campaign.endDate)
+        .subtract(nFullCycles, 'day')
+        .subtract(faker.number.int({ min: 1, max: 23 }), 'hour')
+        .toDate();
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const nTotalCycles = nFullCycles + 1;
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nTotalCycles,
+      );
+      for (let i = 1; i <= nTotalCycles; i += 1) {
+        const expectedStartDate = dayjs(campaign.startDate)
+          .add(i - 1, 'day')
+          .toDate();
+        let expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
+        if (i === nTotalCycles) {
+          expectedEndDate = campaign.endDate;
+        }
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          expectedEndDate,
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
+    });
+
+    it('should not check progress if less than a day from last intermediate result for ongoing campaign', async () => {
       const now = Date.now();
-      const oneDayAgo = dayjs(now).subtract(1, 'day').toDate();
+      campaign.endDate = new Date(now + 1);
+      campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
+
       const intermediateResultsData = generateIntermediateResultsData({
         results: [
           generateIntermediateResult({
-            // add one ms to imitate "almost one day ago"
-            endDate: new Date(oneDayAgo.valueOf() + 1),
+            endDate: dayjs(campaign.startDate).add(1, 'day').toDate(),
           }),
         ],
       });
@@ -2293,7 +2368,9 @@ describe('CampaignsService', () => {
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
-    it('should use start date from last intermediate results when more than a day from last results but campaign not ended', async () => {
+    it('should rely on last intermediate result when more than a day from last result and campaign not ended', async () => {
+      campaign.endDate = dayjs().add(1, 'hour').toDate();
+      campaign.startDate = dayjs(campaign.endDate).subtract(3, 'day').toDate();
       const lastResultsEndDate = dayjs(campaign.startDate)
         .add(1, 'day')
         .toDate();
@@ -2322,7 +2399,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should use start date from last intermediate results if less than a day from last results but campaign ended', async () => {
+    it('should rely on last intermediate result if less than a day from last result and campaign ended', async () => {
       const now = Date.now();
       campaign.endDate = new Date(now - 1);
       const lastResultsEndDate = dayjs().subtract(42, 'minutes').toDate();
@@ -2344,19 +2421,79 @@ describe('CampaignsService', () => {
 
       jest.useRealTimers();
 
-      const expectedEndDate = campaign.endDate;
-
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
         campaign,
         lastResultsEndDate,
-        expectedEndDate,
+        campaign.endDate,
         {
           excludeIneligible: expect.any(Boolean),
           logWarnings: true,
           caller: 'recordCampaignProgress',
         },
       );
+    });
+
+    it('should check all passed cycles for campaign with > 1d duration and existing intermediate results', async () => {
+      const nFullCycles = faker.number.int({ min: 2, max: 5 });
+      /**
+       * Set campaign start date to be nFullCycles days and 1ms ago to make sure
+       * that only full cycles are checked, and not including last partial cycle (if any)
+       */
+      campaign.startDate = dayjs()
+        .subtract(nFullCycles, 'day')
+        .subtract(1, 'ms')
+        .toDate();
+      /**
+       * Campaign not ended yet to make sure endDate is last full cycle end
+       */
+      campaign.endDate = dayjs()
+        .add(faker.number.int({ min: 1, max: 100 }), 'hour')
+        .toDate();
+
+      const lastResultsEndDate = dayjs(campaign.startDate)
+        .add(1, 'day')
+        .toDate();
+      const intermediateResultsData = generateIntermediateResultsData({
+        results: [
+          generateIntermediateResult({
+            endDate: lastResultsEndDate,
+          }),
+        ],
+      });
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(
+        intermediateResultsData,
+      );
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      /**
+       * First is covered by intermediate result
+       */
+      const nNewCycles = nFullCycles - 1;
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nNewCycles,
+      );
+      for (let i = 1; i <= nNewCycles; i += 1) {
+        const expectedStartDate = dayjs(lastResultsEndDate)
+          .add(i - 1, 'day')
+          .toDate();
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          dayjs(expectedStartDate).add(1, 'day').toDate(),
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
     });
 
     it('should use campaign end date if cancellation requested after campaign end date', async () => {
@@ -2404,6 +2541,51 @@ describe('CampaignsService', () => {
       );
     });
 
+    it('should check all passed cycles for campaign with > 1d duration and cancellation request', async () => {
+      mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
+      const cancellationRequestedAt = new Date(campaign.endDate.valueOf() - 1);
+      spyOnGetCancellationRequestDate.mockResolvedValueOnce(
+        cancellationRequestedAt,
+      );
+
+      const nCycles = faker.number.int({ min: 2, max: 5 });
+      campaign.startDate = dayjs(campaign.endDate)
+        .subtract(nCycles, 'day')
+        .toDate();
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValue(
+        generateCampaignProgress(campaign),
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(
+        nCycles,
+      );
+      for (let i = 1; i <= nCycles; i += 1) {
+        const expectedStartDate = dayjs(campaign.startDate)
+          .add(i - 1, 'day')
+          .toDate();
+        let expectedEndDate = dayjs(expectedStartDate).add(1, 'day').toDate();
+        if (i === nCycles) {
+          expectedEndDate = cancellationRequestedAt;
+        }
+
+        expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenNthCalledWith(
+          i,
+          campaign,
+          expectedStartDate,
+          expectedEndDate,
+          {
+            excludeIneligible: expect.any(Boolean),
+            logWarnings: true,
+            caller: 'recordCampaignProgress',
+          },
+        );
+      }
+    });
+
     it('should record campaign progress when no results yet', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -2441,6 +2623,8 @@ describe('CampaignsService', () => {
     });
 
     it('should record campaign progress to existing results', async () => {
+      campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
+
       const intermediateResultsData = generateIntermediateResultsData({
         results: [
           generateIntermediateResult({
@@ -2703,10 +2887,9 @@ describe('CampaignsService', () => {
       expect(secondBatch.results[0]).toEqual(participantOutcomes[2]);
     });
 
-    it('should not move campaign to "pending_completion" if reached its end date but not all results calculated', async () => {
+    it('should not move campaign to "pending_completion" when not all results calculated', async () => {
       const currentDate = new Date();
-      campaign.endDate = new Date(currentDate.valueOf() - 1);
-      campaign.startDate = dayjs(campaign.endDate).subtract(3, 'day').toDate();
+      campaign.endDate = new Date(currentDate.valueOf() + 1);
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
@@ -3246,9 +3429,11 @@ describe('CampaignsService', () => {
         (c) => c.status === CampaignStatus.ACTIVE,
       );
       const activeCampaign = Object.assign({}, campaigns[activeCampaignIndex]);
+      const cancellationRequestedAt = faker.date.recent();
 
       mockedEscrowUtils.getEscrow.mockResolvedValue({
         status: EscrowStatus[EscrowStatus.ToCancel],
+        cancellationRequestedAt: cancellationRequestedAt.valueOf(),
       } as IEscrow);
 
       await campaignsService.syncCampaignStatuses();
@@ -3257,6 +3442,7 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
         ...activeCampaign,
         status: 'to_cancel',
+        cancellationRequestedAt,
       });
       expect(logger.info).toHaveBeenCalledWith(
         'Marking campaign as to_cancel',
@@ -4872,6 +5058,14 @@ describe('CampaignsService', () => {
       async (campaignStatus) => {
         campaign.status = campaignStatus;
 
+        const participants = Array.from(
+          { length: faker.number.int({ min: 3, max: 5 }) },
+          () => generateCampaignParticipant(campaign),
+        );
+        mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
+          participants,
+        );
+
         const data = await campaignsService.getCampaignLeaderboard(
           campaign.chainId,
           campaign.address,
@@ -4880,8 +5074,22 @@ describe('CampaignsService', () => {
         expect(data).toEqual({
           updatedAt: now,
           total: 0,
-          entries: [],
+          entries: expect.any(Array),
         });
+        expect(data.entries).toHaveLength(participants.length);
+        const entriesByParticipant = _.keyBy(
+          data.entries,
+          (entry) => entry.address,
+        );
+        for (const { evmAddress } of participants) {
+          const entry = entriesByParticipant[evmAddress];
+          expect(entry).toEqual({
+            address: evmAddress,
+            score: 0,
+            result: 0,
+            estimatedReward: 0,
+          });
+        }
       },
     );
   });

@@ -75,6 +75,9 @@ class JoinedCampaignDto {
   @ApiProperty({ name: 'processing_status' })
   processingStatus: string;
 
+  @ApiProperty({ name: 'cancellation_requested_at' })
+  cancellationRequestedAt: number | null;
+
   type: CampaignType;
 
   details: CampaignDetails;
@@ -147,10 +150,12 @@ export class ListJoinedCampaignsQueryDto {
 
   @ApiPropertyOptional({
     enum: ReturnedCampaignStatus,
+    isArray: true,
   })
   @IsOptional()
-  @IsEnum(ReturnedCampaignStatus)
-  status?: ReturnedCampaignStatus;
+  @Transform(parseQueryArray)
+  @IsEnum(ReturnedCampaignStatus, { each: true })
+  status?: ReturnedCampaignStatus[];
 
   @ApiPropertyOptional({
     description: 'Campaign types',

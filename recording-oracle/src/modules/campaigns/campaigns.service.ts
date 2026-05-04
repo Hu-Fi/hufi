@@ -24,6 +24,7 @@ import ms from 'ms';
 import { ExchangeName } from '@/common/constants';
 import { ContentType } from '@/common/enums';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
+import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
 import * as debugUtils from '@/common/utils/debug';
 import * as escrowUtils from '@/common/utils/escrow';
@@ -251,9 +252,18 @@ export class CampaignsService implements OnModuleDestroy {
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
     newCampaign.details = details;
-    newCampaign.status = CampaignStatus.ACTIVE;
     newCampaign.lastResultsAt = null;
     newCampaign.resultsCutoffAt = null;
+
+    if (escrowInfo.cancellationRequestedAt) {
+      newCampaign.status = CampaignStatus.TO_CANCEL;
+      newCampaign.cancellationRequestedAt = new Date(
+        escrowInfo.cancellationRequestedAt,
+      );
+    } else {
+      newCampaign.status = CampaignStatus.ACTIVE;
+      newCampaign.cancellationRequestedAt = null;
+    }
 
     await this.campaignsRepository.insert(newCampaign);
 
@@ -416,6 +426,7 @@ export class CampaignsService implements OnModuleDestroy {
         ),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
+        cancellationRequestedAt: escrow.cancellationRequestedAt,
       },
     };
   }
@@ -428,22 +439,21 @@ export class CampaignsService implements OnModuleDestroy {
     this.logger.debug('Campaigns progress recording job started');
 
     try {
-      /**
-       * Atm we don't expect many active campaigns
-       * so it's fine to get all at once, but later
-       * we might need to query them in batches or as stream.
-       */
       const campaignsToCheck =
         await this.campaignsRepository.findForProgressRecording();
-
+      /**
+       * In case some exchange processing is slow or stuck for some reason
+       * we don't want it to block recording progress for all campaigns,
+       * so process them in parallel with limited concurrency.
+       *
+       * At the same time, concurrency should be little to avoid conflicts
+       * for web3 nonce when making storeResults calls, so go safe here.
+       */
+      const promisePool = new controlFlow.PromisePool({ concurrency: 2 });
       for (const campaign of campaignsToCheck) {
-        /**
-         * Right now for simplicity process sequentially.
-         * Later we can add "fastq" usage for parallel processing
-         * and "backpressured" adding to the queue.
-         */
-        await this.recordCampaignProgress(campaign);
+        await promisePool.add(() => this.recordCampaignProgress(campaign));
       }
+      await promisePool.onIdle();
     } catch (error) {
       this.logger.error('Error while recording campaigns progress', error);
     }
@@ -531,31 +541,24 @@ export class CampaignsService implements OnModuleDestroy {
                 campaign.chainId,
                 campaign.address,
               );
-            endDate = cancellationRequestedAt;
+            endDate = new Date(
+              Math.min(
+                cancellationRequestedAt.valueOf(),
+                campaign.endDate.valueOf(),
+              ),
+            );
+          } else if (campaign.endDate <= new Date()) {
+            endDate = campaign.endDate;
           } else {
-            endDate = dayjs(startDate)
-              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
-              .toDate();
-
-            const isOngoingCampaign = campaign.endDate.valueOf() > Date.now();
-            if (isOngoingCampaign && endDate.valueOf() > Date.now()) {
-              /**
-               * If campaign is ongoing - check results only once per period.
-               * Otherwise - let it record results immediately to reduce the wait.
-               */
-              logger.warn(
-                "Can't check progress for period that is not finished yet",
-                {
-                  startDate,
-                  endDate,
-                },
-              );
+            const fullCyclesPassed = Math.floor(
+              dayjs().diff(startDate, 'day', false) / CAMPAIGNS_DAILY_CYCLE,
+            );
+            if (fullCyclesPassed === 0) {
               return;
             }
-          }
-
-          if (endDate > campaign.endDate) {
-            endDate = campaign.endDate;
+            endDate = dayjs(startDate)
+              .add(fullCyclesPassed * CAMPAIGNS_DAILY_CYCLE, 'days')
+              .toDate();
           }
 
           // safety-belt
@@ -596,84 +599,98 @@ export class CampaignsService implements OnModuleDestroy {
             }
           }
 
-          const progress = await this.checkCampaignProgressForPeriod(
-            campaign,
-            startDate,
-            endDate,
-            {
-              excludeIneligible:
-                isThresholdCampaign(campaign) &&
-                isFiniteNumber(campaign.details.maxParticipants),
-              logWarnings: true,
-              caller: this.recordCampaignProgress.name,
-            },
-          );
-
-          const rewardPool = rewardsUtils.calculateRewardPool(
-            campaign,
-            progress,
-          );
-          if (escrowStatus !== EscrowStatus.ToCancel) {
-            const dailyReward = rewardsUtils.calculateDailyReward(campaign);
-            if (Decimal(rewardPool).greaterThan(dailyReward)) {
+          const newResults: IntermediateResult[] = [];
+          let totalRewardPool = new Decimal(0);
+          let nextCycleStart = startDate;
+          do {
+            let nextCycleEnd = dayjs(nextCycleStart)
+              .add(CAMPAIGNS_DAILY_CYCLE, 'day')
+              .toDate();
+            if (nextCycleEnd > endDate) {
               /**
-               * Safety-belt
-               * Should not be possible for non-cancelled campaign
+               * In case campaign duration is not multiple of cycle duration
                */
-              throw new Error(
-                'Calculated reward pool is greater than daily reward',
-              );
+              nextCycleEnd = endDate;
             }
-          }
 
-          const intermediateResult: IntermediateResult = {
-            from: progress.from,
-            to: progress.to,
-            reserved_funds: rewardPool,
-            participants_outcomes_batches: [],
-            ...progress.meta,
-          };
-          for (const chunk of _.chunk(
-            progress.participants_outcomes,
-            ESCROW_BULK_PAYOUT_MAX_ITEMS,
-          )) {
-            intermediateResult.participants_outcomes_batches.push({
-              id: crypto.randomUUID(),
-              results: chunk,
-            });
-          }
+            const cycleProgress = await this.checkCampaignProgressForPeriod(
+              campaign,
+              nextCycleStart,
+              nextCycleEnd,
+              {
+                excludeIneligible:
+                  isThresholdCampaign(campaign) &&
+                  isFiniteNumber(campaign.details.maxParticipants),
+                logWarnings: true,
+                caller: this.recordCampaignProgress.name,
+              },
+            );
 
-          intermediateResults.results.push(intermediateResult);
-          const fundsToReserve = ethers.parseUnits(
-            rewardPool.toString(),
+            const rewardPool = rewardsUtils.calculateRewardPool(
+              campaign,
+              cycleProgress,
+            );
+
+            const intermediateResult: IntermediateResult = {
+              from: cycleProgress.from,
+              to: cycleProgress.to,
+              reserved_funds: rewardPool,
+              participants_outcomes_batches: [],
+              ...cycleProgress.meta,
+            };
+            for (const chunk of _.chunk(
+              cycleProgress.participants_outcomes,
+              ESCROW_BULK_PAYOUT_MAX_ITEMS,
+            )) {
+              intermediateResult.participants_outcomes_batches.push({
+                id: crypto.randomUUID(),
+                results: chunk,
+              });
+            }
+
+            newResults.push(intermediateResult);
+            totalRewardPool = totalRewardPool.add(rewardPool);
+            nextCycleStart = nextCycleEnd;
+          } while (nextCycleStart < endDate);
+
+          const fundsToReserve = rewardsUtils.formatRewardValue(
+            totalRewardPool,
             campaign.fundTokenDecimals,
           );
-
           logger.info('Going to record campaign progress', {
-            from: progress.from,
-            to: progress.to,
-            reserved_funds: rewardPool,
+            from: startDate.toISOString(),
+            to: endDate.toISOString(),
+            reserved_funds: fundsToReserve,
           });
+
+          intermediateResults.results.push(...newResults);
 
           const storedResultsMeta =
             await this.recordCampaignIntermediateResults(
               intermediateResults,
-              fundsToReserve,
+              ethers.parseUnits(fundsToReserve, campaign.fundTokenDecimals),
             );
 
-          logger.info('Campaign progress recorded', {
-            from: progress.from,
-            to: progress.to,
-            reserved_funds: rewardPool,
-            ...progress.meta,
-            resultsUrl: storedResultsMeta.url,
-          });
+          for (const intermediateResult of newResults) {
+            logger.info(
+              'Campaign progress recorded',
+              Object.assign(
+                {
+                  resultsUrl: storedResultsMeta.url,
+                },
+                intermediateResult,
+                {
+                  participants_outcomes_batches: undefined,
+                },
+              ),
+            );
 
-          if (
-            isMarketMakingCampaign(campaign) ||
-            isCompetitiveMarketMakingCampaign(campaign)
-          ) {
-            void this.recordGeneratedVolume(campaign, intermediateResult);
+            if (
+              isMarketMakingCampaign(campaign) ||
+              isCompetitiveMarketMakingCampaign(campaign)
+            ) {
+              void this.recordGeneratedVolume(campaign, intermediateResult);
+            }
           }
 
           if (escrowStatus === EscrowStatus.ToCancel) {
@@ -1021,6 +1038,9 @@ export class CampaignsService implements OnModuleDestroy {
             campaignAddress: campaign.address,
           });
           campaign.status = CampaignStatus.TO_CANCEL;
+          campaign.cancellationRequestedAt = new Date(
+            escrow.cancellationRequestedAt!,
+          );
           await this.campaignsRepository.save(campaign);
         }
       }
@@ -1298,57 +1318,63 @@ export class CampaignsService implements OnModuleDestroy {
           const campaignsToRefresh =
             await this.campaignsRepository.findOngoingCampaigns();
 
-          for (const campaign of campaignsToRefresh) {
-            /**
-             * Right now for simplicity process sequentially.
-             * Later we can add "fastq" usage for parallel processing
-             * and "backpressured" adding to the queue.
-             */
-            const campaignLogger = logger.child({
-              campaignId: campaign.id,
-              chainId: campaign.chainId,
-              campaignAddress: campaign.address,
-            });
-            const isCampaignEndingSoon = dayjs()
-              .add(5, 'minute')
-              .isSameOrAfter(campaign.endDate);
-            if (isCampaignEndingSoon) {
-              campaignLogger.debug(
-                'Campaign ends soon, skip interim progress cache refresh',
-              );
-              continue;
-            }
+          /**
+           * In case some exchange processing is slow or stuck for some reason
+           * we don't want it to block refreshing cache for all campaigns,
+           * so process them in parallel with limited concurrency.
+           */
+          const promisePool = new controlFlow.PromisePool({ concurrency: 2 });
 
-            try {
-              const timeframe = await this.getActiveTimeframe(campaign);
-              if (!timeframe) {
+          for (const campaign of campaignsToRefresh) {
+            await promisePool.add(async () => {
+              const campaignLogger = this.logger.child({
+                campaignId: campaign.id,
+                chainId: campaign.chainId,
+                campaignAddress: campaign.address,
+              });
+              const isCampaignEndingSoon = dayjs()
+                .add(5, 'minute')
+                .isSameOrAfter(campaign.endDate);
+              if (isCampaignEndingSoon) {
                 campaignLogger.debug(
-                  'No active timeframe, skip interim progress cache refresh',
+                  'Campaign ends soon, skip interim progress cache refresh',
                 );
-                continue;
+                return;
               }
-              const progress = await this.checkCampaignProgressForPeriod(
-                campaign,
-                timeframe.start,
-                timeframe.end,
-                {
-                  caller: this.refreshInterimProgressCache.name,
-                },
-              );
-              await this.campaignsCache.setInterimProgress(
-                campaign.id,
-                progress,
-                campaign.endDate,
-              );
-            } catch (error) {
-              campaignLogger.error(
-                'Failed to get interim progress for campaign',
-                {
-                  error,
-                },
-              );
-            }
+
+              try {
+                const timeframe = await this.getActiveTimeframe(campaign);
+                if (!timeframe) {
+                  campaignLogger.debug(
+                    'No active timeframe, skip interim progress cache refresh',
+                  );
+                  return;
+                }
+                const progress = await this.checkCampaignProgressForPeriod(
+                  campaign,
+                  timeframe.start,
+                  timeframe.end,
+                  {
+                    caller: this.refreshInterimProgressCache.name,
+                  },
+                );
+                await this.campaignsCache.setInterimProgress(
+                  campaign.id,
+                  progress,
+                  campaign.endDate,
+                );
+              } catch (error) {
+                campaignLogger.error(
+                  'Failed to get interim progress for campaign',
+                  {
+                    error,
+                  },
+                );
+              }
+            });
           }
+
+          await promisePool.onIdle();
         } catch (error) {
           this.logger.error(
             'Error while refreshing interim progress cache',
@@ -1527,9 +1553,24 @@ export class CampaignsService implements OnModuleDestroy {
         );
         updatedAt = new Date(cachedInterimResults.to);
       } else {
-        resultsToInspect = [];
-        estimatedRewardPool = '0';
-        updatedAt = new Date();
+        const zeroEntries: LeaderboardEntry[] = [];
+        const participants =
+          await this.participationsRepository.findCampaignParticipants(
+            campaign.id,
+          );
+        for (const participant of participants) {
+          zeroEntries.push({
+            address: participant.evmAddress,
+            score: 0,
+            result: 0,
+            estimatedReward: 0,
+          });
+        }
+        return {
+          entries: zeroEntries,
+          total: 0,
+          updatedAt: new Date(),
+        };
       }
     }
 

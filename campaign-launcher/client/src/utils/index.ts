@@ -1,5 +1,6 @@
 import { NETWORKS, type ChainId } from '@human-protocol/sdk';
 import { ethers, formatUnits } from 'ethers';
+import type { FieldErrors } from 'react-hook-form';
 
 import {
   USDC_CONTRACT_ADDRESS,
@@ -10,18 +11,17 @@ import {
 } from '@/constants';
 import { CHAIN_ICONS } from '@/constants/chainIcons';
 import { TOKENS } from '@/constants/tokens';
-import createAppTheme from '@/theme';
 import {
-  CampaignStatus,
   CampaignType,
+  type JoinedCampaign,
   type Campaign,
   type CampaignDetails,
   type CampaignFormValues,
 } from '@/types';
 
-export const formatAddress = (address?: string) => {
+export const formatAddress = (address?: string, start = 6, end = 5) => {
   if (!address) return '';
-  return `${address.slice(0, 6)}…${address.slice(-5)}`;
+  return `${address.slice(0, start)}…${address.slice(-end)}`;
 };
 
 export const getTokenAddress = (
@@ -82,35 +82,6 @@ export const formatTokenAmount = (
       : parseFloat(amountNumber.toFixed(4));
 
   return displayValue.toString();
-};
-
-const theme = createAppTheme('dark');
-
-export const mapStatusToColor = (
-  status: Campaign['status'],
-  startDate: string,
-  endDate: string
-) => {
-  const now = new Date().toISOString();
-
-  switch (status) {
-    case CampaignStatus.ACTIVE:
-      if (now < startDate) {
-        return theme.palette.warning.main;
-      } else if (now > endDate) {
-        return theme.palette.error.main;
-      } else {
-        return theme.palette.success.main;
-      }
-    case CampaignStatus.CANCELLED:
-      return theme.palette.primary.main;
-    case CampaignStatus.COMPLETED:
-      return theme.palette.secondary.main;
-    case CampaignStatus.TO_CANCEL:
-      return 'cyan';
-    default:
-      return theme.palette.primary.main;
-  }
 };
 
 export const mapTypeToLabel = (type: CampaignType) => {
@@ -264,13 +235,20 @@ export const calculateHash = async (
 };
 
 export const filterFalsyQueryParams = (
-  params: Record<string, string | number | undefined>
-): Record<string, string | number> => {
-  const result: Record<string, string | number> = {};
+  params: Record<string, string | number | string[] | undefined>
+): Record<string, string | number | string[]> => {
+  const result: ReturnType<typeof filterFalsyQueryParams> = {};
 
   for (const [key, value] of Object.entries(params)) {
-    if (value) {
-      result[key] = value;
+    if (Array.isArray(value)) {
+      const filteredValues = value.filter(Boolean);
+      if (filteredValues.length > 0) {
+        result[key] = filteredValues;
+      }
+    } else {
+      if (value) {
+        result[key] = value;
+      }
     }
   }
 
@@ -299,4 +277,86 @@ export const isExceedingMaximumInteger = (value: string | number): boolean => {
   return Boolean(
     value && !isNaN(numValue) && numValue > Number.MAX_SAFE_INTEGER
   );
+};
+
+export const scrollToFirstErrorFieldOnMobile = <T extends object>(
+  isMobile: boolean,
+  errors: FieldErrors<T>
+) => {
+  if (!isMobile || Object.keys(errors).length === 0) return;
+
+  const firstErrorField = Object.keys(errors)[0];
+  const errorElement = document.querySelector(
+    `[name="${firstErrorField}"]`
+  ) as HTMLElement | null;
+
+  if (errorElement) {
+    errorElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }
+};
+
+export const getCompactNumberParts = (initialValue: number) => {
+  const absoluteValue = Math.abs(initialValue);
+  const compactNotations = [
+    { threshold: 1000000000000, divisor: 1000000000000, suffix: 'T' },
+    { threshold: 1000000000, divisor: 1000000000, suffix: 'B' },
+    { threshold: 1000000, divisor: 1000000, suffix: 'M' },
+    { threshold: 1000, divisor: 1000, suffix: 'K' },
+  ];
+  const selectedNotation = compactNotations.find(
+    ({ threshold }) => absoluteValue >= threshold
+  );
+  const value = selectedNotation
+    ? initialValue / selectedNotation.divisor
+    : initialValue;
+  const suffix = selectedNotation?.suffix || '';
+  const decimals = suffix ? (Number.isInteger(value) ? 0 : 1) : 2;
+
+  return { value, suffix, decimals };
+};
+
+export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
+  switch (campaign.type) {
+    case CampaignType.MARKET_MAKING:
+      return {
+        label: 'Target Volume',
+        value: campaign.details.daily_volume_target,
+      };
+    case CampaignType.HOLDING:
+      return {
+        label: 'Target Balance',
+        value: campaign.details.daily_balance_target,
+      };
+    case CampaignType.THRESHOLD:
+      return {
+        label: 'Target Balance',
+        value: campaign.details.minimum_balance_target,
+      };
+    default:
+      return {
+        label: 'Target Volume',
+        value: campaign.details.daily_volume_target,
+      };
+  }
+};
+
+export const appendUniqueCampaigns = <T extends { address: string }>(
+  existingCampaigns: T[],
+  newCampaigns: T[]
+): T[] => {
+  const existingCampaignKeys = new Set(
+    existingCampaigns.map((campaign) => campaign.address)
+  );
+
+  const campaignsToAppend = newCampaigns.filter((campaign) => {
+    if (existingCampaignKeys.has(campaign.address)) return false;
+
+    existingCampaignKeys.add(campaign.address);
+    return true;
+  });
+
+  return [...existingCampaigns, ...campaignsToAppend];
 };

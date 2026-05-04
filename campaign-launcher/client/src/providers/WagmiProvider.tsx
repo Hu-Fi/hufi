@@ -1,18 +1,16 @@
 import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import type { ConnectMethod } from '@reown/appkit-controllers';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import {
   localhost as defaultLocalhost,
   defineChain,
-  mainnet,
   polygon,
   polygonAmoy,
-  sepolia,
 } from '@reown/appkit/networks';
 import { AppKitProvider } from '@reown/appkit/react';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import type { ConnectMethod } from '@reown/appkit-controllers';
 import { http, WagmiProvider as WWagmiProvider } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
@@ -29,10 +27,9 @@ const localhost = defineChain({
   caipNetworkId: `eip155:${ChainId.LOCALHOST}`,
 });
 
-const mainnetNetworks: [AppKitNetwork, AppKitNetwork] = [polygon, mainnet];
-const testnetNetworks: [AppKitNetwork, AppKitNetwork, AppKitNetwork] = [
+const mainnetNetworks: [AppKitNetwork] = [polygon];
+const testnetNetworks: [AppKitNetwork, AppKitNetwork] = [
   polygonAmoy,
-  sepolia,
   localhost,
 ];
 
@@ -44,9 +41,7 @@ const wagmiAdapter = new WagmiAdapter({
   syncConnectedChain: false,
   transports: {
     [polygon.id]: http(),
-    [mainnet.id]: http(),
     [polygonAmoy.id]: http(),
-    [sepolia.id]: http(),
     [ChainId.LOCALHOST]: http(),
   },
 });

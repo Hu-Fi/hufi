@@ -32,6 +32,7 @@ export type CampaignWithResults = Pick<
   fundTokenAddress: string;
   fundTokenDecimals: number;
   fundAmount: number;
+  cancellationRequestedAt: Date | null;
 };
 
 export type ParticipantOutcome = {

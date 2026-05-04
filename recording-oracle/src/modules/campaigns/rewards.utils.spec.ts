@@ -24,6 +24,60 @@ import {
 } from './types';
 
 describe('rewards utils', () => {
+  describe('formatRewardValue', () => {
+    it('should correctly format reward value when decimals is 0', () => {
+      const reward = faker.number
+        .float({ min: 1, max: 1000, fractionDigits: 15 })
+        .toString();
+
+      const formattedReward = rewardsUtils.formatRewardValue(
+        new Decimal(reward),
+        0,
+      );
+
+      expect(formattedReward).toBe(reward.split('.')[0]);
+    });
+
+    it('should correctly format zero reward', () => {
+      const formattedReward = rewardsUtils.formatRewardValue(
+        new Decimal('0.000000000000000000'),
+        faker.number.int({ min: 1, max: 5 }),
+      );
+
+      expect(formattedReward).toBe('0');
+    });
+
+    it('should not round up the reward value', () => {
+      const decimals = faker.number.int({ min: 3, max: 18 });
+      const wholePart = faker.number.int({ min: 1, max: 1000 });
+
+      const formattedReward = rewardsUtils.formatRewardValue(
+        new Decimal(`${wholePart}.${'9'.repeat(decimals + 1)}`),
+        decimals,
+      );
+
+      expect(formattedReward).toBe(`${wholePart}.${'9'.repeat(decimals)}`);
+    });
+
+    it('should correctly format reward value when it has less decimals than passed', () => {
+      const decimals = faker.number.int({ min: 3, max: 18 });
+      const rewardValue = faker.number
+        .float({
+          min: 1,
+          max: 1000,
+          fractionDigits: decimals - 1,
+        })
+        .toString();
+
+      const formattedReward = rewardsUtils.formatRewardValue(
+        new Decimal(rewardValue),
+        decimals,
+      );
+
+      expect(formattedReward).toBe(rewardValue);
+    });
+  });
+
   describe('calculateDailyReward', () => {
     it('should correctly calculate reward when duration is integer number of days', () => {
       const duration = faker.number.int({ min: 1, max: 15 });

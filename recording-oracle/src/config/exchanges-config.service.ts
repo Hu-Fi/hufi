@@ -45,6 +45,11 @@ export class ExchangesConfigService {
         enabled: this.configService.get('FEATURE_MEXC', 'true') === 'true',
         type: ExchangeType.CEX,
       },
+      [ExchangeName.KRAKEN]: {
+        enabled: this.configService.get('FEATURE_KRAKEN', 'true') === 'true',
+        type: ExchangeType.CEX,
+        skipCcxtPreload: true,
+      },
       [ExchangeName.PANCAKESWAP]: {
         enabled:
           this.configService.get('FEATURE_PANCAKESWAP', 'true') === 'true',

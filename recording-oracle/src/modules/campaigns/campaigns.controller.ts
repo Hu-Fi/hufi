@@ -46,16 +46,16 @@ const RETURNED_STATUS_TO_CAMPAIGN_STATUSES: Record<
   ReturnedCampaignStatus,
   CampaignStatus[]
 > = {
-  [CampaignStatus.ACTIVE]: [
+  [ReturnedCampaignStatus.ACTIVE]: [
     CampaignStatus.ACTIVE,
     CampaignStatus.PENDING_COMPLETION,
   ],
-  [CampaignStatus.TO_CANCEL]: [
+  [ReturnedCampaignStatus.TO_CANCEL]: [
     CampaignStatus.TO_CANCEL,
     CampaignStatus.PENDING_CANCELLATION,
   ],
-  [CampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
-  [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
+  [ReturnedCampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
+  [ReturnedCampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
 };
 
 const CAMPAIGN_STATUS_TO_RETURNED_STATUS: Record<
@@ -100,9 +100,9 @@ export class CampaignsController {
   ): Promise<ListJoinedCampaignsSuccessDto> {
     const limit = query.limit;
 
-    const statuses: CampaignStatus[] = query.status
-      ? RETURNED_STATUS_TO_CAMPAIGN_STATUSES[query.status]
-      : [];
+    const statuses: CampaignStatus[] = (query.status || []).flatMap(
+      (queryStatus) => RETURNED_STATUS_TO_CAMPAIGN_STATUSES[queryStatus],
+    );
 
     const campaigns = await this.participationsRepository.findByUserId(
       request.user.id,
@@ -132,6 +132,9 @@ export class CampaignsController {
           details: campaign.details,
           status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],
           processingStatus: campaign.status,
+          cancellationRequestedAt: campaign.cancellationRequestedAt
+            ? campaign.cancellationRequestedAt.valueOf()
+            : null,
         }))
         .slice(0, limit),
     };

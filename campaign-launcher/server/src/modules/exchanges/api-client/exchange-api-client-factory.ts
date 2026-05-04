@@ -4,6 +4,7 @@ import { ExchangeName } from '@/common/constants';
 
 import { CcxtExchangeClient } from './ccxt-exchange-client';
 import type { ExchangeApiClient } from './exchange-api-client.interface';
+import { KrakenClient } from './kraken-client';
 import { PancakeSwapClient } from './pancakeswap-client';
 
 @Injectable()
@@ -16,6 +17,9 @@ export class ExchangeApiClientFactory {
       switch (exchangeName) {
         case ExchangeName.PANCAKESWAP:
           client = new PancakeSwapClient();
+          break;
+        case ExchangeName.KRAKEN:
+          client = new KrakenClient();
           break;
         default:
           client = new CcxtExchangeClient(exchangeName);

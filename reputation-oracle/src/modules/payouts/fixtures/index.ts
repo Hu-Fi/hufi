@@ -82,7 +82,9 @@ export function generateManifest(
   }
 }
 
-export function generateEscrow(): IEscrow {
+export function generateEscrow(
+  status: EscrowStatus.Pending | EscrowStatus.ToCancel,
+): IEscrow {
   const escrowAddress = faker.finance.ethereumAddress();
   const totalFundedAmount = faker.number.bigInt({ min: 1 });
 
@@ -90,7 +92,7 @@ export function generateEscrow(): IEscrow {
     id: escrowAddress,
     chainId: generateTestnetChainId(),
     address: escrowAddress,
-    status: EscrowStatus[EscrowStatus.Pending],
+    status: EscrowStatus[status],
     launcher: faker.finance.ethereumAddress(),
     manifest: JSON.stringify(generateManifest()),
     manifestHash: faker.string.hexadecimal(),
@@ -112,6 +114,8 @@ export function generateEscrow(): IEscrow {
     exchangeOracleFee: faker.number.int({ min: 1, max: 50 }),
     recordingOracleFee: faker.number.int({ min: 1, max: 50 }),
     reputationOracleFee: faker.number.int({ min: 1, max: 50 }),
+    cancellationRequestedAt:
+      status === EscrowStatus.ToCancel ? faker.date.recent().valueOf() : null,
   };
 
   return escrow;
@@ -190,6 +194,7 @@ export function generateCampaign(): CampaignWithResults {
     fundTokenAddress: faker.finance.ethereumAddress(),
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
     fundAmount: faker.number.int({ min: 1 }),
+    cancellationRequestedAt: null,
   };
 
   return data;
