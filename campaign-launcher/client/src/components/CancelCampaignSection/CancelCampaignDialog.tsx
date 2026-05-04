@@ -1,6 +1,6 @@
 import { useCallback, useState, type FC } from 'react';
 
-import { EscrowClient } from '@human-protocol/sdk';
+import { EscrowClient } from '@human-protocol/sdk/dist/escrow';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 

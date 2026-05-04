@@ -1,6 +1,6 @@
 import type { FC, PropsWithChildren } from 'react';
 
-import { ChainId } from '@human-protocol/sdk';
+import { ChainId } from '@human-protocol/sdk/dist/enums';
 import { http, createConfig, WagmiProvider as WWagmiProvider } from 'wagmi';
 import { polygon, polygonAmoy } from 'wagmi/chains';
 import { walletConnect, coinbaseWallet } from 'wagmi/connectors';
