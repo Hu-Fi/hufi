@@ -3,12 +3,12 @@ import eslint from '@eslint/js';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import { importX as importXPlugin } from 'eslint-plugin-import-x';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
+import globals from "globals";
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'dist', 'jest.config.js'],
+    ignores: ['eslint.config.mjs', 'dist'],
   },
   eslint.configs.recommended,
   tseslint.configs.recommended,
@@ -17,7 +17,6 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
       },
       sourceType: 'module',
       parserOptions: {
