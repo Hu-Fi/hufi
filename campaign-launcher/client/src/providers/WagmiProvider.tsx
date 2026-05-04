@@ -1,8 +1,6 @@
 import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import type { ConnectMethod } from '@reown/appkit-controllers';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import {
   localhost as defaultLocalhost,
@@ -11,6 +9,8 @@ import {
   polygonAmoy,
 } from '@reown/appkit/networks';
 import { AppKitProvider } from '@reown/appkit/react';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import type { ConnectMethod } from '@reown/appkit-controllers';
 import { http, WagmiProvider as WWagmiProvider } from 'wagmi';
 
 import logo from '@/assets/logo.svg';
