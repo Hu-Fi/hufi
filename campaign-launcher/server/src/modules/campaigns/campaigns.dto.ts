@@ -212,6 +212,9 @@ export class CampaignData {
 
   @ApiProperty({ name: 'cancellation_requested_at' })
   cancellationRequestedAt: number | null;
+
+  @ApiProperty({ name: 'finalized_at' })
+  finalizedAt: number | null;
 }
 
 export class GetCampaignsResponseDto {
