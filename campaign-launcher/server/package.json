@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hu-fi/subgraph-sdk": "3.0.0-beta.4",
+    "@hu-fi/subgraph-sdk": "3.0.0",
     "@human-protocol/logger": "^1.3.0",
     "@human-protocol/sdk": "^7.1.0",
     "@nestjs/common": "^11.1.10",
