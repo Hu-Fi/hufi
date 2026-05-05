@@ -1,5 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Wallet } from 'ethers';
+import { vi } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
 
 export function generateEthWallet(privateKey?: string) {
   const wallet = privateKey ? new Wallet(privateKey) : Wallet.createRandom();
@@ -10,19 +12,19 @@ export function generateEthWallet(privateKey?: string) {
   };
 }
 
-export type SignerMock = jest.Mocked<Pick<Wallet, 'sendTransaction'>> & {
+export type SignerMock = Mocked<Pick<Wallet, 'sendTransaction'>> & {
   __transactionResponse: {
-    wait: jest.Mock;
+    wait: Mock;
   };
 };
 
 export function createSignerMock(): SignerMock {
   const transactionResponse = {
-    wait: jest.fn(),
+    wait: vi.fn(),
   };
 
   return {
-    sendTransaction: jest.fn().mockResolvedValue(transactionResponse),
+    sendTransaction: vi.fn().mockResolvedValue(transactionResponse),
     __transactionResponse: transactionResponse,
   };
 }

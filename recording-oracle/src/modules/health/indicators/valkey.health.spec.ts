@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { Test } from '@nestjs/testing';
+import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 
 import { ValkeyClient } from '@/infrastructure/valkey';
 
@@ -28,7 +29,7 @@ describe('ValkeyHealthIndicator', () => {
   });
 
   describe('isHealty', () => {
-    it('should return healthy status if can ping', async () => {
+    test('should return healthy status if can ping', async () => {
       mockValkeyClient.ping.mockResolvedValueOnce('PONG');
 
       const testKey = faker.lorem.slug();
@@ -43,7 +44,7 @@ describe('ValkeyHealthIndicator', () => {
       });
     });
 
-    it(`should throw with unhealthy status if can't ping`, async () => {
+    test(`should throw with unhealthy status if can't ping`, async () => {
       const mockNetworkError = new Error('Ooops! Redis network error');
       mockValkeyClient.ping.mockRejectedValueOnce(mockNetworkError);
 

@@ -1,7 +1,17 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { FeeData, JsonRpcProvider, Provider } from 'ethers';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { Web3ConfigService } from '@/config';
 
@@ -26,7 +36,7 @@ describe('Web3Service', () => {
     web3Service = moduleRef.get<Web3Service>(Web3Service);
   });
 
-  it('should succesfully create service instance', () => {
+  test('should succesfully create service instance', () => {
     /**
      * Constructor throws if configuration is invalid,
      * so check for an instance as litmus test
@@ -35,7 +45,7 @@ describe('Web3Service', () => {
   });
 
   describe('getSigner', () => {
-    it('should return correct signer for a valid chainId on testnet', () => {
+    test('should return correct signer for a valid chainId on testnet', () => {
       const validChainId = generateTestnetChainId();
 
       const signer = web3Service.getSigner(validChainId);
@@ -45,7 +55,7 @@ describe('Web3Service', () => {
       expect(signer.provider).toBeInstanceOf(JsonRpcProvider);
     });
 
-    it('should throw if invalid chain id provided', () => {
+    test('should throw if invalid chain id provided', () => {
       const invalidChainId = -42;
 
       expect(() => web3Service.getSigner(invalidChainId)).toThrow(
@@ -56,10 +66,10 @@ describe('Web3Service', () => {
 
   describe('calculateTxFees', () => {
     const mockProvider = createMock<Provider>();
-    let spyOnGetSigner: jest.SpyInstance;
+    let spyOnGetSigner: Mock<(typeof web3Service)['getSigner']>;
 
     beforeAll(() => {
-      spyOnGetSigner = jest.spyOn(web3Service, 'getSigner').mockImplementation(
+      spyOnGetSigner = vi.spyOn(web3Service, 'getSigner').mockImplementation(
         () =>
           ({
             provider: mockProvider,
@@ -75,7 +85,7 @@ describe('Web3Service', () => {
       mockProvider.getFeeData.mockReset();
     });
 
-    it('should use multiplier for transaction fee params', async () => {
+    test('should use multiplier for transaction fee params', async () => {
       const testChainId = generateTestnetChainId();
 
       const randomMaxFeePerGas = faker.number.bigInt({ min: 1 });
@@ -95,7 +105,7 @@ describe('Web3Service', () => {
       });
     });
 
-    it('should throw if no transaction fee data from provider', async () => {
+    test('should throw if no transaction fee data from provider', async () => {
       const testChainId = generateTestnetChainId();
 
       mockProvider.getFeeData.mockResolvedValueOnce({
@@ -108,7 +118,7 @@ describe('Web3Service', () => {
       );
     });
 
-    it('should fallback to legacy gasPrice data', async () => {
+    test('should fallback to legacy gasPrice data', async () => {
       const testChainId = generateTestnetChainId();
       const randomGasPrice = faker.number.bigInt();
 

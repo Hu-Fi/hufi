@@ -1,8 +1,17 @@
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -22,6 +31,8 @@ import {
 import { generateExchangeApiKeysData } from './exchange-api-keys/fixtures';
 import { ExchangesService } from './exchanges.service';
 import { generateExchangeName, mockExchangesConfigService } from './fixtures';
+
+vi.mock('@/logger');
 
 const mockExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 const mockExchangeApiKeysService = createMock<ExchangeApiKeysService>();
@@ -58,7 +69,7 @@ describe('ExchangesService', () => {
     exchangesService = moduleRef.get<ExchangesService>(ExchangesService);
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(exchangesService).toBeDefined();
   });
 
@@ -67,7 +78,7 @@ describe('ExchangesService', () => {
       mockExchangesConfigService.configByExchange = {};
     });
 
-    it('should throw when exchange is not supported', async () => {
+    test('should throw when exchange is not supported', async () => {
       const userId = faker.string.uuid();
       const exchangeName = generateExchangeName();
 
@@ -81,7 +92,7 @@ describe('ExchangesService', () => {
       expect(thrownError).toBeInstanceOf(ExchangeNotSupportedError);
     });
 
-    it('should get client via factory for CEX', async () => {
+    test('should get client via factory for CEX', async () => {
       const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
       mockExchangesConfigService.configByExchange = {
@@ -121,7 +132,7 @@ describe('ExchangesService', () => {
       );
     });
 
-    it('should get client via factory for DEX', async () => {
+    test('should get client via factory for DEX', async () => {
       const exchangeName = generateExchangeName();
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
@@ -163,13 +174,13 @@ describe('ExchangesService', () => {
     let exchangeName: ExchangeName;
     let permissionsToCheck: ExchangePermission[];
 
-    let spyOnGetClientForUser: jest.SpyInstance;
+    let spyOnGetClientForUser: Mock;
 
     beforeAll(() => {
       ({ userId, exchangeName } = generateExchangeApiKeysData());
       permissionsToCheck = faker.helpers.arrayElements(exchangePermissions);
 
-      spyOnGetClientForUser = jest.spyOn(exchangesService, 'getClientForUser');
+      spyOnGetClientForUser = vi.spyOn(exchangesService, 'getClientForUser');
       spyOnGetClientForUser.mockImplementation(() => mockExchangeApiClient);
     });
 
@@ -184,7 +195,7 @@ describe('ExchangesService', () => {
       };
     });
 
-    it('should not check access for DEX', async () => {
+    test('should not check access for DEX', async () => {
       mockExchangesConfigService.configByExchange[exchangeName].type =
         ExchangeType.DEX;
 
@@ -197,7 +208,7 @@ describe('ExchangesService', () => {
       expect(spyOnGetClientForUser).toHaveBeenCalledTimes(0);
     });
 
-    it('should not throw when access check succeeded', async () => {
+    test('should not throw when access check succeeded', async () => {
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
       });
@@ -221,7 +232,7 @@ describe('ExchangesService', () => {
       expect(mockExchangeApiKeysService.markValidity).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw KeyAuthorizationError if access check fails', async () => {
+    test('should throw KeyAuthorizationError if access check fails', async () => {
       const missingPermissions = [
         faker.helpers.arrayElement(permissionsToCheck),
       ];

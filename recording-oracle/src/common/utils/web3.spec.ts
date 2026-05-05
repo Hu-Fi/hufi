@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { EVM_SIGNATURE_REGEX } from '@/common/constants';
 import { InvalidEvmAddressError } from '@/common/errors/web3';
@@ -26,18 +27,18 @@ describe('Web3 utilities', () => {
   });
 
   describe('generateNonce', () => {
-    it('should generate nonce exactly 32 hex characters length', () => {
+    test('should generate nonce exactly 32 hex characters length', () => {
       const nonce = web3Utils.generateNonce();
       expect(isValidNonce(nonce)).toBe(true);
     });
   });
 
   describe('assertValidEvmAddress', () => {
-    it('should not throw for valid address', () => {
+    test('should not throw for valid address', () => {
       expect(() => web3Utils.assertValidEvmAddress(address)).not.toThrow();
     });
 
-    it('should throw for invalid address', () => {
+    test('should throw for invalid address', () => {
       expect(() =>
         web3Utils.assertValidEvmAddress(generateInvalidEvmAddress()),
       ).toThrow(InvalidEvmAddressError);
@@ -45,7 +46,7 @@ describe('Web3 utilities', () => {
   });
 
   describe('signMessage', () => {
-    it('should sign message when it is a string', async () => {
+    test('should sign message when it is a string', async () => {
       const message = faker.lorem.words();
 
       const signature = await web3Utils.signMessage(message, privateKey);
@@ -53,7 +54,7 @@ describe('Web3 utilities', () => {
       expect(signature).toMatch(EVM_SIGNATURE_REGEX);
     });
 
-    it('should sign message when it is an object', async () => {
+    test('should sign message when it is an object', async () => {
       const message = {
         [faker.string.sample()]: new Date(),
       };
@@ -63,7 +64,7 @@ describe('Web3 utilities', () => {
       expect(signature).toMatch(EVM_SIGNATURE_REGEX);
     });
 
-    it('should return exact signature', async () => {
+    test('should return exact signature', async () => {
       const signature = await web3Utils.signMessage(
         PERMANENT_MESSAGE,
         PERMANENT_PRIVATE_KEY,
@@ -74,7 +75,7 @@ describe('Web3 utilities', () => {
   });
 
   describe('verifySignature', () => {
-    it('should return true for valid exact signature', async () => {
+    test('should return true for valid exact signature', async () => {
       const result = web3Utils.verifySignature(
         PERMANENT_MESSAGE,
         PERMANENT_SIGNATURE,
@@ -84,7 +85,7 @@ describe('Web3 utilities', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true for valid signature', async () => {
+    test('should return true for valid signature', async () => {
       const message = faker.lorem.words();
 
       const signature = await web3Utils.signMessage(message, privateKey);
@@ -94,7 +95,7 @@ describe('Web3 utilities', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false if signature is not valid', async () => {
+    test('should return false if signature is not valid', async () => {
       const message = faker.lorem.words();
       const invalidSignature = '0xInvalidSignature';
 
@@ -105,7 +106,7 @@ describe('Web3 utilities', () => {
       expect(result).toBe(false);
     });
 
-    it('should return false when signature not verified', async () => {
+    test('should return false when signature not verified', async () => {
       const message = faker.lorem.words();
 
       const signature = await web3Utils.signMessage(message, privateKey);
@@ -120,7 +121,7 @@ describe('Web3 utilities', () => {
   });
 
   describe('recoverSignerAddress', () => {
-    it('should recover the exact signer', async () => {
+    test('should recover the exact signer', async () => {
       const result = web3Utils.recoverSignerAddress(
         PERMANENT_MESSAGE,
         PERMANENT_SIGNATURE,
@@ -129,7 +130,7 @@ describe('Web3 utilities', () => {
       expect(result).toBe(PERMANENT_ADDRESS);
     });
 
-    it('should recover the correct signer', async () => {
+    test('should recover the correct signer', async () => {
       const message = faker.lorem.words();
       const signature = await web3Utils.signMessage(message, privateKey);
 
@@ -138,7 +139,7 @@ describe('Web3 utilities', () => {
       expect(result).toBe(address);
     });
 
-    it('should return null for invalid signature', () => {
+    test('should return null for invalid signature', () => {
       const message = faker.lorem.words();
       const invalidSignature = '0xInvalidSignature';
 
@@ -147,7 +148,7 @@ describe('Web3 utilities', () => {
       expect(signer).toBeNull();
     });
 
-    it('should recover the correct signer if message is an object', async () => {
+    test('should recover the correct signer if message is an object', async () => {
       const message = {
         [faker.string.sample()]: new Date(),
       };

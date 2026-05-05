@@ -17,7 +17,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "typeRoots": ["./node_modules/@types", "./types/**/*.d.ts"],
-    "types": ["express", "jest", "lodash", "node", "supertest"],
+    "types": ["express", "lodash", "node", "supertest"],
     "strictPropertyInitialization": false
   },
   "ts-node": {

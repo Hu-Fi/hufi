@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import _ from 'lodash';
+import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import type { CampaignEntity } from './campaign.entity';
 import {
@@ -25,7 +26,7 @@ import {
 
 describe('rewards utils', () => {
   describe('formatRewardValue', () => {
-    it('should correctly format reward value when decimals is 0', () => {
+    test('should correctly format reward value when decimals is 0', () => {
       const reward = faker.number
         .float({ min: 1, max: 1000, fractionDigits: 15 })
         .toString();
@@ -38,7 +39,7 @@ describe('rewards utils', () => {
       expect(formattedReward).toBe(reward.split('.')[0]);
     });
 
-    it('should correctly format zero reward', () => {
+    test('should correctly format zero reward', () => {
       const formattedReward = rewardsUtils.formatRewardValue(
         new Decimal('0.000000000000000000'),
         faker.number.int({ min: 1, max: 5 }),
@@ -47,7 +48,7 @@ describe('rewards utils', () => {
       expect(formattedReward).toBe('0');
     });
 
-    it('should not round up the reward value', () => {
+    test('should not round up the reward value', () => {
       const decimals = faker.number.int({ min: 3, max: 18 });
       const wholePart = faker.number.int({ min: 1, max: 1000 });
 
@@ -59,7 +60,7 @@ describe('rewards utils', () => {
       expect(formattedReward).toBe(`${wholePart}.${'9'.repeat(decimals)}`);
     });
 
-    it('should correctly format reward value when it has less decimals than passed', () => {
+    test('should correctly format reward value when it has less decimals than passed', () => {
       const decimals = faker.number.int({ min: 3, max: 18 });
       const rewardValue = faker.number
         .float({
@@ -79,7 +80,7 @@ describe('rewards utils', () => {
   });
 
   describe('calculateDailyReward', () => {
-    it('should correctly calculate reward when duration is integer number of days', () => {
+    test('should correctly calculate reward when duration is integer number of days', () => {
       const duration = faker.number.int({ min: 1, max: 15 });
       const campaign = generateCampaignEntity();
       campaign.endDate = dayjs(campaign.startDate)
@@ -95,7 +96,7 @@ describe('rewards utils', () => {
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
-    it('should correctly calculate reward when duration is not integer number of days', () => {
+    test('should correctly calculate reward when duration is not integer number of days', () => {
       /**
        * E.g. if duration is 5 days and 2 hours -
        * then there are 6 "day intervals" to distribute reward
@@ -117,7 +118,7 @@ describe('rewards utils', () => {
       expect(dailyReward).toBe(expectedDailyReward);
     });
 
-    it('should correctly truncate reward value', () => {
+    test('should correctly truncate reward value', () => {
       const duration = 6;
       const campaign = generateCampaignEntity();
       campaign.fundAmount = '10';
@@ -139,7 +140,7 @@ describe('rewards utils', () => {
   describe('calculateRewardPool', () => {
     let campaign: CampaignEntity;
 
-    it('should throw if reward cycly is > 1 day', () => {
+    test('should throw if reward cycly is > 1 day', () => {
       campaign = generateCampaignEntity();
       const progress = generateCampaignProgress(campaign);
       progress.to = dayjs(progress.from)
@@ -157,7 +158,7 @@ describe('rewards utils', () => {
         campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       });
 
-      it('should return 0 when generated volume is 0', () => {
+      test('should return 0 when generated volume is 0', () => {
         const progress = generateCampaignProgress(campaign);
 
         const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
@@ -165,7 +166,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe('0');
       });
 
-      it('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
+      test('should correctly calculate reward pool when generated volume is lower than target but not 0', () => {
         const progressValueTarget = (
           campaign.details as MarketMakingCampaignDetails
         ).dailyVolumeTarget;
@@ -188,7 +189,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe(expectedRewardPool);
       });
 
-      it('should correctly calculate reward pool when generated volume meets target', () => {
+      test('should correctly calculate reward pool when generated volume meets target', () => {
         const progressValueTarget = (
           campaign.details as MarketMakingCampaignDetails
         ).dailyVolumeTarget;
@@ -217,7 +218,7 @@ describe('rewards utils', () => {
         );
       });
 
-      it('should return daily reward as reward pool', () => {
+      test('should return daily reward as reward pool', () => {
         const progress = generateCampaignProgress(campaign);
         progress.participants_outcomes = [
           generateParticipantOutcome(campaign.type, {
@@ -232,7 +233,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe(rewardsUtils.calculateDailyReward(campaign));
       });
 
-      it('should return 0 when no eligible participants', () => {
+      test('should return 0 when no eligible participants', () => {
         const progress = generateCampaignProgress(campaign);
         progress.participants_outcomes = [
           generateParticipantOutcome(campaign.type, {
@@ -253,7 +254,7 @@ describe('rewards utils', () => {
         campaign = generateCampaignEntity(CampaignType.HOLDING);
       });
 
-      it('should return 0 when held balance is 0', () => {
+      test('should return 0 when held balance is 0', () => {
         const progress = generateCampaignProgress(campaign);
 
         const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
@@ -261,7 +262,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe('0');
       });
 
-      it('should correctly calculate reward pool when held balance is lower than target but not 0', () => {
+      test('should correctly calculate reward pool when held balance is lower than target but not 0', () => {
         const progressValueTarget = (campaign.details as HoldingCampaignDetails)
           .dailyBalanceTarget;
         const progressValue = faker.number.float({
@@ -283,7 +284,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe(expectedRewardPool);
       });
 
-      it('should correctly calculate reward pool when held balance meets target', () => {
+      test('should correctly calculate reward pool when held balance meets target', () => {
         const progressValueTarget = (campaign.details as HoldingCampaignDetails)
           .dailyBalanceTarget;
         const progressValue = faker.number.float({
@@ -309,7 +310,7 @@ describe('rewards utils', () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
       });
 
-      it('should return 0 when no eligible participants', () => {
+      test('should return 0 when no eligible participants', () => {
         const progressValueTarget = (
           campaign.details as ThresholdCampaignDetails
         ).minimumBalanceTarget;
@@ -325,7 +326,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe('0');
       });
 
-      it('should return correct value when no maxParticipants', () => {
+      test('should return correct value when no maxParticipants', () => {
         delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
 
         const minimumBalanceTarget = (
@@ -348,7 +349,7 @@ describe('rewards utils', () => {
         expect(rewardPool).toBe(expectedRewardPool);
       });
 
-      it('should return correct value when there is maxParticipants', () => {
+      test('should return correct value when there is maxParticipants', () => {
         const maxParticipants = faker.number.int({ min: 10, max: 100 });
         (campaign.details as ThresholdCampaignDetails).maxParticipants =
           maxParticipants;
@@ -396,7 +397,7 @@ describe('rewards utils', () => {
       campaignType = faker.helpers.arrayElement(campaignTypes);
     });
 
-    it('should return 0 rewards for all participants', () => {
+    test('should return 0 rewards for all participants', () => {
       const participantOutcomes = Array.from({ length: 3 }).map(() =>
         generateParticipantOutcome(campaignType, { score: 0 }),
       );
@@ -411,7 +412,7 @@ describe('rewards utils', () => {
       }
     });
 
-    it('should correctly estimate rewards based on scores', () => {
+    test('should correctly estimate rewards based on scores', () => {
       let totalScore = 0;
 
       const participantOutcomes = Array.from({
@@ -455,7 +456,7 @@ describe('rewards utils', () => {
       rewardPool = faker.number.int({ min: 1 }).toString();
     });
 
-    it('should return 0 when participant score is 0', () => {
+    test('should return 0 when participant score is 0', () => {
       const participantOutcome = generateParticipantOutcome(campaign.type, {
         score: 0,
       });
@@ -469,7 +470,7 @@ describe('rewards utils', () => {
       expect(estimatedRewards[participantOutcome.address]).toBe(0);
     });
 
-    it('should return 0 when participant has not generated enough volume', () => {
+    test('should return 0 when participant has not generated enough volume', () => {
       const participantOutcome = generateParticipantOutcome(campaign.type, {
         total_volume: faker.number.float({
           min: 0,
@@ -486,7 +487,7 @@ describe('rewards utils', () => {
       expect(estimatedRewards[participantOutcome.address]).toBe(0);
     });
 
-    it('should return 0 when participant is not in top list', () => {
+    test('should return 0 when participant is not in top list', () => {
       const topParticipantsScore = faker.number.int({ min: 1 });
 
       const topParticipantsOutcomes = Array.from({
@@ -522,7 +523,7 @@ describe('rewards utils', () => {
       }
     });
 
-    it('should return equal rewards if all tie', () => {
+    test('should return equal rewards if all tie', () => {
       const topParticipantsScore = faker.number.int({ min: 1 });
 
       const topParticipantsOutcomes = Array.from({
@@ -553,7 +554,7 @@ describe('rewards utils', () => {
       }
     });
 
-    it('should correctly estimate rewards based on scores and rewards distribution', () => {
+    test('should correctly estimate rewards based on scores and rewards distribution', () => {
       campaign.details.rewardsDistribution = [30, 20, 50];
 
       const eligibleVolume =

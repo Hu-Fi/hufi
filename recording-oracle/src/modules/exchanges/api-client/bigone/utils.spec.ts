@@ -1,18 +1,19 @@
 import { faker } from '@faker-js/faker';
+import { describe, expect, test } from 'vitest';
 
 import { TakerOrMakerFlag, TradingSide } from '../types';
 import { generateBigoneTrade } from './fixtures';
 import { mapAssetPairToSymbol, mapSymbolToAssetPair, mapTrade } from './utils';
 
 describe('BigONE client utils', () => {
-  it('should map trading pair symbol to asset pair', () => {
+  test('should map trading pair symbol to asset pair', () => {
     const base = faker.finance.currencyCode();
     const quote = faker.finance.currencyCode();
 
     expect(mapSymbolToAssetPair(`${base}/${quote}`)).toBe(`${base}-${quote}`);
   });
 
-  it('should map asset pair to trading pair symbol', () => {
+  test('should map asset pair to trading pair symbol', () => {
     const base = faker.finance.currencyCode();
     const quote = faker.finance.currencyCode();
 
@@ -20,7 +21,7 @@ describe('BigONE client utils', () => {
   });
 
   describe('mapTrade', () => {
-    it('should map to correct format with exact common props', () => {
+    test('should map to correct format with exact common props', () => {
       const apiTrade = generateBigoneTrade();
 
       const mappedTrade = mapTrade(apiTrade);
@@ -40,7 +41,7 @@ describe('BigONE client utils', () => {
       });
     });
 
-    it('should correctly map maker buy', () => {
+    test('should correctly map maker buy', () => {
       const apiTrade = generateBigoneTrade({
         taker_fee: null,
         taker_side: 'ASK',
@@ -53,7 +54,7 @@ describe('BigONE client utils', () => {
       expect(mappedTrade.side).toEqual(TradingSide.BUY);
     });
 
-    it('should correctly map maker sell', () => {
+    test('should correctly map maker sell', () => {
       const apiTrade = generateBigoneTrade({
         taker_fee: null,
         taker_side: 'BID',
@@ -66,7 +67,7 @@ describe('BigONE client utils', () => {
       expect(mappedTrade.side).toEqual(TradingSide.SELL);
     });
 
-    it('should correctly map taker buy', () => {
+    test('should correctly map taker buy', () => {
       const apiTrade = generateBigoneTrade({
         taker_fee: Math.random().toString(),
         taker_side: 'BID',
@@ -79,7 +80,7 @@ describe('BigONE client utils', () => {
       expect(mappedTrade.side).toEqual(TradingSide.BUY);
     });
 
-    it('should correctly map taker sell', () => {
+    test('should correctly map taker sell', () => {
       const apiTrade = generateBigoneTrade({
         taker_fee: Math.random().toString(),
         taker_side: 'ASK',
@@ -92,7 +93,7 @@ describe('BigONE client utils', () => {
       expect(mappedTrade.side).toEqual(TradingSide.SELL);
     });
 
-    it('should correctly map self trades', () => {
+    test('should correctly map self trades', () => {
       const apiTrade = generateBigoneTrade({
         taker_side: 'ASK',
         side: 'SELF_TRADING',

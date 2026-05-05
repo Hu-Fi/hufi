@@ -1,11 +1,12 @@
 import crypto from 'crypto';
 
 import { faker } from '@faker-js/faker';
+import { describe, expect, test } from 'vitest';
 
 import * as cryptoUtils from './crypto';
 
 describe('hashString', () => {
-  it('should handle empty string input and use correct default algorithm', () => {
+  test('should handle empty string input and use correct default algorithm', () => {
     const input = '';
 
     const expected = crypto.createHash('sha256').update(input).digest('hex');
@@ -13,7 +14,7 @@ describe('hashString', () => {
     expect(cryptoUtils.hashString(input)).toBe(expected);
   });
 
-  it('should return consistent results for the same input', () => {
+  test('should return consistent results for the same input', () => {
     const input = faker.string.uuid();
 
     const first = cryptoUtils.hashString(input);
@@ -22,7 +23,7 @@ describe('hashString', () => {
     expect(first).toBe(second);
   });
 
-  it.each(['md5', 'sha1', 'sha256', 'sha512'])(
+  test.each(['md5', 'sha1', 'sha256', 'sha512'])(
     'should hash string using %s',
     (algorithm) => {
       const input = faker.string.uuid();

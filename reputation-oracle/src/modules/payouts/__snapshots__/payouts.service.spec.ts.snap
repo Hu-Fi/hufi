@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PayoutsService calculateRewardsForIntermediateResult should correctly calculate rewards for precision-sensitive results 1`] = `
+exports[`PayoutsService > calculateRewardsForIntermediateResult > should correctly calculate rewards for precision-sensitive results 1`] = `
 [
   {
     "id": "00000000-00000000-00000000-00000000",
@@ -18,7 +18,7 @@ exports[`PayoutsService calculateRewardsForIntermediateResult should correctly c
 ]
 `;
 
-exports[`PayoutsService calculateRewardsForIntermediateResult should correctly truncate rewards for small results in correct notation 1`] = `
+exports[`PayoutsService > calculateRewardsForIntermediateResult > should correctly truncate rewards for small results in correct notation 1`] = `
 [
   {
     "id": "00000000-00000000-00000000-00000000",

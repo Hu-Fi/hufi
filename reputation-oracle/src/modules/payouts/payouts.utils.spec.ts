@@ -2,6 +2,14 @@ import * as crypto from 'crypto';
 
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
 
 import { ChainIds } from '@/common/constants';
 
@@ -24,7 +32,7 @@ describe('payouts utils', () => {
 
   describe('retrieveCampaignManifest', () => {
     describe('manifest string', () => {
-      it('should return parsed manifest if it is a string', async () => {
+      test('should return parsed manifest if it is a string', async () => {
         const manifest = generateManifest();
 
         const result = await payoutsUtils.retrieveCampaignManifest(
@@ -47,7 +55,7 @@ describe('payouts utils', () => {
         nock.cleanAll();
       });
 
-      it('should throw when manifest not found', async () => {
+      test('should throw when manifest not found', async () => {
         const scope = nock(manfestUrl).get('/').reply(404);
 
         let thrownError: any;
@@ -66,7 +74,7 @@ describe('payouts utils', () => {
         expect(thrownError.message).toBe('Failed to download file');
       });
 
-      it('should throw when invalid manfest hash', async () => {
+      test('should throw when invalid manfest hash', async () => {
         const mockedManifest = generateManifest();
         const invalidHash = faker.string.hexadecimal();
         const scope = nock(manfestUrl).get('/').reply(200, mockedManifest);
@@ -84,7 +92,7 @@ describe('payouts utils', () => {
         expect(thrownError.message).toBe('Invalid file hash');
       });
 
-      it('should download manifest and return when hash is valid', async () => {
+      test('should download manifest and return when hash is valid', async () => {
         const mockedManifest = generateManifest();
 
         const mockedManifestHash = crypto
@@ -120,7 +128,7 @@ describe('payouts utils', () => {
       nock.cleanAll();
     });
 
-    it('should throw when intermediate results not found', async () => {
+    test('should throw when intermediate results not found', async () => {
       const scope = nock(intermediateResultsUrl).get('/').reply(404);
 
       let thrownError: any;
@@ -139,7 +147,7 @@ describe('payouts utils', () => {
       expect(thrownError.message).toBe('Failed to download file');
     });
 
-    it('should throw when invalid intermediate results hash', async () => {
+    test('should throw when invalid intermediate results hash', async () => {
       const mockedIntermediateResults = generateIntermediateResultsData();
       const invalidHash = faker.string.hexadecimal();
       const scope = nock(intermediateResultsUrl)
@@ -162,7 +170,7 @@ describe('payouts utils', () => {
       expect(thrownError.message).toBe('Invalid file hash');
     });
 
-    it('should download intermediate results and return when hash is valid', async () => {
+    test('should download intermediate results and return when hash is valid', async () => {
       const mockedIntermediateResults = generateIntermediateResultsData();
 
       const mockedIntermediateResultsHash = calculateIntermediateResultsHash(
@@ -183,7 +191,7 @@ describe('payouts utils', () => {
       expect(intermediateResults).toEqual(mockedIntermediateResults);
     });
 
-    it('should download intermediate results and keep unknown fields', async () => {
+    test('should download intermediate results and keep unknown fields', async () => {
       const mockedIntermediateResults = generateIntermediateResultsData();
       const resultsWithExtra = {
         ...mockedIntermediateResults,
@@ -206,7 +214,7 @@ describe('payouts utils', () => {
       expect(intermediateResults).toEqual(resultsWithExtra);
     });
 
-    it('should download intermediate results and keep reserved funds as string', async () => {
+    test('should download intermediate results and keep reserved funds as string', async () => {
       const mockedRawIntermediateResult = generateRawIntermediateResult();
       mockedRawIntermediateResult.reserved_funds =
         mockedRawIntermediateResult.reserved_funds.toString();
@@ -235,7 +243,7 @@ describe('payouts utils', () => {
       );
     });
 
-    it('should download intermediate results and pass validation when score is 0', async () => {
+    test('should download intermediate results and pass validation when score is 0', async () => {
       const mockedRawIntermediateResult = generateRawIntermediateResult();
       const mockedParticipantOutcome = generateParticipantOutcome();
       mockedParticipantOutcome.score = 0;
@@ -270,7 +278,7 @@ describe('payouts utils', () => {
       ).toBe(0);
     });
 
-    it.each([
+    test.each([
       // invalid chain id format
       {
         ...generateIntermediateResultsData(),

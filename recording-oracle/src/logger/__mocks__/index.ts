@@ -1,11 +1,12 @@
 import type { Logger } from '@human-protocol/logger';
+import { vi } from 'vitest';
 
 const logger: Logger = {
   child: () => logger,
-  info: jest.fn(),
-  debug: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
 export default logger;
