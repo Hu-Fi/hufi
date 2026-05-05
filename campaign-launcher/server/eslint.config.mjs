@@ -3,7 +3,7 @@ import eslint from '@eslint/js';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import { importX as importXPlugin } from 'eslint-plugin-import-x';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from "globals";
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
