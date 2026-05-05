@@ -282,7 +282,14 @@ export class CampaignsService {
       intermediateResultsUrl: subgraphCampaign.intermediateResultsUrl,
       finalResultsUrl: subgraphCampaign.finalResultsUrl,
       createdAt: subgraphCampaign.createdAt,
-      cancellationRequestedAt: subgraphCampaign.cancellationRequestedAt,
+      /**
+       * Old contracts were just "cancelled" w/o cancellation request, so for them
+       * we consider cancellation request time to be same as cancellation time
+       */
+      cancellationRequestedAt:
+        subgraphCampaign.cancellationRequestedAt ||
+        subgraphCampaign.finalizedAt,
+      finalizedAt: subgraphCampaign.finalizedAt,
     };
   }
 
