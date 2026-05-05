@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { createMock } from '@golevelup/ts-vitest';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import * as controlFlow from '@/common/utils/control-flow';
 import { generateCcxtTrade } from '@/modules/exchanges/api-client/ccxt/fixtures';
@@ -16,20 +16,11 @@ vi.mock('ccxt');
 vi.mock('@/logger');
 
 const mockedExchange = createMock<Exchange>();
+vi.mocked(ccxt.hyperliquid).mockImplementation(function MockedExchangeCtor() {
+  return mockedExchange;
+});
 
 describe('HyperliquidClient', () => {
-  beforeEach(() => {
-    vi.mocked(ccxt.hyperliquid).mockImplementation(
-      function MockedExchangeCtor() {
-        return mockedExchange;
-      },
-    );
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
-
   test('should throw when userId is missing', () => {
     expect(
       () =>

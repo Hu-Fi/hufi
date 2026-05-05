@@ -3,17 +3,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { Alchemy, GetTokenPriceBySymbolResponse } from 'alchemy-sdk';
 import { JsonRpcProvider } from 'ethers';
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-  vi,
-} from 'vitest';
-import type { Mock } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { Web3ConfigService } from '@/config';
 import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
@@ -23,7 +13,17 @@ import { generateTestnetChainId, mockWeb3ConfigService } from './fixtures';
 import { Web3Cache } from './web3-cache';
 import { Web3Service } from './web3.service';
 
+vi.mock('alchemy-sdk');
 vi.mock('@/logger');
+
+const mockedAlchemy = {
+  prices: createMock<Alchemy['prices']>(undefined, {
+    strict: true,
+  }),
+};
+vi.mocked(Alchemy).mockImplementation(function MockedAlchemyCtor() {
+  return mockedAlchemy;
+});
 
 const mockCacheManager = new CacheManagerMock();
 
@@ -77,26 +77,6 @@ describe('Web3Service', () => {
   describe('getTokenPriceUsd', () => {
     const testTokenSymbol = faker.finance.currencyCode();
 
-    const mockAlchemySdk = {
-      prices: createMock<Alchemy['prices']>(undefined, {
-        strict: true,
-      }),
-    };
-
-    let replacedAlchemySdkSpy: Mock;
-
-    beforeAll(() => {
-      replacedAlchemySdkSpy = vi.spyOn(web3Service as any, 'alchemySdk', 'get');
-    });
-
-    beforeEach(() => {
-      replacedAlchemySdkSpy.mockImplementation(() => mockAlchemySdk);
-    });
-
-    afterAll(() => {
-      replacedAlchemySdkSpy.mockRestore();
-    });
-
     afterEach(() => {
       vi.resetAllMocks();
 
@@ -106,7 +86,7 @@ describe('Web3Service', () => {
     test('should log a warn if alchemy operation fails and throw', async () => {
       const testError = new Error(faker.lorem.sentence());
 
-      mockAlchemySdk.prices.getTokenPriceBySymbol.mockRejectedValueOnce(
+      mockedAlchemy.prices.getTokenPriceBySymbol.mockRejectedValueOnce(
         testError,
       );
 
@@ -129,7 +109,7 @@ describe('Web3Service', () => {
 
     test('should cache and return price if available', async () => {
       const price = faker.number.float();
-      mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
+      mockedAlchemy.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
           {
             symbol: testTokenSymbol,
@@ -155,7 +135,7 @@ describe('Web3Service', () => {
       const result = await web3Service.getTokenPriceUsd(testTokenSymbol);
 
       expect(result).toBe(price);
-      expect(mockAlchemySdk.prices.getTokenPriceBySymbol).toHaveBeenCalledTimes(
+      expect(mockedAlchemy.prices.getTokenPriceBySymbol).toHaveBeenCalledTimes(
         1,
       );
     });
@@ -163,7 +143,7 @@ describe('Web3Service', () => {
     test('should not cache and return price if available for different symbols', async () => {
       const token1 = faker.finance.currencyCode();
       const price1 = faker.number.float();
-      mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
+      mockedAlchemy.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
           {
             symbol: token1,
@@ -180,7 +160,7 @@ describe('Web3Service', () => {
       });
       const token2 = `${token1}2`;
       const price2 = faker.number.float();
-      mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
+      mockedAlchemy.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
           {
             symbol: token2,
@@ -199,14 +179,14 @@ describe('Web3Service', () => {
       const result1 = await web3Service.getTokenPriceUsd(token1);
 
       expect(result1).toBe(price1);
-      expect(mockAlchemySdk.prices.getTokenPriceBySymbol).toHaveBeenCalledTimes(
+      expect(mockedAlchemy.prices.getTokenPriceBySymbol).toHaveBeenCalledTimes(
         1,
       );
 
       const result2 = await web3Service.getTokenPriceUsd(token2);
 
       expect(result2).toBe(price2);
-      expect(mockAlchemySdk.prices.getTokenPriceBySymbol).toHaveBeenCalledTimes(
+      expect(mockedAlchemy.prices.getTokenPriceBySymbol).toHaveBeenCalledTimes(
         2,
       );
     });
@@ -241,7 +221,7 @@ describe('Web3Service', () => {
     ])(
       'should cache and return null if price is not available [%#]',
       async (apiResponse: GetTokenPriceBySymbolResponse) => {
-        mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce(
+        mockedAlchemy.prices.getTokenPriceBySymbol.mockResolvedValueOnce(
           apiResponse,
         );
 
@@ -256,7 +236,7 @@ describe('Web3Service', () => {
 
         expect(result).toBe(null);
         expect(
-          mockAlchemySdk.prices.getTokenPriceBySymbol,
+          mockedAlchemy.prices.getTokenPriceBySymbol,
         ).toHaveBeenCalledTimes(1);
 
         expect(logger.warn).toHaveBeenCalledTimes(1);
@@ -277,7 +257,7 @@ describe('Web3Service', () => {
 
         expect(result).toBe(1);
         expect(
-          mockAlchemySdk.prices.getTokenPriceBySymbol,
+          mockedAlchemy.prices.getTokenPriceBySymbol,
         ).toHaveBeenCalledTimes(0);
       },
     );

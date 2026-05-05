@@ -40,7 +40,7 @@ const mockAuthConfigService: Omit<AuthConfigService, 'configService'> = {
   refreshTokenExpiresIn: 3600000,
 };
 
-const mockRefresTokenRepository = createMock<RefreshTokensRepository>();
+const mockRefreshTokenRepository = createMock<RefreshTokensRepository>();
 const mockUsersRepository = createMock<UsersRepository>();
 const mockUsersService = createMock<UsersService>();
 
@@ -66,7 +66,7 @@ describe('AuthService', () => {
         AuthService,
         {
           provide: RefreshTokensRepository,
-          useValue: mockRefresTokenRepository,
+          useValue: mockRefreshTokenRepository,
         },
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: UsersService, useValue: mockUsersService },
@@ -78,7 +78,7 @@ describe('AuthService', () => {
   });
 
   beforeEach(() => {
-    mockRefresTokenRepository.insert.mockImplementation(
+    mockRefreshTokenRepository.insert.mockImplementation(
       // @ts-expect-error - no need to have exact TypeORM type here
       async (entity: RefreshTokenEntity): Promise<any> => {
         if (!entity.id) {
@@ -106,7 +106,7 @@ describe('AuthService', () => {
         const now = Date.now();
         const user = generateUserEntity();
 
-        mockRefresTokenRepository.findOneByUserId.mockResolvedValueOnce(
+        mockRefreshTokenRepository.findOneByUserId.mockResolvedValueOnce(
           existingRefreshToken,
         );
 
@@ -114,8 +114,8 @@ describe('AuthService', () => {
           await authService.generateTokens(user);
 
         if (existingRefreshToken) {
-          expect(mockRefresTokenRepository.remove).toHaveBeenCalledTimes(1);
-          expect(mockRefresTokenRepository.remove).toHaveBeenCalledWith(
+          expect(mockRefreshTokenRepository.remove).toHaveBeenCalledTimes(1);
+          expect(mockRefreshTokenRepository.remove).toHaveBeenCalledWith(
             existingRefreshToken,
           );
         }
@@ -289,7 +289,7 @@ describe('AuthService', () => {
     });
 
     test('should throw when token not found', async () => {
-      mockRefresTokenRepository.findOneById.mockResolvedValueOnce(null);
+      mockRefreshTokenRepository.findOneById.mockResolvedValueOnce(null);
 
       let thrownError: any;
       try {
@@ -303,7 +303,7 @@ describe('AuthService', () => {
     });
 
     test('should throw when token expired', async () => {
-      mockRefresTokenRepository.findOneById.mockResolvedValueOnce({
+      mockRefreshTokenRepository.findOneById.mockResolvedValueOnce({
         id: refreshToken,
         expiresAt: faker.date.past(),
       } as RefreshTokenEntity);
@@ -326,7 +326,7 @@ describe('AuthService', () => {
         expiresAt: faker.date.future(),
       };
 
-      mockRefresTokenRepository.findOneById.mockResolvedValueOnce(
+      mockRefreshTokenRepository.findOneById.mockResolvedValueOnce(
         refreshTokenEntity,
       );
 
@@ -360,7 +360,7 @@ describe('AuthService', () => {
         expiresAt: faker.date.future(),
       };
 
-      mockRefresTokenRepository.findOneById.mockResolvedValueOnce(
+      mockRefreshTokenRepository.findOneById.mockResolvedValueOnce(
         refreshTokenEntity,
       );
 
@@ -374,7 +374,7 @@ describe('AuthService', () => {
 
       expect(result).toEqual(mockAuthTokens);
 
-      expect(mockRefresTokenRepository.findOneById).toHaveBeenCalledWith(
+      expect(mockRefreshTokenRepository.findOneById).toHaveBeenCalledWith(
         refreshToken,
         {
           relations: { user: true },

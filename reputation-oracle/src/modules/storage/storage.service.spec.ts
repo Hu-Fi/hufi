@@ -16,6 +16,9 @@ const mockedMinioClientInstance = {
   bucketExists: vi.fn(),
   putObject: vi.fn(),
 };
+vi.mocked(MinioClient).mockImplementation(function MinioClientMock() {
+  return mockedMinioClientInstance;
+});
 
 const mockS3ConfigService: Omit<S3ConfigService, 'configService'> = {
   endpoint: faker.internet.domainName(),
@@ -38,10 +41,6 @@ describe('StorageService', () => {
   let storageService: StorageService;
 
   beforeAll(async () => {
-    vi.mocked(MinioClient).mockImplementation(function MinioClientMock() {
-      return mockedMinioClientInstance;
-    });
-
     const moduleRef = await Test.createTestingModule({
       providers: [
         {

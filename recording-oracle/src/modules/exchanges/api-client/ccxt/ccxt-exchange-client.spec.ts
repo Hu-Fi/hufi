@@ -64,7 +64,7 @@ describe('CcxtExchangeClient', () => {
     beforeEach(() => {
       exchangeName = generateExchangeName();
 
-      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
         return mockedExchange;
       });
     });
@@ -177,7 +177,7 @@ describe('CcxtExchangeClient', () => {
     let ccxtExchangeApiClient: CcxtExchangeClient;
 
     beforeAll(() => {
-      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
         return mockedExchange;
       });
 
@@ -472,7 +472,7 @@ describe('CcxtExchangeClient', () => {
 
           beforeAll(() => {
             mockedCcxt[ExchangeName.MEXC] = vi.fn(
-              function MockedExchangeCtor() {
+              function MockedCcxtExchangeCtor() {
                 return mockedExchange;
               },
             );
@@ -520,9 +520,11 @@ describe('CcxtExchangeClient', () => {
 
           test('should re-throw original error when 10072 code not for mexc', async () => {
             const randomExchange = faker.lorem.slug();
-            mockedCcxt[randomExchange] = vi.fn(function MockedExchangeCtor() {
-              return mockedExchange;
-            });
+            mockedCcxt[randomExchange] = vi.fn(
+              function MockedCcxtExchangeCtor() {
+                return mockedExchange;
+              },
+            );
 
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
@@ -635,9 +637,11 @@ describe('CcxtExchangeClient', () => {
 
           test('should re-throw original error when 10072 code not for mexc', async () => {
             const randomExchange = faker.lorem.slug();
-            mockedCcxt[randomExchange] = vi.fn(function MockedExchangeCtor() {
-              return mockedExchange;
-            });
+            mockedCcxt[randomExchange] = vi.fn(
+              function MockedCcxtExchangeCtor() {
+                return mockedExchange;
+              },
+            );
 
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
@@ -714,7 +718,7 @@ describe('CcxtExchangeClient', () => {
 
           beforeAll(() => {
             mockedCcxt[ExchangeName.MEXC] = vi.fn(
-              function MockedExchangeCtor() {
+              function MockedCcxtExchangeCtor() {
                 return mockedExchange;
               },
             );
@@ -757,9 +761,11 @@ describe('CcxtExchangeClient', () => {
 
           test('should re-throw original error when 10072 code not for mexc', async () => {
             const randomExchange = faker.lorem.slug();
-            mockedCcxt[randomExchange] = vi.fn(function MockedExchangeCtor() {
-              return mockedExchange;
-            });
+            mockedCcxt[randomExchange] = vi.fn(
+              function MockedCcxtExchangeCtor() {
+                return mockedExchange;
+              },
+            );
 
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
@@ -789,9 +795,11 @@ describe('CcxtExchangeClient', () => {
       });
 
       test('should fetch deposit address info for ERC20 network on gate', async () => {
-        mockedCcxt[ExchangeName.GATE] = vi.fn(function MockedExchangeCtor() {
-          return mockedExchange;
-        });
+        mockedCcxt[ExchangeName.GATE] = vi.fn(
+          function MockedCcxtExchangeCtor() {
+            return mockedExchange;
+          },
+        );
 
         const mockedAddressStructure = generateCcxtDepositAddressStructure();
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
@@ -820,7 +828,7 @@ describe('CcxtExchangeClient', () => {
       });
 
       test('should fetch deposit address info for ETH network on xt', async () => {
-        mockedCcxt[ExchangeName.XT] = vi.fn(function MockedExchangeCtor() {
+        mockedCcxt[ExchangeName.XT] = vi.fn(function MockedCcxtExchangeCtor() {
           return mockedExchange;
         });
 

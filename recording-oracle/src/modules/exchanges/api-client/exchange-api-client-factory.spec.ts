@@ -176,7 +176,7 @@ describe('ExchangeApiClientFactory', () => {
     const exchangeName = faker.lorem.slug();
 
     beforeEach(() => {
-      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
         return mockedExchange;
       });
     });
@@ -352,7 +352,7 @@ describe('ExchangeApiClientFactory', () => {
 
     test('should use preloaded client', async () => {
       const _mockedExchange = createMock<Exchange>();
-      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
         return _mockedExchange;
       });
       await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
@@ -441,7 +441,7 @@ describe('ExchangeApiClientFactory', () => {
     test('should correctly init client for hyperliquid with preloaded ccxt client', async () => {
       const exchangeName = ExchangeName.HYPERLIQUID;
       const preloadedExchange = createMock<Exchange>();
-      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
         return preloadedExchange;
       });
       await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
