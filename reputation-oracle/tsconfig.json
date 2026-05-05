@@ -16,7 +16,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "types": ["jest", "lodash", "node"]
+    "types": ["lodash", "node"]
   },
   "ts-node": {
     "files": true,

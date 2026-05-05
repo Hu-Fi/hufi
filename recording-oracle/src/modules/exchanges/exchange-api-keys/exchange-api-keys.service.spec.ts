@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { ExchangeType } from '@/common/constants';
 import { EncryptionConfigService, ExchangesConfigService } from '@/config';
@@ -73,7 +74,7 @@ describe('ExchangeApiKeysService', () => {
       moduleRef.get<AesEncryptionService>(AesEncryptionService);
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(exchangeApiKeysService).toBeDefined();
   });
 
@@ -88,7 +89,7 @@ describe('ExchangeApiKeysService', () => {
       };
     });
 
-    it.each([
+    test.each([
       Object.assign(generateExchangeApiKeysData(), { userId: '' }),
       Object.assign(generateExchangeApiKeysData(), { apiKey: '' }),
       Object.assign(generateExchangeApiKeysData(), { secretKey: '' }),
@@ -104,7 +105,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Invalid arguments');
     });
 
-    it('should throw when not supported exchange', async () => {
+    test('should throw when not supported exchange', async () => {
       mockExchangesConfigService.configByExchange[input.exchangeName] = {
         enabled: false,
         type: ExchangeType.DEX,
@@ -121,7 +122,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.message).toBe('Only CEX exchanges support API keys');
     });
 
-    it('should throw when provided keys do not have required access', async () => {
+    test('should throw when provided keys do not have required access', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
 
       const missingPermissions = faker.helpers.arrayElements(
@@ -145,7 +146,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.missingPermissions).toBe(missingPermissions);
     });
 
-    it('should rethrow when user not exists', async () => {
+    test('should rethrow when user not exists', async () => {
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
       mockExchangeApiClient.checkRequiredAccess.mockResolvedValueOnce({
         success: true,
@@ -164,7 +165,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError).toEqual(testError);
     });
 
-    it('should upsert encrypted keys if data is valid and extras not provided', async () => {
+    test('should upsert encrypted keys if data is valid and extras not provided', async () => {
       delete input.extras;
 
       mockExchangeApiClient.checkRequiredCredentials.mockReturnValueOnce(true);
@@ -194,7 +195,7 @@ describe('ExchangeApiKeysService', () => {
       expect(decryptedSecretKey.toString()).toBe(input.secretKey);
     });
 
-    it('should upsert encrypted keys if data is valid and extras provided', async () => {
+    test('should upsert encrypted keys if data is valid and extras provided', async () => {
       input.extras = {
         [faker.string.alpha()]: faker.string.sample(),
       } as any;
@@ -228,7 +229,7 @@ describe('ExchangeApiKeysService', () => {
   });
 
   describe('retrieve', () => {
-    it('should throw when key not found for the user', async () => {
+    test('should throw when key not found for the user', async () => {
       const { userId, exchangeName } = generateExchangeApiKeysData();
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
@@ -246,7 +247,7 @@ describe('ExchangeApiKeysService', () => {
       expect(thrownError.exchangeName).toBe(exchangeName);
     });
 
-    it('should return decrypted keys', async () => {
+    test('should return decrypted keys', async () => {
       const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
 
@@ -285,7 +286,7 @@ describe('ExchangeApiKeysService', () => {
   });
 
   describe('retrieveEnrolledApiKeys', () => {
-    it('should return enrolled keys', async () => {
+    test('should return enrolled keys', async () => {
       const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
 
@@ -333,7 +334,7 @@ describe('ExchangeApiKeysService', () => {
       exchangeName = faker.lorem.slug();
     });
 
-    it('should throw when key not found', async () => {
+    test('should throw when key not found', async () => {
       mockExchangeApiKeysRepository.findOneByUserAndExchange.mockResolvedValueOnce(
         null,
       );
@@ -363,7 +364,7 @@ describe('ExchangeApiKeysService', () => {
       expect(mockExchangeApiKeysRepository.save).toHaveBeenCalledTimes(0);
     });
 
-    it('should mark existing key as valid', async () => {
+    test('should mark existing key as valid', async () => {
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),
@@ -382,7 +383,7 @@ describe('ExchangeApiKeysService', () => {
       });
     });
 
-    it('should mark existing key as invalid', async () => {
+    test('should mark existing key as invalid', async () => {
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),
@@ -407,7 +408,7 @@ describe('ExchangeApiKeysService', () => {
       });
     });
 
-    it('should override missing permissions with new values', async () => {
+    test('should override missing permissions with new values', async () => {
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),
@@ -439,7 +440,7 @@ describe('ExchangeApiKeysService', () => {
       });
     });
 
-    it('should save missing permissions w/o duplicates', async () => {
+    test('should save missing permissions w/o duplicates', async () => {
       const apiKeyEntity = generateExchangeApiKey({
         encryptedApiKey: faker.string.hexadecimal(),
         encryptedSecretKey: faker.string.hexadecimal(),

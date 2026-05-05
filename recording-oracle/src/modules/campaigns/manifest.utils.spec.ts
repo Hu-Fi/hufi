@@ -1,5 +1,13 @@
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
 
 import * as cryptoUtils from '@/common/utils/crypto';
 import { generateTradingPair } from '@/modules/exchanges/fixtures';
@@ -30,7 +38,7 @@ describe('manifest utils', () => {
       nock.restore();
     });
 
-    it('should throw when manifest not found', async () => {
+    test('should throw when manifest not found', async () => {
       const scope = nock(manifestUrl).get('/').reply(404);
 
       let thrownError: any;
@@ -49,7 +57,7 @@ describe('manifest utils', () => {
       expect(thrownError.message).toBe('Failed to download file');
     });
 
-    it('should throw when invalid manifest hash', async () => {
+    test('should throw when invalid manifest hash', async () => {
       const mockedManifest = generateManifestResponse();
       const invalidHash = faker.string.hexadecimal();
       const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
@@ -67,7 +75,7 @@ describe('manifest utils', () => {
       expect(thrownError.message).toBe('Invalid file hash');
     });
 
-    it('should download manifest and return when hash is valid', async () => {
+    test('should download manifest and return when hash is valid', async () => {
       const mockedManifest = JSON.stringify(generateManifestResponse());
       const mockedManifestHash = cryptoUtils.hashString(mockedManifest, 'sha1');
       const scope = nock(manifestUrl).get('/').reply(200, mockedManifest);
@@ -86,7 +94,7 @@ describe('manifest utils', () => {
   describe('validateBaseSchema', () => {
     const MANIFEST_RESPONSE_KEYS = Object.keys(generateManifestResponse());
 
-    it.each([
+    test.each([
       // all properties are invalid format
       {
         type: faker.string.symbol(),
@@ -140,7 +148,7 @@ describe('manifest utils', () => {
       },
     );
 
-    it('should validate base manifest schema', async () => {
+    test('should validate base manifest schema', async () => {
       const mockedManifest = generateManifestResponse();
 
       const manifest = manifestUtils.validateBaseSchema(
@@ -154,7 +162,7 @@ describe('manifest utils', () => {
       });
     });
 
-    it('should validate base manifest and keep unknown fields', async () => {
+    test('should validate base manifest and keep unknown fields', async () => {
       const strippedManifest = generateManifestResponse();
       const manifestWithExtra = {
         ...strippedManifest,
@@ -176,7 +184,7 @@ describe('manifest utils', () => {
   describe('assertValidMarketMakingCampaignManifest', () => {
     const validManifest = generateMarketMakingCampaignManifest();
 
-    it.each([
+    test.each([
       {
         ...validManifest,
       },
@@ -195,7 +203,7 @@ describe('manifest utils', () => {
       ).toBeUndefined();
     });
 
-    it.each([
+    test.each([
       // invalid (lowercased) type
       Object.assign({}, validManifest, {
         type: CampaignType.MARKET_MAKING.toLowerCase(),
@@ -246,7 +254,7 @@ describe('manifest utils', () => {
   describe('assertValidHoldingCampaignManifest', () => {
     const validManifest = generateHoldingCampaignManifest();
 
-    it.each([
+    test.each([
       { ...validManifest },
       Object.assign({}, validManifest, {
         symbol: `5${faker.string.alphanumeric({
@@ -260,7 +268,7 @@ describe('manifest utils', () => {
       ).toBeUndefined();
     });
 
-    it.each([
+    test.each([
       // invalid (lowercased) type
       Object.assign({}, validManifest, {
         type: CampaignType.HOLDING.toLowerCase(),
@@ -307,7 +315,7 @@ describe('manifest utils', () => {
   describe('assertValidCompetitiveMarketMakingCampaignManifest', () => {
     const validManifest = generateCompetitiveMarketMakingCampaignManifest();
 
-    it.each([
+    test.each([
       { ...validManifest },
       Object.assign({}, validManifest, {
         pair: `1${faker.string.alphanumeric({
@@ -326,7 +334,7 @@ describe('manifest utils', () => {
       ).toBeUndefined();
     });
 
-    it.each([
+    test.each([
       Object.assign({}, validManifest, {
         type: CampaignType.COMPETITIVE_MARKET_MAKING.toLowerCase(),
       }),
@@ -379,7 +387,7 @@ describe('manifest utils', () => {
       );
     });
 
-    it('should not throw when rewards distribution sum is less or equal to 100', () => {
+    test('should not throw when rewards distribution sum is less or equal to 100', () => {
       const validDistributionManifest = Object.assign({}, validManifest, {
         rewards_distribution: [50, 30, 20],
       });
@@ -407,7 +415,7 @@ describe('manifest utils', () => {
   describe('assertValidThresholdCampaignManifest', () => {
     const validManifest = generateThresholdampaignManifest();
 
-    it.each([
+    test.each([
       Object.assign({}, validManifest, { max_participants: undefined }),
       Object.assign({}, validManifest, {
         max_participants: faker.number.int({ min: 1 }),
@@ -424,7 +432,7 @@ describe('manifest utils', () => {
       ).toBeUndefined();
     });
 
-    it.each([
+    test.each([
       // invalid (lowercased) type
       Object.assign({}, validManifest, {
         type: CampaignType.THRESHOLD.toLowerCase(),

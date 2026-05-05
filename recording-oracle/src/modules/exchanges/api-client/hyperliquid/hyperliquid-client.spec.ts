@@ -1,9 +1,8 @@
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
+import { describe, expect, test, vi } from 'vitest';
 
 import * as controlFlow from '@/common/utils/control-flow';
 import { generateCcxtTrade } from '@/modules/exchanges/api-client/ccxt/fixtures';
@@ -13,19 +12,16 @@ import { HyperliquidClient } from './hyperliquid-client';
 import { generateTradingPair } from '../../fixtures';
 import * as ccxtClientUtils from '../ccxt/utils';
 
-const mockedCcxt = jest.mocked(ccxt);
+vi.mock('ccxt');
+vi.mock('@/logger');
+
 const mockedExchange = createMock<Exchange>();
+vi.mocked(ccxt.hyperliquid).mockImplementation(function MockedExchangeCtor() {
+  return mockedExchange;
+});
 
 describe('HyperliquidClient', () => {
-  beforeEach(() => {
-    mockedCcxt.hyperliquid.mockReturnValue(mockedExchange);
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  it('should throw when userId is missing', () => {
+  test('should throw when userId is missing', () => {
     expect(
       () =>
         new HyperliquidClient({
@@ -35,7 +31,7 @@ describe('HyperliquidClient', () => {
     ).toThrow('userId is missing');
   });
 
-  it('should throw when userEvmAddress is missing', () => {
+  test('should throw when userEvmAddress is missing', () => {
     expect(
       () =>
         new HyperliquidClient({
@@ -45,7 +41,7 @@ describe('HyperliquidClient', () => {
     ).toThrow('userEvmAddress is missing');
   });
 
-  it('should return true on checkRequiredCredentials for valid init', () => {
+  test('should return true on checkRequiredCredentials for valid init', () => {
     const client = new HyperliquidClient({
       userId: faker.string.uuid(),
       userEvmAddress: faker.finance.ethereumAddress(),
@@ -54,7 +50,7 @@ describe('HyperliquidClient', () => {
     expect(client.checkRequiredCredentials()).toBe(true);
   });
 
-  it.each([true, false, undefined])(
+  test.each([true, false, undefined])(
     'should create instance with sandbox mode [%#]',
     (sandboxParam) => {
       const client = new HyperliquidClient({
@@ -72,7 +68,7 @@ describe('HyperliquidClient', () => {
     },
   );
 
-  it('should fetch and paginate trades using ccxt with wallet params', async () => {
+  test('should fetch and paginate trades using ccxt with wallet params', async () => {
     const symbol = generateTradingPair();
     const since = faker.date.recent().valueOf();
 

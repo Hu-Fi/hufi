@@ -1,14 +1,15 @@
 import { faker } from '@faker-js/faker';
 import { ethers } from 'ethers';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { generateTradingPair } from '../../fixtures';
 import { TakerOrMakerFlag, TradingSide } from '../types';
 import { generatePancakeswapSwap, generateSubgraphSwapData } from './fixtures';
 import { mapSubgraphDataToSwap, mapSwap } from './utils';
 
-describe('BigONE client utils', () => {
+describe('PancakeSwap client utils', () => {
   describe('mapSubgraphDataToSwap', () => {
-    it('should correctly map data', () => {
+    test('should correctly map data', () => {
       const subgraphSwapData = generateSubgraphSwapData();
 
       const mapped = mapSubgraphDataToSwap(subgraphSwapData);
@@ -45,7 +46,7 @@ describe('BigONE client utils', () => {
       quoteTokenAddress = faker.finance.ethereumAddress();
     });
 
-    it('should map to correct format with exact common props', () => {
+    test('should map to correct format with exact common props', () => {
       const swap = generatePancakeswapSwap();
 
       const trade = mapSwap(swap, tradingPair, quoteTokenAddress);
@@ -64,7 +65,7 @@ describe('BigONE client utils', () => {
       expect(trade.price).toBe(trade.cost / trade.amount);
     });
 
-    it('should correctly map "buy" swap', () => {
+    test('should correctly map "buy" swap', () => {
       const swap = generatePancakeswapSwap({ tokenIn: quoteTokenAddress });
 
       const trade = mapSwap(swap, tradingPair, quoteTokenAddress);
@@ -74,7 +75,7 @@ describe('BigONE client utils', () => {
       expect(trade.cost).toBe(swap.amountIn);
     });
 
-    it('should correctly map "sell" swap', () => {
+    test('should correctly map "sell" swap', () => {
       const swap = generatePancakeswapSwap({ tokenOut: quoteTokenAddress });
 
       const trade = mapSwap(swap, tradingPair, quoteTokenAddress);

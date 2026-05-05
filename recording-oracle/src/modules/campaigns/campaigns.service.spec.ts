@@ -1,17 +1,5 @@
-jest.mock('@human-protocol/sdk', () => {
-  const mockedSdk = jest.createMockFromModule<
-    typeof import('@human-protocol/sdk')
-  >('@human-protocol/sdk');
-
-  return {
-    ...mockedSdk,
-    ESCROW_BULK_PAYOUT_MAX_ITEMS: 2,
-  };
-});
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import {
   EscrowClient,
   EscrowStatus,
@@ -24,6 +12,17 @@ import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -112,6 +111,7 @@ import {
   isThresholdCampaign,
 } from './type-guards';
 import {
+  CampaignEscrowInfo,
   type CampaignProgress,
   CampaignStatus,
   CampaignType,
@@ -123,6 +123,17 @@ import {
   type ThresholdCampaignManifest,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
+
+vi.mock(import('@human-protocol/sdk'), async (importOriginal) => {
+  const originalSdk = await importOriginal();
+  const mockedSdk = vi.mockObject(originalSdk);
+
+  // @ts-expect-error - constant types aren't compatible
+  mockedSdk.ESCROW_BULK_PAYOUT_MAX_ITEMS = 2;
+
+  return mockedSdk;
+});
+vi.mock('@/logger');
 
 const mockCacheManager = new CacheManagerMock();
 
@@ -140,14 +151,14 @@ const mockWeb3Service = createMock<Web3Service>();
 (mockWeb3Service.supportedChainIds as any) = [];
 const mockedSigner = createMock<WalletWithProvider>();
 
-const mockedEscrowClient = jest.mocked(EscrowClient);
-const mockedEscrowUtils = jest.mocked(EscrowUtils);
+const mockedEscrowClient = vi.mocked(EscrowClient);
+const mockedEscrowUtils = vi.mocked(EscrowUtils);
 
 const mockedPancakeswapClient = createMock<PancakeswapClient>();
 
 const exchangePermissions = Object.values(ExchangePermission);
 
-it('campaign progress cycle duration should be 1 day', () => {
+test('campaign progress cycle duration should be 1 day', () => {
   expect(CAMPAIGNS_DAILY_CYCLE).toBe(1);
 });
 
@@ -223,11 +234,7 @@ describe('CampaignsService', () => {
     campaignsCache = moduleRef.get<CampaignsCache>(CampaignsCache);
   });
 
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(campaignsService).toBeDefined();
   });
 
@@ -236,7 +243,7 @@ describe('CampaignsService', () => {
       mockExchangesConfigService.configByExchange = {};
     });
 
-    it('should throw when exchange from manifest not supported', () => {
+    test('should throw when exchange from manifest not supported', () => {
       const manifest = generateCampaignManifest();
 
       let thrownError: any;
@@ -250,7 +257,7 @@ describe('CampaignsService', () => {
       expect(thrownError.exchangeName).toBe(manifest.exchange);
     });
 
-    it('should throw when exchange from manifest supported but disabled', () => {
+    test('should throw when exchange from manifest supported but disabled', () => {
       const manifest = generateCampaignManifest();
 
       mockExchangesConfigService.configByExchange = {
@@ -271,7 +278,7 @@ describe('CampaignsService', () => {
       expect(thrownError.message).toBe('Exchange integration is disabled');
     });
 
-    it.each([ExchangeName.PANCAKESWAP, ExchangeName.HYPERLIQUID])(
+    test.each([ExchangeName.PANCAKESWAP, ExchangeName.HYPERLIQUID])(
       'should throw when exchange from manifest is %s and not market making type',
       (exchangeName) => {
         const manifest = faker.helpers.arrayElement([
@@ -301,7 +308,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should not throw when campaign setup is correct', () => {
+    test('should not throw when campaign setup is correct', () => {
       /**
        * Use random exchange name to avoid flakiness
        * that might appear due to exchange-specific params
@@ -327,25 +334,27 @@ describe('CampaignsService', () => {
     const TEST_TOKEN_SYMBOL = faker.finance.currencyCode();
     const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
 
-    const mockedGetEscrowStatus = jest.fn();
+    const mockedGetEscrowStatus = vi.fn();
 
-    let spyOnDownloadCampaignManifest: jest.SpyInstance;
-    let spyOnAssertCorrectCampaignSetup: jest.SpyInstance;
+    let spyOnDownloadCampaignManifest: Mock;
+    let spyOnAssertCorrectCampaignSetup: Mock<
+      (typeof campaignsService)['assertCorrectCampaignSetup']
+    >;
     let chainId: number;
     let campaignAddress: string;
 
     beforeAll(() => {
-      spyOnDownloadCampaignManifest = jest.spyOn(
+      spyOnDownloadCampaignManifest = vi.spyOn(
         manifestUtils,
         'downloadCampaignManifest',
       );
-      spyOnDownloadCampaignManifest.mockImplementation();
+      spyOnDownloadCampaignManifest.mockImplementation(vi.fn());
 
-      spyOnAssertCorrectCampaignSetup = jest.spyOn(
+      spyOnAssertCorrectCampaignSetup = vi.spyOn(
         campaignsService as any,
         'assertCorrectCampaignSetup',
-      );
-      spyOnAssertCorrectCampaignSetup.mockImplementation();
+      ) as Mock;
+      spyOnAssertCorrectCampaignSetup.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
@@ -365,7 +374,7 @@ describe('CampaignsService', () => {
       mockWeb3Service.getTokenDecimals.mockResolvedValue(TEST_TOKEN_DECIMALS);
     });
 
-    it('should throw when escrow not found', async () => {
+    test('should throw when escrow not found', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce(null);
 
       let thrownError: any;
@@ -388,7 +397,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when subgraph is missing fund token data', async () => {
+    test('should throw when subgraph is missing fund token data', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: '',
       } as IEscrow);
@@ -414,7 +423,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when subgraph is missing fund amount data', async () => {
+    test('should throw when subgraph is missing fund amount data', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
       } as IEscrow);
@@ -440,7 +449,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when fund amount data in subgraph is zero', async () => {
+    test('should throw when fund amount data in subgraph is zero', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: 0n,
@@ -467,7 +476,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when subgraph is missing manifest url', async () => {
+    test('should throw when subgraph is missing manifest url', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt({ min: 1 }),
@@ -496,7 +505,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when subgraph is missing manifest hash', async () => {
+    test('should throw when subgraph is missing manifest hash', async () => {
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
         totalFundedAmount: faker.number.bigInt({ min: 1 }),
@@ -525,7 +534,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when escrow is for different recording oracle', async () => {
+    test('should throw when escrow is for different recording oracle', async () => {
       const escrowRecordingOracle = faker.finance.ethereumAddress();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
         token: faker.finance.ethereumAddress(),
@@ -558,7 +567,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it.each([
+    test.each([
       EscrowStatus[EscrowStatus.Cancelled],
       EscrowStatus[EscrowStatus.Complete],
     ])('should throw when escrow has "%s" status', async (escrowStatus) => {
@@ -596,7 +605,7 @@ describe('CampaignsService', () => {
       expect(mockedGetEscrowStatus).toHaveBeenCalledWith(campaignAddress);
     });
 
-    it('should log and throw when fails to download manifest', async () => {
+    test('should log and throw when fails to download manifest', async () => {
       const manifestUrl = faker.internet.url();
       const manifestHash = faker.string.hexadecimal();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
@@ -638,7 +647,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when invalid base manifest schema', async () => {
+    test('should throw when invalid base manifest schema', async () => {
       const manifest = generateBaseCampaignManifest();
       delete (manifest as any).type;
 
@@ -668,7 +677,7 @@ describe('CampaignsService', () => {
       expect(thrownError.details).toBe('Invalid manifest schema');
     });
 
-    it('should throw when campaign type from manifest not supported', async () => {
+    test('should throw when campaign type from manifest not supported', async () => {
       const manifestUrl = faker.internet.url();
       const manifestHash = faker.string.hexadecimal();
       mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
@@ -705,7 +714,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it.each([
+    test.each([
       generateMarketMakingCampaignManifest(),
       generateHoldingCampaignManifest(),
       generateThresholdampaignManifest(),
@@ -752,7 +761,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it.each([
+    test.each([
       generateMarketMakingCampaignManifest(),
       generateHoldingCampaignManifest(),
       generateThresholdampaignManifest(),
@@ -820,7 +829,7 @@ describe('CampaignsService', () => {
       };
     });
 
-    it('should create market making campaign with proper data', async () => {
+    test('should create market making campaign with proper data', async () => {
       const manifest = generateMarketMakingCampaignManifest();
 
       const campaign = await campaignsService.createCampaign(
@@ -856,7 +865,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should create holding campaign with proper data', async () => {
+    test('should create holding campaign with proper data', async () => {
       const manifest = generateHoldingCampaignManifest();
 
       const campaign = await campaignsService.createCampaign(
@@ -892,7 +901,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should create competitive market making campaign with proper data', async () => {
+    test('should create competitive market making campaign with proper data', async () => {
       const manifest = generateCompetitiveMarketMakingCampaignManifest();
 
       const campaign = await campaignsService.createCampaign(
@@ -936,7 +945,7 @@ describe('CampaignsService', () => {
         manifest = generateThresholdampaignManifest();
       });
 
-      it('should create with proper data', async () => {
+      test('should create with proper data', async () => {
         const campaign = await campaignsService.createCampaign(
           chainId,
           campaignAddress,
@@ -970,7 +979,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      it('should create with maxParticipants in details when it is in manifest', async () => {
+      test('should create with maxParticipants in details when it is in manifest', async () => {
         manifest = generateThresholdampaignManifest({
           shouldHaveMaxParticipants: true,
         });
@@ -994,7 +1003,7 @@ describe('CampaignsService', () => {
         expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       });
 
-      it('should create without maxParticipants in details when manifest does not have it', async () => {
+      test('should create without maxParticipants in details when manifest does not have it', async () => {
         manifest = generateThresholdampaignManifest({
           shouldHaveMaxParticipants: false,
         });
@@ -1018,7 +1027,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should create to_cancel campaign with proper data', async () => {
+    test('should create to_cancel campaign with proper data', async () => {
       const manifest = generateCampaignManifest();
       const cancellationRequestedAt = faker.date.recent();
 
@@ -1061,7 +1070,7 @@ describe('CampaignsService', () => {
     let userId: string;
     let chainId: number;
 
-    const mockedGetEscrowStatus = jest.fn();
+    const mockedGetEscrowStatus = vi.fn();
 
     beforeEach(() => {
       campaign = generateCampaignEntity();
@@ -1073,7 +1082,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should throw when user already joined', async () => {
+    test('should throw when user already joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1106,7 +1115,7 @@ describe('CampaignsService', () => {
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(0);
     });
 
-    it('should return campaign id if campaign exists and user not joined yet', async () => {
+    test('should return campaign id if campaign exists and user not joined yet', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1138,7 +1147,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {
+    test('should re-throw error when exchange api keys not authorized for exchange from campaign', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -1160,7 +1169,7 @@ describe('CampaignsService', () => {
       expect(thrownError).toBe(testError);
     });
 
-    it('should create campaign when not exist and join user', async () => {
+    test('should create campaign when not exist and join user', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
       const campaignAddress = faker.finance.ethereumAddress();
@@ -1168,13 +1177,10 @@ describe('CampaignsService', () => {
         null,
       );
 
-      const spyOnretrieveCampaignData = jest
+      const spyOnretrieveCampaignData = vi
         .spyOn(campaignsService as any, 'retrieveCampaignData')
-        .mockImplementation();
-      const spyOnCreateCampaign = jest.spyOn(
-        campaignsService,
-        'createCampaign',
-      );
+        .mockImplementation(vi.fn());
+      const spyOnCreateCampaign = vi.spyOn(campaignsService, 'createCampaign');
       const campaignManifest = generateCampaignManifest();
       const escrowInfo = {
         fundAmount: faker.number.float(),
@@ -1191,7 +1197,7 @@ describe('CampaignsService', () => {
       mockExchangesService.assertUserHasRequiredAccess.mockResolvedValueOnce();
 
       const now = new Date();
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       const campaignId = await campaignsService.join(
         userId,
@@ -1199,7 +1205,7 @@ describe('CampaignsService', () => {
         campaignAddress,
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(isUuidV4(campaignId)).toBe(true);
 
@@ -1229,7 +1235,7 @@ describe('CampaignsService', () => {
       spyOnCreateCampaign.mockRestore();
     });
 
-    it('should throw when joining campaign that reached its end date', async () => {
+    test('should throw when joining campaign that reached its end date', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Partial);
 
       campaign.endDate = faker.date.past();
@@ -1254,7 +1260,7 @@ describe('CampaignsService', () => {
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(0);
     });
 
-    it.each([
+    test.each([
       [EscrowStatus.ToCancel, CampaignCancelledError],
       [EscrowStatus.Cancelled, CampaignCancelledError],
       [EscrowStatus.Complete, CampaignAlreadyFinishedError],
@@ -1286,7 +1292,7 @@ describe('CampaignsService', () => {
   });
 
   describe('getCampaignProgressChecker', () => {
-    it('should return market making checker for its type', () => {
+    test('should return market making checker for its type', () => {
       const campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       const checker = campaignsService['getCampaignProgressChecker'](
@@ -1302,7 +1308,7 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(MarketMakingProgressChecker);
     });
 
-    it('should return holding checker for its type', () => {
+    test('should return holding checker for its type', () => {
       const campaign = generateCampaignEntity(CampaignType.HOLDING);
 
       const checker = campaignsService['getCampaignProgressChecker'](
@@ -1318,7 +1324,7 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(HoldingProgressChecker);
     });
 
-    it('should return market making checker for competitive market making type', () => {
+    test('should return market making checker for competitive market making type', () => {
       const campaign = generateCampaignEntity(
         CampaignType.COMPETITIVE_MARKET_MAKING,
       );
@@ -1336,7 +1342,7 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(MarketMakingProgressChecker);
     });
 
-    it('should return threshold checker for its type', () => {
+    test('should return threshold checker for its type', () => {
       const campaign = generateCampaignEntity(CampaignType.THRESHOLD);
 
       const checker = campaignsService['getCampaignProgressChecker'](
@@ -1353,7 +1359,7 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(ThresholdProgressChecker);
     });
 
-    it('should throw for unknown campaign type', () => {
+    test('should throw for unknown campaign type', () => {
       const campaign = generateCampaignEntity();
       campaign.type = faker.string.sample() as any;
 
@@ -1377,13 +1383,13 @@ describe('CampaignsService', () => {
   });
 
   describe('retrieveCampaignIntermediateResults', () => {
-    const mockGetIntermediateResultsUrl = jest.fn();
-    let spyOnDownloadFile: jest.SpyInstance;
+    const mockGetIntermediateResultsUrl = vi.fn();
+    let spyOnDownloadFile: Mock;
     let campaign: CampaignEntity;
 
     beforeAll(() => {
-      spyOnDownloadFile = jest.spyOn(httpUtils, 'downloadFile');
-      spyOnDownloadFile.mockImplementation();
+      spyOnDownloadFile = vi.spyOn(httpUtils, 'downloadFile');
+      spyOnDownloadFile.mockImplementation(vi.fn());
 
       campaign = generateCampaignEntity();
     });
@@ -1398,7 +1404,7 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should return null if no results url in escrow', async () => {
+    test('should return null if no results url in escrow', async () => {
       mockGetIntermediateResultsUrl.mockResolvedValueOnce(null);
 
       const results =
@@ -1407,7 +1413,7 @@ describe('CampaignsService', () => {
       expect(results).toBeNull();
     });
 
-    it('should rethrow download error', async () => {
+    test('should rethrow download error', async () => {
       const testUrl = faker.internet.url();
       mockGetIntermediateResultsUrl.mockResolvedValueOnce(testUrl);
 
@@ -1426,7 +1432,7 @@ describe('CampaignsService', () => {
       expect(spyOnDownloadFile).toHaveBeenCalledWith(testUrl);
     });
 
-    it('should download intermediate results', async () => {
+    test('should download intermediate results', async () => {
       const testUrl = faker.internet.url();
       mockGetIntermediateResultsUrl.mockResolvedValueOnce(testUrl);
 
@@ -1445,7 +1451,7 @@ describe('CampaignsService', () => {
   });
 
   describe('recordCampaignIntermediateResults', () => {
-    const mockStoreResults = jest.fn();
+    const mockStoreResults = vi.fn();
     let mockFeeParams: {
       maxFeePerGas: bigint;
       maxPriorityFeePerGas: bigint;
@@ -1468,7 +1474,7 @@ describe('CampaignsService', () => {
       mockedSigner.getNonce.mockResolvedValueOnce(mockLatestNonce);
     });
 
-    it('should upload results to storage and store url in escrow', async () => {
+    test('should upload results to storage and store url in escrow', async () => {
       const mockedResultsFileUrl = faker.internet.url();
       mockStorageService.uploadData.mockResolvedValueOnce(mockedResultsFileUrl);
 
@@ -1518,7 +1524,9 @@ describe('CampaignsService', () => {
 
     const mockCampaignProgressChecker = new MockCampaignProgressChecker();
 
-    let spyOnGetCampaignProgressChecker: jest.SpyInstance;
+    let spyOnGetCampaignProgressChecker: Mock<
+      (typeof campaignsService)['getCampaignProgressChecker']
+    >;
 
     let periodStart: Date;
     let periodEnd: Date;
@@ -1536,10 +1544,10 @@ describe('CampaignsService', () => {
         [mockCampaignProgressMetaProp]: faker.number.float(),
       };
 
-      spyOnGetCampaignProgressChecker = jest.spyOn(
+      spyOnGetCampaignProgressChecker = vi.spyOn(
         campaignsService as any,
         'getCampaignProgressChecker',
-      );
+      ) as Mock;
     });
 
     afterAll(() => {
@@ -1561,8 +1569,8 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should run with correct child logger', async () => {
-      const spyOnLoggerChild = jest.spyOn(logger, 'child');
+    test('should run with correct child logger', async () => {
+      const spyOnLoggerChild = vi.spyOn(logger, 'child');
 
       try {
         await campaignsService.checkCampaignProgressForPeriod(
@@ -1575,7 +1583,7 @@ describe('CampaignsService', () => {
         expect(logger.child).toHaveBeenCalledWith({
           action: 'checkCampaignProgressForPeriod',
           caller: 'unknown',
-          debugCaller: 'Object.<anonymous>',
+          debugCaller: expect.stringContaining('campaigns.service.spec.ts'),
           campaignId: campaign.id,
           chainId: campaign.chainId,
           campaignAddress: campaign.address,
@@ -1590,7 +1598,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it.each([
+    test.each([
       CampaignType.MARKET_MAKING,
       CampaignType.COMPETITIVE_MARKET_MAKING,
       CampaignType.HOLDING,
@@ -1619,7 +1627,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should return results in correct format', async () => {
+    test('should return results in correct format', async () => {
       const participant = generateCampaignParticipant(campaign);
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [participant],
@@ -1652,7 +1660,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should calculate results for each participant', async () => {
+    test('should calculate results for each participant', async () => {
       const participants = [
         generateCampaignParticipant(campaign),
         generateCampaignParticipant(campaign),
@@ -1674,7 +1682,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should skip participant results if abuse detected', async () => {
+    test('should skip participant results if abuse detected', async () => {
       const abuseParticipant = generateCampaignParticipant(campaign);
       const normalParticipant = generateCampaignParticipant(campaign);
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1722,7 +1730,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should skip participant if its api key not found', async () => {
+    test('should skip participant if its api key not found', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noApiKeyParticipant = generateCampaignParticipant(campaign);
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1777,7 +1785,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should skip participant if it lacks exchange api access and revalidate his api key', async () => {
+    test('should skip participant if it lacks exchange api access and revalidate his api key', async () => {
       const normalParticipant = generateCampaignParticipant(campaign);
       const noAccessParticipant = generateCampaignParticipant(campaign);
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
@@ -1842,7 +1850,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should throw when should retry some participant', async () => {
+    test('should throw when should retry some participant', async () => {
       mockParticipationsRepository.findCampaignParticipants.mockResolvedValueOnce(
         [
           generateCampaignParticipant(campaign),
@@ -1876,7 +1884,7 @@ describe('CampaignsService', () => {
       expect(thrownError).toEqual(syntheticError);
     });
 
-    it('should throw when invalid period passed', async () => {
+    test('should throw when invalid period passed', async () => {
       [periodStart, periodEnd] = [periodEnd, periodStart];
 
       try {
@@ -1893,7 +1901,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should exclude participants with zero score if flag is on', async () => {
+    test('should exclude participants with zero score if flag is on', async () => {
       const participants = Array.from({ length: 3 }, () =>
         generateCampaignParticipant(campaign),
       );
@@ -1936,7 +1944,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should not exclude participants with zero score if flag is off', async () => {
+    test('should not exclude participants with zero score if flag is off', async () => {
       const participants = Array.from({ length: 3 }, () =>
         generateCampaignParticipant(campaign),
       );
@@ -1971,45 +1979,51 @@ describe('CampaignsService', () => {
   });
 
   describe('recordCampaignProgress', () => {
-    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
-    let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
-    let spyOnRecordCampaignIntermediateResults: jest.SpyInstance;
-    let spyOnRecordGeneratedVolume: jest.SpyInstance;
-    let spyOnGetCancellationRequestDate: jest.SpyInstance;
+    let spyOnRetrieveCampaignIntermediateResults: Mock<
+      (typeof campaignsService)['retrieveCampaignIntermediateResults']
+    >;
+    let spyOnCheckCampaignProgressForPeriod: Mock;
+    let spyOnRecordCampaignIntermediateResults: Mock<
+      (typeof campaignsService)['recordCampaignIntermediateResults']
+    >;
+    let spyOnRecordGeneratedVolume: Mock<
+      (typeof campaignsService)['recordGeneratedVolume']
+    >;
+    let spyOnGetCancellationRequestDate: Mock;
     let campaign: CampaignEntity;
 
-    const mockedGetEscrowStatus = jest.fn();
+    const mockedGetEscrowStatus = vi.fn();
 
     beforeAll(() => {
-      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+      spyOnRetrieveCampaignIntermediateResults = vi.spyOn(
         campaignsService as any,
         'retrieveCampaignIntermediateResults',
-      );
-      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+      ) as Mock;
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation(vi.fn());
 
-      spyOnCheckCampaignProgressForPeriod = jest.spyOn(
+      spyOnCheckCampaignProgressForPeriod = vi.spyOn(
         campaignsService,
         'checkCampaignProgressForPeriod',
       );
-      spyOnCheckCampaignProgressForPeriod.mockImplementation();
+      spyOnCheckCampaignProgressForPeriod.mockImplementation(vi.fn());
 
-      spyOnRecordCampaignIntermediateResults = jest.spyOn(
+      spyOnRecordCampaignIntermediateResults = vi.spyOn(
         campaignsService as any,
         'recordCampaignIntermediateResults',
-      );
-      spyOnRecordCampaignIntermediateResults.mockImplementation();
+      ) as Mock;
+      spyOnRecordCampaignIntermediateResults.mockImplementation(vi.fn());
 
-      spyOnRecordGeneratedVolume = jest.spyOn(
+      spyOnRecordGeneratedVolume = vi.spyOn(
         campaignsService as any,
         'recordGeneratedVolume',
-      );
-      spyOnRecordGeneratedVolume.mockImplementation();
+      ) as Mock;
+      spyOnRecordGeneratedVolume.mockImplementation(vi.fn());
 
-      spyOnGetCancellationRequestDate = jest.spyOn(
+      spyOnGetCancellationRequestDate = vi.spyOn(
         escrowUtils,
         'getCancellationRequestDate',
       );
-      spyOnGetCancellationRequestDate.mockImplementation();
+      spyOnGetCancellationRequestDate.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
@@ -2037,8 +2051,8 @@ describe('CampaignsService', () => {
       } as unknown as EscrowClient);
     });
 
-    it('should run with pessimistic lock and correct child logger', async () => {
-      const spyOnLoggerChild = jest.spyOn(logger, 'child');
+    test('should run with pessimistic lock and correct child logger', async () => {
+      const spyOnLoggerChild = vi.spyOn(logger, 'child');
 
       campaign.resultsCutoffAt = faker.date.recent();
       try {
@@ -2080,7 +2094,7 @@ describe('CampaignsService', () => {
       const EXPECTED_ERROR_MESSAGE =
         'Failure while recording campaign progress';
 
-      it('should log errors when fails to get intermediate results', async () => {
+      test('should log errors when fails to get intermediate results', async () => {
         const syntheticError = new Error(faker.lorem.words());
         spyOnRetrieveCampaignIntermediateResults.mockRejectedValueOnce(
           syntheticError,
@@ -2095,7 +2109,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      it('should log errors when fails to check campaign progress', async () => {
+      test('should log errors when fails to check campaign progress', async () => {
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
         const syntheticError = new Error(faker.lorem.words());
@@ -2112,7 +2126,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      it('should log errors when fails to record intermediate results', async () => {
+      test('should log errors when fails to record intermediate results', async () => {
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
         spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
           generateCampaignProgress(campaign),
@@ -2132,7 +2146,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      it('should log errors when fails to calc reward pool for unknown campaign', async () => {
+      test('should log errors when fails to calc reward pool for unknown campaign', async () => {
         campaign.type = faker.string.sample() as any;
 
         spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -2154,7 +2168,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it.each(
+    test.each(
       Object.values(CampaignStatus).filter(
         (s) =>
           [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL].includes(s) ===
@@ -2176,7 +2190,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it.each([
+    test.each([
       EscrowStatus[EscrowStatus.Cancelled],
       EscrowStatus[EscrowStatus.Complete],
     ])(
@@ -2199,15 +2213,15 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should not process campaign if it not started yet', async () => {
+    test('should not process campaign if it not started yet', async () => {
       const now = Date.now();
       campaign.startDate = new Date(now + 1);
 
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(spyOnRetrieveCampaignIntermediateResults).toHaveBeenCalledTimes(0);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
@@ -2215,7 +2229,7 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(0);
     });
 
-    it('should not check progress if less than a day from campaign start and it not ended', async () => {
+    test('should not check progress if less than a day from campaign start and it not ended', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const now = Date.now();
@@ -2226,16 +2240,16 @@ describe('CampaignsService', () => {
         .add(1, 'millisecond')
         .toDate();
 
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
-    it('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
+    test('should use correct period dates for campaign with < 1d duration when no intermediate results', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       campaign.startDate = dayjs(campaign.endDate)
@@ -2257,7 +2271,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should check all passed cycles for campaign with > 1d duration when no intermediate results', async () => {
+    test('should check all passed cycles for campaign with > 1d duration when no intermediate results', async () => {
       const nFullCycles = faker.number.int({ min: 2, max: 5 });
       /**
        * Set campaign start date to be nFullCycles days and 1ms ago to make sure
@@ -2302,7 +2316,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should check last cycle if it is not round but campaign ended', async () => {
+    test('should check last cycle if it is not round but campaign ended', async () => {
       const nFullCycles = faker.number.int({ min: 2, max: 5 });
       campaign.startDate = dayjs(campaign.endDate)
         .subtract(nFullCycles, 'day')
@@ -2343,7 +2357,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should not check progress if less than a day from last intermediate result for ongoing campaign', async () => {
+    test('should not check progress if less than a day from last intermediate result for ongoing campaign', async () => {
       const now = Date.now();
       campaign.endDate = new Date(now + 1);
       campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
@@ -2359,16 +2373,16 @@ describe('CampaignsService', () => {
         intermediateResultsData,
       );
 
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(0);
     });
 
-    it('should rely on last intermediate result when more than a day from last result and campaign not ended', async () => {
+    test('should rely on last intermediate result when more than a day from last result and campaign not ended', async () => {
       campaign.endDate = dayjs().add(1, 'hour').toDate();
       campaign.startDate = dayjs(campaign.endDate).subtract(3, 'day').toDate();
       const lastResultsEndDate = dayjs(campaign.startDate)
@@ -2399,7 +2413,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should rely on last intermediate result if less than a day from last result and campaign ended', async () => {
+    test('should rely on last intermediate result if less than a day from last result and campaign ended', async () => {
       const now = Date.now();
       campaign.endDate = new Date(now - 1);
       const lastResultsEndDate = dayjs().subtract(42, 'minutes').toDate();
@@ -2415,11 +2429,11 @@ describe('CampaignsService', () => {
         intermediateResultsData,
       );
 
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(campaign);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledTimes(1);
       expect(spyOnCheckCampaignProgressForPeriod).toHaveBeenCalledWith(
@@ -2434,7 +2448,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should check all passed cycles for campaign with > 1d duration and existing intermediate results', async () => {
+    test('should check all passed cycles for campaign with > 1d duration and existing intermediate results', async () => {
       const nFullCycles = faker.number.int({ min: 2, max: 5 });
       /**
        * Set campaign start date to be nFullCycles days and 1ms ago to make sure
@@ -2496,7 +2510,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should use campaign end date if cancellation requested after campaign end date', async () => {
+    test('should use campaign end date if cancellation requested after campaign end date', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       spyOnGetCancellationRequestDate.mockResolvedValueOnce(
@@ -2518,7 +2532,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should use cancellation request date if cancellation requested before campaign end date', async () => {
+    test('should use cancellation request date if cancellation requested before campaign end date', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       const cancellationRequestedAt = new Date(campaign.endDate.valueOf() - 1);
@@ -2541,7 +2555,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should check all passed cycles for campaign with > 1d duration and cancellation request', async () => {
+    test('should check all passed cycles for campaign with > 1d duration and cancellation request', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       const cancellationRequestedAt = new Date(campaign.endDate.valueOf() - 1);
       spyOnGetCancellationRequestDate.mockResolvedValueOnce(
@@ -2586,7 +2600,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should record campaign progress when no results yet', async () => {
+    test('should record campaign progress when no results yet', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const campaignProgress = generateCampaignProgress(campaign);
@@ -2622,7 +2636,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record campaign progress to existing results', async () => {
+    test('should record campaign progress to existing results', async () => {
       campaign.startDate = dayjs(campaign.endDate).subtract(2, 'day').toDate();
 
       const intermediateResultsData = generateIntermediateResultsData({
@@ -2673,7 +2687,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record correctly calculated reserved funds for MARKET_MAKING campaign', async () => {
+    test('should record correctly calculated reserved funds for MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       const dailyVolumeTarget = (
         campaign.details as MarketMakingCampaignDetails
@@ -2716,7 +2730,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record correctly calculated reserved funds for HOLDING campaign', async () => {
+    test('should record correctly calculated reserved funds for HOLDING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.HOLDING);
       const dailyBalanceTarget = (campaign.details as HoldingCampaignDetails)
         .dailyBalanceTarget;
@@ -2758,7 +2772,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record correctly calculated reserved funds for THRESHOLD campaign', async () => {
+    test('should record correctly calculated reserved funds for THRESHOLD campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.THRESHOLD);
       const campaignDetails = campaign.details as ThresholdCampaignDetails;
 
@@ -2804,7 +2818,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
+    test('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -2848,7 +2862,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should record participant results in batches', async () => {
+    test('should record participant results in batches', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const participantOutcomes = [
@@ -2887,7 +2901,7 @@ describe('CampaignsService', () => {
       expect(secondBatch.results[0]).toEqual(participantOutcomes[2]);
     });
 
-    it('should not move campaign to "pending_completion" when not all results calculated', async () => {
+    test('should not move campaign to "pending_completion" when not all results calculated', async () => {
       const currentDate = new Date();
       campaign.endDate = new Date(currentDate.valueOf() + 1);
 
@@ -2899,13 +2913,13 @@ describe('CampaignsService', () => {
         generateStoredResultsMeta(),
       );
 
-      jest.useFakeTimers({ now: currentDate });
+      vi.useFakeTimers({ now: currentDate });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
@@ -2916,7 +2930,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should move campaign to "pending_completion" when reached its end date and all results calculated', async () => {
+    test('should move campaign to "pending_completion" when reached its end date and all results calculated', async () => {
       const currentDate = new Date();
       campaign.endDate = new Date(currentDate.valueOf() - 1);
       campaign.startDate = dayjs(campaign.endDate).subtract(1, 'hour').toDate();
@@ -2929,13 +2943,13 @@ describe('CampaignsService', () => {
         generateStoredResultsMeta(),
       );
 
-      jest.useFakeTimers({ now: currentDate });
+      vi.useFakeTimers({ now: currentDate });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
@@ -2947,7 +2961,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should move campaign to "pending_completion" if recording period dates overlap', async () => {
+    test('should move campaign to "pending_completion" if recording period dates overlap', async () => {
       const escrowStatus = faker.helpers.arrayElement([
         EscrowStatus.Pending,
         EscrowStatus.Partial,
@@ -2962,13 +2976,13 @@ describe('CampaignsService', () => {
         }),
       );
 
-      jest.useFakeTimers({ now: currentDate });
+      vi.useFakeTimers({ now: currentDate });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
@@ -2992,7 +3006,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
-    it('should move campaign to "pending_cancellation" when results recorded for cancellation request', async () => {
+    test('should move campaign to "pending_cancellation" when results recorded for cancellation request', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
       const cancellationRequestedAt = dayjs(campaign.startDate)
@@ -3012,13 +3026,13 @@ describe('CampaignsService', () => {
       );
 
       const now = new Date();
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(logger.error).toHaveBeenCalledTimes(0);
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
@@ -3030,7 +3044,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should move campaign to "pending_cancellation" when cancellation requested before campaign start', async () => {
+    test('should move campaign to "pending_cancellation" when cancellation requested before campaign start', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
@@ -3042,13 +3056,13 @@ describe('CampaignsService', () => {
       );
 
       const now = new Date();
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
@@ -3062,7 +3076,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
-    it('should move campaign to "pending_cancellation" after internal status update failed and detected', async () => {
+    test('should move campaign to "pending_cancellation" after internal status update failed and detected', async () => {
       mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
 
       const cancellationRequestedAt = dayjs(campaign.startDate)
@@ -3083,13 +3097,13 @@ describe('CampaignsService', () => {
       );
 
       const now = new Date();
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await campaignsService.recordCampaignProgress(
         Object.assign({}, campaign),
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(mockCampaignsRepository.save).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.save).toHaveBeenCalledWith({
@@ -3103,7 +3117,7 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
-    it('should record generated volume stat for MARKET_MAKING campaign', async () => {
+    test('should record generated volume stat for MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
@@ -3134,7 +3148,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should record generated volume stat for COMPETITIVE_MARKET_MAKING campaign', async () => {
+    test('should record generated volume stat for COMPETITIVE_MARKET_MAKING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
       campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
 
@@ -3166,7 +3180,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it.each([CampaignType.HOLDING, CampaignType.THRESHOLD])(
+    test.each([CampaignType.HOLDING, CampaignType.THRESHOLD])(
       'should not record generated volume stat for [%#] campaign',
       async (campaignType) => {
         campaign = generateCampaignEntity(campaignType);
@@ -3188,7 +3202,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should log recording details', async () => {
+    test('should log recording details', async () => {
       spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
       const campaignProgress = generateCampaignProgress(campaign);
@@ -3233,7 +3247,7 @@ describe('CampaignsService', () => {
     });
 
     describe('excludeIneligible flag', () => {
-      it('should exclude ineligible participants for threshold with limit', async () => {
+      test('should exclude ineligible participants for threshold with limit', async () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
         (campaign.details as ThresholdCampaignDetails).maxParticipants =
           faker.number.int({ min: 1, max: 10 });
@@ -3257,7 +3271,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      it('should not exclude ineligible participants for threshold without limit', async () => {
+      test('should not exclude ineligible participants for threshold without limit', async () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
         delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
 
@@ -3280,7 +3294,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      it('should not exclude ineligible participants for non-threshold campaign', async () => {
+      test('should not exclude ineligible participants for non-threshold campaign', async () => {
         campaign = generateCampaignEntity(
           faker.helpers.arrayElement(
             Object.values(CampaignType).filter(
@@ -3311,21 +3325,21 @@ describe('CampaignsService', () => {
   });
 
   describe('recordCampaignsProgress', () => {
-    let spyOnRecordCampaignProgress: jest.SpyInstance;
+    let spyOnRecordCampaignProgress: Mock;
 
     beforeAll(() => {
-      spyOnRecordCampaignProgress = jest.spyOn(
+      spyOnRecordCampaignProgress = vi.spyOn(
         campaignsService,
         'recordCampaignProgress',
       );
-      spyOnRecordCampaignProgress.mockImplementation();
+      spyOnRecordCampaignProgress.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
       spyOnRecordCampaignProgress.mockRestore();
     });
 
-    it('should trigger campaign progress recording for each campaign', async () => {
+    test('should trigger campaign progress recording for each campaign', async () => {
       const nCampaigns = faker.number.int({ min: 2, max: 5 });
       const campaigns = Array.from({ length: nCampaigns }, () =>
         generateCampaignEntity(),
@@ -3347,7 +3361,7 @@ describe('CampaignsService', () => {
   describe('syncCampaignStatuses', () => {
     const nCampaigns = faker.number.int({ min: 2, max: 5 });
 
-    it('should complete campaigns when detects completed escrow', async () => {
+    test('should complete campaigns when detects completed escrow', async () => {
       const campaigns = Array.from({ length: nCampaigns }, () =>
         Object.assign(generateCampaignEntity(), {
           status: CampaignStatus.PENDING_COMPLETION,
@@ -3380,7 +3394,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should cancel campaigns when detects cancelled escrow', async () => {
+    test('should cancel campaigns when detects cancelled escrow', async () => {
       const campaigns = Array.from({ length: nCampaigns }, (_e, index) =>
         Object.assign(generateCampaignEntity(), {
           status:
@@ -3416,7 +3430,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should mark only "active" campaigns as to_cancel when detects to_cancel escrow', async () => {
+    test('should mark only "active" campaigns as to_cancel when detects to_cancel escrow', async () => {
       const campaigns = Object.values(CampaignStatus).map((campaignStatus) => {
         const campaign = generateCampaignEntity();
         campaign.status = campaignStatus;
@@ -3454,7 +3468,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it.each([
+    test.each([
       EscrowStatus[EscrowStatus.Pending],
       EscrowStatus[EscrowStatus.Partial],
     ])(
@@ -3485,7 +3499,7 @@ describe('CampaignsService', () => {
       meta: { total_volume: faker.number.float() },
     });
 
-    it('should not record if quote token usd price is null', async () => {
+    test('should not record if quote token usd price is null', async () => {
       mockWeb3Service.getTokenPriceUsd.mockResolvedValueOnce(null);
 
       await campaignsService['recordGeneratedVolume'](
@@ -3496,7 +3510,7 @@ describe('CampaignsService', () => {
       expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
     });
 
-    it('should not record nor fail if error while getting quote token price', async () => {
+    test('should not record nor fail if error while getting quote token price', async () => {
       mockWeb3Service.getTokenPriceUsd.mockRejectedValueOnce(new Error());
 
       await campaignsService['recordGeneratedVolume'](
@@ -3507,7 +3521,7 @@ describe('CampaignsService', () => {
       expect(mockVolumeStatsRepository.upsert).toHaveBeenCalledTimes(0);
     });
 
-    it('should record with correct usd volume', async () => {
+    test('should record with correct usd volume', async () => {
       const priceUsd = faker.number.float();
       mockWeb3Service.getTokenPriceUsd.mockResolvedValueOnce(priceUsd);
 
@@ -3542,14 +3556,14 @@ describe('CampaignsService', () => {
     let chainId: number;
     let campaign: CampaignEntity;
 
-    let spyOnCheckCampaignTargetMet: jest.SpyInstance;
+    let spyOnCheckCampaignTargetMet: Mock;
 
     beforeAll(() => {
-      spyOnCheckCampaignTargetMet = jest.spyOn(
+      spyOnCheckCampaignTargetMet = vi.spyOn(
         campaignsService,
         'checkCampaignTargetMet',
       );
-      spyOnCheckCampaignTargetMet.mockImplementation();
+      spyOnCheckCampaignTargetMet.mockImplementation(vi.fn());
     });
 
     beforeEach(() => {
@@ -3562,7 +3576,7 @@ describe('CampaignsService', () => {
       spyOnCheckCampaignTargetMet.mockRestore();
     });
 
-    it('should return "not_available" if campaign does not exist', async () => {
+    test('should return "not_available" if campaign does not exist', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         null,
       );
@@ -3590,7 +3604,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should return "already_joined" and join date if user joined', async () => {
+    test('should return "already_joined" and join date if user joined', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -3619,7 +3633,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it.each(
+    test.each(
       Object.values(CampaignStatus).filter((s) => s !== CampaignStatus.ACTIVE),
     )(
       'should return "join_closed" if user not joined and campaign is not active: %s',
@@ -3631,7 +3645,6 @@ describe('CampaignsService', () => {
         mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
           null,
         );
-        spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
         const result = await campaignsService.checkJoinStatus(
           userId,
@@ -3653,7 +3666,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should return "join_closed" if user not joined and campaign is ended', async () => {
+    test('should return "join_closed" if user not joined and campaign is ended', async () => {
       Object.assign(campaign, { endDate: new Date(Date.now() - 1) });
 
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
@@ -3662,7 +3675,6 @@ describe('CampaignsService', () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
-      spyOnCheckCampaignTargetMet.mockResolvedValueOnce(true);
 
       const result = await campaignsService.checkJoinStatus(
         userId,
@@ -3683,7 +3695,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should return "max_participants_reached" if user not joined and participant limit reached', async () => {
+    test('should return "max_participants_reached" if user not joined and participant limit reached', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -3713,7 +3725,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should return "join_closed" if user not joined and ongoing campaign target is met', async () => {
+    test('should return "join_closed" if user not joined and ongoing campaign target is met', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -3744,7 +3756,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it('should return "can_join" if user not joined and ongoing campaign target is not met', async () => {
+    test('should return "can_join" if user not joined and ongoing campaign target is not met', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
         campaign,
       );
@@ -3779,20 +3791,20 @@ describe('CampaignsService', () => {
     const mockedNow = new Date();
 
     let campaign: CampaignEntity;
-    let spyOnGetCancellationRequestDate: jest.SpyInstance;
+    let spyOnGetCancellationRequestDate: Mock;
 
     beforeAll(() => {
-      jest.useFakeTimers({ now: mockedNow });
+      vi.useFakeTimers({ now: mockedNow });
 
-      spyOnGetCancellationRequestDate = jest.spyOn(
+      spyOnGetCancellationRequestDate = vi.spyOn(
         escrowUtils,
         'getCancellationRequestDate',
       );
-      spyOnGetCancellationRequestDate.mockImplementation();
+      spyOnGetCancellationRequestDate.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       spyOnGetCancellationRequestDate.mockRestore();
     });
@@ -3802,7 +3814,7 @@ describe('CampaignsService', () => {
       campaign.exchangeName = faker.lorem.slug(); // any exchange w/o specific logic
     });
 
-    it('should return null if campaign not started', async () => {
+    test('should return null if campaign not started', async () => {
       campaign.startDate = new Date(mockedNow.valueOf() + 1);
 
       const result = await campaignsService.getActiveTimeframe(campaign);
@@ -3810,7 +3822,7 @@ describe('CampaignsService', () => {
       expect(result).toBeNull();
     });
 
-    it.each([
+    test.each([
       {
         status: CampaignStatus.CANCELLED,
       },
@@ -3834,7 +3846,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should return correct timeframe when cancellation requested within that', async () => {
+    test('should return correct timeframe when cancellation requested within that', async () => {
       campaign.status = CampaignStatus.TO_CANCEL;
 
       const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
@@ -3861,7 +3873,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should return correct timeframe for active campaign', async () => {
+    test('should return correct timeframe for active campaign', async () => {
       campaign.exchangeName = faker.lorem.slug(); // any exchange w/o specific logic
 
       const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
@@ -3881,7 +3893,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should return null when cancellation requested outside active timeframe', async () => {
+    test('should return null when cancellation requested outside active timeframe', async () => {
       campaign.status = CampaignStatus.TO_CANCEL;
 
       const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
@@ -3901,7 +3913,7 @@ describe('CampaignsService', () => {
       expect(result).toBeNull();
     });
 
-    it('should return correct timeframe for active pancakeswap campaign', async () => {
+    test('should return correct timeframe for active pancakeswap campaign', async () => {
       campaign.exchangeName = ExchangeName.PANCAKESWAP;
 
       mockExchangeApiClientFactory.createDex.mockReturnValueOnce(
@@ -3945,7 +3957,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should return correct timeframe when cancellation requested for pancakeswap campaign', async () => {
+    test('should return correct timeframe when cancellation requested for pancakeswap campaign', async () => {
       campaign.status = CampaignStatus.TO_CANCEL;
       campaign.exchangeName = ExchangeName.PANCAKESWAP;
 
@@ -3999,21 +4011,21 @@ describe('CampaignsService', () => {
   });
 
   describe('refreshInterimProgressCache', () => {
-    let spyOnCheckCampaignProgressForPeriod: jest.SpyInstance;
-    let spyOnGetActiveTimeframe: jest.SpyInstance;
+    let spyOnCheckCampaignProgressForPeriod: Mock;
+    let spyOnGetActiveTimeframe: Mock;
 
     beforeAll(() => {
-      spyOnCheckCampaignProgressForPeriod = jest.spyOn(
+      spyOnCheckCampaignProgressForPeriod = vi.spyOn(
         campaignsService,
         'checkCampaignProgressForPeriod',
       );
-      spyOnCheckCampaignProgressForPeriod.mockImplementation();
+      spyOnCheckCampaignProgressForPeriod.mockImplementation(vi.fn());
 
-      spyOnGetActiveTimeframe = jest.spyOn(
+      spyOnGetActiveTimeframe = vi.spyOn(
         campaignsService,
         'getActiveTimeframe',
       );
-      spyOnGetActiveTimeframe.mockImplementation();
+      spyOnGetActiveTimeframe.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
@@ -4031,7 +4043,7 @@ describe('CampaignsService', () => {
       mockCacheManager.clear();
     });
 
-    it('should run with pessimistic lock', async () => {
+    test('should run with pessimistic lock', async () => {
       await campaignsService.refreshInterimProgressCache();
 
       expect(mockPgAdvisoryLock.withLock).toHaveBeenCalledTimes(1);
@@ -4041,7 +4053,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should refresh interim progress for each campaign', async () => {
+    test('should refresh interim progress for each campaign', async () => {
       const nCampaigns = faker.number.int({ min: 2, max: 5 });
       const campaigns = Array.from({ length: nCampaigns }, () =>
         generateCampaignEntity(),
@@ -4096,7 +4108,7 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should skip campaign for refresh if ends soon', async () => {
+    test('should skip campaign for refresh if ends soon', async () => {
       const campaign = generateCampaignEntity();
       campaign.endDate = dayjs().add(5, 'minute').toDate();
       mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce([
@@ -4112,7 +4124,7 @@ describe('CampaignsService', () => {
       ).resolves.toBeNull();
     });
 
-    it('should skip campaign for refresh if no active timeframe', async () => {
+    test('should skip campaign for refresh if no active timeframe', async () => {
       const campaign = generateCampaignEntity();
       mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce([
         campaign,
@@ -4130,7 +4142,7 @@ describe('CampaignsService', () => {
       ).resolves.toBeNull();
     });
 
-    it('should handle error for campaign and process others', async () => {
+    test('should handle error for campaign and process others', async () => {
       const okCampaign = generateCampaignEntity();
       const errorCampaign = generateCampaignEntity();
       mockCampaignsRepository.findOngoingCampaigns.mockResolvedValueOnce([
@@ -4176,7 +4188,7 @@ describe('CampaignsService', () => {
   });
 
   describe('getUserProgress', () => {
-    let spyOnGetActiveTimeframe: jest.SpyInstance;
+    let spyOnGetActiveTimeframe: Mock;
 
     let userId: string;
     let evmAddress: string;
@@ -4188,11 +4200,11 @@ describe('CampaignsService', () => {
       evmAddress = faker.finance.ethereumAddress();
       chainId = generateTestnetChainId();
 
-      spyOnGetActiveTimeframe = jest.spyOn(
+      spyOnGetActiveTimeframe = vi.spyOn(
         campaignsService,
         'getActiveTimeframe',
       );
-      spyOnGetActiveTimeframe.mockImplementation();
+      spyOnGetActiveTimeframe.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
@@ -4211,7 +4223,7 @@ describe('CampaignsService', () => {
       mockCacheManager.clear();
     });
 
-    it('should throw when campaign not found', async () => {
+    test('should throw when campaign not found', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress
         .mockReset()
         .mockResolvedValueOnce(null);
@@ -4244,8 +4256,8 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw when campaign not started yet', async () => {
-      jest.useFakeTimers({
+    test('should throw when campaign not started yet', async () => {
+      vi.useFakeTimers({
         now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
       });
 
@@ -4261,7 +4273,7 @@ describe('CampaignsService', () => {
         thrownError = error;
       }
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(thrownError).toBeInstanceOf(CampaignNotStartedError);
       expect(thrownError.chainId).toBe(chainId);
@@ -4279,8 +4291,8 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw when campaign already finished', async () => {
-      jest.useFakeTimers({
+    test('should throw when campaign already finished', async () => {
+      vi.useFakeTimers({
         now: new Date(campaign.endDate.valueOf() + 1),
       });
 
@@ -4296,7 +4308,7 @@ describe('CampaignsService', () => {
         thrownError = error;
       }
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
       expect(thrownError.chainId).toBe(chainId);
@@ -4314,7 +4326,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledTimes(0);
     });
 
-    it.each([
+    test.each([
       CampaignStatus.CANCELLED,
       CampaignStatus.PENDING_CANCELLATION,
       CampaignStatus.COMPLETED,
@@ -4352,7 +4364,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it('should throw when user not joined', async () => {
+    test('should throw when user not joined', async () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         null,
       );
@@ -4379,7 +4391,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(userId, campaign.id);
     });
 
-    it("should throw when can't get active timeframe", async () => {
+    test("should throw when can't get active timeframe", async () => {
       spyOnGetActiveTimeframe.mockReturnValueOnce(null);
 
       let thrownError: any;
@@ -4407,7 +4419,7 @@ describe('CampaignsService', () => {
       ).toHaveBeenCalledWith(chainId, campaign.address);
     });
 
-    it('should return campaign progress for participant from cache if same timeframe', async () => {
+    test('should return campaign progress for participant from cache if same timeframe', async () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
@@ -4465,7 +4477,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should return null if no value for campaign in cache', async () => {
+    test('should return null if no value for campaign in cache', async () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
@@ -4486,7 +4498,7 @@ describe('CampaignsService', () => {
       expect(progress).toBeNull();
     });
 
-    it('should return null if value in cache is for previous timeframe', async () => {
+    test('should return null if value in cache is for previous timeframe', async () => {
       mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
         generateUserJoinedDate(campaign),
       );
@@ -4528,32 +4540,34 @@ describe('CampaignsService', () => {
     const originalSupportedChainIds = mockWeb3Service.supportedChainIds;
     const supportedChainId = faker.number.int();
 
-    let spyOnRetrieveCampaignData: jest.SpyInstance;
-    let spyOnCreateCampaign: jest.SpyInstance;
-    let spyOnGetChainDiscoveryAnchor: jest.SpyInstance;
-    let spyOnSetChainDiscoveryAnchor: jest.SpyInstance;
+    let spyOnRetrieveCampaignData: Mock<
+      (typeof campaignsService)['retrieveCampaignData']
+    >;
+    let spyOnCreateCampaign: Mock;
+    let spyOnGetChainDiscoveryAnchor: Mock;
+    let spyOnSetChainDiscoveryAnchor: Mock;
 
     beforeAll(() => {
-      spyOnRetrieveCampaignData = jest.spyOn(
-        campaignsService,
-        'retrieveCampaignData' as any,
-      );
-      spyOnRetrieveCampaignData.mockImplementation();
+      spyOnRetrieveCampaignData = vi.spyOn(
+        campaignsService as any,
+        'retrieveCampaignData',
+      ) as Mock;
+      spyOnRetrieveCampaignData.mockImplementation(vi.fn());
 
-      spyOnCreateCampaign = jest.spyOn(campaignsService, 'createCampaign');
-      spyOnCreateCampaign.mockImplementation();
+      spyOnCreateCampaign = vi.spyOn(campaignsService, 'createCampaign');
+      spyOnCreateCampaign.mockImplementation(vi.fn());
 
-      spyOnGetChainDiscoveryAnchor = jest.spyOn(
+      spyOnGetChainDiscoveryAnchor = vi.spyOn(
         campaignsCache,
         'getChainDiscoveryAnchor',
       );
-      spyOnGetChainDiscoveryAnchor.mockImplementation();
+      spyOnGetChainDiscoveryAnchor.mockImplementation(vi.fn());
 
-      spyOnSetChainDiscoveryAnchor = jest.spyOn(
+      spyOnSetChainDiscoveryAnchor = vi.spyOn(
         campaignsCache,
         'setChainDiscoveryAnchor',
       );
-      spyOnSetChainDiscoveryAnchor.mockImplementation();
+      spyOnSetChainDiscoveryAnchor.mockImplementation(vi.fn());
     });
 
     beforeEach(() => {
@@ -4569,7 +4583,7 @@ describe('CampaignsService', () => {
       spyOnSetChainDiscoveryAnchor.mockRestore();
     });
 
-    it('should run discovery for each supported chain', async () => {
+    test('should run discovery for each supported chain', async () => {
       (mockWeb3Service.supportedChainIds as any) = [
         faker.number.int(),
         faker.number.int(),
@@ -4585,9 +4599,9 @@ describe('CampaignsService', () => {
       }
     });
 
-    it('should use discovery anchor for lookback', async () => {
+    test('should use discovery anchor for lookback', async () => {
       const chainDiscoveryAnchor = faker.date.past();
-      spyOnGetChainDiscoveryAnchor.mockResolvedValue(chainDiscoveryAnchor);
+      spyOnGetChainDiscoveryAnchor.mockResolvedValueOnce(chainDiscoveryAnchor);
 
       await campaignsService.discoverNewCampaigns();
 
@@ -4602,7 +4616,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should use default "from" if no latest campaign', async () => {
+    test('should use default "from" if no latest campaign', async () => {
       await campaignsService.discoverNewCampaigns();
 
       expect(mockedEscrowUtils.getEscrows).toHaveBeenCalledTimes(1);
@@ -4616,7 +4630,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it('should not save discovered campaign if it already exists', async () => {
+    test('should not save discovered campaign if it already exists', async () => {
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(true);
 
       const campaignAddress = ethers.getAddress(
@@ -4655,7 +4669,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should save discovered campaign if not already exist', async () => {
+    test('should save discovered campaign if not already exist', async () => {
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4668,9 +4682,11 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
       const campaignManifest = generateCampaignManifest();
-      const escrowInfo = {
+      const escrowInfo: CampaignEscrowInfo = {
         fundAmount: faker.number.float(),
         fundTokenSymbol: faker.finance.currencyCode(),
+        fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
+        cancellationRequestedAt: null,
       };
       spyOnRetrieveCampaignData.mockResolvedValueOnce({
         manifest: campaignManifest,
@@ -4712,7 +4728,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should not save and skip discovered campaign if invalid', async () => {
+    test('should not save and skip discovered campaign if invalid', async () => {
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4760,7 +4776,7 @@ describe('CampaignsService', () => {
       expect(logger.error).toHaveBeenCalledTimes(0);
     });
 
-    it('should rethrow and stop discovery if fails to retrieve some campaign', async () => {
+    test('should rethrow and stop discovery if fails to retrieve some campaign', async () => {
       mockCampaignsRepository.checkCampaignExists.mockResolvedValueOnce(false);
 
       const campaignAddress = ethers.getAddress(
@@ -4807,7 +4823,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    it('should process each discovered campaign', async () => {
+    test('should process each discovered campaign', async () => {
       mockCampaignsRepository.checkCampaignExists.mockResolvedValue(true);
 
       const escrows = Array.from(
@@ -4828,20 +4844,22 @@ describe('CampaignsService', () => {
   });
 
   describe('getCampaignLeaderboard', () => {
-    let spyOnRetrieveCampaignIntermediateResults: jest.SpyInstance;
+    let spyOnRetrieveCampaignIntermediateResults: Mock<
+      (typeof campaignsService)['retrieveCampaignIntermediateResults']
+    >;
     let campaign: CampaignEntity;
     let now: Date;
     let outcomeToEntryResultProp: string;
 
     beforeAll(() => {
       now = new Date();
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
-      spyOnRetrieveCampaignIntermediateResults = jest.spyOn(
+      spyOnRetrieveCampaignIntermediateResults = vi.spyOn(
         campaignsService as any,
         'retrieveCampaignIntermediateResults',
-      );
-      spyOnRetrieveCampaignIntermediateResults.mockImplementation();
+      ) as Mock;
+      spyOnRetrieveCampaignIntermediateResults.mockImplementation(vi.fn());
     });
 
     beforeEach(() => {
@@ -4873,11 +4891,11 @@ describe('CampaignsService', () => {
     });
 
     afterAll(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
       spyOnRetrieveCampaignIntermediateResults.mockRestore();
     });
 
-    it('should return empty data if campaign not found', async () => {
+    test('should return empty data if campaign not found', async () => {
       mockCampaignsRepository.findOneByChainIdAndAddress
         .mockReset()
         .mockResolvedValueOnce(null);
@@ -4894,7 +4912,7 @@ describe('CampaignsService', () => {
       });
     });
 
-    it.each([CampaignStatus.CANCELLED, CampaignStatus.COMPLETED])(
+    test.each([CampaignStatus.CANCELLED, CampaignStatus.COMPLETED])(
       'should throw when campaign already finished w/ "%s" status',
       async (campaignStatus) => {
         campaign.status = campaignStatus;
@@ -4915,7 +4933,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it.each([
+    test.each([
       CampaignStatus.PENDING_CANCELLATION,
       CampaignStatus.PENDING_COMPLETION,
     ])(
@@ -4975,7 +4993,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
+    test.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
       'should return data based on interim cache for "%s" campaign',
       async (campaignStatus) => {
         campaign.status = campaignStatus;
@@ -5053,7 +5071,7 @@ describe('CampaignsService', () => {
       },
     );
 
-    it.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
+    test.each([CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL])(
       'should handle empty interim cache for "%s" campaign',
       async (campaignStatus) => {
         campaign.status = campaignStatus;

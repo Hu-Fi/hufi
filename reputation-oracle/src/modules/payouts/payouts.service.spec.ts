@@ -1,8 +1,5 @@
-jest.mock('@human-protocol/sdk');
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import {
   EscrowClient,
   EscrowStatus,
@@ -13,6 +10,17 @@ import { Test } from '@nestjs/testing';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { ContentType } from '@/common/enums';
 import * as cryptoUtils from '@/common/utils/crypto';
@@ -45,11 +53,15 @@ import {
   IntermediateResultsData,
 } from './types';
 
+vi.mock('fs/promises');
+vi.mock('@human-protocol/sdk');
+vi.mock('@/logger');
+
 const mockStorageService = createMock<StorageService>();
 const mockWeb3Service = createMock<Web3Service>();
 
-const mockedEscrowClient = jest.mocked(EscrowClient);
-const mockedEscrowUtils = jest.mocked(EscrowUtils);
+const mockedEscrowClient = vi.mocked(EscrowClient);
+const mockedEscrowUtils = vi.mocked(EscrowUtils);
 
 const mockedSigner = createMock<WalletWithProvider>();
 
@@ -79,10 +91,10 @@ describe('PayoutsService', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(payoutsService).toBeDefined();
   });
 
@@ -96,7 +108,7 @@ describe('PayoutsService', () => {
       mockWeb3Service.getTokenDecimals.mockResolvedValue(TEST_TOKEN_DECIMALS);
     });
 
-    it('should query escrows with correct params', async () => {
+    test('should query escrows with correct params', async () => {
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([]);
 
       await payoutsService['getCampaignsForPayouts'](chainId);
@@ -114,7 +126,7 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should return campaign data for pending escrow', async () => {
+    test('should return campaign data for pending escrow', async () => {
       const expectedEscrow = generateEscrow(EscrowStatus.Pending);
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([expectedEscrow]);
 
@@ -142,7 +154,7 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should return campaign data for to_cancel escrow', async () => {
+    test('should return campaign data for to_cancel escrow', async () => {
       const expectedEscrow = generateEscrow(EscrowStatus.ToCancel);
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([expectedEscrow]);
 
@@ -172,7 +184,7 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should skip to_cancel escrow w/o cancellation request date', async () => {
+    test('should skip to_cancel escrow w/o cancellation request date', async () => {
       const expectedEscrow = generateEscrow(EscrowStatus.ToCancel);
       expectedEscrow.cancellationRequestedAt = null;
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([expectedEscrow]);
@@ -190,7 +202,7 @@ describe('PayoutsService', () => {
       );
     });
 
-    it('should return only "ToCancel" escrows w/o intermediate results', async () => {
+    test('should return only "ToCancel" escrows w/o intermediate results', async () => {
       const fullEscrow = generateEscrow(EscrowStatus.Pending);
       const noResultsPendingEscrow: IEscrow = Object.assign(
         generateEscrow(EscrowStatus.Pending),
@@ -233,7 +245,7 @@ describe('PayoutsService', () => {
       );
     });
 
-    it('should log subgraph error and throw meaningful one', async () => {
+    test('should log subgraph error and throw meaningful one', async () => {
       const syntheticError = new Error(faker.lorem.sentence());
       mockedEscrowUtils.getEscrows.mockRejectedValueOnce(syntheticError);
 
@@ -257,7 +269,7 @@ describe('PayoutsService', () => {
   });
 
   describe('uploadFinalResults', () => {
-    it('should upload results with proper meta', async () => {
+    test('should upload results with proper meta', async () => {
       const expectedFileUrl = faker.internet.url();
       mockStorageService.uploadData.mockResolvedValueOnce(expectedFileUrl);
 
@@ -294,21 +306,25 @@ describe('PayoutsService', () => {
     const originalSupportedChainIds = mockWeb3Service.supportedChainIds;
     const supportedChainId = faker.number.int();
 
-    let spyOnGetCampaignsForPayouts: jest.SpyInstance;
-    let spyOnRunPayoutsCycleForCampaign: jest.SpyInstance;
+    let spyOnGetCampaignsForPayouts: Mock<
+      (typeof payoutsService)['getCampaignsForPayouts']
+    >;
+    let spyOnRunPayoutsCycleForCampaign: Mock<
+      (typeof payoutsService)['runPayoutsCycleForCampaign']
+    >;
 
     beforeAll(() => {
-      spyOnGetCampaignsForPayouts = jest.spyOn(
+      spyOnGetCampaignsForPayouts = vi.spyOn(
         payoutsService as any,
         'getCampaignsForPayouts',
-      );
-      spyOnGetCampaignsForPayouts.mockImplementation();
+      ) as Mock;
+      spyOnGetCampaignsForPayouts.mockImplementation(vi.fn());
 
-      spyOnRunPayoutsCycleForCampaign = jest.spyOn(
+      spyOnRunPayoutsCycleForCampaign = vi.spyOn(
         payoutsService as any,
         'runPayoutsCycleForCampaign',
-      );
-      spyOnRunPayoutsCycleForCampaign.mockImplementation();
+      ) as Mock;
+      spyOnRunPayoutsCycleForCampaign.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
@@ -322,7 +338,7 @@ describe('PayoutsService', () => {
       (mockWeb3Service.supportedChainIds as any) = [supportedChainId];
     });
 
-    it('should process each supported chain', async () => {
+    test('should process each supported chain', async () => {
       (mockWeb3Service.supportedChainIds as any) = [
         faker.number.int(),
         faker.number.int(),
@@ -339,7 +355,7 @@ describe('PayoutsService', () => {
       expect(spyOnRunPayoutsCycleForCampaign).toHaveBeenCalledTimes(0);
     });
 
-    it('should process each campaign for chain', async () => {
+    test('should process each campaign for chain', async () => {
       const campaigns = [generateCampaign(), generateCampaign()];
       spyOnGetCampaignsForPayouts.mockResolvedValueOnce(campaigns);
 
@@ -357,7 +373,7 @@ describe('PayoutsService', () => {
   });
 
   describe('calculateRewardsBatches', () => {
-    it('should calculate reward batches for non-competitive campaigns', () => {
+    test('should calculate reward batches for non-competitive campaigns', () => {
       const participantAddress = faker.finance.ethereumAddress();
       const intermediateResultsData = generateIntermediateResultsData();
       intermediateResultsData.results = [
@@ -395,7 +411,7 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should calculate rewards for competitive campaign', () => {
+    test('should calculate rewards for competitive campaign', () => {
       const participantAddress = '0x0000000000000000000000000000000000000001';
       const minVolumeRequired = faker.number.int({ min: 50, max: 150 });
       const participantScore = faker.number.float({ min: 0.01 });
@@ -450,7 +466,7 @@ describe('PayoutsService', () => {
   describe('calculateRewardsForIntermediateResult', () => {
     const TEST_TOKEN_DECIMALS = faker.number.int({ min: 5, max: 18 });
 
-    it('should return rewards in batches', () => {
+    test('should return rewards in batches', () => {
       const rewardsBatches = payoutsService[
         'calculateRewardsForIntermediateResult'
       ](generateIntermediateResult(), TEST_TOKEN_DECIMALS);
@@ -458,7 +474,7 @@ describe('PayoutsService', () => {
       expect(rewardsBatches.length).toBe(0);
     });
 
-    it('should calculate rewards for all participants in batches', () => {
+    test('should calculate rewards for all participants in batches', () => {
       /**
        * In this test we have to use good numbers in order to avoid
        * flaky results because of floating point precision
@@ -516,7 +532,7 @@ describe('PayoutsService', () => {
       }
     });
 
-    it('should correctly calculate rewards for precision-sensitive results', () => {
+    test('should correctly calculate rewards for precision-sensitive results', () => {
       const rewardsBathes = payoutsService[
         'calculateRewardsForIntermediateResult'
       ](
@@ -541,7 +557,7 @@ describe('PayoutsService', () => {
       expect(rewardsBathes).toMatchSnapshot();
     });
 
-    it('should correctly truncate rewards for precision-sensitive results', () => {
+    test('should correctly truncate rewards for precision-sensitive results', () => {
       const rewardAmount = '1.666666666666666666';
       const intermediateResult = generateIntermediateResult();
       intermediateResult.reserved_funds = rewardAmount;
@@ -578,7 +594,7 @@ describe('PayoutsService', () => {
      * It might be that after truncating small values are in exponential notation
      * which is not supported by ethers.js; have to catch that
      */
-    it('should correctly truncate rewards for small results in correct notation', () => {
+    test('should correctly truncate rewards for small results in correct notation', () => {
       const rewardsBathes = payoutsService[
         'calculateRewardsForIntermediateResult'
       ](
@@ -604,7 +620,7 @@ describe('PayoutsService', () => {
   });
 
   describe('calculateRewardsForCompetitiveIntermediateResult', () => {
-    it('should return rewards batch with correct id', () => {
+    test('should return rewards batch with correct id', () => {
       const intermediateResult = generateIntermediateResult();
 
       const rewardsBatch = payoutsService[
@@ -628,7 +644,7 @@ describe('PayoutsService', () => {
       );
     });
 
-    it('should distribute rewards by manifest percentages to top cumulative score', () => {
+    test('should distribute rewards by manifest percentages to top cumulative score', () => {
       const firstPlaceAddress = faker.finance.ethereumAddress();
       const secondPlaceAddress = faker.finance.ethereumAddress();
       const thirdPlaceAddress = faker.finance.ethereumAddress();
@@ -683,7 +699,7 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should split rewards when scores are equal', () => {
+    test('should split rewards when scores are equal', () => {
       const firstAddress = faker.finance.ethereumAddress();
       const secondAddress = faker.finance.ethereumAddress();
 
@@ -730,7 +746,7 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should split combined rewards for exact tie on 1st place', () => {
+    test('should split combined rewards for exact tie on 1st place', () => {
       const firstPlaceAddress = faker.finance.ethereumAddress();
       const secondPlaceAddress = faker.finance.ethereumAddress();
       const thirdPlaceAddress = faker.finance.ethereumAddress();
@@ -787,7 +803,7 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should split last rewardable place reward between tied participants', () => {
+    test('should split last rewardable place reward between tied participants', () => {
       const firstPlaceAddress = faker.finance.ethereumAddress();
       const secondPlaceAddress = faker.finance.ethereumAddress();
       const thirdPlaceAddress = faker.finance.ethereumAddress();
@@ -852,7 +868,7 @@ describe('PayoutsService', () => {
       ]);
     });
 
-    it('should split all remaining slots when many participants tie for 2nd place', () => {
+    test('should split all remaining slots when many participants tie for 2nd place', () => {
       const firstPlaceAddress = faker.finance.ethereumAddress();
       const tiedSecondPlaceAddresses = Array.from({ length: 5 }, () =>
         faker.finance.ethereumAddress(),
@@ -927,7 +943,7 @@ describe('PayoutsService', () => {
       expect(rewardsByAddress.has(eighthPlaceAddress)).toBe(false);
     });
 
-    it('should filter out participants below min_volume_required', () => {
+    test('should filter out participants below min_volume_required', () => {
       const firstPlaceAddress = ethers.getAddress(
         faker.finance.ethereumAddress(),
       );
@@ -1013,59 +1029,71 @@ describe('PayoutsService', () => {
     const mockedFinalResultsHash = faker.string.hexadecimal();
     const mockedManifest = generateManifest();
 
-    let spyOnRetrieveCampaignManifest: jest.SpyInstance;
-    let spyOnDownloadIntermediateResults: jest.SpyInstance;
-    let spyOnUploadFinalResults: jest.SpyInstance;
-    let spyOnGetBulkPayoutsCount: jest.SpyInstance;
-    let spyOnWriteRewardsBatchToFile: jest.SpyInstance;
-    let spyOnCalculateRewardsBatches: jest.SpyInstance;
+    let spyOnRetrieveCampaignManifest: Mock<
+      (typeof payoutsUtils)['retrieveCampaignManifest']
+    >;
+    let spyOnDownloadIntermediateResults: Mock<
+      (typeof payoutsUtils)['downloadIntermediateResults']
+    >;
+    let spyOnUploadFinalResults: Mock<
+      (typeof payoutsService)['uploadFinalResults']
+    >;
+    let spyOnGetBulkPayoutsCount: Mock<
+      (typeof payoutsService)['getBulkPayoutsCount']
+    >;
+    let spyOnWriteRewardsBatchToFile: Mock<
+      (typeof payoutsService)['writeRewardsBatchToFile']
+    >;
+    let spyOnCalculateRewardsBatches: Mock<
+      (typeof payoutsService)['calculateRewardsBatches']
+    >;
 
-    const mockedGetEscrowBalance = jest.fn();
-    const mockedGetEscrowReservedFunds = jest.fn();
-    const mockedGetEscrowStatus = jest.fn();
-    const mockedBulkPayOut = jest.fn();
-    const mockedCompleteEscrow = jest.fn();
-    const mockedCancelEscrow = jest.fn();
+    const mockedGetEscrowBalance = vi.fn();
+    const mockedGetEscrowReservedFunds = vi.fn();
+    const mockedGetEscrowStatus = vi.fn();
+    const mockedBulkPayOut = vi.fn();
+    const mockedCompleteEscrow = vi.fn();
+    const mockedCancelEscrow = vi.fn();
 
     let mockedCampaign: CampaignWithResults;
     let mockedIntermediateResult: IntermediateResult;
     let mockedEscrowReservedFunds: bigint;
 
     beforeAll(() => {
-      spyOnRetrieveCampaignManifest = jest.spyOn(
+      spyOnRetrieveCampaignManifest = vi.spyOn(
         payoutsUtils,
         'retrieveCampaignManifest',
       );
-      spyOnRetrieveCampaignManifest.mockImplementation();
+      spyOnRetrieveCampaignManifest.mockImplementation(vi.fn());
 
-      spyOnDownloadIntermediateResults = jest.spyOn(
+      spyOnDownloadIntermediateResults = vi.spyOn(
         payoutsUtils,
         'downloadIntermediateResults',
       );
-      spyOnDownloadIntermediateResults.mockImplementation();
+      spyOnDownloadIntermediateResults.mockImplementation(vi.fn());
 
-      spyOnUploadFinalResults = jest.spyOn(
+      spyOnUploadFinalResults = vi.spyOn(
         payoutsService as any,
         'uploadFinalResults',
-      );
-      spyOnUploadFinalResults.mockImplementation();
+      ) as Mock;
+      spyOnUploadFinalResults.mockImplementation(vi.fn());
 
-      spyOnGetBulkPayoutsCount = jest.spyOn(
+      spyOnGetBulkPayoutsCount = vi.spyOn(
         payoutsService as any,
         'getBulkPayoutsCount',
-      );
-      spyOnGetBulkPayoutsCount.mockImplementation();
+      ) as Mock;
+      spyOnGetBulkPayoutsCount.mockImplementation(vi.fn());
 
-      spyOnWriteRewardsBatchToFile = jest.spyOn(
+      spyOnWriteRewardsBatchToFile = vi.spyOn(
         payoutsService as any,
         'writeRewardsBatchToFile',
-      );
-      spyOnWriteRewardsBatchToFile.mockImplementation();
+      ) as Mock;
+      spyOnWriteRewardsBatchToFile.mockImplementation(vi.fn());
 
-      spyOnCalculateRewardsBatches = jest.spyOn(
+      spyOnCalculateRewardsBatches = vi.spyOn(
         payoutsService as any,
         'calculateRewardsBatches',
-      );
+      ) as Mock;
     });
 
     afterAll(() => {
@@ -1081,10 +1109,7 @@ describe('PayoutsService', () => {
       mockedCampaign = generateCampaign();
 
       spyOnCalculateRewardsBatches.mockImplementation(
-        (
-          _manifest: unknown,
-          intermediateResultsData: IntermediateResultsData,
-        ) => {
+        (_manifest: any, intermediateResultsData: IntermediateResultsData) => {
           const latestResult = intermediateResultsData.results.at(-1);
           const latestBatch =
             latestResult?.participants_outcomes_batches.at(-1);
@@ -1152,7 +1177,7 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should skip when campaign status mismatch', async () => {
+    test('should skip when campaign status mismatch', async () => {
       const testEscrowStatus = EscrowStatus.ToCancel;
       mockedGetEscrowStatus.mockReset().mockResolvedValueOnce(testEscrowStatus);
       const testCampaignStatus = EscrowStatus[EscrowStatus.Partial];
@@ -1177,7 +1202,7 @@ describe('PayoutsService', () => {
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
-    it('should cancel if cancellation requested before than start date from manifest', async () => {
+    test('should cancel if cancellation requested before than start date from manifest', async () => {
       mockedCampaign.status = EscrowStatus[EscrowStatus.ToCancel];
 
       mockedGetEscrowStatus
@@ -1192,11 +1217,11 @@ describe('PayoutsService', () => {
         }),
       );
 
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(0);
       expect(logger.info).toHaveBeenCalledTimes(3);
@@ -1212,7 +1237,7 @@ describe('PayoutsService', () => {
       });
     });
 
-    it('should not cancel if cancellation not requested and campaign not started yet', async () => {
+    test('should not cancel if cancellation not requested and campaign not started yet', async () => {
       const now = Date.now();
       spyOnRetrieveCampaignManifest.mockReset().mockResolvedValueOnce(
         Object.assign(generateManifest(), {
@@ -1220,17 +1245,17 @@ describe('PayoutsService', () => {
         }),
       );
 
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       expect(spyOnDownloadIntermediateResults).toHaveBeenCalledTimes(1);
     });
 
-    it('should gracefully handle incomplete intermediate results', async () => {
+    test('should gracefully handle incomplete intermediate results', async () => {
       spyOnDownloadIntermediateResults
         .mockReset()
         .mockResolvedValueOnce(generateIntermediateResultsData());
@@ -1250,7 +1275,7 @@ describe('PayoutsService', () => {
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
-    it('should gracefully handle invalid reserved funds', async () => {
+    test('should gracefully handle invalid reserved funds', async () => {
       mockedGetEscrowReservedFunds.mockReset().mockResolvedValueOnce(
         faker.number.int({
           max:
@@ -1271,7 +1296,7 @@ describe('PayoutsService', () => {
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
-    it('should run payouts and not attempt finish campaign if not ended', async () => {
+    test('should run payouts and not attempt finish campaign if not ended', async () => {
       mockWeb3Service.getSigner.mockReturnValueOnce(mockedSigner);
       const latestNonce = faker.number.int();
       mockedSigner.getNonce.mockResolvedValueOnce(latestNonce);
@@ -1326,7 +1351,7 @@ describe('PayoutsService', () => {
       expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
     });
 
-    it('should skip already paid results', async () => {
+    test('should skip already paid results', async () => {
       spyOnGetBulkPayoutsCount.mockReset().mockResolvedValueOnce(1);
 
       await payoutsService.runPayoutsCycleForCampaign(mockedCampaign);
@@ -1356,7 +1381,7 @@ describe('PayoutsService', () => {
           .mockResolvedValueOnce(manifest);
       });
 
-      it.each([
+      test.each([
         EscrowStatus[EscrowStatus.Complete],
         EscrowStatus[EscrowStatus.Cancelled],
       ])(
@@ -1383,7 +1408,7 @@ describe('PayoutsService', () => {
         },
       );
 
-      it.each([
+      test.each([
         EscrowStatus[EscrowStatus.Partial],
         EscrowStatus[EscrowStatus.Paid],
       ])(
@@ -1424,7 +1449,7 @@ describe('PayoutsService', () => {
         },
       );
 
-      it('should warn if unknown status', async () => {
+      test('should warn if unknown status', async () => {
         const unknownStatus = -1;
         mockedGetEscrowStatus.mockResolvedValueOnce(unknownStatus);
 
@@ -1442,7 +1467,7 @@ describe('PayoutsService', () => {
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 
-      it('should complete if campaign has "zero" results', async () => {
+      test('should complete if campaign has "zero" results', async () => {
         const mockedEscrowBalance = faker.number.bigInt({ min: 1 });
         mockedGetEscrowReservedFunds.mockReset().mockResolvedValueOnce(0);
         mockedIntermediateResult.reserved_funds = 0;
@@ -1486,7 +1511,7 @@ describe('PayoutsService', () => {
         expect(mockedCancelEscrow).toHaveBeenCalledTimes(0);
       });
 
-      it('should run payouts and cancel campaign if cancellation requested and all results paid', async () => {
+      test('should run payouts and cancel campaign if cancellation requested and all results paid', async () => {
         mockedCampaign.status = EscrowStatus[EscrowStatus.ToCancel];
         mockedCampaign.cancellationRequestedAt = mockedIntermediateResult.to;
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.ToCancel);
@@ -1517,7 +1542,7 @@ describe('PayoutsService', () => {
         expect(mockedCompleteEscrow).toHaveBeenCalledTimes(0);
       });
 
-      it('should run payouts and not cancel campaign if cancellation requested and not all results paid', async () => {
+      test('should run payouts and not cancel campaign if cancellation requested and not all results paid', async () => {
         mockedCampaign.status = EscrowStatus[EscrowStatus.ToCancel];
         const cancellationRequestedAt = faker.date.recent({
           refDate: mockedIntermediateResult.to,

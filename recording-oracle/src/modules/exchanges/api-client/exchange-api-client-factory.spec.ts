@@ -1,13 +1,19 @@
-jest.mock('./bigone');
-jest.mock('./ccxt');
-jest.mock('./hyperliquid');
-jest.mock('./pancakeswap');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -27,17 +33,23 @@ import { generateConfigByExchangeStub } from './fixtures';
 import { HyperliquidClient } from './hyperliquid';
 import { PancakeswapClient } from './pancakeswap';
 
-const mockedCcxt = jest.mocked(ccxt);
+vi.mock('ccxt');
+vi.mock('./bigone');
+vi.mock('./ccxt');
+vi.mock('./hyperliquid');
+vi.mock('./pancakeswap');
+
+const mockedCcxt = vi.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
 
 const EXPECTED_BASE_OPTIONS = Object.freeze({
   ...BASE_CCXT_CLIENT_OPTIONS,
 });
 
-const mockedBigoneClient = jest.mocked(BigoneClient);
-const mockedCcxtExchangeClient = jest.mocked(CcxtExchangeClient);
-const mockedHyperliquidClient = jest.mocked(HyperliquidClient);
-const mockedPancakeswapClient = jest.mocked(PancakeswapClient);
+const mockedBigoneClient = vi.mocked(BigoneClient, { deep: true });
+const mockedCcxtExchangeClient = vi.mocked(CcxtExchangeClient, { deep: true });
+const mockedHyperliquidClient = vi.mocked(HyperliquidClient, { deep: true });
+const mockedPancakeswapClient = vi.mocked(PancakeswapClient, { deep: true });
 
 const mockLoggerConfigService: Pick<
   LoggingConfigService,
@@ -73,19 +85,21 @@ describe('ExchangeApiClientFactory', () => {
     );
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(exchangeApiClientFactory).toBeDefined();
   });
 
   describe('module init', () => {
-    let spyOnPreloadCcxtClient: jest.SpyInstance;
+    let spyOnPreloadCcxtClient: Mock<
+      (typeof exchangeApiClientFactory)['preloadCcxtClient']
+    >;
 
     beforeAll(() => {
-      spyOnPreloadCcxtClient = jest.spyOn(
+      spyOnPreloadCcxtClient = vi.spyOn(
         exchangeApiClientFactory as any,
         'preloadCcxtClient',
-      );
-      spyOnPreloadCcxtClient.mockImplementation();
+      ) as Mock;
+      spyOnPreloadCcxtClient.mockImplementation(vi.fn());
     });
 
     afterAll(() => {
@@ -98,7 +112,7 @@ describe('ExchangeApiClientFactory', () => {
       await exchangeApiClientFactory.onModuleDestroy();
     });
 
-    it('should init and preload ccxt client for enabled CEX', async () => {
+    test('should init and preload ccxt client for enabled CEX', async () => {
       const exchangeName = generateExchangeName();
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
@@ -113,7 +127,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(spyOnPreloadCcxtClient).toHaveBeenCalledWith(exchangeName);
     });
 
-    it('should init and skip ccxt client preloading for disabled CEX', async () => {
+    test('should init and skip ccxt client preloading for disabled CEX', async () => {
       const exchangeName = generateExchangeName();
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
@@ -127,7 +141,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
     });
 
-    it('should init and skip ccxt client preloading for enabled non-ccxt DEX', async () => {
+    test('should init and skip ccxt client preloading for enabled non-ccxt DEX', async () => {
       const exchangeName = ExchangeName.PANCAKESWAP;
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
@@ -142,7 +156,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(spyOnPreloadCcxtClient).toHaveBeenCalledTimes(0);
     });
 
-    it('should init and preload ccxt client for enabled hyperliquid DEX', async () => {
+    test('should init and preload ccxt client for enabled hyperliquid DEX', async () => {
       const exchangeName = ExchangeName.HYPERLIQUID;
       mockExchangesConfigService.configByExchange = {
         [exchangeName]: {
@@ -162,14 +176,16 @@ describe('ExchangeApiClientFactory', () => {
     const exchangeName = faker.lorem.slug();
 
     beforeEach(() => {
-      mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
+        return mockedExchange;
+      });
     });
 
     afterAll(() => {
       exchangeApiClientFactory['preloadedCcxtClients'].clear();
     });
 
-    it('should correctly create new client instance and load markets', async () => {
+    test('should correctly create new client instance and load markets', async () => {
       await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
 
       expect(mockedCcxt[exchangeName]).toHaveBeenCalledTimes(1);
@@ -185,7 +201,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(BASE_CCXT_CLIENT_OPTIONS).toEqual(EXPECTED_BASE_OPTIONS);
     });
 
-    it('should use cached client instance to re-load markets', async () => {
+    test('should use cached client instance to re-load markets', async () => {
       await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
 
       expect(mockedCcxt[exchangeName]).toHaveBeenCalledTimes(0);
@@ -215,7 +231,7 @@ describe('ExchangeApiClientFactory', () => {
       userId = faker.string.uuid();
     });
 
-    it('should throw IncompleteKeySuppliedError if creds check fails', () => {
+    test('should throw IncompleteKeySuppliedError if creds check fails', () => {
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         false,
       );
@@ -235,7 +251,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(thrownError.exchangeName).toBe(exchangeName);
     });
 
-    it('should return client instance if creds check succeeded', () => {
+    test('should return client instance if creds check succeeded', () => {
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         true,
       );
@@ -250,7 +266,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(mockedCcxtExchangeClient.mock.instances[0]).toBe(client);
     });
 
-    it('should correctly init client for any exchange', () => {
+    test('should correctly init client for any exchange', () => {
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
         true,
       );
@@ -276,7 +292,7 @@ describe('ExchangeApiClientFactory', () => {
       });
     });
 
-    it('should correctly init client for bigone', () => {
+    test('should correctly init client for bigone', () => {
       exchangeName = ExchangeName.BIGONE;
 
       mockedBigoneClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
@@ -301,7 +317,7 @@ describe('ExchangeApiClientFactory', () => {
       );
     });
 
-    it('should correctly init client for bitmart', () => {
+    test('should correctly init client for bitmart', () => {
       exchangeName = ExchangeName.BITMART;
 
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
@@ -334,9 +350,11 @@ describe('ExchangeApiClientFactory', () => {
       );
     });
 
-    it('should use preloaded client', async () => {
+    test('should use preloaded client', async () => {
       const _mockedExchange = createMock<Exchange>();
-      mockedCcxt[exchangeName].mockReturnValueOnce(_mockedExchange);
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
+        return _mockedExchange;
+      });
       await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
 
       mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
@@ -381,7 +399,7 @@ describe('ExchangeApiClientFactory', () => {
       userEvmAddress = faker.finance.ethereumAddress();
     });
 
-    it('should throw ExchangeNotSupportedError if no exchange client defined for exchange', () => {
+    test('should throw ExchangeNotSupportedError if no exchange client defined for exchange', () => {
       const exchangeName = faker.lorem.slug() as ExchangeName;
 
       let thrownError: any;
@@ -398,7 +416,7 @@ describe('ExchangeApiClientFactory', () => {
       expect(thrownError.exchangeName).toBe(exchangeName);
     });
 
-    it('should correctly init client for pancakeswap', () => {
+    test('should correctly init client for pancakeswap', () => {
       const client = exchangeApiClientFactory.createDex(
         ExchangeName.PANCAKESWAP,
         {
@@ -420,10 +438,12 @@ describe('ExchangeApiClientFactory', () => {
       );
     });
 
-    it('should correctly init client for hyperliquid with preloaded ccxt client', async () => {
+    test('should correctly init client for hyperliquid with preloaded ccxt client', async () => {
       const exchangeName = ExchangeName.HYPERLIQUID;
       const preloadedExchange = createMock<Exchange>();
-      mockedCcxt[exchangeName].mockReturnValueOnce(preloadedExchange);
+      mockedCcxt[exchangeName] = vi.fn(function MockedCcxtExchangeCtor() {
+        return preloadedExchange;
+      });
       await exchangeApiClientFactory['preloadCcxtClient'](exchangeName);
 
       const client = exchangeApiClientFactory.createDex(exchangeName, {

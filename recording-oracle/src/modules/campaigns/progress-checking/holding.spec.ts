@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExchangeApiClient, ExchangesService } from '@/modules/exchanges';
 import { generateAccountBalance } from '@/modules/exchanges/fixtures';
@@ -26,10 +27,10 @@ describe('HoldingProgressChecker', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangesService,
       generateHoldingCheckerSetup(),
@@ -58,7 +59,7 @@ describe('HoldingProgressChecker', () => {
       );
     });
 
-    it('should properly init api client', async () => {
+    test('should properly init api client', async () => {
       const resultsChecker = new TestCampaignProgressChecker(
         mockedExchangesService,
         progressCheckerSetup,
@@ -73,7 +74,7 @@ describe('HoldingProgressChecker', () => {
       );
     });
 
-    it('should return zeros when no token on balance', async () => {
+    test('should return zeros when no token on balance', async () => {
       const result = await resultsChecker.checkForParticipant(
         generateParticipantInfo(),
       );
@@ -85,7 +86,7 @@ describe('HoldingProgressChecker', () => {
       });
     });
 
-    it('should return correct score and balance when account balance has it', async () => {
+    test('should return correct score and balance when account balance has it', async () => {
       const mockedAccountBalance = generateAccountBalance([
         progressCheckerSetup.symbol,
       ]);
@@ -102,7 +103,7 @@ describe('HoldingProgressChecker', () => {
       expect(result.token_balance).toBe(expectedValue);
     });
 
-    it('should throw when total exceeds max safe integer', async () => {
+    test('should throw when total exceeds max safe integer', async () => {
       const mockedAccountBalance = generateAccountBalance([
         progressCheckerSetup.symbol,
       ]);
@@ -130,7 +131,7 @@ describe('HoldingProgressChecker', () => {
       resultsChecker.ethDepositAddresses.clear();
     });
 
-    it('should return zeros if abuse detected', async () => {
+    test('should return zeros if abuse detected', async () => {
       const abuseAddress = faker.finance.ethereumAddress();
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
         abuseAddress,
@@ -164,7 +165,7 @@ describe('HoldingProgressChecker', () => {
       );
     });
 
-    it('should collect total balance for all checked participants', async () => {
+    test('should collect total balance for all checked participants', async () => {
       const nParticipants = faker.number.int({ min: 2, max: 5 });
 
       let expectedTotalBalance = 0;
@@ -188,7 +189,7 @@ describe('HoldingProgressChecker', () => {
       expect(meta.total_balance).toBe(expectedTotalBalance);
     });
 
-    it('should not count balance of abuse participants', async () => {
+    test('should not count balance of abuse participants', async () => {
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValue(
         faker.finance.ethereumAddress(),
       );

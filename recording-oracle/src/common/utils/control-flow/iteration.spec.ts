@@ -1,8 +1,10 @@
+import { describe, expect, test, vi } from 'vitest';
+
 import { consumeIteratorOnce, consumeIterator } from './iteration';
 
 describe('Iteration utilities', () => {
   describe('consumeIteratorOnce', () => {
-    it('should support sync iterable', async () => {
+    test('should support sync iterable', async () => {
       const randomValues = Array.from({ length: 3 }, () => Math.random());
 
       const result = await consumeIteratorOnce(randomValues);
@@ -10,7 +12,7 @@ describe('Iteration utilities', () => {
       expect(result).toBe(randomValues[0]);
     });
 
-    it('should support async iterable', async () => {
+    test('should support async iterable', async () => {
       const randomValue = Math.random();
 
       async function* testGenerator() {
@@ -22,11 +24,11 @@ describe('Iteration utilities', () => {
       expect(result).toBe(randomValue);
     });
 
-    it('should yield once and cleanup', async () => {
+    test('should yield once and cleanup', async () => {
       const randomValue = Math.random();
-      const secondYieldSpy = jest.fn();
-      const catchBlockSpy = jest.fn();
-      const cleanupSpy = jest.fn();
+      const secondYieldSpy = vi.fn();
+      const catchBlockSpy = vi.fn();
+      const cleanupSpy = vi.fn();
 
       async function* testGenerator() {
         try {
@@ -49,7 +51,7 @@ describe('Iteration utilities', () => {
   });
 
   describe('consumeIterator', () => {
-    it('should consume sync iterable', async () => {
+    test('should consume sync iterable', async () => {
       const randomValues = Array.from({ length: 3 }, () => Math.random());
 
       const result = await consumeIterator(randomValues);
@@ -57,7 +59,7 @@ describe('Iteration utilities', () => {
       expect(result).toEqual(randomValues);
     });
 
-    it('should consume async iterable', async () => {
+    test('should consume async iterable', async () => {
       const randomValues = Array.from({ length: 3 }, () => Math.random());
 
       async function* testGenerator() {
