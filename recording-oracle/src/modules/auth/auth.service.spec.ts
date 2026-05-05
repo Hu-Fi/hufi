@@ -1,9 +1,18 @@
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { DEFAULT_NONCE } from '@/common/constants';
 import * as web3Utils from '@/common/utils/web3';
@@ -19,6 +28,8 @@ import { AuthError, AuthErrorMessage } from './auth.errors';
 import { AuthService } from './auth.service';
 import { type RefreshTokenEntity } from './refresh-token.entity';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
+
+vi.mock('@/logger');
 
 const { publicKey, privateKey } = generateES256Keys();
 const mockAuthConfigService: Omit<AuthConfigService, 'configService'> = {
@@ -78,15 +89,15 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(authService).toBeDefined();
   });
 
   describe('generateTokens', () => {
-    it.each([
+    test.each([
       null,
       { uuid: faker.string.uuid() } as unknown as RefreshTokenEntity,
     ])(
@@ -134,17 +145,17 @@ describe('AuthService', () => {
   });
 
   describe('auth', () => {
-    let spyOnGenerateTokens: jest.SpyInstance;
+    let spyOnGenerateTokens: Mock;
 
     beforeAll(() => {
-      spyOnGenerateTokens = jest.spyOn(authService, 'generateTokens');
+      spyOnGenerateTokens = vi.spyOn(authService, 'generateTokens');
     });
 
     afterAll(() => {
       spyOnGenerateTokens.mockRestore();
     });
 
-    it('should throw when invalid signature', async () => {
+    test('should throw when invalid signature', async () => {
       let thrownError: any;
       try {
         await authService.auth(
@@ -159,7 +170,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
     });
 
-    it('should throw when valid signup signature for wrong address', async () => {
+    test('should throw when valid signup signature for wrong address', async () => {
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(null);
 
       const ethWallet = generateEthWallet();
@@ -181,7 +192,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
     });
 
-    it('should throw when valid nonce signature for wrong address', async () => {
+    test('should throw when valid nonce signature for wrong address', async () => {
       const user = generateUserEntity();
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(user);
 
@@ -203,7 +214,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_WEB3_SIGNATURE);
     });
 
-    it('should update nonce for existing user and authorize it', async () => {
+    test('should update nonce for existing user and authorize it', async () => {
       const ethWallet = generateEthWallet();
       const user = generateUserEntity({ evmAddress: ethWallet.address });
 
@@ -239,7 +250,7 @@ describe('AuthService', () => {
       expect(spyOnGenerateTokens).toHaveBeenCalledWith(user);
     });
 
-    it('should create new user when not exist and authorize it', async () => {
+    test('should create new user when not exist and authorize it', async () => {
       mockUsersService.findOneByEvmAddress.mockResolvedValueOnce(null);
 
       const ethWallet = generateEthWallet();
@@ -277,7 +288,7 @@ describe('AuthService', () => {
       refreshToken = faker.string.uuid();
     });
 
-    it('should throw when token not found', async () => {
+    test('should throw when token not found', async () => {
       mockRefresTokenRepository.findOneById.mockResolvedValueOnce(null);
 
       let thrownError: any;
@@ -291,7 +302,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.INVALID_REFRESH_TOKEN);
     });
 
-    it('should throw when token expired', async () => {
+    test('should throw when token expired', async () => {
       mockRefresTokenRepository.findOneById.mockResolvedValueOnce({
         id: refreshToken,
         expiresAt: faker.date.past(),
@@ -308,7 +319,7 @@ describe('AuthService', () => {
       expect(thrownError.message).toBe(AuthErrorMessage.REFRESH_TOKEN_EXPIRED);
     });
 
-    it('should throw when user relation is broken and log it', async () => {
+    test('should throw when user relation is broken and log it', async () => {
       const refreshTokenEntity = {
         id: refreshToken,
         userId: faker.string.uuid(),
@@ -338,8 +349,8 @@ describe('AuthService', () => {
       );
     });
 
-    it('should refresh tokens', async () => {
-      const spyOnGenerateTokens = jest.spyOn(authService, 'generateTokens');
+    test('should refresh tokens', async () => {
+      const spyOnGenerateTokens = vi.spyOn(authService, 'generateTokens');
 
       const user = generateUserEntity();
       const refreshTokenEntity = {

@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
+import { describe, expect, test } from 'vitest';
 
 import * as CaseConverter from './case-converter';
 
 describe('Case converting utilities', () => {
   describe('transformKeysFromSnakeToCamel', () => {
-    it.each([
+    test.each([
       'string',
       42,
       BigInt(0),
@@ -17,7 +18,7 @@ describe('Case converting utilities', () => {
       expect(CaseConverter.transformKeysFromSnakeToCamel(value)).toEqual(value);
     });
 
-    it('should not transform simple array', () => {
+    test('should not transform simple array', () => {
       const input = faker.helpers.multiple(() => faker.string.sample());
 
       const output = CaseConverter.transformKeysFromSnakeToCamel(input);
@@ -25,7 +26,7 @@ describe('Case converting utilities', () => {
       expect(output).toEqual(input);
     });
 
-    it('should transform array of objects', () => {
+    test('should transform array of objects', () => {
       const input = faker.helpers.multiple(() => ({
         test_case: faker.string.sample(),
       }));
@@ -38,7 +39,7 @@ describe('Case converting utilities', () => {
       expect(output).toEqual(expectedOutput);
     });
 
-    it('should transform plain object to camelCase', () => {
+    test('should transform plain object to camelCase', () => {
       const input = {
         random_string: faker.string.sample(),
         random_number: faker.number.float(),
@@ -56,7 +57,7 @@ describe('Case converting utilities', () => {
       });
     });
 
-    it('should transform input with nested data', () => {
+    test('should transform input with nested data', () => {
       const randomString = faker.string.sample();
 
       const input = {
@@ -88,7 +89,7 @@ describe('Case converting utilities', () => {
   });
 
   describe('transformKeysFromCamelToSnake', () => {
-    it.each([
+    test.each([
       'string',
       42,
       BigInt(0),
@@ -101,7 +102,7 @@ describe('Case converting utilities', () => {
       expect(CaseConverter.transformKeysFromCamelToSnake(value)).toEqual(value);
     });
 
-    it('should not transform simple array', () => {
+    test('should not transform simple array', () => {
       const input = faker.helpers.multiple(() => faker.string.sample());
 
       const output = CaseConverter.transformKeysFromCamelToSnake(input);
@@ -109,7 +110,7 @@ describe('Case converting utilities', () => {
       expect(output).toEqual(input);
     });
 
-    it('should transform array of objects', () => {
+    test('should transform array of objects', () => {
       const input = faker.helpers.multiple(() => ({
         testCase: faker.string.sample(),
       }));
@@ -122,7 +123,7 @@ describe('Case converting utilities', () => {
       expect(output).toEqual(expectedOutput);
     });
 
-    it('should transform plain object to camelCase', () => {
+    test('should transform plain object to camelCase', () => {
       const input = {
         randomString: faker.string.sample(),
         randomNumber: faker.number.float(),
@@ -140,7 +141,7 @@ describe('Case converting utilities', () => {
       });
     });
 
-    it('should transform input with nested data', () => {
+    test('should transform input with nested data', () => {
       const randomString = faker.string.sample();
 
       const input = {

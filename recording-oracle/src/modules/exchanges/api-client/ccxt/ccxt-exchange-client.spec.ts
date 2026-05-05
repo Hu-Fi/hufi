@@ -1,10 +1,17 @@
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { Exchange } from 'ccxt';
 import * as ccxt from 'ccxt';
 import _ from 'lodash';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { ExchangeName } from '@/common/constants';
 import * as controlFlow from '@/common/utils/control-flow';
@@ -26,7 +33,10 @@ import {
 } from './fixtures';
 import { SEQUENCE_ID_SYMBOL } from './utils';
 
-const mockedCcxt = jest.mocked(ccxt);
+vi.mock('ccxt');
+vi.mock('@/logger');
+
+const mockedCcxt = vi.mocked(ccxt);
 const mockedExchange = createMock<Exchange>();
 
 const testCcxtApiAccessErrors = [
@@ -45,7 +55,7 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 
 describe('CcxtExchangeClient', () => {
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('constructor', () => {
@@ -53,10 +63,13 @@ describe('CcxtExchangeClient', () => {
 
     beforeEach(() => {
       exchangeName = generateExchangeName();
-      mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+
+      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+        return mockedExchange;
+      });
     });
 
-    it('should not create instance if exchange not supported', () => {
+    test('should not create instance if exchange not supported', () => {
       const exchangeName = faker.lorem.slug();
       let thrownError: any;
       try {
@@ -75,8 +88,8 @@ describe('CcxtExchangeClient', () => {
       );
     });
 
-    it('should create instance with correct public values and logger context', () => {
-      const spyOnLoggerChild = jest.spyOn(logger, 'child');
+    test('should create instance with correct public values and logger context', () => {
+      const spyOnLoggerChild = vi.spyOn(logger, 'child');
 
       try {
         const apiKey = faker.string.sample();
@@ -105,7 +118,7 @@ describe('CcxtExchangeClient', () => {
       }
     });
 
-    it.each([true, false, undefined])(
+    test.each([true, false, undefined])(
       'should create instance with sandbox mode [%#]',
       (sandboxParam) => {
         const apiKey = faker.string.sample();
@@ -128,7 +141,7 @@ describe('CcxtExchangeClient', () => {
       },
     );
 
-    it('should use base client options and avoid mutating them', () => {
+    test('should use base client options and avoid mutating them', () => {
       const apiKey = faker.string.sample();
       const secret = faker.string.sample();
       const userId = faker.string.uuid();
@@ -164,7 +177,9 @@ describe('CcxtExchangeClient', () => {
     let ccxtExchangeApiClient: CcxtExchangeClient;
 
     beforeAll(() => {
-      mockedCcxt[exchangeName].mockReturnValueOnce(mockedExchange);
+      mockedCcxt[exchangeName] = vi.fn(function MockedExchangeCtor() {
+        return mockedExchange;
+      });
 
       ccxtExchangeApiClient = new CcxtExchangeClient(exchangeName, {
         apiKey: faker.string.sample(),
@@ -173,12 +188,12 @@ describe('CcxtExchangeClient', () => {
       });
     });
 
-    it('should be defined', () => {
+    test('should be defined', () => {
       expect(ccxtExchangeApiClient).toBeDefined();
     });
 
     describe('checkRequiredCredentials', () => {
-      it('should properly call origin and return', () => {
+      test('should properly call origin and return', () => {
         const expectedReturn = faker.datatype.boolean();
         mockedExchange.checkRequiredCredentials.mockReturnValueOnce(
           expectedReturn,
@@ -194,7 +209,7 @@ describe('CcxtExchangeClient', () => {
     });
 
     describe('checkRequiredAccess', () => {
-      it('should throw in case of network error', async () => {
+      test('should throw in case of network error', async () => {
         const testError = new ccxt.NetworkError(faker.lorem.sentence());
         mockedExchange.fetchBalance.mockRejectedValueOnce(testError);
 
@@ -216,7 +231,7 @@ describe('CcxtExchangeClient', () => {
         expect(logger.error).toHaveBeenCalledWith(expectedMessage, testError);
       });
 
-      it('should re-throw unknown error', async () => {
+      test('should re-throw unknown error', async () => {
         const testError = new Error(faker.lorem.sentence());
         mockedExchange.fetchDepositAddress.mockRejectedValueOnce(testError);
 
@@ -235,7 +250,7 @@ describe('CcxtExchangeClient', () => {
         expect(thrownError.message).toBe(testError.message);
       });
 
-      it("should return false if can't fetch trades due to missing access", async () => {
+      test("should return false if can't fetch trades due to missing access", async () => {
         const now = Date.now();
         const syntheticAuthError = new ExchangeApiAccessError(
           exchangeName,
@@ -244,13 +259,13 @@ describe('CcxtExchangeClient', () => {
         );
         mockedExchange.fetchMyTrades.mockRejectedValueOnce(syntheticAuthError);
 
-        jest.useFakeTimers({ now });
+        vi.useFakeTimers({ now });
 
         const result = await ccxtExchangeApiClient.checkRequiredAccess([
           ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
         ]);
 
-        jest.useRealTimers();
+        vi.useRealTimers();
 
         expect(result).toEqual({
           success: false,
@@ -269,7 +284,7 @@ describe('CcxtExchangeClient', () => {
         );
       });
 
-      it("should return false if can't fetch the balance due to missing access", async () => {
+      test("should return false if can't fetch the balance due to missing access", async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         const syntheticAuthError = new ExchangeApiAccessError(
           exchangeName,
@@ -292,7 +307,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchMyTrades).toHaveBeenCalledTimes(0);
       });
 
-      it("should return false if can't fetch deposit address due to missing access", async () => {
+      test("should return false if can't fetch deposit address due to missing access", async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         mockedExchange.fetchBalance.mockResolvedValueOnce(
           generateCcxtBalance([faker.finance.currencyCode()]),
@@ -326,7 +341,7 @@ describe('CcxtExchangeClient', () => {
         );
       });
 
-      it('should return true if has all necessary permissions', async () => {
+      test('should return true if has all necessary permissions', async () => {
         mockedExchange.fetchMyTrades.mockResolvedValueOnce([]);
         mockedExchange.fetchBalance.mockResolvedValueOnce(
           generateCcxtBalance([faker.finance.currencyCode()]),
@@ -361,7 +376,7 @@ describe('CcxtExchangeClient', () => {
         mockedExchange.fetchMyTrades.mockResolvedValue([]);
       });
 
-      it('should fetch all trades for test case and return mapped data', async () => {
+      test('should fetch all trades for test case and return mapped data', async () => {
         /**
          * Pagination mechanism in _fetchMyTrades is synthetic,
          * this test case is just to test main generator method.
@@ -423,7 +438,7 @@ describe('CcxtExchangeClient', () => {
         }
       });
 
-      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+      test('should throw ExchangeApiAccessError if no necessary access', async () => {
         const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
@@ -456,7 +471,11 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC] = vi.fn(
+              function MockedExchangeCtor() {
+                return mockedExchange;
+              },
+            );
 
             mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
@@ -465,7 +484,7 @@ describe('CcxtExchangeClient', () => {
             });
           });
 
-          it.each([
+          test.each([
             'mexc {"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Invalid access key"}',
@@ -499,9 +518,11 @@ describe('CcxtExchangeClient', () => {
             },
           );
 
-          it('should re-throw original error when 10072 code not for mexc', async () => {
+          test('should re-throw original error when 10072 code not for mexc', async () => {
             const randomExchange = faker.lorem.slug();
-            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[randomExchange] = vi.fn(function MockedExchangeCtor() {
+              return mockedExchange;
+            });
 
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
@@ -534,7 +555,7 @@ describe('CcxtExchangeClient', () => {
     });
 
     describe('fetchBalance', () => {
-      it('should fetch account balance and return it as is', async () => {
+      test('should fetch account balance and return it as is', async () => {
         const tokenSymbol = faker.finance.currencyCode();
         const mockedBalance = generateCcxtBalance([tokenSymbol]);
 
@@ -547,7 +568,7 @@ describe('CcxtExchangeClient', () => {
         expect(mockedExchange.fetchBalance).toHaveBeenCalledTimes(1);
       });
 
-      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+      test('should throw ExchangeApiAccessError if no necessary access', async () => {
         const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
@@ -574,7 +595,9 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC] = vi.fn(function MockCcxtExchange() {
+              return mockedExchange;
+            });
 
             mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
@@ -583,7 +606,7 @@ describe('CcxtExchangeClient', () => {
             });
           });
 
-          it.each([
+          test.each([
             'mexc {"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Invalid access key"}',
@@ -610,9 +633,11 @@ describe('CcxtExchangeClient', () => {
             },
           );
 
-          it('should re-throw original error when 10072 code not for mexc', async () => {
+          test('should re-throw original error when 10072 code not for mexc', async () => {
             const randomExchange = faker.lorem.slug();
-            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[randomExchange] = vi.fn(function MockedExchangeCtor() {
+              return mockedExchange;
+            });
 
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
@@ -639,7 +664,7 @@ describe('CcxtExchangeClient', () => {
     });
 
     describe('fetchDepositAddress', () => {
-      it('should fetch deposit address info and return just address', async () => {
+      test('should fetch deposit address info and return just address', async () => {
         const mockedAddressStructure = generateCcxtDepositAddressStructure();
 
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
@@ -659,7 +684,7 @@ describe('CcxtExchangeClient', () => {
         );
       });
 
-      it('should throw ExchangeApiAccessError if no necessary access', async () => {
+      test('should throw ExchangeApiAccessError if no necessary access', async () => {
         const ErrorConstructor = faker.helpers.arrayElement(
           testCcxtApiAccessErrors,
         );
@@ -688,7 +713,11 @@ describe('CcxtExchangeClient', () => {
           let mexcClient: CcxtExchangeClient;
 
           beforeAll(() => {
-            mockedCcxt[ExchangeName.MEXC].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[ExchangeName.MEXC] = vi.fn(
+              function MockedExchangeCtor() {
+                return mockedExchange;
+              },
+            );
 
             mexcClient = new CcxtExchangeClient(ExchangeName.MEXC, {
               apiKey: faker.string.sample(),
@@ -697,7 +726,7 @@ describe('CcxtExchangeClient', () => {
             });
           });
 
-          it.each([
+          test.each([
             'mexc {"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Invalid access key"}',
@@ -726,9 +755,11 @@ describe('CcxtExchangeClient', () => {
             },
           );
 
-          it('should re-throw original error when 10072 code not for mexc', async () => {
+          test('should re-throw original error when 10072 code not for mexc', async () => {
             const randomExchange = faker.lorem.slug();
-            mockedCcxt[randomExchange].mockReturnValueOnce(mockedExchange);
+            mockedCcxt[randomExchange] = vi.fn(function MockedExchangeCtor() {
+              return mockedExchange;
+            });
 
             const exchangeClient = new CcxtExchangeClient(randomExchange, {
               apiKey: faker.string.sample(),
@@ -757,8 +788,10 @@ describe('CcxtExchangeClient', () => {
         });
       });
 
-      it('should fetch deposit address info for ERC20 network on gate', async () => {
-        mockedCcxt[ExchangeName.GATE].mockReturnValueOnce(mockedExchange);
+      test('should fetch deposit address info for ERC20 network on gate', async () => {
+        mockedCcxt[ExchangeName.GATE] = vi.fn(function MockedExchangeCtor() {
+          return mockedExchange;
+        });
 
         const mockedAddressStructure = generateCcxtDepositAddressStructure();
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
@@ -786,8 +819,10 @@ describe('CcxtExchangeClient', () => {
         );
       });
 
-      it('should fetch deposit address info for ETH network on xt', async () => {
-        mockedCcxt[ExchangeName.XT].mockReturnValueOnce(mockedExchange);
+      test('should fetch deposit address info for ETH network on xt', async () => {
+        mockedCcxt[ExchangeName.XT] = vi.fn(function MockedExchangeCtor() {
+          return mockedExchange;
+        });
 
         const mockedAddressStructure = generateCcxtDepositAddressStructure();
         mockedExchange.fetchDepositAddress.mockResolvedValueOnce(

@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EncryptionConfigService } from '@/config';
 import { generateAesEncryptionKey } from '~/test/fixtures/crypto';
@@ -8,7 +9,7 @@ import { AesEncryptionService } from './aes-encryption.service';
 
 const HEX_FORMAT_REGEX = /[0-9a-f]+/;
 
-const mockGetAesEncryptionKey = jest.fn();
+const mockGetAesEncryptionKey = vi.fn();
 
 const mockEncryptionConfigService: Omit<
   EncryptionConfigService,
@@ -41,11 +42,11 @@ describe('AesEncryptionService', () => {
     mockGetAesEncryptionKey.mockReturnValue(generateAesEncryptionKey());
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(aesEncryptionService).toBeDefined();
   });
 
-  it('should encrypt data and return envelope string', async () => {
+  test('should encrypt data and return envelope string', async () => {
     const data = faker.lorem.lines();
 
     const envelope = await aesEncryptionService.encrypt(Buffer.from(data));
@@ -63,7 +64,7 @@ describe('AesEncryptionService', () => {
     expect(iv).toMatch(HEX_FORMAT_REGEX);
   });
 
-  it('should decrypt data encrypted by itslef', async () => {
+  test('should decrypt data encrypted by itslef', async () => {
     const data = faker.lorem.lines();
 
     const encrypted = await aesEncryptionService.encrypt(Buffer.from(data));
@@ -72,7 +73,7 @@ describe('AesEncryptionService', () => {
     expect(decrypted.toString()).toBe(data);
   });
 
-  it('should fail to decrypt if different encryption key used', async () => {
+  test('should fail to decrypt if different encryption key used', async () => {
     mockGetAesEncryptionKey.mockReturnValueOnce(generateAesEncryptionKey());
     mockGetAesEncryptionKey.mockReturnValueOnce(generateAesEncryptionKey());
 

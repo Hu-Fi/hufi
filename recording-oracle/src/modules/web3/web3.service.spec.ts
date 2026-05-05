@@ -1,10 +1,19 @@
-jest.mock('@/logger');
-
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { Alchemy } from 'alchemy-sdk';
 import { FeeData, JsonRpcProvider, Provider } from 'ethers';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
+import type { Mock } from 'vitest';
 
 import { Web3ConfigService } from '@/config';
 import { CacheManager, CacheManagerMock } from '@/infrastructure/cache';
@@ -14,6 +23,8 @@ import { generateTestnetChainId, mockWeb3ConfigService } from './fixtures';
 import type { WalletWithProvider } from './types';
 import { Web3Cache } from './web3-cache';
 import { Web3Service } from './web3.service';
+
+vi.mock('@/logger');
 
 const mockCacheManager = new CacheManagerMock();
 
@@ -39,7 +50,7 @@ describe('Web3Service', () => {
     web3Service = moduleRef.get<Web3Service>(Web3Service);
   });
 
-  it('should succesfully create service instance', () => {
+  test('should succesfully create service instance', () => {
     /**
      * Constructor throws if configuration is invalid,
      * so check for an instance as litmus test
@@ -48,7 +59,7 @@ describe('Web3Service', () => {
   });
 
   describe('getSigner', () => {
-    it('should return correct signer for a valid chainId on testnet', () => {
+    test('should return correct signer for a valid chainId on testnet', () => {
       const validChainId = generateTestnetChainId();
 
       const signer = web3Service.getSigner(validChainId);
@@ -58,7 +69,7 @@ describe('Web3Service', () => {
       expect(signer.provider).toBeInstanceOf(JsonRpcProvider);
     });
 
-    it('should throw when invalid chain id provided', () => {
+    test('should throw when invalid chain id provided', () => {
       const invalidChainId = -42;
 
       expect(() => web3Service.getSigner(invalidChainId)).toThrow(
@@ -69,10 +80,10 @@ describe('Web3Service', () => {
 
   describe('calculateTxFees', () => {
     const mockProvider = createMock<Provider>();
-    let spyOnGetSigner: jest.SpyInstance;
+    let spyOnGetSigner: Mock;
 
     beforeAll(() => {
-      spyOnGetSigner = jest.spyOn(web3Service, 'getSigner').mockImplementation(
+      spyOnGetSigner = vi.spyOn(web3Service, 'getSigner').mockImplementation(
         () =>
           ({
             provider: mockProvider,
@@ -88,7 +99,7 @@ describe('Web3Service', () => {
       mockProvider.getFeeData.mockReset();
     });
 
-    it('should use multiplier for transaction fee params', async () => {
+    test('should use multiplier for transaction fee params', async () => {
       const testChainId = generateTestnetChainId();
 
       const randomMaxFeePerGas = faker.number.bigInt({ min: 1 });
@@ -108,7 +119,7 @@ describe('Web3Service', () => {
       });
     });
 
-    it('should throw when no transaction fee data from provider', async () => {
+    test('should throw when no transaction fee data from provider', async () => {
       const testChainId = generateTestnetChainId();
 
       mockProvider.getFeeData.mockResolvedValueOnce({
@@ -121,7 +132,7 @@ describe('Web3Service', () => {
       );
     });
 
-    it('should fallback to legacy gasPrice data', async () => {
+    test('should fallback to legacy gasPrice data', async () => {
       const testChainId = generateTestnetChainId();
       const randomGasPrice = faker.number.bigInt();
 
@@ -141,7 +152,7 @@ describe('Web3Service', () => {
       });
     });
 
-    it('should fallback to legacy gasPrice data', async () => {
+    test('should fallback to legacy gasPrice data', async () => {
       const testChainId = generateTestnetChainId();
       const randomGasPrice = faker.number.bigInt();
 
@@ -169,27 +180,27 @@ describe('Web3Service', () => {
       prices: createMock<Alchemy['prices']>(),
     };
 
-    let replacedAlchemySdkRef: jest.ReplaceProperty<'alchemySdk'>;
+    let replacedAlchemySdkSpy: Mock;
 
     beforeAll(() => {
-      replacedAlchemySdkRef = jest.replaceProperty(
-        web3Service as any,
-        'alchemySdk',
-        mockAlchemySdk,
-      );
+      replacedAlchemySdkSpy = vi.spyOn(web3Service as any, 'alchemySdk', 'get');
+    });
+
+    beforeEach(() => {
+      replacedAlchemySdkSpy.mockImplementation(() => mockAlchemySdk);
     });
 
     afterAll(() => {
-      replacedAlchemySdkRef.restore();
+      replacedAlchemySdkSpy.mockRestore();
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
 
       mockCacheManager.clear();
     });
 
-    it('should log a warn if alchemy operation fails and throw', async () => {
+    test('should log a warn if alchemy operation fails and throw', async () => {
       const testError = new Error(faker.lorem.sentence());
 
       mockAlchemySdk.prices.getTokenPriceBySymbol.mockRejectedValueOnce(
@@ -213,7 +224,7 @@ describe('Web3Service', () => {
       });
     });
 
-    it('should cache and return price if available', async () => {
+    test('should cache and return price if available', async () => {
       const price = faker.number.float();
       mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
         data: [
@@ -246,7 +257,7 @@ describe('Web3Service', () => {
       );
     });
 
-    it('should not cache and return price if available for different symbols', async () => {
+    test('should not cache and return price if available for different symbols', async () => {
       const token1 = faker.finance.currencyCode();
       const price1 = faker.number.float();
       mockAlchemySdk.prices.getTokenPriceBySymbol.mockResolvedValueOnce({
@@ -297,7 +308,7 @@ describe('Web3Service', () => {
       );
     });
 
-    it.each([
+    test.each([
       {
         data: [
           {
@@ -356,7 +367,7 @@ describe('Web3Service', () => {
       },
     );
 
-    it.each(['usdt', 'usdt0', 'usdc'])(
+    test.each(['usdt', 'usdt0', 'usdc'])(
       'should return 1 for %s w/o making alchemy call ',
       async (token) => {
         const result = await web3Service.getTokenPriceUsd(token);

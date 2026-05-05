@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { ethers } from 'ethers';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { InvalidEvmAddressError } from '@/common/errors/web3';
 import { isUuidV4, isValidNonce } from '@/common/validators';
@@ -32,15 +33,15 @@ describe('UsersService', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(usersService).toBeDefined();
   });
 
   describe('create', () => {
-    it('should throw when invalid address provided', async () => {
+    test('should throw when invalid address provided', async () => {
       let thrownError: any;
       try {
         await usersService.create(generateInvalidEvmAddress());
@@ -51,15 +52,15 @@ describe('UsersService', () => {
       expect(thrownError).toBeInstanceOf(InvalidEvmAddressError);
     });
 
-    it('should create user with correct data', async () => {
+    test('should create user with correct data', async () => {
       const now = Date.now();
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
 
       const randomAddress = faker.finance.ethereumAddress();
 
       const user = await usersService.create(randomAddress);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       expect(isUuidV4(user.id)).toBe(true);
 
@@ -75,7 +76,7 @@ describe('UsersService', () => {
   });
 
   describe('findOneByEvmAddress', () => {
-    it('should throw when invalid address provided', async () => {
+    test('should throw when invalid address provided', async () => {
       let thrownError: any;
       try {
         await usersService.findOneByEvmAddress(generateInvalidEvmAddress());
@@ -86,7 +87,7 @@ describe('UsersService', () => {
       expect(thrownError).toBeInstanceOf(InvalidEvmAddressError);
     });
 
-    it('should find user for non-checksummed address', async () => {
+    test('should find user for non-checksummed address', async () => {
       const user = generateUserEntity();
       mockUsersRepository.findOneByEvmAddress.mockResolvedValueOnce(user);
 
@@ -102,7 +103,7 @@ describe('UsersService', () => {
   });
 
   describe('getNonce', () => {
-    it('should throw when invalid address provided', async () => {
+    test('should throw when invalid address provided', async () => {
       let thrownError: any;
       try {
         await usersService.getNonce(generateInvalidEvmAddress());
@@ -113,7 +114,7 @@ describe('UsersService', () => {
       expect(thrownError).toBeInstanceOf(InvalidEvmAddressError);
     });
 
-    it('should return default nonce if user does not exist', async () => {
+    test('should return default nonce if user does not exist', async () => {
       mockUsersRepository.findOneByEvmAddress.mockResolvedValue(null);
 
       const nonce = await usersService.getNonce(
@@ -123,7 +124,7 @@ describe('UsersService', () => {
       expect(nonce).toBe('signup');
     });
 
-    it("should return user's nonce", async () => {
+    test("should return user's nonce", async () => {
       const user = generateUserEntity();
       mockUsersRepository.findOneByEvmAddress.mockResolvedValueOnce(user);
 
@@ -137,7 +138,7 @@ describe('UsersService', () => {
   });
 
   describe('assertUserExistsById', () => {
-    it('should throw when used does not exist for provided id', async () => {
+    test('should throw when used does not exist for provided id', async () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(false);
       const testUserId = faker.string.uuid();
 
@@ -152,7 +153,7 @@ describe('UsersService', () => {
       expect(thrownError).toBeInstanceOf(UserNotFoundError);
     });
 
-    it('should not throw when user exists for provided id', async () => {
+    test('should not throw when user exists for provided id', async () => {
       mockUsersRepository.existsById.mockResolvedValueOnce(true);
       const testUserId = faker.string.uuid();
 

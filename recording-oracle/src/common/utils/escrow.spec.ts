@@ -1,18 +1,19 @@
-jest.mock('@human-protocol/sdk');
-
 import { faker } from '@faker-js/faker';
 import { ITransaction, TransactionUtils } from '@human-protocol/sdk';
+import { describe, expect, test, vi } from 'vitest';
 
 import * as escrowUtils from './escrow';
 
-const mockedTransactionUtils = jest.mocked(TransactionUtils);
+vi.mock('@human-protocol/sdk');
+
+const mockedTransactionUtils = vi.mocked(TransactionUtils);
 
 describe('Escrow utilities', () => {
   describe('getCancellationRequestDate', () => {
     const chainId = faker.number.int();
     const campaignAddress = faker.finance.ethereumAddress();
 
-    it('should call with correct params and throw when no cancellation tx in subgraph', async () => {
+    test('should call with correct params and throw when no cancellation tx in subgraph', async () => {
       mockedTransactionUtils.getTransactions.mockResolvedValueOnce([]);
 
       let thrownError: any;
@@ -33,7 +34,7 @@ describe('Escrow utilities', () => {
       });
     });
 
-    it('should return cancellation request date', async () => {
+    test('should return cancellation request date', async () => {
       const mockedTimestamp = faker.date.anytime().valueOf();
 
       mockedTransactionUtils.getTransactions.mockResolvedValueOnce([

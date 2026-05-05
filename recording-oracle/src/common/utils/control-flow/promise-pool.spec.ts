@@ -1,6 +1,7 @@
 import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';
+import { describe, expect, test } from 'vitest';
 
 import { BackpressureLimitError, PromisePool } from './promise-pool';
 
@@ -20,7 +21,7 @@ function createDeferred(): Deferred {
 
 describe('PromisePool', () => {
   describe('constructor', () => {
-    it.each([
+    test.each([
       0,
       -1 * faker.number.int({ min: 1 }),
       faker.number.float({ min: 0.001, max: 10 }),
@@ -30,7 +31,7 @@ describe('PromisePool', () => {
       }).toThrow('concurrency must be a positive integer');
     });
 
-    it.each([
+    test.each([
       0,
       -1 * faker.number.int({ min: 1 }),
       faker.number.float({ min: 0.001, max: 10 }),
@@ -47,7 +48,7 @@ describe('PromisePool', () => {
     );
   });
 
-  it('should limit task concurrency with default backpressure', async () => {
+  test('should limit task concurrency with default backpressure', async () => {
     const pool = new PromisePool({ concurrency: 2 });
 
     const tasks = [createDeferred(), createDeferred(), createDeferred()];
@@ -98,7 +99,7 @@ describe('PromisePool', () => {
     expect(maxNActiveTasks).toBe(2);
   });
 
-  it('should resolve add() as soon as the task is queued, not when it finishes', async () => {
+  test('should resolve add() as soon as the task is queued, not when it finishes', async () => {
     const pool = new PromisePool({ concurrency: 1 });
 
     let taskStatus = 'pending';
@@ -123,7 +124,7 @@ describe('PromisePool', () => {
     expect(pool.pending).toBe(0);
   });
 
-  it('should throw BackpressureLimitError when queue is full', async () => {
+  test('should throw BackpressureLimitError when queue is full', async () => {
     const pool = new PromisePool({ concurrency: 1, backpressureLimit: 1 });
 
     const tasks = [createDeferred(), createDeferred()];

@@ -2,6 +2,7 @@ import { Readable } from 'stream';
 
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
+import { afterAll, afterEach, describe, expect, test } from 'vitest';
 
 import { generateRandomHashString } from '~/test/fixtures/crypto';
 
@@ -18,7 +19,7 @@ describe('HTTP utilities', () => {
   });
 
   describe('downloadFile', () => {
-    it('should throw for invalid url', async () => {
+    test('should throw for invalid url', async () => {
       const invalidUrl = faker.internet.domainName();
 
       let thrownError: any;
@@ -33,7 +34,7 @@ describe('HTTP utilities', () => {
       expect(thrownError.details).toBe('Invalid http url');
     });
 
-    it('should throw when file not found', async () => {
+    test('should throw when file not found', async () => {
       const url = faker.internet.url();
 
       const scope = nock(url).get('/').reply(404);
@@ -52,7 +53,7 @@ describe('HTTP utilities', () => {
       expect(thrownError.details).toBe('File not found');
     });
 
-    it('should format response errors', async () => {
+    test('should format response errors', async () => {
       const url = faker.internet.url();
       const ERROR_MESSAGE = faker.lorem.words();
 
@@ -72,7 +73,7 @@ describe('HTTP utilities', () => {
       expect(thrownError.details).toBe(ERROR_MESSAGE);
     });
 
-    it('should download file as buffer', async () => {
+    test('should download file as buffer', async () => {
       const url = faker.internet.url();
       const content = faker.lorem.paragraph();
 
@@ -88,7 +89,7 @@ describe('HTTP utilities', () => {
       expect(downloadedFile.toString()).toBe(content);
     });
 
-    it('should download file as stream', async () => {
+    test('should download file as stream', async () => {
       const url = faker.internet.url();
       const content = faker.lorem.paragraph();
 
@@ -114,7 +115,7 @@ describe('HTTP utilities', () => {
   });
 
   describe('downloadFileAndVerifyHash', () => {
-    it('should throw when downloaded file hash is not valid', async () => {
+    test('should throw when downloaded file hash is not valid', async () => {
       const fileUrl = faker.internet.url();
       const fileContent = faker.string.sample();
       const fileHash = cryptoUtils.hashString(fileContent, 'sha256');
@@ -140,7 +141,7 @@ describe('HTTP utilities', () => {
       expect(thrownError.details.fileHash).toBe(fileHash);
     });
 
-    it('should return file content when hash is valid', async () => {
+    test('should return file content when hash is valid', async () => {
       const fileUrl = faker.internet.url();
       const fileContent = faker.string.sample();
       const fileHash = cryptoUtils.hashString(fileContent, 'sha1');

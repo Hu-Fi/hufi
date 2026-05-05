@@ -1,6 +1,7 @@
 import { setTimeout as delay } from 'timers/promises';
 
 import { faker } from '@faker-js/faker';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { TimeoutError, withTimeout } from './timeout';
 
@@ -27,7 +28,7 @@ describe('Timeout utilities', () => {
       });
     });
 
-    it('should throw when operation times out', async () => {
+    test('should throw when operation times out', async () => {
       const startTs = Date.now();
 
       let thrownError: any;
@@ -47,7 +48,7 @@ describe('Timeout utilities', () => {
       );
     });
 
-    it('should return operation result if finished in time', async () => {
+    test('should return operation result if finished in time', async () => {
       const startTs = Date.now();
 
       const mockResult = faker.number.float();

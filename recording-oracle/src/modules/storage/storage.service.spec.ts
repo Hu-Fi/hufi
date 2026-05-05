@@ -1,8 +1,7 @@
-jest.mock('minio');
-
 import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
 import { Client as MinioClient } from 'minio';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { ContentType } from '@/common/enums';
 import { S3ConfigService } from '@/config';
@@ -10,17 +9,13 @@ import { S3ConfigService } from '@/config';
 import { MinioErrorCodes } from './minio.constants';
 import { StorageService } from './storage.service';
 
-const mockedMinioClientInstance = {
-  statObject: jest.fn(),
-  bucketExists: jest.fn(),
-  putObject: jest.fn(),
-};
-jest
-  .mocked(MinioClient)
-  .mockImplementation(
-    () => mockedMinioClientInstance as unknown as MinioClient,
-  );
+vi.mock('minio');
 
+const mockedMinioClientInstance = {
+  statObject: vi.fn(),
+  bucketExists: vi.fn(),
+  putObject: vi.fn(),
+};
 const mockS3ConfigService: Omit<S3ConfigService, 'configService'> = {
   endpoint: faker.internet.domainName(),
   port: faker.internet.port(),
@@ -42,6 +37,10 @@ describe('StorageService', () => {
   let storageService: StorageService;
 
   beforeAll(async () => {
+    vi.mocked(MinioClient).mockImplementation(function MinioClientMock() {
+      return mockedMinioClientInstance;
+    });
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         {
@@ -56,11 +55,11 @@ describe('StorageService', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('uploadData', () => {
-    it('should throw when configured bucket does not exist', async () => {
+    test('should throw when configured bucket does not exist', async () => {
       mockedMinioClientInstance.bucketExists.mockImplementation(
         (bucketName) => {
           if (bucketName === mockS3ConfigService.bucket) {
@@ -82,7 +81,7 @@ describe('StorageService', () => {
       expect(mockedMinioClientInstance.putObject).toHaveBeenCalledTimes(0);
     });
 
-    it('should not upload if file already exists', async () => {
+    test('should not upload if file already exists', async () => {
       mockedMinioClientInstance.bucketExists.mockResolvedValueOnce(true);
 
       const fileName = `${faker.lorem.slug()}.json`;
@@ -107,7 +106,7 @@ describe('StorageService', () => {
       expect(mockedMinioClientInstance.putObject).toHaveBeenCalledTimes(0);
     });
 
-    it('should upload if file does not exists', async () => {
+    test('should upload if file does not exists', async () => {
       mockedMinioClientInstance.bucketExists.mockResolvedValueOnce(true);
 
       const fileName = faker.system.fileName();
