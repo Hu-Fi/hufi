@@ -1,9 +1,10 @@
 import type { FC } from 'react';
 
-import { Box, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 
 import ConnectWallet from '@/components/ConnectWallet';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
+import { useNotification } from '@/hooks/useNotification';
 import { BigFilterIcon, CampaignIcon, LockIcon } from '@/icons';
 import { useSignerContext } from '@/providers/SignerProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
@@ -94,8 +95,9 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
   hasActiveFilters,
   isHistory,
 }) => {
-  const { isAuthenticated } = useWeb3Auth();
+  const { isAuthenticated, signIn } = useWeb3Auth();
   const { isSignerReady } = useSignerContext();
+  const { showError } = useNotification();
 
   let title;
   let description;
@@ -118,6 +120,14 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
     description =
       "Connect your wallet and/or sign in to view the campaigns you've joined. Your activity is linked to your wallet address.";
   }
+
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch {
+      showError('Failed to sign in. Please try again.');
+    }
+  };
 
   return (
     <Stack
@@ -174,6 +184,16 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
         {description}
       </Typography>
       {!isSignerReady && <ConnectWallet />}
+      {isSignerReady && !isAuthenticated && (
+        <Button
+          variant="contained"
+          size="large"
+          color="error"
+          onClick={handleSignIn}
+        >
+          Sign In
+        </Button>
+      )}
     </Stack>
   );
 };

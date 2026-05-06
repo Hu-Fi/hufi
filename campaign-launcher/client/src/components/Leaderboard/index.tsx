@@ -2,6 +2,7 @@ import { useMemo, useState, type FC } from 'react';
 
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -179,16 +180,6 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           {leaderboard.data.slice(0, 3).map((entry) => {
             const { rank, address, result, score, estimated_reward } = entry;
             const {
-              value: resultValue,
-              suffix: resultSuffix,
-              decimals: resultDecimals,
-            } = getCompactNumberParts(result);
-            const {
-              value: scoreValue,
-              suffix: scoreSuffix,
-              decimals: scoreDecimals,
-            } = getCompactNumberParts(score);
-            const {
               value: rewardValue,
               suffix: rewardSuffix,
               decimals: rewardDecimals,
@@ -306,11 +297,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                         lineHeight: 1,
                       }}
                     >
-                      <FormattedNumber
-                        value={resultValue}
-                        decimals={resultDecimals}
-                        suffix={resultSuffix}
-                      />
+                      <CompactNumberWithTooltip value={result} />
                     </Typography>
                   </Box>
                   <Box
@@ -340,11 +327,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                         lineHeight: 1,
                       }}
                     >
-                      <FormattedNumber
-                        value={scoreValue}
-                        decimals={scoreDecimals}
-                        suffix={scoreSuffix}
-                      />
+                      <CompactNumberWithTooltip value={score} />
                     </Typography>
                   </Box>
                   <Box

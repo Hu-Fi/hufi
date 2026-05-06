@@ -87,6 +87,7 @@ export type Campaign = {
 export type JoinedCampaign = {
   address: EvmAddress;
   chain_id: number;
+  cancellation_requested_at: number | null;
   details: {
     daily_volume_target?: number;
     daily_balance_target?: number;

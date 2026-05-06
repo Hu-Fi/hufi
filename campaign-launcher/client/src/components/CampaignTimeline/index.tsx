@@ -26,8 +26,11 @@ const getTimelineInfo = (
   const startDate = dayjs(campaign.start_date);
   const endDate = dayjs(campaign.end_date);
 
-  if (campaign.status === CampaignStatus.CANCELLED) {
-    const cancellationDate = dayjs(campaign?.cancellation_requested_at || 0);
+  if (
+    campaign.status === CampaignStatus.CANCELLED &&
+    campaign.cancellation_requested_at
+  ) {
+    const cancellationDate = dayjs(campaign.cancellation_requested_at);
     return {
       label: 'Cancelled on',
       value: cancellationDate.format(DATE_FORMAT),
@@ -36,11 +39,27 @@ const getTimelineInfo = (
   }
 
   if (endDate.isBefore(nowDate)) {
-    return {
-      label: 'Ended on',
-      value: endDate.format(DATE_FORMAT),
-      color: '#d4cfff',
-    };
+    if (campaign.status === CampaignStatus.ACTIVE) {
+      return {
+        label: '',
+        value: 'Waiting for payouts',
+        color: '#5596ff',
+      };
+    }
+    if (campaign.status === CampaignStatus.TO_CANCEL) {
+      return {
+        label: '',
+        value: 'Pending cancellation',
+        color: '#da4c4f',
+      };
+    }
+    if (campaign.status === CampaignStatus.COMPLETED) {
+      return {
+        label: 'Ended on',
+        value: endDate.format(DATE_FORMAT),
+        color: '#d4cfff',
+      };
+    }
   }
 
   if (nowDate.isBefore(startDate)) {
@@ -69,24 +88,32 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
         flexDirection: direction,
       }}
     >
-      <Typography
-        variant="caption"
-        sx={{
-          fontSize: 14,
-          color: 'text.secondary',
-          letterSpacing: '0.15px',
-          mr: isRow ? 1 : 0,
-        }}
-      >
-        {timeline.label}
-      </Typography>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-        }}
-      >
+      {timeline.label && (
+        <>
+          <Box
+            sx={{
+              display: isRow ? 'flex' : 'none',
+              width: 4,
+              height: 4,
+              mr: 1,
+              borderRadius: '50%',
+              bgcolor: 'text.secondary',
+              flexShrink: 0,
+            }}
+          />
+          <Typography
+            sx={{
+              color: 'text.secondary',
+              fontSize: 14,
+              letterSpacing: '0.15px',
+              mr: isRow ? 1 : 0,
+            }}
+          >
+            {timeline.label}
+          </Typography>
+        </>
+      )}
+      <Box display="flex" alignItems="center" gap={0.5}>
         <Box
           sx={{
             width: 6,

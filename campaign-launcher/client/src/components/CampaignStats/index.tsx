@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { Box, Skeleton, Stack, styled, Typography, Grid } from '@mui/material';
 
 import CampaignSymbol from '@/components/CampaignSymbol';
-import FormattedNumber from '@/components/FormattedNumber';
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CancelIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -16,7 +16,6 @@ import {
   CampaignType,
 } from '@/types';
 import {
-  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
@@ -169,11 +168,6 @@ const CampaignStats: FC<Props> = ({
     campaign.exchange_name;
 
   const targetInfo = getTargetInfo(campaign);
-  const {
-    value: targetValue,
-    suffix: targetSuffix,
-    decimals: targetDecimals,
-  } = getCompactNumberParts(targetInfo.value || 0);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
@@ -290,11 +284,11 @@ const CampaignStats: FC<Props> = ({
           <StatsCard withBorder>
             <CardName variant="subtitle2">{targetInfo.label}</CardName>
             <CardValue>
-              <FormattedNumber
-                value={targetValue}
-                decimals={targetDecimals}
-                suffix={targetSuffix + ' ' + targetTokenSymbol}
+              <CompactNumberWithTooltip
+                value={targetInfo.value}
+                tooltipSize="large"
               />
+              {targetTokenSymbol}
             </CardValue>
           </StatsCard>
         </Grid>

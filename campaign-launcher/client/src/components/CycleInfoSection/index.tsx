@@ -3,6 +3,7 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 
 import { CardName, CardValue, StatsCard } from '@/components/CampaignStats';
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
@@ -10,7 +11,6 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
   formatTokenAmount,
-  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTokenInfo,
 } from '@/utils';
@@ -147,12 +147,6 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
-
-  const {
-    value: totalGeneratedValue,
-    suffix: totalGeneratedSuffix,
-    decimals: totalGeneratedDecimals,
-  } = getCompactNumberParts(leaderboard.total);
 
   const eligibleParticipants = leaderboard.data.filter(
     (entry) => entry.score > 0
@@ -308,11 +302,11 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
                 {getTotalGeneratedCardTitle(campaign.type, isMobile)}
               </CardName>
               <CardValue>
-                <FormattedNumber
-                  value={totalGeneratedValue}
-                  decimals={totalGeneratedDecimals}
-                  suffix={totalGeneratedSuffix + ' ' + targetTokenSymbol}
+                <CompactNumberWithTooltip
+                  value={leaderboard.total}
+                  tooltipSize="large"
                 />
+                {targetTokenSymbol}
               </CardValue>
             </StatsCard>
           </Grid>

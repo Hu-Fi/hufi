@@ -3,6 +3,7 @@ import { memo, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CampaignType, type EvmAddress, type LeaderboardEntry } from '@/types';
@@ -98,22 +99,12 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         headerName: 'Score',
         width: isMobile ? 55 : 100,
         renderCell: (params) => {
-          const { value, suffix, decimals } = getCompactNumberParts(
-            params.row.score
-          );
           return (
             <Typography
               variant="body2"
-              sx={{
-                color: 'white',
-                fontWeight: 500,
-              }}
+              sx={{ color: 'white', fontWeight: 500 }}
             >
-              <FormattedNumber
-                value={value}
-                decimals={decimals}
-                suffix={suffix}
-              />
+              <CompactNumberWithTooltip value={params.row.score} />
             </Typography>
           );
         },
@@ -124,9 +115,6 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
           campaignType === CampaignType.MARKET_MAKING ? 'Volume' : 'Held',
         width: isMobile ? 75 : 100,
         renderCell: (params) => {
-          const { value, suffix, decimals } = getCompactNumberParts(
-            params.row.result
-          );
           return (
             <Typography
               sx={{
@@ -136,11 +124,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
                 fontWeight: 500,
               }}
             >
-              <FormattedNumber
-                value={value}
-                decimals={decimals}
-                suffix={suffix}
-              />
+              <CompactNumberWithTooltip value={params.row.result} />
             </Typography>
           );
         },
