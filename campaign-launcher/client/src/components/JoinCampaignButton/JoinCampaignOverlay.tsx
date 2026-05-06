@@ -122,7 +122,14 @@ const JoinCampaignOverlay: FC<Props> = ({
     >
       <Stack>
         {shouldShowTwoSteps && (
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 2,
+            }}
+          >
             {Array.from({ length: 2 }).map((_, index) => (
               <Box
                 key={index}
@@ -137,23 +144,31 @@ const JoinCampaignOverlay: FC<Props> = ({
             ))}
           </Box>
         )}
-        <Stack gap={1.5}>
+        <Stack sx={{ gap: 1.5 }}>
           <Typography
             variant="body1"
-            fontSize={{ xs: '16px', md: '20px' }}
-            fontWeight={600}
-            color="white"
+            sx={{
+              color: 'white',
+              fontSize: { xs: '16px', md: '20px' },
+              fontWeight: 600,
+            }}
           >
             {isConnectStep ? 'Connect Wallet' : 'Sign In'}
           </Typography>
-          <Typography variant="subtitle2" color="text.primary" fontWeight={500}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: 'text.primary',
+              fontWeight: 500,
+            }}
+          >
             {isConnectStep
               ? 'Connect your wallet to create, participate in campaigns and track your performance.'
               : 'To keep your account secure, please sign this message. This is a gasless way to confirm you own this address.'}
           </Typography>
         </Stack>
         {isConnectStep ? (
-          <Grid container spacing={2} mt={2.5}>
+          <Grid container spacing={2} sx={{ mt: 2.5 }}>
             {connectors.map((connector) => {
               const isSelected = connector.id === selectedConnectorId;
 
@@ -181,7 +196,7 @@ const JoinCampaignOverlay: FC<Props> = ({
                       width="auto"
                       height={44}
                     />
-                    <Typography variant="body1" textAlign="center">
+                    <Typography variant="body1" sx={{ textAlign: 'center' }}>
                       {connector.name}
                     </Typography>
                   </Button>
@@ -191,17 +206,24 @@ const JoinCampaignOverlay: FC<Props> = ({
           </Grid>
         ) : (
           <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mt={2}
-            py={2}
-            px={1.5}
-            border="1px solid #433679"
-            borderRadius="8px"
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 2,
+              py: 2,
+              px: 1.5,
+              border: '1px solid #433679',
+              borderRadius: '8px',
+            }}
           >
             <Typography variant="body1">Connected Wallet</Typography>
-            <Typography color="text.primary" fontWeight={600}>
+            <Typography
+              sx={{
+                color: 'text.primary',
+                fontWeight: 600,
+              }}
+            >
               {formatAddress(activeAddress)}
             </Typography>
           </Box>
@@ -219,7 +241,13 @@ const JoinCampaignOverlay: FC<Props> = ({
             Connect Wallet
           </Button>
         ) : (
-          <Stack direction="row" gap={2} mt={6}>
+          <Stack
+            direction="row"
+            sx={{
+              gap: 2,
+              mt: 6,
+            }}
+          >
             <Button
               variant="outlined"
               size="large"

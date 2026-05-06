@@ -44,7 +44,13 @@ const CampaignTypeStep: FC<Props> = ({
 
   return (
     <>
-      <Stack mt={4} width="100%" gridArea="main">
+      <Stack
+        sx={{
+          mt: 4,
+          width: '100%',
+          gridArea: 'main',
+        }}
+      >
         <Grid container spacing={3}>
           {Object.values(CampaignType).map((type) => {
             const isSelected = formValues?.type === type;
@@ -67,19 +73,32 @@ const CampaignTypeStep: FC<Props> = ({
                   onClick={() => handleChangeCampaignType(type)}
                 >
                   <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={2}
-                    mb={{ xs: 2, md: 1, lg: 4 }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      mb: { xs: 2, md: 1, lg: 4 },
+                    }}
                   >
                     <StarIcon
                       sx={{ color: 'primary.main', width: 24, height: 24 }}
                     />
-                    <Typography variant="h6" color="white" fontWeight={600}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: 'white',
+                        fontWeight: 600,
+                      }}
+                    >
                       {CampaignTypeNames[type]}
                     </Typography>
                   </Box>
-                  <Typography variant="body1" color="text.secondary">
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: 'text.secondary',
+                    }}
+                  >
                     {CAMPAIGN_TYPE_DESCRIPTIONS[type]}
                   </Typography>
                 </Paper>

@@ -74,32 +74,54 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
         border: '1px solid #433679',
       }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          px={2}
-          py={0.5}
-          borderRadius="6px"
-          bgcolor="background.default"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            px: 2,
+            py: 0.5,
+            borderRadius: '6px',
+            bgcolor: 'background.default',
+          }}
         >
           <Typography
             variant="caption"
-            color="text.primary"
-            textTransform="uppercase"
-            fontWeight={600}
+            sx={{
+              color: 'text.primary',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+            }}
           >
             {mapTypeToLabel(campaign.type)}
           </Typography>
         </Box>
-        <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+          }}
+        >
           <CustomTooltip
             arrow
             title={getNetworkName(campaign.chain_id) || 'Unknown Network'}
             placement="top"
           >
-            <Box display="flex" sx={{ '& > svg': { fontSize: '20px' } }}>
+            <Box
+              sx={{
+                display: 'flex',
+                '& > svg': { fontSize: '20px' },
+              }}
+            >
               {getChainIcon(campaign.chain_id)}
             </Box>
           </CustomTooltip>
@@ -111,66 +133,89 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
         </Box>
       </Stack>
       <Box
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        gap={1}
-        color="white"
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          gap: 1,
+          color: 'white',
+        }}
       >
         <CampaignSymbol
           symbol={campaign.symbol}
           campaignType={campaign.type}
           size="small"
         />
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
           <Typography
-            variant="caption"
-            color="white"
-            fontSize={16}
-            fontWeight={600}
-            lineHeight="150%"
-            letterSpacing="0.15px"
-            textTransform="capitalize"
+            sx={{
+              color: 'white',
+              fontSize: 16,
+              fontWeight: 600,
+              lineHeight: '150%',
+              letterSpacing: '0.15px',
+              textTransform: 'capitalize',
+            }}
           >
             {exchangeName}
           </Typography>
           <Box
-            width={4}
-            height={4}
-            borderRadius="50%"
-            bgcolor="text.secondary"
-            flexShrink={0}
+            sx={{
+              width: 4,
+              height: 4,
+              borderRadius: '50%',
+              bgcolor: 'text.secondary',
+              flexShrink: 0,
+            }}
           />
           <CampaignTimeline campaign={campaign} />
         </Box>
       </Box>
       <Stack
         direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        gap={1.5}
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 1.5,
+        }}
       >
         <Box
-          display="flex"
-          flexDirection="column"
-          flex={1}
-          p={{ xs: 1.5, md: 2 }}
-          gap={1.5}
-          borderRadius="8px"
-          border="1px solid #433679"
-          bgcolor="#2d284e"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            p: { xs: 1.5, md: 2 },
+            gap: 1.5,
+            borderRadius: '8px',
+            border: '1px solid #433679',
+            bgcolor: '#2d284e',
+          }}
         >
           <Typography
-            color="#a29dca"
-            fontSize={10}
-            lineHeight="135%"
-            fontWeight={700}
-            letterSpacing="1.2px"
-            textTransform="uppercase"
+            sx={{
+              color: '#a29dca',
+              fontSize: 10,
+              lineHeight: '135%',
+              fontWeight: 700,
+              letterSpacing: '1.2px',
+              textTransform: 'uppercase',
+            }}
           >
             {targetInfo.label}
           </Typography>
-          <Typography variant="h6-mobile" color="white" fontWeight={700}>
+          <Typography
+            variant="h6-mobile"
+            sx={{
+              color: 'white',
+              fontWeight: 700,
+            }}
+          >
             <FormattedNumber
               value={displayTargetValue}
               decimals={displayTargetDecimals}
@@ -178,36 +223,48 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             />
             <Typography
               component="span"
-              color="text.primary"
-              fontSize={{ xs: 12, md: 16 }}
-              fontWeight={600}
-              lineHeight="150%"
+              sx={{
+                color: 'text.primary',
+                fontSize: { xs: 12, md: 16 },
+                fontWeight: 600,
+                lineHeight: '150%',
+              }}
             >
               {targetTokenSymbol}
             </Typography>
           </Typography>
         </Box>
         <Box
-          display="flex"
-          flexDirection="column"
-          flex={1}
-          p={{ xs: 1.5, md: 2 }}
-          gap={1.5}
-          borderRadius="8px"
-          border="1px solid #433679"
-          bgcolor="#2d284e"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            p: { xs: 1.5, md: 2 },
+            gap: 1.5,
+            borderRadius: '8px',
+            border: '1px solid #433679',
+            bgcolor: '#2d284e',
+          }}
         >
           <Typography
-            color="#a29dca"
-            fontSize={10}
-            lineHeight="135%"
-            fontWeight={700}
-            letterSpacing="1.2px"
-            textTransform="uppercase"
+            sx={{
+              color: '#a29dca',
+              fontSize: 10,
+              lineHeight: '135%',
+              fontWeight: 700,
+              letterSpacing: '1.2px',
+              textTransform: 'uppercase',
+            }}
           >
             Reward pool
           </Typography>
-          <Typography variant="h6" color="white" fontWeight={700}>
+          <Typography
+            variant="h6"
+            sx={{
+              color: 'white',
+              fontWeight: 700,
+            }}
+          >
             <FormattedNumber
               value={rewardValue}
               decimals={rewardDecimals}
@@ -215,10 +272,12 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             />
             <Typography
               component="span"
-              color="text.primary"
-              fontSize={{ xs: 12, md: 16 }}
-              fontWeight={600}
-              lineHeight="150%"
+              sx={{
+                color: 'text.primary',
+                fontSize: { xs: 12, md: 16 },
+                fontWeight: 600,
+                lineHeight: '150%',
+              }}
             >
               {isJoinedCampaign
                 ? campaign.fund_token.toUpperCase()
@@ -228,10 +287,12 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
         </Box>
       </Stack>
       <Box
-        display="flex"
-        justifyContent="space-between"
-        gap={1.5}
-        sx={{ '& > .MuiButton-root': { flex: 1 } }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 1.5,
+          '& > .MuiButton-root': { flex: 1 },
+        }}
       >
         <Button
           component={RouterLink}

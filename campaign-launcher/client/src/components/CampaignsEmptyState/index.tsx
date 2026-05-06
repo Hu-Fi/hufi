@@ -39,23 +39,27 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
 
   return (
     <Stack
-      alignItems="center"
-      justifyContent="center"
-      gap={2}
-      m="auto"
-      maxWidth="500px"
-      textAlign="center"
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        m: 'auto',
+        maxWidth: '500px',
+        textAlign: 'center',
+      }}
     >
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        width="72px"
-        height="72px"
-        p={1}
-        borderRadius="16px"
-        border="1px solid #433679"
-        bgcolor="#32295a"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '72px',
+          height: '72px',
+          p: 1,
+          borderRadius: '16px',
+          border: '1px solid #433679',
+          bgcolor: '#32295a',
+        }}
       >
         {hasActiveFilters ? (
           <BigFilterIcon sx={{ width: '100%', height: '100%' }} />
@@ -63,10 +67,23 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           <CampaignIcon sx={{ width: '100%', height: '100%' }} />
         )}
       </Box>
-      <Typography component="p" variant="h6" color="white" fontWeight={700}>
+      <Typography
+        component="p"
+        variant="h6"
+        sx={{
+          color: 'white',
+          fontWeight: 700,
+        }}
+      >
         {title}
       </Typography>
-      <Typography fontSize={16} fontWeight={500} color="#a0a0a0">
+      <Typography
+        sx={{
+          fontSize: 16,
+          fontWeight: 500,
+          color: '#a0a0a0',
+        }}
+      >
         {description}
       </Typography>
     </Stack>
@@ -104,23 +121,27 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
 
   return (
     <Stack
-      alignItems="center"
-      justifyContent="center"
-      gap={2}
-      m="auto"
-      maxWidth="500px"
-      textAlign="center"
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        m: 'auto',
+        maxWidth: '500px',
+        textAlign: 'center',
+      }}
     >
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        width="72px"
-        height="72px"
-        p={1}
-        borderRadius="16px"
-        border="1px solid #433679"
-        bgcolor="#32295a"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '72px',
+          height: '72px',
+          p: 1,
+          borderRadius: '16px',
+          border: '1px solid #433679',
+          bgcolor: '#32295a',
+        }}
       >
         {!isAuthenticated && (
           <LockIcon sx={{ width: '100%', height: '100%' }} />
@@ -132,10 +153,24 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
           <CampaignIcon sx={{ width: '100%', height: '100%' }} />
         )}
       </Box>
-      <Typography component="p" variant="h6" color="white" fontWeight={700}>
+      <Typography
+        component="p"
+        variant="h6"
+        sx={{
+          color: 'white',
+          fontWeight: 700,
+        }}
+      >
         {title}
       </Typography>
-      <Typography fontSize={16} fontWeight={500} color="#a0a0a0" mb={2}>
+      <Typography
+        sx={{
+          fontSize: 16,
+          fontWeight: 500,
+          color: '#a0a0a0',
+          mb: 2,
+        }}
+      >
         {description}
       </Typography>
       {!isSignerReady && <ConnectWallet />}
@@ -173,23 +208,27 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({
 
   return (
     <Stack
-      alignItems="center"
-      justifyContent="center"
-      gap={2}
-      m="auto"
-      maxWidth="500px"
-      textAlign="center"
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        m: 'auto',
+        maxWidth: '500px',
+        textAlign: 'center',
+      }}
     >
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        width="72px"
-        height="72px"
-        p={1}
-        borderRadius="16px"
-        border="1px solid #433679"
-        bgcolor="#32295a"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '72px',
+          height: '72px',
+          p: 1,
+          borderRadius: '16px',
+          border: '1px solid #433679',
+          bgcolor: '#32295a',
+        }}
       >
         {!isSignerReady && <LockIcon sx={{ width: '100%', height: '100%' }} />}
         {isSignerReady && hasActiveFilters && (
@@ -199,10 +238,24 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({
           <CampaignIcon sx={{ width: '100%', height: '100%' }} />
         )}
       </Box>
-      <Typography component="p" variant="h6" color="white" fontWeight={700}>
+      <Typography
+        component="p"
+        variant="h6"
+        sx={{
+          color: 'white',
+          fontWeight: 700,
+        }}
+      >
         {title}
       </Typography>
-      <Typography fontSize={16} fontWeight={500} color="#a0a0a0" mb={2}>
+      <Typography
+        sx={{
+          fontSize: 16,
+          fontWeight: 500,
+          color: '#a0a0a0',
+          mb: 2,
+        }}
+      >
         {description}
       </Typography>
       {isSignerReady ? (

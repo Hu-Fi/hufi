@@ -67,7 +67,13 @@ const CampaignAddress: FC<Props> = ({
 
   if (withCopy) {
     return (
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
         <AddressLink address={address} chainId={chainId} size={size} />
         <IconButton
           disabled={isCopied}

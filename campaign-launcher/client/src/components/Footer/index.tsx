@@ -34,26 +34,37 @@ const Footer: FC<{ reserveBottomOffset: boolean }> = ({
   return (
     <Box
       component="footer"
-      bgcolor="background.default"
-      pb={reserveBottomOffset ? `${MOBILE_BOTTOM_NAV_HEIGHT}px` : 0}
+      sx={{
+        bgcolor: 'background.default',
+        pb: reserveBottomOffset ? `${MOBILE_BOTTOM_NAV_HEIGHT}px` : 0,
+      }}
     >
       <Container>
         <Stack
-          alignItems="center"
-          pt={1}
-          pb={3}
-          gap={1}
-          borderTop="1px solid #433679"
+          sx={{
+            alignItems: 'center',
+            pt: 1,
+            pb: 3,
+            gap: 1,
+            borderTop: '1px solid #433679',
+          }}
         >
-          <Typography color="text.secondary" variant="caption">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
             © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
           </Typography>
           <Box
-            display="flex"
-            alignItems="center"
-            gap="30px"
-            width={{ xs: '100%', md: 'auto' }}
-            justifyContent="center"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '30px',
+              width: { xs: '100%', md: 'auto' },
+              justifyContent: 'center',
+            }}
           >
             <SocialMediaIconButton
               aria-label="GitHub"

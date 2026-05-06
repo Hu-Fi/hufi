@@ -85,7 +85,13 @@ const FormExchangeSelect = <
             component="li"
             sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
           >
-            <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
               {exchange?.logo && (
                 <img
                   src={exchange.logo}
@@ -94,9 +100,8 @@ const FormExchangeSelect = <
                 />
               )}
               <Typography
-                color="primary"
                 variant="body2"
-                sx={{ textTransform: 'capitalize' }}
+                sx={{ color: 'primary', textTransform: 'capitalize' }}
               >
                 {exchange?.display_name}
               </Typography>

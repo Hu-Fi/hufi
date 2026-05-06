@@ -98,10 +98,12 @@ const Account: FC = () => {
       >
         <AvatarIcon sx={{ width: 24, height: 24 }} />
         <Typography
-          color="primary.light"
-          fontSize="14px"
-          fontWeight={600}
-          px={1}
+          sx={{
+            color: 'primary.light',
+            fontSize: '14px',
+            fontWeight: 600,
+            px: 1,
+          }}
         >
           {formattedAddress}
         </Typography>

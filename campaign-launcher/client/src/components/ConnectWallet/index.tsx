@@ -86,10 +86,23 @@ const ConnectWallet: FC<Props> = ({ size = 'large', handleClickCallback }) => {
         desktopSx={{ height: 400 }}
         mobileSx={{ p: 2 }}
       >
-        <Typography variant="h6" component="h6" color="white" mb={1.5}>
+        <Typography
+          variant="h6"
+          component="h6"
+          sx={{
+            color: 'white',
+            mb: 1.5,
+          }}
+        >
           Connect Wallet
         </Typography>
-        <Typography variant="body2" mb={3} fontWeight={500}>
+        <Typography
+          variant="body2"
+          sx={{
+            mb: 3,
+            fontWeight: 500,
+          }}
+        >
           Connect your wallet to create, participate in campaigns and even track
           your performance on the leaderboard.
         </Typography>
@@ -119,7 +132,7 @@ const ConnectWallet: FC<Props> = ({ size = 'large', handleClickCallback }) => {
                   width="auto"
                   height={58}
                 />
-                <Typography variant="body1" color="white">
+                <Typography variant="body1" sx={{ color: 'white' }}>
                   {connector.name}
                 </Typography>
               </Button>
