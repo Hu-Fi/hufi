@@ -181,7 +181,6 @@ const ThresholdForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.start_date,
-                    placeholder: 'Select',
                   },
                 }}
               />
@@ -214,7 +213,6 @@ const ThresholdForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.end_date,
-                    placeholder: 'Select',
                   },
                 }}
               />
