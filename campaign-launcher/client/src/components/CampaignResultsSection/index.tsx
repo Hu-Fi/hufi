@@ -36,12 +36,14 @@ const CampaignResultsSection: FC<Props> = ({ campaign }) => {
     CampaignStatus.COMPLETED,
   ].includes(status);
 
+  const resultUrlForFinished = final_results_url ?? intermediate_results_url;
+
   let result: ResultType[keyof ResultType];
   let resultUrl: string;
 
-  if (isFinished && final_results_url) {
+  if (isFinished && resultUrlForFinished) {
     result = RESULT.final;
-    resultUrl = final_results_url;
+    resultUrl = resultUrlForFinished;
   } else if (!isFinished && intermediate_results_url) {
     result = RESULT.intermediate;
     resultUrl = intermediate_results_url;
