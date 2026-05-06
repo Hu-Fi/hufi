@@ -101,7 +101,6 @@ export type JoinedCampaign = {
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
-  cancellation_requested_at: number | null;
 };
 
 export type CampaignDetails = Campaign & {
