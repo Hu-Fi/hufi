@@ -2,12 +2,7 @@ import type { FC, PropsWithChildren } from 'react';
 
 import { ChainId } from '@human-protocol/sdk';
 import type { AppKitNetwork } from '@reown/appkit/networks';
-import {
-  localhost as defaultLocalhost,
-  defineChain,
-  polygon,
-  polygonAmoy,
-} from '@reown/appkit/networks';
+import { polygon, polygonAmoy } from '@reown/appkit/networks';
 import { AppKitProvider } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import type { ConnectMethod } from '@reown/appkit-controllers';
@@ -20,18 +15,8 @@ const projectId = import.meta.env.VITE_APP_WALLETCONNECT_PROJECT_ID;
 const termsUrl = import.meta.env.VITE_APP_TERMS_URL;
 const privacyUrl = import.meta.env.VITE_APP_PRIVACY_URL;
 
-const localhost = defineChain({
-  ...defaultLocalhost,
-  id: ChainId.LOCALHOST,
-  chainNamespace: 'eip155',
-  caipNetworkId: `eip155:${ChainId.LOCALHOST}`,
-});
-
 const mainnetNetworks: [AppKitNetwork] = [polygon];
-const testnetNetworks: [AppKitNetwork, AppKitNetwork] = [
-  polygonAmoy,
-  localhost,
-];
+const testnetNetworks: [AppKitNetwork] = [polygonAmoy];
 
 const networks = isMainnet ? mainnetNetworks : testnetNetworks;
 
@@ -42,7 +27,6 @@ const wagmiAdapter = new WagmiAdapter({
   transports: {
     [polygon.id]: http(),
     [polygonAmoy.id]: http(),
-    [ChainId.LOCALHOST]: http(),
   },
 });
 
