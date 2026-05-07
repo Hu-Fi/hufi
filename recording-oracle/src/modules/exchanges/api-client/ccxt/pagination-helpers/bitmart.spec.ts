@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { Exchange } from 'ccxt';
 import _ from 'lodash';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { generateCcxtTrade } from '../fixtures';
 import {

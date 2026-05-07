@@ -80,36 +80,43 @@ const JoinCampaignOverlay: FC<Props> = ({
       }}
     >
       <Stack>
-        <Stack gap={1.5}>
+        <Stack sx={{ gap: 1.5 }}>
           <Typography
             variant="body1"
-            fontSize={{ xs: '16px', md: '20px' }}
-            fontWeight={600}
-            color="white"
+            sx={{
+              color: 'white',
+              fontSize: { xs: '16px', md: '20px' },
+              fontWeight: 600,
+            }}
           >
             Sign In
           </Typography>
-          <Typography variant="subtitle2" color="text.primary" fontWeight={500}>
+          <Typography
+            variant="subtitle2"
+            sx={{ color: 'text.primary', fontWeight: 500 }}
+          >
             To keep your account secure, please sign this message. This is a
             gasless way to confirm you own this address.
           </Typography>
         </Stack>
         <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mt={2}
-          py={2}
-          px={1.5}
-          border="1px solid #433679"
-          borderRadius="8px"
+          sx={{
+            alignItems: 'center',
+            border: '1px solid #433679',
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 2,
+            px: 1.5,
+            py: 2,
+          }}
         >
           <Typography variant="body1">Connected Wallet</Typography>
-          <Typography color="text.primary" fontWeight={600}>
+          <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>
             {formatAddress(activeAddress)}
           </Typography>
         </Box>
-        <Stack direction="row" gap={2} mt={6}>
+        <Stack direction="row" sx={{ gap: 2, mt: 6 }}>
           <Button
             variant="outlined"
             size="large"

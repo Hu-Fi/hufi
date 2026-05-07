@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { isAcceptableTimestamp } from './utils';
 
@@ -8,15 +9,15 @@ describe('API clients utils', () => {
     let maxLookbackMs: number;
 
     beforeAll(() => {
-      jest.useFakeTimers({ now });
+      vi.useFakeTimers({ now });
       maxLookbackMs = faker.number.int({ max: 1000 });
     });
 
     afterAll(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
-    it.each([NaN, false, ''])(
+    test.each([NaN, false, ''])(
       'should return false if not a number [%#]',
       (timestamp) => {
         expect(isAcceptableTimestamp(timestamp as number, maxLookbackMs)).toBe(
@@ -25,19 +26,19 @@ describe('API clients utils', () => {
       },
     );
 
-    it('should return false if timestamp from future', () => {
+    test('should return false if timestamp from future', () => {
       expect(
         isAcceptableTimestamp(faker.date.future().valueOf(), maxLookbackMs),
       ).toBe(false);
     });
 
-    it('should return false if timestamp is too far', () => {
+    test('should return false if timestamp is too far', () => {
       expect(
         isAcceptableTimestamp(now - maxLookbackMs - 1, maxLookbackMs),
       ).toBe(false);
     });
 
-    it('should return true if timestamp is in range', () => {
+    test('should return true if timestamp is in range', () => {
       const maxLookbackMs = faker.number.int({ max: 100 });
       expect(isAcceptableTimestamp(now - maxLookbackMs, maxLookbackMs)).toBe(
         true,

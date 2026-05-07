@@ -76,16 +76,22 @@ const CampaignsTabs: FC<Props> = ({ activeTab, setActiveTab, isDisabled }) => {
       <Box
         ref={filtersScrollRef}
         onScroll={updateGradientVisibility}
-        display="flex"
-        flexGrow={isMobile ? 1 : 0}
-        minWidth={0}
         sx={{
+          display: 'flex',
+          flexGrow: isMobile ? 1 : 0,
+          minWidth: 0,
           overflowX: 'auto',
           '&::-webkit-scrollbar': { display: 'none' },
           scrollbarWidth: 'none',
         }}
       >
-        <Stack direction="row" gap={1.5} whiteSpace="nowrap">
+        <Stack
+          direction="row"
+          sx={{
+            gap: 1.5,
+            whiteSpace: 'nowrap',
+          }}
+        >
           <TabFilterStyled
             disabled={isDisabled}
             isActive={activeTab === TabFilter.ACTIVE}

@@ -8,15 +8,17 @@ const ModalSuccess: FC<PropsWithChildren> = ({ children }) => {
   return (
     <>
       <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="fit-content"
-        flexShrink={0}
-        p="12px"
-        color="white"
-        bgcolor="#1a926e"
-        borderRadius={100}
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: 'fit-content',
+          flexShrink: 0,
+          p: '12px',
+          color: 'white',
+          bgcolor: '#1a926e',
+          borderRadius: 100,
+        }}
       >
         <SuccessIcon sx={{ width: 34, height: 34 }} />
       </Box>

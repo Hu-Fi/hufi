@@ -31,13 +31,13 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
 
   return (
     <Box
-      position="fixed"
-      left={0}
-      right={0}
-      bottom={0}
-      px={0}
-      pb={0}
       sx={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        px: 0,
+        pb: 0,
         zIndex: (theme) => theme.zIndex.appBar,
       }}
     >
@@ -79,7 +79,13 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
               }}
             >
               <Icon sx={{ fontSize: 36 }} />
-              <Typography fontSize={12} fontWeight={500} lineHeight="100%">
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  lineHeight: '100%',
+                }}
+              >
                 {label}
               </Typography>
             </MuiLink>

@@ -68,9 +68,11 @@ const DashboardWidgets: FC = () => {
     <Grid
       container
       component="section"
-      width="100%"
       spacing={{ xs: 1.5, md: 3 }}
-      mb={{ xs: 4, md: 8 }}
+      sx={{
+        width: '100%',
+        mb: { xs: 4, md: 8 },
+      }}
     >
       <Grid size={{ xs: 6, md: 4 }}>
         <Card isReverse={isMobile}>
@@ -86,10 +88,12 @@ const DashboardWidgets: FC = () => {
           ) : (
             <Typography
               variant={isMobile ? 'h6' : 'h4'}
-              color="white"
-              fontWeight={{ xs: 500, md: 800 }}
-              mt={{ xs: 0, md: 5 }}
-              mb={{ xs: 1, md: 0 }}
+              sx={{
+                color: 'white',
+                fontWeight: { xs: 500, md: 800 },
+                mt: { xs: 0, md: 5 },
+                mb: { xs: 1, md: 0 },
+              }}
             >
               <FormattedNumber
                 value={campaignsStats?.rewards_pool_usd}
@@ -113,10 +117,12 @@ const DashboardWidgets: FC = () => {
           ) : (
             <Typography
               variant={isMobile ? 'h6' : 'h4'}
-              color="white"
-              fontWeight={{ xs: 500, md: 800 }}
-              mt={{ xs: 0, md: 5 }}
-              mb={{ xs: 1, md: 0 }}
+              sx={{
+                color: 'white',
+                fontWeight: { xs: 500, md: 800 },
+                mt: { xs: 0, md: 5 },
+                mb: { xs: 1, md: 0 },
+              }}
             >
               <FormattedNumber value={totalVolume} prefix="$" />
             </Typography>
@@ -129,16 +135,24 @@ const DashboardWidgets: FC = () => {
             <>
               <Typography
                 component="h5"
-                fontSize="20px"
-                color="white"
-                textTransform="capitalize"
-                lineHeight={{ xs: '150%', md: '100%' }}
-                fontWeight={{ xs: 600, md: 800 }}
-                mb={1}
+                sx={{
+                  color: 'white',
+                  fontSize: '20px',
+                  textTransform: 'capitalize',
+                  lineHeight: { xs: '150%', md: '100%' },
+                  fontWeight: { xs: 600, md: 800 },
+                  mb: 1,
+                }}
               >
                 Host Trading Campaigns in 5 Mins
               </Typography>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  mb: 3,
+                }}
+              >
                 Set up, fund, and go live with a fully tracked trading campaign
                 in minutes.
               </Typography>
@@ -149,16 +163,24 @@ const DashboardWidgets: FC = () => {
               <CardTitle>
                 <LinkIcon sx={{ width: 20, height: 20 }} />
                 <Typography
-                  fontSize="20px"
-                  color="white"
-                  textTransform="capitalize"
-                  fontWeight={{ xs: 600, md: 800 }}
-                  lineHeight="36px"
+                  sx={{
+                    color: 'white',
+                    fontSize: '20px',
+                    textTransform: 'capitalize',
+                    fontWeight: { xs: 600, md: 800 },
+                    lineHeight: '36px',
+                  }}
                 >
                   Connect your wallet
                 </Typography>
               </CardTitle>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  mb: 3,
+                }}
+              >
                 and join / host campaigns in minutes
               </Typography>
               <ConnectWallet size={isMobile ? 'medium' : 'large'} />

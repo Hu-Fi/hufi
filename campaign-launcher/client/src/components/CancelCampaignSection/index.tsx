@@ -23,7 +23,12 @@ const CancelCampaignSection: FC<Props> = ({ campaign }) => {
   return (
     <>
       {showSection && (
-        <Box component="section" width={{ xs: '100%', md: '60%' }}>
+        <Box
+          component="section"
+          sx={{
+            width: { xs: '100%', md: '60%' },
+          }}
+        >
           <Button
             variant="text"
             sx={{

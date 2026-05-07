@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { TerminusModule, TypeOrmHealthIndicator } from '@nestjs/terminus';
 import { Test } from '@nestjs/testing';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ServerConfigService } from '@/config';
 import {
@@ -17,9 +18,11 @@ const mockServerConfigService = {
   gitHash: faker.git.commitSha(),
 };
 
-const mockTypeOrmPingCheck = jest.fn();
+const mockTypeOrmPingCheck = vi.fn();
 
-const mockValkeyCacheClient = createMock<ValkeyClient>();
+const mockValkeyCacheClient = createMock<ValkeyClient>(undefined, {
+  strict: true,
+});
 (mockValkeyCacheClient as any).clientName = faker.lorem.slug();
 
 describe('HealthController', () => {
@@ -51,7 +54,7 @@ describe('HealthController', () => {
     healthController = moduleRef.get(HealthController);
   });
 
-  it('/ping should return proper info', async () => {
+  test('/ping should return proper info', async () => {
     await expect(healthController.ping()).resolves.toEqual({
       gitHash: mockServerConfigService.gitHash,
       nodeEnv: 'test',
@@ -72,7 +75,7 @@ describe('HealthController', () => {
       mockValkeyCacheClient.ping.mockResolvedValueOnce('PONG');
     });
 
-    it(`should return 'up' when all deps are up`, async () => {
+    test(`should return 'up' when all deps are up`, async () => {
       await expect(healthController.check()).resolves.toEqual(
         expect.objectContaining({
           status: 'ok',
@@ -86,7 +89,7 @@ describe('HealthController', () => {
       );
     });
 
-    it(`should return 'down' when cache is down`, async () => {
+    test(`should return 'down' when cache is down`, async () => {
       mockValkeyCacheClient.ping
         .mockReset()
         .mockRejectedValueOnce(new Error('timeout'));

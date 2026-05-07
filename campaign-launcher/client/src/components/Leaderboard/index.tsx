@@ -15,17 +15,17 @@ import LeaderboardOverlay from './Overlay';
 
 const ViewAllButton = ({ onClick }: { onClick: () => void }) => (
   <Box
-    display="flex"
-    alignItems="end"
-    height={{ xs: 'auto', md: '180px' }}
-    px={{ xs: 2, md: 4 }}
-    pb={1.5}
-    pt={{ xs: 1.5, md: 0 }}
-    position={{ xs: 'relative', md: 'absolute' }}
-    bottom={0}
-    left={0}
-    right={0}
     sx={{
+      display: 'flex',
+      alignItems: 'end',
+      height: { xs: 'auto', md: '180px' },
+      px: { xs: 2, md: 4 },
+      pb: 1.5,
+      pt: { xs: 1.5, md: 0 },
+      position: { xs: 'relative', md: 'absolute' },
+      bottom: 0,
+      left: 0,
+      right: 0,
       background: {
         xs: '#251d47',
         md: 'linear-gradient(0deg, #251D47 12.72%, rgba(37, 29, 71, 0.00) 100%)',
@@ -116,34 +116,40 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
   return (
     <Stack
       component="section"
-      py={3}
-      mx={{ xs: -2, md: 0 }}
-      px={{ xs: 2, md: 0 }}
-      gap={{ xs: 1, md: 3 }}
-      borderBottom="1px solid #473C74"
+      sx={{
+        py: 3,
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        gap: { xs: 1, md: 3 },
+        borderBottom: '1px solid #473C74',
+      }}
     >
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={2}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+        }}
       >
         <Typography
           component="h6"
-          color={isMobile ? 'white' : 'text.primary'}
-          fontSize={{ xs: '20px', md: '16px' }}
-          fontWeight={{ xs: 500, md: 600 }}
-          letterSpacing={{ xs: 0, md: 3.2 }}
-          textTransform={{ xs: 'none', md: 'uppercase' }}
+          sx={{
+            color: isMobile ? 'white' : 'text.primary',
+            fontSize: { xs: '20px', md: '16px' },
+            fontWeight: { xs: 500, md: 600 },
+            letterSpacing: { xs: 0, md: 3.2 },
+            textTransform: { xs: 'none', md: 'uppercase' },
+          }}
         >
           Leaderboard
         </Typography>
         <Typography
           component="p"
-          fontSize={{ xs: '12px', md: '16px' }}
-          fontWeight={500}
-          lineHeight={1}
           sx={{
+            fontSize: { xs: '12px', md: '16px' },
+            fontWeight: 500,
+            lineHeight: 1,
             opacity: 0.6,
           }}
         >
@@ -161,12 +167,14 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         }}
       >
         <Box
-          display="flex"
-          alignItems="end"
-          pt={{ xs: 0, md: 4 }}
-          px={{ xs: 0, md: 4 }}
-          gap={{ xs: 0, md: 2 }}
-          borderBottom={showList ? '1px solid #3a2e6f' : 'none'}
+          sx={{
+            display: 'flex',
+            alignItems: 'end',
+            pt: { xs: 0, md: 4 },
+            px: { xs: 0, md: 4 },
+            gap: { xs: 0, md: 2 },
+            borderBottom: showList ? '1px solid #3a2e6f' : 'none',
+          }}
         >
           {leaderboard.data.slice(0, 3).map((entry) => {
             const { rank, address, result, score, estimated_reward } = entry;
@@ -189,22 +197,22 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
             return (
               <Stack
                 key={address}
-                alignItems="center"
-                px={{ xs: 1, md: 4 }}
-                pb={{ xs: 1.5, md: 3 }}
-                flex={1}
-                maxWidth="calc(100% / 3)"
-                height={{
-                  xs: rank === 1 ? '192px' : rank === 2 ? '173px' : '155px',
-                  md: rank === 1 ? '287px' : rank === 2 ? '251px' : '214px',
-                }}
-                borderRadius="15px 15px 0 0"
-                border={{
-                  xs: 'none',
-                  md: '1px solid #3a2e6f',
-                }}
-                borderBottom={{ xs: 'none', md: 'none' }}
                 sx={{
+                  alignItems: 'center',
+                  px: { xs: 1, md: 4 },
+                  pb: { xs: 1.5, md: 3 },
+                  flex: 1,
+                  maxWidth: 'calc(100% / 3)',
+                  height: {
+                    xs: rank === 1 ? '192px' : rank === 2 ? '173px' : '155px',
+                    md: rank === 1 ? '287px' : rank === 2 ? '251px' : '214px',
+                  },
+                  borderRadius: '15px 15px 0 0',
+                  border: {
+                    xs: 'none',
+                    md: '1px solid #3a2e6f',
+                  },
+                  borderBottom: { xs: 'none', md: 'none' },
                   background: {
                     xs: '#3a2e6f',
                     md: 'linear-gradient(180deg, #3a2e6f 0%, #231d3e 100%)',
@@ -212,21 +220,23 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                 }}
               >
                 <Box
-                  display="flex"
-                  alignItems="center"
-                  flexDirection={{ xs: 'column', md: 'row' }}
-                  gap={{ xs: 0, md: 1 }}
-                  my="auto"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    gap: { xs: 0, md: 1 },
+                    my: 'auto',
+                  }}
                 >
                   <Typography
-                    color="transparent"
-                    fontSize={{
-                      xs: rank === 1 ? '42px' : '36px',
-                      md: rank === 1 ? '68px' : rank === 2 ? '48px' : '40px',
-                    }}
-                    lineHeight={1}
-                    fontWeight={700}
                     sx={{
+                      color: 'transparent',
+                      fontSize: {
+                        xs: rank === 1 ? '42px' : '36px',
+                        md: rank === 1 ? '68px' : rank === 2 ? '48px' : '40px',
+                      },
+                      lineHeight: 1,
+                      fontWeight: 700,
                       background:
                         rank === 1
                           ? 'linear-gradient(135deg, #eb5088 46.1%, #5630ff 113.92%)'
@@ -238,13 +248,20 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   >
                     #{rank}
                   </Typography>
-                  <Stack gap={0.5} alignItems="center">
+                  <Stack
+                    sx={{
+                      gap: 0.5,
+                      alignItems: 'center',
+                    }}
+                  >
                     <Typography
                       component="p"
                       variant={isMobile ? 'caption' : 'h6'}
-                      color="#e8e8e8"
-                      fontWeight={600}
-                      letterSpacing={{ xs: 0, md: 2 }}
+                      sx={{
+                        color: '#e8e8e8',
+                        fontWeight: 600,
+                        letterSpacing: { xs: 0, md: 2 },
+                      }}
                     >
                       {formatAddress(address, 4, 2)}
                     </Typography>
@@ -252,34 +269,42 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   </Stack>
                 </Box>
                 <Stack
-                  alignItems="center"
-                  width="100%"
-                  py={{ xs: 1, md: 1.5 }}
-                  px={{ xs: 1, md: 1.5 }}
-                  gap={{ xs: 0.5, md: 1.5 }}
-                  borderRadius="8px"
-                  border={{ xs: 'none', md: '1px solid #433679' }}
-                  bgcolor="#251d47"
+                  sx={{
+                    alignItems: 'center',
+                    width: '100%',
+                    py: { xs: 1, md: 1.5 },
+                    px: { xs: 1, md: 1.5 },
+                    gap: { xs: 0.5, md: 1.5 },
+                    borderRadius: '8px',
+                    border: { xs: 'none', md: '1px solid #433679' },
+                    bgcolor: '#251d47',
+                  }}
                 >
                   <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    width="100%"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                    }}
                   >
                     <Typography
                       component="span"
-                      fontSize={{ xs: 10, md: 12 }}
-                      fontWeight={500}
-                      lineHeight={1}
+                      sx={{
+                        fontSize: { xs: 10, md: 12 },
+                        fontWeight: 500,
+                        lineHeight: 1,
+                      }}
                     >
                       {`${getTargetLabel(campaign.type)}`}
                     </Typography>
                     <Typography
                       component="span"
-                      fontSize={{ xs: 12, md: 20 }}
-                      fontWeight={600}
-                      lineHeight={1}
+                      sx={{
+                        fontSize: { xs: 12, md: 20 },
+                        fontWeight: 600,
+                        lineHeight: 1,
+                      }}
                     >
                       <FormattedNumber
                         value={resultValue}
@@ -289,25 +314,31 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                     </Typography>
                   </Box>
                   <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    width="100%"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                    }}
                   >
                     <Typography
                       component="span"
-                      fontSize={{ xs: 10, md: 12 }}
-                      fontWeight={500}
-                      lineHeight={1}
-                      mr={{ xs: 0.5, md: 0 }}
+                      sx={{
+                        fontSize: { xs: 10, md: 12 },
+                        fontWeight: 500,
+                        lineHeight: 1,
+                        mr: { xs: 0.5, md: 0 },
+                      }}
                     >
                       Score
                     </Typography>
                     <Typography
                       component="span"
-                      fontSize={{ xs: 12, md: 20 }}
-                      fontWeight={600}
-                      lineHeight={1}
+                      sx={{
+                        fontSize: { xs: 12, md: 20 },
+                        fontWeight: 600,
+                        lineHeight: 1,
+                      }}
                     >
                       <FormattedNumber
                         value={scoreValue}
@@ -317,25 +348,31 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                     </Typography>
                   </Box>
                   <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    width="100%"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                    }}
                   >
                     <Typography
                       component="span"
-                      fontSize={{ xs: 10, md: 12 }}
-                      fontWeight={500}
-                      lineHeight={1}
-                      mr={{ xs: 0.5, md: 0 }}
+                      sx={{
+                        fontSize: { xs: 10, md: 12 },
+                        fontWeight: 500,
+                        lineHeight: 1,
+                        mr: { xs: 0.5, md: 0 },
+                      }}
                     >
                       Reward
                     </Typography>
                     <Typography
                       component="span"
-                      fontSize={{ xs: 12, md: 20 }}
-                      fontWeight={600}
-                      lineHeight={1}
+                      sx={{
+                        fontSize: { xs: 12, md: 20 },
+                        fontWeight: 600,
+                        lineHeight: 1,
+                      }}
                     >
                       <FormattedNumber
                         value={rewardValue}
@@ -350,7 +387,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
             );
           })}
         </Box>
-        <Stack position="relative">
+        <Stack sx={{ position: 'relative' }}>
           {showList && (
             <LeaderboardList
               data={leaderboard.data.slice(listStart, listEnd)}

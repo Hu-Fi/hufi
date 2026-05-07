@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
+import { vi } from 'vitest';
 
 import {
   generateExchangeName,
@@ -224,8 +225,8 @@ export class MockCampaignProgressChecker implements CampaignProgressChecker<
     [meta: string]: unknown;
   }
 > {
-  checkForParticipant = jest.fn();
-  getCollectedMeta = jest.fn();
+  checkForParticipant = vi.fn();
+  getCollectedMeta = vi.fn();
 }
 
 export function generateCampaignParticipant(

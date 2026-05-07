@@ -36,12 +36,18 @@ const FAQ: FC = () => {
   const isMobile = useIsMobile();
 
   return (
-    <Stack gap={{ xs: 2, md: 3 }}>
+    <Stack
+      sx={{
+        gap: { xs: 2, md: 3 },
+      }}
+    >
       <Typography
         variant={isMobile ? 'h6' : 'h5'}
-        color="white"
-        fontWeight={{ xs: 500, md: 800 }}
-        letterSpacing={{ xs: '0px', md: '-0.5px' }}
+        sx={{
+          color: 'white',
+          fontWeight: { xs: 500, md: 800 },
+          letterSpacing: { xs: '0px', md: '-0.5px' },
+        }}
       >
         FAQ
       </Typography>
@@ -69,13 +75,24 @@ const FAQ: FC = () => {
               )
             }
           >
-            <Typography variant="body2" color="white" fontWeight={600}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'white',
+                fontWeight: 600,
+              }}
+            >
               How do I add an API key?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack>
-              <Typography variant="body2" fontWeight={500}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                }}
+              >
                 To connect your exchange account:
               </Typography>
               <Stack
@@ -95,7 +112,13 @@ const FAQ: FC = () => {
                   Paste them in the API key section here and save.
                 </Typography>
               </Stack>
-              <Typography variant="body2" mt={1} fontWeight={500}>
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 1,
+                  fontWeight: 500,
+                }}
+              >
                 For a more detailed explanation, visit:
               </Typography>
               <Link
@@ -103,7 +126,9 @@ const FAQ: FC = () => {
                 target="_blank"
                 rel="noreferrer"
                 variant="body2"
-                fontWeight={500}
+                sx={{
+                  fontWeight: 500,
+                }}
               >
                 https://docs.hu.finance/campaign-participation/api-keys/
               </Link>
@@ -133,13 +158,24 @@ const FAQ: FC = () => {
               )
             }
           >
-            <Typography variant="body2" color="white" fontWeight={600}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'white',
+                fontWeight: 600,
+              }}
+            >
               How do I stake HMT?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack>
-              <Typography variant="body2" fontWeight={500}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                }}
+              >
                 To stake your HMT tokens:
               </Typography>
               <Stack
@@ -159,7 +195,13 @@ const FAQ: FC = () => {
                   Confirm the transaction in your wallet.
                 </Typography>
               </Stack>
-              <Typography variant="body2" fontWeight={500} mt={1}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  mt: 1,
+                }}
+              >
                 For a more detailed explanation, visit:
               </Typography>
               <Link
@@ -167,7 +209,9 @@ const FAQ: FC = () => {
                 target="_blank"
                 rel="noreferrer"
                 variant="body2"
-                fontWeight={500}
+                sx={{
+                  fontWeight: 500,
+                }}
               >
                 https://docs.hu.finance/campaign-creation/#1-staking
               </Link>
@@ -198,19 +242,36 @@ const FAQ: FC = () => {
               )
             }
           >
-            <Typography variant="body2" color="white" fontWeight={600}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'white',
+                fontWeight: 600,
+              }}
+            >
               How are campaign rewards distributed?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack>
-              <Typography variant="body2" fontWeight={500}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                }}
+              >
                 Campaign rewards are distributed based on the trading
                 performance and volume generated during the campaign period.
                 Once the campaign ends, eligible participants will receive
                 rewards directly to their connected wallet.
               </Typography>
-              <Typography variant="body2" fontWeight={500} mt={1}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  mt: 1,
+                }}
+              >
                 For a more detailed explanation, visit:
               </Typography>
               <Link
@@ -218,7 +279,9 @@ const FAQ: FC = () => {
                 target="_blank"
                 rel="noreferrer"
                 variant="body2"
-                fontWeight={500}
+                sx={{
+                  fontWeight: 500,
+                }}
               >
                 https://docs.hu.finance/holding/#reward-distribution
               </Link>

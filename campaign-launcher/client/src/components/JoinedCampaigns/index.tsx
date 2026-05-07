@@ -65,11 +65,13 @@ const JoinedCampaigns: FC<Props> = ({
       )}
       {showLoadMore && (
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          mx={{ xs: 0, md: 'auto' }}
-          mt={4}
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            mx: { xs: 0, md: 'auto' },
+            mt: 4,
+          }}
         >
           <Button
             variant="contained"

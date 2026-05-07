@@ -25,9 +25,10 @@ updates:
     versioning-strategy: increase-if-necessary
     target-branch: "develop"
     ignore:
-      # Not compatible w/ jest: https://fakerjs.dev/guide/upgrading#incompatibility-with-jest
-      - dependency-name: "@faker-js/faker"
-        versions: [">=10.0.0"]
+      # Starting from this version the app is built, but can't be opened due to error
+      # that comes from web3-related package. Need to check if it's fixed before making actual update
+      - dependency-name: "vite"
+        versions: [">=8.0.10"]
     # Grouping minor and patch updates to 1 PR to reduce the noise:
     # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
     groups:

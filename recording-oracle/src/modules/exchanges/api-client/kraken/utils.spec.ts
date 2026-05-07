@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { ApiErrorCode, ApiPermissionErrorCode } from './constants';
 import { KrakenApiError } from './error';
@@ -17,7 +18,7 @@ import {
 
 describe('Kraken client utils', () => {
   describe('isApiPermissionError', () => {
-    it('should return true for known API permission errors', () => {
+    test('should return true for known API permission errors', () => {
       const apiErrorCode = faker.helpers.arrayElement(
         Object.values(ApiPermissionErrorCode),
       );
@@ -26,25 +27,25 @@ describe('Kraken client utils', () => {
       expect(isApiPermissionError(error)).toBe(true);
     });
 
-    it('should return false for unknown API errors', () => {
+    test('should return false for unknown API errors', () => {
       const error = new KrakenApiError(ApiErrorCode.REPORT_NOT_READY);
 
       expect(isApiPermissionError(error)).toBe(false);
     });
 
-    it('should return false for non-Kraken errors', () => {
+    test('should return false for non-Kraken errors', () => {
       expect(isApiPermissionError(new Error(faker.lorem.words()))).toBe(false);
     });
   });
 
   describe('isReportNotReadyError', () => {
-    it('should return true for report-not-ready API error', () => {
+    test('should return true for report-not-ready API error', () => {
       const error = new KrakenApiError(ApiErrorCode.REPORT_NOT_READY);
 
       expect(isReportNotReadyError(error)).toBe(true);
     });
 
-    it('should return false for permission API error', () => {
+    test('should return false for permission API error', () => {
       const apiErrorCode = faker.helpers.arrayElement(
         Object.values(ApiPermissionErrorCode),
       );
@@ -53,7 +54,7 @@ describe('Kraken client utils', () => {
       expect(isReportNotReadyError(error)).toBe(false);
     });
 
-    it('should return false for non-Kraken errors', () => {
+    test('should return false for non-Kraken errors', () => {
       expect(isReportNotReadyError(new Error(faker.lorem.words()))).toBe(false);
     });
   });
@@ -65,27 +66,27 @@ describe('Kraken client utils', () => {
       baseKrakenTimestamp = generateTradeTime().formatted.split('.')[0];
     });
 
-    it('should pad timestamp when no fractional digits', () => {
+    test('should pad timestamp when no fractional digits', () => {
       expect(normalizeTimestamp(baseKrakenTimestamp)).toBe(
         `${baseKrakenTimestamp}.000`,
       );
     });
 
-    it('should normalize a timestamp with more than 3 fractional digits by truncating', () => {
+    test('should normalize a timestamp with more than 3 fractional digits by truncating', () => {
       const msPart = faker.number.int({ min: 1000 }).toString();
       expect(normalizeTimestamp(`${baseKrakenTimestamp}.${msPart}`)).toBe(
         `${baseKrakenTimestamp}.${msPart.slice(0, 3)}`,
       );
     });
 
-    it('should keep timestamp with exactly 3 fractional digits unchanged', () => {
+    test('should keep timestamp with exactly 3 fractional digits unchanged', () => {
       const msPart = faker.number.int({ min: 100, max: 999 }).toString();
       expect(normalizeTimestamp(`${baseKrakenTimestamp}.${msPart}`)).toBe(
         `${baseKrakenTimestamp}.${msPart}`,
       );
     });
 
-    it('should pad a timestamp with less than 3 fractional digits to 3', () => {
+    test('should pad a timestamp with less than 3 fractional digits to 3', () => {
       const msPart = faker.number.int({ min: 1, max: 99 }).toString();
 
       expect(normalizeTimestamp(`${baseKrakenTimestamp}.${msPart}`)).toBe(
@@ -104,7 +105,7 @@ describe('Kraken client utils', () => {
       return eocd;
     }
 
-    it('should return the buffer unchanged when there are no trailing bytes', () => {
+    test('should return the buffer unchanged when there are no trailing bytes', () => {
       const zip = buildEocd();
 
       const result = trimZipZeroBytes(zip);
@@ -112,7 +113,7 @@ describe('Kraken client utils', () => {
       expect(result).toEqual(zip);
     });
 
-    it('should trim trailing zero bytes after the EOCD record', () => {
+    test('should trim trailing zero bytes after the EOCD record', () => {
       const eocd = buildEocd();
       const starting = Buffer.alloc(10, 0);
       const trailing = Buffer.alloc(10, 0);
@@ -125,7 +126,7 @@ describe('Kraken client utils', () => {
       expect(result).toEqual(expected);
     });
 
-    it('should preserve EOCD with a ZIP comment', () => {
+    test('should preserve EOCD with a ZIP comment', () => {
       const comment = Buffer.from(faker.lorem.sentence());
       const eocd = buildEocd(comment.length);
       comment.copy(eocd, 22);
@@ -140,7 +141,7 @@ describe('Kraken client utils', () => {
       expect(result).toEqual(expected);
     });
 
-    it('should throw when no EOCD signature is found', () => {
+    test('should throw when no EOCD signature is found', () => {
       const invalid = Buffer.alloc(30, 0xff);
       expect(() => trimZipZeroBytes(invalid)).toThrow(
         'EOCD record not found. Not a valid ZIP buffer',
@@ -149,7 +150,7 @@ describe('Kraken client utils', () => {
   });
 
   describe('mapReportRowToTrade', () => {
-    it('should throw when report pair is not in BASE/QUOTE format', () => {
+    test('should throw when report pair is not in BASE/QUOTE format', () => {
       const csvTrade = generateCsvTradeLine({
         pair: `${faker.finance.currencyCode()}${faker.finance.currencyCode()}`,
       });
@@ -159,7 +160,7 @@ describe('Kraken client utils', () => {
       );
     });
 
-    it('should throw when report timestamp cannot be parsed', () => {
+    test('should throw when report timestamp cannot be parsed', () => {
       const csvTrade = generateCsvTradeLine();
       csvTrade.time = new Date(csvTrade.__timestamp).toISOString();
 
@@ -168,7 +169,7 @@ describe('Kraken client utils', () => {
       );
     });
 
-    it('should correctly map base data from csv row to trade', () => {
+    test('should correctly map base data from csv row to trade', () => {
       const csvTrade = generateCsvTradeLine();
 
       const trade = mapReportRowToTrade(csvTrade);
@@ -185,7 +186,7 @@ describe('Kraken client utils', () => {
       });
     });
 
-    it('should map infer maker for non-initiated limit order', () => {
+    test('should map infer maker for non-initiated limit order', () => {
       const csvTrade = generateCsvTradeLine({
         ordertype: 'limit',
         misc: '',
@@ -196,7 +197,7 @@ describe('Kraken client utils', () => {
       expect(trade.takerOrMaker).toBe('maker');
     });
 
-    it('should map taker for initiated order', () => {
+    test('should map taker for initiated order', () => {
       const csvTrade = generateCsvTradeLine({
         misc: 'initiated',
       });
@@ -206,7 +207,7 @@ describe('Kraken client utils', () => {
       expect(trade.takerOrMaker).toBe('taker');
     });
 
-    it('should map taker for non-limit order', () => {
+    test('should map taker for non-limit order', () => {
       const csvTrade = generateCsvTradeLine({
         ordertype: generateOrderType(['limit']),
         misc: '',

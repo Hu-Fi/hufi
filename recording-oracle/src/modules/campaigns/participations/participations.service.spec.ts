@@ -1,6 +1,16 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
@@ -34,10 +44,10 @@ describe('ParticipationsService', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     expect(participationsService).toBeDefined();
   });
 
@@ -49,11 +59,11 @@ describe('ParticipationsService', () => {
     let expectedParticipantsLimit: number | undefined;
 
     beforeAll(() => {
-      jest.useFakeTimers({ now: testFakeDate });
+      vi.useFakeTimers({ now: testFakeDate });
     });
 
     afterAll(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     beforeEach(() => {
@@ -64,7 +74,7 @@ describe('ParticipationsService', () => {
         : undefined;
     });
 
-    it('should join user to campaign if no race condition', async () => {
+    test('should join user to campaign if no race condition', async () => {
       mockParticipationsRepository.safeInsert.mockResolvedValueOnce(undefined);
 
       await expect(
@@ -82,7 +92,7 @@ describe('ParticipationsService', () => {
       );
     });
 
-    it('should throw error if already joined', async () => {
+    test('should throw error if already joined', async () => {
       mockParticipationsRepository.safeInsert.mockRejectedValueOnce(
         createDuplicatedKeyError(),
       );
@@ -109,7 +119,7 @@ describe('ParticipationsService', () => {
       );
     });
 
-    it('should re-throw unexpected errors', async () => {
+    test('should re-throw unexpected errors', async () => {
       const syntheticError = new Error(faker.lorem.sentence());
 
       mockParticipationsRepository.safeInsert.mockRejectedValueOnce(
@@ -131,7 +141,7 @@ describe('ParticipationsService', () => {
       campaignId = faker.string.uuid();
     });
 
-    it('should return null if not joined', async () => {
+    test('should return null if not joined', async () => {
       mockParticipationsRepository.findByUserAndCampaign.mockResolvedValueOnce(
         null,
       );
@@ -148,7 +158,7 @@ describe('ParticipationsService', () => {
       ).toHaveBeenCalledWith(userId, campaignId);
     });
 
-    it('should return join date if joined', async () => {
+    test('should return join date if joined', async () => {
       const joinDate = faker.date.past();
       mockParticipationsRepository.findByUserAndCampaign.mockResolvedValueOnce({
         userId,
@@ -171,7 +181,7 @@ describe('ParticipationsService', () => {
       campaign.details.maxParticipants = faker.number.int({ min: 1 });
     });
 
-    it('should return false if not threshold campaign', async () => {
+    test('should return false if not threshold campaign', async () => {
       campaign.type = faker.lorem.slug() as CampaignType;
 
       await expect(
@@ -179,7 +189,7 @@ describe('ParticipationsService', () => {
       ).resolves.toBe(false);
     });
 
-    it('should return false if threshold campaign has no maxParticipants', async () => {
+    test('should return false if threshold campaign has no maxParticipants', async () => {
       delete campaign.details.maxParticipants;
 
       await expect(
@@ -187,7 +197,7 @@ describe('ParticipationsService', () => {
       ).resolves.toBe(false);
     });
 
-    it('should return true if participant limit reached', async () => {
+    test('should return true if participant limit reached', async () => {
       mockParticipationsRepository.countParticipants.mockResolvedValueOnce(
         campaign.details.maxParticipants!,
       );
@@ -204,7 +214,7 @@ describe('ParticipationsService', () => {
       ).toHaveBeenCalledWith(campaign.id);
     });
 
-    it('should return false if participant limit not reached', async () => {
+    test('should return false if participant limit not reached', async () => {
       mockParticipationsRepository.countParticipants.mockResolvedValueOnce(
         campaign.details.maxParticipants! - 1,
       );

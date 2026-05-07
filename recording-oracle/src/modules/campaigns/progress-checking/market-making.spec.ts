@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { createMock } from '@golevelup/ts-jest';
+import { createMock } from '@golevelup/ts-vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   ExchangeApiClient,
@@ -28,7 +29,7 @@ class TestCampaignProgressChecker extends MarketMakingProgressChecker {
 const mockedExchangesService = createMock<ExchangesService>();
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 
-const fetchMyTrades = jest.fn();
+const fetchMyTrades = vi.fn();
 async function* fetchMyTradesGenerator() {
   do {
     const result = await fetchMyTrades();
@@ -52,10 +53,10 @@ describe('MarketMakingProgressChecker', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
-  it('should be defined', () => {
+  test('should be defined', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangesService,
       generateMarketMakingCheckerSetup(),
@@ -69,7 +70,7 @@ describe('MarketMakingProgressChecker', () => {
       generateMarketMakingCheckerSetup(),
     );
 
-    it.each(Object.values(TradingSide))(
+    test.each(Object.values(TradingSide))(
       'should return proper score for maker %s',
       (side) => {
         const trade = generateTrade({
@@ -83,7 +84,7 @@ describe('MarketMakingProgressChecker', () => {
       },
     );
 
-    it('should return proper score for taker buy', () => {
+    test('should return proper score for taker buy', () => {
       const trade = generateTrade({
         takerOrMaker: TakerOrMakerFlag.TAKER,
         side: TradingSide.BUY,
@@ -94,7 +95,7 @@ describe('MarketMakingProgressChecker', () => {
       expect(score).toBe(trade.cost * 0.42);
     });
 
-    it('should return proper score for taker sell', () => {
+    test('should return proper score for taker sell', () => {
       const trade = generateTrade({
         takerOrMaker: TakerOrMakerFlag.TAKER,
         side: TradingSide.SELL,
@@ -124,7 +125,7 @@ describe('MarketMakingProgressChecker', () => {
       );
     });
 
-    it('should properly init api client and iterator for trades', async () => {
+    test('should properly init api client and iterator for trades', async () => {
       const anytime = faker.date.anytime();
 
       const setup = generateMarketMakingCheckerSetup({
@@ -162,7 +163,7 @@ describe('MarketMakingProgressChecker', () => {
       );
     });
 
-    it('should return zeros when no trades found', async () => {
+    test('should return zeros when no trades found', async () => {
       fetchMyTrades.mockResolvedValueOnce([]);
 
       const result = await resultsChecker.checkForParticipant(participantInfo);
@@ -174,7 +175,7 @@ describe('MarketMakingProgressChecker', () => {
       });
     });
 
-    it('should iterate through all trades', async () => {
+    test('should iterate through all trades', async () => {
       const nTradesPerPage = faker.number.int({ min: 2, max: 4 });
 
       const pages = Array.from({ length: 2 }, () =>
@@ -194,7 +195,7 @@ describe('MarketMakingProgressChecker', () => {
       expect(fetchMyTrades).toHaveBeenCalledTimes(pages.length + 1);
     });
 
-    it('should paginate through trades starting from join date not setup start', async () => {
+    test('should paginate through trades starting from join date not setup start', async () => {
       participantInfo.joinedAt = faker.date.between({
         from: progressCheckerSetup.periodStart.valueOf() + 1,
         to: progressCheckerSetup.periodEnd.valueOf() - 1,
@@ -211,7 +212,7 @@ describe('MarketMakingProgressChecker', () => {
       );
     });
 
-    it('should throw when total exceeds max safe integer', async () => {
+    test('should throw when total exceeds max safe integer', async () => {
       fetchMyTrades.mockResolvedValueOnce([
         generateTrade({
           cost: Number.MAX_SAFE_INTEGER,
@@ -236,7 +237,7 @@ describe('MarketMakingProgressChecker', () => {
       resultsChecker.ethDepositAddresses.clear();
     });
 
-    it('should return zeros when abuse detected', async () => {
+    test('should return zeros when abuse detected', async () => {
       const abuseAddress = faker.finance.ethereumAddress();
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
         abuseAddress,
@@ -271,7 +272,7 @@ describe('MarketMakingProgressChecker', () => {
       );
     });
 
-    it('should collect total volume for all checked participants', async () => {
+    test('should collect total volume for all checked participants', async () => {
       mockedExchangeApiClient.fetchDepositAddress.mockImplementation(async () =>
         faker.finance.ethereumAddress(),
       );
@@ -294,7 +295,7 @@ describe('MarketMakingProgressChecker', () => {
       expect(meta.total_volume).toBe(expectedTotalVolume);
     });
 
-    it('should not count volume of abuse participants', async () => {
+    test('should not count volume of abuse participants', async () => {
       mockedExchangeApiClient.fetchDepositAddress.mockResolvedValue(
         faker.finance.ethereumAddress(),
       );

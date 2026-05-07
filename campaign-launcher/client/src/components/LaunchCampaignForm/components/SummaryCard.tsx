@@ -25,10 +25,12 @@ type Props = {
 const Row = ({ children }: { children: React.ReactNode }) => (
   <Stack
     direction="row"
-    alignItems="center"
-    justifyContent="space-between"
-    width="100%"
-    py={1}
+    sx={{
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      py: 1,
+    }}
   >
     {children}
   </Stack>

@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { AppModule } from '@/app.module';
 
@@ -25,8 +26,11 @@ describe('App (e2e)', () => {
     await app.close();
   });
 
-  it('GET: /health/ping', async () => {
-    await request(app.getHttpServer()).get('/health/ping').expect(200).expect({
+  test('GET: /health/ping', async () => {
+    const response = await request(app.getHttpServer()).get('/health/ping');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
       node_env: 'test',
       git_hash: E2E_GIT_HASH,
     });

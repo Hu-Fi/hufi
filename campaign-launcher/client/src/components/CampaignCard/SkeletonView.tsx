@@ -14,28 +14,43 @@ const SkeletonCard = () => {
         boxShadow: 'none',
       }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Skeleton variant="text" width={140} height={28} />
         <Skeleton variant="text" width={125} height={28} />
       </Stack>
-      <Stack justifyContent="center" gap={1}>
+      <Stack
+        sx={{
+          justifyContent: 'center',
+          gap: 1,
+        }}
+      >
         <Skeleton variant="text" width={150} height={30} />
         <Skeleton variant="text" width={150} height={20} />
       </Stack>
       <Stack
         direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        gap={2}
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+        }}
       >
         <Skeleton variant="rectangular" height={90} sx={{ flex: 1 }} />
         <Skeleton variant="rectangular" height={90} sx={{ flex: 1 }} />
       </Stack>
       <Stack
         direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        gap={2}
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+        }}
       >
         <Skeleton variant="rectangular" height={44} sx={{ flex: 1 }} />
         <Skeleton variant="rectangular" height={44} sx={{ flex: 1 }} />
