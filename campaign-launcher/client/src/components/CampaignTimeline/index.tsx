@@ -113,7 +113,13 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
           </Typography>
         </>
       )}
-      <Box display="flex" alignItems="center" gap={0.5}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
         <Box
           sx={{
             width: 6,

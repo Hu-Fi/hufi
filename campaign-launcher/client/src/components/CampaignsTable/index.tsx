@@ -112,10 +112,12 @@ const CampaignsTable: FC<Props> = ({
         const { chain_id, address } = params.row;
         return (
           <Box
-            display="flex"
-            alignItems="center"
-            gap={1}
-            sx={{ '& > a': { color: 'white', fontSize: '16px' } }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              '& > a': { color: 'white', fontSize: '16px' },
+            }}
           >
             <CustomTooltip
               arrow
@@ -123,8 +125,10 @@ const CampaignsTable: FC<Props> = ({
               placement="top"
             >
               <Box
-                display="flex"
-                sx={{ '& > svg': { fontSize: '20px', color: 'white' } }}
+                sx={{
+                  display: 'flex',
+                  '& > svg': { fontSize: '20px', color: 'white' },
+                }}
               >
                 {getChainIcon(chain_id)}
               </Box>

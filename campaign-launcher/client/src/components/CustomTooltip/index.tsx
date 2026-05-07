@@ -48,8 +48,7 @@ const CustomTooltip = ({ children, sx, ...props }: TooltipProps) => {
         >
           <Box
             component="span"
-            display="inline"
-            sx={sx}
+            sx={{ display: 'inline', ...sx }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
