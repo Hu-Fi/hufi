@@ -1,75 +1,37 @@
 import { type FC, useEffect, useState } from 'react';
 
-import { Box, Button, Grid, Stack, Typography } from '@mui/material';
-import { useConnect, useConnectors, useDisconnect } from 'wagmi';
+import { Box, Button, Stack, Typography } from '@mui/material';
 
-import coinbasePng from '@/assets/coinbase.png';
-import metaMaskPng from '@/assets/metamask.png';
-import walletConnectPng from '@/assets/walletConnect.png';
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 
-type JoinFlowStep = 'connect' | 'auth';
-
 type Props = {
   open: boolean;
   onClose: () => void;
-  startStep: JoinFlowStep;
   handleJoinCampaign: () => Promise<void>;
-};
-
-const WALLET_ICONS: Record<string, string> = {
-  metaMaskSDK: metaMaskPng,
-  coinbaseWalletSDK: coinbasePng,
-  walletConnect: walletConnectPng,
 };
 
 const JoinCampaignOverlay: FC<Props> = ({
   open,
   onClose,
-  startStep,
   handleJoinCampaign,
 }) => {
-  const [step, setStep] = useState<JoinFlowStep>(startStep);
-  const [selectedConnectorId, setSelectedConnectorId] = useState<string>();
   const [isStartedJoinFlow, setIsStartedJoinFlow] = useState(false);
 
-  const connectors = useConnectors();
-  const connect = useConnect();
-  const disconnect = useDisconnect();
   const { activeAddress } = useActiveAccount();
   const { signIn, isLoading: isAuthLoading } = useWeb3Auth();
   const { enrolledExchanges } = useAuthedUserData();
   const { showError } = useNotification();
-  const isMobile = useIsMobile();
 
-  const selectedConnector = connectors.find(
-    (connector) => connector.id === selectedConnectorId
-  );
-
-  const isOverlayActionLoading =
-    connect.isPending || disconnect.isPending || isAuthLoading;
+  const isOverlayActionLoading = isAuthLoading;
 
   const handleOverlayClose = () => {
     if (isOverlayActionLoading) return;
     onClose();
-  };
-
-  const handleConnectWallet = async () => {
-    if (!selectedConnector || isOverlayActionLoading) return;
-
-    try {
-      await connect.mutateAsync({ connector: selectedConnector });
-      setStep('auth');
-    } catch (error) {
-      console.error(error);
-      showError('Failed to connect wallet');
-    }
   };
 
   const handleAuthenticate = async () => {
@@ -100,9 +62,6 @@ const JoinCampaignOverlay: FC<Props> = ({
     }
   }, [isStartedJoinFlow, enrolledExchanges, handleJoinCampaign]);
 
-  const isConnectStep = step === 'connect';
-  const shouldShowTwoSteps = startStep === 'connect';
-
   return (
     <ResponsiveOverlay
       open={open}
@@ -116,34 +75,11 @@ const JoinCampaignOverlay: FC<Props> = ({
       }}
       mobileSx={{ px: 2, py: 4 }}
       closeButtonSx={{
-        top: shouldShowTwoSteps ? 24 : 32,
+        top: 32,
         right: { xs: 16, md: 32 },
       }}
     >
       <Stack>
-        {shouldShowTwoSteps && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              mb: 2,
-            }}
-          >
-            {Array.from({ length: 2 }).map((_, index) => (
-              <Box
-                key={index}
-                sx={{
-                  height: 8,
-                  width: 90,
-                  borderRadius: 10,
-                  bgcolor:
-                    index === 0 || !isConnectStep ? 'text.primary' : '#3a2e6f',
-                }}
-              />
-            ))}
-          </Box>
-        )}
         <Stack sx={{ gap: 1.5 }}>
           <Typography
             variant="body1"
@@ -153,126 +89,58 @@ const JoinCampaignOverlay: FC<Props> = ({
               fontWeight: 600,
             }}
           >
-            {isConnectStep ? 'Connect Wallet' : 'Sign In'}
+            Sign In
           </Typography>
           <Typography
             variant="subtitle2"
-            sx={{
-              color: 'text.primary',
-              fontWeight: 500,
-            }}
+            sx={{ color: 'text.primary', fontWeight: 500 }}
           >
-            {isConnectStep
-              ? 'Connect your wallet to create, participate in campaigns and track your performance.'
-              : 'To keep your account secure, please sign this message. This is a gasless way to confirm you own this address.'}
+            To keep your account secure, please sign this message. This is a
+            gasless way to confirm you own this address.
           </Typography>
         </Stack>
-        {isConnectStep ? (
-          <Grid container spacing={2} sx={{ mt: 2.5 }}>
-            {connectors.map((connector) => {
-              const isSelected = connector.id === selectedConnectorId;
-
-              return (
-                <Grid size={{ xs: 6 }} key={connector.id}>
-                  <Button
-                    fullWidth
-                    onClick={() => setSelectedConnectorId(connector.id)}
-                    sx={{
-                      p: 2,
-                      gap: 1.5,
-                      minHeight: 136,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: '8px',
-                      color: 'white',
-                      border: '1px solid',
-                      borderColor: isSelected ? 'primary.main' : '#433679',
-                      bgcolor: 'transparent',
-                    }}
-                  >
-                    <img
-                      src={connector.icon ?? WALLET_ICONS[connector.id]}
-                      alt={connector.name}
-                      width="auto"
-                      height={44}
-                    />
-                    <Typography variant="body1" sx={{ textAlign: 'center' }}>
-                      {connector.name}
-                    </Typography>
-                  </Button>
-                </Grid>
-              );
-            })}
-          </Grid>
-        ) : (
-          <Box
+        <Box
+          sx={{
+            alignItems: 'center',
+            border: '1px solid #433679',
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 2,
+            px: 1.5,
+            py: 2,
+          }}
+        >
+          <Typography variant="body1">Connected Wallet</Typography>
+          <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>
+            {formatAddress(activeAddress)}
+          </Typography>
+        </Box>
+        <Stack direction="row" sx={{ gap: 2, mt: 6 }}>
+          <Button
+            variant="outlined"
+            size="large"
+            fullWidth
+            disabled={isOverlayActionLoading}
+            onClick={onClose}
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mt: 2,
-              py: 2,
-              px: 1.5,
-              border: '1px solid #433679',
-              borderRadius: '8px',
+              color: 'white',
+              borderColor: '#433679',
             }}
           >
-            <Typography variant="body1">Connected Wallet</Typography>
-            <Typography
-              sx={{
-                color: 'text.primary',
-                fontWeight: 600,
-              }}
-            >
-              {formatAddress(activeAddress)}
-            </Typography>
-          </Box>
-        )}
-        {isConnectStep ? (
+            Cancel
+          </Button>
           <Button
             variant="contained"
             size="large"
             color="error"
-            fullWidth={isMobile}
-            disabled={!selectedConnector || isOverlayActionLoading}
-            sx={{ mt: 6 }}
-            onClick={handleConnectWallet}
+            fullWidth
+            disabled={isOverlayActionLoading}
+            onClick={handleAuthenticate}
           >
-            Connect Wallet
+            Sign In
           </Button>
-        ) : (
-          <Stack
-            direction="row"
-            sx={{
-              gap: 2,
-              mt: 6,
-            }}
-          >
-            <Button
-              variant="outlined"
-              size="large"
-              fullWidth
-              disabled={isOverlayActionLoading}
-              onClick={onClose}
-              sx={{
-                color: 'white',
-                borderColor: '#433679',
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              size="large"
-              color="error"
-              fullWidth
-              disabled={isOverlayActionLoading}
-              onClick={handleAuthenticate}
-            >
-              Sign In
-            </Button>
-          </Stack>
-        )}
+        </Stack>
       </Stack>
     </ResponsiveOverlay>
   );
