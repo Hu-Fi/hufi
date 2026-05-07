@@ -43,7 +43,7 @@ const getTimelineInfo = (
       return {
         label: '',
         value: 'Waiting for payouts',
-        color: '#5596ff',
+        color: '#b98c08',
       };
     }
     if (campaign.status === CampaignStatus.TO_CANCEL) {
@@ -80,6 +80,10 @@ const getTimelineInfo = (
 const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
   const timeline = getTimelineInfo(campaign);
   const isRow = direction === 'row';
+  const isPending =
+    timeline.value === 'Waiting for payouts' ||
+    timeline.value === 'Pending cancellation';
+
   return (
     <Box
       sx={{
@@ -88,30 +92,28 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
         flexDirection: direction,
       }}
     >
+      <Box
+        sx={{
+          display: isRow ? 'flex' : 'none',
+          width: 4,
+          height: 4,
+          mr: 1,
+          borderRadius: '50%',
+          bgcolor: 'text.secondary',
+          flexShrink: 0,
+        }}
+      />
       {timeline.label && (
-        <>
-          <Box
-            sx={{
-              display: isRow ? 'flex' : 'none',
-              width: 4,
-              height: 4,
-              mr: 1,
-              borderRadius: '50%',
-              bgcolor: 'text.secondary',
-              flexShrink: 0,
-            }}
-          />
-          <Typography
-            sx={{
-              color: 'text.secondary',
-              fontSize: 14,
-              letterSpacing: '0.15px',
-              mr: isRow ? 1 : 0,
-            }}
-          >
-            {timeline.label}
-          </Typography>
-        </>
+        <Typography
+          sx={{
+            color: 'text.secondary',
+            fontSize: 14,
+            letterSpacing: '0.15px',
+            mr: isRow ? 1 : 0,
+          }}
+        >
+          {timeline.label}
+        </Typography>
       )}
       <Box
         sx={{
@@ -120,16 +122,29 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
           gap: 0.5,
         }}
       >
-        <Box
-          sx={{
-            width: 6,
-            height: 6,
-            bgcolor: timeline.color,
-            borderRadius: '50%',
-            border: '3px solid',
-            borderColor: timeline.color,
-          }}
-        />
+        {isPending ? (
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: 'transparent',
+              border: '1px dashed',
+              borderColor: timeline.color,
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: 6,
+              height: 6,
+              bgcolor: timeline.color,
+              borderRadius: '50%',
+              border: '3px solid',
+              borderColor: timeline.color,
+            }}
+          />
+        )}
         <Typography
           sx={{
             color: timeline.color,

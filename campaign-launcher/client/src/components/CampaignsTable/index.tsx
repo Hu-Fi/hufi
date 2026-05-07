@@ -116,7 +116,7 @@ const CampaignsTable: FC<Props> = ({
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              '& > a': { color: 'white', fontSize: '16px' },
+              '& > a': { fontSize: '16px' },
             }}
           >
             <CustomTooltip
@@ -127,7 +127,7 @@ const CampaignsTable: FC<Props> = ({
               <Box
                 sx={{
                   display: 'flex',
-                  '& > svg': { fontSize: '20px', color: 'white' },
+                  '& > svg': { fontSize: '20px' },
                 }}
               >
                 {getChainIcon(chain_id)}
