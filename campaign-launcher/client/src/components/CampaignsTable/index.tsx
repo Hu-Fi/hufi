@@ -222,7 +222,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'action',
       headerName: 'Action',
       flex: 0.5,
-      minWidth: 130,
+      minWidth: 140,
       renderCell: (params) => {
         return (
           <Box
@@ -232,7 +232,7 @@ const CampaignsTable: FC<Props> = ({
               alignItems: 'center',
               flex: 1,
               gap: 1,
-              '& > :nth-of-type(2)': { width: 75 },
+              '& > :nth-of-type(2)': { width: 90 },
             }}
           >
             <IconButton
@@ -243,11 +243,27 @@ const CampaignsTable: FC<Props> = ({
                 p: 0,
                 borderRadius: '4px',
                 border: '1px solid #433679',
+                gap: 1,
+                '& .view-details-text': {
+                  display: 'none',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                },
+                '&:only-child': {
+                  width: '100%',
+                  justifyContent: 'center',
+                  px: 1.5,
+                },
+                '&:only-child .view-details-text': {
+                  display: 'inline',
+                },
               }}
               onClick={() =>
                 navigate(`/campaign-details/${params.row.address}`)
               }
             >
+              <span className="view-details-text">View Details</span>
               <ArrowLeftIcon sx={{ transform: 'rotate(135deg)' }} />
             </IconButton>
             <JoinCampaignButton campaign={params.row} />
@@ -312,6 +328,11 @@ const CampaignsTable: FC<Props> = ({
           textTransform: 'uppercase',
           cursor: 'default',
           bgcolor: 'transparent',
+          '&[data-field="action"]': {
+            '& .MuiDataGrid-columnHeaderTitleContainer': {
+              justifyContent: 'center',
+            },
+          },
         },
         '& .MuiDataGrid-columnHeaderTitle': {
           color: '#716c8b',
