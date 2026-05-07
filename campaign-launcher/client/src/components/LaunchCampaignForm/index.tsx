@@ -47,13 +47,13 @@ const LaunchCampaignForm: FC = () => {
 
   return (
     <Box
-      display={{ xs: 'flex', md: isLastStep ? 'flex' : 'grid' }}
-      gridTemplateColumns={isLastStep ? undefined : '2fr 1fr'}
-      gridTemplateRows="64px auto auto"
-      columnGap={12}
-      flex={isLastStep ? 0 : 1}
-      flexDirection="column"
       sx={{
+        display: { xs: 'flex', md: isLastStep ? 'flex' : 'grid' },
+        gridTemplateColumns: isLastStep ? undefined : '2fr 1fr',
+        gridTemplateRows: '64px auto auto',
+        columnGap: 12,
+        flex: isLastStep ? 0 : 1,
+        flexDirection: 'column',
         gridTemplateAreas: isLastStep
           ? undefined
           : `

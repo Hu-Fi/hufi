@@ -89,10 +89,12 @@ const Dashboard: FC = () => {
     <PageWrapper>
       <DashboardWidgets />
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        mb={{ xs: 2, md: 3 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: { xs: 2, md: 3 },
+        }}
       >
         <LinkToCampaigns />
         {!isMobile && (
@@ -133,8 +135,10 @@ const Dashboard: FC = () => {
         container
         component="section"
         spacing={{ xs: 4, md: 3 }}
-        mt={{ xs: 4, md: 8 }}
-        minHeight={{ xs: 'auto', md: '400px' }}
+        sx={{
+          mt: { xs: 4, md: 8 },
+          minHeight: { xs: 'auto', md: '400px' },
+        }}
       >
         <Grid size={{ xs: 12, md: 5 }}>
           <FAQ />

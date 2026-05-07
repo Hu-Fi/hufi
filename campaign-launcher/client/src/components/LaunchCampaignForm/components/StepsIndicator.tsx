@@ -18,7 +18,9 @@ const CampaignTypeTooltip: FC = () => {
           href="https://docs.hu.finance/holding/"
           target="_blank"
           rel="noopener noreferrer"
-          color="primary.contrast"
+          sx={{
+            color: 'primary.contrast',
+          }}
         >
           What are the campaign types?
         </Link>
@@ -37,43 +39,62 @@ type Props = {
 const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
   const isLastStep = currentStep === steps.length;
   return (
-    <Stack gap={{ xs: 2, md: 3 }} gridArea="stepper">
+    <Stack
+      sx={{
+        gap: { xs: 2, md: 3 },
+        gridArea: 'stepper',
+      }}
+    >
       <Box
-        display="flex"
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        gap={0.5}
+        sx={{
+          display: 'flex',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: 0.5,
+        }}
       >
         {!isLastStep && (
           <Typography
             variant="h6"
-            color="white"
-            fontSize={{ xs: '18px', md: '20px' }}
-            fontWeight={{ xs: 700, md: 600 }}
+            sx={{
+              color: 'white',
+              fontSize: { xs: '18px', md: '20px' },
+              fontWeight: { xs: 700, md: 600 },
+            }}
           >
             {currentStep}.
           </Typography>
         )}
         <Typography
           variant="h6"
-          color="white"
-          fontSize={{ xs: '18px', md: '20px' }}
-          fontWeight={{ xs: 700, md: 600 }}
+          sx={{
+            color: 'white',
+            fontSize: { xs: '18px', md: '20px' },
+            fontWeight: { xs: 700, md: 600 },
+          }}
         >
           {steps[currentStep - 1]}
         </Typography>
         {currentStep === 2 && <CampaignTypeTooltip />}
       </Box>
       {!isLastStep && (
-        <Stack direction="row" alignItems="center" gap={2}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
           {steps.map((step, index) => (
             <Box
-              display={index === steps.length - 1 ? 'none' : 'flex'}
               key={step}
-              maxWidth={100}
-              flexGrow={1}
-              height={9}
-              bgcolor={currentStep >= index + 1 ? 'primary.main' : '#251D47'}
-              borderRadius="90px"
+              sx={{
+                display: index === steps.length - 1 ? 'none' : 'flex',
+                maxWidth: 100,
+                flexGrow: 1,
+                height: 9,
+                bgcolor: currentStep >= index + 1 ? 'primary.main' : '#251D47',
+                borderRadius: '90px',
+              }}
             />
           ))}
         </Stack>

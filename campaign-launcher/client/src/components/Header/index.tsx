@@ -135,7 +135,13 @@ const Header: FC = () => {
             py: { xs: 1, md: 3 },
           }}
         >
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
             <IconButton
               sx={{
                 display: { xs: 'flex', md: 'none' },
@@ -157,10 +163,12 @@ const Header: FC = () => {
           </Box>
 
           <Box
-            display={{ xs: 'none', md: 'flex' }}
-            alignItems="center"
-            height="100%"
-            mx="auto"
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              height: '100%',
+              mx: 'auto',
+            }}
           >
             <StyledLink
               to={ROUTES.DASHBOARD}

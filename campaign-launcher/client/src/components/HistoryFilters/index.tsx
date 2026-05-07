@@ -50,22 +50,26 @@ const HistoryFilters: FC<Props> = ({
                 disabled={isDisabled}
                 icon={
                   <Box
-                    width={20}
-                    height={20}
-                    borderRadius="50%"
-                    border="1.5px solid #6d6d6d"
-                    bgcolor="transparent"
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      border: '1.5px solid #6d6d6d',
+                      bgcolor: 'transparent',
+                    }}
                   />
                 }
                 checkedIcon={
                   <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    width={20}
-                    height={20}
-                    borderRadius="50%"
-                    bgcolor="error.main"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      bgcolor: 'error.main',
+                    }}
                   >
                     <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
                   </Box>
@@ -74,10 +78,12 @@ const HistoryFilters: FC<Props> = ({
             }
             label={
               <Typography
-                color="white"
-                fontSize={16}
-                fontWeight={500}
-                lineHeight={1}
+                sx={{
+                  color: 'white',
+                  fontSize: 16,
+                  fontWeight: 500,
+                  lineHeight: 1,
+                }}
               >
                 {label}
               </Typography>

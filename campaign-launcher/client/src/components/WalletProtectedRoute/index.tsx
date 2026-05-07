@@ -12,12 +12,14 @@ const WalletProtectedRoute: FC<PropsWithChildren> = ({ children }) => {
   if (isConnecting) {
     return (
       <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-        height="calc(100vh - 91px)"
-        mx="auto"
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+          height: 'calc(100vh - 91px)',
+          mx: 'auto',
+        }}
       >
         <CircularProgress size={100} />
       </Box>

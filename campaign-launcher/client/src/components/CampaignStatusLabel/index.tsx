@@ -69,20 +69,30 @@ const CampaignStatusLabel: FC<Props> = ({
     endDate
   );
   return (
-    <Box display="flex" alignItems="center" gap={{ xs: 0.5, md: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: { xs: 0.5, md: 1 },
+      }}
+    >
       <Box
         component="span"
-        display="inline-flex"
-        p={{ xs: '4px', md: '6px' }}
-        borderRadius="100%"
-        bgcolor={color}
+        sx={{
+          display: 'inline-flex',
+          p: { xs: '4px', md: '6px' },
+          borderRadius: '100%',
+          bgcolor: color,
+        }}
       />
       <Typography
-        color={color}
-        fontSize={12}
-        fontWeight={600}
-        lineHeight="150%"
-        textTransform="capitalize"
+        sx={{
+          color,
+          fontSize: 12,
+          fontWeight: 600,
+          lineHeight: '150%',
+          textTransform: 'capitalize',
+        }}
       >
         {text}
       </Typography>

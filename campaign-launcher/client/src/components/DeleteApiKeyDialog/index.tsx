@@ -50,13 +50,21 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
       }}
     >
       <Stack
-        mx="auto"
-        alignItems="center"
-        maxWidth={{ xs: '100%', md: 350 }}
-        height="100%"
+        sx={{
+          mx: 'auto',
+          alignItems: 'center',
+          maxWidth: { xs: '100%', md: 350 },
+          height: '100%',
+        }}
       >
         <WarningIcon sx={{ fontSize: 60, mb: 2, color: '#b98c08' }} />
-        <Typography variant="h6" mb={2} fontWeight={700}>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            fontWeight: 700,
+          }}
+        >
           Delete API key?
         </Typography>
         {isPending && <ModalLoading />}
@@ -64,17 +72,21 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
           <>
             <Typography
               variant="body1"
-              textAlign="center"
-              color="#a0a0a0"
-              fontWeight={500}
+              sx={{
+                textAlign: 'center',
+                color: '#a0a0a0',
+                fontWeight: 500,
+              }}
             >
               You are about to delete an API KEY for{' '}
               <Typography
                 variant="body1"
-                color="text.primary"
-                fontWeight={600}
-                textTransform="capitalize"
                 component="span"
+                sx={{
+                  color: 'text.primary',
+                  fontWeight: 600,
+                  textTransform: 'capitalize',
+                }}
               >
                 {exchangeName}
               </Typography>
@@ -83,20 +95,40 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
               <br />
               You can update it instead.
             </Typography>
-            <Typography variant="body1" color="#a0a0a0" my={3} fontWeight={500}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#a0a0a0',
+                my: 3,
+                fontWeight: 500,
+              }}
+            >
               Do you want to continue?
             </Typography>
           </>
         )}
         {isSuccess && (
           <ModalSuccess>
-            <Typography variant="subtitle2" py={1} mb={1} textAlign="center">
+            <Typography
+              variant="subtitle2"
+              sx={{
+                py: 1,
+                mb: 1,
+                textAlign: 'center',
+              }}
+            >
               You have successfully deleted your API KEY
             </Typography>
           </ModalSuccess>
         )}
         {isError && <ModalError message="Failed to delete API key." />}
-        <Stack direction="row" gap={2} mt="auto">
+        <Stack
+          direction="row"
+          sx={{
+            gap: 2,
+            mt: 'auto',
+          }}
+        >
           <Button
             variant="outlined"
             fullWidth={isMobile}
