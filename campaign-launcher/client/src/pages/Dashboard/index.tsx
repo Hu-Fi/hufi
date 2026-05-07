@@ -1,10 +1,11 @@
-import { useState, type FC } from 'react';
+import { useCallback, useState, type FC } from 'react';
 
 import { Box, Button, Grid, Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router';
 
 import AboutHuFi from '@/components/AboutHuFi';
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
+import CampaignsErrorState from '@/components/CampaignsErrorState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
 import DashboardWidgets from '@/components/DashboardWidgets';
@@ -72,6 +73,8 @@ const Dashboard: FC = () => {
     data,
     isLoading: isCampaignsLoading,
     isFetching: isCampaignsFetching,
+    isError: isCampaignsError,
+    refetch,
   } = useCampaigns(queryParams);
 
   const handleChangeView = (nextView: 'grid' | 'table') => {
@@ -79,11 +82,19 @@ const Dashboard: FC = () => {
     localStorage.setItem(PERSISTED_CAMPAIGNS_VIEW_KEY, nextView);
   };
 
+  const handleRefetch = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const isLoading = isCampaignsLoading || isJoinedCampaignsLoading;
 
   const campaigns = data?.results || [];
+
   const showEmptyState =
-    !isLoading && !isCampaignsFetching && campaigns.length === 0;
+    !isLoading &&
+    !isCampaignsFetching &&
+    !isCampaignsError &&
+    campaigns.length === 0;
 
   return (
     <PageWrapper>
@@ -105,13 +116,11 @@ const Dashboard: FC = () => {
           />
         )}
       </Box>
-      {showEmptyState ? (
-        <CampaignsEmptyState
-          view="all"
-          hasActiveFilters={false}
-          isHistory={false}
-        />
-      ) : (
+      {isCampaignsError && <CampaignsErrorState onRefetch={handleRefetch} />}
+      {showEmptyState && (
+        <CampaignsEmptyState view="all" hasActiveFilters={false} />
+      )}
+      {!isCampaignsError && !showEmptyState && (
         <CampaignsFeed
           data={campaigns}
           isGridView={isGridView}

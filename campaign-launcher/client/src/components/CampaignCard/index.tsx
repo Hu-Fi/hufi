@@ -6,6 +6,7 @@ import { Link as RouterLink } from 'react-router';
 import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
@@ -42,11 +43,6 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
 
   const targetInfo = getTargetInfo(campaign);
   const targetValue = Number(targetInfo.value || 0);
-  const {
-    value: displayTargetValue,
-    suffix: displayTargetSuffix,
-    decimals: displayTargetDecimals,
-  } = getCompactNumberParts(targetValue);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
@@ -165,15 +161,6 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           >
             {exchangeName}
           </Typography>
-          <Box
-            sx={{
-              width: 4,
-              height: 4,
-              borderRadius: '50%',
-              bgcolor: 'text.secondary',
-              flexShrink: 0,
-            }}
-          />
           <CampaignTimeline campaign={campaign} />
         </Box>
       </Box>
@@ -210,17 +197,14 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             {targetInfo.label}
           </Typography>
           <Typography
-            variant="h6-mobile"
             sx={{
               color: 'white',
+              fontSize: 18,
               fontWeight: 700,
+              lineHeight: '150%',
             }}
           >
-            <FormattedNumber
-              value={displayTargetValue}
-              decimals={displayTargetDecimals}
-              suffix={`${displayTargetSuffix} `}
-            />
+            <CompactNumberWithTooltip value={targetValue} />{' '}
             <Typography
               component="span"
               sx={{
@@ -259,10 +243,11 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             Reward pool
           </Typography>
           <Typography
-            variant="h6"
             sx={{
               color: 'white',
+              fontSize: 18,
               fontWeight: 700,
+              lineHeight: '150%',
             }}
           >
             <FormattedNumber

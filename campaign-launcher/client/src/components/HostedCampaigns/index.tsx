@@ -1,8 +1,9 @@
-import { useEffect, useState, type FC } from 'react';
+import { useCallback, useEffect, useState, type FC } from 'react';
 
 import { Box, Button } from '@mui/material';
 
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
+import CampaignsErrorState from '@/components/CampaignsErrorState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useHostedCampaigns } from '@/hooks/useCampaigns';
 import type { Campaign, CampaignsQueryParams } from '@/types';
@@ -12,7 +13,6 @@ type Props = {
   queryParams: CampaignsQueryParams;
   hasActiveFilters: boolean;
   isGridView: boolean;
-  isHistory: boolean;
   setNextPage: () => void;
 };
 
@@ -20,11 +20,11 @@ const HostedCampaigns: FC<Props> = ({
   queryParams,
   hasActiveFilters,
   isGridView,
-  isHistory,
   setNextPage,
 }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const { data, isLoading, isFetching } = useHostedCampaigns(queryParams);
+  const { data, isLoading, isFetching, isError, refetch } =
+    useHostedCampaigns(queryParams);
 
   const currentSkip = queryParams.skip ?? 0;
 
@@ -38,19 +38,25 @@ const HostedCampaigns: FC<Props> = ({
     });
   }, [data, currentSkip, isFetching]);
 
+  const handleRefetch = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const showLoadMore = isLoading || isFetching || data?.has_more;
 
-  const showEmptyState = !isLoading && !isFetching && campaigns.length === 0;
+  const showEmptyState =
+    !isLoading && !isFetching && !isError && campaigns.length === 0;
 
   return (
     <>
-      {showEmptyState ? (
+      {isError && <CampaignsErrorState onRefetch={handleRefetch} />}
+      {showEmptyState && (
         <CampaignsEmptyState
           view="hosted"
           hasActiveFilters={hasActiveFilters}
-          isHistory={isHistory}
         />
-      ) : (
+      )}
+      {!isError && !showEmptyState && (
         <CampaignsFeed
           data={campaigns}
           isGridView={isGridView}
