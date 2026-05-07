@@ -16,22 +16,26 @@ import { type CampaignsFiltersSelection } from '@/components/CampaignsFilters';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { config as wagmiConfig } from '@/providers/WagmiProvider';
-import { CampaignType } from '@/types';
+import { CampaignStatus, CampaignType } from '@/types';
 import { mapTypeToLabel } from '@/utils';
 
 const controlSlotProps = {
   root: {
     sx: {
-      ml: 1,
+      ml: 1.5,
       py: 0,
-      px: 0.5,
+      px: 0,
     },
   },
 };
 
 const labelSlotProps = {
   typography: {
-    color: 'white',
+    sx: {
+      color: 'white',
+      textTransform: 'capitalize',
+      ml: 1,
+    },
   },
 };
 
@@ -63,6 +67,13 @@ const CheckboxCheckedIcon = () => (
   </Box>
 );
 
+const statusOptions = [...Object.values(CampaignStatus)]
+  .filter((status) => status !== CampaignStatus.TO_CANCEL)
+  .map((status) => ({
+    value: status,
+    label: status,
+  }));
+
 const campaignTypeOptions = [...Object.values(CampaignType)].map(
   (campaignType) => ({
     value: campaignType,
@@ -82,7 +93,7 @@ type Props = {
   onApplyFilters: (filters: CampaignsFiltersSelection) => void;
 };
 
-type MultiSelectSection = 'campaignTypes' | 'exchanges';
+type MultiSelectSection = 'campaignTypes' | 'exchanges' | 'statuses';
 
 const CampaignsFiltersContent: FC<Props> = ({
   appliedFilters,
@@ -100,15 +111,19 @@ const CampaignsFiltersContent: FC<Props> = ({
   }));
   const campaignTypeValues = campaignTypeOptions.map((option) => option.value);
   const exchangeValues = exchangeOptions.map((option) => option.value);
+  const statusValues = statusOptions.map((option) => option.value);
   const sectionOptions: Record<MultiSelectSection, string[]> = {
     campaignTypes: campaignTypeValues,
     exchanges: exchangeValues,
+    statuses: statusValues,
   };
 
   const isAllCampaignTypesSelected =
     draftFilters.campaignTypes.includes(ALL_OPTION_VALUE);
   const isAllExchangesSelected =
     draftFilters.exchanges.includes(ALL_OPTION_VALUE);
+  const isAllStatusesSelected =
+    draftFilters.statuses.includes(ALL_OPTION_VALUE);
 
   const handleToggleAll = (section: MultiSelectSection) => {
     const currentValues = draftFilters[section] as string[];
@@ -149,9 +164,10 @@ const CampaignsFiltersContent: FC<Props> = ({
 
   const handleClearAll = () => {
     setDraftFilters({
+      network: appliedFilters.network,
+      statuses: [],
       campaignTypes: [],
       exchanges: [],
-      network: appliedFilters.network,
     });
   };
 
@@ -268,6 +284,56 @@ const CampaignsFiltersContent: FC<Props> = ({
               textTransform: 'uppercase',
             }}
           >
+            Status
+          </Typography>
+          <FormControlLabel
+            label="All"
+            control={
+              <Checkbox
+                checked={isAllStatusesSelected}
+                slotProps={controlSlotProps}
+                icon={<CheckboxIcon />}
+                checkedIcon={<CheckboxCheckedIcon />}
+              />
+            }
+            slotProps={labelSlotProps}
+            onChange={() => handleToggleAll('statuses')}
+          />
+          {statusOptions.map(({ label, value }) => (
+            <FormControlLabel
+              key={value}
+              label={label}
+              control={
+                <Checkbox
+                  checked={
+                    isAllStatusesSelected ||
+                    draftFilters.statuses.includes(value)
+                  }
+                  slotProps={controlSlotProps}
+                  icon={<CheckboxIcon />}
+                  checkedIcon={<CheckboxCheckedIcon />}
+                />
+              }
+              slotProps={labelSlotProps}
+              onChange={() => handleToggleOption(value, 'statuses')}
+            />
+          ))}
+        </Stack>
+        <Divider sx={{ borderColor: '#3a2e6f' }} />
+        <Stack
+          sx={{
+            gap: 1,
+            px: { xs: 2, md: 4 },
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: 13,
+              fontWeight: 500,
+              textTransform: 'uppercase',
+            }}
+          >
             Campaign Type
           </Typography>
           <FormControlLabel
@@ -360,8 +426,7 @@ const CampaignsFiltersContent: FC<Props> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           borderTop: '1px solid #3a2e6f',
-          pt: 3,
-          pb: 4,
+          py: 3,
           px: { xs: 2, md: 3 },
           gap: 2,
         }}

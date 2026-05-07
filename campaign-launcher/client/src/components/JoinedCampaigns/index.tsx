@@ -12,7 +12,6 @@ type Props = {
   queryParams: CampaignsQueryParams;
   hasActiveFilters: boolean;
   isGridView: boolean;
-  isHistory: boolean;
   setNextPage: () => void;
 };
 
@@ -20,7 +19,6 @@ const JoinedCampaigns: FC<Props> = ({
   queryParams,
   hasActiveFilters,
   isGridView,
-  isHistory,
   setNextPage,
 }) => {
   const [campaigns, setCampaigns] = useState<JoinedCampaign[]>([]);
@@ -52,7 +50,6 @@ const JoinedCampaigns: FC<Props> = ({
         <CampaignsEmptyState
           view="joined"
           hasActiveFilters={hasActiveFilters}
-          isHistory={isHistory}
         />
       ) : (
         <CampaignsFeed

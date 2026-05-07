@@ -12,15 +12,12 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 type Props = {
   view: 'all' | 'joined' | 'hosted';
   hasActiveFilters: boolean;
-  isHistory: boolean;
 };
 
 type ChildProps = {
   hasActiveFilters: boolean;
-  isHistory?: boolean;
 };
 
-const NO_CAMPAIGNS_TITLE = 'No campaigns here';
 const NO_CAMPAIGNS_MATCH_FILTERS_TITLE = 'No campaigns match your filters';
 const NO_CAMPAIGNS_MATCH_FILTERS_DESCRIPTION =
   "None of the campaigns fit the filters you've applied. Try adjusting or clearing them to see more results.";
@@ -91,10 +88,7 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
   );
 };
 
-const JoinedCampaignsEmptyState: FC<ChildProps> = ({
-  hasActiveFilters,
-  isHistory,
-}) => {
+const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
   const { isAuthenticated, signIn } = useWeb3Auth();
   const { isSignerReady } = useSignerContext();
   const { showError } = useNotification();
@@ -103,11 +97,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
   let description;
 
   if (isAuthenticated) {
-    if (isHistory) {
-      title = NO_CAMPAIGNS_TITLE;
-      description =
-        'Joined campaigns that ended appear here. Browse active campaigns and jump in to start earning rewards.';
-    } else if (hasActiveFilters) {
+    if (hasActiveFilters) {
       title = NO_CAMPAIGNS_MATCH_FILTERS_TITLE;
       description = NO_CAMPAIGNS_MATCH_FILTERS_DESCRIPTION;
     } else {
@@ -198,24 +188,16 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({
   );
 };
 
-const HostedCampaignsEmptyState: FC<ChildProps> = ({
-  hasActiveFilters,
-  isHistory,
-}) => {
+const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
   const { isSignerReady } = useSignerContext();
 
   let title;
   let description;
 
   if (isSignerReady) {
-    if (isHistory) {
-      title = NO_CAMPAIGNS_TITLE;
-      description =
-        'Hosted campaigns that ended appear here. Launch your campaign now!';
-    } else if (hasActiveFilters) {
+    if (hasActiveFilters) {
       title = NO_CAMPAIGNS_MATCH_FILTERS_TITLE;
-      description =
-        "None of the hosted campaigns fit the filters you've applied. Try adjusting or clearing them to see more results.";
+      description = NO_CAMPAIGNS_MATCH_FILTERS_DESCRIPTION;
     } else {
       title = "You haven't hosted any campaigns";
       description = 'Launch your campaign now!';
@@ -287,11 +269,7 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({
   );
 };
 
-const CampaignsEmptyState: FC<Props> = ({
-  view,
-  hasActiveFilters,
-  isHistory,
-}) => {
+const CampaignsEmptyState: FC<Props> = ({ view, hasActiveFilters }) => {
   return (
     <Paper
       elevation={0}
@@ -308,16 +286,10 @@ const CampaignsEmptyState: FC<Props> = ({
         <AllCampaignsEmptyState hasActiveFilters={hasActiveFilters} />
       )}
       {view === 'joined' && (
-        <JoinedCampaignsEmptyState
-          hasActiveFilters={hasActiveFilters}
-          isHistory={isHistory}
-        />
+        <JoinedCampaignsEmptyState hasActiveFilters={hasActiveFilters} />
       )}
       {view === 'hosted' && (
-        <HostedCampaignsEmptyState
-          hasActiveFilters={hasActiveFilters}
-          isHistory={isHistory}
-        />
+        <HostedCampaignsEmptyState hasActiveFilters={hasActiveFilters} />
       )}
     </Paper>
   );

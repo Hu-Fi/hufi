@@ -279,13 +279,6 @@ export enum AllowanceType {
 }
 
 export enum CampaignsTabFilter {
-  ACTIVE = 'active',
-  JOINED = 'joined',
-  HOSTED = 'hosted',
-  HISTORY = 'history',
-}
-
-export enum HistoryViewFilter {
   ALL = 'all',
   JOINED = 'joined',
   HOSTED = 'hosted',

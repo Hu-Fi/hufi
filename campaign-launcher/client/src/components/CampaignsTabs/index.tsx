@@ -94,10 +94,10 @@ const CampaignsTabs: FC<Props> = ({ activeTab, setActiveTab, isDisabled }) => {
         >
           <TabFilterStyled
             disabled={isDisabled}
-            isActive={activeTab === TabFilter.ACTIVE}
-            onClick={() => setActiveTab(TabFilter.ACTIVE)}
+            isActive={activeTab === TabFilter.ALL}
+            onClick={() => setActiveTab(TabFilter.ALL)}
           >
-            Active
+            All
           </TabFilterStyled>
           <TabFilterStyled
             disabled={isDisabled}
@@ -112,13 +112,6 @@ const CampaignsTabs: FC<Props> = ({ activeTab, setActiveTab, isDisabled }) => {
             onClick={() => setActiveTab(TabFilter.HOSTED)}
           >
             Hosted
-          </TabFilterStyled>
-          <TabFilterStyled
-            disabled={isDisabled}
-            isActive={activeTab === TabFilter.HISTORY}
-            onClick={() => setActiveTab(TabFilter.HISTORY)}
-          >
-            History
           </TabFilterStyled>
         </Stack>
       </Box>

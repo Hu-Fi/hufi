@@ -106,11 +106,7 @@ const Dashboard: FC = () => {
         )}
       </Box>
       {showEmptyState ? (
-        <CampaignsEmptyState
-          view="all"
-          hasActiveFilters={false}
-          isHistory={false}
-        />
+        <CampaignsEmptyState view="all" hasActiveFilters={false} />
       ) : (
         <CampaignsFeed
           data={campaigns}
