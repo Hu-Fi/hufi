@@ -15,6 +15,8 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, ExchangeType, type Campaign } from '@/types';
 import * as errorUtils from '@/utils/error';
 
+import ConnectWalletModal from '../ConnectWallet/ConnectWalletModal';
+
 import JoinCampaignOverlay from './JoinCampaignOverlay';
 
 type Props = {
@@ -43,10 +45,11 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const isDetailsPage = !!useMatch(ROUTES.CAMPAIGN_DETAILS);
   const isLoading =
     isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoining;
-  const { openConnectWallet } = useConnectWalletModal({
-    onCancel: () => setShouldResumeJoinAfterConnect(false),
-    promptOnMobileConnect: false,
-  });
+  const { closeConnectWallet, isConnectWalletOpen, openConnectWallet } =
+    useConnectWalletModal({
+      onCancel: () => setShouldResumeJoinAfterConnect(false),
+      promptOnMobileConnect: false,
+    });
 
   const isAlreadyJoined = useMemo(
     () =>
@@ -177,6 +180,10 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
         open={isOverlayOpen}
         onClose={handleOverlayClose}
         handleJoinCampaign={handleJoinCampaign}
+      />
+      <ConnectWalletModal
+        open={isConnectWalletOpen}
+        onClose={closeConnectWallet}
       />
     </>
   );
