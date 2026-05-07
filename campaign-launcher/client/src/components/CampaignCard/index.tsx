@@ -204,7 +204,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
               lineHeight: '150%',
             }}
           >
-            <CompactNumberWithTooltip value={targetValue} />
+            <CompactNumberWithTooltip value={targetValue} />{' '}
             <Typography
               component="span"
               sx={{

@@ -305,7 +305,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
                 <CompactNumberWithTooltip
                   value={leaderboard.total}
                   tooltipSize="large"
-                />
+                />{' '}
                 {targetTokenSymbol}
               </CardValue>
             </StatsCard>

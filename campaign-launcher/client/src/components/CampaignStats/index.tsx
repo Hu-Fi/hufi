@@ -287,7 +287,7 @@ const CampaignStats: FC<Props> = ({
               <CompactNumberWithTooltip
                 value={targetInfo.value}
                 tooltipSize="large"
-              />
+              />{' '}
               {targetTokenSymbol}
             </CardValue>
           </StatsCard>
