@@ -1,4 +1,4 @@
-import { type FC, useCallback, useMemo, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, CircularProgress } from '@mui/material';
 import { useMatch, useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import { useConnection } from 'wagmi';
 import { ROUTES } from '@/constants';
 import { useJoinCampaign } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useConnectWalletModal } from '@/hooks/useConnectWalletModal';
 import { useNotification } from '@/hooks/useNotification';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
@@ -22,11 +23,12 @@ type Props = {
 
 const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const [startStep, setStartStep] = useState<'connect' | 'auth'>('connect');
+  const [shouldResumeJoinAfterConnect, setShouldResumeJoinAfterConnect] =
+    useState(false);
 
   const navigate = useNavigate();
   const { isConnected } = useConnection();
-  const { isAuthenticated } = useWeb3Auth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useWeb3Auth();
   const {
     enrolledExchanges,
     isEnrolledExchangesLoading,
@@ -41,6 +43,10 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const isDetailsPage = !!useMatch(ROUTES.CAMPAIGN_DETAILS);
   const isLoading =
     isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoining;
+  const { openConnectWallet } = useConnectWalletModal({
+    onCancel: () => setShouldResumeJoinAfterConnect(false),
+    promptOnMobileConnect: false,
+  });
 
   const isAlreadyJoined = useMemo(
     () =>
@@ -89,14 +95,40 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const handleButtonClick = async () => {
     if (isLoading || !campaign) return;
 
-    if (!isConnected || !isAuthenticated) {
+    if (!isConnected) {
+      setShouldResumeJoinAfterConnect(true);
+      openConnectWallet();
+      return;
+    }
+
+    if (!isAuthenticated) {
       setIsOverlayOpen(true);
-      setStartStep(isConnected ? 'auth' : 'connect');
       return;
     }
 
     await handleJoinCampaign();
   };
+
+  useEffect(() => {
+    if (!shouldResumeJoinAfterConnect || !isConnected || isAuthLoading) {
+      return;
+    }
+
+    setShouldResumeJoinAfterConnect(false);
+
+    if (isAuthenticated) {
+      void handleJoinCampaign();
+      return;
+    }
+
+    setIsOverlayOpen(true);
+  }, [
+    handleJoinCampaign,
+    isAuthLoading,
+    isAuthenticated,
+    isConnected,
+    shouldResumeJoinAfterConnect,
+  ]);
 
   const getButtonText = () => {
     if (isJoining) {
@@ -142,9 +174,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
         )}
       </Button>
       <JoinCampaignOverlay
-        key={startStep}
         open={isOverlayOpen}
-        startStep={startStep}
         onClose={handleOverlayClose}
         handleJoinCampaign={handleJoinCampaign}
       />

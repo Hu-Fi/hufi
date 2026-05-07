@@ -1,57 +1,32 @@
-import { type FC, useEffect, useRef } from 'react';
+import { type FC } from 'react';
 
-import { Button } from '@mui/material';
-import { useAppKit } from '@reown/appkit/react';
-import { useConnection } from 'wagmi';
+import { Button, type ButtonProps } from '@mui/material';
 
-import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useConnectWalletModal } from '@/hooks/useConnectWalletModal';
 import { ConnectWalletIcon } from '@/icons';
-import { useActiveAccount } from '@/providers/ActiveAccountProvider';
-import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
-const ConnectWallet: FC = () => {
-  const { open } = useAppKit();
-  const { isConnecting } = useActiveAccount();
-  const { setShowSignInPrompt } = useWeb3Auth();
-  const { isConnected } = useConnection();
-  const isMobile = useIsMobile();
-  const wasConnectedRef = useRef(isConnected);
-  const promptOnNextConnectRef = useRef(false);
+type ConnectWalletProps = {
+  size?: ButtonProps['size'];
+};
 
-  useEffect(() => {
-    if (
-      isMobile &&
-      !wasConnectedRef.current &&
-      isConnected &&
-      promptOnNextConnectRef.current
-    ) {
-      promptOnNextConnectRef.current = false;
-      setShowSignInPrompt(true);
-    }
-
-    wasConnectedRef.current = isConnected;
-  }, [isConnected, isMobile, setShowSignInPrompt]);
-
-  const handleConnectWalletButtonClick = () => {
-    if (isMobile) {
-      promptOnNextConnectRef.current = true;
-    }
-
-    void open({ view: 'Connect' }).catch(() => {
-      if (isMobile) {
-        promptOnNextConnectRef.current = false;
-      }
-    });
-  };
+const ConnectWallet: FC<ConnectWalletProps> = ({ size = 'large' }) => {
+  const { isConnecting, openConnectWallet } = useConnectWalletModal();
 
   return (
     <Button
       variant="contained"
-      size={isMobile ? 'small' : 'large'}
-      sx={{ color: 'primary.contrast', height: isMobile ? '30px' : '42px' }}
+      size={size}
+      color="error"
       disabled={isConnecting}
-      onClick={handleConnectWalletButtonClick}
+      onClick={openConnectWallet}
+      sx={{
+        color: 'white',
+        width: 'fit-content',
+        fontSize: 12,
+        gap: 1,
+      }}
     >
+      <ConnectWalletIcon sx={{ fill: 'none', width: 18, height: 18 }} />
       Connect Wallet
     </Button>
   );
