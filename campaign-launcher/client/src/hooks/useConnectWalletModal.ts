@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useAppKit, useAppKitState } from '@reown/appkit/react';
 import { useConnection, useDisconnect } from 'wagmi';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -18,8 +17,7 @@ export const useConnectWalletModal = ({
   onConnect,
   promptOnMobileConnect = true,
 }: UseConnectWalletModalOptions = {}) => {
-  const { open } = useAppKit();
-  const { open: isAppKitOpen } = useAppKitState();
+  const [isConnectWalletOpen, setIsConnectWalletOpen] = useState(false);
   const { isConnecting } = useActiveAccount();
   const { setShowSignInPrompt } = useWeb3Auth();
   const { isConnected } = useConnection();
@@ -27,7 +25,6 @@ export const useConnectWalletModal = ({
   const isMobile = useIsMobile();
   const wasConnectedRef = useRef(isConnected);
   const appKitSessionStartedRef = useRef(false);
-  const appKitModalWasOpenRef = useRef(false);
   const promptOnNextConnectRef = useRef(false);
 
   useEffect(() => {
@@ -37,8 +34,8 @@ export const useConnectWalletModal = ({
         setShowSignInPrompt(true);
       }
 
+      setIsConnectWalletOpen(false);
       appKitSessionStartedRef.current = false;
-      appKitModalWasOpenRef.current = false;
       onConnect?.();
     }
 
@@ -46,42 +43,36 @@ export const useConnectWalletModal = ({
   }, [isConnected, isMobile, onConnect, setShowSignInPrompt]);
 
   useEffect(() => {
-    if (isAppKitOpen) {
-      appKitModalWasOpenRef.current = true;
-      return;
-    }
+    return () => {
+      promptOnNextConnectRef.current = false;
+    };
+  }, []);
 
-    if (
-      !appKitSessionStartedRef.current ||
-      !appKitModalWasOpenRef.current ||
-      isConnected
-    ) {
+  const openConnectWallet = useCallback(() => {
+    appKitSessionStartedRef.current = true;
+    promptOnNextConnectRef.current = promptOnMobileConnect;
+    setIsConnectWalletOpen(true);
+  }, [promptOnMobileConnect]);
+
+  const closeConnectWallet = useCallback(() => {
+    setIsConnectWalletOpen(false);
+
+    if (!appKitSessionStartedRef.current || isConnected) {
       return;
     }
 
     appKitSessionStartedRef.current = false;
-    appKitModalWasOpenRef.current = false;
     promptOnNextConnectRef.current = false;
     onCancel?.();
 
     if (isConnecting) {
       disconnect();
     }
-  }, [disconnect, isAppKitOpen, isConnected, isConnecting, onCancel]);
-
-  const openConnectWallet = useCallback(() => {
-    appKitSessionStartedRef.current = true;
-    promptOnNextConnectRef.current = promptOnMobileConnect;
-
-    void open({ view: 'Connect' }).catch(() => {
-      appKitSessionStartedRef.current = false;
-      appKitModalWasOpenRef.current = false;
-      promptOnNextConnectRef.current = false;
-      onCancel?.();
-    });
-  }, [onCancel, open, promptOnMobileConnect]);
+  }, [disconnect, isConnected, isConnecting, onCancel]);
 
   return {
+    closeConnectWallet,
+    isConnectWalletOpen,
     isConnecting,
     openConnectWallet,
   };
