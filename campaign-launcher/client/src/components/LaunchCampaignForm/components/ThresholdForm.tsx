@@ -63,7 +63,10 @@ const ThresholdForm: FC<Props> = ({
 
   return (
     <>
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{ gap: { xs: 4, md: 2 } }}
+      >
         <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
           <Typography variant="h6" sx={labelStyles}>
             Exchange
@@ -114,14 +117,15 @@ const ThresholdForm: FC<Props> = ({
                       {...params}
                       error={!!errors.symbol}
                       slotProps={{
+                        ...params.slotProps,
                         input: {
-                          ...params.InputProps,
+                          ...params.slotProps.input,
                           endAdornment: (
                             <>
                               {isLoadingCurrencies ? (
                                 <CircularProgress size={20} />
                               ) : null}
-                              {params.InputProps.endAdornment}
+                              {params.slotProps.input.endAdornment}
                             </>
                           ),
                         },
@@ -151,7 +155,10 @@ const ThresholdForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{ gap: { xs: 4, md: 2 } }}
+      >
         <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
           <Typography variant="h6" sx={labelStyles}>
             Start Date
@@ -174,7 +181,6 @@ const ThresholdForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.start_date,
-                    placeholder: 'Select',
                   },
                 }}
               />
@@ -207,7 +213,6 @@ const ThresholdForm: FC<Props> = ({
                 slotProps={{
                   textField: {
                     error: !!errors.end_date,
-                    placeholder: 'Select',
                   },
                 }}
               />
@@ -218,7 +223,10 @@ const ThresholdForm: FC<Props> = ({
           )}
         </FormControl>
       </Stack>
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 2 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{ gap: { xs: 4, md: 2 } }}
+      >
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
           <Typography variant="h6" sx={labelStyles}>
             Fund Token
@@ -231,10 +239,12 @@ const ThresholdForm: FC<Props> = ({
                 aria-label="Fund Token Select"
                 id="fund-token-select"
                 MenuProps={{
-                  PaperProps: {
-                    elevation: 4,
-                    sx: {
-                      bgcolor: 'background.default',
+                  slotProps: {
+                    paper: {
+                      elevation: 4,
+                      sx: {
+                        bgcolor: 'background.default',
+                      },
                     },
                   },
                 }}
@@ -316,7 +326,12 @@ const ThresholdForm: FC<Props> = ({
                           },
                         }}
                       >
-                        <Typography variant="body1" color="text.primary">
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: 'text.primary',
+                          }}
+                        >
                           {symbol ? getTokenInfo(symbol).label || '' : ''}
                         </Typography>
                       </InputAdornment>

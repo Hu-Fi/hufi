@@ -17,11 +17,13 @@ const CampaignsViewToggle: FC<Props> = ({
 }) => {
   return (
     <Box
-      display={{ xs: 'none', md: 'flex' }}
-      borderRadius="54px"
-      border="1px solid #251d47"
-      width="fit-content"
-      overflow="hidden"
+      sx={{
+        display: { xs: 'none', md: 'flex' },
+        borderRadius: '54px',
+        border: '1px solid #251d47',
+        width: 'fit-content',
+        overflow: 'hidden',
+      }}
     >
       <IconButton
         disableRipple

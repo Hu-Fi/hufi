@@ -63,34 +63,48 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
   const isRow = direction === 'row';
   return (
     <Box
-      display="flex"
-      alignItems={isRow ? 'center' : 'flex-start'}
-      flexDirection={direction}
+      sx={{
+        display: 'flex',
+        alignItems: isRow ? 'center' : 'flex-start',
+        flexDirection: direction,
+      }}
     >
       <Typography
         variant="caption"
-        fontSize={14}
-        color="text.secondary"
-        letterSpacing="0.15px"
-        mr={isRow ? 1 : 0}
+        sx={{
+          fontSize: 14,
+          color: 'text.secondary',
+          letterSpacing: '0.15px',
+          mr: isRow ? 1 : 0,
+        }}
       >
         {timeline.label}
       </Typography>
-      <Box display="flex" alignItems="center" gap={0.5}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
         <Box
-          width={6}
-          height={6}
-          bgcolor={timeline.color}
-          borderRadius="50%"
-          border="3px solid"
-          borderColor={timeline.color}
+          sx={{
+            width: 6,
+            height: 6,
+            bgcolor: timeline.color,
+            borderRadius: '50%',
+            border: '3px solid',
+            borderColor: timeline.color,
+          }}
         />
         <Typography
-          color={timeline.color}
-          fontSize={14}
-          fontWeight={700}
-          lineHeight="150%"
-          letterSpacing="0.15px"
+          sx={{
+            color: timeline.color,
+            fontSize: 14,
+            fontWeight: 700,
+            lineHeight: '150%',
+            letterSpacing: '0.15px',
+          }}
         >
           {timeline.value}
         </Typography>

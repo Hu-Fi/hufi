@@ -72,18 +72,26 @@ const EscrowDetailsStep: FC<Props> = ({
 
   return (
     <>
-      <Stack mt={4} width="100%" gridArea="main">
+      <Stack
+        sx={{
+          mt: 4,
+          width: '100%',
+          gridArea: 'main',
+        }}
+      >
         <form id={formId} onSubmit={handleSubmit(onSubmit)}>
           <Stack
             direction="row"
-            justifyContent="space-between"
-            gap={{ sm: 3, md: 2 }}
+            sx={{
+              justifyContent: 'space-between',
+              gap: { sm: 3, md: 2 },
+            }}
           >
             <Stack
-              gap={{ xs: 4, md: 3 }}
-              maxWidth="600px"
-              width={{ xs: '100%', md: 'auto' }}
               sx={{
+                gap: { xs: 4, md: 3 },
+                maxWidth: '600px',
+                width: { xs: '100%', md: 'auto' },
                 '& .MuiFormHelperText-root': {
                   mt: 0.5,
                   mx: 0,

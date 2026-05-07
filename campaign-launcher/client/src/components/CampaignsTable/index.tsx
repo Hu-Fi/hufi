@@ -51,7 +51,13 @@ const CampaignsTable: FC<Props> = ({
       minWidth: 230,
       renderCell: (params) => {
         return (
-          <Box display="flex" flexDirection="column" color="white">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              color: 'white',
+            }}
+          >
             <CampaignSymbol
               symbol={params.row.symbol}
               campaignType={params.row.type}
@@ -59,10 +65,12 @@ const CampaignsTable: FC<Props> = ({
             />
             <Typography
               variant="caption"
-              color="#a39fbc"
-              textTransform="uppercase"
-              fontWeight={600}
-              letterSpacing={0}
+              sx={{
+                color: '#a39fbc',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                letterSpacing: 0,
+              }}
             >
               {mapTypeToLabel(params.row.type)}
             </Typography>
@@ -80,7 +88,12 @@ const CampaignsTable: FC<Props> = ({
           exchangesMap.get(params.row.exchange_name)?.display_name ||
           params.row.exchange_name;
         return (
-          <Typography color="white" textTransform="capitalize">
+          <Typography
+            sx={{
+              color: 'white',
+              textTransform: 'capitalize',
+            }}
+          >
             {exchangeName}
           </Typography>
         );
@@ -114,9 +127,11 @@ const CampaignsTable: FC<Props> = ({
           <Typography
             component="p"
             variant="subtitle2"
-            color="white"
-            fontSize={16}
-            fontWeight={700}
+            sx={{
+              color: 'white',
+              fontSize: 16,
+              fontWeight: 700,
+            }}
           >
             <FormattedNumber
               value={value}
@@ -136,7 +151,13 @@ const CampaignsTable: FC<Props> = ({
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row;
           return (
-            <Typography variant="body1" color="white" fontWeight={700}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'white',
+                fontWeight: 700,
+              }}
+            >
               <span>{fund_amount}</span> <span>{fund_token.toUpperCase()}</span>
             </Typography>
           );
@@ -146,7 +167,13 @@ const CampaignsTable: FC<Props> = ({
           params.row;
 
         return (
-          <Typography variant="body1" color="white" fontWeight={600}>
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'white',
+              fontWeight: 600,
+            }}
+          >
             <FormattedNumber
               value={formatTokenAmount(fund_amount, fund_token_decimals)}
               suffix={` ${fund_token_symbol}`}
@@ -163,12 +190,14 @@ const CampaignsTable: FC<Props> = ({
       renderCell: (params) => {
         return (
           <Box
-            display="flex"
-            justifyContent="flex-start"
-            alignItems="center"
-            flex={1}
-            gap={1}
-            sx={{ '& > :nth-of-type(2)': { flex: 1 } }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              flex: 1,
+              gap: 1,
+              '& > :nth-of-type(2)': { flex: 1 },
+            }}
           >
             <IconButton
               disableRipple

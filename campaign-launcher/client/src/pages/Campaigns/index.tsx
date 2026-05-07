@@ -173,32 +173,47 @@ const Campaigns: FC = () => {
   return (
     <PageWrapper>
       <Box
-        display="flex"
-        flexDirection={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        justifyContent="space-between"
-        mb={{ xs: 4, md: 6 }}
-        mx={{ xs: -2, md: 0 }}
-        pb={{ xs: 3, md: 0 }}
-        px={{ xs: 2, md: 0 }}
-        gap={{ xs: 3, md: 4 }}
-        borderBottom={{ xs: '1px solid #473c74', md: 'none' }}
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'center' },
+          justifyContent: 'space-between',
+          mb: { xs: 4, md: 6 },
+          mx: { xs: -2, md: 0 },
+          pb: { xs: 3, md: 0 },
+          px: { xs: 2, md: 0 },
+          gap: { xs: 3, md: 4 },
+          borderBottom: { xs: '1px solid #473c74', md: 'none' },
+        }}
       >
         <Stack>
           <Typography
             variant={isMobile ? 'h5' : 'h3'}
-            color="white"
-            fontWeight={isMobile ? 600 : 800}
-            mb={{ xs: 0.5, md: 1.5 }}
-            letterSpacing={isMobile ? '0px' : '-1.5px'}
+            sx={{
+              color: 'white',
+              fontWeight: isMobile ? 600 : 800,
+              mb: { xs: 0.5, md: 1.5 },
+              letterSpacing: isMobile ? '0px' : '-1.5px',
+            }}
           >
             Campaigns
           </Typography>
-          <Typography fontSize={15} fontWeight={400} color="#6b6490">
+          <Typography
+            sx={{
+              fontSize: 15,
+              fontWeight: 400,
+              color: '#6b6490',
+            }}
+          >
             Join or host trading campaigns to earn rewards.
           </Typography>
         </Stack>
-        <Box display="flex" gap={2}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+          }}
+        >
           {isConnected && (
             <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
           )}
@@ -217,18 +232,22 @@ const Campaigns: FC = () => {
         </Box>
       </Box>
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={2}
-        mb={4}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          mb: 4,
+        }}
       >
         <Box
-          display="flex"
-          alignItems="center"
-          position="relative"
-          minWidth={0}
-          gap={1.5}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            position: 'relative',
+            minWidth: 0,
+            gap: 1.5,
+          }}
         >
           <CampaignsTabs
             activeTab={tabFilter}

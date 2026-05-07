@@ -31,29 +31,45 @@ const NotStakedWarning: FC<{
   return (
     <Stack
       ref={warningRef}
-      gap={1.5}
-      p={1.5}
-      mt={{ xs: 10, md: 0 }}
-      bgcolor="rgba(255, 187, 0, 0.15)"
-      borderRadius="4px"
-      boxShadow="10px 12px 30px 0 rgba(0, 0, 0, 0.20)"
+      sx={{
+        gap: 1.5,
+        p: 1.5,
+        mt: { xs: 10, md: 0 },
+        bgcolor: 'rgba(255, 187, 0, 0.15)',
+        borderRadius: '4px',
+        boxShadow: '10px 12px 30px 0 rgba(0, 0, 0, 0.20)',
+      }}
     >
       <Typography
-        display="flex"
-        alignItems="center"
-        gap={1.5}
         variant="body1"
-        fontWeight={600}
-        color="#b98c08"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          fontWeight: 600,
+          color: '#b98c08',
+        }}
       >
         <WarningIcon />
         No HMT staked on this network
       </Typography>
-      <Typography variant="body2" color="white" fontWeight={500}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: 'white',
+          fontWeight: 500,
+        }}
+      >
         To continue, please stake HMT on the selected network. Once updated try
         refreshing to apply the changes
       </Typography>
-      <Box display="flex" alignItems="center" gap={1.5}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+        }}
+      >
         <Button
           variant="outlined"
           size="large"
@@ -165,7 +181,13 @@ const NetworkStep: FC<Props> = ({
 
   return (
     <>
-      <Stack mt={4} width="100%" gridArea="main">
+      <Stack
+        sx={{
+          mt: 4,
+          width: '100%',
+          gridArea: 'main',
+        }}
+      >
         <Grid container spacing={{ xs: 2, md: 3 }}>
           {networks.map(({ value, label }) => {
             const isSelected = chainId === value;
@@ -192,7 +214,13 @@ const NetworkStep: FC<Props> = ({
                   onClick={() => handleClickOnNetwork(value)}
                 >
                   {getChainIcon(value)}
-                  <Typography variant="body1" color="white" fontWeight={500}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: 'white',
+                      fontWeight: 500,
+                    }}
+                  >
                     {label}
                   </Typography>
                 </Paper>
