@@ -87,6 +87,7 @@ export type Campaign = {
 export type JoinedCampaign = {
   address: EvmAddress;
   chain_id: number;
+  cancellation_requested_at: number | null;
   details: {
     daily_volume_target?: number;
     daily_balance_target?: number;
@@ -100,7 +101,6 @@ export type JoinedCampaign = {
   status: CampaignStatus;
   symbol: string;
   type: CampaignType;
-  cancellation_requested_at: number | null;
 };
 
 export type CampaignDetails = Campaign & {
@@ -279,13 +279,6 @@ export enum AllowanceType {
 }
 
 export enum CampaignsTabFilter {
-  ACTIVE = 'active',
-  JOINED = 'joined',
-  HOSTED = 'hosted',
-  HISTORY = 'history',
-}
-
-export enum HistoryViewFilter {
   ALL = 'all',
   JOINED = 'joined',
   HOSTED = 'hosted',

@@ -11,7 +11,6 @@ import CampaignsFilters, {
 } from '@/components/CampaignsFilters';
 import CampaignsTabs from '@/components/CampaignsTabs';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
-import HistoryFilters from '@/components/HistoryFilters';
 import HostedCampaigns from '@/components/HostedCampaigns';
 import JoinedCampaigns from '@/components/JoinedCampaigns';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
@@ -29,10 +28,19 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import {
   type CampaignsQueryParams,
   CampaignStatus,
-  HistoryViewFilter,
   CampaignsTabFilter as TabFilter,
 } from '@/types';
 import { filterFalsyQueryParams } from '@/utils';
+
+const FILTER_STATUS_TO_CAMPAIGN_STATUSES: Record<
+  CampaignStatus,
+  CampaignStatus[]
+> = {
+  [CampaignStatus.ACTIVE]: [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL],
+  [CampaignStatus.TO_CANCEL]: [CampaignStatus.TO_CANCEL],
+  [CampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
+  [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
+};
 
 const Campaigns: FC = () => {
   const { appChainId } = useNetwork();
@@ -40,15 +48,13 @@ const Campaigns: FC = () => {
     const persistedView = localStorage.getItem(PERSISTED_CAMPAIGNS_VIEW_KEY);
     return persistedView === 'table' ? 'table' : 'grid';
   });
-  const [tabFilter, setTabFilter] = useState<TabFilter>(TabFilter.ACTIVE);
-  const [historyViewFilter, setHistoryViewFilter] = useState<HistoryViewFilter>(
-    HistoryViewFilter.ALL
-  );
+  const [tabFilter, setTabFilter] = useState<TabFilter>(TabFilter.ALL);
   const [appliedFilters, setAppliedFilters] =
     useState<CampaignsFiltersSelection>({
+      network: appChainId,
+      statuses: [CampaignStatus.ACTIVE],
       campaignTypes: [],
       exchanges: [],
-      network: appChainId,
     });
 
   const navigate = useNavigate();
@@ -66,23 +72,12 @@ const Campaigns: FC = () => {
 
   const isGridView = view === 'grid';
 
-  const statusFilter = useMemo(() => {
-    if (tabFilter === TabFilter.HISTORY) {
-      return [CampaignStatus.COMPLETED, CampaignStatus.CANCELLED];
-    }
-    return [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL];
-  }, [tabFilter]);
-
   const launcherFilter = useMemo(() => {
-    if (
-      tabFilter === TabFilter.HOSTED ||
-      (tabFilter === TabFilter.HISTORY &&
-        historyViewFilter === HistoryViewFilter.HOSTED)
-    ) {
+    if (tabFilter === TabFilter.HOSTED) {
       return activeAddress;
     }
     return undefined;
-  }, [tabFilter, historyViewFilter, activeAddress]);
+  }, [tabFilter, activeAddress]);
 
   const selectedCampaignTypes = appliedFilters.campaignTypes.filter(
     (campaignType) => campaignType !== 'all'
@@ -91,9 +86,20 @@ const Campaigns: FC = () => {
     (exchange) => exchange !== 'all'
   );
 
+  const filteredStatuses = appliedFilters.statuses.filter(
+    (status) => status !== 'all'
+  );
+  const selectedStatuses = [
+    ...new Set(
+      filteredStatuses.flatMap(
+        (status) => FILTER_STATUS_TO_CAMPAIGN_STATUSES[status]
+      )
+    ),
+  ];
+
   const queryParams = filterFalsyQueryParams({
     chain_id: appliedFilters.network,
-    status: statusFilter,
+    status: selectedStatuses,
     launcher: launcherFilter,
     type: selectedCampaignTypes,
     exchange: selectedExchanges,
@@ -115,21 +121,13 @@ const Campaigns: FC = () => {
     return count;
   }, [appliedFilters]);
 
-  const isJoinedTab =
-    tabFilter === TabFilter.JOINED ||
-    (tabFilter === TabFilter.HISTORY &&
-      historyViewFilter === HistoryViewFilter.JOINED);
-
-  const isHostedTab =
-    tabFilter === TabFilter.HOSTED ||
-    (tabFilter === TabFilter.HISTORY &&
-      historyViewFilter === HistoryViewFilter.HOSTED);
-
+  const isJoinedTab = tabFilter === TabFilter.JOINED;
+  const isHostedTab = tabFilter === TabFilter.HOSTED;
   const isAllTab = !isJoinedTab && !isHostedTab;
 
   const commonKeys = [
     appliedFilters.network,
-    statusFilter,
+    selectedStatuses,
     selectedCampaignTypes,
     selectedExchanges,
     limit,
@@ -153,11 +151,6 @@ const Campaigns: FC = () => {
   const handleSetTabFilter = (nextTab: TabFilter) => {
     resetPage();
     setTabFilter(nextTab);
-  };
-
-  const handleSetHistoryViewFilter = (nextFilter: HistoryViewFilter) => {
-    resetPage();
-    setHistoryViewFilter(nextFilter);
   };
 
   const handleApplyFilters = (nextFilters: CampaignsFiltersSelection) => {
@@ -267,20 +260,12 @@ const Campaigns: FC = () => {
           onViewChange={handleChangeView}
         />
       </Box>
-      {tabFilter === TabFilter.HISTORY && (
-        <HistoryFilters
-          selectedFilter={historyViewFilter}
-          setSelectedFilter={handleSetHistoryViewFilter}
-          isDisabled={disableFilters}
-        />
-      )}
       {isJoinedTab && (
         <JoinedCampaigns
           queryParams={queryParams}
           isGridView={isGridView}
           setNextPage={setNextPage}
           hasActiveFilters={filtersCount > 0}
-          isHistory={tabFilter === TabFilter.HISTORY}
         />
       )}
       {isHostedTab && (
@@ -289,7 +274,6 @@ const Campaigns: FC = () => {
           isGridView={isGridView}
           setNextPage={setNextPage}
           hasActiveFilters={filtersCount > 0}
-          isHistory={tabFilter === TabFilter.HISTORY}
         />
       )}
       {isAllTab && (
@@ -298,7 +282,6 @@ const Campaigns: FC = () => {
           isGridView={isGridView}
           setNextPage={setNextPage}
           hasActiveFilters={filtersCount > 0}
-          isHistory={tabFilter === TabFilter.HISTORY}
         />
       )}
       <MobileBottomNav isVisible={isMobile} />

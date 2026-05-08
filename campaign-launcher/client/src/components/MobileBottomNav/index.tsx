@@ -38,6 +38,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
         bottom: 0,
         px: 0,
         pb: 0,
+        borderTop: '2px solid #251d47',
         zIndex: (theme) => theme.zIndex.appBar,
       }}
     >

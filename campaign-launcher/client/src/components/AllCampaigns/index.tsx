@@ -1,8 +1,9 @@
-import { useEffect, useState, type FC } from 'react';
+import { useCallback, useEffect, useState, type FC } from 'react';
 
 import { Box, Button } from '@mui/material';
 
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
+import CampaignsErrorState from '@/components/CampaignsErrorState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { type Campaign, type CampaignsQueryParams } from '@/types';
@@ -12,7 +13,6 @@ type Props = {
   queryParams: CampaignsQueryParams;
   hasActiveFilters: boolean;
   isGridView: boolean;
-  isHistory: boolean;
   setNextPage: () => void;
 };
 
@@ -20,12 +20,12 @@ const AllCampaigns: FC<Props> = ({
   queryParams,
   hasActiveFilters,
   isGridView,
-  isHistory,
   setNextPage,
 }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
-  const { data, isLoading, isFetching } = useCampaigns(queryParams);
+  const { data, isLoading, isFetching, isError, refetch } =
+    useCampaigns(queryParams);
 
   const currentSkip = queryParams.skip ?? 0;
 
@@ -39,19 +39,22 @@ const AllCampaigns: FC<Props> = ({
     });
   }, [data, currentSkip, isFetching]);
 
+  const handleRefetch = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const showLoadMore = isLoading || isFetching || data?.has_more;
 
-  const showEmptyState = !isLoading && !isFetching && campaigns.length === 0;
+  const showEmptyState =
+    !isLoading && !isFetching && !isError && campaigns.length === 0;
 
   return (
     <>
-      {showEmptyState ? (
-        <CampaignsEmptyState
-          view="all"
-          hasActiveFilters={hasActiveFilters}
-          isHistory={isHistory}
-        />
-      ) : (
+      {isError && <CampaignsErrorState onRefetch={handleRefetch} />}
+      {showEmptyState && (
+        <CampaignsEmptyState view="all" hasActiveFilters={hasActiveFilters} />
+      )}
+      {!isError && !showEmptyState && (
         <CampaignsFeed
           data={campaigns}
           isGridView={isGridView}
