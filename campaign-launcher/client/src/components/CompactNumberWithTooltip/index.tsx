@@ -30,7 +30,7 @@ const CompactNumberWithTooltip: FC<Props> = ({
 
   return (
     <CustomTooltip
-      title={value}
+      title={<FormattedNumber value={value} />}
       arrow
       placement="top"
       slotProps={{

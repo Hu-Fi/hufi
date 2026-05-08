@@ -32,6 +32,16 @@ import {
 } from '@/types';
 import { filterFalsyQueryParams } from '@/utils';
 
+const FILTER_STATUS_TO_CAMPAIGN_STATUSES: Record<
+  CampaignStatus,
+  CampaignStatus[]
+> = {
+  [CampaignStatus.ACTIVE]: [CampaignStatus.ACTIVE, CampaignStatus.TO_CANCEL],
+  [CampaignStatus.TO_CANCEL]: [CampaignStatus.TO_CANCEL],
+  [CampaignStatus.CANCELLED]: [CampaignStatus.CANCELLED],
+  [CampaignStatus.COMPLETED]: [CampaignStatus.COMPLETED],
+};
+
 const Campaigns: FC = () => {
   const { appChainId } = useNetwork();
   const [view, setView] = useState<'grid' | 'table'>(() => {
@@ -79,11 +89,13 @@ const Campaigns: FC = () => {
   const filteredStatuses = appliedFilters.statuses.filter(
     (status) => status !== 'all'
   );
-  const selectedStatuses =
-    filteredStatuses.includes(CampaignStatus.ACTIVE) &&
-    !filteredStatuses.includes(CampaignStatus.TO_CANCEL)
-      ? [...filteredStatuses, CampaignStatus.TO_CANCEL]
-      : filteredStatuses;
+  const selectedStatuses = [
+    ...new Set(
+      filteredStatuses.flatMap(
+        (status) => FILTER_STATUS_TO_CAMPAIGN_STATUSES[status]
+      )
+    ),
+  ];
 
   const queryParams = filterFalsyQueryParams({
     chain_id: appliedFilters.network,

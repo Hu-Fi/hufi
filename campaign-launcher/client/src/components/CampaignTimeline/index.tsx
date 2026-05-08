@@ -27,10 +27,7 @@ const getTimelineInfo = (
   const startDate = dayjs(campaign.start_date);
   const endDate = dayjs(campaign.end_date);
 
-  if (
-    campaign.status === CampaignStatus.CANCELLED &&
-    campaign.cancellation_requested_at
-  ) {
+  if (campaign.status === CampaignStatus.CANCELLED) {
     const cancellationDate = dayjs(campaign.cancellation_requested_at);
     return {
       label: 'Cancelled on',
