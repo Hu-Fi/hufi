@@ -24,11 +24,7 @@ const CompactNumberWithTooltip: FC<Props> = ({
 
   if (numericValue < 1000) {
     return (
-      <FormattedNumber
-        value={_value}
-        decimals={decimals}
-        suffix={`${suffix} `}
-      />
+      <FormattedNumber value={_value} decimals={decimals} suffix={suffix} />
     );
   }
 
@@ -58,11 +54,7 @@ const CompactNumberWithTooltip: FC<Props> = ({
           textDecorationStyle: 'dotted',
         }}
       >
-        <FormattedNumber
-          value={_value}
-          decimals={decimals}
-          suffix={`${suffix}`}
-        />
+        <FormattedNumber value={_value} decimals={decimals} suffix={suffix} />
       </Typography>
     </CustomTooltip>
   );

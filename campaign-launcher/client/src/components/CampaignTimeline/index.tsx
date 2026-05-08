@@ -20,6 +20,7 @@ const getTimelineInfo = (
       label: '',
       value: '',
       color: 'transparent',
+      isPending: false,
     };
   }
   const nowDate = dayjs();
@@ -35,6 +36,7 @@ const getTimelineInfo = (
       label: 'Cancelled on',
       value: cancellationDate.format(DATE_FORMAT),
       color: '#ff6262',
+      isPending: false,
     };
   }
 
@@ -44,6 +46,7 @@ const getTimelineInfo = (
         label: '',
         value: 'Waiting for payouts',
         color: '#b98c08',
+        isPending: true,
       };
     }
     if (campaign.status === CampaignStatus.TO_CANCEL) {
@@ -51,6 +54,7 @@ const getTimelineInfo = (
         label: '',
         value: 'Pending cancellation',
         color: '#da4c4f',
+        isPending: true,
       };
     }
     if (campaign.status === CampaignStatus.COMPLETED) {
@@ -58,6 +62,7 @@ const getTimelineInfo = (
         label: 'Ended on',
         value: endDate.format(DATE_FORMAT),
         color: '#d4cfff',
+        isPending: false,
       };
     }
   }
@@ -67,6 +72,7 @@ const getTimelineInfo = (
       label: 'Starts on',
       value: startDate.format(DATE_FORMAT),
       color: '#43ba96',
+      isPending: false,
     };
   }
 
@@ -74,15 +80,14 @@ const getTimelineInfo = (
     label: 'Ends on',
     value: endDate.format(DATE_FORMAT),
     color: '#b98c08',
+    isPending: false,
   };
 };
 
 const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
   const timeline = getTimelineInfo(campaign);
   const isRow = direction === 'row';
-  const isPending =
-    timeline.value === 'Waiting for payouts' ||
-    timeline.value === 'Pending cancellation';
+  const { isPending, label, value, color } = timeline;
 
   return (
     <Box
@@ -103,7 +108,7 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
           flexShrink: 0,
         }}
       />
-      {timeline.label && (
+      {label && (
         <Typography
           sx={{
             color: 'text.secondary',
@@ -112,7 +117,7 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
             mr: isRow ? 1 : 0,
           }}
         >
-          {timeline.label}
+          {label}
         </Typography>
       )}
       <Box
@@ -130,7 +135,7 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
               borderRadius: '50%',
               bgcolor: 'transparent',
               border: '1px dashed',
-              borderColor: timeline.color,
+              borderColor: color,
             }}
           />
         ) : (
@@ -138,23 +143,23 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
             sx={{
               width: 6,
               height: 6,
-              bgcolor: timeline.color,
+              bgcolor: color,
               borderRadius: '50%',
               border: '3px solid',
-              borderColor: timeline.color,
+              borderColor: color,
             }}
           />
         )}
         <Typography
           sx={{
-            color: timeline.color,
+            color,
             fontSize: 14,
             fontWeight: 700,
             lineHeight: '150%',
             letterSpacing: '0.15px',
           }}
         >
-          {timeline.value}
+          {value}
         </Typography>
       </Box>
     </Box>
