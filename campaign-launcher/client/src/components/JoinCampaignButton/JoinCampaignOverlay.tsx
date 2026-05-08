@@ -9,15 +9,19 @@ import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 
+type JoinFlowStep = 'connect' | 'auth';
+
 type Props = {
   open: boolean;
   onClose: () => void;
+  startStep: JoinFlowStep;
   handleJoinCampaign: () => Promise<void>;
 };
 
 const JoinCampaignOverlay: FC<Props> = ({
   open,
   onClose,
+  startStep,
   handleJoinCampaign,
 }) => {
   const [isStartedJoinFlow, setIsStartedJoinFlow] = useState(false);
@@ -28,6 +32,7 @@ const JoinCampaignOverlay: FC<Props> = ({
   const { showError } = useNotification();
 
   const isOverlayActionLoading = isAuthLoading;
+  const shouldShowTwoSteps = startStep === 'connect';
 
   const handleOverlayClose = () => {
     if (isOverlayActionLoading) return;
@@ -75,12 +80,34 @@ const JoinCampaignOverlay: FC<Props> = ({
       }}
       mobileSx={{ px: 2, py: 4 }}
       closeButtonSx={{
-        top: 32,
+        top: shouldShowTwoSteps ? 24 : 32,
         right: { xs: 16, md: 32 },
       }}
     >
       <Stack>
-        <Stack gap={1.5}>
+        {shouldShowTwoSteps && (
+          <Box
+            sx={{
+              alignItems: 'center',
+              display: 'flex',
+              gap: 1,
+              mb: 2,
+            }}
+          >
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Box
+                key={index}
+                sx={{
+                  bgcolor: 'text.primary',
+                  borderRadius: 10,
+                  height: 8,
+                  width: 90,
+                }}
+              />
+            ))}
+          </Box>
+        )}
+        <Stack sx={{ gap: 1.5 }}>
           <Typography
             variant="body1"
             sx={{

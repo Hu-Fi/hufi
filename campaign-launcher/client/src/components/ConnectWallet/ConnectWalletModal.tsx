@@ -2,7 +2,6 @@ import {
   createElement,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type FC,
@@ -19,20 +18,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import {
-  ApiController,
-  AssetUtil,
-  ConnectionController,
-  ConnectorController,
-  ConnectorControllerUtil,
-  ConnectorUtil,
-  WalletUtil,
-  type ConnectorOrWalletItem,
-} from '@reown/appkit-controllers';
 import '@reown/appkit-ui/wui-qr-code';
 
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
-import { WALLET_PAGE_SIZE } from '@/constants';
+
+import { useReownWalletOptions } from './useReownWalletOptions';
 
 type Props = {
   open: boolean;
@@ -51,13 +41,6 @@ type AppKitQrCodeProps = {
   alt: string;
   imageSrc?: string;
   uri: string;
-};
-
-type WalletOption = {
-  id: string;
-  imageUrl: string;
-  item: ConnectorOrWalletItem;
-  name: string;
 };
 
 const AppKitQrCode: FC<AppKitQrCodeProps> = ({ alt, imageSrc, uri }) => {
@@ -79,214 +62,30 @@ const AppKitQrCode: FC<AppKitQrCodeProps> = ({ alt, imageSrc, uri }) => {
   });
 };
 
-const getWalletImage = (item: ConnectorOrWalletItem) => {
-  if (item.kind === 'wallet') {
-    return (
-      AssetUtil.getWalletImage(item.wallet) ||
-      AssetUtil.getWalletImageUrl(item.wallet.image_id)
-    );
-  }
-
-  return (
-    item.connector.imageUrl ||
-    item.connector.info?.icon ||
-    AssetUtil.getConnectorImage(item.connector) ||
-    AssetUtil.getAssetImageUrl(item.connector.imageId)
-  );
-};
-
-const mapWalletOption = (item: ConnectorOrWalletItem): WalletOption => {
-  if (item.kind === 'wallet') {
-    return {
-      id: item.wallet.id,
-      imageUrl: getWalletImage(item),
-      item,
-      name: item.wallet.name,
-    };
-  }
-
-  return {
-    id: item.connector.id,
-    imageUrl: getWalletImage(item),
-    item,
-    name: item.connector.name,
-  };
-};
-
-const getInitialWallets = () =>
-  ConnectorUtil.connectorList().map(mapWalletOption);
-
-const getWalletConnectWallets = () => {
-  const wallets = ApiController.state.search.length
-    ? ApiController.state.search
-    : WalletUtil.getWalletConnectWallets(ApiController.state.wallets);
-
-  return wallets.map((wallet) =>
-    mapWalletOption({ kind: 'wallet', subtype: 'recommended', wallet })
-  );
-};
-
-const searchWallets = (walletOptions: WalletOption[], searchValue: string) => {
-  const normalizedSearch = searchValue.toLowerCase();
-
-  if (!normalizedSearch) {
-    return walletOptions;
-  }
-
-  return walletOptions.filter((wallet) =>
-    wallet.name.toLowerCase().includes(normalizedSearch)
-  );
-};
-
-const mergeWalletOptions = (walletOptions: WalletOption[]) => {
-  const uniqueWallets = new Map<string, WalletOption>();
-
-  walletOptions.forEach((wallet) => {
-    const key = `${wallet.item.kind}-${wallet.id}`;
-
-    if (!uniqueWallets.has(key)) {
-      uniqueWallets.set(key, wallet);
-    }
-  });
-
-  return [...uniqueWallets.values()];
-};
-
 const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
-  const [wallets, setWallets] = useState(getInitialWallets);
-  const [wcWallets, setWcWallets] = useState(getWalletConnectWallets);
-  const [count, setCount] = useState(ApiController.state.count);
-  const [page, setPage] = useState(ApiController.state.page);
-  const [wcUri, setWcUri] = useState(ConnectionController.state.wcUri);
-  const [isFetchingWallets, setIsFetchingWallets] = useState(false);
-  const [isFetchingWcUri, setIsFetchingWcUri] = useState(
-    ConnectionController.state.wcFetchingUri
-  );
-
-  const [connectingWallet, setConnectingWallet] = useState<WalletOption | null>(
-    null
-  );
   const [search, setSearch] = useState('');
   const [showAllWallets, setShowAllWallets] = useState(false);
-
-  useEffect(() => {
-    const updateInitialWallets = () => setWallets(getInitialWallets());
-    const updateWcWallets = () => setWcWallets(getWalletConnectWallets());
-
-    const unsubscribers = [
-      ConnectorController.subscribeKey('connectors', updateInitialWallets),
-      ApiController.subscribeKey('recommended', updateInitialWallets),
-      ApiController.subscribeKey('wallets', updateWcWallets),
-      ApiController.subscribeKey('search', updateWcWallets),
-      ApiController.subscribeKey('count', setCount),
-      ApiController.subscribeKey('page', setPage),
-      ConnectionController.subscribeKey('wcUri', setWcUri),
-      ConnectionController.subscribeKey('wcFetchingUri', setIsFetchingWcUri),
-    ];
-
-    updateInitialWallets();
-    updateWcWallets();
-
-    return () => {
-      unsubscribers.forEach((unsubscribe) => unsubscribe());
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    setIsFetchingWallets(true);
-    void Promise.allSettled([
-      ApiController.fetchRecommendedWallets(),
-      ApiController.fetchWalletsByPage({ entries: WALLET_PAGE_SIZE, page: 1 }),
-    ]).finally(() => setIsFetchingWallets(false));
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || !showAllWallets) return;
-
-    const timeout = window.setTimeout(() => {
-      const searchValue = search.trim();
-      setIsFetchingWallets(true);
-
-      const fetchPromise = searchValue
-        ? ApiController.searchWallet({
-            entries: 100,
-            page: 1,
-            search: searchValue,
-          })
-        : ApiController.fetchWalletsByPage({
-            entries: WALLET_PAGE_SIZE,
-            page: 1,
-          });
-
-      void fetchPromise.finally(() => setIsFetchingWallets(false));
-    }, 250);
-
-    return () => window.clearTimeout(timeout);
-  }, [open, search, showAllWallets]);
-
-  const displayedWallets = useMemo(() => {
-    if (showAllWallets) {
-      return mergeWalletOptions([
-        ...searchWallets(wallets, search.trim()),
-        ...wcWallets,
-      ]);
-    }
-
-    return wallets;
-  }, [search, showAllWallets, wallets, wcWallets]);
-
-  const resetWalletConnect = useCallback(() => {
-    ConnectionController.resetUri();
-    ConnectionController.setWcLinking(undefined);
-    ConnectionController.setRecentWallet(undefined);
-    setConnectingWallet(null);
-  }, []);
+  const {
+    connectingWallet,
+    connectWallet,
+    displayedWallets,
+    fetchMoreWallets,
+    hasMoreWallets,
+    isFetchingWallets,
+    isFetchingWcUri,
+    resetSearch,
+    resetWalletConnect,
+    wcUri,
+  } = useReownWalletOptions({ open, search, showAllWallets });
 
   const handleClose = useCallback(() => {
     resetWalletConnect();
     setSearch('');
+    resetSearch();
     setShowAllWallets(false);
     onClose();
-  }, [onClose, resetWalletConnect]);
+  }, [onClose, resetSearch, resetWalletConnect]);
 
-  const handleWalletClick = useCallback(
-    async (wallet: WalletOption) => {
-      resetWalletConnect();
-      setConnectingWallet(wallet);
-
-      try {
-        if (
-          wallet.item.kind === 'connector' &&
-          wallet.item.subtype !== 'walletConnect'
-        ) {
-          await ConnectorControllerUtil.connectExternal(wallet.item.connector);
-          return;
-        }
-
-        if (wallet.item.kind === 'wallet') {
-          ConnectionController.setRecentWallet(wallet.item.wallet);
-        }
-
-        await ConnectionController.connectWalletConnect({ cache: 'never' });
-      } catch {
-        setConnectingWallet(null);
-      }
-    },
-    [resetWalletConnect]
-  );
-
-  const handleShowMore = useCallback(() => {
-    setIsFetchingWallets(true);
-    void ApiController.fetchWalletsByPage({
-      entries: WALLET_PAGE_SIZE,
-      page: page + 1,
-    }).finally(() => setIsFetchingWallets(false));
-  }, [page]);
-
-  const totalFetched = page * WALLET_PAGE_SIZE;
-  const hasMoreWallets = showAllWallets && totalFetched < count;
   const isBusy = isFetchingWallets || isFetchingWcUri;
 
   return (
@@ -296,7 +95,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
       isLoading={isFetchingWcUri}
       desktopSx={{
         width: 640,
-        height: 520,
+        height: 560,
         maxHeight: 'calc(100dvh - 48px)',
         px: 4,
         py: 4,
@@ -378,7 +177,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
             />
           )}
 
-          <Box sx={{ minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
+          <Box sx={{ minHeight: 0, overflowY: 'auto', pr: 0.5, mb: 2 }}>
             <Grid container spacing={2}>
               {displayedWallets.map((wallet) => {
                 const isConnectingWallet =
@@ -389,7 +188,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
                     <Button
                       disabled={isBusy}
                       onClick={() => {
-                        void handleWalletClick(wallet);
+                        void connectWallet(wallet);
                       }}
                       sx={{
                         alignItems: 'center',
@@ -456,7 +255,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
               alignItems: 'center',
               gap: 1,
               justifyContent: 'center',
-              mt: 2,
+              mt: 'auto',
             }}
           >
             {!showAllWallets ? (
@@ -470,6 +269,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
             ) : (
               <>
                 <Button
+                  disabled={isBusy}
                   variant="outlined"
                   onClick={() => setShowAllWallets(false)}
                 >
@@ -479,7 +279,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
                 <Button
                   variant="outlined"
                   disabled={isFetchingWallets || !hasMoreWallets}
-                  onClick={handleShowMore}
+                  onClick={fetchMoreWallets}
                 >
                   Show more
                 </Button>

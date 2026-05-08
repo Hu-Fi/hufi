@@ -27,6 +27,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [shouldResumeJoinAfterConnect, setShouldResumeJoinAfterConnect] =
     useState(false);
+  const [startStep, setStartStep] = useState<'connect' | 'auth'>('connect');
 
   const navigate = useNavigate();
   const { isConnected } = useConnection();
@@ -47,7 +48,10 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
     isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoining;
   const { closeConnectWallet, isConnectWalletOpen, openConnectWallet } =
     useConnectWalletModal({
-      onCancel: () => setShouldResumeJoinAfterConnect(false),
+      onCancel: () => {
+        setShouldResumeJoinAfterConnect(false);
+        setStartStep('auth');
+      },
       promptOnMobileConnect: false,
     });
 
@@ -62,6 +66,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
 
   const handleOverlayClose = () => {
     setIsOverlayOpen(false);
+    setStartStep('auth');
   };
 
   const handleJoinCampaign = useCallback(async () => {
@@ -100,11 +105,13 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
 
     if (!isConnected) {
       setShouldResumeJoinAfterConnect(true);
+      setStartStep('connect');
       openConnectWallet();
       return;
     }
 
     if (!isAuthenticated) {
+      setStartStep('auth');
       setIsOverlayOpen(true);
       return;
     }
@@ -120,6 +127,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
     setShouldResumeJoinAfterConnect(false);
 
     if (isAuthenticated) {
+      setStartStep('auth');
       void handleJoinCampaign();
       return;
     }
@@ -179,6 +187,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
       <JoinCampaignOverlay
         open={isOverlayOpen}
         onClose={handleOverlayClose}
+        startStep={startStep}
         handleJoinCampaign={handleJoinCampaign}
       />
       <ConnectWalletModal
