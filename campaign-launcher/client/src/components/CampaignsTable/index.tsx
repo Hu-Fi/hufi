@@ -107,7 +107,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'address',
       headerName: 'Address',
       flex: 1,
-      minWidth: 140,
+      minWidth: 150,
       renderCell: (params) => {
         const { chain_id, address } = params.row;
         return (
@@ -116,7 +116,6 @@ const CampaignsTable: FC<Props> = ({
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              '& > a': { fontSize: '16px' },
             }}
           >
             <CustomTooltip
@@ -146,7 +145,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'status',
       headerName: 'Status',
       flex: 1,
-      minWidth: 120,
+      minWidth: 130,
       renderCell: (params) => (
         <CampaignTimeline campaign={params.row} direction="column" />
       ),
@@ -155,7 +154,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'target',
       headerName: 'Target',
       flex: 1,
-      minWidth: 140,
+      minWidth: 120,
       renderCell: (params) => {
         const targetToken = getDailyTargetTokenSymbol(
           params.row.type,
