@@ -1,8 +1,10 @@
 import { type FC, useEffect, useState } from 'react';
 
 import { Box, Button, Stack, Typography } from '@mui/material';
+import { useConnection } from 'wagmi';
 
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
@@ -15,6 +17,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   startStep: JoinFlowStep;
+  onConnectWallet: () => void;
   handleJoinCampaign: () => Promise<void>;
 };
 
@@ -22,20 +25,21 @@ const JoinCampaignOverlay: FC<Props> = ({
   open,
   onClose,
   startStep,
+  onConnectWallet,
   handleJoinCampaign,
 }) => {
+  const [step, setStep] = useState<JoinFlowStep>(startStep);
   const [isStartedJoinFlow, setIsStartedJoinFlow] = useState(false);
 
   const { activeAddress } = useActiveAccount();
+  const { isConnected } = useConnection();
   const { signIn, isLoading: isAuthLoading } = useWeb3Auth();
   const { enrolledExchanges } = useAuthedUserData();
   const { showError } = useNotification();
-
-  const isOverlayActionLoading = isAuthLoading;
-  const shouldShowTwoSteps = startStep === 'connect';
+  const isMobile = useIsMobile();
 
   const handleOverlayClose = () => {
-    if (isOverlayActionLoading) return;
+    if (isAuthLoading) return;
     onClose();
   };
 
@@ -67,6 +71,22 @@ const JoinCampaignOverlay: FC<Props> = ({
     }
   }, [isStartedJoinFlow, enrolledExchanges, handleJoinCampaign]);
 
+  useEffect(() => {
+    if (open) {
+      setStep(startStep);
+    }
+  }, [open, startStep]);
+
+  useEffect(() => {
+    if (open && startStep === 'connect' && isConnected) {
+      setStep('auth');
+    }
+  }, [isConnected, open, startStep]);
+
+  const isOverlayActionLoading = isAuthLoading;
+  const isConnectStep = step === 'connect';
+  const shouldShowTwoSteps = startStep === 'connect';
+
   return (
     <ResponsiveOverlay
       open={open}
@@ -88,8 +108,8 @@ const JoinCampaignOverlay: FC<Props> = ({
         {shouldShowTwoSteps && (
           <Box
             sx={{
-              alignItems: 'center',
               display: 'flex',
+              alignItems: 'center',
               gap: 1,
               mb: 2,
             }}
@@ -98,10 +118,11 @@ const JoinCampaignOverlay: FC<Props> = ({
               <Box
                 key={index}
                 sx={{
-                  bgcolor: 'text.primary',
-                  borderRadius: 10,
                   height: 8,
                   width: 90,
+                  borderRadius: 10,
+                  bgcolor:
+                    index === 0 || !isConnectStep ? 'text.primary' : '#3a2e6f',
                 }}
               />
             ))}
@@ -116,53 +137,75 @@ const JoinCampaignOverlay: FC<Props> = ({
               fontWeight: 600,
             }}
           >
-            Sign In
+            {isConnectStep ? 'Connect Wallet' : 'Sign In'}
           </Typography>
-          <Typography variant="subtitle2" color="text.primary" fontWeight={500}>
-            To keep your account secure, please sign this message. This is a
-            gasless way to confirm you own this address.
+          <Typography
+            variant="subtitle2"
+            sx={{ color: 'text.primary', fontWeight: 500 }}
+          >
+            {isConnectStep
+              ? 'Connect your wallet to create, participate in campaigns and track your performance.'
+              : 'To keep your account secure, please sign this message. This is a gasless way to confirm you own this address.'}
           </Typography>
         </Stack>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mt={2}
-          py={2}
-          px={1.5}
-          border="1px solid #433679"
-          borderRadius="8px"
-        >
-          <Typography variant="body1">Connected Wallet</Typography>
-          <Typography color="text.primary" fontWeight={600}>
-            {formatAddress(activeAddress)}
-          </Typography>
-        </Box>
-        <Stack direction="row" gap={2} mt={6}>
-          <Button
-            variant="outlined"
-            size="large"
-            fullWidth
-            disabled={isOverlayActionLoading}
-            onClick={onClose}
-            sx={{
-              color: 'white',
-              borderColor: '#433679',
-            }}
-          >
-            Cancel
-          </Button>
+        {isConnectStep ? (
           <Button
             variant="contained"
             size="large"
             color="error"
-            fullWidth
+            fullWidth={isMobile}
             disabled={isOverlayActionLoading}
-            onClick={handleAuthenticate}
+            sx={{ mt: 6 }}
+            onClick={onConnectWallet}
           >
-            Sign In
+            Connect Wallet
           </Button>
-        </Stack>
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1px solid #433679',
+                borderRadius: '8px',
+                justifyContent: 'space-between',
+                mt: 2,
+                px: 1.5,
+                py: 2,
+              }}
+            >
+              <Typography variant="body1">Connected Wallet</Typography>
+              <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>
+                {formatAddress(activeAddress)}
+              </Typography>
+            </Box>
+            <Stack direction="row" sx={{ gap: 2, mt: 6 }}>
+              <Button
+                variant="outlined"
+                size="large"
+                fullWidth
+                disabled={isOverlayActionLoading}
+                onClick={onClose}
+                sx={{
+                  color: 'white',
+                  borderColor: '#433679',
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                color="error"
+                fullWidth
+                disabled={isOverlayActionLoading}
+                onClick={handleAuthenticate}
+              >
+                Sign In
+              </Button>
+            </Stack>
+          </>
+        )}
       </Stack>
     </ResponsiveOverlay>
   );

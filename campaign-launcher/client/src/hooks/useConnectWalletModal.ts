@@ -29,14 +29,18 @@ export const useConnectWalletModal = ({
 
   useEffect(() => {
     if (!wasConnectedRef.current && isConnected) {
-      if (isMobile && promptOnNextConnectRef.current) {
-        promptOnNextConnectRef.current = false;
-        setShowSignInPrompt(true);
-      }
+      const didStartConnectSession = appKitSessionStartedRef.current;
 
-      setIsConnectWalletOpen(false);
-      appKitSessionStartedRef.current = false;
-      onConnect?.();
+      if (didStartConnectSession) {
+        if (isMobile && promptOnNextConnectRef.current) {
+          setShowSignInPrompt(true);
+        }
+
+        setIsConnectWalletOpen(false);
+        appKitSessionStartedRef.current = false;
+        promptOnNextConnectRef.current = false;
+        onConnect?.();
+      }
     }
 
     wasConnectedRef.current = isConnected;

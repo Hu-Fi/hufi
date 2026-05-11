@@ -21,8 +21,7 @@ import {
 import '@reown/appkit-ui/wui-qr-code';
 
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
-
-import { useReownWalletOptions } from './useReownWalletOptions';
+import { useReownWalletOptions } from '@/hooks/useReownWalletOptions';
 
 type Props = {
   open: boolean;
@@ -85,8 +84,6 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
     setShowAllWallets(false);
     onClose();
   }, [onClose, resetSearch, resetWalletConnect]);
-
-  const isBusy = isFetchingWallets || isFetchingWcUri;
 
   return (
     <ResponsiveOverlay
@@ -167,6 +164,11 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
               sx={{ mb: 2 }}
               slotProps={{
                 input: {
+                  endAdornment: isFetchingWallets ? (
+                    <InputAdornment position="end">
+                      <CircularProgress size={18} />
+                    </InputAdornment>
+                  ) : undefined,
                   startAdornment: (
                     <InputAdornment position="start">
                       <SearchIcon sx={{ color: 'text.secondary' }} />
@@ -186,7 +188,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
                 return (
                   <Grid size={{ xs: 6, md: 4 }} key={wallet.id}>
                     <Button
-                      disabled={isBusy}
+                      disabled={isFetchingWcUri}
                       onClick={() => {
                         void connectWallet(wallet);
                       }}
@@ -242,9 +244,11 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
               })}
             </Grid>
 
-            {isBusy && displayedWallets.length === 0 && (
-              <Stack sx={{ alignItems: 'center', py: 6 }}>
-                <CircularProgress size={32} />
+            {!isFetchingWallets && displayedWallets.length === 0 && (
+              <Stack sx={{ alignItems: 'center', py: 15 }}>
+                <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                  No wallets found
+                </Typography>
               </Stack>
             )}
           </Box>
@@ -269,7 +273,7 @@ const ConnectWalletModal: FC<Props> = ({ open, onClose }) => {
             ) : (
               <>
                 <Button
-                  disabled={isBusy}
+                  disabled={isFetchingWcUri}
                   variant="outlined"
                   onClick={() => setShowAllWallets(false)}
                 >

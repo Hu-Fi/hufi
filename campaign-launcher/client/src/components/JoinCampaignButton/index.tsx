@@ -50,7 +50,9 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
     useConnectWalletModal({
       onCancel: () => {
         setShouldResumeJoinAfterConnect(false);
-        setStartStep('auth');
+      },
+      onConnect: () => {
+        setIsOverlayOpen(true);
       },
       promptOnMobileConnect: false,
     });
@@ -66,6 +68,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
 
   const handleOverlayClose = () => {
     setIsOverlayOpen(false);
+    setShouldResumeJoinAfterConnect(false);
     setStartStep('auth');
   };
 
@@ -106,7 +109,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
     if (!isConnected) {
       setShouldResumeJoinAfterConnect(true);
       setStartStep('connect');
-      openConnectWallet();
+      setIsOverlayOpen(true);
       return;
     }
 
@@ -188,6 +191,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
         open={isOverlayOpen}
         onClose={handleOverlayClose}
         startStep={startStep}
+        onConnectWallet={openConnectWallet}
         handleJoinCampaign={handleJoinCampaign}
       />
       <ConnectWalletModal
