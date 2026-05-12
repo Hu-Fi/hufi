@@ -3,8 +3,8 @@ import { type FC, useEffect, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useConnection } from 'wagmi';
 
+import ConnectWalletContent from '@/components/ConnectWallet/ConnectWalletContent';
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
@@ -17,7 +17,6 @@ type Props = {
   open: boolean;
   onClose: () => void;
   startStep: JoinFlowStep;
-  onConnectWallet: () => void;
   handleJoinCampaign: () => Promise<void>;
 };
 
@@ -25,7 +24,6 @@ const JoinCampaignOverlay: FC<Props> = ({
   open,
   onClose,
   startStep,
-  onConnectWallet,
   handleJoinCampaign,
 }) => {
   const [step, setStep] = useState<JoinFlowStep>(startStep);
@@ -36,7 +34,6 @@ const JoinCampaignOverlay: FC<Props> = ({
   const { signIn, isLoading: isAuthLoading } = useWeb3Auth();
   const { enrolledExchanges } = useAuthedUserData();
   const { showError } = useNotification();
-  const isMobile = useIsMobile();
 
   const handleOverlayClose = () => {
     if (isAuthLoading) return;
@@ -92,19 +89,33 @@ const JoinCampaignOverlay: FC<Props> = ({
       open={open}
       onClose={handleOverlayClose}
       isLoading={isOverlayActionLoading}
-      desktopSx={{
-        px: 4,
+      desktopSx={
+        isConnectStep
+          ? {
+              width: 640,
+              height: 600,
+              maxHeight: 'calc(100dvh - 48px)',
+              px: 4,
+              py: 4,
+            }
+          : {
+              px: 4,
+              py: 4,
+              maxWidth: 560,
+              width: '100%',
+            }
+      }
+      mobileSx={{
+        px: 2,
         py: 4,
-        maxWidth: 560,
-        width: '100%',
+        height: isConnectStep ? '85dvh' : 'auto',
       }}
-      mobileSx={{ px: 2, py: 4 }}
       closeButtonSx={{
         top: shouldShowTwoSteps ? 24 : 32,
         right: { xs: 16, md: 32 },
       }}
     >
-      <Stack>
+      <Stack sx={{ height: '100%', minHeight: 0 }}>
         {shouldShowTwoSteps && (
           <Box
             sx={{
@@ -128,38 +139,29 @@ const JoinCampaignOverlay: FC<Props> = ({
             ))}
           </Box>
         )}
-        <Stack sx={{ gap: 1.5 }}>
-          <Typography
-            variant="body1"
-            sx={{
-              color: 'white',
-              fontSize: { xs: '16px', md: '20px' },
-              fontWeight: 600,
-            }}
-          >
-            {isConnectStep ? 'Connect Wallet' : 'Sign In'}
-          </Typography>
-          <Typography
-            variant="subtitle2"
-            sx={{ color: 'text.primary', fontWeight: 500 }}
-          >
-            {isConnectStep
-              ? 'Connect your wallet to create, participate in campaigns and track your performance.'
-              : 'To keep your account secure, please sign this message. This is a gasless way to confirm you own this address.'}
-          </Typography>
-        </Stack>
+        {!isConnectStep && (
+          <Stack sx={{ gap: 1.5 }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'white',
+                fontSize: { xs: '16px', md: '20px' },
+                fontWeight: 600,
+              }}
+            >
+              Sign In
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: 'text.primary', fontWeight: 500 }}
+            >
+              To keep your account secure, please sign this message. This is a
+              gasless way to confirm you own this address.
+            </Typography>
+          </Stack>
+        )}
         {isConnectStep ? (
-          <Button
-            variant="contained"
-            size="large"
-            color="error"
-            fullWidth={isMobile}
-            disabled={isOverlayActionLoading}
-            sx={{ mt: 6 }}
-            onClick={onConnectWallet}
-          >
-            Connect Wallet
-          </Button>
+          <ConnectWalletContent />
         ) : (
           <>
             <Box

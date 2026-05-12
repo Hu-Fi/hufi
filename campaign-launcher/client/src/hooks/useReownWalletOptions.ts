@@ -8,7 +8,7 @@ import {
   ConnectorController,
   ConnectorControllerUtil,
   ConnectorUtil,
-  WalletUtil,
+  type WalletUtil,
   type ConnectorOrWalletItem,
 } from '@reown/appkit-controllers';
 
@@ -58,12 +58,6 @@ const mapWalletOption = (item: ConnectorOrWalletItem): WalletOption => {
 const getInitialWallets = () =>
   ConnectorUtil.connectorList().map(mapWalletOption);
 
-const getWalletConnectWallets = () =>
-  WalletUtil.getWalletConnectWallets(ApiController.state.wallets).map(
-    (wallet) =>
-      mapWalletOption({ kind: 'wallet', subtype: 'recommended', wallet })
-  );
-
 const mapRemoteWallets = (
   wallets: Parameters<typeof WalletUtil.getWalletConnectWallets>[0]
 ) =>
@@ -102,21 +96,16 @@ const mergeWalletOptions = (walletOptions: WalletOption[]) => {
 };
 
 export const useReownWalletOptions = ({
-  open,
   search,
   showAllWallets,
 }: {
-  open: boolean;
   search: string;
   showAllWallets: boolean;
 }) => {
   const [wallets, setWallets] = useState(getInitialWallets);
-  const [wcWallets, setWcWallets] = useState(getWalletConnectWallets);
-  const [remoteSearchWallets, setRemoteSearchWallets] = useState<
-    WalletOption[]
-  >([]);
-  const [count, setCount] = useState(ApiController.state.count);
-  const [page, setPage] = useState(ApiController.state.page);
+  const [wcWallets, setWcWallets] = useState<WalletOption[]>([]);
+  const [wcWalletsCount, setWcWalletsCount] = useState(0);
+  const [wcWalletsPage, setWcWalletsPage] = useState(1);
   const [wcUri, setWcUri] = useState(ConnectionController.state.wcUri);
   const [isFetchingWallets, setIsFetchingWallets] = useState(false);
   const [isFetchingWcUri, setIsFetchingWcUri] = useState(
@@ -125,24 +114,39 @@ export const useReownWalletOptions = ({
   const [connectingWallet, setConnectingWallet] = useState<WalletOption | null>(
     null
   );
+  const [appliedSearchValue, setAppliedSearchValue] = useState('');
+
   const searchRequestIdRef = useRef(0);
+
+  const fetchWcWallets = useCallback(
+    async (_page: number, _searchValue: string) => {
+      return ApiController.fetchWallets({
+        chains: ChainController.getRequestedCaipNetworkIds().join(','),
+        entries: WALLET_PAGE_SIZE,
+        search: _searchValue,
+        page: _page,
+      }).then(({ data, count }) => {
+        const mappedWallets = mapRemoteWallets(data);
+        setWcWallets((prevWallets) =>
+          _page === 1 ? mappedWallets : [...prevWallets, ...mappedWallets]
+        );
+        setWcWalletsCount(count);
+      });
+    },
+    []
+  );
 
   useEffect(() => {
     const updateInitialWallets = () => setWallets(getInitialWallets());
-    const updateWcWallets = () => setWcWallets(getWalletConnectWallets());
 
     const unsubscribers = [
       ConnectorController.subscribeKey('connectors', updateInitialWallets),
       ApiController.subscribeKey('recommended', updateInitialWallets),
-      ApiController.subscribeKey('wallets', updateWcWallets),
-      ApiController.subscribeKey('count', setCount),
-      ApiController.subscribeKey('page', setPage),
       ConnectionController.subscribeKey('wcUri', setWcUri),
       ConnectionController.subscribeKey('wcFetchingUri', setIsFetchingWcUri),
     ];
 
     updateInitialWallets();
-    updateWcWallets();
 
     return () => {
       unsubscribers.forEach((unsubscribe) => unsubscribe());
@@ -150,66 +154,46 @@ export const useReownWalletOptions = ({
   }, []);
 
   useEffect(() => {
-    if (!open) return;
-
-    setIsFetchingWallets(true);
-    void Promise.allSettled([
-      ApiController.fetchRecommendedWallets(),
-      ApiController.fetchWalletsByPage({ entries: WALLET_PAGE_SIZE, page: 1 }),
-    ]).finally(() => setIsFetchingWallets(false));
-  }, [open]);
+    void ApiController.fetchRecommendedWallets();
+  }, []);
 
   useEffect(() => {
-    if (!open || !showAllWallets) return;
+    if (!showAllWallets) return;
 
-    const timeout = window.setTimeout(() => {
-      const searchValue = search.trim();
+    const requestedSearchValue = search.trim();
+    const runFetch = () => {
       setIsFetchingWallets(true);
       searchRequestIdRef.current += 1;
       const requestId = searchRequestIdRef.current;
 
-      const fetchPromise = searchValue
-        ? ApiController.fetchWallets({
-            chains: ChainController.getRequestedCaipNetworkIds().join(','),
-            entries: WALLET_PAGE_SIZE,
-            page: 1,
-            search: searchValue,
-          }).then(({ data }) => {
-            if (requestId === searchRequestIdRef.current) {
-              setRemoteSearchWallets(mapRemoteWallets(data));
-            }
-          })
-        : ApiController.fetchWalletsByPage({
-            entries: WALLET_PAGE_SIZE,
-            page: 1,
-          }).then(() => {
-            if (requestId === searchRequestIdRef.current) {
-              setRemoteSearchWallets([]);
-            }
-          });
-
-      void fetchPromise.finally(() => {
+      fetchWcWallets(1, requestedSearchValue).finally(() => {
         if (requestId === searchRequestIdRef.current) {
+          setAppliedSearchValue(requestedSearchValue);
           setIsFetchingWallets(false);
         }
       });
-    }, 250);
+    };
 
-    return () => window.clearTimeout(timeout);
-  }, [open, search, showAllWallets]);
+    if (!requestedSearchValue) {
+      runFetch();
+      return;
+    }
+
+    const timeout = setTimeout(runFetch, 250);
+
+    return () => clearTimeout(timeout);
+  }, [search, showAllWallets, fetchWcWallets]);
 
   const displayedWallets = useMemo(() => {
     if (showAllWallets) {
-      const searchValue = search.trim();
-
       return mergeWalletOptions([
-        ...searchWallets(wallets, searchValue),
-        ...(searchValue ? remoteSearchWallets : wcWallets),
+        ...searchWallets(wallets, appliedSearchValue),
+        ...wcWallets,
       ]);
+    } else {
+      return wallets;
     }
-
-    return wallets;
-  }, [remoteSearchWallets, search, showAllWallets, wallets, wcWallets]);
+  }, [appliedSearchValue, showAllWallets, wallets, wcWallets]);
 
   const resetWalletConnect = useCallback(() => {
     ConnectionController.resetUri();
@@ -245,19 +229,29 @@ export const useReownWalletOptions = ({
   );
 
   const resetSearch = useCallback(() => {
-    setRemoteSearchWallets([]);
+    setAppliedSearchValue('');
+    setWcWallets([]);
+    setWcWalletsCount(0);
+    setWcWalletsPage(1);
   }, []);
 
   const fetchMoreWallets = useCallback(() => {
-    setIsFetchingWallets(true);
-    void ApiController.fetchWalletsByPage({
-      entries: WALLET_PAGE_SIZE,
-      page: page + 1,
-    }).finally(() => setIsFetchingWallets(false));
-  }, [page]);
+    if (isFetchingWallets || isFetchingWcUri) return;
 
-  const totalFetched = page * WALLET_PAGE_SIZE;
-  const hasMoreWallets = showAllWallets && totalFetched < count;
+    setIsFetchingWallets(true);
+    fetchWcWallets(wcWalletsPage + 1, appliedSearchValue).finally(() => {
+      setWcWalletsPage(wcWalletsPage + 1);
+      setIsFetchingWallets(false);
+    });
+  }, [
+    appliedSearchValue,
+    isFetchingWallets,
+    isFetchingWcUri,
+    fetchWcWallets,
+    wcWalletsPage,
+  ]);
+
+  const hasMoreWallets = wcWalletsCount > wcWallets.length;
 
   return {
     connectingWallet,

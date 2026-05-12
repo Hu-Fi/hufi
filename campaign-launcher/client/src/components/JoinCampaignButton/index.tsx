@@ -7,15 +7,12 @@ import { useConnection } from 'wagmi';
 import { ROUTES } from '@/constants';
 import { useJoinCampaign } from '@/hooks/recording-oracle';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { useConnectWalletModal } from '@/hooks/useConnectWalletModal';
 import { useNotification } from '@/hooks/useNotification';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { CampaignStatus, ExchangeType, type Campaign } from '@/types';
 import * as errorUtils from '@/utils/error';
-
-import ConnectWalletModal from '../ConnectWallet/ConnectWalletModal';
 
 import JoinCampaignOverlay from './JoinCampaignOverlay';
 
@@ -46,16 +43,6 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const isDetailsPage = !!useMatch(ROUTES.CAMPAIGN_DETAILS);
   const isLoading =
     isEnrolledExchangesLoading || isJoinedCampaignsLoading || isJoining;
-  const { closeConnectWallet, isConnectWalletOpen, openConnectWallet } =
-    useConnectWalletModal({
-      onCancel: () => {
-        setShouldResumeJoinAfterConnect(false);
-      },
-      onConnect: () => {
-        setIsOverlayOpen(true);
-      },
-      promptOnMobileConnect: false,
-    });
 
   const isAlreadyJoined = useMemo(
     () =>
@@ -191,12 +178,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
         open={isOverlayOpen}
         onClose={handleOverlayClose}
         startStep={startStep}
-        onConnectWallet={openConnectWallet}
         handleJoinCampaign={handleJoinCampaign}
-      />
-      <ConnectWalletModal
-        open={isConnectWalletOpen}
-        onClose={closeConnectWallet}
       />
     </>
   );
