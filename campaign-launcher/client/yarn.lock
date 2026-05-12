@@ -187,7 +187,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.28.4, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
+"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
   version: 7.28.4
   resolution: "@babel/runtime@npm:7.28.4"
   checksum: 10c0/792ce7af9750fb9b93879cc9d1db175701c4689da890e6ced242ea0207c9da411ccf16dc04e689cc01158b28d7898c40d75598f4559109f761c12ce01e959bf7
@@ -2588,13 +2588,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json5@npm:^0.0.29":
-  version: 0.0.29
-  resolution: "@types/json5@npm:0.0.29"
-  checksum: 10c0/6bf5337bc447b706bb5b4431d37686aa2ea6d07cfd6f79cc31de80170d6ff9b1c7384a9c0ccbc45b3f512bae9e9f75c2e12109806a15331dc94e8a8db6dbb4ac
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:*":
   version: 25.0.9
   resolution: "@types/node@npm:25.0.9"
@@ -3083,9 +3076,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wagmi/connectors@npm:8.0.1, @wagmi/connectors@npm:>=5.9.9":
-  version: 8.0.1
-  resolution: "@wagmi/connectors@npm:8.0.1"
+"@wagmi/connectors@npm:8.0.9":
+  version: 8.0.9
+  resolution: "@wagmi/connectors@npm:8.0.9"
   peerDependencies:
     "@base-org/account": ^2.5.1
     "@coinbase/wallet-sdk": ^4.3.6
@@ -3121,7 +3114,68 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wagmi/core@npm:3.4.2, @wagmi/core@npm:^3.4.2":
+"@wagmi/connectors@npm:>=5.9.9":
+  version: 8.0.1
+  resolution: "@wagmi/connectors@npm:8.0.1"
+  peerDependencies:
+    "@base-org/account": ^2.5.1
+    "@coinbase/wallet-sdk": ^4.3.6
+    "@metamask/connect-evm": ~1.0.0
+    "@safe-global/safe-apps-provider": ~0.18.6
+    "@safe-global/safe-apps-sdk": ^9.1.0
+    "@wagmi/core": 3.4.8
+    "@walletconnect/ethereum-provider": ^2.21.1
+    accounts: ~0.8.1
+    porto: ~0.2.35
+    typescript: ">=5.7.3"
+    viem: 2.x
+  peerDependenciesMeta:
+    "@base-org/account":
+      optional: true
+    "@coinbase/wallet-sdk":
+      optional: true
+    "@metamask/connect-evm":
+      optional: true
+    "@safe-global/safe-apps-provider":
+      optional: true
+    "@safe-global/safe-apps-sdk":
+      optional: true
+    "@walletconnect/ethereum-provider":
+      optional: true
+    accounts:
+      optional: true
+    porto:
+      optional: true
+    typescript:
+      optional: true
+  checksum: 10c0/927b75e4e4832dcea167b2e5c6c256fb95e25cd68b3e74493ce7996bdcaefbfe264d8e874ac1ee2edc9b4d99f924cb552f6afeac860f39e3bd010ea18682044c
+  languageName: node
+  linkType: hard
+
+"@wagmi/core@npm:3.4.8":
+  version: 3.4.8
+  resolution: "@wagmi/core@npm:3.4.8"
+  dependencies:
+    eventemitter3: "npm:5.0.1"
+    mipd: "npm:0.0.7"
+    zustand: "npm:5.0.0"
+  peerDependencies:
+    "@tanstack/query-core": ">=5.0.0"
+    accounts: ~0.8.1
+    typescript: ">=5.7.3"
+    viem: 2.x
+  peerDependenciesMeta:
+    "@tanstack/query-core":
+      optional: true
+    accounts:
+      optional: true
+    typescript:
+      optional: true
+  checksum: 10c0/2aa0aef022bdbe922dea2ea695f58fe0a4cb9d9d1564e679b3b829d12b4ca1065ce7cdc7d94ad0e3275ee829a0e32030e8b9c85a8a005bb2b27c488d1d085447
+  languageName: node
+  linkType: hard
+
+"@wagmi/core@npm:^3.4.2":
   version: 3.4.2
   resolution: "@wagmi/core@npm:3.4.2"
   dependencies:
@@ -3140,7 +3194,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/2aa0aef022bdbe922dea2ea695f58fe0a4cb9d9d1564e679b3b829d12b4ca1065ce7cdc7d94ad0e3275ee829a0e32030e8b9c85a8a005bb2b27c488d1d085447
+  checksum: 10c0/dbe98567cd48b71c1e1c69f7095e85136c9dbd0cc8e3c38cd99041a02910cbea399c39f721d8d27cc56ed1138e0f17ac5dd7ad88d459a97c4e07b5d6936b14aa
   languageName: node
   linkType: hard
 
@@ -4532,15 +4586,6 @@ __metadata:
     supports-color:
       optional: true
   checksum: 10c0/d79136ec6c83ecbefd0f6a5593da6a9c91ec4d7ddc4b54c883d6e71ec9accb5f67a1a5e96d00a328196b5b5c86d365e98d8a3a70856aaf16b4e7b1985e67f5a6
-  languageName: node
-  linkType: hard
-
-"debug@npm:^3.2.7":
-  version: 3.2.7
-  resolution: "debug@npm:3.2.7"
-  dependencies:
-    ms: "npm:^2.1.1"
-  checksum: 10c0/37d96ae42cbc71c14844d2ae3ba55adf462ec89fd3a999459dec3833944cd999af6007ff29c780f1c61153bcaaf2c842d1e4ce1ec621e4fc4923244942e4a02a
   languageName: node
   linkType: hard
 
@@ -6867,7 +6912,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ms@npm:^2.0.0, ms@npm:^2.1.1, ms@npm:^2.1.3":
+"ms@npm:^2.0.0, ms@npm:^2.1.3":
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: 10c0/d924b57e7312b3b63ad21fc5b3dc0af5e78d61a1fc7cfb5457edaf26326bf62be5307cc87ffb6862ef1c2b33b0233cdb5d4f01c4c958cc0d660948b65a287a48
@@ -7160,10 +7205,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openpgp@npm:^6.2.2":
-  version: 6.2.2
-  resolution: "openpgp@npm:6.2.2"
-  checksum: 10c0/dd284ff20ad087c341ec86369e12d5c210056aa28edacba192b20bd0d20892ce21c6aef83c6d79f082f533343e80b8ad63a58ee9ebf5d7651173890e70833ae2
+"openpgp@npm:^6.3.0":
+  version: 6.3.0
+  resolution: "openpgp@npm:6.3.0"
+  checksum: 10c0/0528cb57d7cfd10ef4ab8ce868a0244a4930019d50feed9158028debfd85e5e1a621a4cc5ae254a0b1820a355b12fc7adbe04c950c731d9bb63ca9a9ed44a948
   languageName: node
   linkType: hard
 
@@ -8224,21 +8269,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.7.3":
-  version: 7.7.3
-  resolution: "semver@npm:7.7.3"
-  bin:
-    semver: bin/semver.js
-  checksum: 10c0/4afe5c986567db82f44c8c6faef8fe9df2a9b1d98098fc1721f57c696c4c21cebd572f297fc21002f81889492345b8470473bc6f4aff5fb032a6ea59ea2bc45e
-  languageName: node
-  linkType: hard
-
 "semver@npm:^7.7.2":
   version: 7.7.4
   resolution: "semver@npm:7.7.4"
   bin:
     semver: bin/semver.js
   checksum: 10c0/5215ad0234e2845d4ea5bb9d836d42b03499546ddafb12075566899fc617f68794bb6f146076b6881d755de17d6c6cc73372555879ec7dce2c2feee947866ad2
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.7.3":
+  version: 7.7.3
+  resolution: "semver@npm:7.7.3"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/4afe5c986567db82f44c8c6faef8fe9df2a9b1d98098fc1721f57c696c4c21cebd572f297fc21002f81889492345b8470473bc6f4aff5fb032a6ea59ea2bc45e
   languageName: node
   linkType: hard
 
@@ -9282,7 +9327,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:>=2.45.0, viem@npm:^2.1.1, viem@npm:^2.21.26, viem@npm:^2.27.2, viem@npm:^2.31.7, viem@npm:^2.45.3":
+"viem@npm:>=2.45.0, viem@npm:^2.1.1, viem@npm:^2.21.26, viem@npm:^2.27.2, viem@npm:^2.31.7":
   version: 2.47.10
   resolution: "viem@npm:2.47.10"
   dependencies:
@@ -9299,7 +9344,28 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/801d08331024467496730151fbd7e389147d186c13817b7bc9fa707fbb2d0c844e649a4e8ce6dbf3c2a91accc8f14bbef7c255c98eecb5d8201eb22bfdebafa9
+  checksum: 10c0/b8e39625ac695b3db49934733118010f34880e082d6ad06cf336ac45dd043c87f09f4db5cbfb5c05a4abd00901f1c3cb827f9da4d793064c26a73f480b5a7061
+  languageName: node
+  linkType: hard
+
+"viem@npm:^2.48.4":
+  version: 2.48.11
+  resolution: "viem@npm:2.48.11"
+  dependencies:
+    "@noble/curves": "npm:1.9.1"
+    "@noble/hashes": "npm:1.8.0"
+    "@scure/bip32": "npm:1.7.0"
+    "@scure/bip39": "npm:1.6.0"
+    abitype: "npm:1.2.3"
+    isows: "npm:1.0.7"
+    ox: "npm:0.14.20"
+    ws: "npm:8.18.3"
+  peerDependencies:
+    typescript: ">=5.0.4"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/d2e529c61ae5321acb5b17bde0b99c812ebc12ebd80d828aefba0531395855ed05e64596e8af587b24894322f61a168fa66e805063f08062e5e1b8471b23a419
   languageName: node
   linkType: hard
 
