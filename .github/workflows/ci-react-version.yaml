@@ -26,9 +26,20 @@ jobs:
         run: |
           REACT_VERSION=$(jq -r '.dependencies.react' package.json)
           REACT_DOM_VERSION=$(jq -r '.dependencies."react-dom"' package.json)
+          SEMVER_TRIPLE_REGEX='^[0-9]+\.[0-9]+\.[0-9]+$'
 
           echo "react version: $REACT_VERSION"
           echo "react-dom version: $REACT_DOM_VERSION"
+
+          if ! [[ "$REACT_VERSION" =~ $SEMVER_TRIPLE_REGEX ]]; then
+            echo "Error: react version must use number.number.number format"
+            exit 1
+          fi
+
+          if ! [[ "$REACT_DOM_VERSION" =~ $SEMVER_TRIPLE_REGEX ]]; then
+            echo "Error: react-dom version must use number.number.number format"
+            exit 1
+          fi
 
           if [ "$REACT_VERSION" != "$REACT_DOM_VERSION" ]; then
             echo "Error: react and react-dom versions do not match"
