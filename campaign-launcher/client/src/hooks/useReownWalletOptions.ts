@@ -131,18 +131,18 @@ export const useReownWalletOptions = ({
 
   const fetchWcWallets = useCallback(
     async (_page: number, _searchValue: string) => {
-      return ApiController.fetchWallets({
+      const { data, count } = await ApiController.fetchWallets({
         chains: ChainController.getRequestedCaipNetworkIds().join(','),
         entries: WALLET_PAGE_SIZE,
         search: _searchValue,
         page: _page,
-      }).then(({ data, count }) => {
-        const mappedWallets = mapRemoteWallets(data);
-        setWcWallets((prevWallets) =>
-          _page === 1 ? mappedWallets : [...prevWallets, ...mappedWallets]
-        );
-        setWcWalletsCount(count);
       });
+
+      const mappedWallets = mapRemoteWallets(data);
+      setWcWallets((prevWallets) =>
+        _page === 1 ? mappedWallets : [...prevWallets, ...mappedWallets]
+      );
+      setWcWalletsCount(count);
     },
     []
   );
@@ -172,17 +172,21 @@ export const useReownWalletOptions = ({
     if (!showAllWallets) return;
 
     const requestedSearchValue = search.trim();
-    const runFetch = () => {
+    const runFetch = async () => {
       setIsFetchingWallets(true);
       searchRequestIdRef.current += 1;
       const requestId = searchRequestIdRef.current;
 
-      fetchWcWallets(1, requestedSearchValue).finally(() => {
+      try {
+        await fetchWcWallets(1, requestedSearchValue);
+      } catch (error) {
+        console.error('Failed to fetch wallets', error);
+      } finally {
         if (requestId === searchRequestIdRef.current) {
           setAppliedSearchValue(requestedSearchValue);
           setIsFetchingWallets(false);
         }
-      });
+      }
     };
 
     if (!requestedSearchValue) {
@@ -190,7 +194,9 @@ export const useReownWalletOptions = ({
       return;
     }
 
-    const timeout = setTimeout(runFetch, 250);
+    const timeout = setTimeout(() => {
+      runFetch();
+    }, 250);
 
     return () => clearTimeout(timeout);
   }, [search, showAllWallets, fetchWcWallets]);
@@ -261,14 +267,18 @@ export const useReownWalletOptions = ({
     setWcWalletsPage(1);
   }, []);
 
-  const fetchMoreWallets = useCallback(() => {
+  const fetchMoreWallets = useCallback(async () => {
     if (isFetchingWallets || isFetchingWcUri) return;
 
     setIsFetchingWallets(true);
-    fetchWcWallets(wcWalletsPage + 1, appliedSearchValue).finally(() => {
+    try {
+      await fetchWcWallets(wcWalletsPage + 1, appliedSearchValue);
       setWcWalletsPage(wcWalletsPage + 1);
+    } catch (error) {
+      console.error('Failed to fetch more wallets', error);
+    } finally {
       setIsFetchingWallets(false);
-    });
+    }
   }, [
     appliedSearchValue,
     isFetchingWallets,
