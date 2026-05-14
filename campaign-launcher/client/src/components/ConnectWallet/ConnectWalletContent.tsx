@@ -62,6 +62,7 @@ const ConnectWalletContent: FC = () => {
 
   const isMobile = useIsMobile();
   const {
+    canOpenMobileWallet,
     connectingWallet,
     connectWallet,
     displayedWallets,
@@ -69,6 +70,7 @@ const ConnectWalletContent: FC = () => {
     hasMoreWallets,
     isFetchingWallets,
     isFetchingWcUri,
+    openMobileWallet,
     resetSearch,
     resetWalletConnect,
     wcUri,
@@ -88,6 +90,56 @@ const ConnectWalletContent: FC = () => {
       resetState();
     };
   }, [resetState]);
+
+  if (isMobile && wcUri && connectingWallet && canOpenMobileWallet) {
+    return (
+      <Stack
+        sx={{
+          alignItems: 'center',
+          gap: 2,
+          height: '100%',
+          justifyContent: 'center',
+          px: { xs: 2, md: 4 },
+          textAlign: 'center',
+        }}
+      >
+        <Typography variant="h6" sx={{ color: 'white' }}>
+          Open {connectingWallet.name}
+        </Typography>
+        <Box
+          component="img"
+          src={connectingWallet.imageUrl}
+          alt={connectingWallet.name}
+          sx={{
+            borderRadius: 2,
+            height: 72,
+            objectFit: 'contain',
+            width: 72,
+          }}
+        />
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Continue in your wallet app to approve the connection.
+        </Typography>
+        <Button
+          size="large"
+          variant="contained"
+          color="error"
+          onClick={() => openMobileWallet()}
+        >
+          Open Wallet
+        </Button>
+        <Button
+          size="large"
+          variant="outlined"
+          onClick={() => {
+            resetWalletConnect();
+          }}
+        >
+          Back to wallets
+        </Button>
+      </Stack>
+    );
+  }
 
   return wcUri && connectingWallet ? (
     <Stack

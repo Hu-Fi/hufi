@@ -5,11 +5,14 @@ import {
   AssetUtil,
   ChainController,
   ConnectionController,
+  ConnectionControllerUtil,
   ConnectorController,
   ConnectorControllerUtil,
   ConnectorUtil,
+  CoreHelperUtil,
   type WalletUtil,
   type ConnectorOrWalletItem,
+  type WcWallet,
 } from '@reown/appkit-controllers';
 
 import { WALLET_PAGE_SIZE } from '@/constants';
@@ -93,6 +96,14 @@ const mergeWalletOptions = (walletOptions: WalletOption[]) => {
   });
 
   return [...uniqueWallets.values()];
+};
+
+const getMobileWallet = (wallet: WalletOption): WcWallet | undefined => {
+  if (wallet.item.kind === 'wallet') {
+    return wallet.item.wallet;
+  }
+
+  return wallet.item.connector.explorerWallet;
 };
 
 export const useReownWalletOptions = ({
@@ -202,6 +213,15 @@ export const useReownWalletOptions = ({
     setConnectingWallet(null);
   }, []);
 
+  const openMobileWallet = useCallback(
+    (wallet = connectingWallet) => {
+      if (!wallet) return;
+
+      ConnectionControllerUtil.onConnectMobile(getMobileWallet(wallet));
+    },
+    [connectingWallet]
+  );
+
   const connectWallet = useCallback(
     async (wallet: WalletOption) => {
       resetWalletConnect();
@@ -220,12 +240,18 @@ export const useReownWalletOptions = ({
           ConnectionController.setRecentWallet(wallet.item.wallet);
         }
 
-        await ConnectionController.connectWalletConnect({ cache: 'never' });
+        await ConnectionController.connectWalletConnect({
+          cache: CoreHelperUtil.isMobile() ? 'auto' : 'never',
+        });
+
+        if (CoreHelperUtil.isMobile() && getMobileWallet(wallet)?.mobile_link) {
+          openMobileWallet(wallet);
+        }
       } catch {
         setConnectingWallet(null);
       }
     },
-    [resetWalletConnect]
+    [openMobileWallet, resetWalletConnect]
   );
 
   const resetSearch = useCallback(() => {
@@ -252,8 +278,12 @@ export const useReownWalletOptions = ({
   ]);
 
   const hasMoreWallets = wcWalletsCount > wcWallets.length;
+  const canOpenMobileWallet = Boolean(
+    connectingWallet && getMobileWallet(connectingWallet)?.mobile_link
+  );
 
   return {
+    canOpenMobileWallet,
     connectingWallet,
     connectWallet,
     displayedWallets,
@@ -261,6 +291,7 @@ export const useReownWalletOptions = ({
     hasMoreWallets,
     isFetchingWallets,
     isFetchingWcUri,
+    openMobileWallet,
     resetSearch,
     resetWalletConnect,
     wcUri,
