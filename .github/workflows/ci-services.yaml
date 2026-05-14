@@ -16,6 +16,7 @@ jobs:
     outputs:
       common: ${{ steps.filter.outputs.common }}
       campaign_launcher_client: ${{ steps.filter.outputs.campaign_launcher_client }}
+      campaign_launcher_client_deps: ${{ steps.filter.outputs.campaign_launcher_client_deps }}
       campaign_launcher_server: ${{ steps.filter.outputs.campaign_launcher_server }}
       recording_oracle: ${{ steps.filter.outputs.recording_oracle }}
       reputation_oracle: ${{ steps.filter.outputs.reputation_oracle }}
@@ -44,6 +45,17 @@ jobs:
               - recording-oracle/**
             reputation_oracle:
               - reputation-oracle/**
+            campaign_launcher_client_deps:
+              - campaign-launcher/client/package.json
+              - campaign-launcher/client/yarn.lock
+
+  cl-react-version-check:
+    name: CL React version check
+    needs: changes
+    if: needs.changes.outputs.campaign_launcher_client_deps == 'true' || needs.changes.outputs.common == 'true'
+    uses: ./.github/workflows/ci-react-version.yaml
+    with:
+      working-directory: campaign-launcher/client
 
   campaign-launcher-client-lint:
     name: Campaign Launcher Client Lint
@@ -107,6 +119,7 @@ jobs:
     if: always()
     needs:
       - changes
+      - cl-react-version-check
       - campaign-launcher-client-lint
       - campaign-launcher-server-lint
       - campaign-launcher-server-test
@@ -120,6 +133,7 @@ jobs:
           set -euo pipefail
 
           for r in \
+            "${{ needs.cl-react-version-check.result }}" \
             "${{ needs.campaign-launcher-client-lint.result }}" \
             "${{ needs.campaign-launcher-server-lint.result }}" \
             "${{ needs.campaign-launcher-server-test.result }}" \
