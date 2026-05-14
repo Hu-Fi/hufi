@@ -1,0 +1,444 @@
+import {
+  createElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FC,
+} from 'react';
+
+import SearchIcon from '@mui/icons-material/Search';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  InputAdornment,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import '@reown/appkit-ui/wui-qr-code';
+
+import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useReownWalletOptions } from '@/hooks/useReownWalletOptions';
+
+type AppKitQrCodeElement = HTMLElement & {
+  alt?: string;
+  imageSrc?: string;
+  size?: number;
+  theme?: 'dark' | 'light';
+  uri?: string;
+};
+
+type AppKitQrCodeProps = {
+  alt: string;
+  imageSrc?: string;
+  uri: string;
+};
+
+const AppKitQrCode: FC<AppKitQrCodeProps> = ({ alt, imageSrc, uri }) => {
+  const qrCodeRef = useRef<AppKitQrCodeElement>(null);
+
+  useEffect(() => {
+    if (!qrCodeRef.current) return;
+
+    qrCodeRef.current.alt = alt;
+    qrCodeRef.current.imageSrc = imageSrc;
+    qrCodeRef.current.size = 500;
+    qrCodeRef.current.theme = 'light';
+    qrCodeRef.current.uri = uri;
+  }, [alt, imageSrc, uri]);
+
+  return createElement('wui-qr-code', {
+    ref: qrCodeRef,
+    style: { display: 'block', height: '100%', width: '100%' },
+  });
+};
+
+const ConnectWalletContent: FC = () => {
+  const [search, setSearch] = useState('');
+  const [showAllWallets, setShowAllWallets] = useState(false);
+  const [isUriCopied, setIsUriCopied] = useState(false);
+
+  const copyUriTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyUriTimeoutRef.current) {
+        clearTimeout(copyUriTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyUri = useCallback(
+    (uri: string) => {
+      if (isUriCopied) return;
+
+      void navigator.clipboard.writeText(uri);
+      setIsUriCopied(true);
+
+      if (copyUriTimeoutRef.current) {
+        clearTimeout(copyUriTimeoutRef.current);
+      }
+
+      copyUriTimeoutRef.current = setTimeout(() => {
+        setIsUriCopied(false);
+      }, 1500);
+    },
+    [isUriCopied]
+  );
+
+  const isMobile = useIsMobile();
+  const {
+    canOpenMobileWallet,
+    connectingWallet,
+    connectWallet,
+    displayedWallets,
+    fetchMoreWallets,
+    hasMoreWallets,
+    isFetchingWallets,
+    isFetchingWcUri,
+    openMobileWallet,
+    resetSearch,
+    resetWalletConnect,
+    wcUri,
+  } = useReownWalletOptions({ search, showAllWallets });
+
+  const isFetching = isFetchingWallets || isFetchingWcUri;
+
+  const resetState = useCallback(() => {
+    resetWalletConnect();
+    setSearch('');
+    resetSearch();
+    setShowAllWallets(false);
+  }, [resetSearch, resetWalletConnect]);
+
+  useEffect(() => {
+    return () => {
+      resetState();
+    };
+  }, [resetState]);
+
+  if (isMobile && wcUri && connectingWallet && canOpenMobileWallet) {
+    return (
+      <Stack
+        sx={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          gap: 2,
+          mt: 5,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: 'white' }}>
+          Continue in {connectingWallet.name}
+        </Typography>
+        <Box
+          component="img"
+          src={connectingWallet.imageUrl}
+          alt={connectingWallet.name}
+          sx={{
+            borderRadius: 2,
+            height: 72,
+            width: 72,
+            objectFit: 'contain',
+          }}
+        />
+        <Typography
+          variant="body2"
+          sx={{ color: 'text.secondary', mx: 2, textAlign: 'center' }}
+        >
+          Click on 'Open' and accept the connection request in the wallet, or
+          <Tooltip
+            title="Copied"
+            open={isUriCopied}
+            disableFocusListener
+            disableHoverListener
+            disableTouchListener
+            placement="top"
+          >
+            <Button
+              variant="text"
+              onClick={() => handleCopyUri(wcUri)}
+              sx={{
+                fontSize: 14,
+                lineHeight: '20px',
+                minWidth: 'auto',
+                p: 0,
+                textTransform: 'none',
+                textDecoration: 'underline',
+                verticalAlign: 'baseline',
+              }}
+            >
+              copy the connection link to open it manually
+            </Button>
+          </Tooltip>
+        </Typography>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: 'center',
+            gap: 2,
+            justifyContent: 'center',
+            width: 'calc(100% + 32px)',
+            mt: 'auto',
+            mx: -2,
+            pt: 2,
+            px: 2,
+            borderTop: '1px solid #433679',
+          }}
+        >
+          <Button
+            size="large"
+            variant="outlined"
+            fullWidth
+            onClick={resetWalletConnect}
+          >
+            Back to wallets
+          </Button>
+          <Button
+            size="large"
+            variant="contained"
+            color="error"
+            fullWidth
+            onClick={() => openMobileWallet()}
+          >
+            Open
+          </Button>
+        </Stack>
+      </Stack>
+    );
+  }
+
+  return wcUri && connectingWallet ? (
+    <Stack
+      sx={{
+        alignItems: 'center',
+        gap: 2,
+        height: '100%',
+        justifyContent: 'center',
+        px: { xs: 2, md: 4 },
+        textAlign: 'center',
+      }}
+    >
+      <Typography variant="h6" sx={{ color: 'white' }}>
+        Scan with {connectingWallet.name}
+      </Typography>
+      <Box
+        sx={{
+          bgcolor: 'white',
+          borderRadius: 2,
+          height: 240,
+          p: 2,
+          width: 240,
+        }}
+      >
+        <AppKitQrCode
+          alt={connectingWallet.name}
+          imageSrc={connectingWallet.imageUrl}
+          uri={wcUri}
+        />
+      </Box>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        Open your wallet app and scan this QR code to continue.
+      </Typography>
+      <Button
+        size="large"
+        variant="outlined"
+        onClick={() => {
+          resetWalletConnect();
+        }}
+      >
+        Back to wallets
+      </Button>
+    </Stack>
+  ) : (
+    <Stack sx={{ height: '100%', minHeight: 0 }}>
+      <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
+        Connect Wallet
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{ color: 'text.primary', fontWeight: 500, mb: 3, pr: 5 }}
+      >
+        Connect your wallet to create, participate in campaigns and even track
+        your performance on the leaderboard.
+      </Typography>
+      {showAllWallets && (
+        <TextField
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search Wallet"
+          size="small"
+          fullWidth
+          sx={{ mb: 2 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              endAdornment: isFetching ? (
+                <InputAdornment position="end">
+                  <CircularProgress size={16} />
+                </InputAdornment>
+              ) : null,
+            },
+          }}
+        />
+      )}
+      <Box
+        sx={{
+          minHeight: 0,
+          height: '100%',
+          overflowY: 'auto',
+          pr: 0.5,
+          pb: 2,
+        }}
+      >
+        {!isFetching && showAllWallets && displayedWallets.length === 0 && (
+          <Stack sx={{ alignItems: 'center', py: 15 }}>
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>
+              No wallets found
+            </Typography>
+          </Stack>
+        )}
+        {displayedWallets.length > 0 && (
+          <Grid container spacing={2}>
+            {displayedWallets.map((wallet) => {
+              const isConnectingWallet =
+                connectingWallet?.id === wallet.id && isFetchingWcUri;
+
+              return (
+                <Grid
+                  key={wallet.id}
+                  size={{ xs: 6, md: 4 }}
+                  sx={{ position: 'relative' }}
+                >
+                  {isFetching && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: '100%',
+                        height: '100%',
+                        bgcolor: 'black',
+                        opacity: 0.3,
+                        borderRadius: '8px',
+                      }}
+                    />
+                  )}
+                  <Button
+                    disabled={isFetching}
+                    onClick={() => {
+                      void connectWallet(wallet);
+                    }}
+                    sx={{
+                      alignItems: 'center',
+                      border: '1px solid',
+                      borderColor: 'rgba(205, 199, 255, 0.22)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1.5,
+                      height: 132,
+                      justifyContent: 'center',
+                      p: 2,
+                      width: '100%',
+                      '&:hover': {
+                        bgcolor: 'rgba(205, 199, 255, 0.08)',
+                        borderColor: 'rgba(205, 199, 255, 0.45)',
+                      },
+                    }}
+                  >
+                    {isConnectingWallet ? (
+                      <CircularProgress size={36} />
+                    ) : (
+                      <Box
+                        component="img"
+                        src={wallet.imageUrl}
+                        alt={wallet.name}
+                        sx={{
+                          borderRadius: 1.5,
+                          height: 48,
+                          objectFit: 'contain',
+                          width: 48,
+                        }}
+                      />
+                    )}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'white',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {wallet.name}
+                    </Typography>
+                  </Button>
+                </Grid>
+              );
+            })}
+          </Grid>
+        )}
+      </Box>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: 'center',
+          gap: 1,
+          justifyContent: 'center',
+          mt: 'auto',
+          mx: { xs: -2, md: -4 },
+          pt: 2,
+          px: 2,
+          borderTop: '1px solid #433679',
+        }}
+      >
+        {!showAllWallets ? (
+          <Button
+            size="large"
+            variant="outlined"
+            startIcon={<SearchIcon />}
+            onClick={() => setShowAllWallets(true)}
+          >
+            Search Wallet
+          </Button>
+        ) : (
+          <>
+            <Button
+              size="large"
+              variant="outlined"
+              fullWidth={isMobile}
+              disabled={isFetching}
+              onClick={resetState}
+            >
+              Back
+            </Button>
+            <Button
+              size="large"
+              variant="outlined"
+              fullWidth={isMobile}
+              disabled={isFetching || !hasMoreWallets}
+              onClick={fetchMoreWallets}
+            >
+              Show more
+            </Button>
+          </>
+        )}
+      </Stack>
+    </Stack>
+  );
+};
+
+export default ConnectWalletContent;
