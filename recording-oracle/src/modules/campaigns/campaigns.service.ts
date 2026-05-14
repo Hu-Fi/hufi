@@ -21,8 +21,7 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 import ms from 'ms';
 
-import { ExchangeName } from '@/common/constants';
-import { ContentType } from '@/common/enums';
+import { CampaignType, ContentType, ExchangeName } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
@@ -63,8 +62,8 @@ import {
 import { CampaignsRepository } from './campaigns.repository';
 import {
   CAMPAIGN_PERMISSIONS_MAP,
-  CampaignServiceJob,
   CAMPAIGNS_DAILY_CYCLE,
+  CampaignServiceJob,
 } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -96,7 +95,6 @@ import {
   CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
-  CampaignType,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,

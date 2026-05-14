@@ -7,9 +7,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { DATABASE_SCHEMA_NAME } from '@/common/constants';
+import { DATABASE_SCHEMA_NAME, CampaignType } from '@/common/constants';
 
-import { type CampaignDetails, CampaignStatus, CampaignType } from './types';
+import { type CampaignDetails, CampaignStatus } from './types';
 
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'campaigns' })
 @Index(['chainId', 'address'], { unique: true })

@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { Client as MinioClient } from 'minio';
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { ContentType } from '@/common/enums';
+import { ContentType } from '@/common/constants';
 import { S3ConfigService } from '@/config';
 
 import { MinioErrorCodes } from './minio.constants';

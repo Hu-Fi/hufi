@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, FindManyOptions, Repository } from 'typeorm';
 
 import { UserEntity } from './user.entity';
+
+type FindOptions = {
+  relations?: FindManyOptions<UserEntity>['relations'];
+};
 
 @Injectable()
 export class UsersRepository extends Repository<UserEntity> {
@@ -9,15 +13,23 @@ export class UsersRepository extends Repository<UserEntity> {
     super(UserEntity, dataSource.createEntityManager());
   }
 
-  async findOneById(id: string): Promise<UserEntity | null> {
+  async findOneById(
+    id: string,
+    options: FindOptions = {},
+  ): Promise<UserEntity | null> {
     return this.findOne({
       where: { id },
+      relations: options.relations,
     });
   }
 
-  async findOneByEvmAddress(address: string): Promise<UserEntity | null> {
+  async findOneByEvmAddress(
+    address: string,
+    options: FindOptions = {},
+  ): Promise<UserEntity | null> {
     return this.findOne({
       where: { evmAddress: address },
+      relations: options.relations,
     });
   }
 

@@ -12,6 +12,7 @@ import {
   vi,
 } from 'vitest';
 
+import { CampaignType } from '@/common/constants';
 import { createDuplicatedKeyError } from '~/test/fixtures/database';
 
 import type { CampaignEntity } from '../campaign.entity';
@@ -20,7 +21,7 @@ import { UserAlreadyJoinedError } from './participations.errors';
 import { ParticipationsRepository } from './participations.repository';
 import { ParticipationsService } from './participations.service';
 import { isThresholdCampaign } from '../type-guards';
-import { CampaignType, ThresholdCampaignDetails } from '../types';
+import type { ThresholdCampaignDetails } from '../types';
 
 const mockParticipationsRepository = createMock<ParticipationsRepository>();
 

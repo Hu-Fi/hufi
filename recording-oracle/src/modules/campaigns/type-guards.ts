@@ -1,6 +1,7 @@
+import { CampaignType } from '@/common/constants';
+
 import type { CampaignEntity } from './campaign.entity';
 import {
-  CampaignType,
   type CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,

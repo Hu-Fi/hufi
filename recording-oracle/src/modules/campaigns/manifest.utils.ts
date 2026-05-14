@@ -1,11 +1,11 @@
 import Joi from 'joi';
 
+import { CampaignType } from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 
 import {
   CampaignDetails,
   CampaignManifestBase,
-  CampaignType,
   CompetitiveMarketMakingCampaignDetails,
   HoldingCampaignDetails,
   MarketMakingCampaignDetails,

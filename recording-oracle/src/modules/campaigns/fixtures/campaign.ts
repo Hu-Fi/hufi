@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { vi } from 'vitest';
 
+import { CampaignType } from '@/common/constants';
 import {
   generateExchangeName,
   generateTradingPair,
@@ -22,7 +23,6 @@ import {
   type CampaignDetails,
   type CampaignProgress,
   CampaignStatus,
-  CampaignType,
   type IntermediateResult,
   type IntermediateResultsData,
   type ParticipantOutcome,

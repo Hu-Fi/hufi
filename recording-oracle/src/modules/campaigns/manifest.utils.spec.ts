@@ -9,18 +9,18 @@ import {
   test,
 } from 'vitest';
 
+import { CampaignType } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
 import { generateTradingPair } from '@/modules/exchanges/fixtures';
 
 import {
   generateCompetitiveMarketMakingCampaignManifest,
+  generateHoldingCampaignManifest,
   generateManifestResponse,
   generateMarketMakingCampaignManifest,
-  generateHoldingCampaignManifest,
   generateThresholdampaignManifest,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
-import { CampaignType } from './types';
 
 describe('manifest utils', () => {
   describe('downloadCampaignManifest', () => {

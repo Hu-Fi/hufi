@@ -15,6 +15,7 @@ import {
 } from 'class-validator';
 
 import {
+  CampaignType,
   ChainIds,
   DEFAULT_PAGINATION_LIMIT,
   ExchangeName,
@@ -24,7 +25,6 @@ import { parseQueryArray } from '@/common/utils/transformer';
 
 import {
   CampaignDetails,
-  CampaignType,
   CampaignJoinStatus,
   ReturnedCampaignStatus,
 } from './types';

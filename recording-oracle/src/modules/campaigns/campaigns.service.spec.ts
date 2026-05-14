@@ -24,7 +24,7 @@ import {
 } from 'vitest';
 import type { Mock } from 'vitest';
 
-import { ExchangeName, ExchangeType } from '@/common/constants';
+import { CampaignType, ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as cryptoUtils from '@/common/utils/crypto';
 import * as escrowUtils from '@/common/utils/escrow';
@@ -114,7 +114,6 @@ import {
   CampaignEscrowInfo,
   type CampaignProgress,
   CampaignStatus,
-  CampaignType,
   type CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type IntermediateResultsData,

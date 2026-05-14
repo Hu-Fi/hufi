@@ -1,3 +1,5 @@
+import { CampaignType } from '@/common/constants';
+
 /*
   Internal status of the campaign in recording oracle database.
   Used to simplify queries for results calculation and cancellation.
@@ -16,13 +18,6 @@ export enum ReturnedCampaignStatus {
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
   TO_CANCEL = 'to_cancel',
-}
-
-export enum CampaignType {
-  MARKET_MAKING = 'MARKET_MAKING',
-  COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',
-  HOLDING = 'HOLDING',
-  THRESHOLD = 'THRESHOLD',
 }
 
 export type MarketMakingCampaignDetails = {
