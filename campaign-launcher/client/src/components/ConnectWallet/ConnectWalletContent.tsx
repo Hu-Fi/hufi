@@ -16,6 +16,7 @@ import {
   InputAdornment,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import '@reown/appkit-ui/wui-qr-code';
@@ -59,6 +60,35 @@ const AppKitQrCode: FC<AppKitQrCodeProps> = ({ alt, imageSrc, uri }) => {
 const ConnectWalletContent: FC = () => {
   const [search, setSearch] = useState('');
   const [showAllWallets, setShowAllWallets] = useState(false);
+  const [isUriCopied, setIsUriCopied] = useState(false);
+
+  const copyUriTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyUriTimeoutRef.current) {
+        clearTimeout(copyUriTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyUri = useCallback(
+    (uri: string) => {
+      if (isUriCopied) return;
+
+      void navigator.clipboard.writeText(uri);
+      setIsUriCopied(true);
+
+      if (copyUriTimeoutRef.current) {
+        clearTimeout(copyUriTimeoutRef.current);
+      }
+
+      copyUriTimeoutRef.current = setTimeout(() => {
+        setIsUriCopied(false);
+      }, 1500);
+    },
+    [isUriCopied]
+  );
 
   const isMobile = useIsMobile();
   const {
@@ -96,11 +126,10 @@ const ConnectWalletContent: FC = () => {
       <Stack
         sx={{
           alignItems: 'center',
-          gap: 2,
-          height: '100%',
           justifyContent: 'center',
-          px: { xs: 2, md: 4 },
-          textAlign: 'center',
+          height: '100%',
+          gap: 2,
+          mt: 5,
         }}
       >
         <Typography variant="h6" sx={{ color: 'white' }}>
@@ -113,39 +142,72 @@ const ConnectWalletContent: FC = () => {
           sx={{
             borderRadius: 2,
             height: 72,
-            objectFit: 'contain',
             width: 72,
+            objectFit: 'contain',
           }}
         />
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Accept connection request in the wallet.
+        <Typography
+          variant="body2"
+          sx={{ color: 'text.secondary', mx: 2, textAlign: 'center' }}
+        >
+          Click on 'Open' and accept the connection request in the wallet, or
+          <Tooltip
+            title="Copied"
+            open={isUriCopied}
+            disableFocusListener
+            disableHoverListener
+            disableTouchListener
+            placement="top"
+          >
+            <Button
+              variant="text"
+              onClick={() => handleCopyUri(wcUri)}
+              sx={{
+                fontSize: 14,
+                lineHeight: '20px',
+                minWidth: 'auto',
+                p: 0,
+                textTransform: 'none',
+                textDecoration: 'underline',
+                verticalAlign: 'baseline',
+              }}
+            >
+              copy the connection link to open it manually
+            </Button>
+          </Tooltip>
         </Typography>
-        <Button
-          size="large"
-          variant="contained"
-          color="error"
-          onClick={() => openMobileWallet()}
-        >
-          Open
-        </Button>
-        <Button
-          size="large"
-          variant="outlined"
-          onClick={() => {
-            void navigator.clipboard.writeText(wcUri);
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: 'center',
+            gap: 2,
+            justifyContent: 'center',
+            width: 'calc(100% + 32px)',
+            mt: 'auto',
+            mx: -2,
+            pt: 2,
+            px: 2,
+            borderTop: '1px solid #433679',
           }}
         >
-          Copy link
-        </Button>
-        <Button
-          size="large"
-          variant="outlined"
-          onClick={() => {
-            resetWalletConnect();
-          }}
-        >
-          Back to wallets
-        </Button>
+          <Button
+            size="large"
+            variant="outlined"
+            fullWidth
+            onClick={resetWalletConnect}
+          >
+            Back to wallets
+          </Button>
+          <Button
+            size="large"
+            variant="contained"
+            color="error"
+            fullWidth
+            onClick={() => openMobileWallet()}
+          >
+            Open
+          </Button>
+        </Stack>
       </Stack>
     );
   }

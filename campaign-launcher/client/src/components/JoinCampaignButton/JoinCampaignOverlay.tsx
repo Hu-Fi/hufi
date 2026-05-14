@@ -108,7 +108,8 @@ const JoinCampaignOverlay: FC<Props> = ({
       mobileSx={{
         px: 2,
         py: 4,
-        height: isConnectStep ? '85dvh' : 'auto',
+        minHeight: isConnectStep ? '450px' : 'auto',
+        maxHeight: isConnectStep ? '550px' : 'auto',
       }}
       closeButtonSx={{
         top: shouldShowTwoSteps ? 24 : 32,

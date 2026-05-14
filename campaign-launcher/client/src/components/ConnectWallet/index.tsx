@@ -48,7 +48,7 @@ const ConnectWallet: FC<ConnectWalletProps> = ({ size = 'large' }) => {
           px: 4,
           py: 4,
         }}
-        mobileSx={{ height: '85dvh', p: 2 }}
+        mobileSx={{ minHeight: '450px', maxHeight: '550px', p: 2 }}
         closeButtonSx={{ top: { xs: 16, md: 32 }, right: { xs: 16, md: 32 } }}
       >
         <ConnectWalletContent />
