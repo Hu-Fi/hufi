@@ -104,7 +104,7 @@ const ConnectWalletContent: FC = () => {
         }}
       >
         <Typography variant="h6" sx={{ color: 'white' }}>
-          Open {connectingWallet.name}
+          Continue in {connectingWallet.name}
         </Typography>
         <Box
           component="img"
@@ -118,7 +118,7 @@ const ConnectWalletContent: FC = () => {
           }}
         />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Continue in your wallet app to approve the connection.
+          Accept connection request in the wallet.
         </Typography>
         <Button
           size="large"
@@ -126,7 +126,16 @@ const ConnectWalletContent: FC = () => {
           color="error"
           onClick={() => openMobileWallet()}
         >
-          Open Wallet
+          Open
+        </Button>
+        <Button
+          size="large"
+          variant="outlined"
+          onClick={() => {
+            void navigator.clipboard.writeText(wcUri);
+          }}
+        >
+          Copy link
         </Button>
         <Button
           size="large"
