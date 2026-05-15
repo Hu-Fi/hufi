@@ -11,6 +11,7 @@ export const DEFAULT_PAGINATION_LIMIT = 10;
 
 export * from './campaigns';
 export * from './chains';
+export * from './events';
 export * from './exchanges';
 export * from './http';
 export * from './token';

@@ -21,6 +21,6 @@ import { UsersService } from './users.service';
     UserPreferencesRepository,
   ],
   controllers: [UserMeController],
-  exports: [UsersRepository, UsersService, UserPreferencesService],
+  exports: [UsersRepository, UsersService, UserPreferencesRepository],
 })
 export class UsersModule {}

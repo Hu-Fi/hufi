@@ -1,6 +1,7 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
@@ -24,6 +25,7 @@ import { UsersModule } from './modules/users';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     HealthModule,
     AdminModule,
     ConfigModule.forRoot({

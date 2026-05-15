@@ -4,3 +4,8 @@ export enum CampaignType {
   HOLDING = 'HOLDING',
   THRESHOLD = 'THRESHOLD',
 }
+
+export const ALLOWED_AUTOJOIN_CAMPAIGN_TYPES = [
+  CampaignType.MARKET_MAKING,
+  CampaignType.HOLDING,
+] as const;

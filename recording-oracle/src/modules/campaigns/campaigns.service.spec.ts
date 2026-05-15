@@ -7,6 +7,7 @@ import {
   type IEscrow,
   OrderDirection,
 } from '@human-protocol/sdk';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
@@ -137,6 +138,7 @@ vi.mock('@/logger');
 const mockCacheManager = new CacheManagerMock();
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
+const mockEventEmitter = createMock<EventEmitter2>();
 const mockParticipationsRepository = createMock<ParticipationsRepository>();
 const mockParticipationsService = createMock<ParticipationsService>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
@@ -181,6 +183,10 @@ describe('CampaignsService', () => {
         {
           provide: CampaignsRepository,
           useValue: mockCampaignsRepository,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
         {
           provide: ExchangesConfigService,
@@ -1060,6 +1066,28 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
         expect.objectContaining(expectedCampaignData),
+      );
+    });
+
+    test('should emit creation event', async () => {
+      const manifest = generateCampaignManifest();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundTokenSymbol,
+          fundTokenDecimals,
+          cancellationRequestedAt: null,
+        },
+      );
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledTimes(1);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'CampaignCreated',
+        campaign,
       );
     });
   });

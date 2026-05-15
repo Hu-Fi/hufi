@@ -6,13 +6,17 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsString,
   Length,
   Matches,
   ValidateNested,
 } from 'class-validator';
 
-import { CampaignType, ExchangeName } from '@/common/constants';
+import {
+  ALLOWED_AUTOJOIN_CAMPAIGN_TYPES,
+  ExchangeName,
+} from '@/common/constants';
 
 import { MAX_CAMPAIGNS_AUTOJOIN_TOKENS } from './constants';
 
@@ -28,10 +32,14 @@ export class CampaignsAutojoinPreferencesDto {
   @ArrayUnique()
   exchanges: string[];
 
-  @ApiProperty({ name: 'campaign_types', enum: CampaignType, isArray: true })
+  @ApiProperty({
+    name: 'campaign_types',
+    enum: ALLOWED_AUTOJOIN_CAMPAIGN_TYPES,
+    isArray: true,
+  })
   @IsArray()
-  @ArrayMaxSize(Object.values(CampaignType).length)
-  @IsEnum(CampaignType, { each: true })
+  @ArrayMaxSize(ALLOWED_AUTOJOIN_CAMPAIGN_TYPES.length)
+  @IsIn(ALLOWED_AUTOJOIN_CAMPAIGN_TYPES, { each: true })
   @ArrayUnique()
   campaignTypes: string[];
 

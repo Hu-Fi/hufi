@@ -5,8 +5,10 @@ import { PgAdvisoryLock } from '@/common/utils/pg-advisory-lock';
 import { CacheModule } from '@/infrastructure/cache';
 import { ExchangesModule } from '@/modules/exchanges';
 import { StorageModule } from '@/modules/storage';
+import { UsersModule } from '@/modules/users';
 import { Web3Module } from '@/modules/web3';
 
+import { AutojoinService } from './autojoin.service';
 import { CampaignEntity } from './campaign.entity';
 import { CampaignsCache } from './campaigns-cache';
 import { CampaignsController } from './campaigns.controller';
@@ -23,9 +25,11 @@ import { VolumeStatsRepository } from './volume-stats.repository';
     ParticipationsModule,
     StorageModule,
     TypeOrmModule.forFeature([CampaignEntity, VolumeStatEntity]),
+    UsersModule,
     Web3Module,
   ],
   providers: [
+    AutojoinService,
     CampaignsCache,
     CampaignsRepository,
     CampaignsService,
