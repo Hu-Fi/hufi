@@ -106,10 +106,7 @@ export class AutojoinService {
             continue;
           }
 
-          campaignLogger.error('Error autojoining user to campaign', {
-            userId,
-            error,
-          });
+          throw error;
         }
       }
     } catch (error) {

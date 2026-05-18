@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import { DEFAULT_USER_PREFERENCES } from './constants';
 import { UpdatePreferencesDto } from './user-me.dto';
-import type { UserPreferencesEntity } from './user-preferences.entity';
+import { UserPreferencesEntity } from './user-preferences.entity';
 import { UserPreferencesRepository } from './user-preferences.repository';
 import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';
@@ -26,18 +26,17 @@ export class UserPreferencesService {
       throw new UserNotFoundError(userId);
     }
 
-    const newPreferences = this.userPreferencesRepository.create(
-      _.merge(
-        {
-          userId,
-          createdAt: new Date(),
-        },
-        DEFAULT_USER_PREFERENCES,
-        user.preferences,
-        preferences,
-      ),
+    const newPreferences = new UserPreferencesEntity();
+    Object.assign(
+      newPreferences,
+      {
+        userId,
+        createdAt: new Date(),
+      },
+      DEFAULT_USER_PREFERENCES,
+      user.preferences,
+      preferences,
     );
-    newPreferences.updatedAt = new Date();
 
     newPreferences.campaignsAutojoin.exchanges = _.uniq(
       newPreferences.campaignsAutojoin.exchanges,
@@ -48,6 +47,8 @@ export class UserPreferencesService {
     newPreferences.campaignsAutojoin.tokens = _.uniq(
       newPreferences.campaignsAutojoin.tokens,
     );
+
+    newPreferences.updatedAt = new Date();
 
     return await this.userPreferencesRepository.save(newPreferences);
   }
