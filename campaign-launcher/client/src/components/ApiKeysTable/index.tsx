@@ -2,7 +2,14 @@ import { type FC, useMemo, useState } from 'react';
 
 import ErrorIcon from '@mui/icons-material/Error';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  List,
+  ListItem,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 
 import CustomTooltip from '@/components/CustomTooltip';
@@ -30,18 +37,23 @@ const MissingPermissionsTooltip: FC<{ missingPermissions: string[] }> = ({
       placement={isMobile ? 'right' : 'top'}
       sx={{ height: 20 }}
       title={
-        <Box display="flex" flexDirection="column" gap={1}>
+        <Stack sx={{ gap: 1 }}>
           <Typography variant="tooltip">Missing permissions:</Typography>
           <List sx={{ p: 0, listStyle: 'disc' }}>
             {missingPermissions.map((permission: string) => (
               <ListItem key={permission} sx={{ px: 0, py: 0.5 }}>
-                <Typography variant="tooltip" fontWeight={600}>
+                <Typography
+                  variant="tooltip"
+                  sx={{
+                    fontWeight: 600,
+                  }}
+                >
                   {permission}
                 </Typography>
               </ListItem>
             ))}
           </List>
-        </Box>
+        </Stack>
       }
     >
       <ErrorIcon sx={{ color: 'error.main', fontSize: '20px' }} />
@@ -93,12 +105,20 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
       renderCell: (params) => {
         const { exchangeName, isValid, missingPermissions } = params.row;
         return (
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
             <Typography
               variant="body2"
-              textTransform="capitalize"
-              fontWeight={500}
-              lineHeight="100%"
+              sx={{
+                textTransform: 'capitalize',
+                fontWeight: 500,
+                lineHeight: '100%',
+              }}
             >
               {exchangeName}
             </Typography>
@@ -119,8 +139,19 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
       renderCell: (params) => {
         const isBitmart = params.row.exchangeName === 'bitmart';
         return (
-          <Box display="flex" alignItems="center">
-            <Typography variant="body2" fontWeight={500} lineHeight="100%">
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                lineHeight: '100%',
+              }}
+            >
               {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
             </Typography>
             {isBitmart && !!params.row.extras?.api_key_memo && (
@@ -156,10 +187,12 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
         const { exchangeName, isValid } = params.row;
         return (
           <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="flex-end"
-            gap={1.5}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: 1.5,
+            }}
           >
             {!isValid && (
               <IconButton
@@ -197,9 +230,11 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
 
   return (
     <Box
-      width={{ xs: 'calc(100% + 32px)', md: '100%' }}
-      overflow="hidden"
-      mx={{ xs: -2, md: 0 }}
+      sx={{
+        width: { xs: 'calc(100% + 32px)', md: '100%' },
+        overflow: 'hidden',
+        mx: { xs: -2, md: 0 },
+      }}
     >
       <DataGrid
         columns={columns}
@@ -229,17 +264,21 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
           noRowsOverlay: !isLoading
             ? () => (
                 <Box
-                  display="flex"
-                  width="100%"
-                  height="100%"
-                  alignItems="center"
-                  justifyContent="center"
+                  sx={{
+                    display: 'flex',
+                    width: '100%',
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
                   <NoKeysIcon sx={{ fontSize: 48 }} />
                   <Typography
                     variant="body2"
-                    fontWeight={500}
-                    color="text.secondary"
+                    sx={{
+                      fontWeight: 500,
+                      color: 'text.secondary',
+                    }}
                   >
                     No key is set at the moment
                   </Typography>

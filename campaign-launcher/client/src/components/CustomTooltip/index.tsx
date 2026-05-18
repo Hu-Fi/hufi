@@ -47,7 +47,8 @@ const CustomTooltip = ({ children, sx, ...props }: TooltipProps) => {
           {...props}
         >
           <Box
-            sx={sx}
+            component="span"
+            sx={{ display: 'inline', ...sx }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -63,7 +64,10 @@ const CustomTooltip = ({ children, sx, ...props }: TooltipProps) => {
 
   return (
     <Tooltip {...props}>
-      <Box component="span" sx={{ cursor: 'pointer', ...sx }}>
+      <Box
+        component="span"
+        sx={{ cursor: 'pointer', display: 'inline', ...sx }}
+      >
         {children}
       </Box>
     </Tooltip>

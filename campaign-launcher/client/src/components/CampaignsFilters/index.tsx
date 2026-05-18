@@ -4,7 +4,7 @@ import { IconButton, styled } from '@mui/material';
 
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { FilterIcon } from '@/icons';
-import { type CampaignType } from '@/types';
+import { type CampaignStatus, type CampaignType } from '@/types';
 
 import CampaignsFiltersContent from './Content';
 
@@ -24,9 +24,10 @@ const FiltersCountStyled = styled('div')({
 });
 
 export type CampaignsFiltersSelection = {
+  network: number;
+  statuses: (CampaignStatus | 'all')[];
   campaignTypes: (CampaignType | 'all')[];
   exchanges: string[];
-  network: number;
 };
 
 type Props = {

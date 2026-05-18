@@ -25,19 +25,19 @@ const Wrapper = ({
     return (
       <Stack
         direction="row"
-        alignItems="flex-end"
-        justifyContent="space-between"
-        height={`${MOBILE_BOTTOM_NAV_HEIGHT}px`}
-        px={2}
-        py={3}
-        position="fixed"
-        left="0"
-        right="0"
-        bottom={{ xs: 0, md: 'auto' }}
-        width="100%"
-        bgcolor="background.default"
-        borderTop="2px solid #251d47"
         sx={{
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          height: `${MOBILE_BOTTOM_NAV_HEIGHT}px`,
+          px: 2,
+          py: 3,
+          position: 'fixed',
+          left: '0',
+          right: '0',
+          bottom: { xs: 0, md: 'auto' },
+          width: '100%',
+          bgcolor: 'background.default',
+          borderTop: '2px solid #251d47',
           zIndex: (theme) => theme.zIndex.appBar,
         }}
       >
@@ -48,14 +48,16 @@ const Wrapper = ({
   return (
     <Stack
       direction="row"
-      alignItems="flex-end"
-      justifyContent="space-between"
-      mt="auto"
-      gridArea="bottomNav"
-      minHeight={140}
-      width="auto"
-      gap={4}
-      bgcolor="transparent"
+      sx={{
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        mt: 'auto',
+        gridArea: 'bottomNav',
+        minHeight: 140,
+        width: 'auto',
+        gap: 4,
+        bgcolor: 'transparent',
+      }}
     >
       {children}
     </Stack>
@@ -89,12 +91,14 @@ const BottomNavigation: FC<PropsWithChildren<Props>> = ({
     <Wrapper isMobile={isMobile}>
       {children}
       <Box
-        display="flex"
-        alignItems="center"
-        flexDirection="row"
-        gap={2}
-        width={{ xs: '100%', md: 'auto' }}
-        ml="auto"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          flexDirection: 'row',
+          gap: 2,
+          width: { xs: '100%', md: 'auto' },
+          ml: 'auto',
+        }}
       >
         {showBackButton && (
           <Button

@@ -20,9 +20,9 @@ const AddressLink: FC<Props> = ({ address, chainId, size }) => {
       target="_blank"
       rel="noopener noreferrer"
       sx={{
+        color: 'inherit',
         fontSize:
-          size === 'small' ? '12px' : size === 'medium' ? '14px' : '16px',
-        color: 'text.primary',
+          size === 'small' ? '12px' : size === 'medium' ? '14px' : '20px',
         textDecoration: 'underline',
         fontWeight: 600,
       }}
@@ -67,7 +67,13 @@ const CampaignAddress: FC<Props> = ({
 
   if (withCopy) {
     return (
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
         <AddressLink address={address} chainId={chainId} size={size} />
         <IconButton
           disabled={isCopied}

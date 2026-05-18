@@ -20,6 +20,7 @@ const getTimelineInfo = (
       label: '',
       value: '',
       color: 'transparent',
+      isPending: false,
     };
   }
   const nowDate = dayjs();
@@ -27,20 +28,40 @@ const getTimelineInfo = (
   const endDate = dayjs(campaign.end_date);
 
   if (campaign.status === CampaignStatus.CANCELLED) {
-    const cancellationDate = dayjs(campaign?.cancellation_requested_at || 0);
+    const cancellationDate = dayjs(campaign.cancellation_requested_at);
     return {
       label: 'Cancelled on',
       value: cancellationDate.format(DATE_FORMAT),
       color: '#ff6262',
+      isPending: false,
     };
   }
 
   if (endDate.isBefore(nowDate)) {
-    return {
-      label: 'Ended on',
-      value: endDate.format(DATE_FORMAT),
-      color: '#d4cfff',
-    };
+    if (campaign.status === CampaignStatus.ACTIVE) {
+      return {
+        label: '',
+        value: 'Waiting for payouts',
+        color: '#b98c08',
+        isPending: true,
+      };
+    }
+    if (campaign.status === CampaignStatus.TO_CANCEL) {
+      return {
+        label: '',
+        value: 'Pending cancellation',
+        color: '#da4c4f',
+        isPending: true,
+      };
+    }
+    if (campaign.status === CampaignStatus.COMPLETED) {
+      return {
+        label: 'Ended on',
+        value: endDate.format(DATE_FORMAT),
+        color: '#d4cfff',
+        isPending: false,
+      };
+    }
   }
 
   if (nowDate.isBefore(startDate)) {
@@ -48,6 +69,7 @@ const getTimelineInfo = (
       label: 'Starts on',
       value: startDate.format(DATE_FORMAT),
       color: '#43ba96',
+      isPending: false,
     };
   }
 
@@ -55,44 +77,86 @@ const getTimelineInfo = (
     label: 'Ends on',
     value: endDate.format(DATE_FORMAT),
     color: '#b98c08',
+    isPending: false,
   };
 };
 
 const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
   const timeline = getTimelineInfo(campaign);
   const isRow = direction === 'row';
+  const { isPending, label, value, color } = timeline;
+
   return (
     <Box
-      display="flex"
-      alignItems={isRow ? 'center' : 'flex-start'}
-      flexDirection={direction}
+      sx={{
+        display: 'flex',
+        alignItems: isRow ? 'center' : 'flex-start',
+        flexDirection: direction,
+      }}
     >
-      <Typography
-        variant="caption"
-        fontSize={14}
-        color="text.secondary"
-        letterSpacing="0.15px"
-        mr={isRow ? 1 : 0}
-      >
-        {timeline.label}
-      </Typography>
-      <Box display="flex" alignItems="center" gap={0.5}>
-        <Box
-          width={6}
-          height={6}
-          bgcolor={timeline.color}
-          borderRadius="50%"
-          border="3px solid"
-          borderColor={timeline.color}
-        />
+      <Box
+        sx={{
+          display: isRow ? 'flex' : 'none',
+          width: 4,
+          height: 4,
+          mr: 1,
+          borderRadius: '50%',
+          bgcolor: 'text.secondary',
+          flexShrink: 0,
+        }}
+      />
+      {label && (
         <Typography
-          color={timeline.color}
-          fontSize={14}
-          fontWeight={700}
-          lineHeight="150%"
-          letterSpacing="0.15px"
+          sx={{
+            color: 'text.secondary',
+            fontSize: 14,
+            letterSpacing: '0.15px',
+            mr: isRow ? 1 : 0,
+          }}
         >
-          {timeline.value}
+          {label}
+        </Typography>
+      )}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
+        {isPending ? (
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: 'transparent',
+              border: '1px dashed',
+              borderColor: color,
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: 6,
+              height: 6,
+              bgcolor: color,
+              borderRadius: '50%',
+              border: '3px solid',
+              borderColor: color,
+            }}
+          />
+        )}
+        <Typography
+          sx={{
+            color,
+            fontSize: 14,
+            fontWeight: 700,
+            lineHeight: '150%',
+            letterSpacing: '0.15px',
+          }}
+        >
+          {value}
         </Typography>
       </Box>
     </Box>

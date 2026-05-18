@@ -14,19 +14,32 @@ const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
   const { icon, label } = getTokenInfo(symbol);
 
   return (
-    <Box display="flex" alignItems="center" gap={1}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+      }}
+    >
       {icon && (
         <Box
           component="img"
           src={icon}
           alt={label}
-          width={getSymbolStyles(size).image.size}
-          height={getSymbolStyles(size).image.size}
-          border={getSymbolStyles(size).image.border}
-          borderRadius="100%"
+          sx={{
+            width: getSymbolStyles(size).image.size,
+            height: getSymbolStyles(size).image.size,
+            border: getSymbolStyles(size).image.border,
+            borderRadius: '100%',
+          }}
         />
       )}
-      <Typography color="white" {...getSymbolStyles(size).text}>
+      <Typography
+        sx={{
+          color: 'white',
+          ...getSymbolStyles(size).text,
+        }}
+      >
         {label}
       </Typography>
     </Box>

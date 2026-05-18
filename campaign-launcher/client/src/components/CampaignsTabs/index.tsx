@@ -76,22 +76,28 @@ const CampaignsTabs: FC<Props> = ({ activeTab, setActiveTab, isDisabled }) => {
       <Box
         ref={filtersScrollRef}
         onScroll={updateGradientVisibility}
-        display="flex"
-        flexGrow={isMobile ? 1 : 0}
-        minWidth={0}
         sx={{
+          display: 'flex',
+          flexGrow: isMobile ? 1 : 0,
+          minWidth: 0,
           overflowX: 'auto',
           '&::-webkit-scrollbar': { display: 'none' },
           scrollbarWidth: 'none',
         }}
       >
-        <Stack direction="row" gap={1.5} whiteSpace="nowrap">
+        <Stack
+          direction="row"
+          sx={{
+            gap: 1.5,
+            whiteSpace: 'nowrap',
+          }}
+        >
           <TabFilterStyled
             disabled={isDisabled}
-            isActive={activeTab === TabFilter.ACTIVE}
-            onClick={() => setActiveTab(TabFilter.ACTIVE)}
+            isActive={activeTab === TabFilter.ALL}
+            onClick={() => setActiveTab(TabFilter.ALL)}
           >
-            Active
+            All
           </TabFilterStyled>
           <TabFilterStyled
             disabled={isDisabled}
@@ -106,13 +112,6 @@ const CampaignsTabs: FC<Props> = ({ activeTab, setActiveTab, isDisabled }) => {
             onClick={() => setActiveTab(TabFilter.HOSTED)}
           >
             Hosted
-          </TabFilterStyled>
-          <TabFilterStyled
-            disabled={isDisabled}
-            isActive={activeTab === TabFilter.HISTORY}
-            onClick={() => setActiveTab(TabFilter.HISTORY)}
-          >
-            History
           </TabFilterStyled>
         </Stack>
       </Box>

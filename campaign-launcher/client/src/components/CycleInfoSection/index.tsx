@@ -3,6 +3,7 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 
 import { CardName, CardValue, StatsCard } from '@/components/CampaignStats';
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
@@ -10,7 +11,6 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
   formatTokenAmount,
-  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTokenInfo,
 } from '@/utils';
@@ -21,28 +21,34 @@ const IndividualRewardTooltip = () => {
     <CustomTooltip
       title={
         <Box
-          display="flex"
-          flexDirection="column"
-          gap={1.5}
-          px={{ xs: 0, md: 1 }}
-          py={{ xs: 1, md: 1.5 }}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+            px: { xs: 0, md: 1 },
+            py: { xs: 1, md: 1.5 },
+          }}
         >
           <Typography
-            fontSize={14}
-            color="#161616"
-            fontWeight={500}
-            lineHeight={1}
-            letterSpacing={0}
+            sx={{
+              fontSize: 14,
+              color: '#161616',
+              fontWeight: 500,
+              lineHeight: 1,
+              letterSpacing: 0,
+            }}
           >
             For each cycle, the total reward pool is evenly distributed among
             all eligible participants.
           </Typography>
           <Typography
-            fontSize={14}
-            color="#161616"
-            fontWeight={500}
-            lineHeight={1}
-            letterSpacing={0}
+            sx={{
+              fontSize: 14,
+              color: '#161616',
+              fontWeight: 500,
+              lineHeight: 1,
+              letterSpacing: 0,
+            }}
           >
             Reward per cycle = Total reward pool ÷ eligible participants
           </Typography>
@@ -142,12 +148,6 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
-  const {
-    value: totalGeneratedValue,
-    suffix: totalGeneratedSuffix,
-    decimals: totalGeneratedDecimals,
-  } = getCompactNumberParts(leaderboard.total);
-
   const eligibleParticipants = leaderboard.data.filter(
     (entry) => entry.score > 0
   );
@@ -155,49 +155,68 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
   return (
     <Stack
       component="section"
-      mx={{ xs: -2, md: 0 }}
-      px={{ xs: 2, md: 0 }}
-      pt={3}
-      pb={{ xs: 2, md: 3 }}
-      gap={{ xs: 2, md: 3 }}
-      borderBottom="1px solid #473C74"
+      sx={{
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        pt: 3,
+        pb: { xs: 2, md: 3 },
+        gap: { xs: 2, md: 3 },
+        borderBottom: '1px solid #473C74',
+      }}
     >
       <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={2}
-        width="100%"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          width: '100%',
+        }}
       >
         <Typography
           component="h6"
-          color={isMobile ? 'white' : 'text.primary'}
-          fontSize={{ xs: 20, md: 16 }}
-          fontWeight={{ xs: 500, md: 600 }}
-          letterSpacing={{ xs: 0, md: '3.2px' }}
-          textTransform={{ xs: 'none', md: 'uppercase' }}
+          sx={{
+            color: isMobile ? 'white' : 'text.primary',
+            fontSize: { xs: 20, md: 16 },
+            fontWeight: { xs: 500, md: 600 },
+            letterSpacing: { xs: 0, md: '3.2px' },
+            textTransform: { xs: 'none', md: 'uppercase' },
+          }}
         >
           Cycle Info
         </Typography>
-        <Box display="flex" alignItems="center" gap={1} sx={{ opacity: 0.6 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            opacity: 0.6,
+          }}
+        >
           <Typography
             component="span"
-            fontSize={{ xs: 12, md: 16 }}
-            fontWeight={500}
+            sx={{
+              fontSize: { xs: 12, md: 16 },
+              fontWeight: 500,
+            }}
           >
             {`Cycle ${cycleTimeline.currentCycle} of ${cycleTimeline.totalCycles}`}
           </Typography>
           <Box
-            width={4}
-            height={4}
-            borderRadius="50%"
-            bgcolor="text.primary"
-            sx={{ opacity: 0.6 }}
+            sx={{
+              width: 4,
+              height: 4,
+              borderRadius: '50%',
+              bgcolor: 'text.primary',
+              opacity: 0.6,
+            }}
           />
           <Typography
             component="span"
-            fontSize={{ xs: 12, md: 16 }}
-            fontWeight={500}
+            sx={{
+              fontSize: { xs: 12, md: 16 },
+              fontWeight: 500,
+            }}
           >
             Resets every 24h
           </Typography>
@@ -206,7 +225,9 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
       <Grid container spacing={{ xs: 1.5, md: 3 }}>
         <Grid
           size={{ xs: 6, md: 4 }}
-          order={{ xs: isThreshold ? 3 : 2, md: 1 }}
+          sx={{
+            order: { xs: isThreshold ? 3 : 2, md: 1 },
+          }}
         >
           <StatsCard withBorder>
             <CardName>Cycle Reward Pool</CardName>
@@ -221,18 +242,30 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         </Grid>
         {isThreshold ? (
           <>
-            <Grid size={{ xs: 6, md: 4 }} order={{ xs: 4, md: 2 }}>
+            <Grid
+              size={{ xs: 6, md: 4 }}
+              sx={{
+                order: { xs: 4, md: 2 },
+              }}
+            >
               <StatsCard withBorder>
                 <CardName>Eligible Participants</CardName>
                 <CardValue>{eligibleParticipants.length}</CardValue>
               </StatsCard>
             </Grid>
-            <Grid size={{ xs: 6, md: 4 }} order={{ xs: 2, md: 3 }}>
+            <Grid
+              size={{ xs: 6, md: 4 }}
+              sx={{
+                order: { xs: 2, md: 3 },
+              }}
+            >
               <StatsCard withBorder>
                 <Box
-                  display="flex"
-                  alignItems="center"
-                  gap={{ xs: 0.75, md: 1.5 }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.75, md: 1.5 },
+                  }}
                 >
                   <CardName>Individual Reward</CardName>
                   <IndividualRewardTooltip />
@@ -258,24 +291,31 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             </Grid>
           </>
         ) : (
-          <Grid size={{ xs: 6, md: 4 }} order={{ xs: 3, md: 2 }}>
+          <Grid
+            size={{ xs: 6, md: 4 }}
+            sx={{
+              order: { xs: 3, md: 2 },
+            }}
+          >
             <StatsCard withBorder>
               <CardName>
                 {getTotalGeneratedCardTitle(campaign.type, isMobile)}
               </CardName>
               <CardValue>
-                <FormattedNumber
-                  value={totalGeneratedValue}
-                  decimals={totalGeneratedDecimals}
-                  suffix={totalGeneratedSuffix + ' ' + targetTokenSymbol}
-                />
+                <CompactNumberWithTooltip
+                  value={leaderboard.total}
+                  tooltipSize="large"
+                />{' '}
+                {targetTokenSymbol}
               </CardValue>
             </StatsCard>
           </Grid>
         )}
         <Grid
           size={{ xs: 6, md: 4 }}
-          order={{ xs: 1, md: isThreshold ? 4 : 3 }}
+          sx={{
+            order: { xs: 1, md: isThreshold ? 4 : 3 },
+          }}
         >
           <StatsCard withBorder>
             <CardName>Ends in</CardName>

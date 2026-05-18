@@ -1,0 +1,51 @@
+name: ci-react-version
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "Relative path to the service root"
+        required: true
+        type: string
+
+jobs:
+  react-version-check:
+    name: Check React and React-DOM versions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check React versions match
+        run: |
+          REACT_VERSION=$(jq -r '.dependencies.react' package.json)
+          REACT_DOM_VERSION=$(jq -r '.dependencies."react-dom"' package.json)
+          SEMVER_TRIPLE_REGEX='^[0-9]+\.[0-9]+\.[0-9]+$'
+
+          echo "react version: $REACT_VERSION"
+          echo "react-dom version: $REACT_DOM_VERSION"
+
+          if ! [[ "$REACT_VERSION" =~ $SEMVER_TRIPLE_REGEX ]]; then
+            echo "Error: react version must use number.number.number format"
+            exit 1
+          fi
+
+          if ! [[ "$REACT_DOM_VERSION" =~ $SEMVER_TRIPLE_REGEX ]]; then
+            echo "Error: react-dom version must use number.number.number format"
+            exit 1
+          fi
+
+          if [ "$REACT_VERSION" != "$REACT_DOM_VERSION" ]; then
+            echo "Error: react and react-dom versions do not match"
+            echo "react: $REACT_VERSION"
+            echo "react-dom: $REACT_DOM_VERSION"
+            exit 1
+          fi
+
+          echo "react and react-dom versions match"

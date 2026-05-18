@@ -121,51 +121,75 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
     >
       <Stack
         component="form"
-        height="100%"
-        maxHeight="100%"
-        minHeight={0}
-        overflow="hidden"
         onSubmit={handleSubmit(onSubmit)}
+        sx={{
+          height: '100%',
+          maxHeight: '100%',
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
       >
         <Stack
-          gap={2.5}
-          px={{ xs: 2, md: 4 }}
-          pt={{ xs: 2, md: 6 }}
-          pb={3}
-          borderBottom="1px solid #3a2e6f"
+          sx={{
+            gap: 2.5,
+            px: { xs: 2, md: 4 },
+            pt: { xs: 2, md: 6 },
+            pb: 3,
+            borderBottom: '1px solid #3a2e6f',
+          }}
         >
-          <Typography variant="h5" color="white" fontWeight={700}>
+          <Typography
+            variant="h5"
+            sx={{
+              color: 'white',
+              fontWeight: 700,
+            }}
+          >
             Add API KEY
           </Typography>
-          <Typography variant="body2" fontWeight={500}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 500,
+            }}
+          >
             For you to join a running campaign you must connect your API KEY
           </Typography>
         </Stack>
         <Stack
-          pt={{ xs: 2, md: 5 }}
-          pb={5}
-          px={{ xs: 2, md: 4 }}
-          flex={1}
-          overflow="auto"
+          sx={{
+            pt: { xs: 2, md: 5 },
+            pb: 5,
+            px: { xs: 2, md: 4 },
+            flex: 1,
+            overflow: 'auto',
+          }}
         >
           {isPending && (
             <Stack
-              alignItems="center"
-              justifyContent="center"
-              flex={1}
-              gap={2.5}
+              sx={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                gap: 2.5,
+              }}
             >
               <ModalLoading />
-              <Typography variant="subtitle2" textAlign="center">
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  textAlign: 'center',
+                }}
+              >
                 Connecting API key...
               </Typography>
             </Stack>
           )}
           {isIdle && (
             <Stack
-              gap={3}
-              width="100%"
               sx={{
+                gap: 3,
+                width: '100%',
                 '& .MuiFormHelperText-root': {
                   position: 'absolute',
                   bottom: -16,
@@ -182,9 +206,11 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               >
                 <Typography
                   variant="h6"
-                  color="white"
-                  fontWeight={500}
-                  mb={1.5}
+                  sx={{
+                    color: 'white',
+                    fontWeight: 500,
+                    mb: 1.5,
+                  }}
                 >
                   Exchange
                 </Typography>
@@ -206,9 +232,11 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               <FormControl error={!!errors.apiKey} sx={{ flex: 1 }}>
                 <Typography
                   variant="h6"
-                  color="white"
-                  fontWeight={500}
-                  mb={1.5}
+                  sx={{
+                    color: 'white',
+                    fontWeight: 500,
+                    mb: 1.5,
+                  }}
                 >
                   API Key
                 </Typography>
@@ -235,9 +263,11 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               <FormControl error={!!errors.secret} sx={{ width: '100%' }}>
                 <Typography
                   variant="h6"
-                  color="white"
-                  fontWeight={500}
-                  mb={1.5}
+                  sx={{
+                    color: 'white',
+                    fontWeight: 500,
+                    mb: 1.5,
+                  }}
                 >
                   Secret
                 </Typography>
@@ -263,9 +293,11 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                 <FormControl error={!!errors.memo} sx={{ width: '100%' }}>
                   <Typography
                     variant="h6"
-                    color="white"
-                    fontWeight={500}
-                    mb={1.5}
+                    sx={{
+                      color: 'white',
+                      fontWeight: 500,
+                      mb: 1.5,
+                    }}
                   >
                     Memo
                   </Typography>
@@ -291,17 +323,21 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
           )}
           {isSuccess && (
             <Stack
-              alignItems="center"
-              justifyContent="center"
-              flex={1}
-              gap={2.5}
+              sx={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                gap: 2.5,
+              }}
             >
               <ModalSuccess>
                 <Typography
                   variant="subtitle2"
-                  py={1}
-                  mb={1}
-                  textAlign="center"
+                  sx={{
+                    py: 1,
+                    mb: 1,
+                    textAlign: 'center',
+                  }}
                 >
                   API Key Connected
                 </Typography>
@@ -309,7 +345,14 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             </Stack>
           )}
           {isError && (
-            <Stack alignItems="center" justifyContent="center" flex={1} gap={3}>
+            <Stack
+              sx={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                gap: 3,
+              }}
+            >
               <ModalError
                 message={
                   typeof postExchangeApiKeyError === 'string'
@@ -322,11 +365,13 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
         </Stack>
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="flex-end"
-          py={3}
-          px={{ xs: 2, md: 3 }}
-          borderTop="1px solid #3a2e6f"
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            py: 3,
+            px: { xs: 2, md: 3 },
+            borderTop: '1px solid #3a2e6f',
+          }}
         >
           {isIdle && (
             <Button

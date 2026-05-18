@@ -103,15 +103,17 @@ const LaunchStep: FC<Props> = ({
       {!isEscrowCreated && (
         <Typography
           variant="h6"
-          color="white"
-          mx="auto"
-          fontSize={{ xs: '18px', md: '20px' }}
-          fontWeight={{ xs: 700, md: 600 }}
+          sx={{
+            color: 'white',
+            mx: 'auto',
+            fontSize: { xs: '18px', md: '20px' },
+            fontWeight: { xs: 700, md: 600 },
+          }}
         >
           One final look before you initiate the campaign
         </Typography>
       )}
-      <Stack width="100%" mt={5}>
+      <Stack sx={{ width: '100%', mt: 5 }}>
         <Paper
           elevation={0}
           sx={{
@@ -136,17 +138,17 @@ const LaunchStep: FC<Props> = ({
           {isError && <ErrorView onRetry={handleTryAgainClick} />}
           {isCreatingEscrow && (
             <Box
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              bottom={0}
-              width="100%"
-              height="100%"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
               sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 background: 'rgba(0, 0, 0, 0.5)',
                 zIndex: 1,
                 backdropFilter: 'blur(1px)',
@@ -166,12 +168,14 @@ const LaunchStep: FC<Props> = ({
               {!isMobile && (
                 <Stack
                   direction="row"
-                  justifyContent="space-between"
-                  mt={0}
-                  py={1.5}
-                  px={2}
-                  gap={1.5}
-                  bgcolor="#302854"
+                  sx={{
+                    justifyContent: 'space-between',
+                    mt: 0,
+                    py: 1.5,
+                    px: 2,
+                    gap: 1.5,
+                    bgcolor: '#302854',
+                  }}
                 >
                   <Button
                     size="large"

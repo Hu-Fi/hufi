@@ -4,8 +4,11 @@ import { Box, IconButton, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router';
 
+import CampaignAddress from '@/components/CampaignAddress';
 import CampaignSymbol from '@/components/CampaignSymbol';
 import CampaignTimeline from '@/components/CampaignTimeline';
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
+import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { ArrowLeftIcon } from '@/icons';
@@ -13,8 +16,9 @@ import { useExchangesContext } from '@/providers/ExchangesProvider';
 import type { Campaign, JoinedCampaign } from '@/types';
 import {
   formatTokenAmount,
-  getCompactNumberParts,
+  getChainIcon,
   getDailyTargetTokenSymbol,
+  getNetworkName,
   getTargetInfo,
   getTokenInfo,
   mapTypeToLabel,
@@ -48,10 +52,16 @@ const CampaignsTable: FC<Props> = ({
       field: 'campaign',
       headerName: 'Campaign',
       flex: 1.5,
-      minWidth: 230,
+      minWidth: 210,
       renderCell: (params) => {
         return (
-          <Box display="flex" flexDirection="column" color="white">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              color: 'white',
+            }}
+          >
             <CampaignSymbol
               symbol={params.row.symbol}
               campaignType={params.row.type}
@@ -59,10 +69,12 @@ const CampaignsTable: FC<Props> = ({
             />
             <Typography
               variant="caption"
-              color="#a39fbc"
-              textTransform="uppercase"
-              fontWeight={600}
-              letterSpacing={0}
+              sx={{
+                color: '#a39fbc',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                letterSpacing: 0,
+              }}
             >
               {mapTypeToLabel(params.row.type)}
             </Typography>
@@ -74,15 +86,58 @@ const CampaignsTable: FC<Props> = ({
       field: 'exchange',
       headerName: 'Exchange',
       flex: 1,
-      minWidth: 140,
+      minWidth: 120,
       renderCell: (params) => {
         const exchangeName =
           exchangesMap.get(params.row.exchange_name)?.display_name ||
           params.row.exchange_name;
         return (
-          <Typography color="white" textTransform="capitalize">
+          <Typography
+            sx={{
+              color: 'white',
+              textTransform: 'capitalize',
+            }}
+          >
             {exchangeName}
           </Typography>
+        );
+      },
+    },
+    {
+      field: 'address',
+      headerName: 'Address',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => {
+        const { chain_id, address } = params.row;
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <CustomTooltip
+              arrow
+              title={getNetworkName(chain_id) || 'Unknown Network'}
+              placement="top"
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  '& > svg': { fontSize: '20px' },
+                }}
+              >
+                {getChainIcon(chain_id)}
+              </Box>
+            </CustomTooltip>
+            <CampaignAddress
+              address={address}
+              chainId={chain_id}
+              size="medium"
+            />
+          </Box>
         );
       },
     },
@@ -90,7 +145,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'status',
       headerName: 'Status',
       flex: 1,
-      minWidth: 120,
+      minWidth: 130,
       renderCell: (params) => (
         <CampaignTimeline campaign={params.row} direction="column" />
       ),
@@ -99,7 +154,7 @@ const CampaignsTable: FC<Props> = ({
       field: 'target',
       headerName: 'Target',
       flex: 1,
-      minWidth: 150,
+      minWidth: 120,
       renderCell: (params) => {
         const targetToken = getDailyTargetTokenSymbol(
           params.row.type,
@@ -107,22 +162,17 @@ const CampaignsTable: FC<Props> = ({
         );
         const { label: targetTokenSymbol } = getTokenInfo(targetToken);
         const targetValue = getTargetInfo(params.row).value;
-        const { value, decimals, suffix } = getCompactNumberParts(
-          targetValue || 0
-        );
         return (
           <Typography
             component="p"
             variant="subtitle2"
-            color="white"
-            fontSize={16}
-            fontWeight={700}
+            sx={{
+              color: 'white',
+              fontSize: 16,
+              fontWeight: 700,
+            }}
           >
-            <FormattedNumber
-              value={value}
-              decimals={decimals}
-              suffix={suffix + ' ' + targetTokenSymbol}
-            />
+            <CompactNumberWithTooltip value={targetValue} /> {targetTokenSymbol}
           </Typography>
         );
       },
@@ -136,7 +186,13 @@ const CampaignsTable: FC<Props> = ({
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row;
           return (
-            <Typography variant="body1" color="white" fontWeight={700}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'white',
+                fontWeight: 700,
+              }}
+            >
               <span>{fund_amount}</span> <span>{fund_token.toUpperCase()}</span>
             </Typography>
           );
@@ -146,7 +202,13 @@ const CampaignsTable: FC<Props> = ({
           params.row;
 
         return (
-          <Typography variant="body1" color="white" fontWeight={600}>
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'white',
+              fontWeight: 600,
+            }}
+          >
             <FormattedNumber
               value={formatTokenAmount(fund_amount, fund_token_decimals)}
               suffix={` ${fund_token_symbol}`}
@@ -158,17 +220,19 @@ const CampaignsTable: FC<Props> = ({
     {
       field: 'action',
       headerName: 'Action',
-      flex: 1,
-      minWidth: 170,
+      flex: 0.5,
+      minWidth: 140,
       renderCell: (params) => {
         return (
           <Box
-            display="flex"
-            justifyContent="flex-start"
-            alignItems="center"
-            flex={1}
-            gap={1}
-            sx={{ '& > :nth-of-type(2)': { flex: 1 } }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              flex: 1,
+              gap: 1,
+              '& > :nth-of-type(2)': { width: 90 },
+            }}
           >
             <IconButton
               disableRipple
@@ -178,11 +242,27 @@ const CampaignsTable: FC<Props> = ({
                 p: 0,
                 borderRadius: '4px',
                 border: '1px solid #433679',
+                gap: 1,
+                '& .view-details-text': {
+                  display: 'none',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                },
+                '&:only-child': {
+                  width: '100%',
+                  justifyContent: 'center',
+                  px: 1.5,
+                },
+                '&:only-child .view-details-text': {
+                  display: 'inline',
+                },
               }}
               onClick={() =>
                 navigate(`/campaign-details/${params.row.address}`)
               }
             >
+              <span className="view-details-text">View Details</span>
               <ArrowLeftIcon sx={{ transform: 'rotate(135deg)' }} />
             </IconButton>
             <JoinCampaignButton campaign={params.row} />
@@ -247,6 +327,11 @@ const CampaignsTable: FC<Props> = ({
           textTransform: 'uppercase',
           cursor: 'default',
           bgcolor: 'transparent',
+          '&[data-field="action"]': {
+            '& .MuiDataGrid-columnHeaderTitleContainer': {
+              justifyContent: 'center',
+            },
+          },
         },
         '& .MuiDataGrid-columnHeaderTitle': {
           color: '#716c8b',

@@ -47,7 +47,13 @@ const Layout: FC<PropsWithChildren> = ({ children }) => {
   }, [pathname]);
 
   return (
-    <Box minHeight="100dvh" width="100%" bgcolor="background.default">
+    <Box
+      sx={{
+        minHeight: '100dvh',
+        width: '100%',
+        bgcolor: 'background.default',
+      }}
+    >
       <Header />
       <LayoutBottomOffsetContext.Provider value={setReserveBottomOffset}>
         <Container component="main">{children}</Container>

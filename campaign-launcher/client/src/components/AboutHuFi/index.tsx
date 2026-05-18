@@ -12,29 +12,39 @@ const AboutHuFi: FC = () => {
   const isMobile = useIsMobile();
 
   return (
-    <Stack gap={{ xs: 2, md: 3 }}>
+    <Stack
+      sx={{
+        gap: { xs: 2, md: 3 },
+      }}
+    >
       <Typography
         variant={isMobile ? 'h6' : 'h5'}
-        color="white"
-        fontWeight={{ xs: 500, md: 800 }}
-        letterSpacing={{ xs: '0px', md: '-0.5px' }}
+        sx={{
+          color: 'white',
+          fontWeight: { xs: 500, md: 800 },
+          letterSpacing: { xs: '0px', md: '-0.5px' },
+        }}
       >
         About HuFi
       </Typography>
       <Stack
-        px={2}
-        py={{ xs: 2, md: 4 }}
-        borderRadius="8px"
-        border="1px solid #433679"
-        bgcolor="#251d47"
+        sx={{
+          px: 2,
+          py: { xs: 2, md: 4 },
+          borderRadius: '8px',
+          border: '1px solid #433679',
+          bgcolor: '#251d47',
+        }}
       >
         {!isMobile && <img src={logo} alt="HuFi" width={125} />}
         <Typography
           variant="body2"
-          color="white"
-          fontWeight={600}
-          mt={{ xs: 0, md: 4 }}
-          mb={2}
+          sx={{
+            color: 'white',
+            fontWeight: 600,
+            mt: { xs: 0, md: 4 },
+            mb: 2,
+          }}
         >
           HuFi is a decentralized tradeathon organizing platform where
           communities earn rewards for holding, trading, and contributing to

@@ -19,31 +19,46 @@ const CryptoPairEntity: FC<Props> = ({ symbol, size = 'small' }) => {
   const isLarge = size === 'large';
 
   return (
-    <Box display="flex" alignItems="center" gap={isLarge ? 2 : 1}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: isLarge ? 2 : 1,
+      }}
+    >
       {baseIcon && quoteIcon && (
         <>
           <Box
             component="img"
             src={baseIcon}
             alt={baseLabel}
-            width={getSymbolStyles(size).image.size}
-            height={getSymbolStyles(size).image.size}
-            border={getSymbolStyles(size).image.border}
-            borderRadius="100%"
+            sx={{
+              width: getSymbolStyles(size).image.size,
+              height: getSymbolStyles(size).image.size,
+              border: getSymbolStyles(size).image.border,
+              borderRadius: '100%',
+            }}
           />
           <Box
             component="img"
             src={quoteIcon}
             alt={quoteLabel}
-            ml={isLarge ? -4 : -2}
-            width={getSymbolStyles(size).image.size}
-            height={getSymbolStyles(size).image.size}
-            border={getSymbolStyles(size).image.border}
-            borderRadius="100%"
+            sx={{
+              ml: isLarge ? -4 : -2,
+              width: getSymbolStyles(size).image.size,
+              height: getSymbolStyles(size).image.size,
+              border: getSymbolStyles(size).image.border,
+              borderRadius: '100%',
+            }}
           />
         </>
       )}
-      <Typography color="white" {...getSymbolStyles(size).text}>
+      <Typography
+        sx={{
+          color: 'white',
+          ...getSymbolStyles(size).text,
+        }}
+      >
         {baseLabel ?? base}/{quoteLabel ?? quote}
       </Typography>
     </Box>

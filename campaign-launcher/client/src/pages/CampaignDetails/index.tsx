@@ -33,20 +33,22 @@ import { isCampaignDetails } from '@/utils';
 const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
     <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      width="100%"
-      height={MOBILE_BOTTOM_NAV_HEIGHT}
-      bgcolor="background.default"
-      borderTop="2px solid #251d47"
-      position="fixed"
-      bottom={0}
-      left={0}
-      right={0}
-      py={2}
-      px={3}
-      zIndex={(theme) => theme.zIndex.appBar}
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: MOBILE_BOTTOM_NAV_HEIGHT,
+        bgcolor: 'background.default',
+        borderTop: '2px solid #251d47',
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        py: 2,
+        px: 3,
+        zIndex: (theme) => theme.zIndex.appBar,
+      }}
     >
       {children}
     </Box>

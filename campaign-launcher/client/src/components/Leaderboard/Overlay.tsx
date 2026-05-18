@@ -75,23 +75,34 @@ const LeaderboardOverlay: FC<Props> = ({
         right: { xs: 16, md: 32 },
       }}
     >
-      <Stack height="100%" minHeight={0}>
+      <Stack sx={{ height: '100%', minHeight: 0 }}>
         <Box
-          px={{ xs: 2, md: 4 }}
-          pt={{ xs: 2, md: 4 }}
-          pb={{ xs: 2, md: 3 }}
-          bgcolor="background.default"
-          overflow="hidden"
+          sx={{
+            px: { xs: 2, md: 4 },
+            pt: { xs: 2, md: 4 },
+            pb: { xs: 2, md: 3 },
+            bgcolor: 'background.default',
+            overflow: 'hidden',
+          }}
         >
           <Typography
             component="h6"
             variant={isMobile ? 'h6' : 'h5'}
-            color="white"
-            fontWeight={700}
+            sx={{
+              color: 'white',
+              fontWeight: 700,
+            }}
           >
             {`Leaderboard (${symbol})`}
           </Typography>
-          <Typography fontSize="12px" fontWeight={500} lineHeight={1} mt={0.5}>
+          <Typography
+            sx={{
+              fontSize: '12px',
+              fontWeight: 500,
+              lineHeight: 1,
+              mt: 0.5,
+            }}
+          >
             Actual on: {formatActualOnDate(updatedAt)}
           </Typography>
           <TextField

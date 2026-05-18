@@ -13,7 +13,13 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
   const isMobile = useIsMobile();
 
   return (
-    <Stack alignItems="center" textAlign="center" p={2}>
+    <Stack
+      sx={{
+        alignItems: 'center',
+        textAlign: 'center',
+        p: 2,
+      }}
+    >
       <ModalError message="Something went wrong, please try again." />
       {!isMobile && (
         <Button

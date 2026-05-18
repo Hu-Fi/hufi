@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { Box, Skeleton, Stack, styled, Typography, Grid } from '@mui/material';
 
 import CampaignSymbol from '@/components/CampaignSymbol';
-import FormattedNumber from '@/components/FormattedNumber';
+import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { CancelIcon } from '@/icons';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
@@ -16,7 +16,6 @@ import {
   CampaignType,
 } from '@/types';
 import {
-  getCompactNumberParts,
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
@@ -89,12 +88,14 @@ const now = new Date().toISOString();
 const renderSkeletonBlocks = (isMobile: boolean) => {
   return (
     <Stack
-      mx={{ xs: -2, md: 0 }}
-      px={{ xs: 2, md: 0 }}
-      pt={3}
-      pb={{ xs: 2, md: 3 }}
-      gap={{ xs: 2, md: 3 }}
-      borderBottom="1px solid #473C74"
+      sx={{
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        pt: 3,
+        pb: { xs: 2, md: 3 },
+        gap: { xs: 2, md: 3 },
+        borderBottom: '1px solid #473C74',
+      }}
     >
       <Skeleton variant="text" width="100%" height={isMobile ? 30 : 24} />
       <Skeleton
@@ -167,11 +168,6 @@ const CampaignStats: FC<Props> = ({
     campaign.exchange_name;
 
   const targetInfo = getTargetInfo(campaign);
-  const {
-    value: targetValue,
-    suffix: targetSuffix,
-    decimals: targetDecimals,
-  } = getCompactNumberParts(targetInfo.value || 0);
 
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
@@ -179,44 +175,63 @@ const CampaignStats: FC<Props> = ({
   return (
     <Stack
       component="section"
-      mx={{ xs: -2, md: 0 }}
-      px={{ xs: 2, md: 0 }}
-      pt={3}
-      pb={{ xs: 2, md: 3 }}
-      gap={{ xs: 2, md: 3 }}
-      borderBottom="1px solid #473C74"
+      sx={{
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        pt: 3,
+        pb: { xs: 2, md: 3 },
+        gap: { xs: 2, md: 3 },
+        borderBottom: '1px solid #473C74',
+      }}
     >
       <Typography
         component="h6"
-        color={isMobile ? 'white' : 'text.primary'}
-        fontSize={{ xs: 20, md: 16 }}
-        fontWeight={{ xs: 500, md: 600 }}
-        letterSpacing={{ xs: 0, md: '3.2px' }}
-        textTransform={{ xs: 'none', md: 'uppercase' }}
+        sx={{
+          color: isMobile ? 'white' : 'text.primary',
+          fontSize: { xs: 20, md: 16 },
+          fontWeight: { xs: 500, md: 600 },
+          letterSpacing: { xs: 0, md: '3.2px' },
+          textTransform: { xs: 'none', md: 'uppercase' },
+        }}
       >
         Details
       </Typography>
       {isCancelled && (
         <Stack
-          width="100%"
-          p={4}
-          gap={1.5}
-          bgcolor="#361034"
-          borderRadius="16px"
-          border="1px solid #cb3434"
+          sx={{
+            width: '100%',
+            p: 4,
+            gap: 1.5,
+            bgcolor: '#361034',
+            borderRadius: '16px',
+            border: '1px solid #cb3434',
+          }}
         >
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
             <CancelIcon sx={{ fontSize: 32 }} />
             <Typography
               variant="h5"
               component="p"
-              color="#fb4a4a"
-              fontWeight={600}
+              sx={{
+                color: '#fb4a4a',
+                fontWeight: 600,
+              }}
             >
               Campaign Cancelled
             </Typography>
           </Box>
-          <Typography ml={6} color="#a0a0a0">
+          <Typography
+            sx={{
+              ml: 6,
+              color: '#a0a0a0',
+            }}
+          >
             Cancelled on{' '}
             {formatCancellationRequestedAt(
               campaign.cancellation_requested_at || 0
@@ -226,11 +241,13 @@ const CampaignStats: FC<Props> = ({
       )}
       <Grid
         container
-        width="100%"
         spacing={{ xs: 0, md: 6 }}
-        bgcolor="#251d47"
-        borderRadius="16px"
-        border="1px solid rgba(255, 255, 255, 0.07)"
+        sx={{
+          width: '100%',
+          bgcolor: '#251d47',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.07)',
+        }}
       >
         <Grid size={{ xs: 12, md: 4 }}>
           <StatsCard>
@@ -258,23 +275,25 @@ const CampaignStats: FC<Props> = ({
       <Grid
         container
         spacing={{ xs: 2, md: 3 }}
-        width="100%"
-        alignItems="stretch"
+        sx={{
+          width: '100%',
+          alignItems: 'stretch',
+        }}
       >
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
             <CardName variant="subtitle2">{targetInfo.label}</CardName>
             <CardValue>
-              <FormattedNumber
-                value={targetValue}
-                decimals={targetDecimals}
-                suffix={targetSuffix + ' ' + targetTokenSymbol}
-              />
+              <CompactNumberWithTooltip
+                value={targetInfo.value}
+                tooltipSize="large"
+              />{' '}
+              {targetTokenSymbol}
             </CardValue>
           </StatsCard>
         </Grid>
         {isOngoingCampaign && (
-          <Grid size={{ xs: 6, md: 4 }} display="flex">
+          <Grid size={{ xs: 6, md: 4 }} sx={{ display: 'flex' }}>
             <StatsCard withBorder>
               <CardName variant="subtitle2">
                 {showUserPerformance ? 'Ranking' : 'Total Participants'}

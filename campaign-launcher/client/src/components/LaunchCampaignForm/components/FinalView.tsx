@@ -22,23 +22,43 @@ const FinalView: FC<Props> = ({
 
   return (
     <Stack
-      gap={2}
-      alignItems="center"
-      textAlign="center"
-      py={{ xs: 2, md: 3 }}
-      px={{ xs: 2, md: 3 }}
+      sx={{
+        gap: 2,
+        alignItems: 'center',
+        textAlign: 'center',
+        py: { xs: 2, md: 3 },
+        px: { xs: 2, md: 3 },
+      }}
     >
       <ModalSuccess />
-      <Typography variant="h5" color="text.primary" fontWeight={700}>
+      <Typography
+        variant="h5"
+        sx={{
+          color: 'text.primary',
+          fontWeight: 700,
+        }}
+      >
         Congratulations!
       </Typography>
-      <Typography variant="body1" fontWeight={500} color="#a0a0a0">
+      <Typography
+        variant="body1"
+        sx={{
+          fontWeight: 500,
+          color: '#a0a0a0',
+        }}
+      >
         Your {mapTypeToLabel(campaignType)} campaign has been successfully
         launched.
         <br />
         Everything is set up and ready to go.
       </Typography>
-      <Stack mt={2} gap={2} width={{ xs: '100%', md: 'fit-content' }}>
+      <Stack
+        sx={{
+          mt: 2,
+          gap: 2,
+          width: { xs: '100%', md: 'fit-content' },
+        }}
+      >
         <Button
           size="large"
           variant="outlined"

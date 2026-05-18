@@ -1,4 +1,4 @@
-import { type FC, useCallback, useMemo, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, CircularProgress } from '@mui/material';
 import { useMatch, useNavigate } from 'react-router';
@@ -22,11 +22,13 @@ type Props = {
 
 const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [shouldResumeJoinAfterConnect, setShouldResumeJoinAfterConnect] =
+    useState(false);
   const [startStep, setStartStep] = useState<'connect' | 'auth'>('connect');
 
   const navigate = useNavigate();
   const { isConnected } = useConnection();
-  const { isAuthenticated } = useWeb3Auth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useWeb3Auth();
   const {
     enrolledExchanges,
     isEnrolledExchangesLoading,
@@ -53,6 +55,8 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
 
   const handleOverlayClose = () => {
     setIsOverlayOpen(false);
+    setShouldResumeJoinAfterConnect(false);
+    setStartStep('auth');
   };
 
   const handleJoinCampaign = useCallback(async () => {
@@ -89,14 +93,43 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
   const handleButtonClick = async () => {
     if (isLoading || !campaign) return;
 
-    if (!isConnected || !isAuthenticated) {
+    if (!isConnected) {
+      setShouldResumeJoinAfterConnect(true);
+      setStartStep('connect');
       setIsOverlayOpen(true);
-      setStartStep(isConnected ? 'auth' : 'connect');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setStartStep('auth');
+      setIsOverlayOpen(true);
       return;
     }
 
     await handleJoinCampaign();
   };
+
+  useEffect(() => {
+    if (!shouldResumeJoinAfterConnect || !isConnected || isAuthLoading) {
+      return;
+    }
+
+    setShouldResumeJoinAfterConnect(false);
+
+    if (isAuthenticated) {
+      setStartStep('auth');
+      void handleJoinCampaign();
+      return;
+    }
+
+    setIsOverlayOpen(true);
+  }, [
+    handleJoinCampaign,
+    isAuthLoading,
+    isAuthenticated,
+    isConnected,
+    shouldResumeJoinAfterConnect,
+  ]);
 
   const getButtonText = () => {
     if (isJoining) {
@@ -142,10 +175,9 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
         )}
       </Button>
       <JoinCampaignOverlay
-        key={startStep}
         open={isOverlayOpen}
-        startStep={startStep}
         onClose={handleOverlayClose}
+        startStep={startStep}
         handleJoinCampaign={handleJoinCampaign}
       />
     </>

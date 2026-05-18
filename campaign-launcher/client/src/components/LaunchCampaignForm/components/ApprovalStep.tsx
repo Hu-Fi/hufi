@@ -45,7 +45,11 @@ const AllowanceTooltip = ({ type }: { type: AllowanceType }) => {
       arrow
       placement={isMobile ? 'top' : 'right'}
       title={
-        <Typography component="p" variant="tooltip" color="primary.contrast">
+        <Typography
+          component="p"
+          variant="tooltip"
+          sx={{ color: 'primary.contrast' }}
+        >
           {allowanceTooltipText[type]}
         </Typography>
       }
@@ -193,16 +197,24 @@ const ApprovalStep: FC<Props> = ({
 
   return (
     <>
-      <Stack width="100%" mt={4} gridArea="main">
+      <Stack
+        sx={{
+          width: '100%',
+          mt: 4,
+          gridArea: 'main',
+        }}
+      >
         <form id={formId} onSubmit={handleSubmit(onSubmit)}>
           <Stack
             direction="row"
-            justifyContent="space-between"
-            gap={{ sm: 3, md: 2 }}
+            sx={{
+              justifyContent: 'space-between',
+              gap: { sm: 3, md: 2 },
+            }}
           >
-            <Stack maxWidth="500px" width="100%">
-              <Stack gap={{ xs: 1.5, md: 3 }}>
-                <Typography variant="h6" component="h3" color="white">
+            <Stack sx={{ maxWidth: '500px', width: '100%' }}>
+              <Stack sx={{ gap: { xs: 1.5, md: 3 } }}>
+                <Typography variant="h6" component="h3" sx={{ color: 'white' }}>
                   Campaign Fund Amount
                 </Typography>
                 <FormControl
@@ -250,15 +262,17 @@ const ApprovalStep: FC<Props> = ({
                   )}
                   <Typography
                     variant="body2"
-                    mt={1}
-                    color="white"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent={{ xs: 'flex-start', md: 'space-between' }}
-                    gap={{ xs: 0.5, md: 0 }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: { xs: 'flex-start', md: 'space-between' },
+                      color: 'white',
+                      mt: 1,
+                      gap: { xs: 0.5, md: 0 },
+                    }}
                   >
                     <span>Current allowance:</span>
-                    <Typography component="span" color="error.main">
+                    <Typography component="span" sx={{ color: 'error.main' }}>
                       {currentAllowance === UNLIMITED_AMOUNT
                         ? 'Unlimited'
                         : `${currentAllowance ?? 0} ${fundToken.toUpperCase()}`}
@@ -267,9 +281,13 @@ const ApprovalStep: FC<Props> = ({
                 </FormControl>
               </Stack>
               <Divider sx={{ my: 4 }} />
-              <Stack gap={3}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography variant="h6" component="h3" color="white">
+              <Stack sx={{ gap: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography
+                    variant="h6"
+                    component="h3"
+                    sx={{ color: 'white' }}
+                  >
                     Token Approval
                   </Typography>
                   {(isLoading || isApproving) && <CircularProgress size={24} />}
@@ -299,12 +317,14 @@ const ApprovalStep: FC<Props> = ({
                           gap: 3,
                         }}
                       >
-                        <Stack gap={{ xs: 1, md: 2 }}>
+                        <Stack sx={{ gap: { xs: 1, md: 2 } }}>
                           <Stack
                             direction="row"
-                            alignItems="center"
-                            width="220px"
-                            gap={1}
+                            sx={{
+                              alignItems: 'center',
+                              width: '220px',
+                              gap: 1,
+                            }}
                           >
                             <FormControlLabel
                               value={AllowanceType.CUSTOM}
@@ -399,7 +419,9 @@ const ApprovalStep: FC<Props> = ({
                                         >
                                           <Typography
                                             variant="body1"
-                                            color="text.primary"
+                                            sx={{
+                                              color: 'text.primary',
+                                            }}
                                           >
                                             {inputAdornmentLabel}
                                           </Typography>
@@ -420,9 +442,11 @@ const ApprovalStep: FC<Props> = ({
                         </Stack>
                         <Stack
                           direction="row"
-                          alignItems="center"
-                          width="220px"
-                          gap={1}
+                          sx={{
+                            alignItems: 'center',
+                            width: '220px',
+                            gap: 1,
+                          }}
                         >
                           <FormControlLabel
                             value={AllowanceType.UNLIMITED}

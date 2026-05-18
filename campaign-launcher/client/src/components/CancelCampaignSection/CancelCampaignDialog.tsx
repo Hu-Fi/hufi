@@ -70,17 +70,25 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
         right: { xs: 16, md: 32 },
       }}
     >
-      <Stack px={{ xs: 2, md: 4 }} flex={1} minHeight={200}>
+      <Stack
+        sx={{
+          px: { xs: 2, md: 4 },
+          flex: 1,
+          minHeight: 200,
+        }}
+      >
         <Typography
           variant="h5"
-          display="flex"
-          alignItems="center"
-          color="white"
-          fontSize={{ xs: 16, md: 24 }}
-          fontWeight={700}
-          lineHeight="100%"
-          mb={3}
-          gap={{ xs: 0.75, md: 1.5 }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            color: 'white',
+            fontSize: { xs: 16, md: 24 },
+            fontWeight: 700,
+            lineHeight: '100%',
+            mb: 3,
+            gap: { xs: 0.75, md: 1.5 },
+          }}
         >
           <WarningIcon
             sx={{ fontSize: { xs: 24, md: 32 }, color: '#cb3434' }}
@@ -88,21 +96,35 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           Cancel Campaign
         </Typography>
         {isCancelling && (
-          <Box display="flex" my="auto">
+          <Box
+            sx={{
+              display: 'flex',
+              my: 'auto',
+            }}
+          >
             <ModalLoading />
           </Box>
         )}
         {isCancelled && (
           <Stack
-            alignItems="center"
-            textAlign="center"
-            mx="auto"
-            width="fit-content"
-            gap={1}
+            sx={{
+              alignItems: 'center',
+              textAlign: 'center',
+              mx: 'auto',
+              width: 'fit-content',
+              gap: 1,
+            }}
           >
             <ModalSuccess>
               {/* TODO: we may need to update the docs and reference to the docs here */}
-              <Typography variant="body1" py={1} mb={1} textAlign="center">
+              <Typography
+                variant="body1"
+                sx={{
+                  py: 1,
+                  mb: 1,
+                  textAlign: 'center',
+                }}
+              >
                 Cancellation successfully requested. Updates might take a while.
               </Typography>
             </ModalSuccess>
@@ -110,10 +132,12 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
         )}
         {isIdle && (
           <Typography
-            fontSize={{ xs: 14, md: 16 }}
-            fontWeight={500}
-            lineHeight="20px"
-            mb={4}
+            sx={{
+              fontSize: { xs: 14, md: 16 },
+              fontWeight: 500,
+              lineHeight: '20px',
+              mb: 4,
+            }}
           >
             Cancelling this campaign will immediately stop it from being shown
             as active. All user activity will no longer be recorded. Results
@@ -124,10 +148,12 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
         )}
       </Stack>
       <Box
-        width="100%"
-        py={{ xs: 2, md: 3 }}
-        px={{ xs: 2, md: 4 }}
-        borderTop="1px solid #3a2e6f"
+        sx={{
+          width: '100%',
+          py: { xs: 2, md: 3 },
+          px: { xs: 2, md: 4 },
+          borderTop: '1px solid #3a2e6f',
+        }}
       >
         {isCancelled && (
           <Button
