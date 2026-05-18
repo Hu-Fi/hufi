@@ -8,7 +8,6 @@ import {
   IsEnum,
   IsIn,
   IsString,
-  Length,
   Matches,
   ValidateNested,
 } from 'class-validator';
@@ -47,8 +46,7 @@ export class CampaignsAutojoinPreferencesDto {
   @IsArray()
   @ArrayMaxSize(MAX_CAMPAIGNS_AUTOJOIN_TOKENS)
   @IsString({ each: true })
-  @Length(3, 10, { each: true })
-  @Matches(/^[A-Z0-9]+$/, { each: true })
+  @Matches(/^[A-Z0-9]{3,10}$/, { each: true })
   @ArrayUnique()
   tokens: string[];
 }
