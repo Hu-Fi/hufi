@@ -20,7 +20,6 @@ import {
 
 import type { RequestWithUser } from '@/common/types';
 import Environment from '@/common/utils/environment';
-import { ParticipationsRepository } from '@/modules/campaigns/participations';
 
 import {
   EnrollExchangeApiKeysDto,
@@ -41,7 +40,6 @@ export class ExchangeApiKeysController {
   constructor(
     private readonly exchangeApiKeysService: ExchangeApiKeysService,
     private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
-    private readonly participationsRepository: ParticipationsRepository,
   ) {}
 
   @ApiOperation({
@@ -130,16 +128,9 @@ export class ExchangeApiKeysController {
     @Req() request: RequestWithUser,
     @Param() params: ExchangeNameParamDto,
   ): Promise<void> {
-    const userId = request.user.id;
-    const exchangeName = params.exchangeName;
-
-    await this.participationsRepository.removeUserFromActiveCampaigns(userId, [
-      exchangeName,
-    ]);
-
-    await this.exchangeApiKeysRepository.deleteByUserAndExchange(
-      userId,
-      exchangeName,
+    await this.exchangeApiKeysService.delete(
+      request.user.id,
+      params.exchangeName,
     );
   }
 

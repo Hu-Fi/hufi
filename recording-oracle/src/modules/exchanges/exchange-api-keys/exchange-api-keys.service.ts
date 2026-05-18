@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangesConfigService } from '@/config';
+import { ParticipationsRepository } from '@/modules/campaigns/participations';
 import { AesEncryptionService } from '@/modules/encryption';
-import { UsersService } from '@/modules/users';
+import { UserPreferencesRepository, UsersService } from '@/modules/users';
 
 import {
   ExchangeApiClientFactory,
@@ -23,11 +24,13 @@ import { ExchangeApiKeyData } from './types';
 @Injectable()
 export class ExchangeApiKeysService {
   constructor(
-    private readonly exchangesConfigService: ExchangesConfigService,
-    private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
-    private readonly usersService: UsersService,
     private readonly aesEncryptionService: AesEncryptionService,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
+    private readonly exchangeApiKeysRepository: ExchangeApiKeysRepository,
+    private readonly exchangesConfigService: ExchangesConfigService,
+    private readonly participationsRepository: ParticipationsRepository,
+    private readonly userPreferencesRepository: UserPreferencesRepository,
+    private readonly usersService: UsersService,
   ) {}
 
   async enroll(input: {
@@ -199,5 +202,22 @@ export class ExchangeApiKeysService {
     );
 
     return accessCheckResult;
+  }
+
+  async delete(userId: string, exchangeName: string): Promise<void> {
+    await Promise.all([
+      this.participationsRepository.removeUserFromActiveCampaigns(userId, [
+        exchangeName,
+      ]),
+      this.userPreferencesRepository.removeExchangeFromAutojoin(
+        userId,
+        exchangeName,
+      ),
+    ]);
+
+    await this.exchangeApiKeysRepository.deleteByUserAndExchange(
+      userId,
+      exchangeName,
+    );
   }
 }

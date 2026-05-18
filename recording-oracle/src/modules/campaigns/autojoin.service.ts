@@ -7,7 +7,11 @@ import {
   ExchangeName,
 } from '@/common/constants';
 import logger from '@/logger';
-import { ExchangesService } from '@/modules/exchanges';
+import {
+  ExchangeApiKeyNotFoundError,
+  ExchangesService,
+  KeyAuthorizationError,
+} from '@/modules/exchanges';
 import { UserPreferencesRepository } from '@/modules/users';
 
 import type { CampaignEntity } from './campaign.entity';
@@ -39,19 +43,13 @@ export class AutojoinService {
     });
 
     try {
-      const autojoinToken = campaign.symbol.split('/')[0];
-
-      campaignLogger.info('Started autojoin process for campaign', {
-        autojoinToken,
-      });
-
-      const canAutojoin =
+      const shouldRunAutojoin =
         campaign.status === CampaignStatus.ACTIVE &&
         campaign.endDate.valueOf() > Date.now() &&
         // @ts-expect-error - same base enum
         ALLOWED_AUTOJOIN_CAMPAIGN_TYPES.includes(campaign.type);
 
-      if (!canAutojoin) {
+      if (!shouldRunAutojoin) {
         campaignLogger.info('Campaign is not eligible for autojoin, skipping', {
           type: campaign.type,
           status: campaign.status,
@@ -59,6 +57,11 @@ export class AutojoinService {
         });
         return;
       }
+
+      const autojoinToken = campaign.symbol.split('/')[0];
+      campaignLogger.info('Started autojoin process for campaign', {
+        autojoinToken,
+      });
 
       const autojoinCandidates =
         await this.userPreferencesRepository.findForAutojoin({
@@ -83,15 +86,30 @@ export class AutojoinService {
           });
         } catch (error) {
           if (error instanceof UserAlreadyJoinedError) {
-            campaignLogger.info('User already joined, skipping', {
+            campaignLogger.debug('User already joined, skipping', {
               userId,
             });
-          } else {
-            campaignLogger.error('Error autojoining user to campaign', {
+            continue;
+          }
+
+          if (
+            error instanceof ExchangeApiKeyNotFoundError ||
+            error instanceof KeyAuthorizationError
+          ) {
+            campaignLogger.debug('Failed to join user due to exchange access', {
               userId,
               error,
             });
+            void this.userPreferencesRepository
+              .removeExchangeFromAutojoin(userId, campaign.exchangeName)
+              .catch();
+            continue;
           }
+
+          campaignLogger.error('Error autojoining user to campaign', {
+            userId,
+            error,
+          });
         }
       }
     } catch (error) {

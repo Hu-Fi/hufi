@@ -6,7 +6,7 @@ import type { UserEntity } from './user.entity';
 
 @Injectable()
 export class UserPreferencesRepository extends Repository<UserPreferencesEntity> {
-  constructor(dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(UserPreferencesEntity, dataSource.createEntityManager());
   }
 
@@ -40,5 +40,32 @@ export class UserPreferencesRepository extends Repository<UserPreferencesEntity>
     const usersPreferences = await query.getMany();
 
     return usersPreferences.map((up) => up.user! as UserEntity);
+  }
+
+  async removeExchangeFromAutojoin(
+    userId: string,
+    exchangeName: string,
+  ): Promise<void> {
+    await this.dataSource.transaction(async (txManager) => {
+      const userPreferencesRepository = txManager.getRepository(
+        UserPreferencesEntity,
+      );
+
+      const userPreferences = await userPreferencesRepository.findOne({
+        where: { userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!userPreferences) {
+        return;
+      }
+
+      const exchanges = new Set(userPreferences.campaignsAutojoin.exchanges);
+      exchanges.delete(exchangeName);
+      userPreferences.campaignsAutojoin.exchanges = Array.from(exchanges);
+
+      userPreferences.updatedAt = new Date();
+
+      await userPreferencesRepository.save(userPreferences);
+    });
   }
 }
