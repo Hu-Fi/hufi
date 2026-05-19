@@ -21,9 +21,12 @@ export class UserPreferencesRepository extends Repository<UserPreferencesEntity>
   }): Promise<UserEntity[]> {
     const query = this.createQueryBuilder('preferences')
       .leftJoinAndSelect('preferences.user', 'user')
-      .where(`preferences.campaignsAutojoin ->> 'enabled' = :enabled`, {
-        enabled: true,
-      })
+      .where(
+        `(preferences.campaignsAutojoin ->> 'enabled')::boolean = :enabled`,
+        {
+          enabled: true,
+        },
+      )
       .andWhere(`preferences.campaignsAutojoin -> 'exchanges' ? :exchange`, {
         exchange,
       })

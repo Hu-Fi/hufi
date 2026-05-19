@@ -38,7 +38,7 @@ export class AutojoinService {
   async handleCampaignCreated(campaign: CampaignEntity) {
     const campaignLogger = this.logger.child({
       campaignId: campaign.id,
-      chaindId: campaign.chainId,
+      chainId: campaign.chainId,
       address: campaign.address,
     });
 

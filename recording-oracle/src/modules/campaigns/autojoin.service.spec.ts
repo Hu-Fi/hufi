@@ -34,7 +34,7 @@ const mockExchangesService = createMock<ExchangesService>();
 const mockParticipationsService = createMock<ParticipationsService>();
 const mockUserPreferencesRepository = createMock<UserPreferencesRepository>();
 
-describe('UserPreferencesService', () => {
+describe('AutojoinService', () => {
   let autojoinService: AutojoinService;
 
   beforeAll(async () => {
@@ -94,7 +94,7 @@ describe('UserPreferencesService', () => {
         expect(logger.child).toHaveBeenCalledTimes(1);
         expect(logger.child).toHaveBeenCalledWith({
           campaignId: campaign.id,
-          chaindId: campaign.chainId,
+          chainId: campaign.chainId,
           address: campaign.address,
         });
       } finally {

@@ -105,7 +105,7 @@ describe('UserPreferencesService', () => {
     test('should overwrite existing user preferences with new preferences', async () => {
       /**
        * Old prefs should have more filters than new ones, so we can check
-       * that new values actually overwrite old ones, not merged ny index
+       * that new values actually overwrite old ones, not merged by index
        */
       const existingPreferences = generateUserPreferences({
         campaignsAutojoin: {
