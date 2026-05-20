@@ -48,6 +48,7 @@ updates:
           - "@types/react-dom"
     open-pull-requests-limit: 5 # Reasonable number to start with
     cooldown:
-      patch-days: 3
-      minor-days: 7
-      major-days: 30
+      default-days: 3
+      semver-patch-days: 3
+      semver-minor-days: 7
+      semver-major-days: 30
