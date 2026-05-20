@@ -4,6 +4,8 @@ import Decimal from 'decimal.js';
 import _ from 'lodash';
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
+import { CampaignType } from '@/common/constants';
+
 import type { CampaignEntity } from './campaign.entity';
 import {
   generateCampaignEntity,
@@ -17,7 +19,6 @@ import type {
 } from './progress-checking';
 import * as rewardsUtils from './rewards.utils';
 import {
-  CampaignType,
   CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,

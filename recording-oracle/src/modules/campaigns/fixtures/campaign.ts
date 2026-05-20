@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { vi } from 'vitest';
 
+import { CampaignType } from '@/common/constants';
 import {
   generateExchangeName,
   generateTradingPair,
@@ -22,7 +23,6 @@ import {
   type CampaignDetails,
   type CampaignProgress,
   CampaignStatus,
-  CampaignType,
   type IntermediateResult,
   type IntermediateResultsData,
   type ParticipantOutcome,
@@ -31,15 +31,20 @@ import {
 export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
   const _type = type || faker.helpers.arrayElement(Object.values(CampaignType));
 
+  let symbol: string;
   let details: CampaignDetails;
   switch (_type) {
     case CampaignType.MARKET_MAKING: {
+      symbol = generateTradingPair();
+
       details = {
         dailyVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
     }
     case CampaignType.COMPETITIVE_MARKET_MAKING: {
+      symbol = generateTradingPair();
+
       const nTopParticipants = faker.number.int({ min: 1, max: 5 });
       const maxRewardSharePerParticipant = Math.floor(100 / nTopParticipants);
 
@@ -52,12 +57,16 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
       break;
     }
     case CampaignType.HOLDING: {
+      symbol = faker.finance.currencyCode();
+
       details = {
         dailyBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
       };
       break;
     }
     case CampaignType.THRESHOLD: {
+      symbol = faker.finance.currencyCode();
+
       details = {
         minimumBalanceTarget: faker.number.float({ min: 1, max: 1000 }),
         maxParticipants: faker.datatype.boolean()
@@ -82,7 +91,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     address: ethers.getAddress(faker.finance.ethereumAddress()),
     type: _type,
     exchangeName: generateExchangeName(),
-    symbol: generateTradingPair(),
+    symbol,
     startDate,
     endDate,
     fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),

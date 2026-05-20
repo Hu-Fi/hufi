@@ -47,3 +47,7 @@ updates:
           - "react-dom"
           - "@types/react-dom"
     open-pull-requests-limit: 5 # Reasonable number to start with
+    cooldown:
+      patch-days: 3
+      minor-days: 7
+      major-days: 30

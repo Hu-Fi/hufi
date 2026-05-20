@@ -8,6 +8,7 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Cron,
   CronExpression,
@@ -21,8 +22,12 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 import ms from 'ms';
 
-import { ExchangeName } from '@/common/constants';
-import { ContentType } from '@/common/enums';
+import {
+  CampaignType,
+  ContentType,
+  DomainEvent,
+  ExchangeName,
+} from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
@@ -63,8 +68,8 @@ import {
 import { CampaignsRepository } from './campaigns.repository';
 import {
   CAMPAIGN_PERMISSIONS_MAP,
-  CampaignServiceJob,
   CAMPAIGNS_DAILY_CYCLE,
+  CampaignServiceJob,
 } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -96,7 +101,6 @@ import {
   CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
-  CampaignType,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
@@ -118,6 +122,7 @@ export class CampaignsService implements OnModuleDestroy {
     private readonly campaignsCache: CampaignsCache,
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
+    private readonly eventEmitter: EventEmitter2,
     private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangesService: ExchangesService,
@@ -266,6 +271,8 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     await this.campaignsRepository.insert(newCampaign);
+
+    this.eventEmitter.emit(DomainEvent.CAMPAIGN_CREATED, newCampaign);
 
     return newCampaign;
   }

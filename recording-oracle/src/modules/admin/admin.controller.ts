@@ -13,6 +13,7 @@ import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import dayjs from 'dayjs';
 
 import { Public } from '@/common/decorators';
+import logger from '@/logger';
 import { CampaignsService } from '@/modules/campaigns';
 
 import {
@@ -36,6 +37,8 @@ import { ADMIN_API_KEY_HEADER, AdminApiKeyAuthGuard } from './api-key.guard';
 @UseGuards(AdminApiKeyAuthGuard)
 @UseFilters(AdminControllerErrorsFilter)
 export class AdminController {
+  private logger = logger.child({ context: AdminController.name });
+
   private cronJobTriggerTimes: Map<AdminCronJobId, number> = new Map();
 
   constructor(
@@ -100,15 +103,22 @@ export class AdminController {
       case AdminCronJobId.DISCOVER_NEW_CAMPAIGNS:
         void this.campaignsService.discoverNewCampaigns();
         break;
-      case AdminCronJobId.CAMPAIGNS_PROGRESS_RECORDING:
+      case AdminCronJobId.RECORD_CAMPAIGNS_PROGRESS:
         void this.campaignsService.recordCampaignsProgress();
         break;
-      case AdminCronJobId.REFRESH_INTERIM_CAMPAIGNS_PROGRESS_CACHE:
+      case AdminCronJobId.REFRESH_INTERIM_PROGRESS_CACHE:
         void this.campaignsService.refreshInterimProgressCache();
         break;
       default:
         throw new BadRequestException(`Unknown cron job id: ${jobId}`);
     }
+
+    return { success: true };
+  }
+
+  @Post('/test-anything')
+  async test(@Body() payload: Record<string, unknown>) {
+    this.logger.debug('Test endpoint called', { payload });
 
     return { success: true };
   }
