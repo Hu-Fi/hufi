@@ -61,8 +61,10 @@ const AboutHuFi: FC = () => {
             color: 'error.main',
             fontSize: 16,
             fontWeight: 500,
-            textDecoration: 'underline',
-            textDecorationColor: 'error.main',
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
           }}
         >
           Learn More

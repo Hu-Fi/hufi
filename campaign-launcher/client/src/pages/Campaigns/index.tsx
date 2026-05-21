@@ -207,9 +207,6 @@ const Campaigns: FC = () => {
             gap: 2,
           }}
         >
-          {isConnected && (
-            <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
-          )}
           {isAuthenticated && (
             <Button
               variant="outlined"
@@ -221,6 +218,9 @@ const Campaigns: FC = () => {
             >
               Manage API Keys
             </Button>
+          )}
+          {isConnected && (
+            <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
           )}
         </Box>
       </Box>
