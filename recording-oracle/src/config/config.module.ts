@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuthConfigService } from './auth-config.service';
@@ -8,7 +8,8 @@ import { DatabaseConfigService } from './database-config.service';
 import { EncryptionConfigService } from './encryption-config.service';
 import { ExchangesConfigService } from './exchanges-config.service';
 import { LoggingConfigService } from './logging-config.service';
-import { S3ConfigService } from './s3-config-service';
+import { NotificationsConfigService } from './notifications-config.service';
+import { S3ConfigService } from './s3-config.service';
 import { ServerConfigService } from './server-config.service';
 import { Web3ConfigService } from './web3-config.service';
 
@@ -23,6 +24,7 @@ import { Web3ConfigService } from './web3-config.service';
     EncryptionConfigService,
     ExchangesConfigService,
     LoggingConfigService,
+    NotificationsConfigService,
     S3ConfigService,
     ServerConfigService,
     Web3ConfigService,
@@ -35,6 +37,7 @@ import { Web3ConfigService } from './web3-config.service';
     EncryptionConfigService,
     ExchangesConfigService,
     LoggingConfigService,
+    NotificationsConfigService,
     S3ConfigService,
     ServerConfigService,
     Web3ConfigService,

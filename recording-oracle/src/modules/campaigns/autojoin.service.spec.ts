@@ -18,6 +18,7 @@ import {
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
 } from '@/modules/exchanges';
+import { NotificationsService } from '@/modules/notifications';
 import { UserPreferencesRepository } from '@/modules/users';
 import { generateUserEntity } from '@/modules/users/fixtures';
 
@@ -31,6 +32,7 @@ import { CampaignStatus } from './types';
 vi.mock('@/logger');
 
 const mockExchangesService = createMock<ExchangesService>();
+const mockNotificationsService = createMock<NotificationsService>();
 const mockParticipationsService = createMock<ParticipationsService>();
 const mockUserPreferencesRepository = createMock<UserPreferencesRepository>();
 
@@ -44,6 +46,10 @@ describe('AutojoinService', () => {
         {
           provide: ExchangesService,
           useValue: mockExchangesService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
         },
         {
           provide: ParticipationsService,
@@ -191,7 +197,12 @@ describe('AutojoinService', () => {
         autojoinCandidates,
       );
 
+      const now = Date.now();
+      vi.useFakeTimers({ now });
+
       await autojoinService.handleCampaignCreated(campaign);
+
+      vi.useRealTimers();
 
       expect(
         mockUserPreferencesRepository.findForAutojoin,
@@ -210,6 +221,9 @@ describe('AutojoinService', () => {
       expect(mockParticipationsService.joinCampaign).toHaveBeenCalledTimes(
         autojoinCandidates.length,
       );
+      expect(
+        mockNotificationsService.maybeSendNotification,
+      ).toHaveBeenCalledTimes(autojoinCandidates.length);
       for (const candidate of autojoinCandidates) {
         expect(
           mockExchangesService.assertUserHasRequiredAccess,
@@ -222,6 +236,13 @@ describe('AutojoinService', () => {
           candidate.id,
           campaign,
         );
+        expect(
+          mockNotificationsService.maybeSendNotification,
+        ).toHaveBeenCalledWith(candidate.id, 'campaign_autojoin', {
+          chainId: campaign.chainId,
+          campaignAddress: campaign.address,
+          timestamp: now,
+        });
       }
     });
 

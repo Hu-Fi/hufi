@@ -12,6 +12,10 @@ import {
   ExchangesService,
   KeyAuthorizationError,
 } from '@/modules/exchanges';
+import {
+  NotificationsService,
+  NotificationType,
+} from '@/modules/notifications';
 import { UserPreferencesRepository } from '@/modules/users';
 
 import type { CampaignEntity } from './campaign.entity';
@@ -30,6 +34,7 @@ export class AutojoinService {
 
   constructor(
     private readonly exchangesService: ExchangesService,
+    private readonly notificationsService: NotificationsService,
     private readonly participationsService: ParticipationsService,
     private readonly userPreferencesRepository: UserPreferencesRepository,
   ) {}
@@ -81,6 +86,15 @@ export class AutojoinService {
           );
 
           await this.participationsService.joinCampaign(userId, campaign);
+          void this.notificationsService.maybeSendNotification(
+            userId,
+            NotificationType.CAMPAIGN_AUTOJOIN,
+            {
+              chainId: campaign.chainId,
+              campaignAddress: campaign.address,
+              timestamp: Date.now(),
+            },
+          );
           campaignLogger.info('Successfully autojoined user to campaign', {
             userId,
           });

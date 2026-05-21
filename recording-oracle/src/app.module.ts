@@ -1,6 +1,6 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -20,6 +20,7 @@ import { AuthModule } from './modules/auth';
 import { CampaignsModule } from './modules/campaigns';
 import { ExchangesModule } from './modules/exchanges';
 import { HealthModule } from './modules/health';
+import { NotificationsModule } from './modules/notifications';
 import { StatisticsModule } from './modules/statistics';
 import { UsersModule } from './modules/users';
 
@@ -41,6 +42,7 @@ import { UsersModule } from './modules/users';
     DatabaseModule,
     EnvConfigModule,
     ExchangesModule,
+    NotificationsModule,
     UsersModule,
     StatisticsModule,
     ValkeyModule,

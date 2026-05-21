@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, FindManyOptions, Repository } from 'typeorm';
 
 import { UserPreferencesEntity } from './user-preferences.entity';
 import type { UserEntity } from './user.entity';
+
+type FindOptions = {
+  relations?: FindManyOptions<UserPreferencesEntity>['relations'];
+};
 
 @Injectable()
 export class UserPreferencesRepository extends Repository<UserPreferencesEntity> {
@@ -43,6 +47,16 @@ export class UserPreferencesRepository extends Repository<UserPreferencesEntity>
     const usersPreferences = await query.getMany();
 
     return usersPreferences.map((up) => up.user! as UserEntity);
+  }
+
+  async findOneById(
+    userId: string,
+    options: FindOptions = {},
+  ): Promise<UserPreferencesEntity | null> {
+    return this.findOne({
+      where: { userId },
+      relations: options.relations,
+    });
   }
 
   async removeExchangeFromAutojoin(
