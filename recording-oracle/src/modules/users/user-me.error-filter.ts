@@ -8,9 +8,11 @@ import type { Request, Response } from 'express';
 
 import { BaseErrorResponse } from '@/common/types';
 import logger from '@/logger';
-import { UserNotFoundError } from '@/modules/users';
 
-@Catch(UserNotFoundError)
+import { InvalidUserPrefernecesError } from './user-preferences.error';
+import { UserNotFoundError } from './users.errors';
+
+@Catch(UserNotFoundError, InvalidUserPrefernecesError)
 export class UserMeControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
     context: UserMeControllerErrorsFilter.name,
@@ -31,6 +33,8 @@ export class UserMeControllerErrorsFilter implements ExceptionFilter {
 
     if (exception instanceof UserNotFoundError) {
       status = HttpStatus.NOT_FOUND;
+    } else if (exception instanceof InvalidUserPrefernecesError) {
+      status = HttpStatus.BAD_REQUEST;
     }
 
     return response.status(status).json(responseData);

@@ -4,3 +4,8 @@ export type CampaignsAutojoinPreferences = {
   campaignTypes: string[];
   tokens: string[];
 };
+
+export type NotificationsPreferences = {
+  telegramUserId: string | null;
+  campaignsAutojoin: boolean;
+};

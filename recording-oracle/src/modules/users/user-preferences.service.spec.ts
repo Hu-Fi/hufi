@@ -53,7 +53,7 @@ describe('UserPreferencesService', () => {
     expect(userPreferencesService).toBeDefined();
   });
 
-  describe('savePreferences', () => {
+  describe('update', () => {
     let user: UserEntity;
 
     beforeEach(() => {
@@ -70,7 +70,7 @@ describe('UserPreferencesService', () => {
 
       let thrownError: any;
       try {
-        await userPreferencesService.savePreferences(user.id, {});
+        await userPreferencesService.update(user.id, {});
       } catch (error) {
         thrownError = error;
       }
@@ -90,7 +90,7 @@ describe('UserPreferencesService', () => {
       const now = new Date();
       vi.useFakeTimers({ now });
 
-      const saved = await userPreferencesService.savePreferences(user.id, {});
+      const saved = await userPreferencesService.update(user.id, {});
 
       vi.useRealTimers();
 
@@ -125,7 +125,7 @@ describe('UserPreferencesService', () => {
       const newCampaignType = faker.lorem.word();
       const newToken = faker.lorem.word();
 
-      const result = await userPreferencesService.savePreferences(user.id, {
+      const result = await userPreferencesService.update(user.id, {
         campaignsAutojoin: {
           enabled: !existingPreferences.campaignsAutojoin.enabled,
           exchanges: [newExchange],
@@ -157,7 +157,7 @@ describe('UserPreferencesService', () => {
         preferences: existingPreferences,
       });
 
-      const result = await userPreferencesService.savePreferences(user.id, {
+      const result = await userPreferencesService.update(user.id, {
         campaignsAutojoin: {
           enabled: faker.datatype.boolean(),
           exchanges: [
