@@ -1,6 +1,6 @@
 import { BaseError } from '@/common/errors/base';
 
-export class InvalidUserPrefernecesError extends BaseError {
+export class InvalidUserPreferencesError extends BaseError {
   constructor(
     readonly userId: string,
     message?: string,

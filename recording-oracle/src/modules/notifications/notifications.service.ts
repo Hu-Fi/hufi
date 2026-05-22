@@ -15,8 +15,8 @@ import {
 
 import { HUFI_TG_BOT_AUTH_HEADER } from './constants';
 import {
-  CampaignAutjoinPayload,
   NotificationType,
+  type CampaignAutojoinPayload,
   type NotificationPayload,
 } from './types';
 
@@ -56,7 +56,7 @@ export class NotificationsService {
   async maybeSendNotification(
     userId: string,
     type: NotificationType.CAMPAIGN_AUTOJOIN,
-    payload: CampaignAutjoinPayload,
+    payload: CampaignAutojoinPayload,
   ): Promise<void>;
   async maybeSendNotification(
     userId: string,

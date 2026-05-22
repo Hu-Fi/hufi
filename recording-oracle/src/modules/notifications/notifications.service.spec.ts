@@ -18,7 +18,7 @@ import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 import { HUFI_TG_BOT_AUTH_HEADER } from './constants';
 import { mockNotificationsConfigService } from './fixtures';
 import { NotificationsService } from './notifications.service';
-import { CampaignAutjoinPayload, NotificationType } from './types';
+import { type CampaignAutojoinPayload, NotificationType } from './types';
 
 vi.mock('@/logger');
 vi.mock('axios', async () => {
@@ -162,7 +162,7 @@ describe('NotificationsService', () => {
     });
 
     test('should sign and send notification when enabled', async () => {
-      const payload: CampaignAutjoinPayload = {
+      const payload: CampaignAutojoinPayload = {
         chainId: faker.number.int(),
         campaignAddress: faker.finance.ethereumAddress(),
         timestamp: faker.date.recent().valueOf(),

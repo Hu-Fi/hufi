@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { DEFAULT_USER_PREFERENCES } from './constants';
 import { UpdatePreferencesDto } from './user-me.dto';
 import { UserPreferencesEntity } from './user-preferences.entity';
-import { InvalidUserPrefernecesError } from './user-preferences.error';
+import { InvalidUserPreferencesError } from './user-preferences.error';
 import { UserPreferencesRepository } from './user-preferences.repository';
 import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';
@@ -38,7 +38,7 @@ export class UserPreferencesService {
         }
 
         if (notificationPreference) {
-          throw new InvalidUserPrefernecesError(
+          throw new InvalidUserPreferencesError(
             userId,
             'telegramUserId is required to enable notifications',
           );
@@ -56,7 +56,7 @@ export class UserPreferencesService {
         campaignsAutojoinPreferences.exchanges.length === 0 ||
         campaignsAutojoinPreferences.tokens.length === 0
       ) {
-        throw new InvalidUserPrefernecesError(
+        throw new InvalidUserPreferencesError(
           userId,
           'Autojoin should have filters when enabled',
         );

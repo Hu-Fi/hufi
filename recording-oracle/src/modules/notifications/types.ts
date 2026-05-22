@@ -7,7 +7,7 @@ export type NotificationPayload = {
   [x: string]: unknown;
 };
 
-export type CampaignAutjoinPayload = NotificationPayload & {
+export type CampaignAutojoinPayload = NotificationPayload & {
   chainId: number;
   campaignAddress: string;
 };
