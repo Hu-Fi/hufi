@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LogLevel } from 'typeorm';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import Environment from '@/common/utils/environment';
 import { DatabaseConfigService } from '@/config';
+
+import { CustomNamingStrategy } from './naming-strategy';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { DatabaseConfigService } from '@/config';
               }),
           ssl: databaseConfigService.ssl,
 
-          namingStrategy: new SnakeNamingStrategy(),
+          namingStrategy: new CustomNamingStrategy(),
 
           /**
            * Schema synchronization should be done

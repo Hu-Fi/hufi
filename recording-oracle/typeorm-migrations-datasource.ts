@@ -1,10 +1,10 @@
 import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import '@/setup-libs';
 
 import Environment from '@/common/utils/environment';
+import { CustomNamingStrategy } from '@/infrastructure/database/naming-strategy';
 
 dotenv.config({
   /**
@@ -34,6 +34,6 @@ export default new DataSource({
   migrationsRun: true,
   migrations: ['src/infrastructure/database/migrations/*.ts'],
   migrationsTableName: 'migrations_typeorm',
-  namingStrategy: new SnakeNamingStrategy(),
+  namingStrategy: new CustomNamingStrategy(),
   entities: ['src/modules/**/*.entity.ts'],
 });
