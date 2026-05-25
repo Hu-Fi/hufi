@@ -8,7 +8,7 @@ import {
 import type { Request, Response } from 'express';
 
 import type { BaseErrorResponse } from '@/common/types';
-import { transformKeysFromCamelToSnake } from '@/common/utils/case-converter';
+import { transformKeysToSnakeCase } from '@/common/utils/case-converter';
 import logger from '@/logger';
 
 @Catch()
@@ -39,7 +39,7 @@ export class ExceptionFilter implements IExceptionFilter {
           {
             message: exception.message,
           },
-          transformKeysFromCamelToSnake(exceptionResponse),
+          transformKeysToSnakeCase(exceptionResponse),
         );
       }
     } else {
