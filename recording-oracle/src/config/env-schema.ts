@@ -88,6 +88,9 @@ export const envValidator = Joi.object({
   // Logging
   LOG_EXCHANGE_PERMISSION_ERRORS: BOOL_STRING_SCHEMA,
 
+  // Notifications
+  HUFI_TG_BOT_URL: Joi.string().uri({ scheme: ['http', 'https'] }),
+
   // Campaigns
   FEATURE_LIMIT_HOLDING_JOIN: BOOL_STRING_SCHEMA,
   STORE_RESULTS_TIMEOUT: Joi.number().integer().min(30),

@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import type { PartialDeep } from 'type-fest';
 
-import type { DeepPartial } from '@/common/types';
 import * as web3Utils from '@/common/utils/web3';
 
 import { DEFAULT_USER_PREFERENCES } from '../constants';
@@ -26,7 +26,7 @@ export function generateUserEntity(
 }
 
 export function generateUserPreferences(
-  overrides?: DeepPartial<UserPreferencesEntity>,
+  overrides?: PartialDeep<UserPreferencesEntity>,
 ): UserPreferencesEntity {
   const preferences: UserPreferencesEntity = {
     userId: faker.string.uuid(),

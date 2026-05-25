@@ -12,18 +12,9 @@ import type { RequestWithUser } from '@/common/types';
 import { DEFAULT_USER_PREFERENCES } from './constants';
 import { PreferencesDto, UpdatePreferencesDto, UserMeDto } from './user-me.dto';
 import { UserMeControllerErrorsFilter } from './user-me.error-filter';
-import type { UserPreferencesEntity } from './user-preferences.entity';
 import { UserPreferencesService } from './user-preferences.service';
 import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';
-
-function pickPreferencesDto(
-  preferences: UserPreferencesEntity,
-): PreferencesDto {
-  return {
-    campaignsAutojoin: preferences.campaignsAutojoin,
-  };
-}
 
 @ApiTags('Current User')
 @ApiBearerAuth()
@@ -57,9 +48,18 @@ export class UserMeController {
     return {
       id: userId,
       evmAddress: user.evmAddress,
-      preferences: user.preferences
-        ? pickPreferencesDto(user.preferences)
-        : DEFAULT_USER_PREFERENCES,
+      preferences: {
+        campaignsAutojoin: Object.assign(
+          {},
+          DEFAULT_USER_PREFERENCES.campaignsAutojoin,
+          user.preferences?.campaignsAutojoin,
+        ),
+        notifications: Object.assign(
+          {},
+          DEFAULT_USER_PREFERENCES.notifications,
+          user.preferences?.notifications,
+        ),
+      },
     };
   }
 
@@ -72,15 +72,20 @@ export class UserMeController {
     type: PreferencesDto,
   })
   @Patch('/preferences')
-  async savePreferences(
+  async updatePreferences(
     @Req() request: RequestWithUser,
     @Body() data: UpdatePreferencesDto,
   ): Promise<PreferencesDto> {
     const userId = request.user.id;
 
-    const updatedPreferences =
-      await this.userPreferencesService.savePreferences(userId, data);
+    const updatedPreferences = await this.userPreferencesService.update(
+      userId,
+      data,
+    );
 
-    return pickPreferencesDto(updatedPreferences);
+    return {
+      campaignsAutojoin: updatedPreferences.campaignsAutojoin,
+      notifications: updatedPreferences.notifications,
+    };
   }
 }

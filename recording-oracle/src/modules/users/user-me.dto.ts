@@ -9,6 +9,8 @@ import {
   IsIn,
   IsString,
   Matches,
+  MinLength,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
@@ -51,6 +53,18 @@ export class CampaignsAutojoinPreferencesDto {
   tokens: string[];
 }
 
+export class NotificationsPreferencesDto {
+  @ApiProperty({ name: 'telegram_user_id' })
+  @ValidateIf((_object, value) => value !== null)
+  @IsString()
+  @MinLength(1)
+  telegramUserId: string | null;
+
+  @ApiProperty({ name: 'campaigns_autojoin' })
+  @IsBoolean()
+  campaignsAutojoin: boolean;
+}
+
 export class PreferencesDto {
   @ApiProperty({
     name: 'campaigns_autojoin',
@@ -58,6 +72,11 @@ export class PreferencesDto {
   @ValidateNested()
   @Type(() => CampaignsAutojoinPreferencesDto)
   campaignsAutojoin: CampaignsAutojoinPreferencesDto;
+
+  @ApiProperty()
+  @ValidateNested()
+  @Type(() => NotificationsPreferencesDto)
+  notifications: NotificationsPreferencesDto;
 }
 
 export class UpdatePreferencesDto extends PartialType(PreferencesDto) {}
