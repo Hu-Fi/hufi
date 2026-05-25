@@ -61,9 +61,7 @@ import {
   CampaignCancelledError,
   CampaignJoinLimitedError,
   CampaignNotFoundError,
-  CampaignNotStartedError,
   InvalidCampaign,
-  UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import {
@@ -1122,90 +1120,6 @@ export class CampaignsService implements OnModuleDestroy {
 
     return {
       status: CampaignJoinStatus.USER_CAN_JOIN,
-    };
-  }
-
-  /**
-   * TODO: deprecate this functionality once we use leaderboards data on UI
-   */
-  async getUserProgress(
-    userId: string,
-    evmAddress: string,
-    chainId: number,
-    campaignAddress: string,
-  ): Promise<{
-    from: string;
-    to: string;
-    myScore: number;
-    myMeta: Record<string, unknown>;
-    totalMeta: Record<string, unknown>;
-  } | null> {
-    const campaign = await this.findOneByChainIdAndAddress(
-      chainId,
-      campaignAddress,
-    );
-    if (!campaign) {
-      throw new CampaignNotFoundError(chainId, campaignAddress);
-    }
-
-    const now = new Date();
-    if (now < campaign.startDate) {
-      throw new CampaignNotStartedError(chainId, campaignAddress);
-    }
-
-    if (
-      [
-        CampaignStatus.PENDING_CANCELLATION,
-        CampaignStatus.CANCELLED,
-        CampaignStatus.COMPLETED,
-      ].includes(campaign.status) ||
-      now > campaign.endDate
-    ) {
-      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
-    }
-
-    const userJoinedAt =
-      await this.participationsService.checkUserJoinedCampaign(
-        userId,
-        campaign.id,
-      );
-    if (!userJoinedAt) {
-      throw new UserIsNotParticipatingError();
-    }
-
-    const activeTimeframe = await this.getActiveTimeframe(campaign);
-    if (!activeTimeframe) {
-      throw new InvalidCampaign(
-        campaign.chainId,
-        campaign.address,
-        "Couldn't get active timeframe",
-      );
-    }
-
-    const progress = await this.campaignsCache.getInterimProgress(campaign.id);
-    if (progress?.from !== activeTimeframe.start.toISOString()) {
-      /**
-       * Either no progress cached yet or cached for previous timeframe
-       */
-      return null;
-    }
-
-    const {
-      score: myScore,
-      address: _address,
-      ...myMeta
-    } = progress.participants_outcomes.find(
-      (p) => p.address === evmAddress,
-    ) || {
-      score: 0,
-    };
-
-    return {
-      from: progress.from,
-      to: progress.to,
-      myScore,
-      myMeta,
-      totalMeta: progress.meta,
     };
   }
 

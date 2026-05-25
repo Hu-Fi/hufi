@@ -9,7 +9,6 @@ import axios, { AxiosError } from 'axios';
 import type {
   EvmAddress,
   ExchangeApiKeyData,
-  UserProgress,
   CheckCampaignJoinStatusResponse,
   JoinedCampaignsResponse,
   LeaderboardResponseDto,
@@ -202,23 +201,6 @@ export class RecordingApiClient extends HttpClient {
       }
     );
     return response;
-  }
-
-  async getUserProgress(
-    chain_id: ChainId,
-    campaign_address: EvmAddress
-  ): Promise<UserProgress | null> {
-    const response = await this.get<UserProgress | undefined>(
-      `/campaigns/${chain_id}-${campaign_address}/my-progress`,
-      {
-        params: {
-          chain_id,
-          campaign_address,
-        },
-      }
-    );
-
-    return response || null;
   }
 
   async getLeaderboard(

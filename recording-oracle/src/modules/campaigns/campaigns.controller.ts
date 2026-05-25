@@ -4,13 +4,10 @@ import {
   Get,
   Header,
   HttpCode,
-  HttpException,
-  HttpStatus,
   Param,
   Post,
   Query,
   Req,
-  Res,
   UseFilters,
 } from '@nestjs/common';
 import {
@@ -20,7 +17,6 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import type { Response } from 'express';
 
 import { Public } from '@/common/decorators';
 import type { RequestWithUser } from '@/common/types';
@@ -29,7 +25,6 @@ import {
   CampaignParamsDto,
   CheckJoinStatusDto,
   CheckJoinStatusResponseDto,
-  GetUserProgressResponseDto,
   JoinCampaignDto,
   JoinCampaignSuccessDto,
   ListJoinedCampaignsQueryDto,
@@ -37,7 +32,6 @@ import {
   CampaignLeaderboardResponseDto,
 } from './campaigns.dto';
 import { CampaignsControllerErrorsFilter } from './campaigns.error-filter';
-import { CampaignNotFoundError } from './campaigns.errors';
 import { CampaignsService } from './campaigns.service';
 import { ParticipationsRepository } from './participations';
 import { ReturnedCampaignStatus, CampaignStatus } from './types';
@@ -188,59 +182,6 @@ export class CampaignsController {
     );
 
     return joinStatus;
-  }
-
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Check user progress for the campaign',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Details about user progress',
-    type: GetUserProgressResponseDto,
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'No progress available yet',
-  })
-  @Header('Cache-Control', 'private, max-age=30')
-  @Get(`${SPECIFIC_CAMPAIGN_ROUTE}/my-progress`)
-  async getUserProgress(
-    @Req() request: RequestWithUser,
-    @Param() { chainId, campaignAddress }: CampaignParamsDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<GetUserProgressResponseDto | void> {
-    try {
-      const userProgress = await this.campaignsService.getUserProgress(
-        request.user.id,
-        request.user.evmAddress,
-        chainId,
-        campaignAddress,
-      );
-
-      if (!userProgress) {
-        /**
-         * Only set response status and let Nest.js handle the rest
-         * (`passthrough` is necessary to call response interceptors)
-         */
-        return void response.status(204);
-      }
-
-      return userProgress;
-    } catch (error) {
-      if (error instanceof CampaignNotFoundError) {
-        throw new HttpException(
-          {
-            message: 'Campaign not found',
-            chainId,
-            campaignAddress,
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      throw error;
-    }
   }
 
   @ApiOperation({
