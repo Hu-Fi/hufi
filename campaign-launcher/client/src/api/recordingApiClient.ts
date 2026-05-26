@@ -12,6 +12,9 @@ import type {
   CheckCampaignJoinStatusResponse,
   JoinedCampaignsResponse,
   LeaderboardResponseDto,
+  UserInfo,
+  Preferences,
+  PatchPreferencesDto,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -209,6 +212,21 @@ export class RecordingApiClient extends HttpClient {
   ): Promise<LeaderboardResponseDto> {
     const response = await this.get<LeaderboardResponseDto>(
       `/campaigns/${chain_id}-${campaign_address}/leaderboard`
+    );
+    return response;
+  }
+
+  async getUserInfo(): Promise<UserInfo> {
+    const response = await this.get<UserInfo>('/me');
+    return response;
+  }
+
+  async patchUserPreferences(
+    preferences: PatchPreferencesDto
+  ): Promise<Preferences> {
+    const response = await this.patch<Preferences>(
+      '/me/preferences',
+      preferences
     );
     return response;
   }

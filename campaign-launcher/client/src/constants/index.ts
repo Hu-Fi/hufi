@@ -8,6 +8,7 @@ export const ROUTES = {
   CAMPAIGN_DETAILS: '/campaign-details/:address',
   MANAGE_API_KEYS: '/manage-api-keys',
   LAUNCH_CAMPAIGN: '/launch-campaign',
+  PREFERENCES: '/preferences',
 };
 
 export const oracles = {

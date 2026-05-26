@@ -2,6 +2,7 @@ import { type FC, useState } from 'react';
 
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
   Button,
   List,
@@ -61,6 +62,10 @@ const Account: FC = () => {
 
   const handleGoToManageApiKeys = () => {
     navigate('/manage-api-keys');
+  };
+
+  const handleGoToPreferences = () => {
+    navigate('/preferences');
   };
 
   const handleSignIn = async () => {
@@ -193,6 +198,12 @@ const Account: FC = () => {
             <ListItemButton sx={buttonSx} onClick={handleGoToManageApiKeys}>
               <ApiKeyIcon />
               Manage API Keys
+            </ListItemButton>
+          )}
+          {isAuthenticated && (
+            <ListItemButton sx={buttonSx} onClick={handleGoToPreferences}>
+              <SettingsIcon />
+              Preferences
             </ListItemButton>
           )}
           {isAuthenticated && (
