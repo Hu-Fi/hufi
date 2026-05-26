@@ -268,29 +268,6 @@ export class CampaignParamsDto {
   campaignAddress: string;
 }
 
-export class GetUserProgressResponseDto {
-  @ApiProperty()
-  from: string;
-
-  @ApiProperty()
-  to: string;
-
-  @ApiProperty({
-    name: 'my_score',
-  })
-  myScore: number;
-
-  @ApiProperty({
-    name: 'my_meta',
-  })
-  myMeta: object;
-
-  @ApiProperty({
-    name: 'total_meta',
-  })
-  totalMeta: object;
-}
-
 export class LeaderboardEntry {
   @ApiProperty()
   address: string;

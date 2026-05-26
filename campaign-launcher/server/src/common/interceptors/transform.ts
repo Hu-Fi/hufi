@@ -42,7 +42,7 @@ export class TransformInterceptor implements NestInterceptor {
   }
 
   private transformRequestData(input: unknown): unknown {
-    return CaseConverter.transformKeysFromSnakeToCamel(input);
+    return CaseConverter.transformKeysToCamelCase(input);
   }
 
   private transformResponseData(input: unknown): unknown {
@@ -50,6 +50,6 @@ export class TransformInterceptor implements NestInterceptor {
       return input;
     }
 
-    return CaseConverter.transformKeysFromCamelToSnake(input);
+    return CaseConverter.transformKeysToSnakeCase(input);
   }
 }

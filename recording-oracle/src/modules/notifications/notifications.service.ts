@@ -3,6 +3,10 @@ import axios, { AxiosError } from 'axios';
 import _ from 'lodash';
 import type { Paths } from 'type-fest';
 
+import {
+  RECORDING_ORACLE_SIGNATURE_HEADER,
+  RECORDING_ORACLE_ADDRESS_HEADER,
+} from '@/common/constants';
 import Environment from '@/common/utils/environment';
 import * as httpUtils from '@/common/utils/http';
 import * as web3Utils from '@/common/utils/web3';
@@ -13,7 +17,6 @@ import {
   type NotificationsPreferences,
 } from '@/modules/users';
 
-import { HUFI_TG_BOT_AUTH_HEADER } from './constants';
 import {
   NotificationType,
   type CampaignAutojoinPayload,
@@ -108,7 +111,9 @@ export class NotificationsService {
 
       await axios.post(hufiTgBotUrl, tgWebhookPayload, {
         headers: {
-          [HUFI_TG_BOT_AUTH_HEADER]: signature,
+          [RECORDING_ORACLE_SIGNATURE_HEADER]: signature,
+          [RECORDING_ORACLE_ADDRESS_HEADER]:
+            this.web3ConfigService.operatorAddress,
         },
       });
     } catch (error) {

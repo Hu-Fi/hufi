@@ -180,9 +180,6 @@ export class KrakenClient implements ExchangeApiClient {
      * We aren't going to make same-ms requests, so it should be fine.
      * If we are - then we can request to increase "nonce window" in
      * API key settings.
-     *
-     * TODO: rethink "out of order" requests, probably by controlling
-     * the flow to always have one in-flight request.
      */
     const nonce: string = Date.now().toString();
     const payload: Record<string, unknown> = Object.assign(

@@ -28,15 +28,6 @@ export class CampaignAlreadyFinishedError extends BaseError {
   }
 }
 
-export class CampaignNotStartedError extends BaseError {
-  constructor(
-    readonly chainId: number,
-    readonly address: string,
-  ) {
-    super('Campaign not started yet');
-  }
-}
-
 export class CampaignCancelledError extends BaseError {
   constructor(
     readonly chainId: number,
@@ -53,11 +44,5 @@ export class CampaignJoinLimitedError extends BaseError {
     readonly detail: string,
   ) {
     super('Joining the campaign is limited');
-  }
-}
-
-export class UserIsNotParticipatingError extends BaseError {
-  constructor() {
-    super('User is not participating in campaign');
   }
 }
