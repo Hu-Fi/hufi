@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState, type FC } from 'react';
 import { Box, Button } from '@mui/material';
 
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
-import CampaignsErrorState from '@/components/CampaignsErrorState';
 import CampaignsFeed from '@/components/CampaignsFeed';
+import PageErrorState from '@/components/PageErrorState';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { type Campaign, type CampaignsQueryParams } from '@/types';
 import { appendUniqueCampaigns } from '@/utils';
@@ -50,7 +50,12 @@ const AllCampaigns: FC<Props> = ({
 
   return (
     <>
-      {isError && <CampaignsErrorState onRefetch={handleRefetch} />}
+      {isError && (
+        <PageErrorState
+          description="We couldn't load campaigns right now. This is on our end, please try again in a moment."
+          onRefetch={handleRefetch}
+        />
+      )}
       {showEmptyState && (
         <CampaignsEmptyState view="all" hasActiveFilters={hasActiveFilters} />
       )}

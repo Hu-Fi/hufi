@@ -1,37 +1,57 @@
-import { useEffect, useState, type FC } from 'react';
+import { useEffect, useMemo, useState, type FC } from 'react';
 
 import { Stack, Typography } from '@mui/material';
 import isEqual from 'lodash/isEqual';
 
 import AutojoinPreferences from '@/components/AutojoinPreferences';
+import PageErrorState from '@/components/PageErrorState';
 import PageWrapper from '@/components/PageWrapper';
 import UnsavedPreferencesBar from '@/components/UnsavedPreferencesBar';
 import {
   useGetUserInfo,
   usePatchUserPreferences,
 } from '@/hooks/recording-oracle/user';
+import { useNotification } from '@/hooks/useNotification';
 import { type PatchPreferencesDto, type Preferences } from '@/types';
 
 const PreferencesPage: FC = () => {
   const [draftPreferences, setDraftPreferences] = useState<Preferences | null>(
     null
   );
+  const [isPreferencesLoading, setIsPreferencesLoading] = useState(true);
   const [dirtySections, setDirtySections] = useState<Set<keyof Preferences>>(
     new Set()
   );
 
-  const { data: userInfo, isLoading: isLoadingUserInfo } = useGetUserInfo();
-  const { mutate: savePreferences, isPending: isSavingPreferences } =
+  const {
+    data: userInfo,
+    isLoading: isLoadingUserInfo,
+    isError,
+    refetch,
+  } = useGetUserInfo();
+  const { mutateAsync: savePreferences, isPending: isSavingPreferences } =
     usePatchUserPreferences();
+  const { showError } = useNotification();
 
   const hasUnsavedChanges = dirtySections.size > 0;
 
   useEffect(() => {
     if (!isLoadingUserInfo && userInfo) {
       setDraftPreferences(userInfo.preferences);
+      setIsPreferencesLoading(false);
       setDirtySections(new Set());
     }
   }, [isLoadingUserInfo, userInfo]);
+
+  const isAbleToSaveAutojoinPreferences = useMemo(() => {
+    const autojoin = draftPreferences?.campaigns_autojoin;
+
+    return autojoin?.enabled
+      ? [autojoin.campaign_types, autojoin.exchanges, autojoin.tokens].every(
+          (items) => items.length > 0
+        )
+      : true;
+  }, [draftPreferences]);
 
   const handleChangePreferenceSection = <TSection extends keyof Preferences>(
     section: TSection,
@@ -74,8 +94,12 @@ const PreferencesPage: FC = () => {
     setDirtySections(new Set());
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!draftPreferences || dirtySections.size === 0) {
+      return;
+    }
+
+    if (!isAbleToSaveAutojoinPreferences) {
       return;
     }
 
@@ -85,7 +109,12 @@ const PreferencesPage: FC = () => {
       payload[section] = draftPreferences[section];
     });
 
-    savePreferences(payload);
+    try {
+      await savePreferences(payload);
+    } catch (error) {
+      console.error(error);
+      showError('Failed to save preferences. Please try again.');
+    }
   };
 
   return (
@@ -107,21 +136,30 @@ const PreferencesPage: FC = () => {
         to your connected wallet.
       </Typography>
       <Stack
-        sx={{ width: '100%', mt: 4, pb: { xs: '120px', md: '84px' }, gap: 4 }}
+        sx={{ width: '100%', mt: 4, pb: { xs: '120px', md: '85px' }, gap: 4 }}
       >
-        <AutojoinPreferences
-          preferences={draftPreferences?.campaigns_autojoin ?? null}
-          onSectionChange={handleChangePreferenceSection}
-          isUserInfoLoading={isLoadingUserInfo}
-        />
+        {isError && (
+          <PageErrorState
+            description="We couldn't load preferences right now. This is on our end, please try again in a moment."
+            onRefetch={refetch}
+          />
+        )}
+        {!isError && (
+          <AutojoinPreferences
+            preferences={draftPreferences?.campaigns_autojoin ?? null}
+            onSectionChange={handleChangePreferenceSection}
+            isPreferencesLoading={isPreferencesLoading}
+            isSavingPreferences={isSavingPreferences}
+          />
+        )}
       </Stack>
-      {hasUnsavedChanges && (
-        <UnsavedPreferencesBar
-          onDiscardChanges={handleDiscardChanges}
-          onSaveChanges={handleSaveChanges}
-          isSavingPreferences={isSavingPreferences}
-        />
-      )}
+      <UnsavedPreferencesBar
+        onDiscardChanges={handleDiscardChanges}
+        onSaveChanges={handleSaveChanges}
+        isSavingPreferences={isSavingPreferences}
+        isSaveEnabled={isAbleToSaveAutojoinPreferences}
+        isVisible={hasUnsavedChanges}
+      />
     </PageWrapper>
   );
 };

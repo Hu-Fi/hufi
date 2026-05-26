@@ -283,6 +283,10 @@ export type Preferences = {
     campaign_types: string[];
     tokens: string[];
   };
+  notifications: {
+    telegram_user_id: string | null;
+    campaigns_autojoin: boolean;
+  };
 };
 
 export type PatchPreferencesDto = {
@@ -291,6 +295,10 @@ export type PatchPreferencesDto = {
     exchanges?: string[];
     campaign_types?: string[];
     tokens?: string[];
+  };
+  notifications?: {
+    telegram_user_id?: string | null;
+    campaigns_autojoin?: boolean;
   };
 };
 

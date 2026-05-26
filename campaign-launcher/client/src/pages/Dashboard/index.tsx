@@ -5,13 +5,13 @@ import { Link as RouterLink } from 'react-router';
 
 import AboutHuFi from '@/components/AboutHuFi';
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
-import CampaignsErrorState from '@/components/CampaignsErrorState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
 import DashboardWidgets from '@/components/DashboardWidgets';
 import FAQ from '@/components/FAQ';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import PageErrorState from '@/components/PageErrorState';
 import PageWrapper from '@/components/PageWrapper';
 import { PERSISTED_CAMPAIGNS_VIEW_KEY, ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
@@ -116,7 +116,12 @@ const Dashboard: FC = () => {
           />
         )}
       </Box>
-      {isCampaignsError && <CampaignsErrorState onRefetch={handleRefetch} />}
+      {isCampaignsError && (
+        <PageErrorState
+          description="We couldn't load campaigns right now. This is on our end, please try again in a moment."
+          onRefetch={handleRefetch}
+        />
+      )}
       {showEmptyState && (
         <CampaignsEmptyState view="all" hasActiveFilters={false} />
       )}

@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   Divider,
   Stack,
   Typography,
@@ -46,13 +47,15 @@ type Props = {
     section: 'campaigns_autojoin',
     value: Preferences['campaigns_autojoin']
   ) => void;
-  isUserInfoLoading: boolean;
+  isPreferencesLoading: boolean;
+  isSavingPreferences: boolean;
 };
 
 const AutojoinPreferences: FC<Props> = ({
   preferences,
   onSectionChange,
-  //isUserInfoLoading,
+  isPreferencesLoading,
+  isSavingPreferences,
 }) => {
   const enabled = preferences?.enabled ?? false;
   const selectedCampaignTypes = preferences?.campaign_types ?? [];
@@ -177,11 +180,20 @@ const AutojoinPreferences: FC<Props> = ({
             <Typography
               sx={{ color: '#a29dca', fontSize: 16, fontWeight: 500 }}
             >
-              Automatically join campaigns that match your preferences below
+              Automatically join campaigns that match your preferences below.
+              You must select at least one option in each section.
             </Typography>
           </Box>
         </Box>
-        <SwitchStyled checked={enabled} onChange={handleSwitchChange} />
+        {isPreferencesLoading ? (
+          <CircularProgress size={28} sx={{ color: 'white' }} />
+        ) : (
+          <SwitchStyled
+            checked={enabled}
+            disabled={isSavingPreferences}
+            onChange={handleSwitchChange}
+          />
+        )}
       </Box>
       <Stack sx={{ display: enabled ? 'flex' : 'none', bgcolor: '#251d47' }}>
         <Row>
@@ -234,6 +246,7 @@ const AutojoinPreferences: FC<Props> = ({
                   label={label}
                   labelPlacement="start"
                   borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
                       checked={isChecked}
@@ -278,6 +291,7 @@ const AutojoinPreferences: FC<Props> = ({
               size="large"
               variant="outlined"
               disableRipple
+              disabled={isSavingPreferences}
               sx={{
                 mt: 2,
                 minWidth: 200,
@@ -315,6 +329,7 @@ const AutojoinPreferences: FC<Props> = ({
                   label={display_name}
                   labelPlacement="start"
                   borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
                       checked={isChecked}
@@ -359,6 +374,7 @@ const AutojoinPreferences: FC<Props> = ({
               size="large"
               variant="outlined"
               disableRipple
+              disabled={isSavingPreferences}
               sx={{
                 mt: 2,
                 minWidth: 200,
@@ -406,6 +422,7 @@ const AutojoinPreferences: FC<Props> = ({
                   }
                   labelPlacement="start"
                   borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
                       checked={isChecked}

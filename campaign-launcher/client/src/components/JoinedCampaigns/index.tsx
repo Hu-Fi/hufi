@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState, type FC } from 'react';
 import { Box, Button } from '@mui/material';
 
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
-import CampaignsErrorState from '@/components/CampaignsErrorState';
 import CampaignsFeed from '@/components/CampaignsFeed';
+import PageErrorState from '@/components/PageErrorState';
 import { useJoinedCampaigns } from '@/hooks/recording-oracle';
 import type { CampaignsQueryParams, JoinedCampaign } from '@/types';
 import { appendUniqueCampaigns } from '@/utils';
@@ -53,7 +53,12 @@ const JoinedCampaigns: FC<Props> = ({
 
   return (
     <>
-      {isError && <CampaignsErrorState onRefetch={handleRefetch} />}
+      {isError && (
+        <PageErrorState
+          description="We couldn't load joined campaigns right now. This is on our end, please try again in a moment."
+          onRefetch={handleRefetch}
+        />
+      )}
       {showEmptyState && (
         <CampaignsEmptyState
           view="joined"
