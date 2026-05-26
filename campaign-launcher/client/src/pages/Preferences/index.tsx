@@ -40,6 +40,13 @@ const PreferencesPage: FC = () => {
       setDraftPreferences(userInfo.preferences);
       setIsPreferencesLoading(false);
       setDirtySections(new Set());
+
+      const { enabled } = userInfo.preferences.campaigns_autojoin;
+      const showAutojoinWidget =
+        localStorage.getItem('show_autojoin_widget') !== 'false';
+      if (enabled && showAutojoinWidget) {
+        localStorage.setItem('show_autojoin_widget', 'false');
+      }
     }
   }, [isLoadingUserInfo, userInfo]);
 

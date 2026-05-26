@@ -4,6 +4,7 @@ import { Box, Button, Grid, Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router';
 
 import AboutHuFi from '@/components/AboutHuFi';
+import AutojoinInfoWidget from '@/components/AutojoinInfoWidget';
 import CampaignsEmptyState from '@/components/CampaignsEmptyState';
 import CampaignsFeed from '@/components/CampaignsFeed';
 import CampaignsViewToggle from '@/components/CampaignsViewToggle';
@@ -99,6 +100,7 @@ const Dashboard: FC = () => {
   return (
     <PageWrapper>
       <DashboardWidgets />
+      <AutojoinInfoWidget />
       <Box
         sx={{
           display: 'flex',
