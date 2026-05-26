@@ -4,6 +4,10 @@ import { Test } from '@nestjs/testing';
 import axios, { AxiosError } from 'axios';
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
+import {
+  RECORDING_ORACLE_ADDRESS_HEADER,
+  RECORDING_ORACLE_SIGNATURE_HEADER,
+} from '@/common/constants';
 import * as httpUtils from '@/common/utils/http';
 import * as web3Utils from '@/common/utils/web3';
 import { NotificationsConfigService, Web3ConfigService } from '@/config';
@@ -15,7 +19,6 @@ import {
 import { UserPreferencesRepository } from '@/modules/users/user-preferences.repository';
 import { mockWeb3ConfigService } from '@/modules/web3/fixtures';
 
-import { HUFI_TG_BOT_AUTH_HEADER } from './constants';
 import { mockNotificationsConfigService } from './fixtures';
 import { NotificationsService } from './notifications.service';
 import { type CampaignAutojoinPayload, NotificationType } from './types';
@@ -206,7 +209,9 @@ describe('NotificationsService', () => {
         expectedWebhookPayload,
         {
           headers: {
-            [HUFI_TG_BOT_AUTH_HEADER]: expectedSignature,
+            [RECORDING_ORACLE_SIGNATURE_HEADER]: expectedSignature,
+            [RECORDING_ORACLE_ADDRESS_HEADER]:
+              mockWeb3ConfigService.operatorAddress,
           },
         },
       );
