@@ -69,10 +69,6 @@ const Account: FC = () => {
     navigate(ROUTES.PREFERENCES);
   };
 
-  const handleGoToPreferences = () => {
-    navigate('/preferences');
-  };
-
   const handleSignIn = async () => {
     try {
       await signIn();
