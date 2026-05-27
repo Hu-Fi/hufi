@@ -7,6 +7,8 @@
 
 declare module 'ccxt' {
   export interface Exchange {
+    setSandboxMode(enabled: boolean): void;
+    isSandboxModeEnabled: boolean;
     loadMarkets(reload = false): Promise<Record<string, unknown>>;
     markets: Record<string, unknown>;
     /**
