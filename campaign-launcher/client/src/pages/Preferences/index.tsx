@@ -4,6 +4,7 @@ import { Stack, Typography } from '@mui/material';
 import isEqual from 'lodash/isEqual';
 
 import AutojoinPreferences from '@/components/AutojoinPreferences';
+import NotificationPreferences from '@/components/NotificationPreferences';
 import PageErrorState from '@/components/PageErrorState';
 import PageWrapper from '@/components/PageWrapper';
 import UnsavedPreferencesBar from '@/components/UnsavedPreferencesBar';
@@ -150,12 +151,18 @@ const PreferencesPage: FC = () => {
           />
         )}
         {!isError && (
-          <AutojoinPreferences
-            preferences={draftPreferences?.campaigns_autojoin ?? null}
-            onSectionChange={handleChangePreferenceSection}
-            isPreferencesLoading={isPreferencesLoading}
-            isSavingPreferences={isSavingPreferences}
-          />
+          <>
+            <AutojoinPreferences
+              preferences={draftPreferences?.campaigns_autojoin ?? null}
+              onSectionChange={handleChangePreferenceSection}
+              isPreferencesLoading={isPreferencesLoading}
+              isSavingPreferences={isSavingPreferences}
+            />
+            <NotificationPreferences
+              preferences={draftPreferences?.notifications ?? null}
+              isPreferencesLoading={isPreferencesLoading}
+            />
+          </>
         )}
       </Stack>
       <UnsavedPreferencesBar
