@@ -7,7 +7,7 @@ import LinkTelegramAccountButton from '@/components/LinkTelegramAccountButton';
 import { loadTelegramClient } from '@/lib/loadTelegramClient';
 import { type Preferences } from '@/types';
 
-const clientId = '8802233155';
+const clientId = import.meta.env.VITE_HUFI_TG_BOT_CLIENT_ID;
 
 type Props = {
   preferences: Preferences['notifications'] | null;

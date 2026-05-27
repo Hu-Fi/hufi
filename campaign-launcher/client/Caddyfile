@@ -1,0 +1,8 @@
+http://ui.hufi.local {
+	redir https://ui.hufi.local{uri} permanent
+}
+
+https://ui.hufi.local {
+	tls ./.certs/dev-local.pem ./.certs/dev-local-key.pem
+	reverse_proxy localhost:3001
+}

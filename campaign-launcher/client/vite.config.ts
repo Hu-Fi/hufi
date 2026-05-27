@@ -1,6 +1,5 @@
-import { resolve } from 'path';
+import path from 'path';
 
-import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
@@ -10,6 +9,7 @@ export default defineConfig(() => {
   return {
     server: {
       port: 3001,
+      allowedHosts: ['ui.hufi.local'],
     },
     plugins: [
       react(),
@@ -25,7 +25,6 @@ export default defineConfig(() => {
         },
         protocolImports: true,
       }),
-      basicSsl(),
     ],
     build: {
       outDir: 'dist',
@@ -42,7 +41,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src'),
+        '@': path.resolve(__dirname, 'src'),
         buffer: 'buffer/',
       },
     },
