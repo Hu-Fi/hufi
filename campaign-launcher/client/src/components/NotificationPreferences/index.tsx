@@ -52,6 +52,12 @@ const NotificationPreferences: FC<Props> = () => {
           console.error(result.error);
           setClientStatus('error');
           return;
+        } else if ('user' in result) {
+          const greet =
+            result.user.name ||
+            result.user.preferred_username ||
+            result.user.id;
+          alert(`logged in as '${greet}'`);
         }
 
         setClientStatus('ready');

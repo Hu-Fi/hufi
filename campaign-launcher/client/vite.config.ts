@@ -1,15 +1,19 @@
 import path from 'path';
 
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+
+const useSsl = process.env.VITE_USE_SSL === 'true';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
   return {
     server: {
       port: 3001,
-      allowedHosts: ['ui.hufi.local'],
+      // allow all in case reverse proxy or tunneling is used
+      allowedHosts: true,
     },
     plugins: [
       react(),
@@ -25,6 +29,7 @@ export default defineConfig(() => {
         },
         protocolImports: true,
       }),
+      useSsl ? basicSsl() : undefined,
     ],
     build: {
       outDir: 'dist',
