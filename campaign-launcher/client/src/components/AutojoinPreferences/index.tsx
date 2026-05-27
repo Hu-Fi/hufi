@@ -34,7 +34,7 @@ const CAMPAIGN_TYPES = [
   },
 ];
 
-const TOKENS_OPTIONS = TOKENS.filter(({ name }) =>
+const TOKEN_OPTIONS = TOKENS.filter(({ name }) =>
   ['hmt', 'xin', 'ccd'].includes(name)
 ).map((token) => ({
   ...token,
@@ -62,12 +62,13 @@ const AutojoinPreferences: FC<Props> = ({
   const selectedExchanges = preferences?.exchanges ?? [];
   const selectedTokens = preferences?.tokens ?? [];
 
-  const { exchanges: exchangesOptions } = useExchangesContext();
+  const { exchanges: exchangesOptions, isLoading: isExchangesLoading } =
+    useExchangesContext();
 
   const isAllExchangesSelected =
     !!exchangesOptions?.length &&
     exchangesOptions.length === selectedExchanges.length;
-  const isAllTokensSelected = TOKENS_OPTIONS.length === selectedTokens.length;
+  const isAllTokensSelected = TOKEN_OPTIONS.length === selectedTokens.length;
 
   const handleSwitchChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (!preferences) {
@@ -82,9 +83,9 @@ const AutojoinPreferences: FC<Props> = ({
   };
 
   const handleSelectAll = (section: 'exchanges' | 'tokens') => {
-    if (!preferences) return null;
+    if (!preferences || !exchangesOptions) return null;
 
-    const options = section === 'exchanges' ? exchangesOptions : TOKENS_OPTIONS;
+    const options = section === 'exchanges' ? exchangesOptions : TOKEN_OPTIONS;
     const isAlreadySelected = preferences?.[section].length === options?.length;
 
     if (isAlreadySelected) {
@@ -185,7 +186,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
           </Box>
         </Box>
-        {isPreferencesLoading ? (
+        {isPreferencesLoading || isExchangesLoading ? (
           <CircularProgress size={28} sx={{ color: 'white' }} />
         ) : (
           <SwitchStyled
@@ -403,7 +404,7 @@ const AutojoinPreferences: FC<Props> = ({
               gap: 3,
             }}
           >
-            {TOKENS_OPTIONS.map(({ name, label, icon }) => {
+            {TOKEN_OPTIONS.map(({ name, label, icon }) => {
               const isChecked =
                 isAllTokensSelected || selectedTokens.includes(name);
               return (

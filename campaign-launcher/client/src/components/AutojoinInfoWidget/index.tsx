@@ -107,7 +107,12 @@ const AutojoinInfoWidget: FC = () => {
         >
           Edit Preferences
         </Button>
-        <IconButton sx={{ p: 0 }} disableRipple onClick={handleCloseWidget}>
+        <IconButton
+          aria-label="Close widget"
+          sx={{ p: 0 }}
+          disableRipple
+          onClick={handleCloseWidget}
+        >
           <CloseIcon sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 24 }} />
         </IconButton>
       </Box>

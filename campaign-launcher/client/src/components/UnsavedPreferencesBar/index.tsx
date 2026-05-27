@@ -77,7 +77,7 @@ const UnsavedPreferencesBar: FC<Props> = ({
                 alignItems: 'center',
                 gap: 2,
                 width: { xs: '100%', md: 'auto' },
-                '& .MuiButton-root': { minWidth: { xs: 'none', md: 150 } },
+                '& .MuiButton-root': { minWidth: 150 },
               }}
             >
               <Button

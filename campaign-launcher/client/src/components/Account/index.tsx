@@ -17,6 +17,7 @@ import { useDisconnect } from 'wagmi';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
@@ -61,11 +62,11 @@ const Account: FC = () => {
   const handleClosePopover = () => setAnchorEl(null);
 
   const handleGoToManageApiKeys = () => {
-    navigate('/manage-api-keys');
+    navigate(ROUTES.MANAGE_API_KEYS);
   };
 
   const handleGoToPreferences = () => {
-    navigate('/preferences');
+    navigate(ROUTES.PREFERENCES);
   };
 
   const handleSignIn = async () => {
