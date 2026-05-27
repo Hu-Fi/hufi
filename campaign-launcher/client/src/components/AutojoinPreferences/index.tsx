@@ -113,12 +113,12 @@ const AutojoinPreferences: FC<Props> = ({
     if (isAlreadySelected) {
       onSectionChange('campaigns_autojoin', {
         ...preferences,
-        [section]: preferences?.[section].filter((v) => v !== value),
+        [section]: preferences?.[section].filter((v) => v !== value).sort(),
       });
     } else {
       onSectionChange('campaigns_autojoin', {
         ...preferences,
-        [section]: [...(preferences?.[section] ?? []), value],
+        [section]: [...(preferences?.[section] ?? []), value].sort(),
       });
     }
   };
