@@ -21,6 +21,7 @@ declare module 'ccxt' {
       www: string;
       logo: string;
     };
+    has: Record<string, boolean | undefined>;
     setMarketsFromExchange(sourceExchange: unknown): void;
   }
 

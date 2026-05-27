@@ -21,7 +21,6 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     const exchangeClass = ccxt[exchangeName];
     let perExchangeClientOptions: Record<string, unknown> = {};
 
-    let useSandbox = false;
     switch (exchangeName) {
       case ExchangeName.HYPERLIQUID: {
         perExchangeClientOptions = {
@@ -31,7 +30,6 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
             },
           },
         };
-        useSandbox = !Environment.isProduction();
         break;
       }
     }
@@ -39,7 +37,12 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     this.ccxtClient = new exchangeClass(
       _.merge({}, BASE_CCXT_CLIENT_OPTIONS, perExchangeClientOptions),
     );
-    this.ccxtClient.setSandboxMode(useSandbox);
+    if (
+      Environment.isProduction() === false &&
+      this.ccxtClient.has['sandbox']
+    ) {
+      this.ccxtClient.setSandboxMode(true);
+    }
   }
 
   protected get tradingPairs() {
