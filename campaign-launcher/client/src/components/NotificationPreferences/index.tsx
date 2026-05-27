@@ -47,7 +47,7 @@ const NotificationPreferences: FC<Props> = () => {
       { client_id: clientId, request_access: ['write'] },
       (result) => {
         // eslint-disable-next-line no-console
-        console.log('result', result);
+        console.log('result tg', result);
         if ('error' in result) {
           console.error(result.error);
           setClientStatus('error');
