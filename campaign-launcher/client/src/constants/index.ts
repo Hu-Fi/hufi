@@ -44,6 +44,8 @@ export const MOBILE_BOTTOM_NAV_HEIGHT = 90;
 
 export const MAX_NUMBER_INPUT_LENGTH = 16;
 
+export const WALLET_PAGE_SIZE = 20;
+
 export const PERSISTED_CAMPAIGNS_VIEW_KEY = 'campaigns-view';
 
-export const WALLET_PAGE_SIZE = 20;
+export const SHOW_AUTOJOIN_WIDGET_KEY = 'show_autojoin_widget';

@@ -7,6 +7,7 @@ import AutojoinPreferences from '@/components/AutojoinPreferences';
 import PageErrorState from '@/components/PageErrorState';
 import PageWrapper from '@/components/PageWrapper';
 import UnsavedPreferencesBar from '@/components/UnsavedPreferencesBar';
+import { SHOW_AUTOJOIN_WIDGET_KEY } from '@/constants';
 import {
   useGetUserInfo,
   usePatchUserPreferences,
@@ -43,9 +44,9 @@ const PreferencesPage: FC = () => {
 
       const { enabled } = userInfo.preferences.campaigns_autojoin;
       const showAutojoinWidget =
-        localStorage.getItem('show_autojoin_widget') !== 'false';
+        localStorage.getItem(SHOW_AUTOJOIN_WIDGET_KEY) !== 'false';
       if (enabled && showAutojoinWidget) {
-        localStorage.setItem('show_autojoin_widget', 'false');
+        localStorage.setItem(SHOW_AUTOJOIN_WIDGET_KEY, 'false');
       }
     }
   }, [isLoadingUserInfo, userInfo]);

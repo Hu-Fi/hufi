@@ -1,5 +1,11 @@
 import type { ChainId } from '@human-protocol/sdk';
 
+export type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T;
+
 export type EvmAddress = `0x${string}`;
 
 export enum ExchangeType {
@@ -289,18 +295,7 @@ export type Preferences = {
   };
 };
 
-export type PatchPreferencesDto = {
-  campaigns_autojoin?: {
-    enabled?: boolean;
-    exchanges?: string[];
-    campaign_types?: string[];
-    tokens?: string[];
-  };
-  notifications?: {
-    telegram_user_id?: string | null;
-    campaigns_autojoin?: boolean;
-  };
-};
+export type PatchPreferencesDto = DeepPartial<Preferences>;
 
 export type UserInfo = {
   id: string;

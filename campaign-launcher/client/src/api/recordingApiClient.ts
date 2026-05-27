@@ -13,7 +13,6 @@ import type {
   JoinedCampaignsResponse,
   LeaderboardResponseDto,
   UserInfo,
-  Preferences,
   PatchPreferencesDto,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
@@ -221,13 +220,7 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async patchUserPreferences(
-    preferences: PatchPreferencesDto
-  ): Promise<Preferences> {
-    const response = await this.patch<Preferences>(
-      '/me/preferences',
-      preferences
-    );
-    return response;
+  async patchUserPreferences(preferences: PatchPreferencesDto): Promise<void> {
+    await this.patch('/me/preferences', preferences);
   }
 }

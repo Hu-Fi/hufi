@@ -4,21 +4,22 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 
-import { ROUTES } from '@/constants';
+import { ROUTES, SHOW_AUTOJOIN_WIDGET_KEY } from '@/constants';
 import { AutojoinLabelIcon, LightningIcon } from '@/icons';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
 const AutojoinInfoWidget: FC = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useWeb3Auth();
   const [isWidgetOpen, setIsWidgetOpen] = useState(
-    localStorage.getItem('show_autojoin_widget') !== 'false'
+    localStorage.getItem(SHOW_AUTOJOIN_WIDGET_KEY) !== 'false'
   );
 
-  if (!isAuthenticated || !isWidgetOpen) return null;
+  const navigate = useNavigate();
+  const { isAuthenticated } = useWeb3Auth();
+
+  if (!isWidgetOpen || !isAuthenticated) return null;
 
   const handleCloseWidget = () => {
-    localStorage.setItem('show_autojoin_widget', 'false');
+    localStorage.setItem(SHOW_AUTOJOIN_WIDGET_KEY, 'false');
     setIsWidgetOpen(false);
   };
 
