@@ -8,7 +8,7 @@
   "scripts": {
     "clean": "rm -rf dist node_modules/.vite",
     "start": "vite",
-    "start:ssl": "VITE_USE_SSL=true vite --host --port 443",
+    "start:ssl": "VITE_USE_SSL=true vite",
     "build": "tsc && vite build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --fix",

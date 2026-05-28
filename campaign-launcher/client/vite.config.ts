@@ -6,12 +6,14 @@ import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const useSsl = process.env.VITE_USE_SSL === 'true';
+const LOCAL_SSL_DOMAIN = 'ui.hufi.local';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
   return {
     server: {
-      port: 3001,
+      host: useSsl ? true : undefined,
+      port: useSsl ? 443 : 3001,
       // allow all in case reverse proxy or tunneling is used
       allowedHosts: true,
     },
@@ -29,7 +31,12 @@ export default defineConfig(() => {
         },
         protocolImports: true,
       }),
-      useSsl ? basicSsl() : undefined,
+      useSsl
+        ? basicSsl({
+            name: LOCAL_SSL_DOMAIN,
+            domains: [LOCAL_SSL_DOMAIN, '127.0.0.1'],
+          })
+        : undefined,
     ],
     build: {
       outDir: 'dist',
