@@ -2,6 +2,29 @@ import { gql } from 'graphql-request';
 
 import { MAX_PAGE_SIZE } from './constants';
 
+export type LatestSwapData = {
+  id: string;
+  hash: string;
+  timestamp: string;
+  blockNumber: string;
+};
+
+export const GET_LATEST_SWAPS_QUERY = gql`
+  query getLatestSwaps($after: BigInt!) {
+    latestSwaps: swaps(
+      where: { timestamp_gt: $after }
+      first: 5
+      orderBy: blockNumber
+      orderDirection: desc
+    ) {
+      id
+      hash
+      timestamp
+      blockNumber
+    }
+  }
+`;
+
 const TOKEN_FRAGMENT = gql`
   fragment TokenFields on Token {
     id
@@ -22,6 +45,7 @@ export const GET_ACCOUNT_SWAPS_QUERY = gql`
     $since: BigInt!
     $until: BigInt!
     $skip: Int
+    $block: Block_height
   ) {
     swaps(
       where: {
@@ -32,6 +56,7 @@ export const GET_ACCOUNT_SWAPS_QUERY = gql`
         timestamp_lt: $until
       }
       first: ${MAX_PAGE_SIZE}
+      block: $block
       skip: $skip
       orderBy: nonce
       orderDirection: asc
@@ -63,25 +88,3 @@ export type SubgraphSwapData = {
   tokenIn: SubgraphToken;
   tokenOut: SubgraphToken;
 };
-
-export type SubgraphMeta = {
-  hasIndexingErrors: boolean;
-  block: {
-    hash: string;
-    number: number;
-    timestamp: number;
-  };
-};
-
-export const GET_SUBGRAPH_META_QUERY = gql`
-  query getSubgraphMeta {
-    _meta {
-      hasIndexingErrors
-      block {
-        hash
-        timestamp
-        number
-      }
-    }
-  }
-`;

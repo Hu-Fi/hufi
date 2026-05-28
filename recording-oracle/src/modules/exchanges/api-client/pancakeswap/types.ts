@@ -1,3 +1,8 @@
+export type LatestBlockData = {
+  number: number;
+  timestamp: number;
+};
+
 export type Swap = {
   id: string;
   hash: string;
