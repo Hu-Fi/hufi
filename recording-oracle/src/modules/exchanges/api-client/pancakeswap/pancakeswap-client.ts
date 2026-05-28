@@ -26,7 +26,9 @@ import {
 import {
   GET_ACCOUNT_SWAPS_QUERY,
   GET_LATEST_SWAPS_QUERY,
+  GET_SUBGRAPH_META_QUERY,
   type LatestSwapData,
+  type SubgraphMeta,
   type SubgraphSwapData,
 } from './queries';
 import type { LatestBlockData, Swap } from './types';
@@ -75,6 +77,37 @@ export class PancakeswapClient implements ExchangeApiClient {
       exchangeName: this.exchangeName,
       userId,
     });
+  }
+
+  async fetchSubgraphMeta(): Promise<SubgraphMeta> {
+    try {
+      const { _meta } = await this.graphClient.request<{
+        _meta: SubgraphMeta;
+      }>(GET_SUBGRAPH_META_QUERY);
+
+      return _meta;
+    } catch (error) {
+      const message = 'Failed to fetch subgraph meta';
+      this.logger.error(message, {
+        error: pancakeswapUtils.formatGraphqlRequestError(error as Error),
+      });
+      throw new PancakeswapClientError(message);
+    }
+  }
+
+  /**
+   * @param timestamp value in seconds
+   */
+  private async assertSubgraphNotStale(timestamp: number): Promise<void> {
+    const subgraphMeta = await this.fetchSubgraphMeta();
+
+    if (subgraphMeta.hasIndexingErrors) {
+      throw new PancakeswapClientError('Subgraph has indexing errors');
+    }
+
+    if (subgraphMeta.block.timestamp < timestamp) {
+      throw new PancakeswapClientError('Subgraph is stale');
+    }
   }
 
   async fetchActualBlockData(producedAfter?: number): Promise<LatestBlockData> {
@@ -176,11 +209,14 @@ export class PancakeswapClient implements ExchangeApiClient {
      * so we get the first block number produced after "until" and then use it as a reference
      * in subsequent time-travel queries, so TheGraph LB can exlude stale indexers.
      * Ref: https://thegraph.com/docs/en/subgraphs/querying/distributed-systems/#polling-for-updated-data
+     * Previous option: rely on subgraph meta's latest block timestamp, but use exact indexer URL,
+     * so we make sure requests land to the same node.
      *
      * Otherwise, we may end up in a situation when we query for swaps in a block
      * that is not yet indexed by the node and get empty results, while the same
      * query to another node would return the data.
      */
+    // await this.assertSubgraphNotStale(untilSeconds); // previous option
     const latestBlockData = await this.fetchActualBlockData(until);
 
     try {

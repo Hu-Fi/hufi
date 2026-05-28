@@ -88,3 +88,25 @@ export type SubgraphSwapData = {
   tokenIn: SubgraphToken;
   tokenOut: SubgraphToken;
 };
+
+export type SubgraphMeta = {
+  hasIndexingErrors: boolean;
+  block: {
+    hash: string;
+    number: number;
+    timestamp: number;
+  };
+};
+
+export const GET_SUBGRAPH_META_QUERY = gql`
+  query getSubgraphMeta {
+    _meta {
+      hasIndexingErrors
+      block {
+        hash
+        timestamp
+        number
+      }
+    }
+  }
+`;
