@@ -142,8 +142,7 @@ const AutojoinPreferences: FC<Props> = ({
           width: '100%',
           background: 'linear-gradient(90deg, #251D47 0%, #3C2F73 100%)',
           gap: 2,
-          pl: 6,
-          pr: 3,
+          px: 5,
           py: 4,
         }}
       >
@@ -152,14 +151,12 @@ const AutojoinPreferences: FC<Props> = ({
             sx={{
               display: 'flex',
               position: 'relative',
-              width: 63,
-              height: 63,
             }}
           >
             <AutojoinLabelIcon
               sx={{
-                width: 63,
-                height: 63,
+                width: 64,
+                height: 64,
                 color: enabled ? '#3d5b6e' : '#331d4a',
               }}
             />
