@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { setTimeout as delay } from 'timers/promises';
 
+import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { GraphQLClient } from 'graphql-request';
 import _ from 'lodash';
@@ -83,7 +84,7 @@ export class PancakeswapClient implements ExchangeApiClient {
       const { latestSwaps } = await this.graphClient.request<{
         latestSwaps: LatestSwapData[];
       }>(GET_LATEST_SWAPS_QUERY, {
-        after: Math.ceil(afterMs / 1000),
+        after: dayjs(afterMs).unix(),
       });
 
       if (latestSwaps.length === 0) {
@@ -167,8 +168,8 @@ export class PancakeswapClient implements ExchangeApiClient {
       await delay(keepUpMs);
     }
 
-    const sinceSeconds = Math.floor(since / 1000);
-    const untilSeconds = Math.ceil(until / 1000);
+    const sinceSeconds = dayjs(since).unix();
+    const untilSeconds = dayjs(until).unix() + 1;
 
     /**
      * We must ensure that queries land to graph nodes that have data up to "until" timestamp,
