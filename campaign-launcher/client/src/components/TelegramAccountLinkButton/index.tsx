@@ -24,6 +24,7 @@ const TelegramAccountLinkButton: FC<Props> = ({
       <Button
         variant="outlined"
         size="large"
+        disabled={isDisabled}
         sx={{ color: 'white', borderColor: '#433679', gap: 1 }}
         onClick={onUnlink}
       >
