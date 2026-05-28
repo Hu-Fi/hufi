@@ -160,7 +160,9 @@ const PreferencesPage: FC = () => {
             />
             <NotificationPreferences
               preferences={draftPreferences?.notifications ?? null}
+              onSectionChange={handleChangePreferenceSection}
               isPreferencesLoading={isPreferencesLoading}
+              isSavingPreferences={isSavingPreferences}
             />
           </>
         )}

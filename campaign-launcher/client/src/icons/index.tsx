@@ -644,3 +644,33 @@ export const LightningIcon: FC<SvgIconProps> = (props) => {
     </SvgIcon>
   );
 };
+
+export const LinkOffIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M9 17H7C5.67392 17 4.40215 16.4732 3.46447 15.5355C2.52678 14.5979 2 13.3261 2 12C2 10.6739 2.52678 9.40215 3.46447 8.46447C4.40215 7.52678 5.67392 7 7 7M15 7H17C17.9286 7 18.8388 7.25857 19.6287 7.74675C20.4185 8.23492 21.0569 8.9334 21.4721 9.76393C21.8874 10.5945 22.0632 11.5242 21.9798 12.449C21.8964 13.3738 21.5571 14.2572 21 15M8 12H12M2 2L22 22"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};
+
+export const LinkOnIcon: FC<SvgIconProps> = (props) => {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M6.33962 13.4146L4.9254 12.0004C3.98772 11.0627 3.46094 9.79093 3.46094 8.46484C3.46094 7.13876 3.98772 5.86699 4.9254 4.92931C5.86309 3.99163 7.13486 3.46484 8.46094 3.46484C9.78702 3.46484 11.0588 3.99163 11.9965 4.92931L13.4107 6.34352M17.6533 10.5862L19.0675 12.0004C20.0052 12.9381 20.532 14.2098 20.532 15.5359C20.532 16.862 20.0052 18.1338 19.0675 19.0714C18.1299 20.0091 16.8581 20.5359 15.532 20.5359C14.2059 20.5359 12.9342 20.0091 11.9965 19.0714L10.5823 17.6572M9.16804 9.17195L14.8249 14.8288"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  );
+};

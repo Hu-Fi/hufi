@@ -6,28 +6,28 @@ import { Button } from '@mui/material';
 import { ConnectWalletIcon } from '@/icons';
 
 type Props = {
-  isClientReady: boolean;
   isLinked: boolean;
+  isDisabled: boolean;
+
   onLink: () => void;
+  onUnlink: () => void;
 };
 
-const LinkTelegramAccountButton: FC<Props> = ({
-  isClientReady,
+const TelegramAccountLinkButton: FC<Props> = ({
   isLinked,
+  isDisabled,
   onLink,
+  onUnlink,
 }) => {
-  if (!isClientReady) {
-    return null;
-  }
-
   if (isLinked) {
     return (
       <Button
         variant="outlined"
         size="large"
         sx={{ color: 'white', borderColor: '#433679', gap: 1 }}
+        onClick={onUnlink}
       >
-        <ConnectWalletIcon sx={{ fill: 'none', fontSize: 20 }} />
+        <ConnectWalletIcon sx={{ fontSize: 20, fill: 'none' }} />
         Unlink account
       </Button>
     );
@@ -37,13 +37,14 @@ const LinkTelegramAccountButton: FC<Props> = ({
     <Button
       variant="outlined"
       size="large"
+      disabled={isDisabled}
       sx={{ color: 'white', borderColor: '#433679', gap: 1 }}
       onClick={onLink}
     >
-      <TelegramIcon sx={{ fontSize: 20, color: 'white' }} />
+      <TelegramIcon sx={{ fontSize: 20 }} />
       Link account
     </Button>
   );
 };
 
-export default LinkTelegramAccountButton;
+export default TelegramAccountLinkButton;
