@@ -41,7 +41,7 @@ export class UserPreferencesService {
     /**
      * Right now unknown values are stripped by the API layer,
      * but use this schema validation check as a safety belt to make sure that
-     * no invalid date is saved to the database.
+     * no invalid data is saved to the database.
      */
     const schemaValidationResult =
       PREFERENCES_VALIDATION_SCHEMA.validate(newPreferences);

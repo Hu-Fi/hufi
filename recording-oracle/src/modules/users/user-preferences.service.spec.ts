@@ -23,6 +23,8 @@ import type { UserEntity } from './user.entity';
 import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';
 
+vi.mock('jose');
+
 const mockUsersRepository = createMock<UsersRepository>();
 const mockUserPreferencesRepository = createMock<UserPreferencesRepository>();
 
