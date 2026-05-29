@@ -18,37 +18,30 @@ export class UserPreferencesService {
 
   private assertPreferencesValid(
     userId: string,
-    preferences: UpdatePreferencesDto,
+    newPreferences: UpdatePreferencesDto,
+    context: Pick<UserPreferencesEntity, 'telegramUserId'>,
   ): void {
+    // @ts-expect-error - safety belt from abuse data and missing API validation
+    if (newPreferences.telegramUserId) {
+      throw new InvalidUserPreferencesError(
+        userId,
+        'Telegram user ID cannot be updated directly',
+      );
+    }
     // assert notification preferences
-    const notificationPreferences =
-      preferences.notifications || DEFAULT_USER_PREFERENCES.notifications;
-
-    if (!notificationPreferences.telegramUserId) {
-      for (const [
-        notificationPreferenceKey,
-        notificationPreference,
-      ] of Object.entries(notificationPreferences)) {
-        if (notificationPreferenceKey === 'telegramUserId') {
-          continue;
-        }
-
-        if (typeof notificationPreference !== 'boolean') {
-          throw new Error('Unexpected preferences format');
-        }
-
-        if (notificationPreference) {
-          throw new InvalidUserPreferencesError(
-            userId,
-            'telegramUserId is required to enable notifications',
-          );
-        }
-      }
+    const hasSomeNotificationOn = Object.values(
+      newPreferences.notifications || {},
+    ).some((notificationPreference) => notificationPreference);
+    if (hasSomeNotificationOn && !context.telegramUserId) {
+      throw new InvalidUserPreferencesError(
+        userId,
+        'Telegram must be linked to enable notifications',
+      );
     }
 
     // assert campaigns autojoin preferences
     const campaignsAutojoinPreferences =
-      preferences.campaignsAutojoin ||
+      newPreferences.campaignsAutojoin ||
       DEFAULT_USER_PREFERENCES.campaignsAutojoin;
     if (campaignsAutojoinPreferences.enabled) {
       if (
@@ -68,14 +61,18 @@ export class UserPreferencesService {
     userId: string,
     preferences: UpdatePreferencesDto,
   ): Promise<UserPreferencesEntity> {
-    this.assertPreferencesValid(userId, preferences);
-
     const user = await this.usersRepository.findOneById(userId, {
       relations: { preferences: true },
     });
     if (!user) {
       throw new UserNotFoundError(userId);
     }
+
+    this.assertPreferencesValid(
+      userId,
+      preferences,
+      user.preferences || DEFAULT_USER_PREFERENCES,
+    );
 
     const newPreferences = new UserPreferencesEntity();
     Object.assign(

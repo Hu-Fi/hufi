@@ -54,6 +54,7 @@ export class UserMeController {
           DEFAULT_USER_PREFERENCES.campaignsAutojoin,
           user.preferences?.campaignsAutojoin,
         ),
+        telegramUserId: user.preferences?.telegramUserId || null,
         notifications: Object.assign(
           {},
           DEFAULT_USER_PREFERENCES.notifications,
@@ -84,6 +85,7 @@ export class UserMeController {
     );
 
     return {
+      telegramUserId: updatedPreferences.telegramUserId,
       campaignsAutojoin: updatedPreferences.campaignsAutojoin,
       notifications: updatedPreferences.notifications,
     };

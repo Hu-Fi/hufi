@@ -31,6 +31,7 @@ export function generateUserPreferences(
   const preferences: UserPreferencesEntity = {
     userId: faker.string.uuid(),
     ...DEFAULT_USER_PREFERENCES,
+    telegramUserId: null,
     createdAt: faker.date.recent(),
     updatedAt: new Date(),
   };

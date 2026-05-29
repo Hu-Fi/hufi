@@ -13,6 +13,7 @@ import {
 
 import { DEFAULT_USER_PREFERENCES } from './constants';
 import { generateUserEntity, generateUserPreferences } from './fixtures';
+import { InvalidUserPreferencesError } from './user-preferences.error';
 import { UserPreferencesRepository } from './user-preferences.repository';
 import { UserPreferencesService } from './user-preferences.service';
 import type { UserEntity } from './user.entity';
@@ -84,6 +85,26 @@ describe('UserPreferencesService', () => {
       });
     });
 
+    test('should throw when try to update telegramUserId directly', async () => {
+      mockUsersRepository.findOneById.mockResolvedValueOnce(user);
+
+      let thrownError: any;
+      try {
+        await userPreferencesService.update(user.id, {
+          // @ts-expect-error - simulate abuse data
+          telegramUserId: faker.number.int().toString(),
+        });
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(InvalidUserPreferencesError);
+      expect(thrownError.userId).toBe(user.id);
+      expect(thrownError.message).toBe(
+        'Telegram user ID cannot be updated directly',
+      );
+    });
+
     test('should save with default values when user does not have existing preferences', async () => {
       mockUsersRepository.findOneById.mockResolvedValueOnce(user);
 
@@ -97,8 +118,12 @@ describe('UserPreferencesService', () => {
       expect(saved.userId).toBe(user.id);
       expect(saved.createdAt).toEqual(now);
       expect(saved.updatedAt).toEqual(now);
+      expect(saved.telegramUserId).toBeNull();
       expect(saved.campaignsAutojoin).toEqual(
         DEFAULT_USER_PREFERENCES.campaignsAutojoin,
+      );
+      expect(saved.notifications).toEqual(
+        DEFAULT_USER_PREFERENCES.notifications,
       );
     });
 
@@ -113,6 +138,10 @@ describe('UserPreferencesService', () => {
           exchanges: Array.from({ length: 2 }, () => faker.lorem.word()),
           campaignTypes: Array.from({ length: 2 }, () => faker.lorem.word()),
           tokens: Array.from({ length: 2 }, () => faker.lorem.word()),
+        },
+        telegramUserId: faker.number.int().toString(),
+        notifications: {
+          campaignsAutojoin: faker.datatype.boolean(),
         },
       });
 
@@ -132,6 +161,10 @@ describe('UserPreferencesService', () => {
           campaignTypes: [newCampaignType],
           tokens: [newToken],
         },
+        notifications: {
+          campaignsAutojoin:
+            !existingPreferences.notifications.campaignsAutojoin,
+        },
       });
 
       expect(result.campaignsAutojoin.enabled).toBe(
@@ -140,6 +173,10 @@ describe('UserPreferencesService', () => {
       expect(result.campaignsAutojoin.exchanges).toEqual([newExchange]);
       expect(result.campaignsAutojoin.campaignTypes).toEqual([newCampaignType]);
       expect(result.campaignsAutojoin.tokens).toEqual([newToken]);
+
+      expect(result.notifications.campaignsAutojoin).not.toEqual(
+        existingPreferences.notifications.campaignsAutojoin,
+      );
     });
 
     test('should deduplicate array values', async () => {

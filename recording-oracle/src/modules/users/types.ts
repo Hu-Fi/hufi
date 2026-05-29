@@ -6,6 +6,5 @@ export type CampaignsAutojoinPreferences = {
 };
 
 export type NotificationsPreferences = {
-  telegramUserId: string | null;
   campaignsAutojoin: boolean;
 };

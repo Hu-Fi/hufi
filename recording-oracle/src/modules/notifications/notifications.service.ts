@@ -88,7 +88,7 @@ export class NotificationsService {
           },
         },
       );
-      if (!preferences || !preferences.notifications.telegramUserId) {
+      if (!preferences || !preferences.telegramUserId) {
         return;
       }
 
@@ -98,7 +98,7 @@ export class NotificationsService {
 
       const tgWebhookPayload = {
         type,
-        telegramUserId: preferences.notifications.telegramUserId,
+        telegramUserId: preferences.telegramUserId,
         userId,
         userEvmAddress: preferences.user!.evmAddress,
         ...payload,

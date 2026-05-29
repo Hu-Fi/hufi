@@ -4,9 +4,11 @@ import type {
 } from './types';
 
 export const DEFAULT_USER_PREFERENCES: {
+  telegramUserId: string | null;
   notifications: NotificationsPreferences;
   campaignsAutojoin: CampaignsAutojoinPreferences;
 } = Object.freeze({
+  telegramUserId: null,
   campaignsAutojoin: {
     enabled: false,
     campaignTypes: [],
@@ -14,7 +16,6 @@ export const DEFAULT_USER_PREFERENCES: {
     tokens: [],
   },
   notifications: {
-    telegramUserId: null,
     campaignsAutojoin: false,
   },
 });
