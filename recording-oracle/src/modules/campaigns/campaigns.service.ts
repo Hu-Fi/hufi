@@ -1353,7 +1353,7 @@ export class CampaignsService implements OnModuleDestroy {
       timeframeEnd = cancellationRequestedAt;
     } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
       /**
-       * To avoid error when subgrpaph sync might be a bit delayed.
+       * To avoid error when subgraph sync might be a bit delayed.
        */
       timeframeEnd = dayjs(now).subtract(1, 'minute').toDate();
     } else {

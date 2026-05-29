@@ -207,7 +207,7 @@ export class PancakeswapClient implements ExchangeApiClient {
     /**
      * We must ensure that queries land to graph nodes that have data up to "until" timestamp,
      * so we get the first block number produced after "until" and then use it as a reference
-     * in subsequent time-travel queries, so TheGraph LB can exlude stale indexers.
+     * in subsequent time-travel queries, so TheGraph LB can exclude stale indexers.
      * Ref: https://thegraph.com/docs/en/subgraphs/querying/distributed-systems/#polling-for-updated-data
      * Previous option: rely on subgraph meta's latest block timestamp, but use exact indexer URL,
      * so we make sure requests land to the same node.
