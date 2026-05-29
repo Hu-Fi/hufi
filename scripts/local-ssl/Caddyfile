@@ -1,8 +1,12 @@
+(common_tls) {
+	tls .certs/dev-local.pem .certs/dev-local-key.pem
+}
+
 http://ui.hufi.local {
 	redir https://ui.hufi.local{uri} permanent
 }
 
 https://ui.hufi.local {
-	tls ./.certs/dev-local.pem ./.certs/dev-local-key.pem
+	import common_tls
 	reverse_proxy localhost:3001
 }

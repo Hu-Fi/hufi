@@ -15,6 +15,11 @@ export default defineConfig(() => {
       host: useSsl ? true : undefined,
       port: useSsl ? 443 : 3001,
       // allow all in case reverse proxy or tunneling is used
+      /**
+       * Allow all in case reverse proxy or tunneling is used.
+       * It's fine to set it to "true" for simplicity because
+       * this server is dev-purpose only.
+       */
       allowedHosts: true,
     },
     plugins: [
