@@ -1,5 +1,7 @@
 import assert from 'assert';
+import { setTimeout as delay } from 'timers/promises';
 
+import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 import { GraphQLClient } from 'graphql-request';
 import _ from 'lodash';
@@ -14,16 +16,22 @@ import {
   type DexApiClientInitOptions,
   ExchangeApiClient,
 } from '../exchange-api-client.interface';
-import { type RequiredAccessCheckResult, type Trade } from '../types';
+import type { RequiredAccessCheckResult, Trade } from '../types';
 import * as apiClientUtils from '../utils';
-import { MAX_LOOKBACK_MS, tokenAddressBySymbol } from './constants';
+import {
+  ACCEPTED_SYNC_DELAY_MS,
+  MAX_LOOKBACK_MS,
+  tokenAddressBySymbol,
+} from './constants';
 import {
   GET_ACCOUNT_SWAPS_QUERY,
+  GET_LATEST_SWAPS_QUERY,
   GET_SUBGRAPH_META_QUERY,
-  type SubgraphSwapData,
+  type LatestSwapData,
   type SubgraphMeta,
+  type SubgraphSwapData,
 } from './queries';
-import { type Swap } from './types';
+import type { LatestBlockData, Swap } from './types';
 import * as pancakeswapUtils from './utils';
 
 type PancakeswapClientInitOptions = DexApiClientInitOptions & {
@@ -86,6 +94,7 @@ export class PancakeswapClient implements ExchangeApiClient {
       throw new PancakeswapClientError(message);
     }
   }
+
   /**
    * @param timestamp value in seconds
    */
@@ -101,12 +110,43 @@ export class PancakeswapClient implements ExchangeApiClient {
     }
   }
 
+  async fetchActualBlockData(producedAfter?: number): Promise<LatestBlockData> {
+    try {
+      const afterMs = producedAfter ?? Date.now() - ACCEPTED_SYNC_DELAY_MS;
+
+      const { latestSwaps } = await this.graphClient.request<{
+        latestSwaps: LatestSwapData[];
+      }>(GET_LATEST_SWAPS_QUERY, {
+        after: dayjs(afterMs).unix(),
+      });
+
+      if (latestSwaps.length === 0) {
+        throw new Error(`No swaps after ${new Date(afterMs).toISOString()}`);
+      }
+
+      const { blockNumber, timestamp } = latestSwaps[0];
+      return {
+        number: Number(blockNumber),
+        timestamp: Number(timestamp) * 1000,
+      };
+    } catch (error) {
+      const message = 'Failed to fetch actual block data';
+      this.logger.error(message, {
+        error: pancakeswapUtils.formatGraphqlRequestError(error as Error),
+      });
+      throw new PancakeswapClientError(message);
+    }
+  }
+
   private async fetchSwaps(
     tokenIn: string,
     tokenOut: string,
     since: number,
     until: number,
-    skip: number = 0,
+    options: {
+      skip?: number;
+      blockNumber?: number;
+    },
   ): Promise<Swap[]> {
     const { swaps } = await this.graphClient.request<{
       swaps: SubgraphSwapData[];
@@ -116,7 +156,12 @@ export class PancakeswapClient implements ExchangeApiClient {
       tokenOut: tokenOut.toLowerCase(),
       since,
       until,
-      skip,
+      skip: options.skip || 0,
+      block: options.blockNumber
+        ? {
+            number_gte: options.blockNumber,
+          }
+        : undefined,
     });
 
     return swaps.map(pancakeswapUtils.mapSubgraphDataToSwap);
@@ -143,10 +188,36 @@ export class PancakeswapClient implements ExchangeApiClient {
       throw new Error('"until" must be a ms timestamp in acceptable range');
     }
 
-    const sinceSeconds = Math.floor(since / 1000);
-    const untilSeconds = Math.ceil(until / 1000);
+    const msToUntil = Date.now() - until;
+    if (msToUntil < ACCEPTED_SYNC_DELAY_MS) {
+      const keepUpMs = ACCEPTED_SYNC_DELAY_MS - msToUntil;
+      this.logger.warn(
+        `Provided "until" timestamp is too recent, adding delay to avoid errors`,
+        {
+          until,
+          keepUpMs,
+        },
+      );
+      await delay(keepUpMs);
+    }
 
-    await this.assertSubgraphNotStale(untilSeconds);
+    const sinceSeconds = dayjs(since).unix();
+    const untilSeconds = dayjs(until).unix() + 1;
+
+    /**
+     * We must ensure that queries land to graph nodes that have data up to "until" timestamp,
+     * so we get the first block number produced after "until" and then use it as a reference
+     * in subsequent time-travel queries, so TheGraph LB can exclude stale indexers.
+     * Ref: https://thegraph.com/docs/en/subgraphs/querying/distributed-systems/#polling-for-updated-data
+     * Previous option: rely on subgraph meta's latest block timestamp, but use exact indexer URL,
+     * so we make sure requests land to the same node.
+     *
+     * Otherwise, we may end up in a situation when we query for swaps in a block
+     * that is not yet indexed by the node and get empty results, while the same
+     * query to another node would return the data.
+     */
+    // await this.assertSubgraphNotStale(untilSeconds); // previous option
+    const latestBlockData = await this.fetchActualBlockData(until);
 
     try {
       const [baseTokenSymbol, quoteTokenSymbol] = symbol.split('/');
@@ -176,7 +247,7 @@ export class PancakeswapClient implements ExchangeApiClient {
             baseTokenAddress,
             sinceSeconds,
             untilSeconds,
-            nBuySwaps,
+            { skip: nBuySwaps, blockNumber: latestBlockData.number },
           );
         }
 
@@ -189,7 +260,7 @@ export class PancakeswapClient implements ExchangeApiClient {
             quoteTokenAddress,
             sinceSeconds,
             untilSeconds,
-            nSellSwaps,
+            { skip: nSellSwaps, blockNumber: latestBlockData.number },
           );
         }
 

@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import dayjs from 'dayjs';
 import { ethers } from 'ethers';
 
 import { generateTxHash } from '~/test/fixtures/web3';
@@ -20,7 +21,7 @@ export function generateSubgraphSwapData(): SubgraphSwapData {
     id: generateSwapId(txHash),
     hash: txHash,
     nonce: faker.number.bigInt().toString(),
-    timestamp: Math.round(faker.date.recent().valueOf() / 1000).toString(),
+    timestamp: dayjs(faker.date.recent()).unix().toString(),
     amountIn: ethers
       .parseUnits(
         faker.number.float(42).toFixed(tokenInDecimals),
@@ -51,7 +52,7 @@ export function generatePancakeswapSwap(overrides?: Partial<Swap>): Swap {
     id: generateSwapId(txHash),
     hash: txHash,
     nonce: faker.number.bigInt().toString(),
-    timestamp: Math.round(faker.date.recent().valueOf() / 1000),
+    timestamp: dayjs(faker.date.recent()).unix(),
     amountIn: faker.number.float(),
     amountOut: faker.number.float(),
     tokenIn: faker.finance.ethereumAddress(),

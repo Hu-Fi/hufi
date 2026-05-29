@@ -45,10 +45,8 @@ import {
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
-  ExchangeApiClientFactory,
   ExchangeApiKeyNotFoundError,
   ExchangesService,
-  type PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -121,7 +119,6 @@ export class CampaignsService implements OnModuleDestroy {
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
     private readonly eventEmitter: EventEmitter2,
-    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangesService: ExchangesService,
     private readonly participationsRepository: ParticipationsRepository,
@@ -1354,25 +1351,13 @@ export class CampaignsService implements OnModuleDestroy {
         return null;
       }
       timeframeEnd = cancellationRequestedAt;
+    } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
+      /**
+       * To avoid error when subgraph sync might be a bit delayed.
+       */
+      timeframeEnd = dayjs(now).subtract(1, 'minute').toDate();
     } else {
       timeframeEnd = now;
-    }
-
-    if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
-      const client = this.exchangeApiClientFactory.createDex(
-        ExchangeName.PANCAKESWAP,
-        {
-          userId: 'system',
-          userEvmAddress: 'n/a',
-        },
-      ) as PancakeswapClient;
-
-      const subgraphMeta = await client.fetchSubgraphMeta();
-
-      const lastBlockSyncedAt = new Date(subgraphMeta.block.timestamp * 1000);
-      if (lastBlockSyncedAt.valueOf() < timeframeEnd.valueOf()) {
-        timeframeEnd = lastBlockSyncedAt;
-      }
     }
 
     return {
