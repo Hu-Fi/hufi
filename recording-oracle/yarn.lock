@@ -5898,6 +5898,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jose@npm:^6.2.3":
+  version: 6.2.3
+  resolution: "jose@npm:6.2.3"
+  checksum: 10c0/aa91bccba22cc84d86308f833749bcb0b00441e35c24e0ac79abeac5f76dc62d47bdef9c1da6a0c609f5da6478595f52b252085888b89dbdb163861e40ea4188
+  languageName: node
+  linkType: hard
+
 "joycon@npm:^3.1.1":
   version: 3.1.1
   resolution: "joycon@npm:3.1.1"
@@ -7593,6 +7600,7 @@ __metadata:
     graphql-request: "npm:^7.4.0"
     helmet: "npm:^8.1.0"
     joi: "npm:^18.0.2"
+    jose: "npm:^6.2.3"
     jsonwebtoken: "npm:^9.0.3"
     lodash: "npm:^4.17.21"
     lru-cache: "npm:^11.2.6"

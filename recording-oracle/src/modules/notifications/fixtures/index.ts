@@ -7,4 +7,5 @@ export const mockNotificationsConfigService: Omit<
   'configService'
 > = {
   hufiTgBotUrl: faker.internet.url(),
+  hufiTgBotClientId: faker.number.int().toString(),
 };

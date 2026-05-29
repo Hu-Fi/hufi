@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Patch, Req, UseFilters } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Patch,
+  Post,
+  Req,
+  UseFilters,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -10,7 +19,13 @@ import {
 import type { RequestWithUser } from '@/common/types';
 
 import { DEFAULT_USER_PREFERENCES } from './constants';
-import { PreferencesDto, UpdatePreferencesDto, UserMeDto } from './user-me.dto';
+import {
+  LinkedTelegramDto,
+  LinkTelegramDto,
+  PreferencesDto,
+  UpdatePreferencesDto,
+  UserMeDto,
+} from './user-me.dto';
 import { UserMeControllerErrorsFilter } from './user-me.error-filter';
 import { UserPreferencesService } from './user-preferences.service';
 import { UserNotFoundError } from './users.errors';
@@ -89,5 +104,38 @@ export class UserMeController {
       campaignsAutojoin: updatedPreferences.campaignsAutojoin,
       notifications: updatedPreferences.notifications,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Link Telegram account to the user preferences',
+  })
+  @ApiBody({ type: LinkTelegramDto })
+  @ApiResponse({
+    status: 200,
+    type: LinkedTelegramDto,
+  })
+  @Post('link-telegram')
+  async linkTelegram(
+    @Req() request: RequestWithUser,
+    @Body() data: LinkTelegramDto,
+  ): Promise<LinkedTelegramDto> {
+    const result = await this.userPreferencesService.linkTelegram(
+      request.user.id,
+      data.idToken,
+    );
+
+    return result;
+  }
+
+  @ApiOperation({
+    summary: 'Unlink Telegram account from the user preferences',
+  })
+  @ApiResponse({
+    status: 204,
+  })
+  @HttpCode(204)
+  @Post('unlink-telegram')
+  async unlinkTelegram(@Req() request: RequestWithUser): Promise<void> {
+    await this.userPreferencesService.unlinkTelegram(request.user.id);
   }
 }

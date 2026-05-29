@@ -11,6 +11,9 @@ import {
   vi,
 } from 'vitest';
 
+import { NotificationsConfigService } from '@/config';
+import { mockNotificationsConfigService } from '@/modules/notifications/fixtures';
+
 import { DEFAULT_USER_PREFERENCES } from './constants';
 import { generateUserEntity, generateUserPreferences } from './fixtures';
 import { InvalidUserPreferencesError } from './user-preferences.error';
@@ -30,6 +33,10 @@ describe('UserPreferencesService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         UserPreferencesService,
+        {
+          provide: NotificationsConfigService,
+          useValue: mockNotificationsConfigService,
+        },
         {
           provide: UsersRepository,
           useValue: mockUsersRepository,

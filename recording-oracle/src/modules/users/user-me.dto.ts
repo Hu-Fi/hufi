@@ -7,6 +7,7 @@ import {
   IsBoolean,
   IsEnum,
   IsIn,
+  IsNotEmpty,
   IsString,
   Matches,
   ValidateNested,
@@ -87,4 +88,16 @@ export class UserMeDto {
 
   @ApiProperty()
   preferences: PreferencesDto;
+}
+
+export class LinkTelegramDto {
+  @ApiProperty({ name: 'id_token' })
+  @IsString()
+  @IsNotEmpty()
+  idToken: string;
+}
+
+export class LinkedTelegramDto {
+  @ApiProperty({ name: 'telegram_user_id' })
+  telegramUserId: string;
 }

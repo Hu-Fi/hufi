@@ -9,10 +9,17 @@ import type { Request, Response } from 'express';
 import { BaseErrorResponse } from '@/common/types';
 import logger from '@/logger';
 
-import { InvalidUserPreferencesError } from './user-preferences.error';
+import {
+  InvalidUserPreferencesError,
+  TelegramTokenVerificationError,
+} from './user-preferences.error';
 import { UserNotFoundError } from './users.errors';
 
-@Catch(UserNotFoundError, InvalidUserPreferencesError)
+@Catch(
+  UserNotFoundError,
+  InvalidUserPreferencesError,
+  TelegramTokenVerificationError,
+)
 export class UserMeControllerErrorsFilter implements ExceptionFilter {
   private readonly logger = logger.child({
     context: UserMeControllerErrorsFilter.name,
@@ -35,6 +42,9 @@ export class UserMeControllerErrorsFilter implements ExceptionFilter {
       status = HttpStatus.NOT_FOUND;
     } else if (exception instanceof InvalidUserPreferencesError) {
       status = HttpStatus.BAD_REQUEST;
+    } else if (exception instanceof TelegramTokenVerificationError) {
+      status = HttpStatus.UNPROCESSABLE_ENTITY;
+      responseData.details = exception.cause;
     }
 
     return response.status(status).json(responseData);
