@@ -90,6 +90,39 @@ export class UserPreferencesService {
     // =========== CAMPAIGNS AUTOJOIN CHECKS END ===========
   }
 
+  private async hydrateAndUpsert(
+    userId: string,
+    preferencesToUpdate: Partial<UserPreferencesEntity>,
+    existingPreferences?: UserPreferencesEntity,
+  ) {
+    const preferences = new UserPreferencesEntity();
+
+    Object.assign(
+      preferences,
+      {
+        userId,
+        createdAt: new Date(),
+      },
+      DEFAULT_USER_PREFERENCES,
+      existingPreferences,
+      preferencesToUpdate,
+    );
+
+    preferences.campaignsAutojoin.exchanges = _.uniq(
+      preferences.campaignsAutojoin.exchanges,
+    );
+    preferences.campaignsAutojoin.campaignTypes = _.uniq(
+      preferences.campaignsAutojoin.campaignTypes,
+    );
+    preferences.campaignsAutojoin.tokens = _.uniq(
+      preferences.campaignsAutojoin.tokens,
+    );
+
+    preferences.updatedAt = new Date();
+
+    return await this.userPreferencesRepository.save(preferences);
+  }
+
   async update(
     userId: string,
     preferences: UpdatePreferencesDto,
@@ -107,31 +140,7 @@ export class UserPreferencesService {
       user.preferences || DEFAULT_USER_PREFERENCES,
     );
 
-    const newPreferences = new UserPreferencesEntity();
-    Object.assign(
-      newPreferences,
-      {
-        userId,
-        createdAt: new Date(),
-      },
-      DEFAULT_USER_PREFERENCES,
-      user.preferences,
-      preferences,
-    );
-
-    newPreferences.campaignsAutojoin.exchanges = _.uniq(
-      newPreferences.campaignsAutojoin.exchanges,
-    );
-    newPreferences.campaignsAutojoin.campaignTypes = _.uniq(
-      newPreferences.campaignsAutojoin.campaignTypes,
-    );
-    newPreferences.campaignsAutojoin.tokens = _.uniq(
-      newPreferences.campaignsAutojoin.tokens,
-    );
-
-    newPreferences.updatedAt = new Date();
-
-    return await this.userPreferencesRepository.save(newPreferences);
+    return await this.hydrateAndUpsert(userId, preferences, user.preferences);
   }
 
   async linkTelegram(
@@ -162,10 +171,7 @@ export class UserPreferencesService {
 
       const telegramUserId = payload.id;
 
-      await this.userPreferencesRepository.update(userId, {
-        telegramUserId,
-        updatedAt: new Date(),
-      });
+      await this.hydrateAndUpsert(userId, { telegramUserId }, user.preferences);
 
       return { telegramUserId };
     } catch (error) {

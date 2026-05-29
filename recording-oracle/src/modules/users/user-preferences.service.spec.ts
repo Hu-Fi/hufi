@@ -174,6 +174,7 @@ describe('UserPreferencesService', () => {
         },
       });
 
+      expect(result.telegramUserId).toBe(existingPreferences.telegramUserId);
       expect(result.campaignsAutojoin.enabled).toBe(
         !existingPreferences.campaignsAutojoin.enabled,
       );
