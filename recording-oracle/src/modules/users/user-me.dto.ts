@@ -1,4 +1,4 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -7,10 +7,9 @@ import {
   IsBoolean,
   IsEnum,
   IsIn,
+  IsNotEmpty,
   IsString,
   Matches,
-  MinLength,
-  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
@@ -54,12 +53,6 @@ export class CampaignsAutojoinPreferencesDto {
 }
 
 export class NotificationsPreferencesDto {
-  @ApiProperty({ name: 'telegram_user_id' })
-  @ValidateIf((_object, value) => value !== null)
-  @IsString()
-  @MinLength(1)
-  telegramUserId: string | null;
-
   @ApiProperty({ name: 'campaigns_autojoin' })
   @IsBoolean()
   campaignsAutojoin: boolean;
@@ -77,9 +70,14 @@ export class PreferencesDto {
   @ValidateNested()
   @Type(() => NotificationsPreferencesDto)
   notifications: NotificationsPreferencesDto;
+
+  @ApiProperty({ name: 'telegram_user_id' })
+  telegramUserId: string | null;
 }
 
-export class UpdatePreferencesDto extends PartialType(PreferencesDto) {}
+export class UpdatePreferencesDto extends PartialType(
+  OmitType(PreferencesDto, ['telegramUserId']),
+) {}
 
 export class UserMeDto {
   @ApiProperty()
@@ -90,4 +88,16 @@ export class UserMeDto {
 
   @ApiProperty()
   preferences: PreferencesDto;
+}
+
+export class LinkTelegramDto {
+  @ApiProperty({ name: 'id_token' })
+  @IsString()
+  @IsNotEmpty()
+  idToken: string;
+}
+
+export class LinkedTelegramDto {
+  @ApiProperty({ name: 'telegram_user_id' })
+  telegramUserId: string;
 }

@@ -26,6 +26,10 @@ export class UserPreferencesEntity {
   @Column('jsonb')
   notifications: NotificationsPreferences;
 
+  /** They are numeric, but limit with uuid length just in case */
+  @Column('varchar', { length: 36, nullable: true })
+  telegramUserId: string | null;
+
   @Column({ type: 'timestamptz' })
   createdAt: Date;
 

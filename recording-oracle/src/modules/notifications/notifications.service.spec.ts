@@ -126,7 +126,6 @@ describe('NotificationsService', () => {
     test('should return when user has no telegram user id', async () => {
       const preferences = generateUserPreferences({
         notifications: {
-          telegramUserId: null,
           campaignsAutojoin: true,
         },
       });
@@ -146,9 +145,7 @@ describe('NotificationsService', () => {
 
     test('should return when notification type does not exist in preferences', async () => {
       const preferences = generateUserPreferences({
-        notifications: {
-          telegramUserId: faker.string.numeric(10),
-        },
+        telegramUserId: faker.number.int().toString(),
       });
       mockUserPreferencesRepository.findOneById.mockResolvedValueOnce(
         preferences,
@@ -176,8 +173,8 @@ describe('NotificationsService', () => {
       const preferences = generateUserPreferences({
         userId,
         user,
+        telegramUserId: faker.number.int().toString(),
         notifications: {
-          telegramUserId: faker.string.numeric(10),
           campaignsAutojoin: true,
         },
       });
@@ -193,7 +190,7 @@ describe('NotificationsService', () => {
 
       const expectedWebhookPayload = {
         type: NotificationType.CAMPAIGN_AUTOJOIN,
-        telegramUserId: preferences.notifications.telegramUserId,
+        telegramUserId: preferences.telegramUserId,
         userId,
         userEvmAddress: user.evmAddress,
         ...payload,
@@ -228,8 +225,8 @@ describe('NotificationsService', () => {
       const preferences = generateUserPreferences({
         userId,
         user,
+        telegramUserId: faker.number.int().toString(),
         notifications: {
-          telegramUserId: faker.string.numeric(10),
           campaignsAutojoin: true,
         },
       });

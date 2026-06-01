@@ -54,6 +54,7 @@
     "graphql-request": "^7.4.0",
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
+    "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
     "lodash": "^4.17.21",
     "lru-cache": "^11.2.6",

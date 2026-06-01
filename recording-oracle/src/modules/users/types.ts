@@ -1,3 +1,5 @@
+import type { JWTPayload } from 'jose';
+
 export type CampaignsAutojoinPreferences = {
   enabled: boolean;
   exchanges: string[];
@@ -6,6 +8,12 @@ export type CampaignsAutojoinPreferences = {
 };
 
 export type NotificationsPreferences = {
-  telegramUserId: string | null;
   campaignsAutojoin: boolean;
+};
+
+export type TelegramJwtPayload = JWTPayload & {
+  id: string;
+  name: string;
+  preferred_username?: string;
+  picture?: string;
 };

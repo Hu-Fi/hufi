@@ -90,6 +90,7 @@ export const envValidator = Joi.object({
 
   // Notifications
   HUFI_TG_BOT_URL: Joi.string().uri({ scheme: ['http', 'https'] }),
+  HUFI_TG_BOT_CLIENT_ID: Joi.string().required(),
 
   // Campaigns
   FEATURE_LIMIT_HOLDING_JOIN: BOOL_STRING_SCHEMA,

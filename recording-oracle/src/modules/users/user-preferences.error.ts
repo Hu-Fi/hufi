@@ -8,3 +8,12 @@ export class InvalidUserPreferencesError extends BaseError {
     super(message || 'User preferences are not valid');
   }
 }
+
+export class TelegramTokenVerificationError extends BaseError {
+  constructor(
+    readonly userId: string,
+    readonly cause: string,
+  ) {
+    super('Failed to verify Telegram id token');
+  }
+}
