@@ -160,6 +160,7 @@ const PreferencesPage: FC = () => {
             />
             <NotificationPreferences
               preferences={draftPreferences?.notifications ?? null}
+              telegramUserId={draftPreferences?.telegram_user_id ?? null}
               onSectionChange={handleChangePreferenceSection}
               isPreferencesLoading={isPreferencesLoading}
               isSavingPreferences={isSavingPreferences}

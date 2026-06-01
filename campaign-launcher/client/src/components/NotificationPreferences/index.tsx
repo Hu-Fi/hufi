@@ -11,6 +11,11 @@ import {
 
 import { SwitchStyled } from '@/components/AutojoinPreferences/components';
 import TelegramAccountLinkButton from '@/components/TelegramAccountLinkButton';
+import {
+  useLinkTelegramAccount,
+  useUnlinkTelegramAccount,
+} from '@/hooks/recording-oracle/user';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { LinkOffIcon, LinkOnIcon } from '@/icons';
 import { loadTelegramLoginClient } from '@/lib/loadTelegramClient';
@@ -23,9 +28,10 @@ const POPUP_CLOSED_ERROR = 'popup_closed';
 
 type Props = {
   preferences: Preferences['notifications'] | null;
+  telegramUserId: string | null;
   onSectionChange: (
-    section: 'notifications',
-    value: Preferences['notifications']
+    section: 'notifications' | 'telegram_user_id',
+    value: Preferences['notifications'] | string | null
   ) => void;
   isPreferencesLoading: boolean;
   isSavingPreferences: boolean;
@@ -39,6 +45,7 @@ enum ClientStatus {
 
 const NotificationPreferences: FC<Props> = ({
   preferences,
+  telegramUserId,
   onSectionChange,
   isPreferencesLoading,
   isSavingPreferences,
@@ -49,8 +56,13 @@ const NotificationPreferences: FC<Props> = ({
   const [isLinking, setIsLinking] = useState(false);
 
   const { showError, showWarning } = useNotification();
+  const isMobile = useIsMobile();
 
-  const isLinked = !!preferences?.telegram_user_id;
+  const { mutateAsync: linkTelegram } = useLinkTelegramAccount();
+  const { mutateAsync: unlinkTelegram, isPending: isUnlinkingTelegram } =
+    useUnlinkTelegramAccount();
+
+  const isLinked = !!telegramUserId;
 
   useEffect(() => {
     loadTelegramLoginClient()
@@ -81,7 +93,7 @@ const NotificationPreferences: FC<Props> = ({
 
     window.Telegram.Login.auth(
       { client_id: clientId, request_access: ['write'] },
-      (result) => {
+      async (result) => {
         if ('error' in result) {
           console.error(result.error);
           if (result.error === POPUP_CLOSED_ERROR) {
@@ -90,24 +102,34 @@ const NotificationPreferences: FC<Props> = ({
             showError('Failed to link Telegram account. Please try again.');
           }
         } else {
-          onSectionChange('notifications', {
-            ...preferences,
-            telegram_user_id: result.user.id as string,
-          });
+          const telegramUserId = await linkTelegram(result.id_token as string);
+          if (telegramUserId === result.user.id) {
+            onSectionChange('telegram_user_id', telegramUserId);
+          } else {
+            showError('Failed to link Telegram account. Please try again.');
+          }
         }
         setIsLinking(false);
       }
     );
   };
 
-  const handleUnlinkTelegram = () => {
+  const handleUnlinkTelegram = async () => {
     if (!preferences) return null;
 
-    onSectionChange('notifications', {
-      ...preferences,
-      campaigns_autojoin: false,
-      telegram_user_id: null,
-    });
+    try {
+      await unlinkTelegram();
+      onSectionChange('telegram_user_id', null);
+      const resetNotifications = Object.fromEntries(
+        Object.keys(preferences).map((key) => [key, false])
+      ) as Preferences['notifications'];
+      onSectionChange('notifications', {
+        ...resetNotifications,
+      });
+    } catch (error) {
+      console.error(error);
+      showError('Failed to unlink Telegram account. Please try again.');
+    }
   };
 
   const handleSwitchChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -129,22 +151,22 @@ const NotificationPreferences: FC<Props> = ({
               alignItems: 'center',
               gap: 1,
               color: '#43ba96',
-              fontSize: 16,
+              fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: '100%',
             }}
           >
-            <LinkOnIcon sx={{ fontSize: 24 }} />
+            <LinkOnIcon sx={{ fontSize: { xs: 18, md: 24 } }} />
             Linked
           </Typography>
           <Typography
             sx={{
               color: 'rgba(212, 207, 255, 0.70)',
-              fontSize: 16,
+              fontSize: { xs: 12, md: 16 },
               lineHeight: '100%',
             }}
           >
-            id: {preferences?.telegram_user_id}
+            id: {telegramUserId}
           </Typography>
         </Box>
       );
@@ -156,12 +178,12 @@ const NotificationPreferences: FC<Props> = ({
             alignItems: 'center',
             gap: 1,
             color: '#b98c08',
-            fontSize: 16,
+            fontSize: { xs: 12, md: 16 },
             fontWeight: 500,
             lineHeight: '100%',
           }}
         >
-          <LinkOffIcon sx={{ fontSize: 24 }} />
+          <LinkOffIcon sx={{ fontSize: { xs: 18, md: 24 } }} />
           Not linked
         </Typography>
       );
@@ -173,12 +195,15 @@ const NotificationPreferences: FC<Props> = ({
             alignItems: 'center',
             gap: 1,
             color: '#a29dca',
-            fontSize: 16,
+            fontSize: { xs: 12, md: 16 },
             fontWeight: 500,
             lineHeight: '100%',
           }}
         >
-          <CircularProgress size={24} sx={{ color: '#a29dca' }} />
+          <CircularProgress
+            size={isMobile ? 18 : 24}
+            sx={{ color: '#a29dca' }}
+          />
           Waiting for Telegram&hellip;
         </Typography>
       );
@@ -189,7 +214,7 @@ const NotificationPreferences: FC<Props> = ({
     <Stack
       sx={{
         width: '100%',
-        minHeight: '290px',
+        minHeight: { xs: 'auto', md: '290px' },
         bgcolor: '#251d47',
         borderRadius: '18px',
         borderTop: '1px solid #3a2e6f',
@@ -198,25 +223,34 @@ const NotificationPreferences: FC<Props> = ({
         },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', p: 5, gap: 3.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: { xs: 2, md: 5 },
+          py: { xs: 2.5, md: 5 },
+          gap: { xs: 1.5, md: 3.5 },
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 64,
-            height: 64,
-            borderRadius: '16px',
+            flexShrink: 0,
+            width: { xs: 48, md: 64 },
+            height: { xs: 48, md: 64 },
+            borderRadius: { xs: '12px', md: '16px' },
             bgcolor: '#53a6e4',
           }}
         >
-          <TelegramIcon sx={{ fontSize: 32, color: 'white' }} />
+          <TelegramIcon sx={{ fontSize: { xs: 24, md: 32 }, color: 'white' }} />
         </Box>
-        <Stack sx={{ gap: 1 }}>
+        <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
           <Typography
             sx={{
               color: 'white',
-              fontSize: 20,
+              fontSize: { xs: 16, md: 20 },
               fontWeight: 700,
               lineHeight: '100%',
             }}
@@ -226,7 +260,7 @@ const NotificationPreferences: FC<Props> = ({
           <Typography
             sx={{
               color: '#a29dca',
-              fontSize: 16,
+              fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: '100%',
             }}
@@ -238,18 +272,20 @@ const NotificationPreferences: FC<Props> = ({
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'flex-start', md: 'center' },
           justifyContent: 'space-between',
-          p: 5,
-          gap: 3.5,
+          px: { xs: 2, md: 5 },
+          py: { xs: 2.5, md: 5 },
+          gap: 3,
         }}
       >
-        <Stack sx={{ gap: 2.5 }}>
+        <Stack sx={{ gap: { xs: 1.5, md: 2.5 } }}>
           <Typography
             sx={{
               color: 'white',
-              fontSize: 20,
-              fontWeight: 500,
+              fontSize: { xs: 16, md: 20 },
+              fontWeight: { xs: 700, md: 500 },
               lineHeight: '100%',
             }}
           >
@@ -279,50 +315,54 @@ const NotificationPreferences: FC<Props> = ({
             isDisabled={
               isSavingPreferences ||
               clientStatus === ClientStatus.ERROR ||
-              isLinking
+              isLinking ||
+              isUnlinkingTelegram
             }
             onLink={handleLinkTelegram}
             onUnlink={handleUnlinkTelegram}
           />
         )}
       </Box>
-      <Box
-        sx={{
-          display: isLinked ? 'flex' : 'none',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          p: 5,
-          gap: 3.5,
-        }}
-      >
-        <Stack sx={{ gap: 2.5 }}>
-          <Typography
-            sx={{
-              color: 'white',
-              fontSize: 20,
-              fontWeight: 500,
-              lineHeight: '100%',
-            }}
-          >
-            Autojoin notifications
-          </Typography>
-          <Typography
-            sx={{
-              color: '#a29dca',
-              fontSize: 16,
-              fontWeight: 500,
-              lineHeight: '100%',
-            }}
-          >
-            Send a message when a campaign is auto-joined
-          </Typography>
-        </Stack>
-        <SwitchStyled
-          checked={preferences?.campaigns_autojoin ?? false}
-          disabled={isSavingPreferences}
-          onChange={handleSwitchChange}
-        />
-      </Box>
+      {isLinked && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: { xs: 2, md: 5 },
+            py: { xs: 2.5, md: 3.5 },
+            gap: 3,
+          }}
+        >
+          <Stack sx={{ gap: { xs: 0.5, md: 2.5 } }}>
+            <Typography
+              sx={{
+                color: 'white',
+                fontSize: { xs: 16, md: 20 },
+                fontWeight: { xs: 700, md: 500 },
+                lineHeight: '100%',
+              }}
+            >
+              Autojoin notifications
+            </Typography>
+            <Typography
+              sx={{
+                color: '#a29dca',
+                fontSize: { xs: 12, md: 16 },
+                fontWeight: 500,
+                lineHeight: '100%',
+              }}
+            >
+              Send a message when a campaign is auto-joined
+            </Typography>
+          </Stack>
+          <SwitchStyled
+            checked={preferences?.campaigns_autojoin ?? false}
+            disabled={isSavingPreferences}
+            onChange={handleSwitchChange}
+          />
+        </Box>
+      )}
     </Stack>
   );
 };
