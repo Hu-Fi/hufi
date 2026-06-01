@@ -89,10 +89,7 @@ const PreferencesPage: FC = () => {
 
       return {
         ...previous,
-        [section]: {
-          ...previous[section],
-          ...value,
-        },
+        [section]: value,
       };
     });
   };
@@ -113,8 +110,15 @@ const PreferencesPage: FC = () => {
 
     const payload: PatchPreferencesDto = {};
 
+    const setPayloadSection = <TSection extends keyof Preferences>(
+      key: TSection,
+      value: Preferences[TSection]
+    ) => {
+      payload[key] = value;
+    };
+
     dirtySections.forEach((section) => {
-      payload[section] = draftPreferences[section];
+      setPayloadSection(section, draftPreferences[section]);
     });
 
     try {

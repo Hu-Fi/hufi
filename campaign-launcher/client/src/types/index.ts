@@ -289,8 +289,8 @@ export type Preferences = {
     campaign_types: string[];
     tokens: string[];
   };
+  telegram_user_id: string | null;
   notifications: {
-    telegram_user_id: string | null;
     campaigns_autojoin: boolean;
   };
 };
