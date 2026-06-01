@@ -143,9 +143,7 @@ const PreferencesPage: FC = () => {
         Configure your account defaults and automation settings. Changes apply
         to your connected wallet.
       </Typography>
-      <Stack
-        sx={{ width: '100%', mt: 4, pb: { xs: '120px', md: '85px' }, gap: 4 }}
-      >
+      <Stack sx={{ width: '100%', mt: 4, gap: 4 }}>
         {isError && (
           <PageErrorState
             description="We couldn't load preferences right now. This is on our end, please try again in a moment."

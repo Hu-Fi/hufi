@@ -52,6 +52,20 @@ export const SwitchStyled = styled((props: SwitchProps) => (
       duration: 500,
     }),
   },
+
+  '@media (max-width: 900px)': {
+    width: 40,
+    height: 22,
+    '& .MuiSwitch-switchBase': {
+      '&.Mui-checked': {
+        transform: 'translateX(18px)',
+      },
+    },
+    '& .MuiSwitch-thumb': {
+      width: 14,
+      height: 14,
+    },
+  },
 }));
 
 export const FormControlLabelStyled = styled(FormControlLabel, {
@@ -72,6 +86,15 @@ export const FormControlLabelStyled = styled(FormControlLabel, {
     letterSpacing: 0,
     marginRight: 'auto',
   },
+
+  '@media (max-width: 900px)': {
+    padding: '0px 12px',
+    gap: '12px',
+    minWidth: 120,
+    '& .MuiFormControlLabel-label': {
+      fontSize: 14,
+    },
+  },
 }));
 
 export const Row = styled(Box)({
@@ -80,6 +103,13 @@ export const Row = styled(Box)({
   width: '100%',
   borderTop: '1px solid #3a2e6f',
   minHeight: 140,
+
+  '@media (max-width: 900px)': {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '24px',
+    padding: '24px 16px',
+  },
 });
 
 export const CheckboxIcon = () => (

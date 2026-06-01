@@ -5,6 +5,7 @@ import { Box, Button, IconButton, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 
 import { ROUTES, SHOW_AUTOJOIN_WIDGET_KEY } from '@/constants';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { AutojoinLabelIcon, LightningIcon } from '@/icons';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 
@@ -15,6 +16,7 @@ const AutojoinInfoWidget: FC = () => {
 
   const navigate = useNavigate();
   const { isAuthenticated } = useWeb3Auth();
+  const isMobile = useIsMobile();
 
   if (!isWidgetOpen || !isAuthenticated) return null;
 
@@ -27,39 +29,40 @@ const AutojoinInfoWidget: FC = () => {
     <Box
       sx={{
         display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
         alignItems: 'center',
         justifyContent: 'space-between',
+        position: 'relative',
         width: '100%',
         background: 'linear-gradient(90deg, #251D47 0%, #3C2F73 100%)',
-        gap: 10,
-        mt: 2,
-        mb: 8,
-        px: 3.5,
-        py: 4,
+        gap: { xs: 3, md: 10 },
+        mt: { xs: 0, md: 2 },
+        mb: { xs: 4, md: 8 },
+        px: { xs: 2, md: 3.5 },
+        pt: 4,
+        pb: { xs: 2, md: 4 },
         borderRadius: '18px',
         border: '2px solid #342D54',
       }}
     >
-      <Box sx={{ display: 'flex', gap: 3 }}>
+      <Box sx={{ display: 'flex', gap: { xs: 1.5, md: 3 } }}>
         <Box
           sx={{
             display: 'flex',
             position: 'relative',
-            width: 63,
-            height: 63,
           }}
         >
           <AutojoinLabelIcon
             sx={{
-              width: 63,
-              height: 63,
+              width: { xs: 48, md: 64 },
+              height: { xs: 48, md: 64 },
               color: '#3d5b6e',
             }}
           />
           <LightningIcon
             sx={{
-              width: 16,
-              height: 16,
+              width: { xs: 12, md: 16 },
+              height: { xs: 12, md: 16 },
               position: 'absolute',
               top: 0,
               right: 4,
@@ -77,7 +80,7 @@ const AutojoinInfoWidget: FC = () => {
           <Typography
             sx={{
               color: 'white',
-              fontSize: 20,
+              fontSize: { xs: 16, md: 20 },
               fontWeight: 700,
               lineHeight: { xs: '100%', lg: '150%' },
             }}
@@ -87,10 +90,10 @@ const AutojoinInfoWidget: FC = () => {
           <Typography
             sx={{
               color: '#a29dca',
-              fontSize: 16,
+              fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: { xs: '100%', lg: '150%' },
-              maxWidth: { xs: '450px', lg: 'none' },
+              maxWidth: { xs: '100%', lg: 'none' },
             }}
           >
             Configure your preferences and let HuFi join the right campaigns on
@@ -98,10 +101,11 @@ const AutojoinInfoWidget: FC = () => {
           </Typography>
         </Box>
       </Box>
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' } }}>
         <Button
           variant="outlined"
           size="large"
+          fullWidth={isMobile}
           sx={{ color: 'white', borderColor: 'rgba(255, 255, 255, 0.12)' }}
           onClick={() => navigate(ROUTES.PREFERENCES)}
         >
@@ -109,7 +113,12 @@ const AutojoinInfoWidget: FC = () => {
         </Button>
         <IconButton
           aria-label="Close widget"
-          sx={{ p: 0 }}
+          sx={{
+            p: 0,
+            position: { xs: 'absolute', md: 'static' },
+            top: { xs: 16, md: 'auto' },
+            right: { xs: 16, md: 'auto' },
+          }}
           disableRipple
           onClick={handleCloseWidget}
         >

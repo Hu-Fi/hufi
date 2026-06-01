@@ -142,11 +142,17 @@ const AutojoinPreferences: FC<Props> = ({
           width: '100%',
           background: 'linear-gradient(90deg, #251D47 0%, #3C2F73 100%)',
           gap: 2,
-          px: 5,
-          py: 4,
+          px: { xs: 2, md: 5 },
+          py: { xs: 3.5, md: 4.5 },
         }}
       >
-        <Box sx={{ display: 'flex', gap: 3 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 1.5, md: 3 },
+          }}
+        >
           <Box
             sx={{
               display: 'flex',
@@ -155,15 +161,15 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <AutojoinLabelIcon
               sx={{
-                width: 64,
-                height: 64,
+                width: { xs: 48, md: 64 },
+                height: { xs: 48, md: 64 },
                 color: enabled ? '#3d5b6e' : '#331d4a',
               }}
             />
             <LightningIcon
               sx={{
-                width: 16,
-                height: 16,
+                width: { xs: 12, md: 16 },
+                height: { xs: 12, md: 16 },
                 position: 'absolute',
                 top: 0,
                 right: 4,
@@ -171,14 +177,41 @@ const AutojoinPreferences: FC<Props> = ({
               }}
             />
           </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: { xs: 0.5, md: 1 },
+            }}
+          >
+            <Typography
+              sx={{
+                color: 'white',
+                fontSize: { xs: 16, md: 20 },
+                fontWeight: 700,
+                lineHeight: '100%',
+              }}
+            >
               Autojoin campaigns
             </Typography>
             <Typography
-              sx={{ color: '#a29dca', fontSize: 16, fontWeight: 500 }}
+              sx={{
+                color: '#a29dca',
+                fontSize: { xs: 12, md: 16 },
+                fontWeight: 500,
+                lineHeight: '100%',
+              }}
             >
               Automatically join campaigns that match your preferences below.
+            </Typography>
+            <Typography
+              sx={{
+                color: '#a29dca',
+                fontSize: { xs: 12, md: 16 },
+                fontWeight: 500,
+                lineHeight: '100%',
+              }}
+            >
               You must select at least one option in each section.
             </Typography>
           </Box>
@@ -199,24 +232,31 @@ const AutojoinPreferences: FC<Props> = ({
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              width: 270,
+              width: { xs: '100%', md: 270 },
               height: '100%',
-              p: 3,
-              gap: 1,
+              px: { xs: 0, md: 3 },
+              pt: { xs: 0, md: 3 },
+              pb: { xs: 0, md: 3 },
+              gap: { xs: 0.5, md: 1 },
             }}
           >
             <Typography
               sx={{
                 color: 'white',
-                fontSize: 20,
-                fontWeight: 600,
-                lineHeight: '150%',
+                fontSize: { xs: 16, md: 20 },
+                fontWeight: { xs: 700, md: 600 },
+                lineHeight: { xs: '100%', md: '150%' },
               }}
             >
               Campaign types
             </Typography>
             <Typography
-              sx={{ color: '#a29dca', fontSize: 14, fontWeight: 500 }}
+              sx={{
+                color: '#a29dca',
+                fontSize: { xs: 12, md: 14 },
+                fontWeight: 500,
+                lineHeight: '100%',
+              }}
             >
               Select which campaign types to autojoin
             </Typography>
@@ -224,7 +264,10 @@ const AutojoinPreferences: FC<Props> = ({
           <Divider
             orientation="vertical"
             flexItem
-            sx={{ borderColor: '#3a2e6f' }}
+            sx={{
+              display: { xs: 'none', md: 'block' },
+              borderColor: '#3a2e6f',
+            }}
           />
           <Box
             sx={{
@@ -232,8 +275,8 @@ const AutojoinPreferences: FC<Props> = ({
               flex: 1,
               height: '100%',
               flexWrap: 'wrap',
-              px: 4,
-              gap: 3,
+              px: { xs: 0, md: 4 },
+              gap: { xs: 1.5, md: 3 },
             }}
           >
             {CAMPAIGN_TYPES.map(({ label, value }) => {
@@ -263,36 +306,50 @@ const AutojoinPreferences: FC<Props> = ({
           <Box
             sx={{
               display: 'flex',
-              flexDirection: 'column',
-              width: 270,
+              flexDirection: { xs: 'row', md: 'column' },
+              alignItems: { xs: 'center', md: 'flex-start' },
+              width: { xs: '100%', md: 270 },
               height: '100%',
-              p: 3,
-              gap: 1,
+              px: { xs: 0, md: 3 },
+              pt: { xs: 0, md: 3 },
+              pb: { xs: 0, md: 3 },
+              gap: 3,
             }}
           >
-            <Typography
-              sx={{
-                color: 'white',
-                fontSize: 20,
-                fontWeight: 600,
-                lineHeight: '150%',
-              }}
-            >
-              Exchanges
-            </Typography>
-            <Typography
-              sx={{ color: '#a29dca', fontSize: 14, fontWeight: 500 }}
-            >
-              Only autojoin campaigns running on these exchanges
-            </Typography>
+            <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
+              <Typography
+                sx={{
+                  color: 'white',
+                  fontSize: { xs: 16, md: 20 },
+                  fontWeight: { xs: 700, md: 600 },
+                  lineHeight: { xs: '100%', md: '150%' },
+                }}
+              >
+                Exchanges
+              </Typography>
+              <Typography
+                sx={{
+                  color: '#a29dca',
+                  fontSize: { xs: 12, md: 14 },
+                  fontWeight: 500,
+                  lineHeight: '100%',
+                }}
+              >
+                Only autojoin campaigns running on these exchanges
+              </Typography>
+            </Stack>
             <Button
               size="large"
               variant="outlined"
               disableRipple
               disabled={isSavingPreferences}
               sx={{
-                mt: 2,
-                minWidth: 200,
+                fontSize: { xs: 14, md: 16 },
+                fontWeight: 500,
+                lineHeight: '150%',
+                width: { xs: 100, md: 200 },
+                minWidth: { xs: 100, md: 200 },
+                px: { xs: '14px', md: '22px' },
                 color: isAllExchangesSelected ? 'error.main' : 'white',
                 borderRadius: 99,
                 border: '1px solid',
@@ -306,7 +363,10 @@ const AutojoinPreferences: FC<Props> = ({
           <Divider
             orientation="vertical"
             flexItem
-            sx={{ borderColor: '#3a2e6f' }}
+            sx={{
+              display: { xs: 'none', md: 'block' },
+              borderColor: '#3a2e6f',
+            }}
           />
           <Box
             sx={{
@@ -314,8 +374,8 @@ const AutojoinPreferences: FC<Props> = ({
               flex: 1,
               height: '100%',
               flexWrap: 'wrap',
-              px: 4,
-              gap: 3,
+              px: { xs: 0, md: 4 },
+              gap: { xs: 1.5, md: 3 },
             }}
           >
             {exchangesOptions?.map(({ name, display_name }) => {
@@ -346,36 +406,50 @@ const AutojoinPreferences: FC<Props> = ({
           <Box
             sx={{
               display: 'flex',
-              flexDirection: 'column',
-              width: 270,
+              flexDirection: { xs: 'row', md: 'column' },
+              alignItems: { xs: 'center', md: 'flex-start' },
+              width: { xs: '100%', md: 270 },
               height: '100%',
-              p: 3,
-              gap: 1,
+              px: { xs: 0, md: 3 },
+              pt: { xs: 0, md: 3 },
+              pb: { xs: 0, md: 3 },
+              gap: 3,
             }}
           >
-            <Typography
-              sx={{
-                color: 'white',
-                fontSize: 20,
-                fontWeight: 600,
-                lineHeight: '150%',
-              }}
-            >
-              Tokens
-            </Typography>
-            <Typography
-              sx={{ color: '#a29dca', fontSize: 14, fontWeight: 500 }}
-            >
-              Autojoin campaigns for these tokens only
-            </Typography>
+            <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
+              <Typography
+                sx={{
+                  color: 'white',
+                  fontSize: { xs: 16, md: 20 },
+                  fontWeight: { xs: 700, md: 600 },
+                  lineHeight: { xs: '100%', md: '150%' },
+                }}
+              >
+                Tokens
+              </Typography>
+              <Typography
+                sx={{
+                  color: '#a29dca',
+                  fontSize: { xs: 12, md: 14 },
+                  fontWeight: 500,
+                  lineHeight: '100%',
+                }}
+              >
+                Autojoin campaigns for these tokens only
+              </Typography>
+            </Stack>
             <Button
               size="large"
               variant="outlined"
               disableRipple
               disabled={isSavingPreferences}
               sx={{
-                mt: 2,
-                minWidth: 200,
+                fontSize: { xs: 14, md: 16 },
+                fontWeight: 500,
+                lineHeight: '150%',
+                width: { xs: 100, md: 200 },
+                minWidth: { xs: 100, md: 200 },
+                px: { xs: '14px', md: '22px' },
                 color: isAllTokensSelected ? 'error.main' : 'white',
                 borderRadius: 99,
                 border: '1px solid',
@@ -389,7 +463,10 @@ const AutojoinPreferences: FC<Props> = ({
           <Divider
             orientation="vertical"
             flexItem
-            sx={{ borderColor: '#3a2e6f' }}
+            sx={{
+              display: { xs: 'none', md: 'block' },
+              borderColor: '#3a2e6f',
+            }}
           />
           <Box
             sx={{
@@ -397,8 +474,8 @@ const AutojoinPreferences: FC<Props> = ({
               flex: 1,
               height: '100%',
               flexWrap: 'wrap',
-              px: 4,
-              gap: 3,
+              px: { xs: 0, md: 4 },
+              gap: { xs: 1.5, md: 3 },
             }}
           >
             {TOKEN_OPTIONS.map(({ name, label, icon }) => {
