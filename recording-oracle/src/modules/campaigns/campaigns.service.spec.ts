@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import {
@@ -329,7 +330,6 @@ describe('CampaignsService', () => {
     const TEST_TOKEN_DECIMALS = faker.helpers.arrayElement([6, 18]);
 
     const mockedGetEscrowStatus = vi.fn();
-    const mockedGetEscrowBalance = vi.fn();
 
     let spyOnDownloadCampaignManifest: Mock;
     let spyOnAssertCorrectCampaignSetup: Mock<
@@ -363,7 +363,6 @@ describe('CampaignsService', () => {
 
       mockedEscrowClient.build.mockResolvedValue({
         getStatus: mockedGetEscrowStatus,
-        getBalance: mockedGetEscrowBalance,
       } as unknown as EscrowClient);
 
       mockWeb3Service.getTokenSymbol.mockResolvedValue(TEST_TOKEN_SYMBOL);
@@ -720,7 +719,6 @@ describe('CampaignsService', () => {
         const manifestUrl = faker.internet.url();
         const manifestHash = faker.string.hexadecimal();
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
-        const mockEscrowBalance = totalFundedAmount - 3n;
 
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
@@ -728,9 +726,11 @@ describe('CampaignsService', () => {
           manifest: manifestUrl,
           manifestHash,
           recordingOracle: mockWeb3ConfigService.operatorAddress,
+          exchangeOracleFee: 2,
+          recordingOracleFee: 3,
+          reputationOracleFee: 5,
         } as IEscrow);
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
-        mockedGetEscrowBalance.mockResolvedValueOnce(mockEscrowBalance);
 
         spyOnDownloadCampaignManifest.mockResolvedValueOnce(
           JSON.stringify(mockedManifest),
@@ -741,12 +741,17 @@ describe('CampaignsService', () => {
         ](chainId, campaignAddress);
 
         expect(manifest).toEqual(mockedManifest);
+
+        const expectedFundAmount = Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        );
         expect(escrowInfo).toEqual({
-          fundAmount: Number(
-            ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
-          ),
+          fundAmount: expectedFundAmount,
           fundAmountNet: Number(
-            ethers.formatUnits(mockEscrowBalance, TEST_TOKEN_DECIMALS),
+            rewardsUtils.formatRewardValue(
+              Decimal(expectedFundAmount).mul(0.9),
+              TEST_TOKEN_DECIMALS,
+            ),
           ),
           fundTokenSymbol: TEST_TOKEN_SYMBOL,
           fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -771,28 +776,35 @@ describe('CampaignsService', () => {
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
-        const mockEscrowBalance = totalFundedAmount - 3n;
+
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
           manifest: JSON.stringify(mockedManifest),
           manifestHash: faker.string.hexadecimal(),
           recordingOracle: mockWeb3ConfigService.operatorAddress,
+          exchangeOracleFee: 2,
+          recordingOracleFee: 3,
+          reputationOracleFee: 5,
         } as IEscrow);
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
-        mockedGetEscrowBalance.mockResolvedValueOnce(mockEscrowBalance);
 
         const { manifest, escrowInfo } = await campaignsService[
           'retrieveCampaignData'
         ](chainId, campaignAddress);
 
         expect(manifest).toEqual(mockedManifest);
+
+        const expectedFundAmount = Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        );
         expect(escrowInfo).toEqual({
-          fundAmount: Number(
-            ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
-          ),
+          fundAmount: expectedFundAmount,
           fundAmountNet: Number(
-            ethers.formatUnits(mockEscrowBalance, TEST_TOKEN_DECIMALS),
+            rewardsUtils.formatRewardValue(
+              Decimal(expectedFundAmount).mul(0.9),
+              TEST_TOKEN_DECIMALS,
+            ),
           ),
           fundTokenSymbol: TEST_TOKEN_SYMBOL,
           fundTokenDecimals: TEST_TOKEN_DECIMALS,
