@@ -102,10 +102,11 @@ const NotificationPreferences: FC<Props> = ({
             showError('Failed to link Telegram account. Please try again.');
           }
         } else {
-          const telegramUserId = await linkTelegram(result.id_token as string);
-          if (telegramUserId === result.user.id) {
+          try {
+            const telegramUserId = await linkTelegram(result.id_token);
             onSectionChange('telegram_user_id', telegramUserId);
-          } else {
+          } catch (error) {
+            console.error(error);
             showError('Failed to link Telegram account. Please try again.');
           }
         }
