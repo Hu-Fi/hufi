@@ -66,6 +66,9 @@ class JoinedCampaignDto {
   @ApiProperty({ name: 'fund_amount' })
   fundAmount: number;
 
+  @ApiProperty({ name: 'fund_amount_net' })
+  fundAmountNet: number;
+
   @ApiProperty({ name: 'fund_token' })
   fundToken: string;
 
