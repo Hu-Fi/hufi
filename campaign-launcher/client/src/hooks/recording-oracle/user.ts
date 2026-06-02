@@ -30,13 +30,27 @@ export const usePatchUserPreferences = () => {
 };
 
 export const useLinkTelegramAccount = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (idToken: string) => recordingApi.linkTelegramAccount(idToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.USER_INFO],
+      });
+    },
   });
 };
 
 export const useUnlinkTelegramAccount = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: () => recordingApi.unlinkTelegramAccount(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.USER_INFO],
+      });
+    },
   });
 };
