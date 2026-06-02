@@ -223,4 +223,18 @@ export class RecordingApiClient extends HttpClient {
   async patchUserPreferences(preferences: PatchPreferencesDto): Promise<void> {
     await this.patch('/me/preferences', preferences);
   }
+
+  async linkTelegramAccount(idToken: string) {
+    const response = await this.post<{ telegram_user_id: string }>(
+      '/me/link-telegram',
+      {
+        id_token: idToken,
+      }
+    );
+    return response?.telegram_user_id ?? null;
+  }
+
+  async unlinkTelegramAccount(): Promise<void> {
+    await this.post('/me/unlink-telegram');
+  }
 }

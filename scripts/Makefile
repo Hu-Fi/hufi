@@ -106,3 +106,20 @@ typecheck:
 	$(MAKE) typecheck-recording-oracle
 	$(MAKE) typecheck-reputation-oracle
 	@echo "Finished typechecking code"
+
+SSL_CERTS_DIR := ./local-ssl/.certs
+SSL_CERTS_NAME := dev-local
+.PHONY: create-ssl-certs
+create-ssl-certs:
+	@echo "Creating local SSL certs..."
+	@mkdir -p $(SSL_CERTS_DIR)
+	@mkcert \
+		-cert-file $(SSL_CERTS_DIR)/$(SSL_CERTS_NAME).pem \
+		-key-file $(SSL_CERTS_DIR)/$(SSL_CERTS_NAME)-key.pem \
+		ui.hufi.local localhost 127.0.0.1 ::1
+	@echo "Local SSL certs created"
+
+.PHONY: run-reverse-proxy
+run-reverse-proxy:
+	$(MAKE) create-ssl-certs
+	@cd ./local-ssl && caddy run

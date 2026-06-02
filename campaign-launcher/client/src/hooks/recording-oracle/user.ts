@@ -28,3 +28,15 @@ export const usePatchUserPreferences = () => {
     },
   });
 };
+
+export const useLinkTelegramAccount = () => {
+  return useMutation({
+    mutationFn: (idToken: string) => recordingApi.linkTelegramAccount(idToken),
+  });
+};
+
+export const useUnlinkTelegramAccount = () => {
+  return useMutation({
+    mutationFn: () => recordingApi.unlinkTelegramAccount(),
+  });
+};

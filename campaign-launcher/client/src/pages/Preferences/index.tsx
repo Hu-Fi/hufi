@@ -4,6 +4,7 @@ import { Stack, Typography } from '@mui/material';
 import isEqual from 'lodash/isEqual';
 
 import AutojoinPreferences from '@/components/AutojoinPreferences';
+import NotificationPreferences from '@/components/NotificationPreferences';
 import PageErrorState from '@/components/PageErrorState';
 import PageWrapper from '@/components/PageWrapper';
 import UnsavedPreferencesBar from '@/components/UnsavedPreferencesBar';
@@ -15,12 +16,11 @@ import {
 import { useNotification } from '@/hooks/useNotification';
 import type { PatchPreferencesDto, UserPreferences } from '@/types';
 
-type SelectablePreferences = Omit<UserPreferences, 'telegram_user_id'>;
-type SectionKey = keyof SelectablePreferences;
+type SectionKey = keyof UserPreferences;
 
 const PreferencesPage: FC = () => {
   const [draftPreferences, setDraftPreferences] =
-    useState<SelectablePreferences | null>(null);
+    useState<UserPreferences | null>(null);
   const [isPreferencesLoading, setIsPreferencesLoading] = useState(true);
   const [dirtySections, setDirtySections] = useState<Set<SectionKey>>(
     new Set()
@@ -65,7 +65,7 @@ const PreferencesPage: FC = () => {
 
   const handleChangePreferenceSection = (
     section: SectionKey,
-    value: SelectablePreferences[SectionKey]
+    value: UserPreferences[SectionKey]
   ) => {
     if (!userInfo) {
       return;
@@ -150,12 +150,21 @@ const PreferencesPage: FC = () => {
           />
         )}
         {!isError && (
-          <AutojoinPreferences
-            preferences={draftPreferences?.campaigns_autojoin ?? null}
-            onSectionChange={handleChangePreferenceSection}
-            isPreferencesLoading={isPreferencesLoading}
-            isSavingPreferences={isSavingPreferences}
-          />
+          <>
+            <AutojoinPreferences
+              preferences={draftPreferences?.campaigns_autojoin ?? null}
+              onSectionChange={handleChangePreferenceSection}
+              isPreferencesLoading={isPreferencesLoading}
+              isSavingPreferences={isSavingPreferences}
+            />
+            <NotificationPreferences
+              preferences={draftPreferences?.notifications ?? null}
+              telegramUserId={draftPreferences?.telegram_user_id ?? null}
+              onSectionChange={handleChangePreferenceSection}
+              isPreferencesLoading={isPreferencesLoading}
+              isSavingPreferences={isSavingPreferences}
+            />
+          </>
         )}
       </Stack>
       <UnsavedPreferencesBar
