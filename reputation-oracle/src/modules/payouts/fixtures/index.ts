@@ -193,7 +193,6 @@ export function generateCampaign(): CampaignWithResults {
     launcher: faker.finance.ethereumAddress(),
     fundTokenAddress: faker.finance.ethereumAddress(),
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
-    fundAmount: faker.number.int({ min: 1 }),
     cancellationRequestedAt: null,
   };
 
