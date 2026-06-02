@@ -44,6 +44,9 @@ export class CampaignEntity {
   @Column({ type: 'decimal', precision: 30, scale: 18 })
   fundAmount: string;
 
+  @Column({ type: 'decimal', precision: 30, scale: 18 })
+  fundAmountNet: string;
+
   @Column('varchar', { length: 20 })
   fundToken: string;
 

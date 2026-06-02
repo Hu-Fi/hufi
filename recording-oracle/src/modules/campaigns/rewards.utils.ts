@@ -36,9 +36,9 @@ export function calculateDailyReward(campaign: CampaignEntity): string {
     dayjs(campaign.endDate).diff(campaign.startDate, 'days', true),
   );
 
-  const fundAmount = new Decimal(campaign.fundAmount);
+  const fundAmountNet = new Decimal(campaign.fundAmountNet);
 
-  const dailyReward = fundAmount.div(campaignDurationDays);
+  const dailyReward = fundAmountNet.div(campaignDurationDays);
 
   return formatRewardValue(dailyReward, campaign.fundTokenDecimals);
 }

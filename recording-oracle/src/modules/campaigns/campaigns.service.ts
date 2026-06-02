@@ -249,6 +249,7 @@ export class CampaignsService implements OnModuleDestroy {
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
+    newCampaign.fundAmountNet = escrowInfo.fundAmountNet.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
     newCampaign.details = details;
@@ -415,16 +416,21 @@ export class CampaignsService implements OnModuleDestroy {
       );
     }
 
-    const [campaignTokenSymbol, campaignTokenDecimals] = await Promise.all([
-      this.web3Service.getTokenSymbol(chainId, escrow.token),
-      this.web3Service.getTokenDecimals(chainId, escrow.token),
-    ]);
+    const [campaignTokenSymbol, campaignTokenDecimals, fundAmountNet] =
+      await Promise.all([
+        this.web3Service.getTokenSymbol(chainId, escrow.token),
+        this.web3Service.getTokenDecimals(chainId, escrow.token),
+        escrowClient.getBalance(campaignAddress),
+      ]);
 
     return {
       manifest,
       escrowInfo: {
         fundAmount: Number(
           ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
+        ),
+        fundAmountNet: Number(
+          ethers.formatUnits(fundAmountNet, campaignTokenDecimals),
         ),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
