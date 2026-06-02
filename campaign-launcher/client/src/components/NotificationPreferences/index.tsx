@@ -133,12 +133,15 @@ const NotificationPreferences: FC<Props> = ({
     }
   };
 
-  const handleSwitchChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleSwitchChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    field: keyof UserPreferences['notifications']
+  ) => {
     if (!preferences) return null;
 
     onSectionChange('notifications', {
       ...preferences,
-      campaigns_autojoin: event.target.checked,
+      [field]: event.target.checked,
     });
   };
 
@@ -360,7 +363,9 @@ const NotificationPreferences: FC<Props> = ({
           <SwitchStyled
             checked={preferences?.campaigns_autojoin ?? false}
             disabled={isSavingPreferences}
-            onChange={handleSwitchChange}
+            onChange={(event) =>
+              handleSwitchChange(event, 'campaigns_autojoin')
+            }
           />
         </Box>
       )}
