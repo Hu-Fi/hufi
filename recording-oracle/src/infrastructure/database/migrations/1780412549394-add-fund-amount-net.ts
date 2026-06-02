@@ -19,10 +19,18 @@ async function getCampaignFundAmountNet(campaign: Campaign): Promise<string> {
     throw new Error(`Escrow not found for campaign: ${campaign.id}`);
   }
 
+  if (
+    !escrow.exchangeOracleFee ||
+    !escrow.recordingOracleFee ||
+    !escrow.reputationOracleFee
+  ) {
+    throw new Error(`Oracle fees not found for campaign: ${campaign.id}`);
+  }
+
   const oraclesFeePercent =
-    escrow.exchangeOracleFee! +
-    escrow.recordingOracleFee! +
-    escrow.reputationOracleFee!;
+    escrow.exchangeOracleFee +
+    escrow.recordingOracleFee +
+    escrow.reputationOracleFee;
   const netFundsPercent = 100 - oraclesFeePercent;
 
   const fundAmountNet = Decimal(campaign.fund_amount)
