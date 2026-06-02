@@ -13,7 +13,7 @@ import {
 import { TOKENS } from '@/constants/tokens';
 import { AutojoinLabelIcon, LightningIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { CampaignType, type Preferences } from '@/types';
+import { CampaignType, type UserPreferences } from '@/types';
 
 import {
   CheckboxCheckedIcon,
@@ -42,10 +42,10 @@ const TOKEN_OPTIONS = TOKENS.filter(({ name }) =>
 }));
 
 type Props = {
-  preferences: Preferences['campaigns_autojoin'] | null;
+  preferences: UserPreferences['campaigns_autojoin'] | null;
   onSectionChange: (
     section: 'campaigns_autojoin',
-    value: Preferences['campaigns_autojoin']
+    value: UserPreferences['campaigns_autojoin']
   ) => void;
   isPreferencesLoading: boolean;
   isSavingPreferences: boolean;

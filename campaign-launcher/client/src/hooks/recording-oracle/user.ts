@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { recordingApi } from '@/api';
 import { AUTHED_QUERY_TAG, QUERY_KEYS } from '@/constants/queryKeys';
 import { useWeb3Auth } from '@/providers/Web3AuthProvider';
-import { type PatchPreferencesDto } from '@/types';
+import type { PatchPreferencesDto } from '@/types';
 
 export const useGetUserInfo = () => {
   const { isAuthenticated } = useWeb3Auth();

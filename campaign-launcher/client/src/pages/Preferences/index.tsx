@@ -13,14 +13,16 @@ import {
   usePatchUserPreferences,
 } from '@/hooks/recording-oracle/user';
 import { useNotification } from '@/hooks/useNotification';
-import { type PatchPreferencesDto, type Preferences } from '@/types';
+import type { PatchPreferencesDto, UserPreferences } from '@/types';
+
+type SelectablePreferences = Omit<UserPreferences, 'telegram_user_id'>;
+type SectionKey = keyof SelectablePreferences;
 
 const PreferencesPage: FC = () => {
-  const [draftPreferences, setDraftPreferences] = useState<Preferences | null>(
-    null
-  );
+  const [draftPreferences, setDraftPreferences] =
+    useState<SelectablePreferences | null>(null);
   const [isPreferencesLoading, setIsPreferencesLoading] = useState(true);
-  const [dirtySections, setDirtySections] = useState<Set<keyof Preferences>>(
+  const [dirtySections, setDirtySections] = useState<Set<SectionKey>>(
     new Set()
   );
 
@@ -61,9 +63,9 @@ const PreferencesPage: FC = () => {
       : true;
   }, [draftPreferences]);
 
-  const handleChangePreferenceSection = <TSection extends keyof Preferences>(
-    section: TSection,
-    value: Preferences[TSection]
+  const handleChangePreferenceSection = (
+    section: SectionKey,
+    value: SelectablePreferences[SectionKey]
   ) => {
     if (!userInfo) {
       return;
@@ -110,15 +112,8 @@ const PreferencesPage: FC = () => {
 
     const payload: PatchPreferencesDto = {};
 
-    const setPayloadSection = <TSection extends keyof Preferences>(
-      key: TSection,
-      value: Preferences[TSection]
-    ) => {
-      payload[key] = value;
-    };
-
     dirtySections.forEach((section) => {
-      setPayloadSection(section, draftPreferences[section]);
+      Object.assign(payload, { [section]: draftPreferences[section] });
     });
 
     try {

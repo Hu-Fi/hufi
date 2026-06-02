@@ -1,11 +1,5 @@
 import type { ChainId } from '@human-protocol/sdk';
 
-export type DeepPartial<T> = T extends object
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>;
-    }
-  : T;
-
 export type EvmAddress = `0x${string}`;
 
 export enum ExchangeType {
@@ -282,7 +276,7 @@ export enum CampaignsTabFilter {
   HOSTED = 'hosted',
 }
 
-export type Preferences = {
+export type UserPreferences = {
   campaigns_autojoin: {
     enabled: boolean;
     exchanges: string[];
@@ -295,10 +289,12 @@ export type Preferences = {
   };
 };
 
-export type PatchPreferencesDto = DeepPartial<Preferences>;
+export type PatchPreferencesDto = Partial<
+  Omit<UserPreferences, 'telegram_user_id'>
+>;
 
 export type UserInfo = {
   id: string;
   evm_address: EvmAddress;
-  preferences: Preferences;
+  preferences: UserPreferences;
 };
