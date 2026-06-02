@@ -31,7 +31,7 @@ type Props = {
   telegramUserId: string | null;
   onSectionChange: (
     section: 'notifications' | 'telegram_user_id',
-    value: UserPreferences['notifications'] | string | null
+    value: UserPreferences['notifications' | 'telegram_user_id']
   ) => void;
   isPreferencesLoading: boolean;
   isSavingPreferences: boolean;
