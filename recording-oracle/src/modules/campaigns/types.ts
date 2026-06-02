@@ -85,6 +85,7 @@ export type CampaignManifest =
 
 export type CampaignEscrowInfo = {
   fundAmount: number;
+  fundAmountNet: number;
   fundTokenSymbol: string;
   fundTokenDecimals: number;
   cancellationRequestedAt: number | null;

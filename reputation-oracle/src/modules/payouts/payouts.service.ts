@@ -606,9 +606,6 @@ export class PayoutsService {
           intermediateResultsHash: escrow.intermediateResultsHash,
           fundTokenAddress: escrow.token,
           fundTokenDecimals,
-          fundAmount: Number(
-            ethers.formatUnits(escrow.totalFundedAmount, fundTokenDecimals),
-          ),
           cancellationRequestedAt: escrow.cancellationRequestedAt
             ? new Date(escrow.cancellationRequestedAt)
             : null,

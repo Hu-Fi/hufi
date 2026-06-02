@@ -85,6 +85,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     .add(faker.number.int({ min: 3, max: 7 }), 'days')
     .toDate();
 
+  const fundAmount = faker.number.float({ min: 10, max: 10000 });
   const campaign: Omit<CampaignEntity, 'beforeInsert' | 'beforeUpdate'> = {
     id: faker.string.uuid(),
     chainId: generateTestnetChainId(),
@@ -94,7 +95,8 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
     symbol,
     startDate,
     endDate,
-    fundAmount: faker.number.float({ min: 10, max: 10000 }).toString(),
+    fundAmount: fundAmount.toString(),
+    fundAmountNet: (fundAmount * 0.97).toString(),
     fundToken: faker.finance.currencyCode(),
     fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
     details,

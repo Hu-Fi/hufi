@@ -122,6 +122,7 @@ export class CampaignsController {
           startDate: campaign.startDate.toISOString(),
           endDate: campaign.endDate.toISOString(),
           fundAmount: Number(campaign.fundAmount),
+          fundAmountNet: Number(campaign.fundAmountNet),
           fundToken: campaign.fundToken,
           details: campaign.details,
           status: CAMPAIGN_STATUS_TO_RETURNED_STATUS[campaign.status],

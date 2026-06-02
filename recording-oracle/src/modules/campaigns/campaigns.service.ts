@@ -249,6 +249,7 @@ export class CampaignsService implements OnModuleDestroy {
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
+    newCampaign.fundAmountNet = escrowInfo.fundAmountNet.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
     newCampaign.details = details;
@@ -420,12 +421,27 @@ export class CampaignsService implements OnModuleDestroy {
       this.web3Service.getTokenDecimals(chainId, escrow.token),
     ]);
 
+    const fundAmount = ethers.formatUnits(
+      escrow.totalFundedAmount,
+      campaignTokenDecimals,
+    );
+
+    const oraclesFeePercent =
+      escrow.exchangeOracleFee! +
+      escrow.recordingOracleFee! +
+      escrow.reputationOracleFee!;
+    const netFundsPercent = 100 - oraclesFeePercent;
+
+    const fundAmountNet = rewardsUtils.formatRewardValue(
+      Decimal(fundAmount).mul(netFundsPercent).div(100),
+      campaignTokenDecimals,
+    );
+
     return {
       manifest,
       escrowInfo: {
-        fundAmount: Number(
-          ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
-        ),
+        fundAmount: Number(fundAmount),
+        fundAmountNet: Number(fundAmountNet),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
         cancellationRequestedAt: escrow.cancellationRequestedAt,

@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import {
@@ -108,7 +109,7 @@ import {
   isThresholdCampaign,
 } from './type-guards';
 import {
-  CampaignEscrowInfo,
+  type CampaignEscrowInfo,
   type CampaignProgress,
   CampaignStatus,
   type CompetitiveMarketMakingCampaignDetails,
@@ -718,12 +719,16 @@ describe('CampaignsService', () => {
         const manifestUrl = faker.internet.url();
         const manifestHash = faker.string.hexadecimal();
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
+
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
           manifest: manifestUrl,
           manifestHash,
           recordingOracle: mockWeb3ConfigService.operatorAddress,
+          exchangeOracleFee: 2,
+          recordingOracleFee: 3,
+          reputationOracleFee: 5,
         } as IEscrow);
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
@@ -736,9 +741,17 @@ describe('CampaignsService', () => {
         ](chainId, campaignAddress);
 
         expect(manifest).toEqual(mockedManifest);
+
+        const expectedFundAmount = Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        );
         expect(escrowInfo).toEqual({
-          fundAmount: Number(
-            ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+          fundAmount: expectedFundAmount,
+          fundAmountNet: Number(
+            rewardsUtils.formatRewardValue(
+              Decimal(expectedFundAmount).mul(0.9),
+              TEST_TOKEN_DECIMALS,
+            ),
           ),
           fundTokenSymbol: TEST_TOKEN_SYMBOL,
           fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -763,12 +776,16 @@ describe('CampaignsService', () => {
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
+
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
           manifest: JSON.stringify(mockedManifest),
           manifestHash: faker.string.hexadecimal(),
           recordingOracle: mockWeb3ConfigService.operatorAddress,
+          exchangeOracleFee: 2,
+          recordingOracleFee: 3,
+          reputationOracleFee: 5,
         } as IEscrow);
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
@@ -777,9 +794,17 @@ describe('CampaignsService', () => {
         ](chainId, campaignAddress);
 
         expect(manifest).toEqual(mockedManifest);
+
+        const expectedFundAmount = Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        );
         expect(escrowInfo).toEqual({
-          fundAmount: Number(
-            ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+          fundAmount: expectedFundAmount,
+          fundAmountNet: Number(
+            rewardsUtils.formatRewardValue(
+              Decimal(expectedFundAmount).mul(0.9),
+              TEST_TOKEN_DECIMALS,
+            ),
           ),
           fundTokenSymbol: TEST_TOKEN_SYMBOL,
           fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -797,6 +822,7 @@ describe('CampaignsService', () => {
     let chainId: number;
     let campaignAddress: string;
     let fundAmount: number;
+    let fundAmountNet: number;
     let fundTokenSymbol: string;
     let fundTokenDecimals: number;
 
@@ -806,6 +832,7 @@ describe('CampaignsService', () => {
       chainId = generateTestnetChainId();
       campaignAddress = faker.finance.ethereumAddress();
       fundAmount = faker.number.float();
+      fundAmountNet = fundAmount * 0.97;
       fundTokenSymbol = faker.finance.currencyCode();
       fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
@@ -814,6 +841,7 @@ describe('CampaignsService', () => {
         chainId,
         address: ethers.getAddress(campaignAddress),
         fundAmount: fundAmount.toString(),
+        fundAmountNet: fundAmountNet.toString(),
         fundToken: fundTokenSymbol,
         fundTokenDecimals,
         status: 'active',
@@ -832,6 +860,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -868,6 +897,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -904,6 +934,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -946,6 +977,7 @@ describe('CampaignsService', () => {
           manifest,
           {
             fundAmount,
+            fundAmountNet,
             fundTokenSymbol,
             fundTokenDecimals,
             cancellationRequestedAt: null,
@@ -984,6 +1016,7 @@ describe('CampaignsService', () => {
           manifest,
           {
             fundAmount,
+            fundAmountNet,
             fundTokenSymbol,
             fundTokenDecimals,
             cancellationRequestedAt: null,
@@ -1008,6 +1041,7 @@ describe('CampaignsService', () => {
           manifest,
           {
             fundAmount,
+            fundAmountNet,
             fundTokenSymbol,
             fundTokenDecimals,
             cancellationRequestedAt: null,
@@ -1031,6 +1065,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: cancellationRequestedAt.valueOf(),
@@ -1067,6 +1102,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -1198,9 +1234,12 @@ describe('CampaignsService', () => {
         .mockImplementation(vi.fn());
       const spyOnCreateCampaign = vi.spyOn(campaignsService, 'createCampaign');
       const campaignManifest = generateCampaignManifest();
-      const escrowInfo = {
+      const escrowInfo: CampaignEscrowInfo = {
         fundAmount: faker.number.float(),
+        fundAmountNet: faker.number.float(),
         fundTokenSymbol: faker.finance.currencyCode(),
+        fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
+        cancellationRequestedAt: null,
       };
       spyOnretrieveCampaignData.mockResolvedValueOnce({
         manifest: campaignManifest,
@@ -4304,8 +4343,10 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
       const campaignManifest = generateCampaignManifest();
+      const fundAmount = faker.number.float();
       const escrowInfo: CampaignEscrowInfo = {
-        fundAmount: faker.number.float(),
+        fundAmount,
+        fundAmountNet: fundAmount * 0.97,
         fundTokenSymbol: faker.finance.currencyCode(),
         fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
         cancellationRequestedAt: null,
