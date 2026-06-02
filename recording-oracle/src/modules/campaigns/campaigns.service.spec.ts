@@ -1111,7 +1111,6 @@ describe('CampaignsService', () => {
     let chainId: number;
 
     const mockedGetEscrowStatus = vi.fn();
-    const mockedGetEscrowBalance = vi.fn();
 
     beforeEach(() => {
       campaign = generateCampaignEntity();
@@ -1120,7 +1119,6 @@ describe('CampaignsService', () => {
 
       mockedEscrowClient.build.mockResolvedValue({
         getStatus: mockedGetEscrowStatus,
-        getBalance: mockedGetEscrowBalance,
       } as unknown as EscrowClient);
     });
 
@@ -1224,10 +1222,12 @@ describe('CampaignsService', () => {
         .mockImplementation(vi.fn());
       const spyOnCreateCampaign = vi.spyOn(campaignsService, 'createCampaign');
       const campaignManifest = generateCampaignManifest();
-      const escrowInfo = {
+      const escrowInfo: CampaignEscrowInfo = {
         fundAmount: faker.number.float(),
         fundAmountNet: faker.number.float(),
         fundTokenSymbol: faker.finance.currencyCode(),
+        fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
+        cancellationRequestedAt: null,
       };
       spyOnretrieveCampaignData.mockResolvedValueOnce({
         manifest: campaignManifest,
@@ -2036,7 +2036,6 @@ describe('CampaignsService', () => {
     let campaign: CampaignEntity;
 
     const mockedGetEscrowStatus = vi.fn();
-    const mockedGetEscrowBalance = vi.fn();
 
     beforeAll(() => {
       spyOnRetrieveCampaignIntermediateResults = vi.spyOn(
@@ -2092,7 +2091,6 @@ describe('CampaignsService', () => {
 
       mockedEscrowClient.build.mockResolvedValue({
         getStatus: mockedGetEscrowStatus,
-        getBalance: mockedGetEscrowBalance,
       } as unknown as EscrowClient);
     });
 
