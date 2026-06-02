@@ -16,12 +16,11 @@ import {
 import { useNotification } from '@/hooks/useNotification';
 import type { PatchPreferencesDto, UserPreferences } from '@/types';
 
-type SelectablePreferences = Omit<UserPreferences, 'telegram_user_id'>;
-type SectionKey = keyof SelectablePreferences;
+type SectionKey = keyof UserPreferences;
 
 const PreferencesPage: FC = () => {
   const [draftPreferences, setDraftPreferences] =
-    useState<SelectablePreferences | null>(null);
+    useState<UserPreferences | null>(null);
   const [isPreferencesLoading, setIsPreferencesLoading] = useState(true);
   const [dirtySections, setDirtySections] = useState<Set<SectionKey>>(
     new Set()
@@ -66,7 +65,7 @@ const PreferencesPage: FC = () => {
 
   const handleChangePreferenceSection = (
     section: SectionKey,
-    value: SelectablePreferences[SectionKey]
+    value: UserPreferences[SectionKey]
   ) => {
     if (!userInfo) {
       return;

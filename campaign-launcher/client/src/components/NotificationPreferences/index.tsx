@@ -19,7 +19,7 @@ import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { LinkOffIcon, LinkOnIcon } from '@/icons';
 import { loadTelegramLoginClient } from '@/lib/loadTelegramClient';
-import { type Preferences } from '@/types';
+import { type UserPreferences } from '@/types';
 
 const clientId = import.meta.env.VITE_HUFI_TG_BOT_CLIENT_ID;
 const CLIENT_ERROR_MESSAGE =
@@ -27,11 +27,11 @@ const CLIENT_ERROR_MESSAGE =
 const POPUP_CLOSED_ERROR = 'popup_closed';
 
 type Props = {
-  preferences: Preferences['notifications'] | null;
+  preferences: UserPreferences['notifications'] | null;
   telegramUserId: string | null;
   onSectionChange: (
     section: 'notifications' | 'telegram_user_id',
-    value: Preferences['notifications'] | string | null
+    value: UserPreferences['notifications'] | string | null
   ) => void;
   isPreferencesLoading: boolean;
   isSavingPreferences: boolean;
@@ -120,9 +120,10 @@ const NotificationPreferences: FC<Props> = ({
     try {
       await unlinkTelegram();
       onSectionChange('telegram_user_id', null);
+
       const resetNotifications = Object.fromEntries(
         Object.keys(preferences).map((key) => [key, false])
-      ) as Preferences['notifications'];
+      ) as UserPreferences['notifications'];
       onSectionChange('notifications', {
         ...resetNotifications,
       });

@@ -289,9 +289,7 @@ export type UserPreferences = {
   };
 };
 
-export type PatchPreferencesDto = Partial<
-  Omit<UserPreferences, 'telegram_user_id'>
->;
+export type PatchPreferencesDto = Partial<UserPreferences>;
 
 export type UserInfo = {
   id: string;
