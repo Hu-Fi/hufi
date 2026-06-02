@@ -4,6 +4,8 @@ import Decimal from 'decimal.js';
 import _ from 'lodash';
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
+import { CampaignType } from '@/common/constants';
+
 import type { CampaignEntity } from './campaign.entity';
 import {
   generateCampaignEntity,
@@ -17,7 +19,6 @@ import type {
 } from './progress-checking';
 import * as rewardsUtils from './rewards.utils';
 import {
-  CampaignType,
   CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,
@@ -89,7 +90,7 @@ describe('rewards utils', () => {
 
       const dailyReward = rewardsUtils.calculateDailyReward(campaign);
 
-      const expectedDailyReward = new Decimal(campaign.fundAmount)
+      const expectedDailyReward = new Decimal(campaign.fundAmountNet)
         .div(duration)
         .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
         .toString();
@@ -111,7 +112,7 @@ describe('rewards utils', () => {
 
       const dailyReward = rewardsUtils.calculateDailyReward(campaign);
 
-      const expectedDailyReward = new Decimal(campaign.fundAmount)
+      const expectedDailyReward = new Decimal(campaign.fundAmountNet)
         .div(duration)
         .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
         .toString();
@@ -121,7 +122,7 @@ describe('rewards utils', () => {
     test('should correctly truncate reward value', () => {
       const duration = 6;
       const campaign = generateCampaignEntity();
-      campaign.fundAmount = '10';
+      campaign.fundAmountNet = '10';
       campaign.fundTokenDecimals = 18;
       campaign.endDate = dayjs(campaign.startDate)
         .add(duration, 'days')
@@ -129,7 +130,7 @@ describe('rewards utils', () => {
 
       const dailyReward = rewardsUtils.calculateDailyReward(campaign);
 
-      const expectedDailyReward = new Decimal(campaign.fundAmount)
+      const expectedDailyReward = new Decimal(campaign.fundAmountNet)
         .div(duration)
         .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
         .toString();

@@ -109,7 +109,7 @@ const FAQ: FC = () => {
                   Copy the API Key and Secret Key.
                 </Typography>
                 <Typography component="li" variant="body2">
-                  Paste them in the API key section here and save.
+                  Paste them in the API key section and save.
                 </Typography>
               </Stack>
               <Typography

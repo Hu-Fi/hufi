@@ -1,22 +1,8 @@
+import _ from 'lodash';
+
 import { isObject } from './type-guard';
 
 type CaseTransformer = (input: string) => string;
-
-/**
- * TODO: check if replacing it with lodash.camelCase
- * won't break anything
- */
-const snakeToCamel: CaseTransformer = (input) => {
-  return input.replace(/_([a-z])/g, (_match, letter) => letter.toUpperCase());
-};
-
-/**
- * TODO: check if replacing it with lodash.snakeCase
- * won't break anything
- */
-const camelToSnake: CaseTransformer = (input) => {
-  return input.replace(/([A-Z])/g, '_$1').toLowerCase();
-};
 
 function transformKeysCase(
   input: unknown,
@@ -41,10 +27,10 @@ function transformKeysCase(
   return transformedObject;
 }
 
-export function transformKeysFromSnakeToCamel(input: unknown): unknown {
-  return transformKeysCase(input, snakeToCamel);
+export function transformKeysToCamelCase(input: unknown): unknown {
+  return transformKeysCase(input, _.camelCase);
 }
 
-export function transformKeysFromCamelToSnake(input: unknown): unknown {
-  return transformKeysCase(input, camelToSnake);
+export function transformKeysToSnakeCase(input: unknown): unknown {
+  return transformKeysCase(input, _.snakeCase);
 }

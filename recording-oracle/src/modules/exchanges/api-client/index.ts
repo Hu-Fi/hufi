@@ -16,5 +16,3 @@ export {
   type RequiredAccessCheckResult,
   type Trade,
 } from './types';
-
-export { type PancakeswapClient } from './pancakeswap';

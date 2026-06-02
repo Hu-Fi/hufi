@@ -4,7 +4,9 @@ import ms from 'ms';
 export const MAX_PAGE_SIZE = 50;
 
 export const tokenAddressBySymbol: Record<string, string | undefined> = {
+  WBNB: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
   USDT: '0x55d398326f99059fF775485246999027B3197955',
+  USDC: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
   HMT: NETWORKS[ChainId.BSC_MAINNET]!.hmtAddress,
 };
 tokenAddressBySymbol.USDT0 = tokenAddressBySymbol.USDT;
@@ -18,3 +20,5 @@ tokenAddressBySymbol.USDT0 = tokenAddressBySymbol.USDT;
  * have a space for maneuver.
  */
 export const MAX_LOOKBACK_MS = ms('4 days');
+
+export const ACCEPTED_SYNC_DELAY_MS = ms('20 seconds');

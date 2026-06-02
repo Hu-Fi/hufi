@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 import * as CaseConverter from './case-converter';
 
 describe('Case converting utilities', () => {
-  describe('transformKeysFromSnakeToCamel', () => {
+  describe('transformKeysToCamelCase', () => {
     test.each([
       'string',
       42,
@@ -15,13 +15,13 @@ describe('Case converting utilities', () => {
       null,
       undefined,
     ])('should not transform basic value [%#]', (value: unknown) => {
-      expect(CaseConverter.transformKeysFromSnakeToCamel(value)).toEqual(value);
+      expect(CaseConverter.transformKeysToCamelCase(value)).toEqual(value);
     });
 
     test('should not transform simple array', () => {
       const input = faker.helpers.multiple(() => faker.string.sample());
 
-      const output = CaseConverter.transformKeysFromSnakeToCamel(input);
+      const output = CaseConverter.transformKeysToCamelCase(input);
 
       expect(output).toEqual(input);
     });
@@ -34,7 +34,7 @@ describe('Case converting utilities', () => {
         testCase: v.test_case,
       }));
 
-      const output = CaseConverter.transformKeysFromSnakeToCamel(input);
+      const output = CaseConverter.transformKeysToCamelCase(input);
 
       expect(output).toEqual(expectedOutput);
     });
@@ -47,7 +47,7 @@ describe('Case converting utilities', () => {
         always_null: null,
       };
 
-      const output = CaseConverter.transformKeysFromSnakeToCamel(input);
+      const output = CaseConverter.transformKeysToCamelCase(input);
 
       expect(output).toEqual({
         randomString: input.random_string,
@@ -72,7 +72,7 @@ describe('Case converting utilities', () => {
         },
       };
 
-      const output = CaseConverter.transformKeysFromSnakeToCamel(input);
+      const output = CaseConverter.transformKeysToCamelCase(input);
 
       expect(output).toEqual({
         nestedObject: {
@@ -88,7 +88,7 @@ describe('Case converting utilities', () => {
     });
   });
 
-  describe('transformKeysFromCamelToSnake', () => {
+  describe('transformKeysToSnakeCase', () => {
     test.each([
       'string',
       42,
@@ -99,13 +99,13 @@ describe('Case converting utilities', () => {
       null,
       undefined,
     ])('should not transform primitive [%#]', (value: unknown) => {
-      expect(CaseConverter.transformKeysFromCamelToSnake(value)).toEqual(value);
+      expect(CaseConverter.transformKeysToSnakeCase(value)).toEqual(value);
     });
 
     test('should not transform simple array', () => {
       const input = faker.helpers.multiple(() => faker.string.sample());
 
-      const output = CaseConverter.transformKeysFromCamelToSnake(input);
+      const output = CaseConverter.transformKeysToSnakeCase(input);
 
       expect(output).toEqual(input);
     });
@@ -118,7 +118,7 @@ describe('Case converting utilities', () => {
         test_case: v.testCase,
       }));
 
-      const output = CaseConverter.transformKeysFromCamelToSnake(input);
+      const output = CaseConverter.transformKeysToSnakeCase(input);
 
       expect(output).toEqual(expectedOutput);
     });
@@ -131,7 +131,7 @@ describe('Case converting utilities', () => {
         alwaysNull: null,
       };
 
-      const output = CaseConverter.transformKeysFromCamelToSnake(input);
+      const output = CaseConverter.transformKeysToSnakeCase(input);
 
       expect(output).toEqual({
         random_string: input.randomString,
@@ -156,7 +156,7 @@ describe('Case converting utilities', () => {
         },
       };
 
-      const output = CaseConverter.transformKeysFromCamelToSnake(input);
+      const output = CaseConverter.transformKeysToSnakeCase(input);
 
       expect(output).toEqual({
         nested_object: {

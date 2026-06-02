@@ -221,14 +221,6 @@ export type ThresholdMeta = {
 export type MyMeta = HoldingResult | MarketMakingResult | ThresholdResult;
 export type TotalMeta = HoldingMeta | MarketMakingMeta | ThresholdMeta;
 
-export type UserProgress = {
-  from: string;
-  to: string;
-  my_score: number;
-  my_meta: MyMeta;
-  total_meta: TotalMeta;
-};
-
 type BaseCampaignFormValues = {
   exchange: string;
   start_date: Date;
@@ -283,3 +275,24 @@ export enum CampaignsTabFilter {
   JOINED = 'joined',
   HOSTED = 'hosted',
 }
+
+export type UserPreferences = {
+  campaigns_autojoin: {
+    enabled: boolean;
+    exchanges: string[];
+    campaign_types: string[];
+    tokens: string[];
+  };
+  telegram_user_id: string | null;
+  notifications: {
+    campaigns_autojoin: boolean;
+  };
+};
+
+export type PatchPreferencesDto = Partial<UserPreferences>;
+
+export type UserInfo = {
+  id: string;
+  evm_address: EvmAddress;
+  preferences: UserPreferences;
+};

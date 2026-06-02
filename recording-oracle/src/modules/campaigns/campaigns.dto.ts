@@ -15,6 +15,7 @@ import {
 } from 'class-validator';
 
 import {
+  CampaignType,
   ChainIds,
   DEFAULT_PAGINATION_LIMIT,
   ExchangeName,
@@ -24,7 +25,6 @@ import { parseQueryArray } from '@/common/utils/transformer';
 
 import {
   CampaignDetails,
-  CampaignType,
   CampaignJoinStatus,
   ReturnedCampaignStatus,
 } from './types';
@@ -65,6 +65,9 @@ class JoinedCampaignDto {
 
   @ApiProperty({ name: 'fund_amount' })
   fundAmount: number;
+
+  @ApiProperty({ name: 'fund_amount_net' })
+  fundAmountNet: number;
 
   @ApiProperty({ name: 'fund_token' })
   fundToken: string;
@@ -266,29 +269,6 @@ export class CampaignParamsDto {
   })
   @IsEthereumAddress()
   campaignAddress: string;
-}
-
-export class GetUserProgressResponseDto {
-  @ApiProperty()
-  from: string;
-
-  @ApiProperty()
-  to: string;
-
-  @ApiProperty({
-    name: 'my_score',
-  })
-  myScore: number;
-
-  @ApiProperty({
-    name: 'my_meta',
-  })
-  myMeta: object;
-
-  @ApiProperty({
-    name: 'total_meta',
-  })
-  totalMeta: object;
 }
 
 export class LeaderboardEntry {

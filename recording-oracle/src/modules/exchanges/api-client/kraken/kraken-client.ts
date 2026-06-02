@@ -4,6 +4,7 @@ import { setTimeout as delay } from 'timers/promises';
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import axios, { AxiosError } from 'axios';
 import { parse as csvParse } from 'csv-parse';
+import dayjs from 'dayjs';
 
 import { ExchangeName } from '@/common/constants';
 import * as cryptoUtils from '@/common/utils/crypto';
@@ -180,9 +181,6 @@ export class KrakenClient implements ExchangeApiClient {
      * We aren't going to make same-ms requests, so it should be fine.
      * If we are - then we can request to increase "nonce window" in
      * API key settings.
-     *
-     * TODO: rethink "out of order" requests, probably by controlling
-     * the flow to always have one in-flight request.
      */
     const nonce: string = Date.now().toString();
     const payload: Record<string, unknown> = Object.assign(
@@ -327,8 +325,8 @@ export class KrakenClient implements ExchangeApiClient {
      * so use [since, until] seconds range to get all trades for boundary seconds
      * and filter out trades not within [since, until) ms range when processing report.
      */
-    const starttm = Math.floor(since.valueOf() / 1000);
-    const endtm = Math.ceil(until.valueOf() / 1000);
+    const starttm = dayjs(since).unix();
+    const endtm = dayjs(until).unix() + 1;
 
     const result = await this.makeRequest<{ id: string }>(
       'POST',

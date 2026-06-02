@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { CampaignType } from '@/common/constants';
 import {
   generateExchangeName,
   generateTradingPair,
@@ -7,7 +8,6 @@ import {
 
 import {
   CampaignManifest,
-  CampaignType,
   type CampaignManifestBase,
   type CompetitiveMarketMakingCampaignManifest,
   type HoldingCampaignManifest,

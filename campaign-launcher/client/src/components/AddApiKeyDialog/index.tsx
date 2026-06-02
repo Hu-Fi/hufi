@@ -145,7 +145,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               fontWeight: 700,
             }}
           >
-            Add API KEY
+            Add API Key
           </Typography>
           <Typography
             variant="body2"
@@ -153,7 +153,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               fontWeight: 500,
             }}
           >
-            For you to join a running campaign you must connect your API KEY
+            For you to join a running campaign you must connect your API key
           </Typography>
         </Stack>
         <Stack

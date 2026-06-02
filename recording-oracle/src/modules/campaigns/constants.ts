@@ -1,6 +1,5 @@
+import { CampaignType } from '@/common/constants';
 import { ExchangePermission } from '@/modules/exchanges';
-
-import { CampaignType } from './types';
 
 /**
  * Just a convenience constant to easily search places where

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
 
-import { ContentType } from '@/common/enums';
+import { ContentType } from '@/common/constants';
 import { S3ConfigService } from '@/config';
 import logger from '@/logger';
 

@@ -9,10 +9,11 @@ import axios, { AxiosError } from 'axios';
 import type {
   EvmAddress,
   ExchangeApiKeyData,
-  UserProgress,
   CheckCampaignJoinStatusResponse,
   JoinedCampaignsResponse,
   LeaderboardResponseDto,
+  UserInfo,
+  PatchPreferencesDto,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -204,23 +205,6 @@ export class RecordingApiClient extends HttpClient {
     return response;
   }
 
-  async getUserProgress(
-    chain_id: ChainId,
-    campaign_address: EvmAddress
-  ): Promise<UserProgress | null> {
-    const response = await this.get<UserProgress | undefined>(
-      `/campaigns/${chain_id}-${campaign_address}/my-progress`,
-      {
-        params: {
-          chain_id,
-          campaign_address,
-        },
-      }
-    );
-
-    return response || null;
-  }
-
   async getLeaderboard(
     chain_id: ChainId,
     campaign_address: string
@@ -229,5 +213,28 @@ export class RecordingApiClient extends HttpClient {
       `/campaigns/${chain_id}-${campaign_address}/leaderboard`
     );
     return response;
+  }
+
+  async getUserInfo(): Promise<UserInfo> {
+    const response = await this.get<UserInfo>('/me');
+    return response;
+  }
+
+  async patchUserPreferences(preferences: PatchPreferencesDto): Promise<void> {
+    await this.patch('/me/preferences', preferences);
+  }
+
+  async linkTelegramAccount(idToken: string) {
+    const response = await this.post<{ telegram_user_id: string }>(
+      '/me/link-telegram',
+      {
+        id_token: idToken,
+      }
+    );
+    return response?.telegram_user_id ?? null;
+  }
+
+  async unlinkTelegramAccount(): Promise<void> {
+    await this.post('/me/unlink-telegram');
   }
 }

@@ -14,9 +14,9 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import type { Constructor } from 'type-fest';
 
 import { ExchangeName, ExchangeType } from '@/common/constants';
-import type { ClassConstructor } from '@/common/types';
 import { ExchangeNameValidator } from '@/common/validators';
 
 export class ExchangeNameParamDto {
@@ -61,7 +61,7 @@ export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
   )
   @ValidateNested()
   @Transform((params: { obj: EnrollExchangeApiKeysDto; value: unknown }) => {
-    let exchangeExtrasDtoClass: ClassConstructor<BitmartExtras> | undefined;
+    let exchangeExtrasDtoClass: Constructor<BitmartExtras> | undefined;
 
     switch (params.obj.exchangeName) {
       case ExchangeName.BITMART: {

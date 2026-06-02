@@ -7,9 +7,11 @@ import {
   type IEscrow,
   OrderDirection,
 } from '@human-protocol/sdk';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test } from '@nestjs/testing';
 import dayjs from 'dayjs';
+import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
 import {
@@ -24,7 +26,7 @@ import {
 } from 'vitest';
 import type { Mock } from 'vitest';
 
-import { ExchangeName, ExchangeType } from '@/common/constants';
+import { CampaignType, ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as cryptoUtils from '@/common/utils/crypto';
 import * as escrowUtils from '@/common/utils/escrow';
@@ -41,11 +43,9 @@ import logger from '@/logger';
 import {
   ExchangeApiAccessError,
   ExchangeApiClientError,
-  ExchangeApiClientFactory,
   ExchangeApiKeyNotFoundError,
   ExchangePermission,
   ExchangesService,
-  PancakeswapClient,
 } from '@/modules/exchanges';
 import { mockExchangesConfigService } from '@/modules/exchanges/fixtures';
 import { StorageService } from '@/modules/storage';
@@ -61,9 +61,7 @@ import {
   CampaignAlreadyFinishedError,
   CampaignCancelledError,
   CampaignNotFoundError,
-  CampaignNotStartedError,
   InvalidCampaign,
-  UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import { CampaignsService } from './campaigns.service';
@@ -111,10 +109,9 @@ import {
   isThresholdCampaign,
 } from './type-guards';
 import {
-  CampaignEscrowInfo,
+  type CampaignEscrowInfo,
   type CampaignProgress,
   CampaignStatus,
-  CampaignType,
   type CompetitiveMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type IntermediateResultsData,
@@ -138,10 +135,10 @@ vi.mock('@/logger');
 const mockCacheManager = new CacheManagerMock();
 
 const mockCampaignsRepository = createMock<CampaignsRepository>();
+const mockEventEmitter = createMock<EventEmitter2>();
 const mockParticipationsRepository = createMock<ParticipationsRepository>();
 const mockParticipationsService = createMock<ParticipationsService>();
 const mockVolumeStatsRepository = createMock<VolumeStatsRepository>();
-const mockExchangeApiClientFactory = createMock<ExchangeApiClientFactory>();
 const mockExchangesService = createMock<ExchangesService>();
 const mockStorageService = createMock<StorageService>();
 const mockPgAdvisoryLock = createMock<PgAdvisoryLock>();
@@ -153,8 +150,6 @@ const mockedSigner = createMock<WalletWithProvider>();
 
 const mockedEscrowClient = vi.mocked(EscrowClient);
 const mockedEscrowUtils = vi.mocked(EscrowUtils);
-
-const mockedPancakeswapClient = createMock<PancakeswapClient>();
 
 const exchangePermissions = Object.values(ExchangePermission);
 
@@ -184,12 +179,12 @@ describe('CampaignsService', () => {
           useValue: mockCampaignsRepository,
         },
         {
-          provide: ExchangesConfigService,
-          useValue: mockExchangesConfigService,
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
         {
-          provide: ExchangeApiClientFactory,
-          useValue: mockExchangeApiClientFactory,
+          provide: ExchangesConfigService,
+          useValue: mockExchangesConfigService,
         },
         {
           provide: ExchangesService,
@@ -724,12 +719,16 @@ describe('CampaignsService', () => {
         const manifestUrl = faker.internet.url();
         const manifestHash = faker.string.hexadecimal();
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
+
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
           manifest: manifestUrl,
           manifestHash,
           recordingOracle: mockWeb3ConfigService.operatorAddress,
+          exchangeOracleFee: 2,
+          recordingOracleFee: 3,
+          reputationOracleFee: 5,
         } as IEscrow);
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
@@ -742,9 +741,17 @@ describe('CampaignsService', () => {
         ](chainId, campaignAddress);
 
         expect(manifest).toEqual(mockedManifest);
+
+        const expectedFundAmount = Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        );
         expect(escrowInfo).toEqual({
-          fundAmount: Number(
-            ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+          fundAmount: expectedFundAmount,
+          fundAmountNet: Number(
+            rewardsUtils.formatRewardValue(
+              Decimal(expectedFundAmount).mul(0.9),
+              TEST_TOKEN_DECIMALS,
+            ),
           ),
           fundTokenSymbol: TEST_TOKEN_SYMBOL,
           fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -769,12 +776,16 @@ describe('CampaignsService', () => {
       'should retrieve and return data (manifest json) [%#]',
       async (mockedManifest) => {
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
+
         mockedEscrowUtils.getEscrow.mockResolvedValueOnce({
           token: faker.finance.ethereumAddress(),
           totalFundedAmount,
           manifest: JSON.stringify(mockedManifest),
           manifestHash: faker.string.hexadecimal(),
           recordingOracle: mockWeb3ConfigService.operatorAddress,
+          exchangeOracleFee: 2,
+          recordingOracleFee: 3,
+          reputationOracleFee: 5,
         } as IEscrow);
         mockedGetEscrowStatus.mockResolvedValueOnce(EscrowStatus.Pending);
 
@@ -783,9 +794,17 @@ describe('CampaignsService', () => {
         ](chainId, campaignAddress);
 
         expect(manifest).toEqual(mockedManifest);
+
+        const expectedFundAmount = Number(
+          ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+        );
         expect(escrowInfo).toEqual({
-          fundAmount: Number(
-            ethers.formatUnits(totalFundedAmount, TEST_TOKEN_DECIMALS),
+          fundAmount: expectedFundAmount,
+          fundAmountNet: Number(
+            rewardsUtils.formatRewardValue(
+              Decimal(expectedFundAmount).mul(0.9),
+              TEST_TOKEN_DECIMALS,
+            ),
           ),
           fundTokenSymbol: TEST_TOKEN_SYMBOL,
           fundTokenDecimals: TEST_TOKEN_DECIMALS,
@@ -803,6 +822,7 @@ describe('CampaignsService', () => {
     let chainId: number;
     let campaignAddress: string;
     let fundAmount: number;
+    let fundAmountNet: number;
     let fundTokenSymbol: string;
     let fundTokenDecimals: number;
 
@@ -812,6 +832,7 @@ describe('CampaignsService', () => {
       chainId = generateTestnetChainId();
       campaignAddress = faker.finance.ethereumAddress();
       fundAmount = faker.number.float();
+      fundAmountNet = fundAmount * 0.97;
       fundTokenSymbol = faker.finance.currencyCode();
       fundTokenDecimals = faker.number.int({ min: 6, max: 18 });
 
@@ -820,6 +841,7 @@ describe('CampaignsService', () => {
         chainId,
         address: ethers.getAddress(campaignAddress),
         fundAmount: fundAmount.toString(),
+        fundAmountNet: fundAmountNet.toString(),
         fundToken: fundTokenSymbol,
         fundTokenDecimals,
         status: 'active',
@@ -838,6 +860,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -874,6 +897,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -910,6 +934,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: null,
@@ -952,6 +977,7 @@ describe('CampaignsService', () => {
           manifest,
           {
             fundAmount,
+            fundAmountNet,
             fundTokenSymbol,
             fundTokenDecimals,
             cancellationRequestedAt: null,
@@ -990,6 +1016,7 @@ describe('CampaignsService', () => {
           manifest,
           {
             fundAmount,
+            fundAmountNet,
             fundTokenSymbol,
             fundTokenDecimals,
             cancellationRequestedAt: null,
@@ -1014,6 +1041,7 @@ describe('CampaignsService', () => {
           manifest,
           {
             fundAmount,
+            fundAmountNet,
             fundTokenSymbol,
             fundTokenDecimals,
             cancellationRequestedAt: null,
@@ -1037,6 +1065,7 @@ describe('CampaignsService', () => {
         manifest,
         {
           fundAmount,
+          fundAmountNet,
           fundTokenSymbol,
           fundTokenDecimals,
           cancellationRequestedAt: cancellationRequestedAt.valueOf(),
@@ -1061,6 +1090,29 @@ describe('CampaignsService', () => {
       expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
       expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
         expect.objectContaining(expectedCampaignData),
+      );
+    });
+
+    test('should emit creation event', async () => {
+      const manifest = generateCampaignManifest();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundAmountNet,
+          fundTokenSymbol,
+          fundTokenDecimals,
+          cancellationRequestedAt: null,
+        },
+      );
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledTimes(1);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'CampaignCreated',
+        campaign,
       );
     });
   });
@@ -1182,9 +1234,12 @@ describe('CampaignsService', () => {
         .mockImplementation(vi.fn());
       const spyOnCreateCampaign = vi.spyOn(campaignsService, 'createCampaign');
       const campaignManifest = generateCampaignManifest();
-      const escrowInfo = {
+      const escrowInfo: CampaignEscrowInfo = {
         fundAmount: faker.number.float(),
+        fundAmountNet: faker.number.float(),
         fundTokenSymbol: faker.finance.currencyCode(),
+        fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
+        cancellationRequestedAt: null,
       };
       spyOnretrieveCampaignData.mockResolvedValueOnce({
         manifest: campaignManifest,
@@ -3916,65 +3971,29 @@ describe('CampaignsService', () => {
     test('should return correct timeframe for active pancakeswap campaign', async () => {
       campaign.exchangeName = ExchangeName.PANCAKESWAP;
 
-      mockExchangeApiClientFactory.createDex.mockReturnValueOnce(
-        mockedPancakeswapClient,
-      );
-      const mockedLastBlockTs = Math.round(
-        faker.date.recent().valueOf() / 1000,
-      );
-      mockedPancakeswapClient.fetchSubgraphMeta.mockResolvedValueOnce({
-        block: {
-          timestamp: mockedLastBlockTs,
-          hash: faker.string.hexadecimal(),
-          number: faker.number.int(),
-        },
-        hasIndexingErrors: false,
-      });
-
       const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
       campaign.startDate = dayjs()
         .subtract(campaignDaysPassed, 'days')
         .toDate();
 
-      const expectedTimeframeStart = dayjs(campaign.startDate)
-        .add(campaignDaysPassed, 'days')
-        .toDate();
+      const now = new Date();
+      vi.useFakeTimers({ now });
 
       const result = await campaignsService.getActiveTimeframe(campaign);
 
-      expect(result).toEqual({
-        start: expectedTimeframeStart,
-        end: new Date(mockedLastBlockTs * 1000),
-      });
+      vi.useRealTimers();
 
-      expect(mockExchangeApiClientFactory.createDex).toHaveBeenCalledTimes(1);
-      expect(mockExchangeApiClientFactory.createDex).toHaveBeenCalledWith(
-        ExchangeName.PANCAKESWAP,
-        {
-          userId: 'system',
-          userEvmAddress: 'n/a',
-        },
-      );
+      expect(result).toEqual({
+        start: dayjs(campaign.startDate)
+          .add(campaignDaysPassed, 'days')
+          .toDate(),
+        end: dayjs(now).subtract(1, 'minute').toDate(),
+      });
     });
 
     test('should return correct timeframe when cancellation requested for pancakeswap campaign', async () => {
       campaign.status = CampaignStatus.TO_CANCEL;
       campaign.exchangeName = ExchangeName.PANCAKESWAP;
-
-      mockExchangeApiClientFactory.createDex.mockReturnValueOnce(
-        mockedPancakeswapClient,
-      );
-      const mockedLastBlockTs = Math.round(
-        faker.date.recent().valueOf() / 1000,
-      );
-      mockedPancakeswapClient.fetchSubgraphMeta.mockResolvedValueOnce({
-        block: {
-          timestamp: mockedLastBlockTs,
-          hash: faker.string.hexadecimal(),
-          number: faker.number.int(),
-        },
-        hasIndexingErrors: false,
-      });
 
       const campaignDaysPassed = faker.number.int({ min: 1, max: 3 });
       campaign.startDate = dayjs()
@@ -3996,17 +4015,8 @@ describe('CampaignsService', () => {
 
       expect(result).toEqual({
         start: expectedTimeframeStart,
-        end: new Date(mockedLastBlockTs * 1000),
+        end: cancellationRequestedAt,
       });
-
-      expect(mockExchangeApiClientFactory.createDex).toHaveBeenCalledTimes(1);
-      expect(mockExchangeApiClientFactory.createDex).toHaveBeenCalledWith(
-        ExchangeName.PANCAKESWAP,
-        {
-          userId: 'system',
-          userEvmAddress: 'n/a',
-        },
-      );
     });
   });
 
@@ -4187,355 +4197,6 @@ describe('CampaignsService', () => {
     });
   });
 
-  describe('getUserProgress', () => {
-    let spyOnGetActiveTimeframe: Mock;
-
-    let userId: string;
-    let evmAddress: string;
-    let chainId: number;
-    let campaign: CampaignEntity;
-
-    beforeAll(() => {
-      userId = faker.string.uuid();
-      evmAddress = faker.finance.ethereumAddress();
-      chainId = generateTestnetChainId();
-
-      spyOnGetActiveTimeframe = vi.spyOn(
-        campaignsService,
-        'getActiveTimeframe',
-      );
-      spyOnGetActiveTimeframe.mockImplementation(vi.fn());
-    });
-
-    afterAll(() => {
-      spyOnGetActiveTimeframe.mockRestore();
-    });
-
-    beforeEach(() => {
-      campaign = generateCampaignEntity();
-
-      mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
-        campaign,
-      );
-    });
-
-    afterEach(() => {
-      mockCacheManager.clear();
-    });
-
-    test('should throw when campaign not found', async () => {
-      mockCampaignsRepository.findOneByChainIdAndAddress
-        .mockReset()
-        .mockResolvedValueOnce(null);
-
-      let thrownError: any;
-      try {
-        await campaignsService.getUserProgress(
-          userId,
-          evmAddress,
-          chainId,
-          campaign.address,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(CampaignNotFoundError);
-      expect(thrownError.chainId).toBe(chainId);
-      expect(thrownError.address).toBe(campaign.address);
-
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaign.address);
-
-      expect(
-        mockParticipationsService.checkUserJoinedCampaign,
-      ).toHaveBeenCalledTimes(0);
-    });
-
-    test('should throw when campaign not started yet', async () => {
-      vi.useFakeTimers({
-        now: dayjs(campaign.startDate).subtract(1, 'millisecond').toDate(),
-      });
-
-      let thrownError: any;
-      try {
-        await campaignsService.getUserProgress(
-          userId,
-          evmAddress,
-          chainId,
-          campaign.address,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      vi.useRealTimers();
-
-      expect(thrownError).toBeInstanceOf(CampaignNotStartedError);
-      expect(thrownError.chainId).toBe(chainId);
-      expect(thrownError.address).toBe(campaign.address);
-
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaign.address);
-
-      expect(
-        mockParticipationsService.checkUserJoinedCampaign,
-      ).toHaveBeenCalledTimes(0);
-    });
-
-    test('should throw when campaign already finished', async () => {
-      vi.useFakeTimers({
-        now: new Date(campaign.endDate.valueOf() + 1),
-      });
-
-      let thrownError: any;
-      try {
-        await campaignsService.getUserProgress(
-          userId,
-          evmAddress,
-          chainId,
-          campaign.address,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      vi.useRealTimers();
-
-      expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
-      expect(thrownError.chainId).toBe(chainId);
-      expect(thrownError.address).toBe(campaign.address);
-
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaign.address);
-
-      expect(
-        mockParticipationsService.checkUserJoinedCampaign,
-      ).toHaveBeenCalledTimes(0);
-    });
-
-    test.each([
-      CampaignStatus.CANCELLED,
-      CampaignStatus.PENDING_CANCELLATION,
-      CampaignStatus.COMPLETED,
-    ])(
-      'should throw when campaign status is not eligible for progress check: "%s"',
-      async (campaignStatus) => {
-        campaign.status = campaignStatus;
-
-        let thrownError: any;
-        try {
-          await campaignsService.getUserProgress(
-            userId,
-            evmAddress,
-            chainId,
-            campaign.address,
-          );
-        } catch (error) {
-          thrownError = error;
-        }
-
-        expect(thrownError).toBeInstanceOf(CampaignAlreadyFinishedError);
-        expect(thrownError.chainId).toBe(chainId);
-        expect(thrownError.address).toBe(campaign.address);
-
-        expect(
-          mockCampaignsRepository.findOneByChainIdAndAddress,
-        ).toHaveBeenCalledTimes(1);
-        expect(
-          mockCampaignsRepository.findOneByChainIdAndAddress,
-        ).toHaveBeenCalledWith(chainId, campaign.address);
-
-        expect(
-          mockParticipationsService.checkUserJoinedCampaign,
-        ).toHaveBeenCalledTimes(0);
-      },
-    );
-
-    test('should throw when user not joined', async () => {
-      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
-        null,
-      );
-
-      let thrownError: any;
-      try {
-        await campaignsService.getUserProgress(
-          userId,
-          evmAddress,
-          chainId,
-          campaign.address,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(UserIsNotParticipatingError);
-
-      expect(
-        mockParticipationsService.checkUserJoinedCampaign,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockParticipationsService.checkUserJoinedCampaign,
-      ).toHaveBeenCalledWith(userId, campaign.id);
-    });
-
-    test("should throw when can't get active timeframe", async () => {
-      spyOnGetActiveTimeframe.mockReturnValueOnce(null);
-
-      let thrownError: any;
-      try {
-        await campaignsService.getUserProgress(
-          userId,
-          evmAddress,
-          chainId,
-          campaign.address,
-        );
-      } catch (error) {
-        thrownError = error;
-      }
-
-      expect(thrownError).toBeInstanceOf(InvalidCampaign);
-      expect(thrownError.chainId).toBe(campaign.chainId);
-      expect(thrownError.address).toBe(campaign.address);
-      expect(thrownError.details).toBe("Couldn't get active timeframe");
-
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockCampaignsRepository.findOneByChainIdAndAddress,
-      ).toHaveBeenCalledWith(chainId, campaign.address);
-    });
-
-    test('should return campaign progress for participant from cache if same timeframe', async () => {
-      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
-        generateUserJoinedDate(campaign),
-      );
-
-      const participantMetaProp = faker.lorem.word();
-      const participantMetaValue = faker.number.float();
-      const participantOutcome = generateParticipantOutcome(campaign.type, {
-        address: evmAddress,
-        [participantMetaProp]: participantMetaValue,
-        total_volume: undefined,
-        token_balance: undefined,
-      });
-
-      const mockedActiveTimeframe = {
-        start: faker.date.recent(),
-        end: faker.date.recent(),
-      };
-      spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
-
-      const campaignProgress: CampaignProgress<CampaignProgressMeta> = {
-        from: mockedActiveTimeframe.start.toISOString(),
-        to: mockedActiveTimeframe.end.toISOString(),
-        participants_outcomes: [
-          generateParticipantOutcome(campaign.type),
-          participantOutcome,
-          generateParticipantOutcome(campaign.type),
-        ],
-        meta: {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          anything: faker.number.float(),
-        },
-      };
-      await campaignsCache.setInterimProgress(
-        campaign.id,
-        campaignProgress,
-        mockedActiveTimeframe.end,
-      );
-
-      const progress = await campaignsService.getUserProgress(
-        userId,
-        evmAddress,
-        chainId,
-        campaign.address,
-      );
-
-      expect(progress).toEqual({
-        from: campaignProgress.from,
-        to: campaignProgress.to,
-        myScore: participantOutcome.score,
-        myMeta: {
-          [participantMetaProp]: participantMetaValue,
-        },
-        totalMeta: campaignProgress.meta,
-      });
-    });
-
-    test('should return null if no value for campaign in cache', async () => {
-      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
-        generateUserJoinedDate(campaign),
-      );
-
-      const mockedActiveTimeframe = {
-        start: faker.date.recent(),
-        end: faker.date.soon(),
-      };
-      spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
-
-      const progress = await campaignsService.getUserProgress(
-        userId,
-        evmAddress,
-        chainId,
-        campaign.address,
-      );
-
-      expect(progress).toBeNull();
-    });
-
-    test('should return null if value in cache is for previous timeframe', async () => {
-      mockParticipationsService.checkUserJoinedCampaign.mockResolvedValueOnce(
-        generateUserJoinedDate(campaign),
-      );
-
-      const mockedActiveTimeframe = {
-        start: faker.date.recent(),
-        end: faker.date.soon(),
-      };
-      spyOnGetActiveTimeframe.mockResolvedValueOnce(mockedActiveTimeframe);
-
-      const campaignProgress = generateCampaignProgress(campaign);
-      campaignProgress.to = new Date(
-        mockedActiveTimeframe.start.valueOf() - 1,
-      ).toISOString();
-      campaignProgress.from = faker.date
-        .recent({
-          refDate: campaignProgress.to,
-        })
-        .toISOString();
-
-      await campaignsCache.setInterimProgress(
-        campaign.id,
-        campaignProgress,
-        mockedActiveTimeframe.end,
-      );
-
-      const progress = await campaignsService.getUserProgress(
-        userId,
-        evmAddress,
-        chainId,
-        campaign.address,
-      );
-
-      expect(progress).toBeNull();
-    });
-  });
-
   describe('discoverNewCampaigns', () => {
     const originalSupportedChainIds = mockWeb3Service.supportedChainIds;
     const supportedChainId = faker.number.int();
@@ -4682,8 +4343,10 @@ describe('CampaignsService', () => {
       mockedEscrowUtils.getEscrows.mockResolvedValueOnce([escrow]);
 
       const campaignManifest = generateCampaignManifest();
+      const fundAmount = faker.number.float();
       const escrowInfo: CampaignEscrowInfo = {
-        fundAmount: faker.number.float(),
+        fundAmount,
+        fundAmountNet: fundAmount * 0.97,
         fundTokenSymbol: faker.finance.currencyCode(),
         fundTokenDecimals: faker.helpers.arrayElement([6, 18]),
         cancellationRequestedAt: null,

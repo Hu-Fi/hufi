@@ -5,9 +5,10 @@ import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { ExchangeType } from '@/common/constants';
 import { EncryptionConfigService, ExchangesConfigService } from '@/config';
+import { ParticipationsRepository } from '@/modules/campaigns/participations';
 import { AesEncryptionService } from '@/modules/encryption';
 import { mockEncryptionConfigService } from '@/modules/encryption/fixtures';
-import { UsersService } from '@/modules/users';
+import { UserPreferencesRepository, UsersService } from '@/modules/users';
 
 import {
   ExchangeApiClient,
@@ -27,9 +28,11 @@ import {
 } from './fixtures';
 import { mockExchangesConfigService } from '../fixtures';
 
-const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
-const mockUsersService = createMock<UsersService>();
 const mockExchangeApiClient = createMock<ExchangeApiClient>();
+const mockExchangeApiKeysRepository = createMock<ExchangeApiKeysRepository>();
+const mockParticipationsRepository = createMock<ParticipationsRepository>();
+const mockUserPreferencesRepository = createMock<UserPreferencesRepository>();
+const mockUsersService = createMock<UsersService>();
 
 const exchangePermissions = Object.values(ExchangePermission);
 
@@ -41,28 +44,36 @@ describe('ExchangeApiKeysService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         ExchangeApiKeysService,
-        {
-          provide: ExchangesConfigService,
-          useValue: mockExchangesConfigService,
-        },
-        {
-          provide: UsersService,
-          useValue: mockUsersService,
-        },
-        {
-          provide: ExchangeApiKeysRepository,
-          useValue: mockExchangeApiKeysRepository,
-        },
         AesEncryptionService,
-        {
-          provide: EncryptionConfigService,
-          useValue: mockEncryptionConfigService,
-        },
         {
           provide: ExchangeApiClientFactory,
           useValue: {
             createCex: () => mockExchangeApiClient,
           },
+        },
+        {
+          provide: ExchangeApiKeysRepository,
+          useValue: mockExchangeApiKeysRepository,
+        },
+        {
+          provide: EncryptionConfigService,
+          useValue: mockEncryptionConfigService,
+        },
+        {
+          provide: ExchangesConfigService,
+          useValue: mockExchangesConfigService,
+        },
+        {
+          provide: ParticipationsRepository,
+          useValue: mockParticipationsRepository,
+        },
+        {
+          provide: UserPreferencesRepository,
+          useValue: mockUserPreferencesRepository,
+        },
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
         },
       ],
     }).compile();

@@ -143,12 +143,6 @@ describe('PayoutsService', () => {
         intermediateResultsHash: expectedEscrow.intermediateResultsHash,
         fundTokenAddress: expectedEscrow.token,
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
-        fundAmount: Number(
-          ethers.formatUnits(
-            expectedEscrow.totalFundedAmount,
-            TEST_TOKEN_DECIMALS,
-          ),
-        ),
         launcher: expectedEscrow.launcher,
         cancellationRequestedAt: null,
       });
@@ -171,12 +165,6 @@ describe('PayoutsService', () => {
         intermediateResultsHash: expectedEscrow.intermediateResultsHash,
         fundTokenAddress: expectedEscrow.token,
         fundTokenDecimals: TEST_TOKEN_DECIMALS,
-        fundAmount: Number(
-          ethers.formatUnits(
-            expectedEscrow.totalFundedAmount,
-            TEST_TOKEN_DECIMALS,
-          ),
-        ),
         launcher: expectedEscrow.launcher,
         cancellationRequestedAt: new Date(
           expectedEscrow.cancellationRequestedAt!,

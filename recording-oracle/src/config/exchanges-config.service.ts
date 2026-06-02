@@ -72,9 +72,13 @@ export class ExchangesConfigService {
   }
 
   get pancakeswapSubgraphUrl(): string {
+    /**
+     * Direct indexer URL as possible fallback to send requests to the same node:
+     * https://gateway.thegraph.com/api/deployments/id/QmYQLE8EzY8Jw4F5y2rEcSJ4vZJny1ipiyC6EnB2cFYWyr/indexers/id/0xbdfb5ee5a2abf4fc7bb1bd1221067aef7f9de491
+     */
     return this.configService.get(
       'PANCAKESWAP_SUBGRAPH_URL',
-      'https://gateway.thegraph.com/api/deployments/id/QmYQLE8EzY8Jw4F5y2rEcSJ4vZJny1ipiyC6EnB2cFYWyr/indexers/id/0xbdfb5ee5a2abf4fc7bb1bd1221067aef7f9de491',
+      'https://gateway.thegraph.com/api/subgraphs/id/F6L7Zd1hoEc5FKATZjTMpFqwDEUNE3LRC4Z784RahMYH',
     );
   }
 }

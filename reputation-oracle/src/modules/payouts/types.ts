@@ -31,7 +31,6 @@ export type CampaignWithResults = Pick<
   manifestHash: string;
   fundTokenAddress: string;
   fundTokenDecimals: number;
-  fundAmount: number;
   cancellationRequestedAt: Date | null;
 };
 

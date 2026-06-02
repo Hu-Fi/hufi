@@ -270,6 +270,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                     height: '100%',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: 1,
                   }}
                 >
                   <NoKeysIcon sx={{ fontSize: 48 }} />
@@ -280,7 +281,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                       color: 'text.secondary',
                     }}
                   >
-                    No key is set at the moment
+                    No key is set <br /> at the moment
                   </Typography>
                 </Box>
               )

@@ -3,6 +3,7 @@ import type { Exchange } from 'ccxt';
 import _ from 'lodash';
 
 import { ExchangeName } from '@/common/constants';
+import Environment from '@/common/utils/environment';
 
 import { BaseExchangeApiClient } from './base-client';
 import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
@@ -21,7 +22,7 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     let perExchangeClientOptions: Record<string, unknown> = {};
 
     switch (exchangeName) {
-      case ExchangeName.HYPERLIQUID:
+      case ExchangeName.HYPERLIQUID: {
         perExchangeClientOptions = {
           options: {
             fetchMarkets: {
@@ -30,11 +31,18 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
           },
         };
         break;
+      }
     }
 
     this.ccxtClient = new exchangeClass(
       _.merge({}, BASE_CCXT_CLIENT_OPTIONS, perExchangeClientOptions),
     );
+    if (
+      Environment.isProduction() === false &&
+      this.ccxtClient.has['sandbox']
+    ) {
+      this.ccxtClient.setSandboxMode(true);
+    }
   }
 
   protected get tradingPairs() {

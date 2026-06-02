@@ -19,9 +19,7 @@ import {
   CampaignCancelledError,
   CampaignJoinLimitedError,
   CampaignNotFoundError,
-  CampaignNotStartedError,
   InvalidCampaign,
-  UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { MaxParticipantsError, UserAlreadyJoinedError } from './participations';
 
@@ -29,13 +27,11 @@ import { MaxParticipantsError, UserAlreadyJoinedError } from './participations';
   CampaignNotFoundError,
   InvalidCampaign,
   CampaignAlreadyFinishedError,
-  CampaignNotStartedError,
   CampaignCancelledError,
   CampaignJoinLimitedError,
   ExchangeApiKeyNotFoundError,
   KeyAuthorizationError,
   InvalidEvmAddressError,
-  UserIsNotParticipatingError,
   MaxParticipantsError,
   UserAlreadyJoinedError,
 )

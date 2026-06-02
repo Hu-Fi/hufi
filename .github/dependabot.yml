@@ -24,11 +24,6 @@ updates:
     # instead of increasing them all
     versioning-strategy: increase-if-necessary
     target-branch: "develop"
-    ignore:
-      # Starting from this version the app is built, but can't be opened due to error
-      # that comes from web3-related package. Need to check if it's fixed before making actual update
-      - dependency-name: "vite"
-        versions: [">=8.0.10"]
     # Grouping minor and patch updates to 1 PR to reduce the noise:
     # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/optimizing-pr-creation-version-updates#example-3-individual-pull-requests-for-major-updates-and-grouped-for-minorpatch-updates
     groups:
@@ -47,3 +42,8 @@ updates:
           - "react-dom"
           - "@types/react-dom"
     open-pull-requests-limit: 5 # Reasonable number to start with
+    cooldown:
+      default-days: 3
+      semver-patch-days: 3
+      semver-minor-days: 7
+      semver-major-days: 30

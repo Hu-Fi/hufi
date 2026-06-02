@@ -1,4 +1,5 @@
 import type { Trade as CcxtTrade } from 'ccxt';
+import dayjs from 'dayjs';
 
 import type { GetPaginationInputFn, HandlePaginationResponseFn } from './types';
 
@@ -40,7 +41,7 @@ export const getPaginationInput: GetPaginationInputFn<
      * so in order to get items up to "until" we need to convert it on our end
      * and later filter out using "until" in ms
      */
-    to: Math.ceil(until / 1000),
+    to: dayjs(until).unix() + 1,
     page: nextPageToken || 1,
     [UNTIL_PARAM_SYMBOL]: until,
   };

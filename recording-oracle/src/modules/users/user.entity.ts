@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
+
+import type { UserPreferencesEntity } from './user-preferences.entity';
 
 @Entity({ schema: DATABASE_SCHEMA_NAME, name: 'users' })
 export class UserEntity {
@@ -12,6 +14,13 @@ export class UserEntity {
 
   @Column('varchar', { length: 32 })
   nonce: string;
+
+  @OneToOne(
+    'UserPreferencesEntity',
+    (preferences: UserPreferencesEntity) => preferences.user,
+    { persistence: false },
+  )
+  preferences?: UserPreferencesEntity;
 
   @Column({ type: 'timestamptz' })
   createdAt: Date;

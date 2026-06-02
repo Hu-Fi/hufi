@@ -22,10 +22,10 @@ export class CheckCampaignProgressDto {
 }
 
 export enum AdminCronJobId {
-  REFRESH_INTERIM_CAMPAIGNS_PROGRESS_CACHE = 'refresh_icp_cache',
-  CAMPAIGNS_PROGRESS_RECORDING = 'progress_recording',
-  DISCOVER_NEW_CAMPAIGNS = 'discover_new_campaigns',
+  RECORD_CAMPAIGNS_PROGRESS = 'progress_recording',
   SYNC_CAMPAIGN_STATUSES = 'sync_campaign_statuses',
+  DISCOVER_NEW_CAMPAIGNS = 'campaigns_discovery',
+  REFRESH_INTERIM_PROGRESS_CACHE = 'refresh_icp_cache',
 }
 
 export class TriggerCronJobDto {

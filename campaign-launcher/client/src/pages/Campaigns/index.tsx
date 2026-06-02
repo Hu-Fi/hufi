@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import AllCampaigns from '@/components/AllCampaigns';
+import AutojoinInfoWidget from '@/components/AutojoinInfoWidget';
 import CampaignsFilters, {
   type CampaignsFiltersSelection,
 } from '@/components/CampaignsFilters';
@@ -207,9 +208,6 @@ const Campaigns: FC = () => {
             gap: 2,
           }}
         >
-          {isConnected && (
-            <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
-          )}
           {isAuthenticated && (
             <Button
               variant="outlined"
@@ -222,8 +220,12 @@ const Campaigns: FC = () => {
               Manage API Keys
             </Button>
           )}
+          {isConnected && (
+            <LaunchCampaignButton size={isMobile ? 'medium' : 'large'} />
+          )}
         </Box>
       </Box>
+      <AutojoinInfoWidget />
       <Box
         sx={{
           display: 'flex',

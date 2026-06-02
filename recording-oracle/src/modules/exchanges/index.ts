@@ -3,7 +3,6 @@ export {
   ExchangeApiClientError,
   ExchangeApiClientFactory,
   ExchangePermission,
-  type PancakeswapClient,
   TakerOrMakerFlag,
   TradingSide,
   type ExchangeApiClient,

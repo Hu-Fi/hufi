@@ -8,6 +8,7 @@ import {
   OrderDirection,
 } from '@human-protocol/sdk';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Cron,
   CronExpression,
@@ -21,8 +22,12 @@ import _ from 'lodash';
 import { LRUCache } from 'lru-cache';
 import ms from 'ms';
 
-import { ExchangeName } from '@/common/constants';
-import { ContentType } from '@/common/enums';
+import {
+  CampaignType,
+  ContentType,
+  DomainEvent,
+  ExchangeName,
+} from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
 import * as controlFlow from '@/common/utils/control-flow';
 import * as cryptoUtils from '@/common/utils/crypto';
@@ -40,10 +45,8 @@ import {
 import logger from '@/logger';
 import {
   ExchangeApiAccessError,
-  ExchangeApiClientFactory,
   ExchangeApiKeyNotFoundError,
   ExchangesService,
-  type PancakeswapClient,
 } from '@/modules/exchanges';
 import { StorageService } from '@/modules/storage';
 import { Web3Service } from '@/modules/web3';
@@ -56,15 +59,13 @@ import {
   CampaignCancelledError,
   CampaignJoinLimitedError,
   CampaignNotFoundError,
-  CampaignNotStartedError,
   InvalidCampaign,
-  UserIsNotParticipatingError,
 } from './campaigns.errors';
 import { CampaignsRepository } from './campaigns.repository';
 import {
   CAMPAIGN_PERMISSIONS_MAP,
-  CampaignServiceJob,
   CAMPAIGNS_DAILY_CYCLE,
+  CampaignServiceJob,
 } from './constants';
 import * as manifestUtils from './manifest.utils';
 import {
@@ -96,7 +97,6 @@ import {
   CampaignManifestBase,
   CampaignProgress,
   CampaignStatus,
-  CampaignType,
   IntermediateResult,
   IntermediateResultsData,
   ParticipantOutcome,
@@ -118,7 +118,7 @@ export class CampaignsService implements OnModuleDestroy {
     private readonly campaignsCache: CampaignsCache,
     private readonly campaignsConfigService: CampaignsConfigService,
     private readonly campaignsRepository: CampaignsRepository,
-    private readonly exchangeApiClientFactory: ExchangeApiClientFactory,
+    private readonly eventEmitter: EventEmitter2,
     private readonly exchangesConfigService: ExchangesConfigService,
     private readonly exchangesService: ExchangesService,
     private readonly participationsRepository: ParticipationsRepository,
@@ -249,6 +249,7 @@ export class CampaignsService implements OnModuleDestroy {
     newCampaign.startDate = manifest.start_date;
     newCampaign.endDate = manifest.end_date;
     newCampaign.fundAmount = escrowInfo.fundAmount.toString();
+    newCampaign.fundAmountNet = escrowInfo.fundAmountNet.toString();
     newCampaign.fundToken = escrowInfo.fundTokenSymbol;
     newCampaign.fundTokenDecimals = escrowInfo.fundTokenDecimals;
     newCampaign.details = details;
@@ -266,6 +267,8 @@ export class CampaignsService implements OnModuleDestroy {
     }
 
     await this.campaignsRepository.insert(newCampaign);
+
+    this.eventEmitter.emit(DomainEvent.CAMPAIGN_CREATED, newCampaign);
 
     return newCampaign;
   }
@@ -418,12 +421,27 @@ export class CampaignsService implements OnModuleDestroy {
       this.web3Service.getTokenDecimals(chainId, escrow.token),
     ]);
 
+    const fundAmount = ethers.formatUnits(
+      escrow.totalFundedAmount,
+      campaignTokenDecimals,
+    );
+
+    const oraclesFeePercent =
+      escrow.exchangeOracleFee! +
+      escrow.recordingOracleFee! +
+      escrow.reputationOracleFee!;
+    const netFundsPercent = 100 - oraclesFeePercent;
+
+    const fundAmountNet = rewardsUtils.formatRewardValue(
+      Decimal(fundAmount).mul(netFundsPercent).div(100),
+      campaignTokenDecimals,
+    );
+
     return {
       manifest,
       escrowInfo: {
-        fundAmount: Number(
-          ethers.formatUnits(escrow.totalFundedAmount, campaignTokenDecimals),
-        ),
+        fundAmount: Number(fundAmount),
+        fundAmountNet: Number(fundAmountNet),
         fundTokenSymbol: campaignTokenSymbol,
         fundTokenDecimals: campaignTokenDecimals,
         cancellationRequestedAt: escrow.cancellationRequestedAt,
@@ -1118,90 +1136,6 @@ export class CampaignsService implements OnModuleDestroy {
     };
   }
 
-  /**
-   * TODO: deprecate this functionality once we use leaderboards data on UI
-   */
-  async getUserProgress(
-    userId: string,
-    evmAddress: string,
-    chainId: number,
-    campaignAddress: string,
-  ): Promise<{
-    from: string;
-    to: string;
-    myScore: number;
-    myMeta: Record<string, unknown>;
-    totalMeta: Record<string, unknown>;
-  } | null> {
-    const campaign = await this.findOneByChainIdAndAddress(
-      chainId,
-      campaignAddress,
-    );
-    if (!campaign) {
-      throw new CampaignNotFoundError(chainId, campaignAddress);
-    }
-
-    const now = new Date();
-    if (now < campaign.startDate) {
-      throw new CampaignNotStartedError(chainId, campaignAddress);
-    }
-
-    if (
-      [
-        CampaignStatus.PENDING_CANCELLATION,
-        CampaignStatus.CANCELLED,
-        CampaignStatus.COMPLETED,
-      ].includes(campaign.status) ||
-      now > campaign.endDate
-    ) {
-      throw new CampaignAlreadyFinishedError(chainId, campaignAddress);
-    }
-
-    const userJoinedAt =
-      await this.participationsService.checkUserJoinedCampaign(
-        userId,
-        campaign.id,
-      );
-    if (!userJoinedAt) {
-      throw new UserIsNotParticipatingError();
-    }
-
-    const activeTimeframe = await this.getActiveTimeframe(campaign);
-    if (!activeTimeframe) {
-      throw new InvalidCampaign(
-        campaign.chainId,
-        campaign.address,
-        "Couldn't get active timeframe",
-      );
-    }
-
-    const progress = await this.campaignsCache.getInterimProgress(campaign.id);
-    if (progress?.from !== activeTimeframe.start.toISOString()) {
-      /**
-       * Either no progress cached yet or cached for previous timeframe
-       */
-      return null;
-    }
-
-    const {
-      score: myScore,
-      address: _address,
-      ...myMeta
-    } = progress.participants_outcomes.find(
-      (p) => p.address === evmAddress,
-    ) || {
-      score: 0,
-    };
-
-    return {
-      from: progress.from,
-      to: progress.to,
-      myScore,
-      myMeta,
-      totalMeta: progress.meta,
-    };
-  }
-
   @ScheduleInterval(CampaignServiceJob.DISCOVER_NEW_CAMPAIGNS, ms('10 minutes'))
   async discoverNewCampaigns(): Promise<void> {
     this.logger.debug('Campaigns discovery job started');
@@ -1433,25 +1367,13 @@ export class CampaignsService implements OnModuleDestroy {
         return null;
       }
       timeframeEnd = cancellationRequestedAt;
+    } else if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
+      /**
+       * To avoid error when subgraph sync might be a bit delayed.
+       */
+      timeframeEnd = dayjs(now).subtract(1, 'minute').toDate();
     } else {
       timeframeEnd = now;
-    }
-
-    if (campaign.exchangeName === ExchangeName.PANCAKESWAP) {
-      const client = this.exchangeApiClientFactory.createDex(
-        ExchangeName.PANCAKESWAP,
-        {
-          userId: 'system',
-          userEvmAddress: 'n/a',
-        },
-      ) as PancakeswapClient;
-
-      const subgraphMeta = await client.fetchSubgraphMeta();
-
-      const lastBlockSyncedAt = new Date(subgraphMeta.block.timestamp * 1000);
-      if (lastBlockSyncedAt.valueOf() < timeframeEnd.valueOf()) {
-        timeframeEnd = lastBlockSyncedAt;
-      }
     }
 
     return {

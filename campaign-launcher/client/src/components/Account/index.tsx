@@ -2,6 +2,7 @@ import { type FC, useState } from 'react';
 
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
   Button,
   List,
@@ -16,6 +17,7 @@ import { useDisconnect } from 'wagmi';
 
 import CustomTooltip from '@/components/CustomTooltip';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import { ROUTES } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { AvatarIcon, ChevronIcon, PowerIcon, ApiKeyIcon } from '@/icons';
@@ -60,7 +62,11 @@ const Account: FC = () => {
   const handleClosePopover = () => setAnchorEl(null);
 
   const handleGoToManageApiKeys = () => {
-    navigate('/manage-api-keys');
+    navigate(ROUTES.MANAGE_API_KEYS);
+  };
+
+  const handleGoToPreferences = () => {
+    navigate(ROUTES.PREFERENCES);
   };
 
   const handleSignIn = async () => {
@@ -193,6 +199,12 @@ const Account: FC = () => {
             <ListItemButton sx={buttonSx} onClick={handleGoToManageApiKeys}>
               <ApiKeyIcon />
               Manage API Keys
+            </ListItemButton>
+          )}
+          {isAuthenticated && (
+            <ListItemButton sx={buttonSx} onClick={handleGoToPreferences}>
+              <SettingsIcon />
+              Preferences
             </ListItemButton>
           )}
           {isAuthenticated && (

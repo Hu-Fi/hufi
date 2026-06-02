@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import { DataSource, Repository } from 'typeorm';
 
-import { ExchangeName, type ChainId } from '@/common/constants';
+import { CampaignType, ExchangeName, type ChainId } from '@/common/constants';
 import { isFiniteNumber } from '@/common/utils/type-guard';
 import type { UserEntity } from '@/modules/users';
 
 import { CampaignEntity } from '../campaign.entity';
-import { CampaignStatus, CampaignType } from '../types';
+import { CampaignStatus } from '../types';
 import { ParticipationEntity } from './participation.entity';
 import { MaxParticipantsError } from './participations.errors';
 import { type CampaignParticipant } from './types';
