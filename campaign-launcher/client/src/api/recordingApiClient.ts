@@ -12,6 +12,8 @@ import type {
   CheckCampaignJoinStatusResponse,
   JoinedCampaignsResponse,
   LeaderboardResponseDto,
+  UserInfo,
+  PatchPreferencesDto,
 } from '@/types';
 import { HttpClient, HttpError } from '@/utils/HttpClient';
 import type { TokenData, TokenManager } from '@/utils/TokenManager';
@@ -211,5 +213,14 @@ export class RecordingApiClient extends HttpClient {
       `/campaigns/${chain_id}-${campaign_address}/leaderboard`
     );
     return response;
+  }
+
+  async getUserInfo(): Promise<UserInfo> {
+    const response = await this.get<UserInfo>('/me');
+    return response;
+  }
+
+  async patchUserPreferences(preferences: PatchPreferencesDto): Promise<void> {
+    await this.patch('/me/preferences', preferences);
   }
 }

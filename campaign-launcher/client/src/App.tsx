@@ -13,6 +13,7 @@ import Campaigns from '@/pages/Campaigns';
 import Dashboard from '@/pages/Dashboard';
 import LaunchCampaignPage from '@/pages/LaunchCampaign';
 import ManageApiKeysPage from '@/pages/ManageApiKeys';
+import PreferencesPage from '@/pages/Preferences';
 import ActiveAccountProvider from '@/providers/ActiveAccountProvider';
 import { AuthedUserDataProvider } from '@/providers/AuthedUserData';
 import ExchangesProvider from '@/providers/ExchangesProvider';
@@ -69,6 +70,14 @@ const App: FC = () => {
                                     <WalletProtectedRoute>
                                       <LaunchCampaignPage />
                                     </WalletProtectedRoute>
+                                  }
+                                />
+                                <Route
+                                  path={ROUTES.PREFERENCES}
+                                  element={
+                                    <ProtectedRoute>
+                                      <PreferencesPage />
+                                    </ProtectedRoute>
                                   }
                                 />
                               </Routes>

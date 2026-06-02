@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { useConnection } from 'wagmi';
 
 import AllCampaigns from '@/components/AllCampaigns';
+import AutojoinInfoWidget from '@/components/AutojoinInfoWidget';
 import CampaignsFilters, {
   type CampaignsFiltersSelection,
 } from '@/components/CampaignsFilters';
@@ -224,6 +225,7 @@ const Campaigns: FC = () => {
           )}
         </Box>
       </Box>
+      <AutojoinInfoWidget />
       <Box
         sx={{
           display: 'flex',

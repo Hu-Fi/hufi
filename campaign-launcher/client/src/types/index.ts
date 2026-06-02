@@ -275,3 +275,26 @@ export enum CampaignsTabFilter {
   JOINED = 'joined',
   HOSTED = 'hosted',
 }
+
+export type UserPreferences = {
+  campaigns_autojoin: {
+    enabled: boolean;
+    exchanges: string[];
+    campaign_types: string[];
+    tokens: string[];
+  };
+  telegram_user_id: string | null;
+  notifications: {
+    campaigns_autojoin: boolean;
+  };
+};
+
+export type PatchPreferencesDto = Partial<
+  Omit<UserPreferences, 'telegram_user_id'>
+>;
+
+export type UserInfo = {
+  id: string;
+  evm_address: EvmAddress;
+  preferences: UserPreferences;
+};
