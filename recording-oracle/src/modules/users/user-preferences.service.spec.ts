@@ -195,7 +195,7 @@ describe('UserPreferencesService', () => {
           enabled: faker.datatype.boolean(),
           exchanges: [faker.lorem.word()],
           campaignTypes: [faker.lorem.word()],
-          tokens: [faker.lorem.word()],
+          tokens: [faker.lorem.word({ length: { min: 3, max: 10 } })],
         },
       });
 
