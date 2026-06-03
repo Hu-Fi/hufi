@@ -109,13 +109,17 @@ export class NotificationsService {
         this.web3ConfigService.privateKey,
       );
 
-      await axios.post(hufiTgBotUrl, tgWebhookPayload, {
-        headers: {
-          [RECORDING_ORACLE_SIGNATURE_HEADER]: signature,
-          [RECORDING_ORACLE_ADDRESS_HEADER]:
-            this.web3ConfigService.operatorAddress,
+      await axios.post(
+        `${hufiTgBotUrl}/recording-oracle/notifications`,
+        tgWebhookPayload,
+        {
+          headers: {
+            [RECORDING_ORACLE_SIGNATURE_HEADER]: signature,
+            [RECORDING_ORACLE_ADDRESS_HEADER]:
+              this.web3ConfigService.operatorAddress,
+          },
         },
-      });
+      );
     } catch (error) {
       let formattedError = error;
       if (error instanceof AxiosError) {

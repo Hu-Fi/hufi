@@ -6,7 +6,9 @@ export class NotificationsConfigService {
   constructor(private configService: ConfigService) {}
 
   get hufiTgBotUrl(): string {
-    return this.configService.get('HUFI_TG_BOT_URL') || '';
+    const url = this.configService.get('HUFI_TG_BOT_URL') || '';
+
+    return url.replace(/\/+$/, '');
   }
 
   get hufiTgBotClientId(): string {

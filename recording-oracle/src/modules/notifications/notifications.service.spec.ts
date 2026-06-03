@@ -202,7 +202,7 @@ describe('NotificationsService', () => {
 
       expect(mockAxiosPost).toHaveBeenCalledTimes(1);
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        mockNotificationsConfigService.hufiTgBotUrl,
+        `${mockNotificationsConfigService.hufiTgBotUrl}/recording-oracle/notifications`,
         expectedWebhookPayload,
         {
           headers: {
