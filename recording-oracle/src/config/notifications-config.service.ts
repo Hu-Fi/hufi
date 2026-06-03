@@ -10,6 +10,8 @@ export class NotificationsConfigService {
   }
 
   get hufiTgBotClientId(): string {
-    return this.configService.getOrThrow('HUFI_TG_BOT_CLIENT_ID');
+    const url = this.configService.getOrThrow<string>('HUFI_TG_BOT_CLIENT_ID');
+
+    return url.replace(/\/+$/, '');
   }
 }
