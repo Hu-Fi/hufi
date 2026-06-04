@@ -103,7 +103,8 @@ const NotificationPreferences: FC<Props> = ({
           }
         } else {
           try {
-            await linkTelegram(result.id_token);
+            const tgUserId = await linkTelegram(result.id_token);
+            onSectionChange('telegram_user_id', tgUserId);
           } catch (error) {
             console.error(error);
             showError('Failed to link Telegram account. Please try again.');
@@ -119,6 +120,7 @@ const NotificationPreferences: FC<Props> = ({
 
     try {
       await unlinkTelegram();
+      onSectionChange('telegram_user_id', null);
     } catch (error) {
       console.error(error);
       showError('Failed to unlink Telegram account. Please try again.');

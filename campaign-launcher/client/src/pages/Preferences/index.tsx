@@ -36,7 +36,10 @@ const PreferencesPage: FC = () => {
     usePatchUserPreferences();
   const { showError } = useNotification();
 
-  const hasUnsavedChanges = dirtySections.size > 0;
+  const ignoredDirtySections = new Set<SectionKey>(['telegram_user_id']);
+
+  const hasUnsavedChanges =
+    dirtySections.size > 0 && !dirtySections.isSubsetOf(ignoredDirtySections);
 
   useEffect(() => {
     if (!isLoadingUserInfo && userInfo) {
@@ -96,7 +99,7 @@ const PreferencesPage: FC = () => {
     });
   };
 
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges = async () => {
     setDraftPreferences(userInfo?.preferences ?? null);
     setDirtySections(new Set());
   };
