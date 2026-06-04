@@ -99,7 +99,7 @@ const PreferencesPage: FC = () => {
     });
   };
 
-  const handleDiscardChanges = async () => {
+  const handleDiscardChanges = () => {
     setDraftPreferences(userInfo?.preferences ?? null);
     setDirtySections(new Set());
   };
