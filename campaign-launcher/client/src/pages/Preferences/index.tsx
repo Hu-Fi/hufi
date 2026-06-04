@@ -18,6 +18,8 @@ import type { PatchPreferencesDto, UserPreferences } from '@/types';
 
 type SectionKey = keyof UserPreferences;
 
+const ignoredDirtySections = new Set<SectionKey>(['telegram_user_id']);
+
 const PreferencesPage: FC = () => {
   const [draftPreferences, setDraftPreferences] =
     useState<UserPreferences | null>(null);
@@ -36,10 +38,7 @@ const PreferencesPage: FC = () => {
     usePatchUserPreferences();
   const { showError } = useNotification();
 
-  const ignoredDirtySections = new Set<SectionKey>(['telegram_user_id']);
-
-  const hasUnsavedChanges =
-    dirtySections.size > 0 && !dirtySections.isSubsetOf(ignoredDirtySections);
+  const hasUnsavedChanges = dirtySections.size > 0;
 
   useEffect(() => {
     if (!isLoadingUserInfo && userInfo) {
@@ -81,7 +80,7 @@ const PreferencesPage: FC = () => {
       if (isEqual(initialValue, value)) {
         _dirtySections.delete(section);
       } else {
-        _dirtySections.add(section);
+        if (!ignoredDirtySections.has(section)) _dirtySections.add(section);
       }
 
       return _dirtySections;
