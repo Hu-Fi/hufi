@@ -18,6 +18,8 @@ import type { PatchPreferencesDto, UserPreferences } from '@/types';
 
 type SectionKey = keyof UserPreferences;
 
+const ignoredDirtySections = new Set<SectionKey>(['telegram_user_id']);
+
 const PreferencesPage: FC = () => {
   const [draftPreferences, setDraftPreferences] =
     useState<UserPreferences | null>(null);
@@ -77,7 +79,7 @@ const PreferencesPage: FC = () => {
 
       if (isEqual(initialValue, value)) {
         _dirtySections.delete(section);
-      } else {
+      } else if (!ignoredDirtySections.has(section)) {
         _dirtySections.add(section);
       }
 
@@ -96,8 +98,21 @@ const PreferencesPage: FC = () => {
     });
   };
 
+  const handleTelegramUnlinked = () => {
+    setDirtySections((prevValue) => {
+      const nextValue = new Set(prevValue);
+      nextValue.delete('notifications');
+      return nextValue;
+    });
+  };
+
   const handleDiscardChanges = () => {
-    setDraftPreferences(userInfo?.preferences ?? null);
+    if (!userInfo) return;
+
+    setDraftPreferences({
+      ...userInfo.preferences,
+      telegram_user_id: draftPreferences?.telegram_user_id ?? null,
+    });
     setDirtySections(new Set());
   };
 
@@ -161,6 +176,7 @@ const PreferencesPage: FC = () => {
               preferences={draftPreferences?.notifications ?? null}
               telegramUserId={draftPreferences?.telegram_user_id ?? null}
               onSectionChange={handleChangePreferenceSection}
+              onUnlinkTelegram={handleTelegramUnlinked}
               isPreferencesLoading={isPreferencesLoading}
               isSavingPreferences={isSavingPreferences}
             />

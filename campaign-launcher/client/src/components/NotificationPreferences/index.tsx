@@ -33,6 +33,7 @@ type Props = {
     section: 'notifications' | 'telegram_user_id',
     value: UserPreferences['notifications' | 'telegram_user_id']
   ) => void;
+  onUnlinkTelegram: () => void;
   isPreferencesLoading: boolean;
   isSavingPreferences: boolean;
 };
@@ -47,6 +48,7 @@ const NotificationPreferences: FC<Props> = ({
   preferences,
   telegramUserId,
   onSectionChange,
+  onUnlinkTelegram,
   isPreferencesLoading,
   isSavingPreferences,
 }) => {
@@ -121,13 +123,7 @@ const NotificationPreferences: FC<Props> = ({
     try {
       await unlinkTelegram();
       onSectionChange('telegram_user_id', null);
-
-      const resetNotifications = Object.fromEntries(
-        Object.keys(preferences).map((key) => [key, false])
-      ) as UserPreferences['notifications'];
-      onSectionChange('notifications', {
-        ...resetNotifications,
-      });
+      onUnlinkTelegram();
     } catch (error) {
       console.error(error);
       showError('Failed to unlink Telegram account. Please try again.');
@@ -363,7 +359,7 @@ const NotificationPreferences: FC<Props> = ({
           </Stack>
           <SwitchStyled
             checked={preferences?.campaigns_autojoin ?? false}
-            disabled={isSavingPreferences}
+            disabled={isSavingPreferences || isUnlinkingTelegram}
             onChange={(event) =>
               handleSwitchChange(event, 'campaigns_autojoin')
             }
