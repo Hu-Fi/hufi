@@ -356,7 +356,7 @@ const NotificationPreferences: FC<Props> = ({
           </Stack>
           <SwitchStyled
             checked={preferences?.campaigns_autojoin ?? false}
-            disabled={isSavingPreferences}
+            disabled={isSavingPreferences || isUnlinkingTelegram}
             onChange={(event) =>
               handleSwitchChange(event, 'campaigns_autojoin')
             }
