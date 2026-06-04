@@ -79,8 +79,8 @@ const PreferencesPage: FC = () => {
 
       if (isEqual(initialValue, value)) {
         _dirtySections.delete(section);
-      } else {
-        if (!ignoredDirtySections.has(section)) _dirtySections.add(section);
+      } else if (!ignoredDirtySections.has(section)) {
+        _dirtySections.add(section);
       }
 
       return _dirtySections;
@@ -95,6 +95,14 @@ const PreferencesPage: FC = () => {
         ...previous,
         [section]: value,
       };
+    });
+  };
+
+  const handleTelegramUnlinked = () => {
+    setDirtySections((prevValue) => {
+      const nextValue = new Set(prevValue);
+      nextValue.delete('notifications');
+      return nextValue;
     });
   };
 
@@ -168,6 +176,7 @@ const PreferencesPage: FC = () => {
               preferences={draftPreferences?.notifications ?? null}
               telegramUserId={draftPreferences?.telegram_user_id ?? null}
               onSectionChange={handleChangePreferenceSection}
+              onUnlinkTelegram={handleTelegramUnlinked}
               isPreferencesLoading={isPreferencesLoading}
               isSavingPreferences={isSavingPreferences}
             />
