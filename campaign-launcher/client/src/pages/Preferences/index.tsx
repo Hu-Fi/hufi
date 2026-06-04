@@ -99,7 +99,12 @@ const PreferencesPage: FC = () => {
   };
 
   const handleDiscardChanges = () => {
-    setDraftPreferences(userInfo?.preferences ?? null);
+    if (!userInfo) return;
+
+    setDraftPreferences({
+      ...userInfo.preferences,
+      telegram_user_id: draftPreferences?.telegram_user_id ?? null,
+    });
     setDirtySections(new Set());
   };
 
