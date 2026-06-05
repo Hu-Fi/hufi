@@ -38,6 +38,8 @@ export const nestLoggerOverride = new NestLogger(
   defaultLogger.child({ name: 'NestLogger' }),
 );
 
+export const backfillsLogger = defaultLogger.child({ name: 'BackfillsLogger' });
+
 export type { Logger };
 
 export default defaultLogger;

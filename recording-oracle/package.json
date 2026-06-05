@@ -19,6 +19,7 @@
     "migration:revert": "yarn typeorm migration:revert -d typeorm-migrations-datasource.ts",
     "migration:run": "yarn typeorm migration:run -d typeorm-migrations-datasource.ts",
     "migration:show": "yarn typeorm migration:show -d typeorm-migrations-datasource.ts",
+    "run:db-script": "ts-node src/infrastructure/database/script-runner.ts",
     "test": "vitest --dir src",
     "test:watch": "yarn test --watch --ui",
     "test:e2e": "vitest --dir test/e2e",
@@ -84,6 +85,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^7.2.0",
+    "@types/yargs": "^17.0.35",
     "@vitest/ui": "^4.1.5",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
@@ -99,7 +101,8 @@
     "type-fest": "^5.6.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "yargs": "^18.0.0"
   },
   "lint-staged": {
     "*.ts": [
