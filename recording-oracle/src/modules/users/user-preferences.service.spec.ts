@@ -146,7 +146,7 @@ describe('UserPreferencesService', () => {
           enabled: faker.datatype.boolean(),
           exchanges: Array.from({ length: 2 }, () => faker.lorem.word()),
           campaignTypes: Array.from({ length: 2 }, () => faker.lorem.word()),
-          tokens: Array.from({ length: 2 }, () => faker.lorem.word()),
+          tokens: Array.from({ length: 2 }, () => faker.finance.currencyCode()),
         },
         telegramUserId: faker.number.int().toString(),
         notifications: {
@@ -161,7 +161,7 @@ describe('UserPreferencesService', () => {
 
       const newExchange = faker.lorem.word();
       const newCampaignType = faker.lorem.word();
-      const newToken = faker.lorem.word();
+      const newToken = faker.finance.currencyCode();
 
       const result = await userPreferencesService.update(user.id, {
         campaignsAutojoin: {
@@ -195,7 +195,7 @@ describe('UserPreferencesService', () => {
           enabled: faker.datatype.boolean(),
           exchanges: [faker.lorem.word()],
           campaignTypes: [faker.lorem.word()],
-          tokens: [faker.lorem.word({ length: { min: 3, max: 10 } })],
+          tokens: [faker.finance.currencyCode()],
         },
       });
 
