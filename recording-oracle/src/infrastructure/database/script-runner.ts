@@ -114,7 +114,6 @@ async function getUserConfirmation(message: string): Promise<boolean> {
     const answerInput = await rl.question(
       `${message} Type "y" or "yes" to continue: `,
     );
-    process.stdout.write('\n');
 
     if (['y', 'yes'].includes(answerInput.trim().toLowerCase())) {
       return true;
@@ -124,10 +123,12 @@ async function getUserConfirmation(message: string): Promise<boolean> {
   } catch {
     return false;
   } finally {
+    process.stdout.write('\n\n');
     rl.close();
   }
 }
 
+let dataSource: DataSource;
 async function createDependencies(scriptName: string) {
   runnerLogger.debug('Initializing dependencies');
 
@@ -136,10 +137,10 @@ async function createDependencies(scriptName: string) {
     runnerLogger.error(
       'Database connection details are not provided. Please check your NODE_ENV or/and .env files',
     );
-    process.exit(1);
+    throw new Error('Invalid DB connection details');
   }
 
-  const dataSource = new DataSource({
+  dataSource = new DataSource({
     type: 'postgres',
     useUTC: true,
     ...(connectionUrl
@@ -160,8 +161,9 @@ async function createDependencies(scriptName: string) {
   try {
     await dataSource.initialize();
   } catch (error) {
-    runnerLogger.error('Error while initializing data source', { error });
-    process.exit(1);
+    const errorMessage = 'Failed to initialize data source';
+    runnerLogger.error(errorMessage, { error });
+    throw new Error(errorMessage);
   }
 
   return {
@@ -170,71 +172,118 @@ async function createDependencies(scriptName: string) {
   };
 }
 
-/**
- * yarn ts-node src/infrastructure/database/script-runner.ts
- */
-void (async () => {
-  let scriptName: string;
-  let argsOptions: ArgsOptions;
+async function cleanupDependencies() {
+  runnerLogger.debug('Cleaning up dependencies');
+  await dataSource?.destroy();
+  runnerLogger.debug('Dependencies cleaned up');
+}
 
-  try {
-    ({ scriptName, ...argsOptions } = await parseOptions());
-  } catch (error) {
-    runnerLogger.error('Error while parsing options', { error });
-    process.exit(1);
+let shutdownInProgress = false;
+let cleanupTimeout: NodeJS.Timeout | undefined;
+async function shutdown(signal?: string) {
+  if (shutdownInProgress) {
+    return;
   }
+  shutdownInProgress = true;
 
-  runnerLogger.debug('Parsed options', {
-    scriptName,
-    ...argsOptions,
-  });
+  runnerLogger.info(`Received ${signal}, shutting down...`);
 
-  const { scriptLogger, ...scriptDependencies } =
-    await createDependencies(scriptName);
-
-  let scriptCtor: Constructor<DbScript>;
-  try {
-    scriptLogger.debug('Loading script');
-    scriptCtor = await loadScriptCtor(scriptName);
-  } catch (error) {
-    scriptLogger.error('Error while loading script', { error });
+  cleanupTimeout = setTimeout(() => {
+    runnerLogger.error('Cleanup timeout, forcing exit');
     process.exit(1);
-  }
+  }, 10 * 1000);
 
   try {
-    const script = new scriptCtor(scriptLogger, scriptDependencies.queryRunner);
-    await script.init();
+    await cleanupDependencies();
 
-    scriptLogger.info('Script executor initialized, going to run');
-
-    if (argsOptions.dryRun) {
-      runnerLogger.warn(
-        'Running in "dry-run" mode, no actual changes should be applied',
-      );
-    } else {
-      await delay(1000);
-      const confirmed = await getUserConfirmation(
-        `You are going to run "${scriptName}" script in live mode, actual changes will be applied. Do you want to continue?`,
-      );
-      if (confirmed) {
-        runnerLogger.debug('"Live" mode confirmed, continuing');
-        await delay(1000);
-      } else {
-        runnerLogger.debug('Script execution cancelled');
-        process.exit(0);
-      }
-    }
-
-    const { revert, ...scriptOptions } = argsOptions;
-    if (revert) {
-      await script.revert(scriptOptions);
-    } else {
-      await script.execute(scriptOptions);
+    if (cleanupTimeout) {
+      clearTimeout(cleanupTimeout);
     }
 
     process.exit(0);
   } catch (error) {
-    scriptLogger.error('Error while running script', { scriptName, error });
+    runnerLogger.error('Error during shutdown', error);
+
+    if (cleanupTimeout) {
+      clearTimeout(cleanupTimeout);
+    }
+
     process.exit(1);
+  }
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+/**
+ * yarn ts-node src/infrastructure/database/script-runner.ts
+ */
+void (async () => {
+  try {
+    let scriptName: string;
+    let argsOptions: ArgsOptions;
+
+    try {
+      ({ scriptName, ...argsOptions } = await parseOptions());
+    } catch (error) {
+      runnerLogger.error('Error while parsing options', { error });
+      return;
+    }
+
+    runnerLogger.debug('Parsed options', {
+      scriptName,
+      ...argsOptions,
+    });
+
+    const { scriptLogger, ...scriptDependencies } =
+      await createDependencies(scriptName);
+
+    let scriptCtor: Constructor<DbScript>;
+    try {
+      scriptLogger.debug('Loading script');
+      scriptCtor = await loadScriptCtor(scriptName);
+    } catch (error) {
+      scriptLogger.error('Error while loading script', { error });
+      return;
+    }
+
+    try {
+      const script = new scriptCtor(
+        scriptLogger,
+        scriptDependencies.queryRunner,
+      );
+      await script.init();
+
+      scriptLogger.info('Script executor initialized, going to run');
+
+      if (argsOptions.dryRun) {
+        runnerLogger.warn(
+          'Running in "dry-run" mode, no actual changes should be applied',
+        );
+      } else {
+        await delay(1000);
+        const confirmed = await getUserConfirmation(
+          `You are going to run "${scriptName}" script in live mode, actual changes will be applied. Do you want to continue?`,
+        );
+        if (confirmed) {
+          runnerLogger.debug('"Live" mode confirmed, continuing');
+          await delay(1000);
+        } else {
+          runnerLogger.debug('Script execution cancelled');
+          return;
+        }
+      }
+
+      const { revert, ...scriptOptions } = argsOptions;
+      if (revert) {
+        await script.revert(scriptOptions);
+      } else {
+        await script.execute(scriptOptions);
+      }
+    } catch (error) {
+      scriptLogger.error('Error while running script', { scriptName, error });
+    }
+  } finally {
+    await cleanupDependencies();
   }
 })();

@@ -12,7 +12,7 @@ type Campaign = {
 
 /**
  * !!!WARN!!!
- * This was one-time occurence where we had to perform calculations in the migration.
+ * This was one-time occurrence where we had to perform calculations in the migration.
  * This is not a good practice and should be avoided in the future.
  *
  * Further we should plan migrations to only bring schema changes
