@@ -2547,6 +2547,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/yargs-parser@npm:*":
+  version: 21.0.3
+  resolution: "@types/yargs-parser@npm:21.0.3"
+  checksum: 10c0/e71c3bd9d0b73ca82e10bee2064c384ab70f61034bbfb78e74f5206283fc16a6d85267b606b5c22cb2a3338373586786fed595b2009825d6a9115afba36560a0
+  languageName: node
+  linkType: hard
+
+"@types/yargs@npm:^17.0.35":
+  version: 17.0.35
+  resolution: "@types/yargs@npm:17.0.35"
+  dependencies:
+    "@types/yargs-parser": "npm:*"
+  checksum: 10c0/609557826a6b85e73ccf587923f6429850d6dc70e420b455bab4601b670bfadf684b09ae288bccedab042c48ba65f1666133cf375814204b544009f57d6eef63
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/eslint-plugin@npm:8.60.0":
   version: 8.60.0
   resolution: "@typescript-eslint/eslint-plugin@npm:8.60.0"
@@ -7571,6 +7587,7 @@ __metadata:
     "@types/passport-jwt": "npm:^4.0.1"
     "@types/pg": "npm:^8.16.0"
     "@types/supertest": "npm:^7.2.0"
+    "@types/yargs": "npm:^17.0.35"
     "@valkey/valkey-glide": "npm:^2.2.1"
     "@vitest/ui": "npm:^4.1.5"
     alchemy-sdk: "npm:^3.6.5"
@@ -7614,6 +7631,7 @@ __metadata:
     typescript: "npm:^6.0.2"
     typescript-eslint: "npm:^8.58.1"
     vitest: "npm:^4.1.5"
+    yargs: "npm:^18.0.0"
     yauzl: "npm:^3.3.0"
   languageName: unknown
   linkType: soft
