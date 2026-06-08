@@ -15,13 +15,12 @@ import logger from '@/logger';
 import type { DbScript } from './scripts/base';
 
 /**
- * NOTE: ts-node can't use dynamic imports, so have to use this
+ * NOTE: ts-node can't use dynamic imports that contain ts-paths,
+ * so have to use this as a workaround to load scripts dynamically
  */
 const __require = createRequire(__filename);
 
 const runnerLogger = logger.child({ context: 'ScriptRunner' });
-
-const DEFAULT_SCRIPT_NAME = 'ping';
 
 type ArgsOptions = {
   dryRun: boolean;
@@ -32,12 +31,13 @@ async function parseOptions(): Promise<{ scriptName: string } & ArgsOptions> {
   const argv = await yargs(hideBin(process.argv))
     .version(false)
     .scriptName('yarn run:db-script')
-    .usage('$0 [options]')
-    .option('script', {
-      type: 'string',
-      default: DEFAULT_SCRIPT_NAME,
-      describe: 'Name of script to run',
-    })
+    .usage('$0 <script-name> [options]')
+    .command('$0 <script-name>', 'Run a database script', (yargs) =>
+      yargs.positional('script-name', {
+        type: 'string',
+        describe: 'Script name to run',
+      }),
+    )
     .option('dry-run', {
       type: 'boolean',
       default: true,
@@ -49,13 +49,14 @@ async function parseOptions(): Promise<{ scriptName: string } & ArgsOptions> {
       describe: 'Run "revert" version of the script',
     })
     .help()
+    .example('$0 ping', 'Ping DB connection')
     .parserConfiguration({
       'camel-case-expansion': true,
     })
     .parseAsync();
 
   return {
-    scriptName: argv.script,
+    scriptName: argv['script-name'] as string,
     dryRun: argv.dryRun,
     revert: argv.revert,
   };
@@ -97,12 +98,10 @@ async function getUserConfirmation(message: string): Promise<boolean> {
   });
 
   try {
+    process.stdout.write('\n');
     const answerInput = await rl.question(
       `${message} Type "y" or "yes" to continue: `,
     );
-    /**
-     * Empty line after confirmation input
-     */
     process.stdout.write('\n');
 
     if (['y', 'yes'].includes(answerInput.trim().toLowerCase())) {
@@ -136,7 +135,7 @@ void (async () => {
     ...argsOptions,
   });
   /**
-   * To get this log before confirmation prompt
+   * To get the log message above before confirmation prompt
    */
   await delay(1000);
 
@@ -145,9 +144,10 @@ void (async () => {
       'Running in "dry-run" mode, no actual changes should be applied',
     );
   } else {
-    const confirmed = await getUserConfirmation(
-      `\nYou are going to run "${scriptName}" script in live mode, actual changes will be applied. Do you want to continue?`,
-    );
+    const confirmed = await getUserConfirmation(`
+      You are going to run "${scriptName}" script in live mode,
+      actual changes will be applied. Do you want to continue?
+    `);
     if (confirmed) {
       runnerLogger.debug('"Live" mode confirmed, continuing');
       await delay(2500);
