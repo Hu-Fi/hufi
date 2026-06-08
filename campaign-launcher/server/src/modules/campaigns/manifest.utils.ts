@@ -8,6 +8,7 @@ import type {
   HoldingCampaignManifest,
   ThresholdCampaignManifest,
   MarketMakingCampaignManifest,
+  ThresholdMarketMakingCampaignManifest,
 } from './types';
 import { CampaignType } from './types';
 
@@ -27,6 +28,12 @@ export function isCompetitiveMarketMakingManifest(
   manifest: CampaignManifest,
 ): manifest is CompetitiveMarketMakingCampaignManifest {
   return manifest.type === CampaignType.COMPETITIVE_MARKET_MAKING;
+}
+
+export function isThresholdMarketMakingManifest(
+  manifest: CampaignManifest,
+): manifest is ThresholdMarketMakingCampaignManifest {
+  return manifest.type === CampaignType.THRESHOLD_MARKET_MAKING;
 }
 
 export function isThresholdManifest(
@@ -86,6 +93,18 @@ const competitiveMarketMakingManifestSchema = Joi.object({
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
 
+const thresholdMarketMakingManifestSchema = Joi.object({
+  type: Joi.string().valid(CampaignType.THRESHOLD_MARKET_MAKING).required(),
+  exchange: Joi.string().required(),
+  minimum_volume_target: Joi.number().strict().positive().required(),
+  max_participants: Joi.number().strict().positive().integer(),
+  pair: Joi.string()
+    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
+    .required(),
+  start_date: Joi.date().iso().required(),
+  end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
+}).options({ allowUnknown: true, stripUnknown: true });
+
 const thresholdManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.THRESHOLD).required(),
   exchange: Joi.string().required(),
@@ -116,18 +135,26 @@ export function validateSchema(manifestJson: unknown): CampaignManifest {
     let manifestSchema;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     switch ((manifestJson as any).type) {
-      case CampaignType.MARKET_MAKING:
+      case CampaignType.MARKET_MAKING: {
         manifestSchema = marketMakingManifestSchema;
         break;
-      case CampaignType.HOLDING:
+      }
+      case CampaignType.HOLDING: {
         manifestSchema = holdingManifestSchema;
         break;
-      case CampaignType.COMPETITIVE_MARKET_MAKING:
+      }
+      case CampaignType.COMPETITIVE_MARKET_MAKING: {
         manifestSchema = competitiveMarketMakingManifestSchema;
         break;
-      case CampaignType.THRESHOLD:
+      }
+      case CampaignType.THRESHOLD: {
         manifestSchema = thresholdManifestSchema;
         break;
+      }
+      case CampaignType.THRESHOLD_MARKET_MAKING: {
+        manifestSchema = thresholdMarketMakingManifestSchema;
+        break;
+      }
       default:
         throw new Error('Unsupported campaign type');
     }

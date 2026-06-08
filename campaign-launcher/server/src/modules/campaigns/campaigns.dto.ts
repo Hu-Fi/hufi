@@ -108,6 +108,11 @@ export class CampaignDetails {
   minVolumeRequired?: number;
 
   @ApiPropertyOptional({
+    name: 'minimum_volume_target',
+  })
+  minimumVolumeTarget?: number;
+
+  @ApiPropertyOptional({
     name: 'daily_balance_target',
   })
   dailyBalanceTarget?: number;

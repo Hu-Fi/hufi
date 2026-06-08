@@ -221,6 +221,12 @@ export class CampaignsService {
         rewardsDistribution: manifest.rewards_distribution,
         minVolumeRequired: manifest.min_volume_required,
       };
+    } else if (manifestUtils.isThresholdMarketMakingManifest(manifest)) {
+      symbol = manifest.pair;
+      details = {
+        minimumVolumeTarget: manifest.minimum_volume_target,
+        maxParticipants: manifest.max_participants,
+      };
     } else if (manifestUtils.isHoldingManifest(manifest)) {
       symbol = manifest.symbol;
       details = {
