@@ -4,15 +4,27 @@ import path from 'path';
 import readline from 'readline/promises';
 import { setTimeout as delay } from 'timers/promises';
 
+import * as dotenv from 'dotenv';
 import type { Constructor } from 'type-fest';
+import { DataSource } from 'typeorm';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import '@/setup-libs';
 
+import Environment from '@/common/utils/environment';
 import logger from '@/logger';
 
+import { CustomNamingStrategy } from './naming-strategy';
 import type { DbScript } from './scripts/base';
+
+dotenv.config({
+  quiet: true,
+  /**
+   * First value wins if "override" option is not set
+   */
+  path: [`.env.${Environment.name}`, '.env'],
+});
 
 /**
  * NOTE: ts-node can't use dynamic imports that contain ts-paths,
@@ -116,6 +128,48 @@ async function getUserConfirmation(message: string): Promise<boolean> {
   }
 }
 
+async function createDependencies(scriptName: string) {
+  runnerLogger.debug('Initializing dependencies');
+
+  const connectionUrl = process.env.POSTGRES_URL;
+  if (!connectionUrl && !process.env.POSTGRES_HOST) {
+    runnerLogger.error(
+      'Database connection details are not provided. Please check your NODE_ENV or/and .env files',
+    );
+    process.exit(1);
+  }
+
+  const dataSource = new DataSource({
+    type: 'postgres',
+    useUTC: true,
+    ...(connectionUrl
+      ? {
+          url: connectionUrl,
+        }
+      : {
+          host: process.env.POSTGRES_HOST,
+          port: Number(process.env.POSTGRES_PORT),
+          username: process.env.POSTGRES_USER,
+          password: process.env.POSTGRES_PASSWORD,
+          database: process.env.POSTGRES_DATABASE,
+        }),
+    ssl: process.env.POSTGRES_SSL?.toLowerCase() === 'true',
+    namingStrategy: new CustomNamingStrategy(),
+  });
+
+  try {
+    await dataSource.initialize();
+  } catch (error) {
+    runnerLogger.error('Error while initializing data source', { error });
+    process.exit(1);
+  }
+
+  return {
+    scriptLogger: runnerLogger.child({ scriptName }),
+    queryRunner: dataSource.createQueryRunner(),
+  };
+}
+
 /**
  * yarn ts-node src/infrastructure/database/script-runner.ts
  */
@@ -134,42 +188,42 @@ void (async () => {
     scriptName,
     ...argsOptions,
   });
-  /**
-   * To get the log message above before confirmation prompt
-   */
-  await delay(1000);
 
-  if (argsOptions.dryRun) {
-    runnerLogger.warn(
-      'Running in "dry-run" mode, no actual changes should be applied',
-    );
-  } else {
-    const confirmed = await getUserConfirmation(`
-      You are going to run "${scriptName}" script in live mode,
-      actual changes will be applied. Do you want to continue?
-    `);
-    if (confirmed) {
-      runnerLogger.debug('"Live" mode confirmed, continuing');
-      await delay(2500);
-    } else {
-      runnerLogger.debug('Script execution cancelled');
-      process.exit(0);
-    }
+  const { scriptLogger, ...scriptDependencies } =
+    await createDependencies(scriptName);
+
+  let scriptCtor: Constructor<DbScript>;
+  try {
+    scriptLogger.debug('Loading script');
+    scriptCtor = await loadScriptCtor(scriptName);
+  } catch (error) {
+    scriptLogger.error('Error while loading script', { error });
+    process.exit(1);
   }
 
-  const scriptLogger = runnerLogger.child({ scriptName });
   try {
-    scriptLogger.debug('Loading script', {
-      options: argsOptions,
-    });
-    const scriptCtor = await loadScriptCtor(scriptName);
-
-    scriptLogger.info('Script executor loaded, initializing');
-
-    const script = new scriptCtor(scriptLogger);
+    const script = new scriptCtor(scriptLogger, scriptDependencies.queryRunner);
     await script.init();
 
     scriptLogger.info('Script executor initialized, going to run');
+
+    if (argsOptions.dryRun) {
+      runnerLogger.warn(
+        'Running in "dry-run" mode, no actual changes should be applied',
+      );
+    } else {
+      await delay(1000);
+      const confirmed = await getUserConfirmation(
+        `You are going to run "${scriptName}" script in live mode, actual changes will be applied. Do you want to continue?`,
+      );
+      if (confirmed) {
+        runnerLogger.debug('"Live" mode confirmed, continuing');
+        await delay(1000);
+      } else {
+        runnerLogger.debug('Script execution cancelled');
+        process.exit(0);
+      }
+    }
 
     const { revert, ...scriptOptions } = argsOptions;
     if (revert) {
@@ -180,7 +234,7 @@ void (async () => {
 
     process.exit(0);
   } catch (error) {
-    scriptLogger.error('Error while running script', { error });
+    scriptLogger.error('Error while running script', { scriptName, error });
     process.exit(1);
   }
 })();

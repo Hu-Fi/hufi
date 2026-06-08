@@ -7,6 +7,7 @@ import Environment from '@/common/utils/environment';
 import { CustomNamingStrategy } from '@/infrastructure/database/naming-strategy';
 
 dotenv.config({
+  quiet: true,
   /**
    * First value wins if "override" option is not set
    */
