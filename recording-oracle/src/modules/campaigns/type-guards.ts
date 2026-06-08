@@ -3,6 +3,7 @@ import { CampaignType } from '@/common/constants';
 import type { CampaignEntity } from './campaign.entity';
 import {
   type CompetitiveMarketMakingCampaignDetails,
+  type ThresholdMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
@@ -20,6 +21,14 @@ export function isCompetitiveMarketMakingCampaign(
   details: CompetitiveMarketMakingCampaignDetails;
 } {
   return campaign.type === CampaignType.COMPETITIVE_MARKET_MAKING;
+}
+
+export function isThresholdMarketMakingCampaign(
+  campaign: CampaignEntity,
+): campaign is CampaignEntity & {
+  details: ThresholdMarketMakingCampaignDetails;
+} {
+  return campaign.type === CampaignType.THRESHOLD_MARKET_MAKING;
 }
 
 export function isHoldingCampaign(

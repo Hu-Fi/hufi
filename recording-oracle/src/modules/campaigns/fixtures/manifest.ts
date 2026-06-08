@@ -10,6 +10,7 @@ import {
   CampaignManifest,
   type CampaignManifestBase,
   type CompetitiveMarketMakingCampaignManifest,
+  type ThresholdMarketMakingCampaignManifest,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
   type ThresholdCampaignManifest,
@@ -70,6 +71,20 @@ export function generateCompetitiveMarketMakingCampaignManifest(): CompetitiveMa
     pair: generateTradingPair(),
     min_volume_required: faker.number.float({ min: 0.0001 }),
     rewards_distribution: rewardsDistribution,
+  };
+
+  return manifest;
+}
+
+export function generateThresholdMarketMakingCampaignManifest(): ThresholdMarketMakingCampaignManifest {
+  const manifestBase = generateBaseCampaignManifest();
+
+  const manifest: ThresholdMarketMakingCampaignManifest = {
+    ...manifestBase,
+    type: CampaignType.THRESHOLD_MARKET_MAKING,
+    pair: generateTradingPair(),
+    minimum_volume_target: faker.number.float({ min: 0.0001 }),
+    max_participants: faker.number.int({ min: 1, max: 5 }),
   };
 
   return manifest;

@@ -29,6 +29,11 @@ export type CompetitiveMarketMakingCampaignDetails = {
   minVolumeRequired: number;
 };
 
+export type ThresholdMarketMakingCampaignDetails = {
+  minimumVolumeTarget: number;
+  maxParticipants: number;
+};
+
 export type HoldingCampaignDetails = {
   dailyBalanceTarget: number;
 };
@@ -41,6 +46,7 @@ export type ThresholdCampaignDetails = {
 export type CampaignDetails =
   | MarketMakingCampaignDetails
   | CompetitiveMarketMakingCampaignDetails
+  | ThresholdMarketMakingCampaignDetails
   | HoldingCampaignDetails
   | ThresholdCampaignDetails;
 
@@ -64,6 +70,13 @@ export type CompetitiveMarketMakingCampaignManifest = CampaignManifestBase & {
   min_volume_required: number;
 };
 
+export type ThresholdMarketMakingCampaignManifest = CampaignManifestBase & {
+  type: CampaignType.THRESHOLD_MARKET_MAKING;
+  pair: string;
+  minimum_volume_target: number;
+  max_participants: number;
+};
+
 export type HoldingCampaignManifest = CampaignManifestBase & {
   type: CampaignType.HOLDING;
   symbol: string;
@@ -80,6 +93,7 @@ export type ThresholdCampaignManifest = CampaignManifestBase & {
 export type CampaignManifest =
   | MarketMakingCampaignManifest
   | CompetitiveMarketMakingCampaignManifest
+  | ThresholdMarketMakingCampaignManifest
   | HoldingCampaignManifest
   | ThresholdCampaignManifest;
 

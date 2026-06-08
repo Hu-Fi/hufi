@@ -389,20 +389,30 @@ export class CampaignsService implements OnModuleDestroy {
       manifest = manifestUtils.validateBaseSchema(manifestString);
 
       switch (manifest.type) {
-        case CampaignType.MARKET_MAKING:
+        case CampaignType.MARKET_MAKING: {
           manifestUtils.assertValidMarketMakingCampaignManifest(manifest);
           break;
-        case CampaignType.COMPETITIVE_MARKET_MAKING:
+        }
+        case CampaignType.COMPETITIVE_MARKET_MAKING: {
           manifestUtils.assertValidCompetitiveMarketMakingCampaignManifest(
             manifest,
           );
           break;
-        case CampaignType.HOLDING:
+        }
+        case CampaignType.THRESHOLD_MARKET_MAKING: {
+          manifestUtils.assertValidThresholdMarketMakingCampaignManifest(
+            manifest,
+          );
+          break;
+        }
+        case CampaignType.HOLDING: {
           manifestUtils.assertValidHoldingCampaignManifest(manifest);
           break;
-        case CampaignType.THRESHOLD:
+        }
+        case CampaignType.THRESHOLD: {
           manifestUtils.assertValidThresholdCampaignManifest(manifest);
           break;
+        }
         default:
           throw new Error(`Campaign type not supported: ${manifest.type}`);
       }

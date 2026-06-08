@@ -23,6 +23,10 @@ export const CAMPAIGN_PERMISSIONS_MAP: Record<
     ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
     ExchangePermission.VIEW_DEPOSIT_ADDRESS,
   ],
+  [CampaignType.THRESHOLD_MARKET_MAKING]: [
+    ExchangePermission.VIEW_SPOT_TRADING_HISTORY,
+    ExchangePermission.VIEW_DEPOSIT_ADDRESS,
+  ],
   [CampaignType.THRESHOLD]: [
     ExchangePermission.VIEW_ACCOUNT_BALANCE,
     ExchangePermission.VIEW_DEPOSIT_ADDRESS,

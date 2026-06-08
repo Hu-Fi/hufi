@@ -56,6 +56,15 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
       };
       break;
     }
+    case CampaignType.THRESHOLD_MARKET_MAKING: {
+      symbol = generateTradingPair();
+
+      details = {
+        minimumVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
+        maxParticipants: faker.number.int({ min: 1, max: 5 }),
+      };
+      break;
+    }
     case CampaignType.HOLDING: {
       symbol = faker.finance.currencyCode();
 
@@ -152,27 +161,37 @@ export function generateCampaignProgress(
 
   let meta: CampaignProgressMeta;
   switch (campaign.type) {
-    case CampaignType.MARKET_MAKING:
+    case CampaignType.MARKET_MAKING: {
       meta = {
         total_volume: 0,
       };
       break;
-    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    }
+    case CampaignType.COMPETITIVE_MARKET_MAKING: {
       meta = {
         total_volume: 0,
       };
       break;
-    case CampaignType.HOLDING:
+    }
+    case CampaignType.THRESHOLD_MARKET_MAKING: {
+      meta = {
+        total_volume: 0,
+      };
+      break;
+    }
+    case CampaignType.HOLDING: {
       meta = {
         total_balance: 0,
       };
       break;
-    case CampaignType.THRESHOLD:
+    }
+    case CampaignType.THRESHOLD: {
       meta = {
         total_balance: 0,
         total_score: 0,
       };
       break;
+    }
   }
 
   return {
