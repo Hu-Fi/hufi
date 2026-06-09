@@ -313,21 +313,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:7.0.0":
+"@human-protocol/core@npm:7.0.0, @human-protocol/core@npm:^7.0.0":
   version: 7.0.0
   resolution: "@human-protocol/core@npm:7.0.0"
   peerDependencies:
     ethers: ~6.16.0
   checksum: 10c0/b8083fca9b7fab0bca450b7a520cf9f0e8b3af29f4b90fc36ab1d3f24b2ff76aa53f3c3e160f7c40e7079aad6f32ebc67f5abaf8ad75eb77eee808fee7fd3955
-  languageName: node
-  linkType: hard
-
-"@human-protocol/core@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@human-protocol/core@npm:6.0.0"
-  peerDependencies:
-    ethers: ~6.15.0
-  checksum: 10c0/10316b23ed6987c75ca1276de85145200bd1190ac8116e5ce6dfad5c427b1b509db63457ba5849fb9c16477264fc521b6737af48cf4700edc968153e1f8e28f2
   languageName: node
   linkType: hard
 
@@ -5158,7 +5149,7 @@ __metadata:
     "@eslint/js": "npm:^10.0.1"
     "@faker-js/faker": "npm:^10.4.0"
     "@golevelup/ts-vitest": "npm:^4.0.0"
-    "@human-protocol/core": "npm:^6.0.0"
+    "@human-protocol/core": "npm:^7.0.0"
     "@human-protocol/logger": "npm:^1.3.0"
     "@human-protocol/sdk": "npm:^7.3.0"
     "@nestjs/cli": "npm:^11.0.14"
