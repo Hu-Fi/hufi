@@ -20,8 +20,7 @@ import { generateCampaignEntity } from '../fixtures';
 import { UserAlreadyJoinedError } from './participations.errors';
 import { ParticipationsRepository } from './participations.repository';
 import { ParticipationsService } from './participations.service';
-import { isThresholdCampaign } from '../type-guards';
-import type { ThresholdCampaignDetails } from '../types';
+import { isThresholdBasedCampaign } from '../type-guards';
 
 const mockParticipationsRepository = createMock<ParticipationsRepository>();
 
@@ -70,7 +69,7 @@ describe('ParticipationsService', () => {
     beforeEach(() => {
       userId = faker.string.uuid();
       campaign = generateCampaignEntity();
-      expectedParticipantsLimit = isThresholdCampaign(campaign)
+      expectedParticipantsLimit = isThresholdBasedCampaign(campaign)
         ? campaign.details.maxParticipants
         : undefined;
     });
@@ -174,11 +173,15 @@ describe('ParticipationsService', () => {
   });
 
   describe('checkParticipantLimitReached', () => {
-    let campaign: CampaignEntity & { details: ThresholdCampaignDetails };
+    let campaign: CampaignEntity & { details: { maxParticipants?: number } };
 
     beforeEach(() => {
-      // @ts-expect-error - we know details is ThresholdCampaignDetails for this test suite
-      campaign = generateCampaignEntity(CampaignType.THRESHOLD);
+      campaign = generateCampaignEntity(
+        faker.helpers.arrayElement([
+          CampaignType.THRESHOLD,
+          CampaignType.THRESHOLD_MARKET_MAKING,
+        ]),
+      );
       campaign.details.maxParticipants = faker.number.int({ min: 1 });
     });
 

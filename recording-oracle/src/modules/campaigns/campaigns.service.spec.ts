@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
 import _ from 'lodash';
+import type { Mock } from 'vitest';
 import {
   afterAll,
   afterEach,
@@ -24,7 +25,6 @@ import {
   test,
   vi,
 } from 'vitest';
-import type { Mock } from 'vitest';
 
 import { CampaignType, ExchangeName, ExchangeType } from '@/common/constants';
 import { ExchangeNotSupportedError } from '@/common/errors/exchanges';
@@ -80,6 +80,7 @@ import {
   generateParticipantOutcome,
   generateStoredResultsMeta,
   generateThresholdampaignManifest,
+  generateThresholdMarketMakingCampaignManifest,
   generateUserJoinedDate,
   MockCampaignProgressChecker,
   mockCampaignsConfigService,
@@ -94,19 +95,21 @@ import {
 } from './participations';
 import {
   type CampaignProgressMeta,
+  type HoldingMeta,
   HoldingProgressChecker,
+  type MarketMakingMeta,
   MarketMakingProgressChecker,
-} from './progress-checking';
-import { type HoldingMeta } from './progress-checking/holding';
-import { type MarketMakingMeta } from './progress-checking/market-making';
-import {
+  type ThresholdMarketMakingMeta,
+  ThresholdMarketMakingProgressChecker,
   type ThresholdMeta,
   ThresholdProgressChecker,
-} from './progress-checking/threshold';
+} from './progress-checking';
 import * as rewardsUtils from './rewards.utils';
 import {
+  isBalanceBasedCampaign,
   isCompetitiveMarketMakingCampaign,
-  isThresholdCampaign,
+  isThresholdBasedCampaign,
+  isVolumeBasedCampaign,
 } from './type-guards';
 import {
   type CampaignEscrowInfo,
@@ -118,6 +121,7 @@ import {
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
   type ThresholdCampaignManifest,
+  ThresholdMarketMakingCampaignDetails,
 } from './types';
 import { VolumeStatsRepository } from './volume-stats.repository';
 
@@ -711,6 +715,8 @@ describe('CampaignsService', () => {
 
     test.each([
       generateMarketMakingCampaignManifest(),
+      generateCompetitiveMarketMakingCampaignManifest(),
+      generateThresholdMarketMakingCampaignManifest(),
       generateHoldingCampaignManifest(),
       generateThresholdampaignManifest(),
     ])(
@@ -770,6 +776,8 @@ describe('CampaignsService', () => {
 
     test.each([
       generateMarketMakingCampaignManifest(),
+      generateCompetitiveMarketMakingCampaignManifest(),
+      generateThresholdMarketMakingCampaignManifest(),
       generateHoldingCampaignManifest(),
       generateThresholdampaignManifest(),
     ])(
@@ -851,7 +859,7 @@ describe('CampaignsService', () => {
       };
     });
 
-    test('should create market making campaign with proper data', async () => {
+    test('should create MARKET_MAKING campaign with proper data', async () => {
       const manifest = generateMarketMakingCampaignManifest();
 
       const campaign = await campaignsService.createCampaign(
@@ -888,44 +896,7 @@ describe('CampaignsService', () => {
       );
     });
 
-    test('should create holding campaign with proper data', async () => {
-      const manifest = generateHoldingCampaignManifest();
-
-      const campaign = await campaignsService.createCampaign(
-        chainId,
-        campaignAddress,
-        manifest,
-        {
-          fundAmount,
-          fundAmountNet,
-          fundTokenSymbol,
-          fundTokenDecimals,
-          cancellationRequestedAt: null,
-        },
-      );
-
-      expect(isUuidV4(campaign.id)).toBe(true);
-
-      const expectedCampaignData = {
-        ...commonExpectedCampaignData,
-        type: manifest.type,
-        exchangeName: manifest.exchange,
-        symbol: manifest.symbol,
-        startDate: manifest.start_date,
-        endDate: manifest.end_date,
-        details: {
-          dailyBalanceTarget: manifest.daily_balance_target,
-        },
-      };
-      expect(campaign).toEqual(expectedCampaignData);
-
-      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
-      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
-        expectedCampaignData,
-      );
-    });
-
-    test('should create competitive market making campaign with proper data', async () => {
+    test('should create COMPETITIVE_MARKET_MAKING campaign with proper data', async () => {
       const manifest = generateCompetitiveMarketMakingCampaignManifest();
 
       const campaign = await campaignsService.createCampaign(
@@ -963,7 +934,82 @@ describe('CampaignsService', () => {
       );
     });
 
-    describe('threshold campaign creation', () => {
+    test('should create THRESHOLD_MARKET_MAKING campaign with proper data', async () => {
+      const manifest = generateThresholdMarketMakingCampaignManifest();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundAmountNet,
+          fundTokenSymbol,
+          fundTokenDecimals,
+          cancellationRequestedAt: null,
+        },
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        ...commonExpectedCampaignData,
+        type: manifest.type,
+        exchangeName: manifest.exchange,
+        symbol: manifest.pair,
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        details: {
+          minimumVolumeTarget: manifest.minimum_volume_target,
+          maxParticipants: manifest.max_participants,
+        },
+      };
+      expect(campaign).toEqual(expectedCampaignData);
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expectedCampaignData,
+      );
+    });
+
+    test('should create HOLDING campaign with proper data', async () => {
+      const manifest = generateHoldingCampaignManifest();
+
+      const campaign = await campaignsService.createCampaign(
+        chainId,
+        campaignAddress,
+        manifest,
+        {
+          fundAmount,
+          fundAmountNet,
+          fundTokenSymbol,
+          fundTokenDecimals,
+          cancellationRequestedAt: null,
+        },
+      );
+
+      expect(isUuidV4(campaign.id)).toBe(true);
+
+      const expectedCampaignData = {
+        ...commonExpectedCampaignData,
+        type: manifest.type,
+        exchangeName: manifest.exchange,
+        symbol: manifest.symbol,
+        startDate: manifest.start_date,
+        endDate: manifest.end_date,
+        details: {
+          dailyBalanceTarget: manifest.daily_balance_target,
+        },
+      };
+      expect(campaign).toEqual(expectedCampaignData);
+
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledTimes(1);
+      expect(mockCampaignsRepository.insert).toHaveBeenCalledWith(
+        expectedCampaignData,
+      );
+    });
+
+    describe('THRESHOLD campaign creation', () => {
       let manifest: ThresholdCampaignManifest;
 
       beforeEach(() => {
@@ -1347,7 +1393,7 @@ describe('CampaignsService', () => {
   });
 
   describe('getCampaignProgressChecker', () => {
-    test('should return market making checker for its type', () => {
+    test('should return correct checker for MARKET_MAKING type', () => {
       const campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
 
       const checker = campaignsService['getCampaignProgressChecker'](
@@ -1363,23 +1409,7 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(MarketMakingProgressChecker);
     });
 
-    test('should return holding checker for its type', () => {
-      const campaign = generateCampaignEntity(CampaignType.HOLDING);
-
-      const checker = campaignsService['getCampaignProgressChecker'](
-        campaign.type,
-        {
-          exchangeName: campaign.exchangeName as ExchangeName,
-          symbol: campaign.symbol,
-          periodStart: faker.date.recent(),
-          periodEnd: faker.date.soon(),
-        },
-      );
-
-      expect(checker).toBeInstanceOf(HoldingProgressChecker);
-    });
-
-    test('should return market making checker for competitive market making type', () => {
+    test('should return correct checker for COMPETITIVE_MARKET_MAKING type', () => {
       const campaign = generateCampaignEntity(
         CampaignType.COMPETITIVE_MARKET_MAKING,
       );
@@ -1397,7 +1427,42 @@ describe('CampaignsService', () => {
       expect(checker).toBeInstanceOf(MarketMakingProgressChecker);
     });
 
-    test('should return threshold checker for its type', () => {
+    test('should return correct checker for THRESHOLD_MARKET_MAKING type', () => {
+      const campaign = generateCampaignEntity(
+        CampaignType.THRESHOLD_MARKET_MAKING,
+      );
+
+      const checker = campaignsService['getCampaignProgressChecker'](
+        campaign.type,
+        {
+          exchangeName: campaign.exchangeName as ExchangeName,
+          symbol: campaign.symbol,
+          periodStart: faker.date.recent(),
+          periodEnd: faker.date.soon(),
+          minimumVolumeTarget: faker.number.float({ min: 0.1 }),
+        },
+      );
+
+      expect(checker).toBeInstanceOf(ThresholdMarketMakingProgressChecker);
+    });
+
+    test('should return correct checker for HOLDING type', () => {
+      const campaign = generateCampaignEntity(CampaignType.HOLDING);
+
+      const checker = campaignsService['getCampaignProgressChecker'](
+        campaign.type,
+        {
+          exchangeName: campaign.exchangeName as ExchangeName,
+          symbol: campaign.symbol,
+          periodStart: faker.date.recent(),
+          periodEnd: faker.date.soon(),
+        },
+      );
+
+      expect(checker).toBeInstanceOf(HoldingProgressChecker);
+    });
+
+    test('should return correct checker for THRESHOLD type', () => {
       const campaign = generateCampaignEntity(CampaignType.THRESHOLD);
 
       const checker = campaignsService['getCampaignProgressChecker'](
@@ -1407,7 +1472,7 @@ describe('CampaignsService', () => {
           symbol: campaign.symbol,
           periodStart: faker.date.recent(),
           periodEnd: faker.date.soon(),
-          minimumBalanceTarget: faker.number.float(),
+          minimumBalanceTarget: faker.number.float({ min: 0.1 }),
         },
       );
 
@@ -1656,6 +1721,7 @@ describe('CampaignsService', () => {
     test.each([
       CampaignType.MARKET_MAKING,
       CampaignType.COMPETITIVE_MARKET_MAKING,
+      CampaignType.THRESHOLD_MARKET_MAKING,
       CampaignType.HOLDING,
       CampaignType.THRESHOLD,
     ])(
@@ -2785,6 +2851,96 @@ describe('CampaignsService', () => {
       );
     });
 
+    test('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const campaignProgress = generateCampaignProgress(campaign);
+      campaignProgress.participants_outcomes.push(
+        generateParticipantOutcome(campaign.type, {
+          total_volume: (
+            campaign.details as CompetitiveMarketMakingCampaignDetails
+          ).minVolumeRequired,
+        }),
+      );
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedRewardPool = rewardsUtils.calculateDailyReward(campaign);
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_volume: (campaignProgress.meta as MarketMakingMeta)
+                .total_volume,
+              reserved_funds: expectedRewardPool,
+              participants_outcomes_batches: [
+                {
+                  id: expect.any(String),
+                  results: campaignProgress.participants_outcomes,
+                },
+              ],
+            },
+          ],
+        }),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+      );
+    });
+
+    test('should record correctly calculated reserved funds for THRESHOLD_MARKET_MAKING campaign', async () => {
+      campaign = generateCampaignEntity(CampaignType.THRESHOLD_MARKET_MAKING);
+      const campaignDetails =
+        campaign.details as ThresholdMarketMakingCampaignDetails;
+
+      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+
+      const nEligible = faker.number.int({
+        min: 1,
+        max: campaignDetails.maxParticipants,
+      });
+      const totalVolume = nEligible * campaignDetails.minimumVolumeTarget;
+      const campaignProgress = generateCampaignProgress(campaign);
+      (campaignProgress.meta as ThresholdMarketMakingMeta) = {
+        total_score: nEligible,
+        total_volume: totalVolume,
+      };
+      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+        campaignProgress,
+      );
+
+      await campaignsService.recordCampaignProgress(campaign);
+
+      const expectedRewardPool = rewardsUtils.calculateRewardPool(
+        campaign,
+        campaignProgress,
+      );
+
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
+      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: [
+            {
+              from: campaignProgress.from,
+              to: campaignProgress.to,
+              total_volume: totalVolume,
+              total_score: nEligible,
+              reserved_funds: expectedRewardPool,
+              participants_outcomes_batches: [],
+            },
+          ],
+        }),
+        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
+      );
+    });
+
     test('should record correctly calculated reserved funds for HOLDING campaign', async () => {
       campaign = generateCampaignEntity(CampaignType.HOLDING);
       const dailyBalanceTarget = (campaign.details as HoldingCampaignDetails)
@@ -2866,50 +3022,6 @@ describe('CampaignsService', () => {
               total_score: nEligible,
               reserved_funds: expectedRewardPool,
               participants_outcomes_batches: [],
-            },
-          ],
-        }),
-        ethers.parseUnits(expectedRewardPool, campaign.fundTokenDecimals),
-      );
-    });
-
-    test('should record correctly calculated reserved funds for COMPETITIVE_MARKET_MAKING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-      const campaignProgress = generateCampaignProgress(campaign);
-      campaignProgress.participants_outcomes.push(
-        generateParticipantOutcome(campaign.type, {
-          total_volume: (
-            campaign.details as CompetitiveMarketMakingCampaignDetails
-          ).minVolumeRequired,
-        }),
-      );
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      const expectedRewardPool = rewardsUtils.calculateDailyReward(campaign);
-
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledWith(
-        expect.objectContaining({
-          results: [
-            {
-              from: campaignProgress.from,
-              to: campaignProgress.to,
-              total_volume: (campaignProgress.meta as MarketMakingMeta)
-                .total_volume,
-              reserved_funds: expectedRewardPool,
-              participants_outcomes_batches: [
-                {
-                  id: expect.any(String),
-                  results: campaignProgress.participants_outcomes,
-                },
-              ],
             },
           ],
         }),
@@ -3172,68 +3284,39 @@ describe('CampaignsService', () => {
       expect(spyOnRecordCampaignIntermediateResults).toHaveBeenCalledTimes(0);
     });
 
-    test('should record generated volume stat for MARKET_MAKING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
+    test.each([
+      CampaignType.MARKET_MAKING,
+      CampaignType.COMPETITIVE_MARKET_MAKING,
+      CampaignType.THRESHOLD_MARKET_MAKING,
+    ])(
+      'should record generated volume stat for [%#] campaign',
+      async (campaignType) => {
+        campaign = generateCampaignEntity(campaignType);
 
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
+        spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
 
-      const campaignProgress = generateCampaignProgress(campaign);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
+        const campaignProgress = generateCampaignProgress(campaign);
+        spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
+          campaignProgress,
+        );
 
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
-      );
+        spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
+          generateStoredResultsMeta(),
+        );
 
-      await campaignsService.recordCampaignProgress(campaign);
+        await campaignsService.recordCampaignProgress(campaign);
 
-      const expectedRewardPool = rewardsUtils.calculateRewardPool(
-        campaign,
-        campaignProgress,
-      );
-
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
-        from: campaignProgress.from,
-        to: campaignProgress.to,
-        total_volume: 0,
-        reserved_funds: expectedRewardPool,
-        participants_outcomes_batches: [],
-      });
-    });
-
-    test('should record generated volume stat for COMPETITIVE_MARKET_MAKING campaign', async () => {
-      campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
-      campaign.endDate = dayjs(campaign.startDate).add(1, 'day').toDate();
-
-      spyOnRetrieveCampaignIntermediateResults.mockResolvedValueOnce(null);
-
-      const campaignProgress = generateCampaignProgress(campaign);
-      spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(
-        campaignProgress,
-      );
-
-      spyOnRecordCampaignIntermediateResults.mockResolvedValueOnce(
-        generateStoredResultsMeta(),
-      );
-
-      await campaignsService.recordCampaignProgress(campaign);
-
-      const expectedRewardPool = rewardsUtils.calculateRewardPool(
-        campaign,
-        campaignProgress,
-      );
-
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
-      expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(campaign, {
-        from: campaignProgress.from,
-        to: campaignProgress.to,
-        total_volume: 0,
-        reserved_funds: expectedRewardPool,
-        participants_outcomes_batches: [],
-      });
-    });
+        expect(spyOnRecordGeneratedVolume).toHaveBeenCalledTimes(1);
+        expect(spyOnRecordGeneratedVolume).toHaveBeenCalledWith(
+          campaign,
+          expect.objectContaining({
+            from: campaignProgress.from,
+            to: campaignProgress.to,
+            total_volume: 0,
+          }),
+        );
+      },
+    );
 
     test.each([CampaignType.HOLDING, CampaignType.THRESHOLD])(
       'should not record generated volume stat for [%#] campaign',
@@ -3302,7 +3385,7 @@ describe('CampaignsService', () => {
     });
 
     describe('excludeIneligible flag', () => {
-      test('should exclude ineligible participants for threshold with limit', async () => {
+      test('should exclude ineligible participants for THRESHOLD with limit', async () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
         (campaign.details as ThresholdCampaignDetails).maxParticipants =
           faker.number.int({ min: 1, max: 10 });
@@ -3326,7 +3409,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      test('should not exclude ineligible participants for threshold without limit', async () => {
+      test('should not exclude ineligible participants for THRESHOLD without limit', async () => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
         delete (campaign.details as ThresholdCampaignDetails).maxParticipants;
 
@@ -3349,7 +3432,7 @@ describe('CampaignsService', () => {
         );
       });
 
-      test('should not exclude ineligible participants for non-threshold campaign', async () => {
+      test('should not exclude ineligible participants when campaign type is not THRESHOLD', async () => {
         campaign = generateCampaignEntity(
           faker.helpers.arrayElement(
             Object.values(CampaignType).filter(
@@ -4532,16 +4615,9 @@ describe('CampaignsService', () => {
         campaign,
       );
 
-      if (
-        [
-          CampaignType.MARKET_MAKING,
-          CampaignType.COMPETITIVE_MARKET_MAKING,
-        ].includes(campaign.type)
-      ) {
+      if (isVolumeBasedCampaign(campaign)) {
         outcomeToEntryResultProp = 'total_volume';
-      } else if (
-        [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(campaign.type)
-      ) {
+      } else if (isBalanceBasedCampaign(campaign)) {
         outcomeToEntryResultProp = 'token_balance';
       } else {
         outcomeToEntryResultProp = 'unknown';
@@ -4674,7 +4750,7 @@ describe('CampaignsService', () => {
           total_balance: faker.number.float({ min: 1, max: 1000 }),
           total_score: faker.number.float({
             min: 1,
-            max: isThresholdCampaign(campaign)
+            max: isThresholdBasedCampaign(campaign)
               ? campaign.details.maxParticipants
               : 10,
           }),

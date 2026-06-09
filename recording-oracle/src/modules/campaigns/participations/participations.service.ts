@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { isDuplicatedError } from '@/infrastructure/database';
 
 import type { CampaignEntity } from '../campaign.entity';
-import { isThresholdCampaign } from '../type-guards';
+import { isThresholdBasedCampaign } from '../type-guards';
 import { ParticipationEntity } from './participation.entity';
 import { UserAlreadyJoinedError } from './participations.errors';
 import { ParticipationsRepository } from './participations.repository';
@@ -21,7 +21,7 @@ export class ParticipationsService {
     participation.createdAt = new Date();
 
     let participantsLimit: number | undefined;
-    if (isThresholdCampaign(campaign)) {
+    if (isThresholdBasedCampaign(campaign)) {
       participantsLimit = campaign.details.maxParticipants;
     }
 
@@ -59,7 +59,7 @@ export class ParticipationsService {
   async checkParticipantLimitReached(
     campaign: CampaignEntity,
   ): Promise<boolean> {
-    if (!isThresholdCampaign(campaign)) {
+    if (!isThresholdBasedCampaign(campaign)) {
       return false;
     }
 

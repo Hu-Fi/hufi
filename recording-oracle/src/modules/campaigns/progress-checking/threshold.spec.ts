@@ -178,6 +178,13 @@ describe('ThresholdProgressChecker', () => {
         const accountBalance = generateAccountBalance([
           progressCheckerSetup.symbol,
         ]);
+        if (i === 0) {
+          accountBalance[progressCheckerSetup.symbol] = {
+            free: 0,
+            used: 0,
+            total: 0,
+          };
+        }
         mockedExchangeApiClient.fetchDepositAddress.mockResolvedValueOnce(
           faker.finance.ethereumAddress(),
         );

@@ -126,12 +126,15 @@ export function generateParticipantOutcome(
 ): ParticipantOutcome {
   const outcome: ParticipantOutcome = {
     address: ethers.getAddress(faker.finance.ethereumAddress()),
-    score: faker.number.float(),
+    score: campaignType.startsWith('THRESHOLD')
+      ? faker.helpers.arrayElement([0, 1])
+      : faker.number.float(),
   };
 
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
     case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       outcome.total_volume = faker.number.float({ min: 0, max: 10000 });
       break;
     case CampaignType.HOLDING:
@@ -176,6 +179,7 @@ export function generateCampaignProgress(
     case CampaignType.THRESHOLD_MARKET_MAKING: {
       meta = {
         total_volume: 0,
+        total_score: 0,
       };
       break;
     }

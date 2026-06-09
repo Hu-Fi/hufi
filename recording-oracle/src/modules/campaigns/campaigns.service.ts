@@ -79,16 +79,18 @@ import {
   HoldingProgressChecker,
   MarketMakingProgressChecker,
   ProgressCheckResult,
+  ThresholdMarketMakingProgressChecker,
   ThresholdProgressChecker,
   type CampaignProgressChecker,
   type HoldingMeta,
 } from './progress-checking';
 import * as rewardsUtils from './rewards.utils';
 import {
+  isBalanceBasedCampaign,
   isCompetitiveMarketMakingCampaign,
   isHoldingCampaign,
-  isMarketMakingCampaign,
   isThresholdCampaign,
+  isVolumeBasedCampaign,
 } from './type-guards';
 import {
   CampaignEscrowInfo,
@@ -295,6 +297,7 @@ export class CampaignsService implements OnModuleDestroy {
       ![
         CampaignType.MARKET_MAKING,
         CampaignType.COMPETITIVE_MARKET_MAKING,
+        CampaignType.THRESHOLD_MARKET_MAKING,
       ].includes(manifest.type as CampaignType)
     ) {
       throw new Error(
@@ -713,10 +716,7 @@ export class CampaignsService implements OnModuleDestroy {
               ),
             );
 
-            if (
-              isMarketMakingCampaign(campaign) ||
-              isCompetitiveMarketMakingCampaign(campaign)
-            ) {
+            if (isVolumeBasedCampaign(campaign)) {
               void this.recordGeneratedVolume(campaign, intermediateResult);
             }
           }
@@ -897,6 +897,11 @@ export class CampaignsService implements OnModuleDestroy {
       case CampaignType.MARKET_MAKING:
       case CampaignType.COMPETITIVE_MARKET_MAKING:
         return new MarketMakingProgressChecker(
+          this.exchangesService,
+          campaignCheckerSetup,
+        );
+      case CampaignType.THRESHOLD_MARKET_MAKING:
+        return new ThresholdMarketMakingProgressChecker(
           this.exchangesService,
           campaignCheckerSetup,
         );
@@ -1518,12 +1523,9 @@ export class CampaignsService implements OnModuleDestroy {
     let total = 0;
     for (const participantOutcome of resultsToInspect) {
       let result: number;
-      if (
-        isMarketMakingCampaign(campaign) ||
-        isCompetitiveMarketMakingCampaign(campaign)
-      ) {
+      if (isVolumeBasedCampaign(campaign)) {
         result = participantOutcome.total_volume as number;
-      } else if (isHoldingCampaign(campaign) || isThresholdCampaign(campaign)) {
+      } else if (isBalanceBasedCampaign(campaign)) {
         result = participantOutcome.token_balance as number;
       } else {
         throw new Error(

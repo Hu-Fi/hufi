@@ -464,6 +464,9 @@ describe('manifest utils', () => {
         max_participants: faker.number.int({ min: 1 }).toString(),
       }),
       Object.assign({}, validManifest, {
+        max_participants: undefined,
+      }),
+      Object.assign({}, validManifest, {
         max_participants: 0,
       }),
       Object.assign({}, validManifest, {

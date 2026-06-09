@@ -15,11 +15,13 @@ import {
 import type {
   HoldingMeta,
   MarketMakingMeta,
+  ThresholdMarketMakingMeta,
   ThresholdMeta,
 } from './progress-checking';
 import * as rewardsUtils from './rewards.utils';
 import {
   CompetitiveMarketMakingCampaignDetails,
+  ThresholdMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
@@ -154,7 +156,7 @@ describe('rewards utils', () => {
       }).toThrow();
     });
 
-    describe('market making campaigns', () => {
+    describe('MARKET_MAKING campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       });
@@ -212,7 +214,7 @@ describe('rewards utils', () => {
       });
     });
 
-    describe('competitive market making campaigns', () => {
+    describe('COMPETITIVE_MARKET_MAKING campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(
           CampaignType.COMPETITIVE_MARKET_MAKING,
@@ -250,7 +252,67 @@ describe('rewards utils', () => {
       });
     });
 
-    describe('holding campaigns', () => {
+    describe('THRESHOLD_MARKET_MAKING campaigns', () => {
+      beforeEach(() => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD_MARKET_MAKING);
+      });
+
+      test('should return 0 when no eligible participants', () => {
+        const progressValueTarget = (
+          campaign.details as ThresholdMarketMakingCampaignDetails
+        ).minimumVolumeTarget;
+
+        const progress = generateCampaignProgress(campaign);
+        (progress.meta as ThresholdMarketMakingMeta).total_volume =
+          faker.number.float({
+            min: progressValueTarget,
+            max: progressValueTarget * 10,
+          });
+
+        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
+
+        expect(rewardPool).toBe('0');
+      });
+
+      test('should return correct value when there are eligible participants', () => {
+        const maxParticipants = faker.number.int({ min: 10, max: 100 });
+        (
+          campaign.details as ThresholdMarketMakingCampaignDetails
+        ).maxParticipants = maxParticipants;
+
+        const minimumVolumeTarget = (
+          campaign.details as ThresholdMarketMakingCampaignDetails
+        ).minimumVolumeTarget;
+
+        const nEligible = faker.number.int({
+          min: 1,
+          max: Math.floor(maxParticipants / 2),
+        });
+        const nIneligible = faker.number.int({
+          min: 0,
+          max: Math.floor(maxParticipants / 2),
+        });
+        const progress = generateCampaignProgress(campaign);
+        (progress.meta as ThresholdMarketMakingMeta) = {
+          total_volume:
+            nIneligible * minimumVolumeTarget * Math.random() +
+            nEligible * minimumVolumeTarget,
+          total_score: nEligible,
+        };
+
+        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
+
+        const expectedRewardPool = new Decimal(
+          rewardsUtils.calculateDailyReward(campaign),
+        )
+          .mul(Math.min(nEligible / maxParticipants, 1))
+          .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+          .toString();
+        expect(rewardPool).toBe(expectedRewardPool);
+      });
+    });
+
+    describe('HOLDING campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.HOLDING);
       });
@@ -306,7 +368,7 @@ describe('rewards utils', () => {
       });
     });
 
-    describe('threshold campaigns', () => {
+    describe('THRESHOLD campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
       });

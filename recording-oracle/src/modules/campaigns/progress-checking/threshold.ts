@@ -6,9 +6,11 @@ import type {
   CampaignProgressCheckerSetup,
   BaseProgressCheckResult,
   ParticipantInfo,
+  ThresholdScore,
 } from './types';
 
 export type ThresholdResult = BaseProgressCheckResult & {
+  score: ThresholdScore;
   token_balance: number;
 };
 
@@ -58,7 +60,8 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
     ]);
 
     let tokenBalance = accountBalance[this.thresholdTokenSymbol]?.total || 0;
-    let score = tokenBalance >= this.minimumBalanceTarget ? 1 : 0;
+    let score: ThresholdScore =
+      tokenBalance >= this.minimumBalanceTarget ? 1 : 0;
 
     let abuseDetected = false;
     if (this.ethDepositAddresses.has(ethDepositAddress)) {

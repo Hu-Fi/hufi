@@ -177,22 +177,27 @@ describe('MarketMakingProgressChecker', () => {
 
     test('should iterate through all trades', async () => {
       const nTradesPerPage = faker.number.int({ min: 2, max: 4 });
+      const nPages = 2;
 
-      const pages = Array.from({ length: 2 }, () =>
-        Array.from({ length: nTradesPerPage }, () => generateTrade()),
-      );
-      for (const page of pages) {
-        fetchMyTrades.mockResolvedValueOnce(page);
+      let expectedTotalVolume = 0;
+      for (let i = 0; i < nPages; i += 1) {
+        const pageTrades = Array.from({ length: nTradesPerPage }, () => {
+          const trade = generateTrade();
+          expectedTotalVolume += trade.cost;
+          return trade;
+        });
+        fetchMyTrades.mockResolvedValueOnce(pageTrades);
       }
 
-      await resultsChecker.checkForParticipant(participantInfo);
+      const result = await resultsChecker.checkForParticipant(participantInfo);
 
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(1);
 
       /**
        * Extra call under the hood to check if more trades on next page
        */
-      expect(fetchMyTrades).toHaveBeenCalledTimes(pages.length + 1);
+      expect(fetchMyTrades).toHaveBeenCalledTimes(nPages + 1);
+      expect(result.total_volume).toBe(expectedTotalVolume);
     });
 
     test('should paginate through trades starting from join date not setup start', async () => {

@@ -110,7 +110,7 @@ const thresholdMarketMakingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.THRESHOLD_MARKET_MAKING),
   pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   minimum_volume_target: Joi.number().strict().positive().required(),
-  max_participants: Joi.number().strict().positive().integer(),
+  max_participants: Joi.number().strict().positive().integer().required(),
 });
 export function assertValidThresholdMarketMakingCampaignManifest(
   manifest: CampaignManifestBase,

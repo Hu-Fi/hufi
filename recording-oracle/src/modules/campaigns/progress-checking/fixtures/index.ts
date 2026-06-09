@@ -65,3 +65,19 @@ export function generateThresholdCheckerSetup(
 
   return input;
 }
+
+export function generateThresholdMarketMakingCheckerSetup(
+  overrides?: Partial<CampaignProgressCheckerSetup>,
+): CampaignProgressCheckerSetup {
+  const input: CampaignProgressCheckerSetup = {
+    exchangeName: generateExchangeName(),
+    symbol: generateTradingPair(),
+    periodStart: faker.date.recent(),
+    periodEnd: faker.date.future(),
+    minimumVolumeTarget: faker.number.float({ min: 0.001 }),
+  };
+
+  Object.assign(input, overrides);
+
+  return input;
+}
