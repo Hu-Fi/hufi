@@ -97,7 +97,7 @@ const thresholdMarketMakingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.THRESHOLD_MARKET_MAKING).required(),
   exchange: Joi.string().required(),
   minimum_volume_target: Joi.number().strict().positive().required(),
-  max_participants: Joi.number().strict().positive().integer(),
+  max_participants: Joi.number().strict().positive().integer().required(),
   pair: Joi.string()
     .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
     .required(),
