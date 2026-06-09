@@ -313,7 +313,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/core@npm:6.0.0, @human-protocol/core@npm:^6.0.0":
+"@human-protocol/core@npm:7.0.0":
+  version: 7.0.0
+  resolution: "@human-protocol/core@npm:7.0.0"
+  peerDependencies:
+    ethers: ~6.16.0
+  checksum: 10c0/b8083fca9b7fab0bca450b7a520cf9f0e8b3af29f4b90fc36ab1d3f24b2ff76aa53f3c3e160f7c40e7079aad6f32ebc67f5abaf8ad75eb77eee808fee7fd3955
+  languageName: node
+  linkType: hard
+
+"@human-protocol/core@npm:^6.0.0":
   version: 6.0.0
   resolution: "@human-protocol/core@npm:6.0.0"
   peerDependencies:
@@ -334,11 +343,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@human-protocol/sdk@npm:^7.1.0":
-  version: 7.2.0
-  resolution: "@human-protocol/sdk@npm:7.2.0"
+"@human-protocol/sdk@npm:^7.3.0":
+  version: 7.3.0
+  resolution: "@human-protocol/sdk@npm:7.3.0"
   dependencies:
-    "@human-protocol/core": "npm:6.0.0"
+    "@human-protocol/core": "npm:7.0.0"
     axios: "npm:^1.4.0"
     ethers: "npm:~6.16.0"
     graphql: "npm:^16.8.1"
@@ -348,7 +357,7 @@ __metadata:
     secp256k1: "npm:^5.0.1"
     validator: "npm:^13.12.0"
     vitest: "npm:^4.0.18"
-  checksum: 10c0/7feac300575a4429f86b9602fd028edd543853d81198377d7a6b921548ba76b3fcb4b8a1f3611783a753b3b30620adcb94f53a8631dd060442eb20a5e382206d
+  checksum: 10c0/5835ce09161ab554483c6f9239f9985296491810b28a2f19adb090602c4436732b6787acb875ef2cf3fa9a6ca04ddecc620c52d5829f13a3cec1fd4dc85f1785
   languageName: node
   linkType: hard
 
@@ -5151,7 +5160,7 @@ __metadata:
     "@golevelup/ts-vitest": "npm:^4.0.0"
     "@human-protocol/core": "npm:^6.0.0"
     "@human-protocol/logger": "npm:^1.3.0"
-    "@human-protocol/sdk": "npm:^7.1.0"
+    "@human-protocol/sdk": "npm:^7.3.0"
     "@nestjs/cli": "npm:^11.0.14"
     "@nestjs/common": "npm:^11.1.10"
     "@nestjs/config": "npm:^4.0.2"
