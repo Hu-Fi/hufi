@@ -16,7 +16,9 @@ import {
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
-const IndividualRewardTooltip = () => {
+const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
+  hasParticipantsLimit,
+}) => {
   return (
     <CustomTooltip
       title={
@@ -39,7 +41,7 @@ const IndividualRewardTooltip = () => {
             }}
           >
             For each cycle, the total reward pool is evenly distributed among
-            all eligible participants.
+            participants.
           </Typography>
           <Typography
             sx={{
@@ -50,7 +52,10 @@ const IndividualRewardTooltip = () => {
               letterSpacing: 0,
             }}
           >
-            Reward per cycle = Total reward pool ÷ eligible participants
+            Reward per cycle = Total reward pool ÷{' '}
+            {hasParticipantsLimit
+              ? 'max participants'
+              : 'eligible participants'}
           </Typography>
         </Box>
       }
@@ -134,7 +139,10 @@ const getTotalGeneratedCardTitle = (
 const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
   const isMobile = useIsMobile();
 
-  const isThreshold = campaign.type === CampaignType.THRESHOLD;
+  const isThreshold = [
+    CampaignType.THRESHOLD,
+    CampaignType.THRESHOLD_MARKET_MAKING,
+  ].includes(campaign.type);
 
   const cycleTimeline = useCycleTimeline(
     campaign.start_date,
@@ -145,12 +153,21 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
     campaign.fund_token_decimals
   );
 
+  const cycleRewardPool = rewardPool / cycleTimeline.totalCycles;
+
   const targetToken = getDailyTargetTokenSymbol(campaign.type, campaign.symbol);
   const { label: targetTokenSymbol } = getTokenInfo(targetToken);
 
   const eligibleParticipants = leaderboard.data.filter(
     (entry) => entry.score > 0
   );
+
+  let individualReward: number | undefined;
+  if (campaign.details.max_participants) {
+    individualReward = cycleRewardPool / campaign.details.max_participants;
+  } else if (eligibleParticipants.length > 0) {
+    individualReward = cycleRewardPool / eligibleParticipants.length;
+  }
 
   return (
     <Stack
@@ -233,7 +250,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             <CardName>Cycle Reward Pool</CardName>
             <CardValue color={isThreshold ? 'white' : '#46db99'}>
               <FormattedNumber
-                value={rewardPool / cycleTimeline.totalCycles}
+                value={cycleRewardPool}
                 decimals={2}
                 suffix={` ${campaign.fund_token_symbol}`}
               />
@@ -268,18 +285,16 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
                   }}
                 >
                   <CardName>Individual Reward</CardName>
-                  <IndividualRewardTooltip />
+                  <IndividualRewardTooltip
+                    hasParticipantsLimit={!!campaign.details.max_participants}
+                  />
                 </Box>
                 <CardValue
                   color={eligibleParticipants.length > 0 ? '#46db99' : 'white'}
                 >
-                  {eligibleParticipants.length > 0 ? (
+                  {individualReward ? (
                     <FormattedNumber
-                      value={
-                        rewardPool /
-                        cycleTimeline.totalCycles /
-                        eligibleParticipants.length
-                      }
+                      value={individualReward}
                       decimals={2}
                       suffix={` ${campaign.fund_token_symbol}`}
                     />

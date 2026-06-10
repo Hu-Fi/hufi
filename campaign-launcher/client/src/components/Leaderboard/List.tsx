@@ -6,8 +6,17 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { CampaignType, type EvmAddress, type LeaderboardEntry } from '@/types';
-import { formatAddress, getCompactNumberParts } from '@/utils';
+import {
+  type CampaignType,
+  type EvmAddress,
+  type LeaderboardEntry,
+} from '@/types';
+import {
+  formatAddress,
+  getCompactNumberParts,
+  isBalanceBasedCampaignType,
+  isVolumeBasedCampaignType,
+} from '@/utils';
 
 import MyEntryLabel from './MyEntryLabel';
 
@@ -111,8 +120,11 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
       },
       {
         field: 'target',
-        headerName:
-          campaignType === CampaignType.MARKET_MAKING ? 'Volume' : 'Held',
+        headerName: isVolumeBasedCampaignType(campaignType)
+          ? 'Volume'
+          : isBalanceBasedCampaignType(campaignType)
+            ? 'Held'
+            : 'Target',
         width: isMobile ? 75 : 100,
         renderCell: (params) => {
           return (

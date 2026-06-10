@@ -9,14 +9,10 @@ export enum ExchangeType {
 
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
+  COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',
+  THRESHOLD_MARKET_MAKING = 'THRESHOLD_MARKET_MAKING',
   HOLDING = 'HOLDING',
   THRESHOLD = 'THRESHOLD',
-}
-
-export enum CampaignTypeNames {
-  MARKET_MAKING = 'Market Making',
-  HOLDING = 'Holding',
-  THRESHOLD = 'Threshold',
 }
 
 export enum CampaignStatus {
@@ -61,6 +57,9 @@ export type Campaign = {
     daily_volume_target?: number;
     daily_balance_target?: number;
     minimum_balance_target?: number;
+    min_volume_required?: number;
+    minimum_volume_target?: number;
+    max_participants?: number;
   };
   end_date: string;
   escrow_status: string;
@@ -92,6 +91,9 @@ export type JoinedCampaign = {
     daily_volume_target?: number;
     daily_balance_target?: number;
     minimum_balance_target?: number;
+    min_volume_required?: number;
+    minimum_volume_target?: number;
+    max_participants?: number;
   };
   end_date: string;
   exchange_name: string;

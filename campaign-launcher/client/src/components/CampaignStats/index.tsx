@@ -301,7 +301,7 @@ const CampaignStats: FC<Props> = ({
               <CardValue>
                 {showUserPerformance
                   ? `${userRank} / ${totalParticipants}`
-                  : totalParticipants}
+                  : `${totalParticipants} / ${campaign.details.max_participants || '\u221E'}`}
               </CardValue>
             </StatsCard>
           </Grid>

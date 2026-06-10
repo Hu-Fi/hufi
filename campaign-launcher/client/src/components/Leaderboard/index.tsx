@@ -88,11 +88,13 @@ export const formatActualOnDate = (date: string) => {
 const getTargetLabel = (campaignType: CampaignType): string => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       return 'Volume';
     case CampaignType.HOLDING:
       return 'Balance';
     default:
-      return 'Volume';
+      return 'Unknown Target';
   }
 };
 type Props = {

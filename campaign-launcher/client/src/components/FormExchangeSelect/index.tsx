@@ -5,7 +5,8 @@ import type { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 
 import { ExchangeName } from '@/constants/exchanges';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { CampaignType, type ExchangeType } from '@/types';
+import type { CampaignType, ExchangeType } from '@/types';
+import { isVolumeBasedCampaignType } from '@/utils';
 
 type FormExchangeSelectProps<
   TFieldValues extends FieldValues,
@@ -48,7 +49,7 @@ const FormExchangeSelect = <
       );
     }
 
-    if (campaignType === CampaignType.MARKET_MAKING) {
+    if (isVolumeBasedCampaignType(campaignType as CampaignType)) {
       return _exchanges;
     }
 

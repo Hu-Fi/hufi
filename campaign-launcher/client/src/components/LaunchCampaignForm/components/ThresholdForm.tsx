@@ -115,6 +115,7 @@ const ThresholdForm: FC<Props> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
+                      placeholder="Select"
                       error={!!errors.symbol}
                       slotProps={{
                         ...params.slotProps,

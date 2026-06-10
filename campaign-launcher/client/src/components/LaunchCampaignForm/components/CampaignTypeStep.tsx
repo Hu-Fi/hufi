@@ -3,13 +3,14 @@ import { type SetStateAction, type Dispatch, type FC } from 'react';
 import StarIcon from '@mui/icons-material/Star';
 import { Box, Grid, Paper, Stack, Typography } from '@mui/material';
 
-import {
-  type CampaignFormValues,
-  CampaignType,
-  CampaignTypeNames,
-} from '@/types';
+import { type CampaignFormValues, CampaignType } from '@/types';
+import { mapTypeToLabel } from '@/utils';
 
-import { getFormDefaultValues } from '../utils';
+import {
+  getFormDefaultValues,
+  LAUNCH_SUPPORTED_CAMPAIGN_TYPES,
+  type LaunchSupportedCampaignType,
+} from '../utils';
 
 import { BottomNavigation } from '.';
 
@@ -19,21 +20,22 @@ type Props = {
   handleChangeStep: Dispatch<SetStateAction<number>>;
 };
 
-const CAMPAIGN_TYPE_DESCRIPTIONS = {
-  [CampaignType.MARKET_MAKING]:
-    'Allows you to generate trading activity on a pair.',
-  [CampaignType.HOLDING]:
-    'Requires market makers to collectively maintain a specified amount of a particular token.',
-  [CampaignType.THRESHOLD]:
-    'Requires market makers to maintain a minimum balance of a specified token.',
-};
+const CAMPAIGN_TYPE_DESCRIPTIONS: Record<LaunchSupportedCampaignType, string> =
+  {
+    [CampaignType.MARKET_MAKING]:
+      'Allows you to generate trading activity on a pair.',
+    [CampaignType.HOLDING]:
+      'Requires market makers to collectively maintain a specified amount of a particular token.',
+    [CampaignType.THRESHOLD]:
+      'Requires market makers to maintain a minimum balance of a specified token.',
+  };
 
 const CampaignTypeStep: FC<Props> = ({
   formValues,
   setFormValues,
   handleChangeStep,
 }) => {
-  const handleChangeCampaignType = (type: CampaignType) => {
+  const handleChangeCampaignType = (type: LaunchSupportedCampaignType) => {
     const defaultValues = getFormDefaultValues(type);
 
     setFormValues({
@@ -52,7 +54,7 @@ const CampaignTypeStep: FC<Props> = ({
         }}
       >
         <Grid container spacing={3}>
-          {Object.values(CampaignType).map((type) => {
+          {LAUNCH_SUPPORTED_CAMPAIGN_TYPES.map((type) => {
             const isSelected = formValues?.type === type;
             return (
               <Grid size={{ xs: 12, md: 6 }} key={type}>
@@ -90,7 +92,7 @@ const CampaignTypeStep: FC<Props> = ({
                         fontWeight: 600,
                       }}
                     >
-                      {CampaignTypeNames[type]}
+                      {mapTypeToLabel(type)}
                     </Typography>
                   </Box>
                   <Typography
