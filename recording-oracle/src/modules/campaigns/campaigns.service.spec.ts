@@ -4707,6 +4707,9 @@ describe('CampaignsService', () => {
           : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
 
         let expectedTotal = 0;
+        const grossRatio = Decimal(campaign.fundAmount).div(
+          campaign.fundAmountNet,
+        );
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
             // prettier-ignore
@@ -4714,11 +4717,13 @@ describe('CampaignsService', () => {
 
             expectedTotal += result;
 
+            const estimatedReward = estimatedRewards[outcome.address];
             return {
               address: outcome.address,
               score: outcome.score,
               result: result,
-              estimatedReward: estimatedRewards[outcome.address],
+              estimatedReward: estimatedReward,
+              estimatedRewardGross: grossRatio.mul(estimatedReward).toNumber(),
             };
           }),
           'score',
@@ -4783,8 +4788,11 @@ describe('CampaignsService', () => {
               campaign,
             )
           : rewardsUtils.estimateRewards(participantOutcomes, rewardPool);
-        let expectedTotal = 0;
 
+        let expectedTotal = 0;
+        const grossRatio = Decimal(campaign.fundAmount).div(
+          campaign.fundAmountNet,
+        );
         const expectedEntries = _.orderBy(
           participantOutcomes.map((outcome) => {
             // prettier-ignore
@@ -4792,11 +4800,13 @@ describe('CampaignsService', () => {
 
             expectedTotal += result;
 
+            const estimatedReward = estimatedRewards[outcome.address];
             return {
               address: outcome.address,
               score: outcome.score,
               result: result,
-              estimatedReward: estimatedRewards[outcome.address],
+              estimatedReward: estimatedReward,
+              estimatedRewardGross: grossRatio.mul(estimatedReward).toNumber(),
             };
           }),
           'score',
@@ -4845,6 +4855,7 @@ describe('CampaignsService', () => {
             score: 0,
             result: 0,
             estimatedReward: 0,
+            estimatedRewardGross: 0,
           });
         }
       },

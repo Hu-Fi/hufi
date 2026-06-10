@@ -1501,6 +1501,7 @@ export class CampaignsService implements OnModuleDestroy {
             score: 0,
             result: 0,
             estimatedReward: 0,
+            estimatedRewardGross: 0,
           });
         }
         return {
@@ -1519,6 +1520,10 @@ export class CampaignsService implements OnModuleDestroy {
         )
       : rewardsUtils.estimateRewards(resultsToInspect, estimatedRewardPool);
 
+    /**
+     * UI works with gross values, so we need to apply gross-up ratio to estimated rewards
+     */
+    const grossRatio = Decimal(campaign.fundAmount).div(campaign.fundAmountNet);
     const leaderboardEntries: LeaderboardEntry[] = [];
     let total = 0;
     for (const participantOutcome of resultsToInspect) {
@@ -1534,11 +1539,16 @@ export class CampaignsService implements OnModuleDestroy {
       }
 
       total += result;
+
+      const estimatedReward = estimatedRewards[participantOutcome.address];
       leaderboardEntries.push({
         address: participantOutcome.address,
         score: participantOutcome.score,
         result,
-        estimatedReward: estimatedRewards[participantOutcome.address],
+        estimatedReward: estimatedReward,
+        estimatedRewardGross: grossRatio
+          .mul(estimatedRewards[participantOutcome.address])
+          .toNumber(),
       });
     }
 

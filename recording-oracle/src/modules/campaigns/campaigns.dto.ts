@@ -312,6 +312,11 @@ export class LeaderboardEntry {
     name: 'estimated_reward',
   })
   estimatedReward: number;
+
+  @ApiProperty({
+    name: 'estimated_reward_gross',
+  })
+  estimatedRewardGross: number;
 }
 
 export class CampaignLeaderboardResponseDto {

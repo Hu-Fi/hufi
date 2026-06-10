@@ -83,7 +83,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         width: isMobile ? 60 : 100,
         renderCell: (params) => {
           const { value, suffix, decimals } = getCompactNumberParts(
-            params.row.estimated_reward
+            params.row.estimated_reward_gross
           );
           return (
             <Typography

@@ -134,6 +134,7 @@ export type LeaderboardEntryDto = {
   result: number;
   score: number;
   estimated_reward: number;
+  estimated_reward_gross: number;
 };
 
 export type LeaderboardEntry = LeaderboardEntryDto & {
