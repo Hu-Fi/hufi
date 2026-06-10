@@ -8,6 +8,8 @@ import { generateTrade } from '@/modules/exchanges/fixtures';
 import {
   generateThresholdMarketMakingCheckerSetup,
   generateParticipantInfo,
+  mockedFetchMyTradesGenerator,
+  mockedFetchMyTrades,
 } from './fixtures';
 import { ThresholdMarketMakingProgressChecker } from './threshold-market-making';
 import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
@@ -15,26 +17,13 @@ import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
 const mockedExchangesService = createMock<ExchangesService>();
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 
-const fetchMyTrades = vi.fn();
-async function* fetchMyTradesGenerator() {
-  do {
-    const result = await fetchMyTrades();
-
-    if (result === undefined || result.length === 0) {
-      break;
-    } else {
-      yield result;
-    }
-  } while (true);
-}
-
 describe('ThresholdMarketMakingProgressChecker', () => {
   beforeEach(() => {
     mockedExchangesService.getClientForUser.mockResolvedValue(
       mockedExchangeApiClient,
     );
     mockedExchangeApiClient.fetchMyTrades.mockImplementation(
-      fetchMyTradesGenerator,
+      mockedFetchMyTradesGenerator,
     );
   });
 
@@ -42,21 +31,26 @@ describe('ThresholdMarketMakingProgressChecker', () => {
     vi.resetAllMocks();
   });
 
-  test('should be defined', () => {
-    const resultsChecker = new ThresholdMarketMakingProgressChecker(
-      mockedExchangesService,
-      generateThresholdMarketMakingCheckerSetup(),
-    );
-    expect(resultsChecker).toBeDefined();
-  });
+  describe('constructor', () => {
+    test('should create checker for valid setup', () => {
+      const resultsChecker = new ThresholdMarketMakingProgressChecker(
+        mockedExchangesService,
+        generateThresholdMarketMakingCheckerSetup(),
+      );
+      expect(resultsChecker).toBeDefined();
+    });
 
-  test('should fail if no minimum volume target provided', () => {
-    expect(() => {
-      new ThresholdMarketMakingProgressChecker(mockedExchangesService, {
-        ...generateThresholdMarketMakingCheckerSetup(),
-        minimumVolumeTarget: undefined,
-      });
-    }).toThrow('No minimum volume target provided');
+    test.each([undefined, null, NaN])(
+      'should fail if invalid minimum volume target provided [%#]',
+      (input) => {
+        expect(() => {
+          new ThresholdMarketMakingProgressChecker(mockedExchangesService, {
+            ...generateThresholdMarketMakingCheckerSetup(),
+            minimumVolumeTarget: input,
+          });
+        }).toThrow('Invalid minimum volume target provided');
+      },
+    );
   });
 
   describe('checkForParticipant', () => {
@@ -85,7 +79,7 @@ describe('ThresholdMarketMakingProgressChecker', () => {
       const nTrades = faker.number.int({ min: 2, max: 4 });
 
       const costPerTrade = minimumVolumeTarget / nTrades;
-      fetchMyTrades.mockResolvedValueOnce(
+      mockedFetchMyTrades.mockResolvedValueOnce(
         Array.from({ length: nTrades }, () =>
           generateTrade({
             cost: faker.number.float({ min: 0.01, max: costPerTrade - 1 }),
@@ -103,7 +97,7 @@ describe('ThresholdMarketMakingProgressChecker', () => {
       const nTrades = faker.number.int({ min: 2, max: 4 });
 
       const costPerTrade = minimumVolumeTarget / nTrades;
-      fetchMyTrades.mockResolvedValueOnce(
+      mockedFetchMyTrades.mockResolvedValueOnce(
         Array.from({ length: nTrades }, () =>
           generateTrade({
             cost: faker.number.float({
@@ -148,7 +142,7 @@ describe('ThresholdMarketMakingProgressChecker', () => {
         if (i === 0) {
           trade.cost = 0;
         }
-        fetchMyTrades.mockResolvedValueOnce([trade]);
+        mockedFetchMyTrades.mockResolvedValueOnce([trade]);
         expectedTotalVolume += trade.cost;
         if (
           trade.cost >= (progressCheckerSetup.minimumVolumeTarget as number)

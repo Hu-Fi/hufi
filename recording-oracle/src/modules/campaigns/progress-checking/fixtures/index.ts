@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { vi } from 'vitest';
 
 import {
   generateExchangeName,
@@ -80,4 +81,18 @@ export function generateThresholdMarketMakingCheckerSetup(
   Object.assign(input, overrides);
 
   return input;
+}
+
+export const mockedFetchMyTrades = vi.fn();
+
+export async function* mockedFetchMyTradesGenerator() {
+  do {
+    const result = await mockedFetchMyTrades();
+
+    if (result === undefined || result.length === 0) {
+      break;
+    } else {
+      yield result;
+    }
+  } while (true);
 }

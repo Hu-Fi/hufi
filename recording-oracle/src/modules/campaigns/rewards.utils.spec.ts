@@ -263,11 +263,20 @@ describe('rewards utils', () => {
         ).minimumVolumeTarget;
 
         const progress = generateCampaignProgress(campaign);
-        (progress.meta as ThresholdMarketMakingMeta).total_volume =
-          faker.number.float({
-            min: progressValueTarget,
-            max: progressValueTarget * 10,
-          });
+        const nonEligibleVolume = faker.number.float({
+          max: progressValueTarget - 1,
+        });
+        progress.participants_outcomes.push(
+          generateParticipantOutcome(campaign.type, {
+            total_score: 0,
+            total_volume: nonEligibleVolume,
+          }),
+        );
+
+        (progress.meta as ThresholdMarketMakingMeta) = {
+          total_score: 0,
+          total_volume: nonEligibleVolume,
+        };
 
         const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
 
@@ -305,7 +314,7 @@ describe('rewards utils', () => {
         const expectedRewardPool = new Decimal(
           rewardsUtils.calculateDailyReward(campaign),
         )
-          .mul(Math.min(nEligible / maxParticipants, 1))
+          .mul(nEligible / maxParticipants)
           .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);
@@ -379,10 +388,19 @@ describe('rewards utils', () => {
         ).minimumBalanceTarget;
 
         const progress = generateCampaignProgress(campaign);
-        (progress.meta as ThresholdMeta).total_balance = faker.number.float({
-          min: progressValueTarget,
-          max: progressValueTarget * 10,
+        const nonEligibleBalance = faker.number.float({
+          max: progressValueTarget - 1,
         });
+        progress.participants_outcomes.push(
+          generateParticipantOutcome(campaign.type, {
+            total_score: 0,
+            total_balance: nonEligibleBalance,
+          }),
+        );
+        (progress.meta as ThresholdMeta) = {
+          total_score: 0,
+          total_balance: nonEligibleBalance,
+        };
 
         const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
 
@@ -442,7 +460,7 @@ describe('rewards utils', () => {
         const expectedRewardPool = new Decimal(
           rewardsUtils.calculateDailyReward(campaign),
         )
-          .mul(Math.min(nEligible / maxParticipants, 1))
+          .mul(nEligible / maxParticipants)
           .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);

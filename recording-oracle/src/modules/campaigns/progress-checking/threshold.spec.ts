@@ -30,12 +30,26 @@ describe('ThresholdProgressChecker', () => {
     vi.resetAllMocks();
   });
 
-  test('should be defined', () => {
-    const resultsChecker = new TestCampaignProgressChecker(
-      mockedExchangesService,
-      generateThresholdCheckerSetup(),
+  describe('constructor', () => {
+    test('should create checker for valid setup', () => {
+      const resultsChecker = new TestCampaignProgressChecker(
+        mockedExchangesService,
+        generateThresholdCheckerSetup(),
+      );
+      expect(resultsChecker).toBeDefined();
+    });
+
+    test.each([undefined, null, NaN])(
+      'should fail if invalid minimum balance target provided [%#]',
+      (input) => {
+        expect(() => {
+          new TestCampaignProgressChecker(mockedExchangesService, {
+            ...generateThresholdCheckerSetup(),
+            minimumBalanceTarget: input,
+          });
+        }).toThrow('Invalid minimum balance target provided');
+      },
     );
-    expect(resultsChecker).toBeDefined();
   });
 
   describe('checkForParticipant', () => {

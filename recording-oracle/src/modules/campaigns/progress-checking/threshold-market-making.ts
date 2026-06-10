@@ -1,3 +1,4 @@
+import { isFiniteNumber } from '@/common/utils/type-guard';
 import { ExchangesService } from '@/modules/exchanges';
 
 import {
@@ -30,11 +31,11 @@ export class ThresholdMarketMakingProgressChecker extends MarketMakingProgressCh
   ) {
     super(exchangesService, setupData);
 
-    if (setupData.minimumVolumeTarget) {
-      this.minimumVolumeTarget = setupData.minimumVolumeTarget as number;
+    if (isFiniteNumber(setupData.minimumVolumeTarget)) {
+      this.minimumVolumeTarget = setupData.minimumVolumeTarget;
     } else {
       // Safety belt: should not happen
-      throw new Error('No minimum volume target provided');
+      throw new Error('Invalid minimum volume target provided');
     }
   }
 

@@ -1,10 +1,11 @@
 import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
+import { isFiniteNumber } from '@/common/utils/type-guard';
 import { ExchangesService } from '@/modules/exchanges';
 
 import type {
+  BaseProgressCheckResult,
   CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  BaseProgressCheckResult,
   ParticipantInfo,
   ThresholdScore,
 } from './types';
@@ -38,11 +39,11 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
   ) {
     this.exchangeName = setupData.exchangeName;
     this.thresholdTokenSymbol = setupData.symbol;
-    if (setupData.minimumBalanceTarget) {
-      this.minimumBalanceTarget = setupData.minimumBalanceTarget as number;
+    if (isFiniteNumber(setupData.minimumBalanceTarget)) {
+      this.minimumBalanceTarget = setupData.minimumBalanceTarget;
     } else {
       // Safety belt: should not happen
-      throw new Error('No minimum balance target provided');
+      throw new Error('Invalid minimum balance target provided');
     }
   }
 
