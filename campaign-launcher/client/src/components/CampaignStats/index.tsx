@@ -13,12 +13,12 @@ import {
   CampaignStatus,
   type LeaderboardData,
   type CampaignDetails,
-  CampaignType,
 } from '@/types';
 import {
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
+  isThesholdBasedCampaignType,
   mapTypeToLabel,
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
@@ -139,7 +139,6 @@ const CampaignStats: FC<Props> = ({
   if (!campaign) return null;
 
   const isCancelled = campaign.status === CampaignStatus.CANCELLED;
-  const isThresholdCampaign = campaign.type === CampaignType.THRESHOLD;
 
   const isOngoingCampaign =
     campaign.status === CampaignStatus.ACTIVE &&
@@ -159,7 +158,7 @@ const CampaignStats: FC<Props> = ({
   const showUserPerformance =
     isAuthenticated &&
     isJoined &&
-    !isThresholdCampaign &&
+    !isThesholdBasedCampaignType(campaign.type) &&
     !!userRank &&
     (isOngoingCampaign || hasProgressBeforeCancel);
 

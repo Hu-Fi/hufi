@@ -13,6 +13,7 @@ import {
   formatTokenAmount,
   getDailyTargetTokenSymbol,
   getTokenInfo,
+  isThesholdBasedCampaignType,
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -139,10 +140,7 @@ const getTotalGeneratedCardTitle = (
 const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
   const isMobile = useIsMobile();
 
-  const isThreshold = [
-    CampaignType.THRESHOLD,
-    CampaignType.THRESHOLD_MARKET_MAKING,
-  ].includes(campaign.type);
+  const isThresholdBasedCampaign = isThesholdBasedCampaignType(campaign.type);
 
   const cycleTimeline = useCycleTimeline(
     campaign.start_date,
@@ -243,12 +241,12 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         <Grid
           size={{ xs: 6, md: 4 }}
           sx={{
-            order: { xs: isThreshold ? 3 : 2, md: 1 },
+            order: { xs: isThresholdBasedCampaign ? 3 : 2, md: 1 },
           }}
         >
           <StatsCard withBorder>
             <CardName>Cycle Reward Pool</CardName>
-            <CardValue color={isThreshold ? 'white' : '#46db99'}>
+            <CardValue color={isThresholdBasedCampaign ? 'white' : '#46db99'}>
               <FormattedNumber
                 value={cycleRewardPool}
                 decimals={2}
@@ -257,7 +255,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             </CardValue>
           </StatsCard>
         </Grid>
-        {isThreshold ? (
+        {isThresholdBasedCampaign ? (
           <>
             <Grid
               size={{ xs: 6, md: 4 }}
@@ -329,7 +327,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         <Grid
           size={{ xs: 6, md: 4 }}
           sx={{
-            order: { xs: 1, md: isThreshold ? 4 : 3 },
+            order: { xs: 1, md: isThresholdBasedCampaign ? 4 : 3 },
           }}
         >
           <StatsCard withBorder>

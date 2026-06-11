@@ -387,3 +387,10 @@ export const isVolumeBasedCampaignType = (type: CampaignType) => {
 export const isBalanceBasedCampaignType = (type: CampaignType) => {
   return [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(type);
 };
+
+export const isThesholdBasedCampaignType = (type: CampaignType) => {
+  return [
+    CampaignType.THRESHOLD,
+    CampaignType.THRESHOLD_MARKET_MAKING,
+  ].includes(type);
+};
