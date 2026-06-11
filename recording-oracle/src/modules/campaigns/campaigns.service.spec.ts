@@ -922,7 +922,7 @@ describe('CampaignsService', () => {
         startDate: manifest.start_date,
         endDate: manifest.end_date,
         details: {
-          minVolumeRequired: manifest.min_volume_required,
+          minimumVolumeRequired: manifest.minimum_volume_required,
           rewardsDistribution: manifest.rewards_distribution,
         },
       };
@@ -2861,7 +2861,7 @@ describe('CampaignsService', () => {
         generateParticipantOutcome(campaign.type, {
           total_volume: (
             campaign.details as CompetitiveMarketMakingCampaignDetails
-          ).minVolumeRequired,
+          ).minimumVolumeRequired,
         }),
       );
       spyOnCheckCampaignProgressForPeriod.mockResolvedValueOnce(

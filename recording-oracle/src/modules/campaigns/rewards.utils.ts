@@ -65,7 +65,8 @@ export function calculateRewardPool(
   } else if (isCompetitiveMarketMakingCampaign(campaign)) {
     const eligibleParticipants = progress.participants_outcomes.filter(
       (outcome) =>
-        (outcome.total_volume as number) >= campaign.details.minVolumeRequired,
+        (outcome.total_volume as number) >=
+        campaign.details.minimumVolumeRequired,
     );
     if (eligibleParticipants.length === 0) {
       return '0';
@@ -159,7 +160,7 @@ export function estimateCompetitiveRewards(
     if (
       participantOutcome.score > 0 &&
       (participantOutcome.total_volume as number) >=
-        campaign.details.minVolumeRequired
+        campaign.details.minimumVolumeRequired
     ) {
       eligibleOutcomes.push(participantOutcome);
     }

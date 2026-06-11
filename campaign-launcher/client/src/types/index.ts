@@ -54,11 +54,17 @@ export type Campaign = {
   address: EvmAddress;
   chain_id: number;
   details: {
+    // Market Making
     daily_volume_target?: number;
-    daily_balance_target?: number;
-    minimum_balance_target?: number;
-    min_volume_required?: number;
+    // Competitive Market Making
+    minimum_volume_required?: number;
+    // Threshold Market Making
     minimum_volume_target?: number;
+    // Holding
+    daily_balance_target?: number;
+    // Threshold
+    minimum_balance_target?: number;
+    // Threshold-based
     max_participants?: number;
   };
   end_date: string;
@@ -88,11 +94,17 @@ export type JoinedCampaign = {
   chain_id: number;
   cancellation_requested_at: number | null;
   details: {
+    // Market Making
     daily_volume_target?: number;
-    daily_balance_target?: number;
-    minimum_balance_target?: number;
-    min_volume_required?: number;
+    // Competitive Market Making
+    minimum_volume_required?: number;
+    // Threshold Market Making
     minimum_volume_target?: number;
+    // Holding
+    daily_balance_target?: number;
+    // Threshold
+    minimum_balance_target?: number;
+    // Threshold-based
     max_participants?: number;
   };
   end_date: string;

@@ -74,7 +74,7 @@ export function assertValidMarketMakingCampaignManifest(
 const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING),
   pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
-  min_volume_required: Joi.number().strict().positive().required(),
+  minimum_volume_required: Joi.number().strict().positive().required(),
   rewards_distribution: Joi.array()
     .items(Joi.number().strict().positive())
     .min(1)
@@ -172,7 +172,7 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as CompetitiveMarketMakingCampaignManifest;
       const details: CompetitiveMarketMakingCampaignDetails = {
         rewardsDistribution: _manifest.rewards_distribution,
-        minVolumeRequired: _manifest.min_volume_required,
+        minimumVolumeRequired: _manifest.minimum_volume_required,
       };
       return {
         symbol: _manifest.pair,

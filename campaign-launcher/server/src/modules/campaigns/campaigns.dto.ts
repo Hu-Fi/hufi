@@ -103,9 +103,9 @@ export class CampaignDetails {
   rewardsDistribution?: number[];
 
   @ApiPropertyOptional({
-    name: 'min_volume_required',
+    name: 'minimum_volume_required',
   })
-  minVolumeRequired?: number;
+  minimumVolumeRequired?: number;
 
   @ApiPropertyOptional({
     name: 'minimum_volume_target',

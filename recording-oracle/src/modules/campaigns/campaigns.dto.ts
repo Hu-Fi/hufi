@@ -100,8 +100,8 @@ class MarketMakingCampaignDto extends JoinedCampaignDto {
 }
 
 class CompetitiveMarketMakingCampaignDetailsDto {
-  @ApiProperty({ name: 'min_volume_required' })
-  minVolumeRequired: number;
+  @ApiProperty({ name: 'minimum_volume_required' })
+  minimumVolumeRequired: number;
 
   @ApiProperty({ name: 'rewards_distribution' })
   rewardsDistribution: number[];

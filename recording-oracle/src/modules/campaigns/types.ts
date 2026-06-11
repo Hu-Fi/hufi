@@ -26,7 +26,7 @@ export type MarketMakingCampaignDetails = {
 
 export type CompetitiveMarketMakingCampaignDetails = {
   rewardsDistribution: number[];
-  minVolumeRequired: number;
+  minimumVolumeRequired: number;
 };
 
 export type ThresholdMarketMakingCampaignDetails = {
@@ -67,7 +67,7 @@ export type CompetitiveMarketMakingCampaignManifest = CampaignManifestBase & {
   type: CampaignType.COMPETITIVE_MARKET_MAKING;
   pair: string;
   rewards_distribution: number[];
-  min_volume_required: number;
+  minimum_volume_required: number;
 };
 
 export type ThresholdMarketMakingCampaignManifest = CampaignManifestBase & {

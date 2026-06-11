@@ -333,7 +333,7 @@ export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
     case CampaignType.COMPETITIVE_MARKET_MAKING:
       return {
         label: 'Min Volume',
-        value: campaign.details.min_volume_required,
+        value: campaign.details.minimum_volume_required,
       };
     case CampaignType.THRESHOLD_MARKET_MAKING:
       return {

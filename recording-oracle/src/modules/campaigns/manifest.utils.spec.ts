@@ -361,13 +361,13 @@ describe('manifest utils', () => {
         rewards_distribution: [faker.number.int({ min: 1 }).toString()],
       }),
       Object.assign({}, validManifest, {
-        min_volume_required: faker.number.float({ min: -100, max: -1 }),
+        minimum_volume_required: faker.number.float({ min: -100, max: -1 }),
       }),
       Object.assign({}, validManifest, {
-        min_volume_required: undefined,
+        minimum_volume_required: undefined,
       }),
       Object.assign({}, validManifest, {
-        min_volume_required: faker.number.int({ min: 1 }).toString(),
+        minimum_volume_required: faker.number.int({ min: 1 }).toString(),
       }),
       Object.assign({}, validManifest, {
         rewards_distribution: [60, 41],

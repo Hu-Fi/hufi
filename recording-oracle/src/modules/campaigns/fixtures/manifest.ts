@@ -69,7 +69,7 @@ export function generateCompetitiveMarketMakingCampaignManifest(): CompetitiveMa
     ...manifestBase,
     type: CampaignType.COMPETITIVE_MARKET_MAKING,
     pair: generateTradingPair(),
-    min_volume_required: faker.number.float({ min: 0.0001 }),
+    minimum_volume_required: faker.number.float({ min: 0.0001 }),
     rewards_distribution: rewardsDistribution,
   };
 

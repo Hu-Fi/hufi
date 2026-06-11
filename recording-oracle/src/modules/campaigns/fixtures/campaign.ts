@@ -49,7 +49,7 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
       const maxRewardSharePerParticipant = Math.floor(100 / nTopParticipants);
 
       details = {
-        minVolumeRequired: faker.number.float({ min: 0.0001, max: 1000 }),
+        minimumVolumeRequired: faker.number.float({ min: 0.0001, max: 1000 }),
         rewardsDistribution: Array.from({ length: nTopParticipants }, () =>
           faker.number.int({ min: 1, max: maxRewardSharePerParticipant }),
         ),

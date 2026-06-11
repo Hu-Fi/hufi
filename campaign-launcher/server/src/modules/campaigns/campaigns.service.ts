@@ -219,7 +219,7 @@ export class CampaignsService {
       symbol = manifest.pair;
       details = {
         rewardsDistribution: manifest.rewards_distribution,
-        minVolumeRequired: manifest.min_volume_required,
+        minimumVolumeRequired: manifest.minimum_volume_required,
       };
     } else if (manifestUtils.isThresholdMarketMakingManifest(manifest)) {
       symbol = manifest.pair;

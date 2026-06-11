@@ -227,7 +227,7 @@ describe('rewards utils', () => {
           generateParticipantOutcome(campaign.type, {
             total_volume: (
               campaign.details as CompetitiveMarketMakingCampaignDetails
-            ).minVolumeRequired,
+            ).minimumVolumeRequired,
           }),
         ];
 
@@ -242,7 +242,7 @@ describe('rewards utils', () => {
           generateParticipantOutcome(campaign.type, {
             total_volume:
               (campaign.details as CompetitiveMarketMakingCampaignDetails)
-                .minVolumeRequired - 0.00001,
+                .minimumVolumeRequired - 0.00001,
           }),
         ];
 
@@ -533,7 +533,7 @@ describe('rewards utils', () => {
       // @ts-expect-error - we set expected type for campaign
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
       eligibleVolume =
-        campaign.details.minVolumeRequired + faker.number.float();
+        campaign.details.minimumVolumeRequired + faker.number.float();
       rewardPool = faker.number.int({ min: 1 }).toString();
     });
 
@@ -555,7 +555,7 @@ describe('rewards utils', () => {
       const participantOutcome = generateParticipantOutcome(campaign.type, {
         total_volume: faker.number.float({
           min: 0,
-          max: campaign.details.minVolumeRequired - 0.00001,
+          max: campaign.details.minimumVolumeRequired - 0.00001,
         }),
       });
 
@@ -639,7 +639,8 @@ describe('rewards utils', () => {
       campaign.details.rewardsDistribution = [30, 20, 50];
 
       const eligibleVolume =
-        campaign.details.minVolumeRequired + faker.number.float({ min: 0.001 });
+        campaign.details.minimumVolumeRequired +
+        faker.number.float({ min: 0.001 });
 
       const firstPlaceParticipant = generateParticipantOutcome(campaign.type, {
         score: 4,
