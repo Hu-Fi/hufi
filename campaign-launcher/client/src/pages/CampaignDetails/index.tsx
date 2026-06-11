@@ -23,7 +23,7 @@ import { useCampaignDetails } from '@/hooks/useCampaigns';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { CampaignStatus, type Campaign, type EvmAddress } from '@/types';
-import { isCampaignDetails, isThesholdBasedCampaignType } from '@/utils';
+import { isCampaignDetails, isThresholdBasedCampaignType } from '@/utils';
 
 const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
@@ -114,7 +114,7 @@ const CampaignDetails: FC = () => {
 
   const showLeaderboard =
     isOngoingCampaign &&
-    !isThesholdBasedCampaignType(campaignData.type) &&
+    !isThresholdBasedCampaignType(campaignData.type) &&
     leaderboard &&
     leaderboard.data.length > 0;
 

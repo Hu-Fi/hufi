@@ -388,7 +388,7 @@ export const isBalanceBasedCampaignType = (type: CampaignType) => {
   return [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(type);
 };
 
-export const isThesholdBasedCampaignType = (type: CampaignType) => {
+export const isThresholdBasedCampaignType = (type: CampaignType) => {
   return [
     CampaignType.THRESHOLD,
     CampaignType.THRESHOLD_MARKET_MAKING,

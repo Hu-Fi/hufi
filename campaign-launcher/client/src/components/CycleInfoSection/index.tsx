@@ -13,7 +13,7 @@ import {
   formatTokenAmount,
   getDailyTargetTokenSymbol,
   getTokenInfo,
-  isThesholdBasedCampaignType,
+  isThresholdBasedCampaignType,
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
 
@@ -140,7 +140,7 @@ const getTotalGeneratedCardTitle = (
 const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
   const isMobile = useIsMobile();
 
-  const isThresholdBasedCampaign = isThesholdBasedCampaignType(campaign.type);
+  const isThresholdBasedCampaign = isThresholdBasedCampaignType(campaign.type);
 
   const cycleTimeline = useCycleTimeline(
     campaign.start_date,

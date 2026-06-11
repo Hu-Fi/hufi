@@ -18,7 +18,7 @@ import {
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
-  isThesholdBasedCampaignType,
+  isThresholdBasedCampaignType,
   mapTypeToLabel,
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
@@ -158,7 +158,7 @@ const CampaignStats: FC<Props> = ({
   const showUserPerformance =
     isAuthenticated &&
     isJoined &&
-    !isThesholdBasedCampaignType(campaign.type) &&
+    !isThresholdBasedCampaignType(campaign.type) &&
     !!userRank &&
     (isOngoingCampaign || hasProgressBeforeCancel);
 
