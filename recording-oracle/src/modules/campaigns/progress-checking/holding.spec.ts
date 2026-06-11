@@ -30,7 +30,7 @@ describe('HoldingProgressChecker', () => {
     vi.resetAllMocks();
   });
 
-  test('should be defined', () => {
+  test('should create checker for valid setup', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangesService,
       generateHoldingCheckerSetup(),

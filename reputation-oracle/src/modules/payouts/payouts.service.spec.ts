@@ -401,11 +401,11 @@ describe('PayoutsService', () => {
 
     test('should calculate rewards for competitive campaign', () => {
       const participantAddress = '0x0000000000000000000000000000000000000001';
-      const minVolumeRequired = faker.number.int({ min: 50, max: 150 });
+      const minimumVolumeRequired = faker.number.int({ min: 50, max: 150 });
       const participantScore = faker.number.float({ min: 0.01 });
       const participantTotalVolume = faker.number.float({
-        min: minVolumeRequired,
-        max: minVolumeRequired + 100,
+        min: minimumVolumeRequired,
+        max: minimumVolumeRequired + 100,
       });
       const intermediateResultsData = generateIntermediateResultsData();
       const intermediateResult = generateIntermediateResult();
@@ -432,7 +432,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           end_date: faker.date.past().toISOString(),
-          min_volume_required: minVolumeRequired,
+          minimum_volume_required: minimumVolumeRequired,
           rewards_distribution: [100],
         } as CompetitiveCampaignManifest,
         intermediateResultsData,
@@ -618,7 +618,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0.0000001,
+          minimum_volume_required: 0.0000001,
           rewards_distribution: [20, 50, 30],
         } as CompetitiveCampaignManifest,
         18,
@@ -674,7 +674,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0.0000001,
+          minimum_volume_required: 0.0000001,
           rewards_distribution: [20, 50, 30],
         } as CompetitiveCampaignManifest,
         18,
@@ -722,7 +722,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0.0000001,
+          minimum_volume_required: 0.0000001,
           rewards_distribution: [60, 40],
         } as CompetitiveCampaignManifest,
         18,
@@ -778,7 +778,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0.0000001,
+          minimum_volume_required: 0.0000001,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         18,
@@ -842,7 +842,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: 0.0000001,
+          minimum_volume_required: 0.0000001,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         18,
@@ -869,9 +869,9 @@ describe('PayoutsService', () => {
       const tiedSecondPlaceScore = Math.floor(baseScore / 2);
       const seventhPlaceScore = Math.floor(baseScore / 3);
       const eighthPlaceScore = Math.floor(baseScore / 4);
-      const minVolumeRequired = faker.number.int({ min: 50, max: 120 });
+      const minimumVolumeRequired = faker.number.int({ min: 50, max: 120 });
       const eligibleVolume =
-        minVolumeRequired + faker.number.int({ min: 1, max: 100 });
+        minimumVolumeRequired + faker.number.int({ min: 1, max: 100 });
 
       const intermediateResult = generateIntermediateResult();
       intermediateResult.reserved_funds = '100';
@@ -912,7 +912,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: minVolumeRequired,
+          minimum_volume_required: minimumVolumeRequired,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         18,
@@ -931,7 +931,7 @@ describe('PayoutsService', () => {
       expect(rewardsByAddress.has(eighthPlaceAddress)).toBe(false);
     });
 
-    test('should filter out participants below min_volume_required', () => {
+    test('should filter out participants below minimum_volume_required', () => {
       const firstPlaceAddress = ethers.getAddress(
         faker.finance.ethereumAddress(),
       );
@@ -941,12 +941,12 @@ describe('PayoutsService', () => {
       const thirdPlaceAddress = ethers.getAddress(
         faker.finance.ethereumAddress(),
       );
-      const minVolumeRequired = faker.number.int({ min: 100, max: 300 });
+      const minimumVolumeRequired = faker.number.int({ min: 100, max: 300 });
       const firstParticipantVolume =
-        minVolumeRequired - faker.number.int({ min: 1, max: 50 });
+        minimumVolumeRequired - faker.number.int({ min: 1, max: 50 });
       const secondParticipantVolume =
-        minVolumeRequired + faker.number.int({ min: 10, max: 80 });
-      const thirdParticipantVolume = minVolumeRequired;
+        minimumVolumeRequired + faker.number.int({ min: 10, max: 80 });
+      const thirdParticipantVolume = minimumVolumeRequired;
       const baseScore = faker.number.int({ min: 90, max: 180 });
       const firstPlaceScore = baseScore;
       const secondPlaceScore = Math.floor(baseScore / 2);
@@ -984,7 +984,7 @@ describe('PayoutsService', () => {
         {
           ...generateManifest('COMPETITIVE_MARKET_MAKING'),
           pair: 'BTC/USDT',
-          min_volume_required: minVolumeRequired,
+          minimum_volume_required: minimumVolumeRequired,
           rewards_distribution: [50, 30, 20],
         } as CompetitiveCampaignManifest,
         18,

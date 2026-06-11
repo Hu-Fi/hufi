@@ -9,14 +9,10 @@ export enum ExchangeType {
 
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
+  COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',
+  THRESHOLD_MARKET_MAKING = 'THRESHOLD_MARKET_MAKING',
   HOLDING = 'HOLDING',
   THRESHOLD = 'THRESHOLD',
-}
-
-export enum CampaignTypeNames {
-  MARKET_MAKING = 'Market Making',
-  HOLDING = 'Holding',
-  THRESHOLD = 'Threshold',
 }
 
 export enum CampaignStatus {
@@ -58,9 +54,18 @@ export type Campaign = {
   address: EvmAddress;
   chain_id: number;
   details: {
+    // Market Making
     daily_volume_target?: number;
+    // Competitive Market Making
+    minimum_volume_required?: number;
+    // Threshold Market Making
+    minimum_volume_target?: number;
+    // Holding
     daily_balance_target?: number;
+    // Threshold
     minimum_balance_target?: number;
+    // Threshold-based
+    max_participants?: number;
   };
   end_date: string;
   escrow_status: string;
@@ -89,9 +94,18 @@ export type JoinedCampaign = {
   chain_id: number;
   cancellation_requested_at: number | null;
   details: {
+    // Market Making
     daily_volume_target?: number;
+    // Competitive Market Making
+    minimum_volume_required?: number;
+    // Threshold Market Making
+    minimum_volume_target?: number;
+    // Holding
     daily_balance_target?: number;
+    // Threshold
     minimum_balance_target?: number;
+    // Threshold-based
+    max_participants?: number;
   };
   end_date: string;
   exchange_name: string;
@@ -132,6 +146,7 @@ export type LeaderboardEntryDto = {
   result: number;
   score: number;
   estimated_reward: number;
+  estimated_reward_gross: number;
 };
 
 export type LeaderboardEntry = LeaderboardEntryDto & {

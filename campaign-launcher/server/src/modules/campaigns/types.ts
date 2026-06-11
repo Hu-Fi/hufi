@@ -18,7 +18,13 @@ export type MarketMakingCampaignManifest = BaseCampaignManifest & {
 export type CompetitiveMarketMakingCampaignManifest = BaseCampaignManifest & {
   pair: string;
   rewards_distribution: number[];
-  min_volume_required: number;
+  minimum_volume_required: number;
+};
+
+export type ThresholdMarketMakingCampaignManifest = BaseCampaignManifest & {
+  pair: string;
+  minimum_volume_target: number;
+  max_participants: number;
 };
 
 export type ThresholdCampaignManifest = BaseCampaignManifest & {
@@ -31,6 +37,7 @@ export type CampaignManifest =
   | HoldingCampaignManifest
   | MarketMakingCampaignManifest
   | CompetitiveMarketMakingCampaignManifest
+  | ThresholdMarketMakingCampaignManifest
   | ThresholdCampaignManifest;
 
 export enum CampaignStatus {
@@ -50,6 +57,7 @@ export enum SubgraphCampaignStatus {
 export enum CampaignType {
   MARKET_MAKING = 'MARKET_MAKING',
   COMPETITIVE_MARKET_MAKING = 'COMPETITIVE_MARKET_MAKING',
+  THRESHOLD_MARKET_MAKING = 'THRESHOLD_MARKET_MAKING',
   HOLDING = 'HOLDING',
   THRESHOLD = 'THRESHOLD',
 }

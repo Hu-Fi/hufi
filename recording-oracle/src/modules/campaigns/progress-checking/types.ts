@@ -26,3 +26,5 @@ export interface CampaignProgressChecker<
   checkForParticipant(participant: ParticipantInfo): Promise<R>;
   getCollectedMeta(): M;
 }
+
+export type ThresholdScore = 1 | 0;

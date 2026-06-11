@@ -1,14 +1,17 @@
 import { ETH_TOKEN_SYMBOL, ExchangeName } from '@/common/constants';
+import { isFiniteNumber } from '@/common/utils/type-guard';
 import { ExchangesService } from '@/modules/exchanges';
 
 import type {
+  BaseProgressCheckResult,
   CampaignProgressChecker,
   CampaignProgressCheckerSetup,
-  BaseProgressCheckResult,
   ParticipantInfo,
+  ThresholdScore,
 } from './types';
 
 export type ThresholdResult = BaseProgressCheckResult & {
+  score: ThresholdScore;
   token_balance: number;
 };
 
@@ -36,11 +39,11 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
   ) {
     this.exchangeName = setupData.exchangeName;
     this.thresholdTokenSymbol = setupData.symbol;
-    if (setupData.minimumBalanceTarget) {
-      this.minimumBalanceTarget = setupData.minimumBalanceTarget as number;
+    if (isFiniteNumber(setupData.minimumBalanceTarget)) {
+      this.minimumBalanceTarget = setupData.minimumBalanceTarget;
     } else {
       // Safety belt: should not happen
-      throw new Error('No minimum balance target provided');
+      throw new Error('Invalid minimum balance target provided');
     }
   }
 
@@ -58,7 +61,8 @@ export class ThresholdProgressChecker implements CampaignProgressChecker<
     ]);
 
     let tokenBalance = accountBalance[this.thresholdTokenSymbol]?.total || 0;
-    let score = tokenBalance >= this.minimumBalanceTarget ? 1 : 0;
+    let score: ThresholdScore =
+      tokenBalance >= this.minimumBalanceTarget ? 1 : 0;
 
     let abuseDetected = false;
     if (this.ethDepositAddresses.has(ethDepositAddress)) {

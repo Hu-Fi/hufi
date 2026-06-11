@@ -13,12 +13,12 @@ import {
   CampaignStatus,
   type LeaderboardData,
   type CampaignDetails,
-  CampaignType,
 } from '@/types';
 import {
   getDailyTargetTokenSymbol,
   getTargetInfo,
   getTokenInfo,
+  isThresholdBasedCampaignType,
   mapTypeToLabel,
 } from '@/utils';
 import dayjs from '@/utils/dayjs';
@@ -139,7 +139,6 @@ const CampaignStats: FC<Props> = ({
   if (!campaign) return null;
 
   const isCancelled = campaign.status === CampaignStatus.CANCELLED;
-  const isThresholdCampaign = campaign.type === CampaignType.THRESHOLD;
 
   const isOngoingCampaign =
     campaign.status === CampaignStatus.ACTIVE &&
@@ -159,7 +158,7 @@ const CampaignStats: FC<Props> = ({
   const showUserPerformance =
     isAuthenticated &&
     isJoined &&
-    !isThresholdCampaign &&
+    !isThresholdBasedCampaignType(campaign.type) &&
     !!userRank &&
     (isOngoingCampaign || hasProgressBeforeCancel);
 
@@ -301,7 +300,7 @@ const CampaignStats: FC<Props> = ({
               <CardValue>
                 {showUserPerformance
                   ? `${userRank} / ${totalParticipants}`
-                  : totalParticipants}
+                  : `${totalParticipants} / ${campaign.details.max_participants || '\u221E'}`}
               </CardValue>
             </StatsCard>
           </Grid>

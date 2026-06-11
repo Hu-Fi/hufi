@@ -28,8 +28,20 @@ const defaultFormValuesMap = {
   },
 };
 
-export const getFormDefaultValues = <T extends CampaignType>(campaignType: T) =>
-  defaultFormValuesMap[campaignType];
+/**
+ * TODO: rethink if we need this array and type after we add support for more campaign types
+ */
+export const LAUNCH_SUPPORTED_CAMPAIGN_TYPES = [
+  CampaignType.MARKET_MAKING,
+  CampaignType.HOLDING,
+  CampaignType.THRESHOLD,
+] as const;
+export type LaunchSupportedCampaignType =
+  (typeof LAUNCH_SUPPORTED_CAMPAIGN_TYPES)[number];
+
+export const getFormDefaultValues = <T extends LaunchSupportedCampaignType>(
+  campaignType: T
+) => defaultFormValuesMap[campaignType];
 
 /*
 This function removes leading zeros, eliminates negative sign and limits the number of digits after decimal point to 3

@@ -84,13 +84,17 @@ export const formatTokenAmount = (
   return displayValue.toString();
 };
 
-export const mapTypeToLabel = (type: CampaignType) => {
+export const mapTypeToLabel = (type: string) => {
   switch (type) {
-    case 'MARKET_MAKING':
+    case CampaignType.MARKET_MAKING:
       return 'Market Making';
-    case 'HOLDING':
+    case CampaignType.THRESHOLD_MARKET_MAKING:
+      return 'Threshold MM';
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      return 'Competitive MM';
+    case CampaignType.HOLDING:
       return 'Holding';
-    case 'THRESHOLD':
+    case CampaignType.THRESHOLD:
       return 'Threshold';
     default:
       return type;
@@ -103,9 +107,10 @@ export const getDailyTargetTokenSymbol = (
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       return symbol.split('/')[1];
     case CampaignType.HOLDING:
-      return symbol;
     case CampaignType.THRESHOLD:
       return symbol;
     default:
@@ -325,6 +330,16 @@ export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
         label: 'Target Volume',
         value: campaign.details.daily_volume_target,
       };
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      return {
+        label: 'Min Volume',
+        value: campaign.details.minimum_volume_required,
+      };
+    case CampaignType.THRESHOLD_MARKET_MAKING:
+      return {
+        label: 'Min Volume',
+        value: campaign.details.minimum_volume_target,
+      };
     case CampaignType.HOLDING:
       return {
         label: 'Target Balance',
@@ -359,4 +374,23 @@ export const appendUniqueCampaigns = <T extends { address: string }>(
   });
 
   return [...existingCampaigns, ...campaignsToAppend];
+};
+
+export const isVolumeBasedCampaignType = (type: CampaignType) => {
+  return [
+    CampaignType.MARKET_MAKING,
+    CampaignType.COMPETITIVE_MARKET_MAKING,
+    CampaignType.THRESHOLD_MARKET_MAKING,
+  ].includes(type);
+};
+
+export const isBalanceBasedCampaignType = (type: CampaignType) => {
+  return [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(type);
+};
+
+export const isThresholdBasedCampaignType = (type: CampaignType) => {
+  return [
+    CampaignType.THRESHOLD,
+    CampaignType.THRESHOLD_MARKET_MAKING,
+  ].includes(type);
 };

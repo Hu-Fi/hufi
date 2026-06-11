@@ -19,6 +19,7 @@ import {
   generateManifestResponse,
   generateMarketMakingCampaignManifest,
   generateThresholdampaignManifest,
+  generateThresholdMarketMakingCampaignManifest,
 } from './fixtures';
 import * as manifestUtils from './manifest.utils';
 
@@ -360,13 +361,13 @@ describe('manifest utils', () => {
         rewards_distribution: [faker.number.int({ min: 1 }).toString()],
       }),
       Object.assign({}, validManifest, {
-        min_volume_required: faker.number.float({ min: -100, max: -1 }),
+        minimum_volume_required: faker.number.float({ min: -100, max: -1 }),
       }),
       Object.assign({}, validManifest, {
-        min_volume_required: undefined,
+        minimum_volume_required: undefined,
       }),
       Object.assign({}, validManifest, {
-        min_volume_required: faker.number.int({ min: 1 }).toString(),
+        minimum_volume_required: faker.number.int({ min: 1 }).toString(),
       }),
       Object.assign({}, validManifest, {
         rewards_distribution: [60, 41],
@@ -409,6 +410,85 @@ describe('manifest utils', () => {
           ...validPartialDistributionManifest,
         }),
       ).toBeUndefined();
+    });
+  });
+
+  describe('assertValidThresholdMarketMakingCampaignManifest', () => {
+    const validManifest = generateThresholdMarketMakingCampaignManifest();
+
+    test.each([
+      { ...validManifest },
+      Object.assign({}, validManifest, {
+        pair: `1${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}2/3${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 8 }),
+        })}4`,
+      }),
+    ])('should not throw for valid manifest [%#]', (testManifest) => {
+      expect(
+        manifestUtils.assertValidThresholdMarketMakingCampaignManifest(
+          testManifest,
+        ),
+      ).toBeUndefined();
+    });
+
+    test.each([
+      Object.assign({}, validManifest, {
+        type: CampaignType.THRESHOLD_MARKET_MAKING.toLowerCase(),
+      }),
+      Object.assign({}, validManifest, {
+        pair: generateTradingPair().replace('/', ''),
+      }),
+      Object.assign({}, validManifest, {
+        pair: faker.finance.currencyCode(),
+      }),
+      Object.assign({}, validManifest, {
+        pair: generateTradingPair().toLowerCase(),
+      }),
+      Object.assign({}, validManifest, {
+        minimum_volume_target: faker.number.int({ min: -42, max: 0 }),
+      }),
+      Object.assign({}, validManifest, {
+        minimum_volume_target: undefined,
+      }),
+      Object.assign({}, validManifest, {
+        minimum_volume_target: faker.number.int({ min: 1 }).toString(),
+      }),
+      Object.assign({}, validManifest, {
+        minimum_volume_target: Number.MAX_SAFE_INTEGER + 42,
+      }),
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: 1 }).toString(),
+      }),
+      Object.assign({}, validManifest, {
+        max_participants: undefined,
+      }),
+      Object.assign({}, validManifest, {
+        max_participants: 0,
+      }),
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.int({ min: -42, max: -1 }),
+      }),
+      Object.assign({}, validManifest, {
+        max_participants: faker.number.float({ fractionDigits: 3 }),
+      }),
+    ])('should throw when invalid manifest schema [%#]', async (manifest) => {
+      let thrownError: any;
+      try {
+        manifestUtils.assertValidThresholdMarketMakingCampaignManifest(
+          manifest,
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      expect(thrownError.message).toBe(
+        'Invalid threshold market making campaign manifest schema',
+      );
     });
   });
 
