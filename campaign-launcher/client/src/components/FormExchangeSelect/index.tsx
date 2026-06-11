@@ -49,15 +49,15 @@ const FormExchangeSelect = <
       );
     }
 
-    if (isVolumeBasedCampaignType(campaignType as CampaignType)) {
-      return _exchanges;
+    if (campaignType && !isVolumeBasedCampaignType(campaignType)) {
+      return _exchanges.filter(
+        (exchange) =>
+          exchange.name !== ExchangeName.PANCAKESWAP &&
+          exchange.name !== ExchangeName.HYPERLIQUID
+      );
     }
 
-    return _exchanges.filter(
-      (exchange) =>
-        exchange.name !== ExchangeName.PANCAKESWAP &&
-        exchange.name !== ExchangeName.HYPERLIQUID
-    );
+    return _exchanges;
   }, [campaignType, exchangeTypes, exchanges]);
 
   return (
