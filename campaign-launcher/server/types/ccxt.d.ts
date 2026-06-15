@@ -6,11 +6,17 @@
  */
 
 declare module 'ccxt' {
+  type MarketInfo = {
+    type: string | undefined;
+    symbol: string;
+    [x: string]: unknown;
+  };
+
   export interface Exchange {
     setSandboxMode(enabled: boolean): void;
     isSandboxModeEnabled: boolean;
     loadMarkets(reload = false): Promise<Record<string, unknown>>;
-    markets: Record<string, unknown>;
+    markets: Record<string, MarketInfo>;
     /**
      * 'undefined' until successfull call of 'loadMarkets'
      */
