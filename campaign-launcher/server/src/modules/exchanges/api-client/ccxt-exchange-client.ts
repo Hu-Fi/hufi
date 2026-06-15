@@ -78,9 +78,9 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
   protected get tradingPairs() {
     const spotTradingPairs: string[] = [];
 
-    for (const marketInfo of Object.values(this.ccxtClient.markets)) {
+    for (const marketInfo of Object.values(this.ccxtClient.markets || {})) {
       if (marketInfo.type === 'spot') {
-        spotTradingPairs.push(marketInfo.symbol as string);
+        spotTradingPairs.push(marketInfo.symbol);
       }
     }
 
