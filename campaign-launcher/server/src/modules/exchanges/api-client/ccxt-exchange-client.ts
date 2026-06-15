@@ -48,24 +48,9 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
         };
         break;
       }
-      case ExchangeName.MEXC: {
-        perExchangeClientOptions = {
-          options: {
-            fetchMarkets: {
-              types: {
-                spot: true,
-                swap: {
-                  linear: false,
-                  inverse: false,
-                },
-              },
-            },
-          },
-        };
-        break;
-      }
       case ExchangeName.BIGONE:
       case ExchangeName.BITMART:
+      case ExchangeName.MEXC:
       case ExchangeName.XT:
       default: {
         /**
