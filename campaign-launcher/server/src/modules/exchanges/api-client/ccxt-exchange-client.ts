@@ -22,6 +22,8 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     let perExchangeClientOptions: Record<string, unknown> = {};
 
     switch (exchangeName) {
+      case ExchangeName.BYBIT:
+      case ExchangeName.GATE:
       case ExchangeName.HYPERLIQUID: {
         perExchangeClientOptions = {
           options: {
@@ -30,6 +32,34 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
             },
           },
         };
+        break;
+      }
+      case ExchangeName.HTX: {
+        perExchangeClientOptions = {
+          options: {
+            fetchMarkets: {
+              types: {
+                spot: true,
+                linear: false,
+                inverse: false,
+              },
+            },
+          },
+        };
+        break;
+      }
+      case ExchangeName.BIGONE:
+      case ExchangeName.BITMART:
+      case ExchangeName.MEXC:
+      case ExchangeName.XT:
+      default: {
+        /**
+         * Not possible to configure markets via options for some exchanges,
+         * so will have to filter them out after fetching.
+         *
+         * Even though we filter out later, keep config for those exchanges that support it
+         * to reduce the amount of data fetched from the exchange and also fetch correct currencies.
+         */
         break;
       }
     }
@@ -46,7 +76,15 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
   }
 
   protected get tradingPairs() {
-    return this.ccxtClient.symbols;
+    const spotTradingPairs: string[] = [];
+
+    for (const marketInfo of Object.values(this.ccxtClient.markets || {})) {
+      if (marketInfo.type === 'spot') {
+        spotTradingPairs.push(marketInfo.symbol);
+      }
+    }
+
+    return spotTradingPairs;
   }
 
   protected get currencies() {
