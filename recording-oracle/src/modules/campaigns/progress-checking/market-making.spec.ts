@@ -14,6 +14,8 @@ import { generateTrade } from '@/modules/exchanges/fixtures';
 import {
   generateMarketMakingCheckerSetup,
   generateParticipantInfo,
+  mockedFetchMyTrades,
+  mockedFetchMyTradesGenerator,
 } from './fixtures';
 import { MarketMakingProgressChecker } from './market-making';
 import { CampaignProgressCheckerSetup, ParticipantInfo } from './types';
@@ -29,26 +31,13 @@ class TestCampaignProgressChecker extends MarketMakingProgressChecker {
 const mockedExchangesService = createMock<ExchangesService>();
 const mockedExchangeApiClient = createMock<ExchangeApiClient>();
 
-const fetchMyTrades = vi.fn();
-async function* fetchMyTradesGenerator() {
-  do {
-    const result = await fetchMyTrades();
-
-    if (result === undefined || result.length === 0) {
-      break;
-    } else {
-      yield result;
-    }
-  } while (true);
-}
-
 describe('MarketMakingProgressChecker', () => {
   beforeEach(() => {
     mockedExchangesService.getClientForUser.mockResolvedValue(
       mockedExchangeApiClient,
     );
     mockedExchangeApiClient.fetchMyTrades.mockImplementation(
-      fetchMyTradesGenerator,
+      mockedFetchMyTradesGenerator,
     );
   });
 
@@ -56,7 +45,7 @@ describe('MarketMakingProgressChecker', () => {
     vi.resetAllMocks();
   });
 
-  test('should be defined', () => {
+  test('should create checker for valid setup', () => {
     const resultsChecker = new TestCampaignProgressChecker(
       mockedExchangesService,
       generateMarketMakingCheckerSetup(),
@@ -164,7 +153,7 @@ describe('MarketMakingProgressChecker', () => {
     });
 
     test('should return zeros when no trades found', async () => {
-      fetchMyTrades.mockResolvedValueOnce([]);
+      mockedFetchMyTrades.mockResolvedValueOnce([]);
 
       const result = await resultsChecker.checkForParticipant(participantInfo);
 
@@ -177,22 +166,27 @@ describe('MarketMakingProgressChecker', () => {
 
     test('should iterate through all trades', async () => {
       const nTradesPerPage = faker.number.int({ min: 2, max: 4 });
+      const nPages = 2;
 
-      const pages = Array.from({ length: 2 }, () =>
-        Array.from({ length: nTradesPerPage }, () => generateTrade()),
-      );
-      for (const page of pages) {
-        fetchMyTrades.mockResolvedValueOnce(page);
+      let expectedTotalVolume = 0;
+      for (let i = 0; i < nPages; i += 1) {
+        const pageTrades = Array.from({ length: nTradesPerPage }, () => {
+          const trade = generateTrade();
+          expectedTotalVolume += trade.cost;
+          return trade;
+        });
+        mockedFetchMyTrades.mockResolvedValueOnce(pageTrades);
       }
 
-      await resultsChecker.checkForParticipant(participantInfo);
+      const result = await resultsChecker.checkForParticipant(participantInfo);
 
       expect(mockedExchangeApiClient.fetchMyTrades).toHaveBeenCalledTimes(1);
 
       /**
        * Extra call under the hood to check if more trades on next page
        */
-      expect(fetchMyTrades).toHaveBeenCalledTimes(pages.length + 1);
+      expect(mockedFetchMyTrades).toHaveBeenCalledTimes(nPages + 1);
+      expect(result.total_volume).toBe(expectedTotalVolume);
     });
 
     test('should paginate through trades starting from join date not setup start', async () => {
@@ -200,7 +194,7 @@ describe('MarketMakingProgressChecker', () => {
         from: progressCheckerSetup.periodStart.valueOf() + 1,
         to: progressCheckerSetup.periodEnd.valueOf() - 1,
       });
-      fetchMyTrades.mockResolvedValueOnce([]);
+      mockedFetchMyTrades.mockResolvedValueOnce([]);
 
       await resultsChecker.checkForParticipant(participantInfo);
 
@@ -213,7 +207,7 @@ describe('MarketMakingProgressChecker', () => {
     });
 
     test('should throw when total exceeds max safe integer', async () => {
-      fetchMyTrades.mockResolvedValueOnce([
+      mockedFetchMyTrades.mockResolvedValueOnce([
         generateTrade({
           cost: Number.MAX_SAFE_INTEGER,
           takerOrMaker: TakerOrMakerFlag.MAKER,
@@ -244,7 +238,7 @@ describe('MarketMakingProgressChecker', () => {
       );
       resultsChecker.ethDepositAddresses.add(abuseAddress);
 
-      fetchMyTrades.mockResolvedValueOnce([generateTrade()]);
+      mockedFetchMyTrades.mockResolvedValueOnce([generateTrade()]);
 
       const result = await resultsChecker.checkForParticipant(
         generateParticipantInfo({
@@ -254,7 +248,7 @@ describe('MarketMakingProgressChecker', () => {
       expect(result.abuseDetected).toBe(true);
       expect(result.score).toBe(0);
       expect(result.total_volume).toBe(0);
-      expect(fetchMyTrades).toHaveBeenCalledTimes(0);
+      expect(mockedFetchMyTrades).toHaveBeenCalledTimes(0);
     });
   });
 
@@ -281,7 +275,7 @@ describe('MarketMakingProgressChecker', () => {
       let expectedTotalVolume = 0;
       for (let i = 0; i < nParticipants; i += 1) {
         const trade = generateTrade();
-        fetchMyTrades.mockResolvedValueOnce([trade]);
+        mockedFetchMyTrades.mockResolvedValueOnce([trade]);
         expectedTotalVolume += trade.cost;
 
         await resultsChecker.checkForParticipant(
@@ -301,11 +295,11 @@ describe('MarketMakingProgressChecker', () => {
       );
 
       const normalTrades = [generateTrade(), generateTrade()];
-      fetchMyTrades.mockResolvedValueOnce(normalTrades);
-      fetchMyTrades.mockResolvedValueOnce([]); // last page for first participant
+      mockedFetchMyTrades.mockResolvedValueOnce(normalTrades);
+      mockedFetchMyTrades.mockResolvedValueOnce([]); // last page for first participant
 
-      fetchMyTrades.mockResolvedValueOnce([generateTrade()]);
-      fetchMyTrades.mockResolvedValueOnce([]); // last page for second participant
+      mockedFetchMyTrades.mockResolvedValueOnce([generateTrade()]);
+      mockedFetchMyTrades.mockResolvedValueOnce([]); // last page for second participant
 
       const normalResult = await resultsChecker.checkForParticipant(
         generateParticipantInfo({

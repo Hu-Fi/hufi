@@ -88,11 +88,13 @@ export const formatActualOnDate = (date: string) => {
 const getTargetLabel = (campaignType: CampaignType): string => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       return 'Volume';
     case CampaignType.HOLDING:
       return 'Balance';
     default:
-      return 'Volume';
+      return 'Unknown Target';
   }
 };
 type Props = {
@@ -178,12 +180,13 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
           }}
         >
           {leaderboard.data.slice(0, 3).map((entry) => {
-            const { rank, address, result, score, estimated_reward } = entry;
+            const { rank, address, result, score, estimated_reward_gross } =
+              entry;
             const {
               value: rewardValue,
               suffix: rewardSuffix,
               decimals: rewardDecimals,
-            } = getCompactNumberParts(estimated_reward);
+            } = getCompactNumberParts(estimated_reward_gross);
             const isMyEntry = address === activeAddress;
             return (
               <Stack

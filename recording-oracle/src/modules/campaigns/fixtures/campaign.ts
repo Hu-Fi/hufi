@@ -49,10 +49,19 @@ export function generateCampaignEntity(type?: CampaignType): CampaignEntity {
       const maxRewardSharePerParticipant = Math.floor(100 / nTopParticipants);
 
       details = {
-        minVolumeRequired: faker.number.float({ min: 0.0001, max: 1000 }),
+        minimumVolumeRequired: faker.number.float({ min: 0.0001, max: 1000 }),
         rewardsDistribution: Array.from({ length: nTopParticipants }, () =>
           faker.number.int({ min: 1, max: maxRewardSharePerParticipant }),
         ),
+      };
+      break;
+    }
+    case CampaignType.THRESHOLD_MARKET_MAKING: {
+      symbol = generateTradingPair();
+
+      details = {
+        minimumVolumeTarget: faker.number.float({ min: 1, max: 1000 }),
+        maxParticipants: faker.number.int({ min: 1, max: 5 }),
       };
       break;
     }
@@ -117,12 +126,15 @@ export function generateParticipantOutcome(
 ): ParticipantOutcome {
   const outcome: ParticipantOutcome = {
     address: ethers.getAddress(faker.finance.ethereumAddress()),
-    score: faker.number.float(),
+    score: campaignType.startsWith('THRESHOLD')
+      ? faker.helpers.arrayElement([0, 1])
+      : faker.number.float(),
   };
 
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
     case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       outcome.total_volume = faker.number.float({ min: 0, max: 10000 });
       break;
     case CampaignType.HOLDING:
@@ -152,27 +164,38 @@ export function generateCampaignProgress(
 
   let meta: CampaignProgressMeta;
   switch (campaign.type) {
-    case CampaignType.MARKET_MAKING:
+    case CampaignType.MARKET_MAKING: {
       meta = {
         total_volume: 0,
       };
       break;
-    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    }
+    case CampaignType.COMPETITIVE_MARKET_MAKING: {
       meta = {
         total_volume: 0,
       };
       break;
-    case CampaignType.HOLDING:
+    }
+    case CampaignType.THRESHOLD_MARKET_MAKING: {
+      meta = {
+        total_volume: 0,
+        total_score: 0,
+      };
+      break;
+    }
+    case CampaignType.HOLDING: {
       meta = {
         total_balance: 0,
       };
       break;
-    case CampaignType.THRESHOLD:
+    }
+    case CampaignType.THRESHOLD: {
       meta = {
         total_balance: 0,
         total_score: 0,
       };
       break;
+    }
   }
 
   return {

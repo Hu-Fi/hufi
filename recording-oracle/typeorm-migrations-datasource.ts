@@ -7,6 +7,7 @@ import Environment from '@/common/utils/environment';
 import { CustomNamingStrategy } from '@/infrastructure/database/naming-strategy';
 
 dotenv.config({
+  quiet: true,
   /**
    * First value wins if "override" option is not set
    */
@@ -32,6 +33,7 @@ export default new DataSource({
   ssl: process.env.POSTGRES_SSL?.toLowerCase() === 'true',
   synchronize: false,
   migrationsRun: true,
+  migrationsTransactionMode: 'each',
   migrations: ['src/infrastructure/database/migrations/*.ts'],
   migrationsTableName: 'migrations_typeorm',
   namingStrategy: new CustomNamingStrategy(),

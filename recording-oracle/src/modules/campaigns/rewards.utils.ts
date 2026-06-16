@@ -8,13 +8,14 @@ import type {
   CampaignProgressMeta,
   HoldingMeta,
   MarketMakingMeta,
+  ThresholdMarketMakingMeta,
   ThresholdMeta,
 } from './progress-checking';
 import {
   isCompetitiveMarketMakingCampaign,
   isHoldingCampaign,
   isMarketMakingCampaign,
-  isThresholdCampaign,
+  isThresholdBasedCampaign,
 } from './type-guards';
 import type {
   CampaignProgress,
@@ -64,7 +65,8 @@ export function calculateRewardPool(
   } else if (isCompetitiveMarketMakingCampaign(campaign)) {
     const eligibleParticipants = progress.participants_outcomes.filter(
       (outcome) =>
-        (outcome.total_volume as number) >= campaign.details.minVolumeRequired,
+        (outcome.total_volume as number) >=
+        campaign.details.minimumVolumeRequired,
     );
     if (eligibleParticipants.length === 0) {
       return '0';
@@ -79,15 +81,17 @@ export function calculateRewardPool(
   } else if (isHoldingCampaign(campaign)) {
     progressValue = (progress.meta as HoldingMeta).total_balance;
     progressValueTarget = campaign.details.dailyBalanceTarget;
-  } else if (isThresholdCampaign(campaign)) {
+  } else if (isThresholdBasedCampaign(campaign)) {
     /**
      * 'total_score' in this case is the number of eligible participants in current cycle,
      * so when calculating reward pool we are going to distribute equal portion
      * of daily reward to each participant that reached the threshold,
      * where equal portion is defined as `dailyReward / maxParticipants`
      */
-    // prettier-ignore
-    const nEligibleParticipants = (progress.meta as ThresholdMeta).total_score;
+    const progressMeta = progress.meta as
+      | ThresholdMeta
+      | ThresholdMarketMakingMeta;
+    const nEligibleParticipants = progressMeta.total_score;
     if (
       campaign.details.maxParticipants &&
       nEligibleParticipants > campaign.details.maxParticipants
@@ -156,7 +160,7 @@ export function estimateCompetitiveRewards(
     if (
       participantOutcome.score > 0 &&
       (participantOutcome.total_volume as number) >=
-        campaign.details.minVolumeRequired
+        campaign.details.minimumVolumeRequired
     ) {
       eligibleOutcomes.push(participantOutcome);
     }

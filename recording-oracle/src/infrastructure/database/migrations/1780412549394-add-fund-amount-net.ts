@@ -10,6 +10,14 @@ type Campaign = {
   fund_token_decimals: number;
 };
 
+/**
+ * !!!WARN!!!
+ * This was one-time occurrence where we had to perform calculations in the migration.
+ * This is not a good practice and should be avoided in the future.
+ *
+ * Further we should plan migrations to only bring schema changes
+ * and run updates/backfills via separate scripts.
+ */
 async function getCampaignFundAmountNet(campaign: Campaign): Promise<string> {
   const escrow = await EscrowUtils.getEscrow(
     campaign.chain_id,

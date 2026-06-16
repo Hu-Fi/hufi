@@ -9,11 +9,12 @@ import {
   type MarketMakingFormValues,
   type HoldingFormValues,
   type ThresholdFormValues,
-  CampaignTypeNames,
   CampaignType,
 } from '@/types';
-import { getNetworkName, getTokenInfo } from '@/utils';
+import { getNetworkName, getTokenInfo, mapTypeToLabel } from '@/utils';
 import dayjs from '@/utils/dayjs';
+
+import { type LaunchSupportedCampaignType } from '../utils';
 
 type Props = {
   step: number;
@@ -50,7 +51,7 @@ const RowValue = styled(Typography)({
 });
 
 const getTargetInfo = (
-  campaignType: CampaignType,
+  campaignType: LaunchSupportedCampaignType,
   formValues: CampaignFormValues
 ) => {
   switch (campaignType) {
@@ -76,7 +77,7 @@ const getTargetInfo = (
 };
 
 const getSymbolOrPairInfo = (
-  campaignType: CampaignType,
+  campaignType: LaunchSupportedCampaignType,
   formValues: CampaignFormValues
 ) => {
   switch (campaignType) {
@@ -93,6 +94,7 @@ const getSymbolOrPairInfo = (
     case CampaignType.THRESHOLD:
       return {
         label: 'Symbol',
+        value: (formValues as ThresholdFormValues)?.symbol,
       };
   }
 };
@@ -149,7 +151,7 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
         <Row>
           <RowName>Campaign Type</RowName>
           <RowValue>
-            {campaignType ? CampaignTypeNames[campaignType] : '-'}
+            {campaignType ? mapTypeToLabel(campaignType) : '-'}
           </RowValue>
         </Row>
       )}

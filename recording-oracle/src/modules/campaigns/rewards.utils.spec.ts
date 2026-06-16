@@ -15,11 +15,13 @@ import {
 import type {
   HoldingMeta,
   MarketMakingMeta,
+  ThresholdMarketMakingMeta,
   ThresholdMeta,
 } from './progress-checking';
 import * as rewardsUtils from './rewards.utils';
 import {
   CompetitiveMarketMakingCampaignDetails,
+  ThresholdMarketMakingCampaignDetails,
   type HoldingCampaignDetails,
   type MarketMakingCampaignDetails,
   type ThresholdCampaignDetails,
@@ -154,7 +156,7 @@ describe('rewards utils', () => {
       }).toThrow();
     });
 
-    describe('market making campaigns', () => {
+    describe('MARKET_MAKING campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.MARKET_MAKING);
       });
@@ -212,7 +214,7 @@ describe('rewards utils', () => {
       });
     });
 
-    describe('competitive market making campaigns', () => {
+    describe('COMPETITIVE_MARKET_MAKING campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(
           CampaignType.COMPETITIVE_MARKET_MAKING,
@@ -225,7 +227,7 @@ describe('rewards utils', () => {
           generateParticipantOutcome(campaign.type, {
             total_volume: (
               campaign.details as CompetitiveMarketMakingCampaignDetails
-            ).minVolumeRequired,
+            ).minimumVolumeRequired,
           }),
         ];
 
@@ -240,7 +242,7 @@ describe('rewards utils', () => {
           generateParticipantOutcome(campaign.type, {
             total_volume:
               (campaign.details as CompetitiveMarketMakingCampaignDetails)
-                .minVolumeRequired - 0.00001,
+                .minimumVolumeRequired - 0.00001,
           }),
         ];
 
@@ -250,7 +252,76 @@ describe('rewards utils', () => {
       });
     });
 
-    describe('holding campaigns', () => {
+    describe('THRESHOLD_MARKET_MAKING campaigns', () => {
+      beforeEach(() => {
+        campaign = generateCampaignEntity(CampaignType.THRESHOLD_MARKET_MAKING);
+      });
+
+      test('should return 0 when no eligible participants', () => {
+        const progressValueTarget = (
+          campaign.details as ThresholdMarketMakingCampaignDetails
+        ).minimumVolumeTarget;
+
+        const progress = generateCampaignProgress(campaign);
+        const nonEligibleVolume = faker.number.float({
+          max: progressValueTarget - 1,
+        });
+        progress.participants_outcomes.push(
+          generateParticipantOutcome(campaign.type, {
+            total_score: 0,
+            total_volume: nonEligibleVolume,
+          }),
+        );
+
+        (progress.meta as ThresholdMarketMakingMeta) = {
+          total_score: 0,
+          total_volume: nonEligibleVolume,
+        };
+
+        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
+
+        expect(rewardPool).toBe('0');
+      });
+
+      test('should return correct value when there are eligible participants', () => {
+        const maxParticipants = faker.number.int({ min: 10, max: 100 });
+        (
+          campaign.details as ThresholdMarketMakingCampaignDetails
+        ).maxParticipants = maxParticipants;
+
+        const minimumVolumeTarget = (
+          campaign.details as ThresholdMarketMakingCampaignDetails
+        ).minimumVolumeTarget;
+
+        const nEligible = faker.number.int({
+          min: 1,
+          max: Math.floor(maxParticipants / 2),
+        });
+        const nIneligible = faker.number.int({
+          min: 0,
+          max: Math.floor(maxParticipants / 2),
+        });
+        const progress = generateCampaignProgress(campaign);
+        (progress.meta as ThresholdMarketMakingMeta) = {
+          total_volume:
+            nIneligible * minimumVolumeTarget * Math.random() +
+            nEligible * minimumVolumeTarget,
+          total_score: nEligible,
+        };
+
+        const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
+
+        const expectedRewardPool = new Decimal(
+          rewardsUtils.calculateDailyReward(campaign),
+        )
+          .mul(nEligible / maxParticipants)
+          .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
+          .toString();
+        expect(rewardPool).toBe(expectedRewardPool);
+      });
+    });
+
+    describe('HOLDING campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.HOLDING);
       });
@@ -306,7 +377,7 @@ describe('rewards utils', () => {
       });
     });
 
-    describe('threshold campaigns', () => {
+    describe('THRESHOLD campaigns', () => {
       beforeEach(() => {
         campaign = generateCampaignEntity(CampaignType.THRESHOLD);
       });
@@ -317,10 +388,19 @@ describe('rewards utils', () => {
         ).minimumBalanceTarget;
 
         const progress = generateCampaignProgress(campaign);
-        (progress.meta as ThresholdMeta).total_balance = faker.number.float({
-          min: progressValueTarget,
-          max: progressValueTarget * 10,
+        const nonEligibleBalance = faker.number.float({
+          max: progressValueTarget - 1,
         });
+        progress.participants_outcomes.push(
+          generateParticipantOutcome(campaign.type, {
+            total_score: 0,
+            total_balance: nonEligibleBalance,
+          }),
+        );
+        (progress.meta as ThresholdMeta) = {
+          total_score: 0,
+          total_balance: nonEligibleBalance,
+        };
 
         const rewardPool = rewardsUtils.calculateRewardPool(campaign, progress);
 
@@ -380,7 +460,7 @@ describe('rewards utils', () => {
         const expectedRewardPool = new Decimal(
           rewardsUtils.calculateDailyReward(campaign),
         )
-          .mul(Math.min(nEligible / maxParticipants, 1))
+          .mul(nEligible / maxParticipants)
           .toDecimalPlaces(campaign.fundTokenDecimals, Decimal.ROUND_DOWN)
           .toString();
         expect(rewardPool).toBe(expectedRewardPool);
@@ -453,7 +533,7 @@ describe('rewards utils', () => {
       // @ts-expect-error - we set expected type for campaign
       campaign = generateCampaignEntity(CampaignType.COMPETITIVE_MARKET_MAKING);
       eligibleVolume =
-        campaign.details.minVolumeRequired + faker.number.float();
+        campaign.details.minimumVolumeRequired + faker.number.float();
       rewardPool = faker.number.int({ min: 1 }).toString();
     });
 
@@ -475,7 +555,7 @@ describe('rewards utils', () => {
       const participantOutcome = generateParticipantOutcome(campaign.type, {
         total_volume: faker.number.float({
           min: 0,
-          max: campaign.details.minVolumeRequired - 0.00001,
+          max: campaign.details.minimumVolumeRequired - 0.00001,
         }),
       });
 
@@ -559,7 +639,8 @@ describe('rewards utils', () => {
       campaign.details.rewardsDistribution = [30, 20, 50];
 
       const eligibleVolume =
-        campaign.details.minVolumeRequired + faker.number.float({ min: 0.001 });
+        campaign.details.minimumVolumeRequired +
+        faker.number.float({ min: 0.001 });
 
       const firstPlaceParticipant = generateParticipantOutcome(campaign.type, {
         score: 4,

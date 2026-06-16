@@ -100,8 +100,8 @@ class MarketMakingCampaignDto extends JoinedCampaignDto {
 }
 
 class CompetitiveMarketMakingCampaignDetailsDto {
-  @ApiProperty({ name: 'min_volume_required' })
-  minVolumeRequired: number;
+  @ApiProperty({ name: 'minimum_volume_required' })
+  minimumVolumeRequired: number;
 
   @ApiProperty({ name: 'rewards_distribution' })
   rewardsDistribution: number[];
@@ -113,6 +113,22 @@ class CompetitiveMarketMakingCampaignDto extends JoinedCampaignDto {
 
   @ApiProperty()
   declare details: CompetitiveMarketMakingCampaignDetailsDto;
+}
+
+class ThresholdMarketMakingCampaignDetailsDto {
+  @ApiProperty({ name: 'minimum_volume_target' })
+  minimumVolumeTarget: number;
+
+  @ApiProperty({ name: 'max_participants' })
+  maxParticipants: number;
+}
+
+class ThresholdMarketMakingCampaignDto extends JoinedCampaignDto {
+  @ApiProperty({ enum: [CampaignType.THRESHOLD_MARKET_MAKING] })
+  declare type: CampaignType.THRESHOLD_MARKET_MAKING;
+
+  @ApiProperty()
+  declare details: ThresholdMarketMakingCampaignDetailsDto;
 }
 
 class HoldingCampaignDetailsDto {
@@ -200,6 +216,7 @@ export class ListJoinedCampaignsQueryDto {
 @ApiExtraModels(
   MarketMakingCampaignDto,
   CompetitiveMarketMakingCampaignDto,
+  ThresholdMarketMakingCampaignDto,
   HoldingCampaignDto,
   ThresholdCampaignDto,
 )
@@ -213,6 +230,7 @@ export class ListJoinedCampaignsSuccessDto {
     oneOf: [
       { $ref: getSchemaPath(MarketMakingCampaignDto) },
       { $ref: getSchemaPath(CompetitiveMarketMakingCampaignDto) },
+      { $ref: getSchemaPath(ThresholdMarketMakingCampaignDto) },
       { $ref: getSchemaPath(HoldingCampaignDto) },
       { $ref: getSchemaPath(ThresholdCampaignDto) },
     ],
@@ -222,6 +240,9 @@ export class ListJoinedCampaignsSuccessDto {
         [CampaignType.MARKET_MAKING]: getSchemaPath(MarketMakingCampaignDto),
         [CampaignType.COMPETITIVE_MARKET_MAKING]: getSchemaPath(
           CompetitiveMarketMakingCampaignDto,
+        ),
+        [CampaignType.THRESHOLD_MARKET_MAKING]: getSchemaPath(
+          ThresholdMarketMakingCampaignDto,
         ),
         [CampaignType.HOLDING]: getSchemaPath(HoldingCampaignDto),
         [CampaignType.THRESHOLD]: getSchemaPath(ThresholdCampaignDto),
@@ -291,6 +312,11 @@ export class LeaderboardEntry {
     name: 'estimated_reward',
   })
   estimatedReward: number;
+
+  @ApiProperty({
+    name: 'estimated_reward_gross',
+  })
+  estimatedRewardGross: number;
 }
 
 export class CampaignLeaderboardResponseDto {

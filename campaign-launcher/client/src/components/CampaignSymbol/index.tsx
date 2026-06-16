@@ -2,7 +2,8 @@ import type { FC } from 'react';
 
 import CryptoEntity from '@/components/CryptoEntity';
 import CryptoPairEntity from '@/components/CryptoPairEntity';
-import { CampaignType } from '@/types';
+import { type CampaignType } from '@/types';
+import { isBalanceBasedCampaignType, isVolumeBasedCampaignType } from '@/utils';
 
 type Props = {
   symbol: string;
@@ -76,12 +77,9 @@ const CampaignSymbol: FC<Props> = ({
   campaignType,
   size = 'small',
 }) => {
-  if (campaignType === CampaignType.MARKET_MAKING) {
+  if (isVolumeBasedCampaignType(campaignType)) {
     return <CryptoPairEntity symbol={symbol} size={size} />;
-  } else if (
-    campaignType === CampaignType.HOLDING ||
-    campaignType === CampaignType.THRESHOLD
-  ) {
+  } else if (isBalanceBasedCampaignType(campaignType)) {
     return <CryptoEntity symbol={symbol} size={size} />;
   }
 };

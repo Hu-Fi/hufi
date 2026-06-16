@@ -12,10 +12,15 @@ import {
   ThresholdCampaignDetails,
   type CampaignManifest,
   type CompetitiveMarketMakingCampaignManifest,
+  type ThresholdMarketMakingCampaignManifest,
   type HoldingCampaignManifest,
   type MarketMakingCampaignManifest,
   type ThresholdCampaignManifest,
+  ThresholdMarketMakingCampaignDetails,
 } from './types';
+
+const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{3,10}$/;
+const TRADING_PAIR_REGEX = /^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/;
 
 const baseManifestSchema = Joi.object({
   type: Joi.string().min(2).required(),
@@ -53,9 +58,7 @@ export function validateBaseSchema(manifest: string): CampaignManifestBase {
 
 const marketMakingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.MARKET_MAKING),
-  pair: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
-    .required(),
+  pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   daily_volume_target: Joi.number().strict().positive().required(),
 });
 export function assertValidMarketMakingCampaignManifest(
@@ -70,10 +73,8 @@ export function assertValidMarketMakingCampaignManifest(
 
 const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING),
-  pair: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
-    .required(),
-  min_volume_required: Joi.number().strict().positive().required(),
+  pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
+  minimum_volume_required: Joi.number().strict().positive().required(),
   rewards_distribution: Joi.array()
     .items(Joi.number().strict().positive())
     .min(1)
@@ -105,11 +106,25 @@ export function assertValidCompetitiveMarketMakingCampaignManifest(
   }
 }
 
+const thresholdMarketMakingManifestSchema = baseManifestSchema.keys({
+  type: Joi.string().valid(CampaignType.THRESHOLD_MARKET_MAKING),
+  pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
+  minimum_volume_target: Joi.number().strict().positive().required(),
+  max_participants: Joi.number().strict().positive().integer().required(),
+});
+export function assertValidThresholdMarketMakingCampaignManifest(
+  manifest: CampaignManifestBase,
+): asserts manifest is ThresholdMarketMakingCampaignManifest {
+  try {
+    Joi.assert(manifest, thresholdMarketMakingManifestSchema);
+  } catch {
+    throw new Error('Invalid threshold market making campaign manifest schema');
+  }
+}
+
 const holdingManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.HOLDING),
-  symbol: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}$/)
-    .required(),
+  symbol: Joi.string().pattern(TOKEN_SYMBOL_REGEX).required(),
   daily_balance_target: Joi.number().strict().positive().required(),
 });
 export function assertValidHoldingCampaignManifest(
@@ -124,9 +139,7 @@ export function assertValidHoldingCampaignManifest(
 
 const thresholdManifestSchema = baseManifestSchema.keys({
   type: Joi.string().valid(CampaignType.THRESHOLD),
-  symbol: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}$/)
-    .required(),
+  symbol: Joi.string().pattern(TOKEN_SYMBOL_REGEX).required(),
   minimum_balance_target: Joi.number().strict().positive().required(),
   max_participants: Joi.number().strict().positive().integer(),
 });
@@ -159,7 +172,18 @@ export function extractCampaignDetails(manifest: CampaignManifest): {
       const _manifest = manifest as CompetitiveMarketMakingCampaignManifest;
       const details: CompetitiveMarketMakingCampaignDetails = {
         rewardsDistribution: _manifest.rewards_distribution,
-        minVolumeRequired: _manifest.min_volume_required,
+        minimumVolumeRequired: _manifest.minimum_volume_required,
+      };
+      return {
+        symbol: _manifest.pair,
+        details,
+      };
+    }
+    case CampaignType.THRESHOLD_MARKET_MAKING: {
+      const _manifest = manifest as ThresholdMarketMakingCampaignManifest;
+      const details: ThresholdMarketMakingCampaignDetails = {
+        minimumVolumeTarget: _manifest.minimum_volume_target,
+        maxParticipants: _manifest.max_participants,
       };
       return {
         symbol: _manifest.pair,
