@@ -110,6 +110,6 @@ jobs:
                 --data @- "$SLACK_WEBHOOK_URL"
 
           # Post to Discord
-          jq -Rs '{content: .}' sprint_report.md \
+          jq -Rs '{content: ., flags: 4}' sprint_report.md \
             | curl -sf -X POST -H 'Content-type: application/json' \
                 --data @- "$DISCORD_WEBHOOK_URL"
