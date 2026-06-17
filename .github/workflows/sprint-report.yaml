@@ -37,8 +37,8 @@ jobs:
           Cadence gate (must run first):
           - Use UTC date TODAY (${TODAY}).
           - Sprint cadence is fixed at 14 days.
-          - Anchor sprint start date is hardcoded: 2026-02-25 (UTC, sprint day 1).
-          - Compute days_since_anchor = (TODAY - 2026-02-25) in whole UTC days.
+          - Anchor sprint start date is hardcoded: 2026-02-23 (UTC, sprint day 1).
+          - Compute days_since_anchor = (TODAY - 2026-02-23) in whole UTC days.
           - TODAY is a sprint start day only if:
             - days_since_anchor >= 0
             - days_since_anchor % 14 == 0
