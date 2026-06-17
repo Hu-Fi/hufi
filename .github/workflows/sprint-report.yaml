@@ -90,10 +90,10 @@ jobs:
             echo "sprint_report.md is empty"; exit 1
           fi
 
-          if grep -Fxq "Not sprint start day (cadence check); skipping sprint report." sprint_report.md; then
-            echo "Skipping Slack post: not sprint start day."
-            exit 0
-          fi
+          # if grep -Fxq "Not sprint start day (cadence check); skipping sprint report." sprint_report.md; then
+          #   echo "Skipping Slack post: not sprint start day."
+          #   exit 0
+          # fi
 
           sed -E \
             -e 's/^#{1,6} (.+)$/\*\1\*/' \
