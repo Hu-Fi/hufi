@@ -40,8 +40,3 @@ export type RequiredAccessCheckResult =
       success: false;
       missing: Array<ExchangePermission>;
     };
-
-export type ExtraCreds = { uid: string };
-
-export type BitmartExtras = { apiKeyMemo: string };
-export type ExchangeExtras = BitmartExtras;

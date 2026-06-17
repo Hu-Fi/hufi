@@ -17,6 +17,7 @@ import {
   BASE_CCXT_CLIENT_OPTIONS,
   CcxtExchangeClient,
   CcxtExchangeClientInitOptions,
+  type BitmartExtras,
 } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import type {
@@ -29,21 +30,23 @@ import {
   HyperliquidClient,
 } from './hyperliquid';
 import { KrakenClient } from './kraken';
+import { KucoinClient, type KucoinExtras } from './kucoin';
 import { PancakeswapClient } from './pancakeswap';
-import { ExchangeExtras } from './types';
 
 const PRELOAD_CCXT_CLIENTS_INTERVAL = ms('6 hours'); // ms after previous load
 
+export type ExchangeExtras = BitmartExtras | KucoinExtras;
+
 type CreateCexApiClientInitOptions = Omit<
   CexApiClientInitOptions,
-  'extraCreds' | 'loggingConfig'
+  'loggingConfig'
 > & {
   extras?: ExchangeExtras;
 };
 
 type CreateDexApiClientInitOptions = Omit<
   DexApiClientInitOptions,
-  'extraCreds' | 'loggingConfig'
+  'loggingConfig'
 > & {};
 
 @Injectable()
@@ -155,7 +158,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
 
     let cexApiClient: ExchangeApiClient;
 
-    const clientInitOptions: CcxtExchangeClientInitOptions = {
+    const clientInitOptions: CexApiClientInitOptions = {
       apiKey: initOptions.apiKey,
       secret: initOptions.secret,
       userId: initOptions.userId,
@@ -164,27 +167,40 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
           this.loggingConfigService.logExchangePermissionErrors,
       },
       sandbox: this.exchangesConfigService.useSandbox,
-      preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
     };
 
     if (exchangeName === ExchangeName.BIGONE) {
       cexApiClient = new BigoneClient(clientInitOptions);
     } else if (exchangeName === ExchangeName.KRAKEN) {
       cexApiClient = new KrakenClient(clientInitOptions);
+    } else if (exchangeName === ExchangeName.KUCOIN) {
+      cexApiClient = new KucoinClient({
+        ...clientInitOptions,
+        extraCreds: {
+          passphrase: (initOptions.extras as KucoinExtras).passphrase,
+        },
+      });
     } else {
+      const ccxtClientInitOptions: CcxtExchangeClientInitOptions = {
+        ...clientInitOptions,
+        preloadedExchangeClient: this.preloadedCcxtClients.get(exchangeName),
+      };
       /**
        * Add extra options per exchange if needed
        */
       switch (exchangeName) {
         case ExchangeName.BITMART: {
-          clientInitOptions.extraCreds = {
-            uid: initOptions.extras?.apiKeyMemo as string,
+          ccxtClientInitOptions.extraCreds = {
+            uid: (initOptions.extras as BitmartExtras).apiKeyMemo,
           };
           break;
         }
       }
 
-      cexApiClient = new CcxtExchangeClient(exchangeName, clientInitOptions);
+      cexApiClient = new CcxtExchangeClient(
+        exchangeName,
+        ccxtClientInitOptions,
+      );
     }
 
     if (cexApiClient.checkRequiredCredentials()) {

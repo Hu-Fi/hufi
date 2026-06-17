@@ -6,6 +6,7 @@ export enum ExchangeName {
   HTX = 'htx',
   HYPERLIQUID = 'hyperliquid',
   KRAKEN = 'kraken',
+  KUCOIN = 'kucoin',
   MEXC = 'mexc',
   PANCAKESWAP = 'pancakeswap',
   XT = 'xt',
