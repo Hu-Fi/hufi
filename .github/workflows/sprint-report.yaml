@@ -84,7 +84,7 @@ jobs:
           - Keep wording factual and concise.
           - The entire output MUST be under 2000 characters (including newlines). Trim bullets or shorten descriptions as needed to stay within this limit."
 
-      - name: Post summary to Slack
+      - name: Post summary to Slack and Discord
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.REPORT_SLACK_WEBHOOK_URL }}
           DISCORD_WEBHOOK_URL: ${{ secrets.REPORT_DISCORD_WEBHOOK_URL }}
