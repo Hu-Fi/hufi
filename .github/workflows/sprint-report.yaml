@@ -78,11 +78,13 @@ jobs:
           Quality bar:
           - Do not invent facts.
           - Make sure that every issue or pull request mention is actually a link to a corresponding item on GitHub.
-          - Keep wording factual and concise."
+          - Keep wording factual and concise.
+          - The entire output MUST be under 2000 characters (including newlines). Trim bullets or shorten descriptions as needed to stay within this limit."
 
       - name: Post summary to Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.REPORT_SLACK_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.REPORT_DISCORD_WEBHOOK_URL }}
         run: |
           if [ ! -s sprint_report.md ]; then
             echo "sprint_report.md is empty"; exit 1
@@ -106,3 +108,8 @@ jobs:
               }' \
             | curl -sf -X POST -H 'Content-type: application/json' \
                 --data @- "$SLACK_WEBHOOK_URL"
+
+          # Post to Discord
+          jq -Rs '{content: .}' sprint_report.md \
+            | curl -sf -X POST -H 'Content-type: application/json' \
+                --data @- "$DISCORD_WEBHOOK_URL"
