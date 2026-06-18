@@ -27,7 +27,7 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 
 const buttonSx = {
-  color: 'text.secondary',
+  color: 'primary.100',
   bgcolor: '#f5efff',
   p: 1,
   width: '100%',
@@ -37,10 +37,6 @@ const buttonSx = {
   gap: 1,
   borderBottom: '1px solid',
   borderBottomColor: 'rgba(205, 199, 255, 0.50)',
-  '&:hover': {
-    bgcolor: '#f5efff',
-    color: 'primary.light',
-  },
   '&:last-child': {
     borderBottom: 'none',
   },
@@ -94,7 +90,7 @@ const Account: FC = () => {
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disableRipple
         sx={{
-          bgcolor: 'primary.main',
+          bgcolor: 'secondary.200',
           borderRadius: '4px',
           width: 'fit-content',
           px: 1,
@@ -105,7 +101,7 @@ const Account: FC = () => {
         <AvatarIcon sx={{ width: 24, height: 24 }} />
         <Typography
           sx={{
-            color: 'primary.light',
+            color: 'primary.100',
             fontSize: '14px',
             fontWeight: 600,
             px: 1,
@@ -115,7 +111,7 @@ const Account: FC = () => {
         </Typography>
         <ChevronIcon
           sx={{
-            color: 'primary.light',
+            color: 'primary.100',
             transform: anchorEl ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease-in-out',
           }}
@@ -134,7 +130,7 @@ const Account: FC = () => {
           paper: {
             elevation: 0,
             sx: {
-              bgcolor: 'primary.main',
+              bgcolor: 'secondary.200',
               width: anchorEl?.getBoundingClientRect().width,
               minWidth: 'fit-content',
               borderTopLeftRadius: 0,
@@ -182,8 +178,8 @@ const Account: FC = () => {
                     width: '20px',
                     height: '20px',
                     px: 1,
-                    bgcolor: 'text.secondary',
-                    '& > span': { color: 'white' },
+                    bgcolor: 'primary.100',
+                    '& > span': { color: 'neutral.100' },
                   }}
                 />
               </CustomTooltip>

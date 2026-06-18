@@ -14,7 +14,7 @@ const PageWrapper: FC<PropsWithChildren> = ({ children }) => {
         pb: { xs: 5, md: 8 },
         px: { xs: 2, md: 0 },
         flexDirection: 'column',
-        bgcolor: 'background.default',
+        bgcolor: 'primary.100',
         minHeight: {
           xs: `calc(100vh - 62px - ${MOBILE_BOTTOM_NAV_HEIGHT}px)`, // minus header and bottom nav
           md: 'calc(100vh - 91px)', // minus header

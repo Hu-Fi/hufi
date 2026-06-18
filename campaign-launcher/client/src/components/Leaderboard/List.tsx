@@ -39,7 +39,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
           <Typography
             variant="body2"
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontWeight: 500,
             }}
           >
@@ -66,7 +66,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
               <Typography
                 variant="body2"
                 sx={{
-                  color: 'white',
+                  color: 'neutral.100',
                   fontWeight: 500,
                 }}
               >
@@ -89,7 +89,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
             <Typography
               variant="body2"
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: 500,
               }}
             >
@@ -111,7 +111,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
           return (
             <Typography
               variant="body2"
-              sx={{ color: 'white', fontWeight: 500 }}
+              sx={{ color: 'neutral.100', fontWeight: 500 }}
             >
               <CompactNumberWithTooltip value={params.row.score} />
             </Typography>
@@ -130,7 +130,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
           return (
             <Typography
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontSize: 14,
                 lineHeight: 1,
                 fontWeight: 500,
@@ -151,7 +151,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         flex: 1,
         minHeight: 0,
         overflow: 'hidden',
-        bgcolor: '#251d47',
+        bgcolor: 'primary.200',
       }}
     >
       <DataGrid
@@ -176,10 +176,11 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
           border: 'none',
           bgcolor: 'inherit',
           '& .MuiDataGrid-columnHeaders': {
-            borderBottom: '1px solid #3a2e6f',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
           },
           '& .MuiDataGrid-columnHeader': {
-            bgcolor: '#251d47',
+            bgcolor: 'primary.200',
             borderBottom: 'none !important',
             px: 0,
             pointerEvents: 'none',
@@ -199,7 +200,8 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
             fontWeight: 500,
           },
           '& .MuiDataGrid-row': {
-            borderBottom: '1px solid #3a2e6f',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
             '&:hover': {
               bgcolor: 'transparent',
             },
@@ -208,7 +210,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
             },
           },
           '& .MuiDataGrid-row.leaderboard-row--active': {
-            bgcolor: '#3a2e6f',
+            bgcolor: 'border.strong',
           },
           '& .MuiDataGrid-cell': {
             display: 'flex',

@@ -54,9 +54,10 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           width: '72px',
           height: '72px',
           p: 1,
+          bgcolor: 'secondary.300',
           borderRadius: '16px',
-          border: '1px solid #433679',
-          bgcolor: '#32295a',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {hasActiveFilters ? (
@@ -69,7 +70,7 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         component="p"
         variant="h6"
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           fontWeight: 700,
         }}
       >
@@ -79,7 +80,7 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         sx={{
           fontSize: 16,
           fontWeight: 500,
-          color: '#a0a0a0',
+          color: 'neutral.500',
         }}
       >
         {description}
@@ -138,9 +139,10 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           width: '72px',
           height: '72px',
           p: 1,
+          bgcolor: 'secondary.300',
           borderRadius: '16px',
-          border: '1px solid #433679',
-          bgcolor: '#32295a',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {!isAuthenticated && (
@@ -157,7 +159,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         component="p"
         variant="h6"
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           fontWeight: 700,
         }}
       >
@@ -167,7 +169,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         sx={{
           fontSize: 16,
           fontWeight: 500,
-          color: '#a0a0a0',
+          color: 'neutral.500',
           mb: 2,
         }}
       >
@@ -178,7 +180,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         <Button
           variant="contained"
           size="large"
-          color="error"
+          color="accent"
           onClick={handleSignIn}
         >
           Sign In
@@ -227,9 +229,10 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           width: '72px',
           height: '72px',
           p: 1,
+          bgcolor: 'secondary.300',
           borderRadius: '16px',
-          border: '1px solid #433679',
-          bgcolor: '#32295a',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {!isSignerReady && <LockIcon sx={{ width: '100%', height: '100%' }} />}
@@ -244,7 +247,7 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         component="p"
         variant="h6"
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           fontWeight: 700,
         }}
       >
@@ -254,7 +257,7 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         sx={{
           fontSize: 16,
           fontWeight: 500,
-          color: '#a0a0a0',
+          color: 'neutral.500',
           mb: 2,
         }}
       >
@@ -277,7 +280,7 @@ const CampaignsEmptyState: FC<Props> = ({ view, hasActiveFilters }) => {
         display: 'flex',
         py: 3,
         px: 2,
-        bgcolor: '#251d47',
+        bgcolor: 'primary.200',
         borderRadius: '16px',
         height: '400px',
       }}

@@ -59,7 +59,7 @@ const CampaignsTable: FC<Props> = ({
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              color: 'white',
+              color: 'neutral.100',
             }}
           >
             <CampaignSymbol
@@ -70,7 +70,7 @@ const CampaignsTable: FC<Props> = ({
             <Typography
               variant="caption"
               sx={{
-                color: '#a39fbc',
+                color: 'secondary.400',
                 textTransform: 'uppercase',
                 fontWeight: 600,
                 letterSpacing: 0,
@@ -94,7 +94,7 @@ const CampaignsTable: FC<Props> = ({
         return (
           <Typography
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               textTransform: 'capitalize',
             }}
           >
@@ -167,7 +167,7 @@ const CampaignsTable: FC<Props> = ({
             component="p"
             variant="subtitle2"
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: 16,
               fontWeight: 700,
             }}
@@ -189,7 +189,7 @@ const CampaignsTable: FC<Props> = ({
             <Typography
               variant="body1"
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: 700,
               }}
             >
@@ -205,7 +205,7 @@ const CampaignsTable: FC<Props> = ({
           <Typography
             variant="body1"
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontWeight: 600,
             }}
           >
@@ -241,11 +241,12 @@ const CampaignsTable: FC<Props> = ({
                 height: 42,
                 p: 0,
                 borderRadius: '4px',
-                border: '1px solid #433679',
+                border: '1px solid',
+                borderColor: 'border.strong',
                 gap: 1,
                 '& .view-details-text': {
                   display: 'none',
-                  color: 'white',
+                  color: 'neutral.100',
                   fontSize: '14px',
                   fontWeight: 600,
                 },
@@ -302,7 +303,7 @@ const CampaignsTable: FC<Props> = ({
         border: 'none',
         borderRadius: '18px',
         opacity: isFetching ? 0.5 : 1,
-        bgcolor: '#251d47',
+        bgcolor: 'primary.200',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',
         },
@@ -334,7 +335,7 @@ const CampaignsTable: FC<Props> = ({
           },
         },
         '& .MuiDataGrid-columnHeaderTitle': {
-          color: '#716c8b',
+          color: 'secondary.100',
           fontWeight: 600,
           fontSize: '14px',
           lineHeight: '18px',
@@ -347,7 +348,8 @@ const CampaignsTable: FC<Props> = ({
           mb: 0,
           py: 2,
           bgcolor: 'transparent',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid',
+          borderColor: 'border.main',
           '&:hover': {
             bgcolor: 'transparent',
           },

@@ -55,13 +55,16 @@ const StyledLink = ({
         px: { xs: 0, md: 2 },
         py: { xs: 0, md: 1 },
         textDecoration: 'none',
-        color: { xs: 'text.primary', md: isActive ? 'white' : '#6b6490' },
+        color: {
+          xs: 'text.primary',
+          md: isActive ? 'neutral.100' : 'secondary.100',
+        },
         fontWeight: isActive ? 600 : 400,
         fontSize: '14px',
-        bgcolor: isActive ? 'rgba(255, 255, 255, 0.07)' : 'transparent',
+        bgcolor: isActive ? 'border.main' : 'transparent',
         borderRadius: '10px',
         '&:hover': {
-          color: 'white',
+          color: 'neutral.100',
         },
         ...sx,
       }}
@@ -115,10 +118,11 @@ const Header: FC = () => {
         position: 'sticky',
         top: 0,
         zIndex: (theme) => theme.zIndex.appBar,
-        bgcolor: 'background.default',
+        bgcolor: 'primary.100',
         boxShadow: 'none',
         width: '100%',
-        borderBottom: '1px solid #433679',
+        borderBottom: '1px solid',
+        borderColor: 'border.strong',
         '& .MuiToolbar-root': {
           px: { xs: 2, md: 0 },
         },
@@ -145,7 +149,7 @@ const Header: FC = () => {
             <IconButton
               sx={{
                 display: { xs: 'flex', md: 'none' },
-                color: 'primary.main',
+                color: 'secondary.200',
                 p: 0,
               }}
               onClick={handleMenuOpen}
@@ -214,7 +218,7 @@ const Header: FC = () => {
               sx: {
                 top: '62px !important',
                 left: '0 !important',
-                bgcolor: 'background.default',
+                bgcolor: 'primary.100',
                 maxWidth: '100%',
                 width: '100%',
               },

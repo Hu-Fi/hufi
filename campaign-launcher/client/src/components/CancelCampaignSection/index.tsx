@@ -36,7 +36,7 @@ const CancelCampaignSection: FC<Props> = ({ campaign }) => {
               ml: 0.5,
               p: 0,
               bgcolor: 'transparent',
-              color: '#ff6262',
+              color: 'neutral.400',
               fontSize: 14,
               fontWeight: 700,
               lineHeight: '20px',

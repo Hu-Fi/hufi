@@ -11,13 +11,18 @@ declare module '@mui/material/styles' {
   interface BreakpointOverrides {
     xxl: true;
   }
-  interface SimplePaletteColorOptions {
-    contrast?: string;
-    violet?: string;
+  interface Palette {
+    accent: PaletteColor;
+    neutral: PaletteColor;
+    border: PaletteColor;
   }
   interface PaletteColor {
-    violet?: string;
-    contrast?: string;
+    '100'?: string;
+    '200'?: string;
+    '300'?: string;
+    '400'?: string;
+    '500'?: string;
+    strong?: string;
   }
   interface TypographyVariants {
     'h4-mobile': React.CSSProperties;
@@ -42,6 +47,18 @@ declare module '@mui/material/Typography' {
   }
 }
 
+declare module '@mui/material/Button' {
+  interface ButtonPropsColorOverrides {
+    accent: true;
+  }
+}
+
+declare module '@mui/material/Radio' {
+  interface RadioPropsColorOverrides {
+    accent: true;
+  }
+}
+
 const createAppTheme = (mode: PaletteMode) => {
   return createTheme({
     breakpoints: {
@@ -60,47 +77,99 @@ const createAppTheme = (mode: PaletteMode) => {
         ? {
             primary: {
               main: '#cdc7ff',
-              light: '#6309ff',
-              contrast: 'rgba(0, 0, 0, 0.87)',
+              '100': '#100735',
+              '200': '#251d47',
             },
-            background: {
-              default: '#100735',
+            secondary: {
+              main: '#5d0Ce9',
+              '100': '#6b6490',
+              '200': '#d4cfff',
+              '300': '#2d284e',
+              '400': '#a29dca',
+            },
+            accent: {
+              main: '#fa2a75',
+              dark: '#af1d51',
+              contrastText: '#ffffff',
+            },
+            neutral: {
+              '100': '#ffffff',
+              '200': '#43ba96',
+              '300': '#ffbb00',
+              '400': '#ff6262',
+              '500': '#a0a0a0',
+            },
+            border: {
+              main: 'rgba(255, 255, 255, 0.07)',
+              strong: '#3a2e6f',
             },
             text: {
               primary: '#d4cfff',
               secondary: 'rgba(212, 207, 255, 0.70)',
             },
             success: {
-              main: '#0ad397',
+              main: '#43ba96',
+              dark: '#43ba96cc',
+              contrastText: '#ffffff',
+            },
+            warning: {
+              main: '#ffbb00',
+              dark: '#ffbb00cc',
+              contrastText: '#ffffff',
             },
             error: {
-              main: '#fa2a75',
+              main: '#ff6262',
+              dark: '#ff6262cc',
+              contrastText: '#ffffff',
             },
           }
         : {
             primary: {
               main: '#cdc7ff',
-              light: '#320a8d',
-              violet: '#6309ff',
-              contrast: 'rgba(0, 0, 0, 0.87)',
+              '100': '#100735',
+              '200': '#251d47',
             },
             secondary: {
               main: '#5d0Ce9',
-              contrast: 'rgba(255, 255, 255, 0.87)',
+              '100': '#6b6490',
+              '200': '#d4cfff',
+              '300': '#2d284e',
+              '400': '#a29dca',
             },
-            background: {
-              default: '#100735',
+            accent: {
+              main: '#fa2a75',
+              dark: '#af1d51',
+              contrastText: '#ffffff',
+            },
+            neutral: {
+              '100': '#ffffff',
+              '200': '#43ba96',
+              '300': '#ffbb00',
+              '400': '#ff6262',
+              '500': '#a0a0a0',
+            },
+            border: {
+              main: 'rgba(255, 255, 255, 0.07)',
+              strong: '#3a2e6f',
             },
             text: {
               primary: '#d4cfff',
-              secondary: '#858ec6',
-              disabled: 'rgba(212, 207, 255, 0.50)',
+              secondary: 'rgba(212, 207, 255, 0.70)',
             },
             success: {
-              main: '#0ad397',
+              main: '#43ba96',
+              dark: '#43ba96cc',
+              contrastText: '#ffffff',
+            },
+            warning: {
+              main: '#ffbb00',
+              dark: '#ffbb00cc',
+              contrastText: '#ffffff',
             },
             error: {
-              main: '#fa2a75',
+              main: '#ff6262',
+              dark: '#ff6262cc',
+              contrastText: '#ffffff',
             },
           }),
     },
@@ -186,6 +255,10 @@ const createAppTheme = (mode: PaletteMode) => {
             fontWeight: 600,
             letterSpacing: '0.1px',
             textTransform: 'none',
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: 'none',
+            },
           },
           sizeSmall: {
             padding: '4px 10px',
@@ -207,12 +280,12 @@ const createAppTheme = (mode: PaletteMode) => {
       MuiTooltip: {
         styleOverrides: {
           tooltip: ({ theme }) => ({
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.primary.contrast,
+            backgroundColor: theme.palette.secondary['200'],
+            color: theme.palette.primary['100'],
           }),
           arrow: ({ theme }) => ({
             '&::before': {
-              backgroundColor: theme.palette.primary.main,
+              backgroundColor: theme.palette.secondary['200'],
             },
           }),
         },
@@ -260,9 +333,9 @@ const createAppTheme = (mode: PaletteMode) => {
       },
       MuiInputBase: {
         styleOverrides: {
-          input: {
-            color: 'white',
-          },
+          input: ({ theme }) => ({
+            color: theme.palette.neutral['100'],
+          }),
         },
       },
       MuiOutlinedInput: {
@@ -276,12 +349,12 @@ const createAppTheme = (mode: PaletteMode) => {
       },
       MuiPickersOutlinedInput: {
         styleOverrides: {
-          root: {
-            color: 'white',
+          root: ({ theme }) => ({
+            color: theme.palette.neutral['100'],
             '& .MuiPickersOutlinedInput-notchedOutline': {
-              borderColor: '#433679',
+              borderColor: theme.palette.border['strong'],
             },
-          },
+          }),
         },
       },
     },

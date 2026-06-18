@@ -81,7 +81,7 @@ const HostedCampaigns: FC<Props> = ({
         >
           <Button
             variant="contained"
-            color="error"
+            color="accent"
             disabled={isFetching || isLoading}
             sx={{ width: { xs: '100%', md: '200px' } }}
             onClick={setNextPage}

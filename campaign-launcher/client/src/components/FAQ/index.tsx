@@ -14,8 +14,9 @@ import {
 import { useIsMobile } from '@/hooks/useBreakpoints';
 
 const accordionSx = {
-  bgcolor: '#251d47',
-  border: '1px solid #433679',
+  bgcolor: 'primary.200',
+  border: '1px solid',
+  borderColor: 'border.strong',
   '&:first-of-type': {
     borderRadius: '10px 10px 0 0',
   },
@@ -44,7 +45,7 @@ const FAQ: FC = () => {
       <Typography
         variant={isMobile ? 'h6' : 'h5'}
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           fontWeight: { xs: 500, md: 800 },
           letterSpacing: { xs: '0px', md: '-0.5px' },
         }}
@@ -69,16 +70,16 @@ const FAQ: FC = () => {
           <AccordionSummary
             expandIcon={
               expanded.includes('faq-0') ? (
-                <RemoveIcon sx={{ color: 'white' }} />
+                <RemoveIcon sx={{ color: 'neutral.100' }} />
               ) : (
-                <AddIcon sx={{ color: 'white' }} />
+                <AddIcon sx={{ color: 'neutral.100' }} />
               )
             }
           >
             <Typography
               variant="body2"
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: 600,
               }}
             >
@@ -152,16 +153,16 @@ const FAQ: FC = () => {
           <AccordionSummary
             expandIcon={
               expanded.includes('faq-1') ? (
-                <RemoveIcon sx={{ color: 'white' }} />
+                <RemoveIcon sx={{ color: 'neutral.100' }} />
               ) : (
-                <AddIcon sx={{ color: 'white' }} />
+                <AddIcon sx={{ color: 'neutral.100' }} />
               )
             }
           >
             <Typography
               variant="body2"
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: 600,
               }}
             >
@@ -236,16 +237,16 @@ const FAQ: FC = () => {
           <AccordionSummary
             expandIcon={
               expanded.includes('faq-2') ? (
-                <RemoveIcon sx={{ color: 'white' }} />
+                <RemoveIcon sx={{ color: 'neutral.100' }} />
               ) : (
-                <AddIcon sx={{ color: 'white' }} />
+                <AddIcon sx={{ color: 'neutral.100' }} />
               )
             }
           >
             <Typography
               variant="body2"
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: 600,
               }}
             >

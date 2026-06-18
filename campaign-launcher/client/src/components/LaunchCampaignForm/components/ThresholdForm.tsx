@@ -42,7 +42,7 @@ type Props = {
 };
 
 const labelStyles = {
-  color: 'white',
+  color: 'neutral.100',
   mb: 1.5,
   lineHeight: '100%',
   letterSpacing: '0px',
@@ -108,7 +108,7 @@ const ThresholdForm: FC<Props> = ({
                     paper: {
                       elevation: 4,
                       sx: {
-                        bgcolor: 'background.default',
+                        bgcolor: 'primary.100',
                       },
                     },
                   }}
@@ -244,7 +244,7 @@ const ThresholdForm: FC<Props> = ({
                     paper: {
                       elevation: 4,
                       sx: {
-                        bgcolor: 'background.default',
+                        bgcolor: 'primary.100',
                       },
                     },
                   },

@@ -81,7 +81,7 @@ const LeaderboardOverlay: FC<Props> = ({
             px: { xs: 2, md: 4 },
             pt: { xs: 2, md: 4 },
             pb: { xs: 2, md: 3 },
-            bgcolor: 'background.default',
+            bgcolor: 'primary.100',
             overflow: 'hidden',
           }}
         >
@@ -89,7 +89,7 @@ const LeaderboardOverlay: FC<Props> = ({
             component="h6"
             variant={isMobile ? 'h6' : 'h5'}
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontWeight: 700,
             }}
           >
@@ -116,7 +116,7 @@ const LeaderboardOverlay: FC<Props> = ({
                 'aria-label': 'Search Wallet',
                 endAdornment: (
                   <InputAdornment position="end">
-                    <SearchIcon sx={{ color: 'white', fontSize: 24 }} />
+                    <SearchIcon sx={{ color: 'neutral.100', fontSize: 24 }} />
                   </InputAdornment>
                 ),
               },
@@ -124,8 +124,8 @@ const LeaderboardOverlay: FC<Props> = ({
             sx={{
               mt: 2,
               '& .MuiOutlinedInput-root': {
-                color: 'white',
-                bgcolor: '#382c6b',
+                color: 'neutral.100',
+                bgcolor: 'border.strong',
                 borderRadius: '28px',
                 border: 'none',
                 '& fieldset': {
@@ -133,7 +133,7 @@ const LeaderboardOverlay: FC<Props> = ({
                 },
               },
               '& .MuiInputBase-input::placeholder': {
-                color: 'white',
+                color: 'neutral.100',
                 opacity: 1,
               },
             }}

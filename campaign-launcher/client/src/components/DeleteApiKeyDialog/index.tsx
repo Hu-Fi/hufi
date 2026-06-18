@@ -57,7 +57,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
           height: '100%',
         }}
       >
-        <WarningIcon sx={{ fontSize: 60, mb: 2, color: '#b98c08' }} />
+        <WarningIcon sx={{ fontSize: 60, mb: 2, color: 'neutral.300' }} />
         <Typography
           variant="h6"
           sx={{
@@ -74,7 +74,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
               variant="body1"
               sx={{
                 textAlign: 'center',
-                color: '#a0a0a0',
+                color: 'neutral.500',
                 fontWeight: 500,
               }}
             >
@@ -98,7 +98,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
             <Typography
               variant="body1"
               sx={{
-                color: '#a0a0a0',
+                color: 'neutral.500',
                 my: 3,
                 fontWeight: 500,
               }}
@@ -134,20 +134,22 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
             fullWidth={isMobile}
             disabled={isPending}
             onClick={handleClose}
-            sx={{ color: 'white', borderColor: '#433679', minWidth: 135 }}
+            sx={{
+              color: 'neutral.100',
+              borderColor: 'border.strong',
+              minWidth: 135,
+            }}
           >
             {isIdle ? 'Cancel' : 'Close'}
           </Button>
           {isIdle && (
             <Button
               variant="contained"
+              color="error"
               fullWidth={isMobile}
               onClick={handleDelete}
               sx={{
-                color: 'white',
-                bgcolor: '#da4c4f',
                 minWidth: 135,
-                boxShadow: 'none',
               }}
             >
               Delete

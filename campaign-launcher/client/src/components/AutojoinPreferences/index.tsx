@@ -130,7 +130,7 @@ const AutojoinPreferences: FC<Props> = ({
         width: '100%',
         borderRadius: '18px',
         border: '2px solid',
-        borderColor: enabled ? '#43ba96' : '#100735',
+        borderColor: enabled ? 'neutral.200' : 'primary.100',
         overflow: 'hidden',
       }}
     >
@@ -140,7 +140,7 @@ const AutojoinPreferences: FC<Props> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           width: '100%',
-          background: 'linear-gradient(90deg, #251D47 0%, #3C2F73 100%)',
+          background: 'linear-gradient(90deg, #251d47 0%, #3c2f73 100%)',
           gap: 2,
           px: { xs: 2, md: 5 },
           py: { xs: 3.5, md: 4.5 },
@@ -173,7 +173,7 @@ const AutojoinPreferences: FC<Props> = ({
                 position: 'absolute',
                 top: 0,
                 right: 4,
-                color: enabled ? '#43ba96' : '#201d2c',
+                color: enabled ? 'neutral.200' : '#201d2c',
               }}
             />
           </Box>
@@ -186,7 +186,7 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Typography
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontSize: { xs: 16, md: 20 },
                 fontWeight: 700,
                 lineHeight: '100%',
@@ -196,7 +196,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: '#a29dca',
+                color: 'secondary.400',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -206,7 +206,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: '#a29dca',
+                color: 'secondary.400',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -217,7 +217,7 @@ const AutojoinPreferences: FC<Props> = ({
           </Box>
         </Box>
         {isPreferencesLoading || isExchangesLoading ? (
-          <CircularProgress size={28} sx={{ color: 'white' }} />
+          <CircularProgress size={28} sx={{ color: 'neutral.100' }} />
         ) : (
           <SwitchStyled
             checked={enabled}
@@ -226,7 +226,9 @@ const AutojoinPreferences: FC<Props> = ({
           />
         )}
       </Box>
-      <Stack sx={{ display: enabled ? 'flex' : 'none', bgcolor: '#251d47' }}>
+      <Stack
+        sx={{ display: enabled ? 'flex' : 'none', bgcolor: 'primary.200' }}
+      >
         <Row>
           <Box
             sx={{
@@ -242,7 +244,7 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Typography
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontSize: { xs: 16, md: 20 },
                 fontWeight: { xs: 700, md: 600 },
                 lineHeight: { xs: '100%', md: '150%' },
@@ -252,7 +254,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: '#a29dca',
+                color: 'secondary.400',
                 fontSize: { xs: 12, md: 14 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -266,7 +268,7 @@ const AutojoinPreferences: FC<Props> = ({
             flexItem
             sx={{
               display: { xs: 'none', md: 'block' },
-              borderColor: '#3a2e6f',
+              borderColor: 'border.strong',
             }}
           />
           <Box
@@ -286,7 +288,9 @@ const AutojoinPreferences: FC<Props> = ({
                   key={value}
                   label={label}
                   labelPlacement="start"
-                  borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  sx={{
+                    borderColor: isChecked ? 'accent.main' : 'border.strong',
+                  }}
                   disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
@@ -319,7 +323,7 @@ const AutojoinPreferences: FC<Props> = ({
             <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
               <Typography
                 sx={{
-                  color: 'white',
+                  color: 'neutral.100',
                   fontSize: { xs: 16, md: 20 },
                   fontWeight: { xs: 700, md: 600 },
                   lineHeight: { xs: '100%', md: '150%' },
@@ -329,7 +333,7 @@ const AutojoinPreferences: FC<Props> = ({
               </Typography>
               <Typography
                 sx={{
-                  color: '#a29dca',
+                  color: 'secondary.400',
                   fontSize: { xs: 12, md: 14 },
                   fontWeight: 500,
                   lineHeight: '100%',
@@ -350,10 +354,12 @@ const AutojoinPreferences: FC<Props> = ({
                 width: { xs: 100, md: 200 },
                 minWidth: { xs: 100, md: 200 },
                 px: { xs: '14px', md: '22px' },
-                color: isAllExchangesSelected ? 'error.main' : 'white',
+                color: isAllExchangesSelected ? 'accent.main' : 'neutral.100',
                 borderRadius: 99,
                 border: '1px solid',
-                borderColor: isAllExchangesSelected ? 'error.main' : '#3a2e6f',
+                borderColor: isAllExchangesSelected
+                  ? 'accent.main'
+                  : 'border.strong',
               }}
               onClick={() => handleSelectAll('exchanges')}
             >
@@ -365,7 +371,7 @@ const AutojoinPreferences: FC<Props> = ({
             flexItem
             sx={{
               display: { xs: 'none', md: 'block' },
-              borderColor: '#3a2e6f',
+              borderColor: 'border.strong',
             }}
           />
           <Box
@@ -386,7 +392,9 @@ const AutojoinPreferences: FC<Props> = ({
                   key={name}
                   label={display_name}
                   labelPlacement="start"
-                  borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  sx={{
+                    borderColor: isChecked ? 'accent.main' : 'border.strong',
+                  }}
                   disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
@@ -419,7 +427,7 @@ const AutojoinPreferences: FC<Props> = ({
             <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
               <Typography
                 sx={{
-                  color: 'white',
+                  color: 'neutral.100',
                   fontSize: { xs: 16, md: 20 },
                   fontWeight: { xs: 700, md: 600 },
                   lineHeight: { xs: '100%', md: '150%' },
@@ -429,7 +437,7 @@ const AutojoinPreferences: FC<Props> = ({
               </Typography>
               <Typography
                 sx={{
-                  color: '#a29dca',
+                  color: 'secondary.400',
                   fontSize: { xs: 12, md: 14 },
                   fontWeight: 500,
                   lineHeight: '100%',
@@ -450,10 +458,12 @@ const AutojoinPreferences: FC<Props> = ({
                 width: { xs: 100, md: 200 },
                 minWidth: { xs: 100, md: 200 },
                 px: { xs: '14px', md: '22px' },
-                color: isAllTokensSelected ? 'error.main' : 'white',
+                color: isAllTokensSelected ? 'accent.main' : 'neutral.100',
                 borderRadius: 99,
                 border: '1px solid',
-                borderColor: isAllTokensSelected ? 'error.main' : '#3a2e6f',
+                borderColor: isAllTokensSelected
+                  ? 'accent.main'
+                  : 'border.strong',
               }}
               onClick={() => handleSelectAll('tokens')}
             >
@@ -465,7 +475,7 @@ const AutojoinPreferences: FC<Props> = ({
             flexItem
             sx={{
               display: { xs: 'none', md: 'block' },
-              borderColor: '#3a2e6f',
+              borderColor: 'border.strong',
             }}
           />
           <Box
@@ -496,7 +506,9 @@ const AutojoinPreferences: FC<Props> = ({
                     </Box>
                   }
                   labelPlacement="start"
-                  borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  sx={{
+                    borderColor: isChecked ? 'accent.main' : 'border.strong',
+                  }}
                   disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox

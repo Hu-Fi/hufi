@@ -41,7 +41,7 @@ const BaseDrawer: FC<PropsWithChildren<Props>> = ({
           elevation: 0,
           sx: {
             py: 2,
-            bgcolor: '#251d47',
+            bgcolor: 'primary.200',
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
             border: 'none',
@@ -61,7 +61,7 @@ const BaseDrawer: FC<PropsWithChildren<Props>> = ({
           ...closeButtonSx,
         }}
       >
-        <CloseIcon sx={{ color: 'white' }} />
+        <CloseIcon sx={{ color: 'neutral.100' }} />
       </IconButton>
       {children}
     </Drawer>

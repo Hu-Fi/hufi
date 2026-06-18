@@ -8,9 +8,10 @@ const SkeletonCard = () => {
         p: 2,
         gap: 1.5,
         flexDirection: 'column',
-        bgcolor: '#251d47',
+        bgcolor: 'primary.200',
         borderRadius: '8px',
-        border: '1px solid #433679',
+        border: '1px solid',
+        borderColor: 'border.strong',
         boxShadow: 'none',
       }}
     >

@@ -39,8 +39,9 @@ const UnsavedPreferencesBar: FC<Props> = ({
           position: 'fixed',
           bottom: 0,
           left: 0,
-          bgcolor: '#251d47',
-          borderTop: '1px solid #3a2e6f',
+          bgcolor: 'primary.200',
+          borderTop: '1px solid',
+          borderColor: 'border.strong',
           zIndex: 10,
         }}
       >
@@ -59,14 +60,14 @@ const UnsavedPreferencesBar: FC<Props> = ({
               sx={{
                 fontSize: 16,
                 fontWeight: 500,
-                color: '#a4a4a4',
+                color: 'neutral.500',
                 lineHeight: '150%',
               }}
             >
               You have{' '}
               <Typography
                 component="span"
-                sx={{ color: '#be9827', fontWeight: 500 }}
+                sx={{ color: 'neutral.300', fontWeight: 500 }}
               >
                 unsaved changes
               </Typography>
@@ -86,8 +87,8 @@ const UnsavedPreferencesBar: FC<Props> = ({
                 fullWidth={isMobile}
                 disabled={isSavingPreferences}
                 sx={{
-                  color: 'white',
-                  borderColor: '#433679',
+                  color: 'neutral.100',
+                  borderColor: 'border.strong',
                 }}
                 onClick={onDiscardChanges}
               >
@@ -96,7 +97,7 @@ const UnsavedPreferencesBar: FC<Props> = ({
               <Button
                 variant="contained"
                 size="large"
-                color="error"
+                color="accent"
                 fullWidth={isMobile}
                 disabled={isSavingPreferences || !isSaveEnabled}
                 onClick={onSaveChanges}

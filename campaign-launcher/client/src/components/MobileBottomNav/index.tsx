@@ -38,7 +38,8 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
         bottom: 0,
         px: 0,
         pb: 0,
-        borderTop: '2px solid #251d47',
+        borderTop: '2px solid',
+        borderColor: 'primary.200',
         zIndex: (theme) => theme.zIndex.appBar,
       }}
     >
@@ -49,7 +50,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
           display: 'flex',
           width: '100%',
           overflow: 'hidden',
-          bgcolor: 'background.default',
+          bgcolor: 'primary.100',
         }}
       >
         {NAV_ITEMS.map(({ label, to, icon: Icon }) => {
@@ -66,8 +67,8 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
                 justifyContent: 'center',
                 flex: 1,
                 height: `${MOBILE_BOTTOM_NAV_HEIGHT}px`,
-                color: isActive ? 'error.main' : 'text.primary',
-                bgcolor: isActive ? '#251d47' : 'background.default',
+                color: isActive ? 'accent.main' : 'text.primary',
+                bgcolor: isActive ? 'primary.200' : 'primary.100',
                 gap: 1,
                 textDecoration: 'none',
                 transition: 'all 0.2s ease',

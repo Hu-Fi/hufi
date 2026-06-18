@@ -162,14 +162,13 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
       <Button
         variant="contained"
         size="large"
-        color="error"
+        color="accent"
         fullWidth={isMobile}
         disabled={isLoading}
-        sx={{ color: 'white' }}
         onClick={handleButtonClick}
       >
         {isJoining ? (
-          <CircularProgress size={24} sx={{ color: 'primary.contrast' }} />
+          <CircularProgress size={24} sx={{ color: 'primary.100' }} />
         ) : (
           getButtonText()
         )}

@@ -51,7 +51,7 @@ const Layout: FC<PropsWithChildren> = ({ children }) => {
       sx={{
         minHeight: '100dvh',
         width: '100%',
-        bgcolor: 'background.default',
+        bgcolor: 'primary.100',
       }}
     >
       <Header />

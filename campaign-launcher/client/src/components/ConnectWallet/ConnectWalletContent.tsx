@@ -132,7 +132,7 @@ const ConnectWalletContent: FC = () => {
           mt: 5,
         }}
       >
-        <Typography variant="h6" sx={{ color: 'white' }}>
+        <Typography variant="h6" sx={{ color: 'neutral.100' }}>
           Continue in {connectingWallet.name}
         </Typography>
         <Box
@@ -187,7 +187,8 @@ const ConnectWalletContent: FC = () => {
             mx: -2,
             pt: 2,
             px: 2,
-            borderTop: '1px solid #433679',
+            borderTop: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Button
@@ -201,7 +202,7 @@ const ConnectWalletContent: FC = () => {
           <Button
             size="large"
             variant="contained"
-            color="error"
+            color="accent"
             fullWidth
             onClick={() => openMobileWallet()}
           >
@@ -223,12 +224,12 @@ const ConnectWalletContent: FC = () => {
         textAlign: 'center',
       }}
     >
-      <Typography variant="h6" sx={{ color: 'white' }}>
+      <Typography variant="h6" sx={{ color: 'neutral.100' }}>
         Scan with {connectingWallet.name}
       </Typography>
       <Box
         sx={{
-          bgcolor: 'white',
+          bgcolor: 'neutral.100',
           borderRadius: 2,
           height: 240,
           p: 2,
@@ -256,7 +257,7 @@ const ConnectWalletContent: FC = () => {
     </Stack>
   ) : (
     <Stack sx={{ height: '100%', minHeight: 0 }}>
-      <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
+      <Typography variant="h6" sx={{ color: 'neutral.100', mb: 1 }}>
         Connect Wallet
       </Typography>
       <Typography
@@ -344,7 +345,7 @@ const ConnectWalletContent: FC = () => {
                       border: '1px solid',
                       borderColor: 'rgba(205, 199, 255, 0.22)',
                       borderRadius: '8px',
-                      color: 'white',
+                      color: 'neutral.100',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 1.5,
@@ -376,7 +377,7 @@ const ConnectWalletContent: FC = () => {
                     <Typography
                       variant="body2"
                       sx={{
-                        color: 'white',
+                        color: 'neutral.100',
                         maxWidth: '100%',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -402,7 +403,8 @@ const ConnectWalletContent: FC = () => {
           mx: { xs: -2, md: -4 },
           pt: 2,
           px: 2,
-          borderTop: '1px solid #433679',
+          borderTop: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {!showAllWallets ? (

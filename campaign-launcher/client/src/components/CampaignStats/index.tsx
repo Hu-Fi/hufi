@@ -34,9 +34,10 @@ export const StatsCard = styled(Box, {
   flex: 1,
   gap: '45px',
   ...(withBorder && {
-    backgroundColor: '#251D47',
+    backgroundColor: theme.palette.primary['200'],
     borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid',
+    borderColor: theme.palette.border.main,
   }),
 
   [theme.breakpoints.down('md')]: {
@@ -51,7 +52,7 @@ export const StatsCard = styled(Box, {
 }));
 
 export const CardName = styled(Typography)(({ theme }) => ({
-  color: '#6b6490',
+  color: theme.palette.secondary['100'],
   fontSize: '16px',
   fontWeight: 600,
   lineHeight: '18px',
@@ -68,10 +69,8 @@ export const CardName = styled(Typography)(({ theme }) => ({
   },
 }));
 
-export const CardValue = styled(Typography, {
-  shouldForwardProp: (prop) => prop !== 'color',
-})<{ color?: string }>(({ theme, color = 'white' }) => ({
-  color,
+export const CardValue = styled(Typography)(({ theme }) => ({
+  color: theme.palette.neutral['100'],
   fontSize: '36px',
   fontWeight: 800,
   lineHeight: '100%',
@@ -94,7 +93,8 @@ const renderSkeletonBlocks = (isMobile: boolean) => {
         pt: 3,
         pb: { xs: 2, md: 3 },
         gap: { xs: 2, md: 3 },
-        borderBottom: '1px solid #473C74',
+        borderBottom: '1px solid',
+        borderColor: 'border.strong',
       }}
     >
       <Skeleton variant="text" width="100%" height={isMobile ? 30 : 24} />
@@ -180,13 +180,14 @@ const CampaignStats: FC<Props> = ({
         pt: 3,
         pb: { xs: 2, md: 3 },
         gap: { xs: 2, md: 3 },
-        borderBottom: '1px solid #473C74',
+        borderBottom: '1px solid',
+        borderColor: 'border.strong',
       }}
     >
       <Typography
         component="h6"
         sx={{
-          color: isMobile ? 'white' : 'text.primary',
+          color: isMobile ? 'neutral.100' : 'text.primary',
           fontSize: { xs: 20, md: 16 },
           fontWeight: { xs: 500, md: 600 },
           letterSpacing: { xs: 0, md: '3.2px' },
@@ -203,7 +204,8 @@ const CampaignStats: FC<Props> = ({
             gap: 1.5,
             bgcolor: '#361034',
             borderRadius: '16px',
-            border: '1px solid #cb3434',
+            border: '1px solid',
+            borderColor: 'neutral.400',
           }}
         >
           <Box
@@ -218,7 +220,7 @@ const CampaignStats: FC<Props> = ({
               variant="h5"
               component="p"
               sx={{
-                color: '#fb4a4a',
+                color: 'neutral.400',
                 fontWeight: 600,
               }}
             >
@@ -228,7 +230,7 @@ const CampaignStats: FC<Props> = ({
           <Typography
             sx={{
               ml: 6,
-              color: '#a0a0a0',
+              color: 'neutral.500',
             }}
           >
             Cancelled on{' '}
@@ -243,9 +245,10 @@ const CampaignStats: FC<Props> = ({
         spacing={{ xs: 0, md: 6 }}
         sx={{
           width: '100%',
-          bgcolor: '#251d47',
+          bgcolor: 'primary.200',
           borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.07)',
+          border: '1px solid',
+          borderColor: 'border.main',
         }}
       >
         <Grid size={{ xs: 12, md: 4 }}>

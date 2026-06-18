@@ -171,7 +171,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                     width: '20px',
                     height: '20px',
                     px: 1,
-                    bgcolor: 'background.default',
+                    bgcolor: 'primary.100',
                   }}
                 />
               </CustomTooltip>
@@ -216,18 +216,17 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
               gap: 1.5,
             }}
           >
-            {!isValid && (
+            {(!isValid || 2 > 1) && (
               <IconButton
-                sx={{ p: 0 }}
+                sx={{
+                  p: 0,
+                  color: 'text.primary',
+                }}
                 disableRipple
                 disabled={isRevalidating}
                 onClick={() => handleClickOnRefresh(exchangeName)}
               >
-                <RefreshIcon
-                  sx={{
-                    color: isRevalidating ? 'text.disabled' : 'text.primary',
-                  }}
-                />
+                <RefreshIcon />
               </IconButton>
             )}
             <IconButton
@@ -317,7 +316,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
             p: isMobile ? 0 : 0,
             width: '100%',
             height: '400px',
-            background: 'background.default',
+            background: 'primary.100',
           },
           '& .MuiDataGrid-cell': {
             display: 'flex',
@@ -341,7 +340,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
             bgcolor: 'transparent',
           },
           '& .MuiDataGrid-columnHeader': {
-            backgroundColor: '#251d47',
+            bgcolor: 'primary.200',
             fontSize: '14px',
             lineHeight: '14px',
             fontWeight: 500,

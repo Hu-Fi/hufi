@@ -134,7 +134,9 @@ const JoinCampaignOverlay: FC<Props> = ({
                   width: 90,
                   borderRadius: 10,
                   bgcolor:
-                    index === 0 || !isConnectStep ? 'text.primary' : '#3a2e6f',
+                    index === 0 || !isConnectStep
+                      ? 'text.primary'
+                      : 'border.strong',
                 }}
               />
             ))}
@@ -145,7 +147,7 @@ const JoinCampaignOverlay: FC<Props> = ({
             <Typography
               variant="body1"
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontSize: { xs: '16px', md: '20px' },
                 fontWeight: 600,
               }}
@@ -169,12 +171,13 @@ const JoinCampaignOverlay: FC<Props> = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1px solid #433679',
-                borderRadius: '8px',
                 justifyContent: 'space-between',
                 mt: 2,
                 px: 1.5,
                 py: 2,
+                borderRadius: '8px',
+                border: '1px solid',
+                borderColor: 'border.strong',
               }}
             >
               <Typography variant="body1">Connected Wallet</Typography>
@@ -190,8 +193,8 @@ const JoinCampaignOverlay: FC<Props> = ({
                 disabled={isOverlayActionLoading}
                 onClick={onClose}
                 sx={{
-                  color: 'white',
-                  borderColor: '#433679',
+                  color: 'neutral.100',
+                  borderColor: 'border.strong',
                 }}
               >
                 Cancel
@@ -199,7 +202,7 @@ const JoinCampaignOverlay: FC<Props> = ({
               <Button
                 variant="contained"
                 size="large"
-                color="error"
+                color="accent"
                 fullWidth
                 disabled={isOverlayActionLoading}
                 onClick={handleAuthenticate}

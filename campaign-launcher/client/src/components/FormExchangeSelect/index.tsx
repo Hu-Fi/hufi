@@ -23,7 +23,7 @@ const slotProps = {
   paper: {
     elevation: 4,
     sx: {
-      bgcolor: 'background.default',
+      bgcolor: 'primary.100',
     },
   },
 };

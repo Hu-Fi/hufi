@@ -19,7 +19,7 @@ const CampaignTypeTooltip: FC = () => {
           target="_blank"
           rel="noopener noreferrer"
           sx={{
-            color: 'primary.contrast',
+            color: 'primary.100',
           }}
         >
           What are the campaign types?
@@ -56,7 +56,7 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
           <Typography
             variant="h6"
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: { xs: '18px', md: '20px' },
               fontWeight: { xs: 700, md: 600 },
             }}
@@ -67,7 +67,7 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
         <Typography
           variant="h6"
           sx={{
-            color: 'white',
+            color: 'neutral.100',
             fontSize: { xs: '18px', md: '20px' },
             fontWeight: { xs: 700, md: 600 },
           }}
@@ -92,7 +92,8 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
                 maxWidth: 100,
                 flexGrow: 1,
                 height: 9,
-                bgcolor: currentStep >= index + 1 ? 'primary.main' : '#251D47',
+                bgcolor:
+                  currentStep >= index + 1 ? 'secondary.200' : 'primary.200',
                 borderRadius: '90px',
               }}
             />

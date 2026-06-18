@@ -151,7 +151,7 @@ const NotificationPreferences: FC<Props> = ({
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              color: '#43ba96',
+              color: 'neutral.200',
               fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: '100%',
@@ -178,7 +178,7 @@ const NotificationPreferences: FC<Props> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            color: '#b98c08',
+            color: 'neutral.300',
             fontSize: { xs: 12, md: 16 },
             fontWeight: 500,
             lineHeight: '100%',
@@ -195,7 +195,7 @@ const NotificationPreferences: FC<Props> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            color: '#a29dca',
+            color: 'secondary.400',
             fontSize: { xs: 12, md: 16 },
             fontWeight: 500,
             lineHeight: '100%',
@@ -203,7 +203,7 @@ const NotificationPreferences: FC<Props> = ({
         >
           <CircularProgress
             size={isMobile ? 18 : 24}
-            sx={{ color: '#a29dca' }}
+            sx={{ color: 'secondary.400' }}
           />
           Waiting for Telegram&hellip;
         </Typography>
@@ -216,11 +216,13 @@ const NotificationPreferences: FC<Props> = ({
       sx={{
         width: '100%',
         minHeight: { xs: 'auto', md: '290px' },
-        bgcolor: '#251d47',
+        bgcolor: 'primary.200',
         borderRadius: '18px',
-        borderTop: '1px solid #3a2e6f',
+        borderTop: '1px solid',
+        borderColor: 'border.strong',
         '& > :not(:last-child)': {
-          borderBottom: '1px solid #342d54',
+          borderBottom: '1px solid',
+          borderColor: 'border.strong',
         },
       }}
     >
@@ -245,12 +247,14 @@ const NotificationPreferences: FC<Props> = ({
             bgcolor: '#53a6e4',
           }}
         >
-          <TelegramIcon sx={{ fontSize: { xs: 24, md: 32 }, color: 'white' }} />
+          <TelegramIcon
+            sx={{ fontSize: { xs: 24, md: 32 }, color: 'neutral.100' }}
+          />
         </Box>
         <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
           <Typography
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: { xs: 16, md: 20 },
               fontWeight: 700,
               lineHeight: '100%',
@@ -260,7 +264,7 @@ const NotificationPreferences: FC<Props> = ({
           </Typography>
           <Typography
             sx={{
-              color: '#a29dca',
+              color: 'secondary.400',
               fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: '100%',
@@ -284,7 +288,7 @@ const NotificationPreferences: FC<Props> = ({
         <Stack sx={{ gap: { xs: 1.5, md: 2.5 } }}>
           <Typography
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: { xs: 16, md: 20 },
               fontWeight: { xs: 700, md: 500 },
               lineHeight: '100%',
@@ -338,7 +342,7 @@ const NotificationPreferences: FC<Props> = ({
           <Stack sx={{ gap: { xs: 0.5, md: 2.5 } }}>
             <Typography
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontSize: { xs: 16, md: 20 },
                 fontWeight: { xs: 700, md: 500 },
                 lineHeight: '100%',
@@ -348,7 +352,7 @@ const NotificationPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: '#a29dca',
+                color: 'secondary.400',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',

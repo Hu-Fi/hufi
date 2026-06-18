@@ -67,9 +67,9 @@ const CampaignTypeStep: FC<Props> = ({
                     px: 3,
                     height: { xs: 150, md: 170 },
                     borderRadius: '8px',
-                    bgcolor: '#251d47',
+                    bgcolor: 'primary.200',
                     border: '1px solid',
-                    borderColor: isSelected ? 'error.main' : '#433679',
+                    borderColor: isSelected ? 'accent.main' : 'border.strong',
                     cursor: 'pointer',
                   }}
                   onClick={() => handleChangeCampaignType(type)}
@@ -83,12 +83,12 @@ const CampaignTypeStep: FC<Props> = ({
                     }}
                   >
                     <StarIcon
-                      sx={{ color: 'primary.main', width: 24, height: 24 }}
+                      sx={{ color: 'secondary.200', width: 24, height: 24 }}
                     />
                     <Typography
                       variant="h6"
                       sx={{
-                        color: 'white',
+                        color: 'neutral.100',
                         fontWeight: 600,
                       }}
                     >

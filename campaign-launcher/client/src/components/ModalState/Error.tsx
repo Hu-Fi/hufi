@@ -20,7 +20,7 @@ const ModalError: FC<Props> = ({ message }) => {
           flexShrink: 0,
           mb: 1,
           p: '3px',
-          color: 'white',
+          color: 'neutral.100',
           bgcolor: 'error.main',
           borderRadius: 100,
         }}

@@ -82,7 +82,7 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           sx={{
             display: 'flex',
             alignItems: 'center',
-            color: 'white',
+            color: 'neutral.100',
             fontSize: { xs: 16, md: 24 },
             fontWeight: 700,
             lineHeight: '100%',
@@ -91,7 +91,7 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           }}
         >
           <WarningIcon
-            sx={{ fontSize: { xs: 24, md: 32 }, color: '#cb3434' }}
+            sx={{ fontSize: { xs: 24, md: 32 }, color: 'neutral.400' }}
           />
           Cancel Campaign
         </Typography>
@@ -152,26 +152,28 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           width: '100%',
           py: { xs: 2, md: 3 },
           px: { xs: 2, md: 4 },
-          borderTop: '1px solid #3a2e6f',
+          borderTop: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
-        {isCancelled && (
+        {isCancelled ? (
           <Button
             size="large"
             variant="contained"
+            color="accent"
+            fullWidth
             onClick={handleClose}
-            sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
           >
             Close
           </Button>
-        )}
-        {!isCancelled && (
+        ) : (
           <Button
             size="large"
             variant="contained"
+            color="error"
+            fullWidth
             disabled={isCancelling}
             onClick={handleCancelCampaign}
-            sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
           >
             Cancel Campaign
           </Button>

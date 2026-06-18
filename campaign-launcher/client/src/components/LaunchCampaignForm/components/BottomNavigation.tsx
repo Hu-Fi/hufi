@@ -36,8 +36,9 @@ const Wrapper = ({
           right: '0',
           bottom: { xs: 0, md: 'auto' },
           width: '100%',
-          bgcolor: 'background.default',
-          borderTop: '2px solid #251d47',
+          bgcolor: 'primary.100',
+          borderTop: '2px solid',
+          borderColor: 'primary.200',
           zIndex: (theme) => theme.zIndex.appBar,
         }}
       >
@@ -106,7 +107,11 @@ const BottomNavigation: FC<PropsWithChildren<Props>> = ({
             size="large"
             fullWidth={isMobile}
             disabled={disableBackButton}
-            sx={{ minWidth: 150, color: 'white', borderColor: '#433679' }}
+            sx={{
+              minWidth: 150,
+              color: 'neutral.100',
+              borderColor: 'border.strong',
+            }}
             onClick={onBackClick}
           >
             {isMobile ? 'Back' : 'Previous'}
@@ -115,7 +120,7 @@ const BottomNavigation: FC<PropsWithChildren<Props>> = ({
         <Button
           variant="contained"
           size="large"
-          color="error"
+          color="accent"
           fullWidth={isMobile}
           type={formId ? 'submit' : 'button'}
           form={formId}

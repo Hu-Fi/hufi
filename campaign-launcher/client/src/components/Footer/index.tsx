@@ -35,7 +35,7 @@ const Footer: FC<{ reserveBottomOffset: boolean }> = ({
     <Box
       component="footer"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: 'primary.100',
         pb: reserveBottomOffset ? `${MOBILE_BOTTOM_NAV_HEIGHT}px` : 0,
       }}
     >
@@ -46,7 +46,8 @@ const Footer: FC<{ reserveBottomOffset: boolean }> = ({
             pt: 1,
             pb: 3,
             gap: 1,
-            borderTop: '1px solid #433679',
+            borderTop: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Typography

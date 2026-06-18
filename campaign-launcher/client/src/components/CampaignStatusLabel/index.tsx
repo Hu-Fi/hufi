@@ -15,38 +15,38 @@ const mapStatusToColorAndText = (
     case CampaignStatus.ACTIVE:
       if (now < startDate) {
         return {
-          color: '#b78608',
+          color: 'neutral.300',
           text: 'Awaiting start date',
         };
       } else if (now > endDate) {
         return {
-          color: '#5596ff',
+          color: 'neutral.300',
           text: 'Waiting for payouts',
         };
       } else {
         return {
-          color: '#1a926e',
+          color: 'neutral.200',
           text: 'Active',
         };
       }
     case CampaignStatus.COMPLETED:
       return {
-        color: '#d4cfff',
+        color: 'secondary.200',
         text: 'Ended',
       };
     case CampaignStatus.CANCELLED:
       return {
-        color: '#da4c4f',
+        color: 'neutral.400',
         text: 'Cancelled',
       };
     case CampaignStatus.TO_CANCEL:
       return {
-        color: '#da4c4f',
+        color: 'neutral.400',
         text: 'Pending cancellation',
       };
     default:
       return {
-        color: '#d4cfff',
+        color: 'secondary.200',
         text: 'Unknown',
       };
   }

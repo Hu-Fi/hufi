@@ -48,7 +48,7 @@ const AllowanceTooltip = ({ type }: { type: AllowanceType }) => {
         <Typography
           component="p"
           variant="tooltip"
-          sx={{ color: 'primary.contrast' }}
+          sx={{ color: 'primary.100' }}
         >
           {allowanceTooltipText[type]}
         </Typography>
@@ -78,7 +78,7 @@ const ApprovalStep: FC<Props> = ({
 
   const {
     control,
-    formState: { errors, dirtyFields },
+    formState: { errors },
     handleSubmit,
     watch,
     setValue,
@@ -117,18 +117,12 @@ const ApprovalStep: FC<Props> = ({
   const { showError } = useNotification();
 
   useEffect(() => {
-    if (
-      !dirtyFields.selected_allowance &&
-      !isLoading &&
-      currentAllowance === UNLIMITED_AMOUNT
-    ) {
-      setValue('selected_allowance', AllowanceType.UNLIMITED);
-    }
-  }, [currentAllowance, dirtyFields, setValue, isLoading]);
-
-  useEffect(() => {
-    fetchAllowance(fundToken);
-  }, [fundToken, fetchAllowance]);
+    fetchAllowance(fundToken).then((allowance) => {
+      if (allowance === UNLIMITED_AMOUNT) {
+        setValue('selected_allowance', AllowanceType.UNLIMITED);
+      }
+    });
+  }, [fundToken, fetchAllowance, setValue]);
 
   useEffect(() => {
     if (isMobile && errors.fund_amount) {
@@ -214,7 +208,11 @@ const ApprovalStep: FC<Props> = ({
           >
             <Stack sx={{ maxWidth: '500px', width: '100%' }}>
               <Stack sx={{ gap: { xs: 1.5, md: 3 } }}>
-                <Typography variant="h6" component="h3" sx={{ color: 'white' }}>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  sx={{ color: 'neutral.100' }}
+                >
                   Campaign Fund Amount
                 </Typography>
                 <FormControl
@@ -266,13 +264,13 @@ const ApprovalStep: FC<Props> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: { xs: 'flex-start', md: 'space-between' },
-                      color: 'white',
+                      color: 'neutral.100',
                       mt: 1,
                       gap: { xs: 0.5, md: 0 },
                     }}
                   >
                     <span>Current allowance:</span>
-                    <Typography component="span" sx={{ color: 'error.main' }}>
+                    <Typography component="span" sx={{ color: 'accent.main' }}>
                       {currentAllowance === UNLIMITED_AMOUNT
                         ? 'Unlimited'
                         : `${currentAllowance ?? 0} ${fundToken.toUpperCase()}`}
@@ -286,7 +284,7 @@ const ApprovalStep: FC<Props> = ({
                   <Typography
                     variant="h6"
                     component="h3"
-                    sx={{ color: 'white' }}
+                    sx={{ color: 'neutral.100' }}
                   >
                     Token Approval
                   </Typography>
@@ -329,7 +327,7 @@ const ApprovalStep: FC<Props> = ({
                             <FormControlLabel
                               value={AllowanceType.CUSTOM}
                               disabled={isApproving}
-                              control={<Radio color="error" />}
+                              control={<Radio color="accent" />}
                               label="Limited Allowance"
                               sx={{
                                 mr: 0,
@@ -337,8 +335,8 @@ const ApprovalStep: FC<Props> = ({
                                   color:
                                     selected_allowance ===
                                       AllowanceType.CUSTOM && !isApproving
-                                      ? 'white'
-                                      : '#8b8b8b',
+                                      ? 'neutral.100'
+                                      : 'neutral.500',
                                 },
                               }}
                             />
@@ -451,7 +449,7 @@ const ApprovalStep: FC<Props> = ({
                           <FormControlLabel
                             value={AllowanceType.UNLIMITED}
                             disabled={isApproving}
-                            control={<Radio color="error" />}
+                            control={<Radio color="accent" />}
                             label="Unlimited Approval"
                             sx={{
                               mr: 0,
@@ -459,8 +457,8 @@ const ApprovalStep: FC<Props> = ({
                                 color:
                                   selected_allowance ===
                                     AllowanceType.UNLIMITED && !isApproving
-                                    ? 'white'
-                                    : '#8b8b8b',
+                                    ? 'neutral.100'
+                                    : 'neutral.500',
                               },
                             }}
                           />

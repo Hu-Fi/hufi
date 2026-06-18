@@ -32,7 +32,7 @@ const getTimelineInfo = (
     return {
       label: 'Cancelled on',
       value: cancellationDate.format(DATE_FORMAT),
-      color: '#ff6262',
+      color: 'neutral.400',
       isPending: false,
     };
   }
@@ -42,7 +42,7 @@ const getTimelineInfo = (
       return {
         label: '',
         value: 'Waiting for payouts',
-        color: '#b98c08',
+        color: 'neutral.300',
         isPending: true,
       };
     }
@@ -50,7 +50,7 @@ const getTimelineInfo = (
       return {
         label: '',
         value: 'Pending cancellation',
-        color: '#da4c4f',
+        color: 'neutral.400',
         isPending: true,
       };
     }
@@ -58,7 +58,7 @@ const getTimelineInfo = (
       return {
         label: 'Ended on',
         value: endDate.format(DATE_FORMAT),
-        color: '#d4cfff',
+        color: 'secondary.200',
         isPending: false,
       };
     }
@@ -68,7 +68,7 @@ const getTimelineInfo = (
     return {
       label: 'Starts on',
       value: startDate.format(DATE_FORMAT),
-      color: '#43ba96',
+      color: 'neutral.200',
       isPending: false,
     };
   }
@@ -76,7 +76,7 @@ const getTimelineInfo = (
   return {
     label: 'Ends on',
     value: endDate.format(DATE_FORMAT),
-    color: '#b98c08',
+    color: 'neutral.300',
     isPending: false,
   };
 };
@@ -101,14 +101,13 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
           height: 4,
           mr: 1,
           borderRadius: '50%',
-          bgcolor: 'text.secondary',
+          bgcolor: 'neutral.100',
           flexShrink: 0,
         }}
       />
       {label && (
         <Typography
           sx={{
-            color: 'text.secondary',
             fontSize: 14,
             letterSpacing: '0.15px',
             mr: isRow ? 1 : 0,

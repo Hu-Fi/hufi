@@ -158,13 +158,14 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             px: { xs: 2, md: 4 },
             pt: { xs: 2, md: 6 },
             pb: 3,
-            borderBottom: '1px solid #3a2e6f',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Typography
             variant="h5"
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontWeight: 700,
             }}
           >
@@ -230,7 +231,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontWeight: 500,
                     mb: 1.5,
                   }}
@@ -256,7 +257,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontWeight: 500,
                     mb: 1.5,
                   }}
@@ -287,7 +288,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontWeight: 500,
                     mb: 1.5,
                   }}
@@ -317,7 +318,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                   <Typography
                     variant="h6"
                     sx={{
-                      color: 'white',
+                      color: 'neutral.100',
                       fontWeight: 500,
                       mb: 1.5,
                     }}
@@ -423,7 +424,8 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             justifyContent: 'flex-end',
             py: 3,
             px: { xs: 2, md: 3 },
-            borderTop: '1px solid #3a2e6f',
+            borderTop: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           {isIdle && (
@@ -431,7 +433,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               variant="contained"
               size="large"
               type="submit"
-              color="error"
+              color="accent"
               fullWidth={isMobile}
             >
               Connect API key
@@ -441,7 +443,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             <Button
               size="large"
               variant="contained"
-              color="error"
+              color="accent"
               disabled={isPending}
               fullWidth={isMobile}
               sx={{ minWidth: 130 }}
@@ -454,7 +456,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             <Button
               size="large"
               variant="contained"
-              color="error"
+              color="accent"
               fullWidth={isMobile}
               sx={{ minWidth: 130 }}
               onClick={resetMutation}

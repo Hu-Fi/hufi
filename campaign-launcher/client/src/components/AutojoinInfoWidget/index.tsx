@@ -34,7 +34,7 @@ const AutojoinInfoWidget: FC = () => {
         justifyContent: 'space-between',
         position: 'relative',
         width: '100%',
-        background: 'linear-gradient(90deg, #251D47 0%, #3C2F73 100%)',
+        background: 'linear-gradient(90deg, #251d47 0%, #3c2f73 100%)',
         gap: { xs: 3, md: 10 },
         mt: { xs: 0, md: 2 },
         mb: { xs: 4, md: 8 },
@@ -42,7 +42,8 @@ const AutojoinInfoWidget: FC = () => {
         pt: 4,
         pb: { xs: 2, md: 4 },
         borderRadius: '18px',
-        border: '2px solid #342D54',
+        border: '2px solid',
+        borderColor: 'border.strong',
       }}
     >
       <Box sx={{ display: 'flex', gap: { xs: 1.5, md: 3 } }}>
@@ -66,7 +67,7 @@ const AutojoinInfoWidget: FC = () => {
               position: 'absolute',
               top: 0,
               right: 4,
-              color: '#43ba96',
+              color: 'neutral.200',
             }}
           />
         </Box>
@@ -79,7 +80,7 @@ const AutojoinInfoWidget: FC = () => {
         >
           <Typography
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: { xs: 16, md: 20 },
               fontWeight: 700,
               lineHeight: { xs: '100%', lg: '150%' },
@@ -89,7 +90,7 @@ const AutojoinInfoWidget: FC = () => {
           </Typography>
           <Typography
             sx={{
-              color: '#a29dca',
+              color: 'secondary.400',
               fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: { xs: '100%', lg: '150%' },
@@ -106,7 +107,10 @@ const AutojoinInfoWidget: FC = () => {
           variant="outlined"
           size="large"
           fullWidth={isMobile}
-          sx={{ color: 'white', borderColor: 'rgba(255, 255, 255, 0.12)' }}
+          sx={{
+            color: 'neutral.100',
+            borderColor: 'rgba(255, 255, 255, 0.12)',
+          }}
           onClick={() => navigate(ROUTES.PREFERENCES)}
         >
           Edit Preferences

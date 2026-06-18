@@ -12,26 +12,31 @@ const TabFilterStyled = styled('button')<{ isActive: boolean }>(
     justifyContent: 'center',
     width: 100,
     height: 42,
-    color: 'white',
+    color: theme.palette.neutral['100'],
     fontSize: 16,
     fontWeight: 500,
     borderRadius: '40px',
-    backgroundColor: isActive ? '#251D47' : theme.palette.background.default,
-    border: isActive ? '1px solid #FA2A75' : '1px solid #433679',
+    backgroundColor: isActive
+      ? theme.palette.primary['200']
+      : theme.palette.primary['100'],
+    border: '1px solid',
+    borderColor: isActive
+      ? theme.palette.accent.main
+      : theme.palette.border.strong,
     cursor: 'pointer',
   })
 );
 
-const GradientBox = styled(Box)({
+const GradientBox = styled(Box)(({ theme }) => ({
   position: 'absolute',
   top: 0,
   right: 42,
   width: 100,
   height: 42,
-  background: 'linear-gradient(90deg, rgba(16, 7, 53, 0) 0%, #100735 100%)',
+  background: `linear-gradient(90deg, rgba(16, 7, 53, 0) 0%, ${theme.palette.primary['100']} 100%)`,
   transition: 'display 0.3s ease-in-out',
   cursor: 'pointer',
-});
+}));
 
 type Props = {
   activeTab: TabFilter;

@@ -20,7 +20,7 @@ const AboutHuFi: FC = () => {
       <Typography
         variant={isMobile ? 'h6' : 'h5'}
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           fontWeight: { xs: 500, md: 800 },
           letterSpacing: { xs: '0px', md: '-0.5px' },
         }}
@@ -31,16 +31,17 @@ const AboutHuFi: FC = () => {
         sx={{
           px: 2,
           py: { xs: 2, md: 4 },
+          bgcolor: 'primary.200',
           borderRadius: '8px',
-          border: '1px solid #433679',
-          bgcolor: '#251d47',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {!isMobile && <img src={logo} alt="HuFi" width={125} />}
         <Typography
           variant="body2"
           sx={{
-            color: 'white',
+            color: 'neutral.100',
             fontWeight: 600,
             mt: { xs: 0, md: 4 },
             mb: 2,
@@ -58,7 +59,7 @@ const AboutHuFi: FC = () => {
             display: 'inline-flex',
             alignItems: 'center',
             width: 'fit-content',
-            color: 'error.main',
+            color: 'accent.main',
             fontSize: 16,
             fontWeight: 500,
             textDecoration: 'none',

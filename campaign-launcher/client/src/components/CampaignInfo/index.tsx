@@ -69,7 +69,8 @@ const CampaignInfo: FC<Props> = ({
             px: 2,
             pb: 4,
             gap: 2,
-            borderBottom: '1px solid #473C74',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Skeleton variant="text" width="100%" height={32} />
@@ -106,7 +107,8 @@ const CampaignInfo: FC<Props> = ({
         px: { xs: 2, md: 0 },
         pb: { xs: 4, md: 0 },
         gap: { xs: 2, md: 3.5 },
-        borderBottom: { xs: '1px solid #473C74', md: 'none' },
+        borderBottom: { xs: '1px solid', md: 'none' },
+        borderColor: { xs: 'border.strong', md: 'unset' },
       }}
     >
       <Box
@@ -121,7 +123,7 @@ const CampaignInfo: FC<Props> = ({
         <Typography
           variant="h6"
           sx={{
-            color: 'white',
+            color: 'neutral.100',
             fontWeight: { xs: 500, md: 600 },
           }}
         >
@@ -166,7 +168,7 @@ const CampaignInfo: FC<Props> = ({
               width: { xs: 24, md: 32 },
               height: { xs: 24, md: 32 },
               borderRadius: '100%',
-              bgcolor: '#3a2e6f',
+              bgcolor: 'primary.200',
               '& > svg': { fontSize: { xs: '12px', md: '16px' } },
             }}
           >
@@ -174,7 +176,7 @@ const CampaignInfo: FC<Props> = ({
           </Box>
           <Typography
             sx={{
-              color: isMobile ? 'text.primary' : 'white',
+              color: isMobile ? 'text.primary' : 'neutral.100',
               fontSize: { xs: 14, md: 20 },
               fontWeight: 500,
               lineHeight: '100%',
@@ -197,7 +199,7 @@ const CampaignInfo: FC<Props> = ({
           <>
             <Typography
               sx={{
-                color: 'error.main',
+                color: 'accent.main',
                 fontSize: { xs: 14, md: 20 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -238,7 +240,7 @@ const CampaignInfo: FC<Props> = ({
           <Typography
             component="span"
             sx={{
-              color: 'error.main',
+              color: 'accent.main',
               fontSize: { xs: 14, md: 20 },
               fontWeight: 500,
               lineHeight: '100%',
@@ -288,12 +290,13 @@ const CampaignInfo: FC<Props> = ({
             py: 1,
             bgcolor: 'rgba(212, 207, 255, 0.15)',
             borderRadius: '8px',
-            border: '1px solid rgba(255, 255, 255, 0.07)',
+            border: '1px solid',
+            borderColor: 'border.main',
           }}
         >
           <Typography
             sx={{
-              color: '#a496c2',
+              color: 'secondary.100',
               fontSize: 12,
               fontWeight: 600,
               lineHeight: '150%',
@@ -305,6 +308,7 @@ const CampaignInfo: FC<Props> = ({
           </Typography>
           <Typography
             sx={{
+              color: 'secondary.200',
               fontSize: 14,
               fontWeight: 500,
               lineHeight: '150%',

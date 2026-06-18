@@ -21,17 +21,16 @@ const Card = styled('div', {
   display: 'flex',
   flexDirection: isReverse ? 'column-reverse' : 'column',
   height: '100%',
-  backgroundColor: '#251d47',
+  backgroundColor: theme.palette.primary['200'],
   borderRadius: '16px',
   border: '1px solid',
-  borderColor: 'rgba(255, 255, 255, 0.07)',
+  borderColor: theme.palette.border.main,
   padding: '24px 32px',
 
   [theme.breakpoints.down('md')]: {
     justifyContent: 'flex-end',
     padding: '12px 16px 16px',
     borderRadius: '8px',
-    borderColor: '#433679',
   },
 }));
 
@@ -39,7 +38,7 @@ const CardTitle = styled('h5')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-  color: '#6b6490',
+  color: theme.palette.secondary['100'],
   margin: 0,
   fontSize: '16px',
   fontWeight: 600,
@@ -89,7 +88,7 @@ const DashboardWidgets: FC = () => {
             <Typography
               variant={isMobile ? 'h6' : 'h4'}
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: { xs: 500, md: 800 },
                 mt: { xs: 0, md: 5 },
                 mb: { xs: 1, md: 0 },
@@ -118,7 +117,7 @@ const DashboardWidgets: FC = () => {
             <Typography
               variant={isMobile ? 'h6' : 'h4'}
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontWeight: { xs: 500, md: 800 },
                 mt: { xs: 0, md: 5 },
                 mb: { xs: 1, md: 0 },
@@ -136,7 +135,7 @@ const DashboardWidgets: FC = () => {
               <Typography
                 component="h5"
                 sx={{
-                  color: 'white',
+                  color: 'neutral.100',
                   fontSize: '20px',
                   textTransform: 'capitalize',
                   lineHeight: { xs: '150%', md: '100%' },
@@ -164,7 +163,7 @@ const DashboardWidgets: FC = () => {
                 <LinkIcon sx={{ width: 20, height: 20 }} />
                 <Typography
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontSize: '20px',
                     textTransform: 'capitalize',
                     fontWeight: { xs: 600, md: 800 },

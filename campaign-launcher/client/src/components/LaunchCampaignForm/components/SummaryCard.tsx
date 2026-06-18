@@ -37,18 +37,18 @@ const Row = ({ children }: { children: React.ReactNode }) => (
   </Stack>
 );
 
-const RowName = styled(Typography)({
-  color: '#a0a0a0',
+const RowName = styled(Typography)(({ theme }) => ({
+  color: theme.palette.neutral['500'],
   fontSize: '14px',
   fontWeight: 500,
-});
+}));
 
-const RowValue = styled(Typography)({
-  color: '#ffffff',
+const RowValue = styled(Typography)(({ theme }) => ({
+  color: theme.palette.neutral['100'],
   fontSize: '14px',
   fontWeight: 500,
   textAlign: 'right',
-});
+}));
 
 const getTargetInfo = (
   campaignType: LaunchSupportedCampaignType,
@@ -138,9 +138,10 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
         height: 'fit-content',
         py: 1,
         px: 2,
-        bgcolor: '#251d47',
+        bgcolor: 'primary.200',
         borderRadius: '8px',
-        border: isLastStep ? 'none' : '1px solid #433679',
+        border: isLastStep ? 'none' : '1px solid',
+        borderColor: 'border.strong',
       }}
     >
       <Row>
