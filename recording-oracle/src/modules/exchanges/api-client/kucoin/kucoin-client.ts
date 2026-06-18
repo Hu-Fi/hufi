@@ -30,7 +30,12 @@ import {
   KucoinApiError,
   KucoinClientError,
 } from './error';
-import { ApiAccount, ApiDepositAddress, ApiSpotTrade } from './types';
+import {
+  ApiAccount,
+  ApiDepositAddress,
+  ApiKeyInfo,
+  ApiSpotTrade,
+} from './types';
 import * as kucoinUtils from './utils';
 
 export type KucoinClientInitOptions = Omit<
@@ -220,10 +225,32 @@ export class KucoinClient implements ExchangeApiClient {
     }
   }
 
-  checkRequiredAccess(
-    _permissionsToCheck: Array<ExchangePermission>,
+  async checkRequiredAccess(
+    permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult> {
-    throw new Error('Method not implemented.');
+    const info = await this.makeRequest<ApiKeyInfo>(
+      'GET',
+      '/api/v1/user/api-key',
+    );
+
+    let hasAccess = false;
+    if (info.permission.includes('General')) {
+      hasAccess = true;
+    }
+
+    const permissionCheckHandlers: Record<
+      ExchangePermission,
+      () => Promise<boolean>
+    > = {
+      [ExchangePermission.VIEW_ACCOUNT_BALANCE]: async () => hasAccess,
+      [ExchangePermission.VIEW_DEPOSIT_ADDRESS]: async () => hasAccess,
+      [ExchangePermission.VIEW_SPOT_TRADING_HISTORY]: async () => hasAccess,
+    };
+
+    return apiClientUtils.checkRequiredAccess(
+      permissionsToCheck,
+      permissionCheckHandlers,
+    );
   }
 
   /**

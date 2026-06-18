@@ -1,3 +1,14 @@
+export type ApiKeyInfo = {
+  uid: number;
+  region: string;
+  kycStatus: 0 | 1;
+  subName: string;
+  remark: string;
+  permission: string;
+  apiVersion: number;
+  createdAt: number;
+};
+
 export type ApiDepositAddress = {
   address: string;
   chainId: string;
