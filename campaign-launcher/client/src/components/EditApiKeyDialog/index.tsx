@@ -57,22 +57,21 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
       apiKey: '',
       secret: '',
       memo: '',
+      passphrase: '',
     },
   });
 
   const isMobile = useIsMobile();
-  const [apiKeyValue, secretValue, exchange, memoValue] = watch([
-    'apiKey',
-    'secret',
-    'exchange',
-    'memo',
-  ]);
+  const [apiKeyValue, secretValue, exchange, memoValue, passphraseValue] =
+    watch(['apiKey', 'secret', 'exchange', 'memo', 'passphrase']);
 
   const isBitmart = exchange === 'bitmart';
+  const isKucoin = exchange === 'kucoin';
   const isSaveDisabled =
     !apiKeyValue?.trim() ||
     !secretValue?.trim() ||
-    (isBitmart && !memoValue?.trim());
+    (isBitmart && !memoValue?.trim()) ||
+    (isKucoin && !passphraseValue?.trim());
 
   useEffect(() => {
     if (open && exchangeName) {
@@ -81,6 +80,7 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
         apiKey: '',
         secret: '',
         memo: '',
+        passphrase: '',
       });
     }
   }, [open, exchangeName, reset]);
@@ -97,11 +97,20 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
   };
 
   const onSubmit = (values: APIKeyFormValues) => {
+    let extras: Record<string, string> | undefined;
+    switch (values.exchange) {
+      case 'bitmart':
+        extras = { api_key_memo: values.memo || '' };
+        break;
+      case 'kucoin':
+        extras = { passphrase: values.passphrase || '' };
+        break;
+    }
     postExchangeApiKey({
       exchangeName: values.exchange,
       apiKey: values.apiKey,
       secret: values.secret,
-      extras: isBitmart ? { api_key_memo: values.memo || '' } : undefined,
+      extras,
     });
   };
 
@@ -300,6 +309,36 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
                   />
                   {errors.memo && (
                     <FormHelperText>{errors.memo.message}</FormHelperText>
+                  )}
+                </FormControl>
+              )}
+              {isKucoin && (
+                <FormControl error={!!errors.passphrase} sx={{ flex: 1 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: 'white',
+                      fontWeight: 500,
+                      mb: 1.5,
+                    }}
+                  >
+                    Passphrase
+                  </Typography>
+                  <Controller
+                    name="passphrase"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        type="text"
+                        id="passphrase-input"
+                        placeholder="Enter"
+                        error={!!errors.passphrase}
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.passphrase && (
+                    <FormHelperText>{errors.passphrase.message}</FormHelperText>
                   )}
                 </FormControl>
               )}
