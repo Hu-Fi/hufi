@@ -1,7 +1,9 @@
 import crypto from 'crypto';
+import http from 'http';
 
 import { type AxiosError } from 'axios';
 import _ from 'lodash';
+import ms from 'ms';
 
 import { BaseError } from '@/common/errors/base';
 
@@ -120,3 +122,11 @@ export async function downloadFileAndVerifyHash(
 
   return file;
 }
+
+export const DEFAULT_HTTP_AGENT_OPTIONS = Object.freeze({
+  maxSockets: 10,
+  maxFreeSockets: 2,
+  timeout: ms('60 seconds'),
+  keepAlive: true,
+  keepAliveMsecs: ms('10 seconds'),
+} satisfies http.AgentOptions);

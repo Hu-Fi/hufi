@@ -1,3 +1,6 @@
+import { Agent as HttpAgent } from 'http';
+import { Agent as HttpsAgent } from 'https';
+
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import axios, { AxiosError } from 'axios';
 
@@ -73,7 +76,10 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
             });
           }
 
-          throw new KucoinApiAccessError(expectedPermission, error.message);
+          throw new KucoinApiAccessError(
+            expectedPermission,
+            error.codeMsg || error.message,
+          );
         }
 
         throw error;
@@ -83,12 +89,7 @@ function CatchApiPermissionErrors(expectedPermission: ExchangePermission) {
     return descriptor;
   };
 }
-/**
- * TODO:
- * - check error handling
- * - invalid timestamp in signature
- * - check 401 & 403 when accessing wrong endpoint/wrong perm or wrong sign and etc;
- */
+
 export class KucoinClient implements ExchangeApiClient {
   readonly exchangeName = ExchangeName.KUCOIN;
   readonly apiClient: AxiosInstance;
@@ -131,6 +132,8 @@ export class KucoinClient implements ExchangeApiClient {
     this.apiClient = axios.create({
       baseURL: BASE_API_URL,
       timeout: API_TIMEOUT,
+      httpAgent: new HttpAgent(httpUtils.DEFAULT_HTTP_AGENT_OPTIONS),
+      httpsAgent: new HttpsAgent(httpUtils.DEFAULT_HTTP_AGENT_OPTIONS),
     });
 
     this.loggingConfig = {
@@ -163,9 +166,14 @@ export class KucoinClient implements ExchangeApiClient {
 
     const _body = data ? JSON.stringify(data) : '';
 
+    /**
+     * Receive window is ~"now + [-4; 5]" seconds.
+     * If our server time is different than accepted range - we should fail for all,
+     * no need to handle it as permission error.
+     */
     const timestamp = Date.now().toString();
 
-    const toSign = timestamp + method + _path + _body;
+    const toSign = timestamp + method.toUpperCase() + _path + _body;
     return {
       'KC-API-KEY': this.apiKey,
       'KC-API-PASSPHRASE': this.passphrase,
@@ -228,10 +236,26 @@ export class KucoinClient implements ExchangeApiClient {
   async checkRequiredAccess(
     permissionsToCheck: Array<ExchangePermission>,
   ): Promise<RequiredAccessCheckResult> {
-    const info = await this.makeRequest<ApiKeyInfo>(
-      'GET',
-      '/api/v1/user/api-key',
-    );
+    let info: ApiKeyInfo;
+    try {
+      info = await this.makeRequest<ApiKeyInfo>('GET', '/api/v1/user/api-key');
+    } catch (error) {
+      if (kucoinUtils.isApiPermissionError(error)) {
+        if (this.loggingConfig.logPermissionErrors) {
+          this.logger.info('Invalid API key configuration', {
+            errorDetails: {
+              message: error.message,
+              code: error.code,
+            },
+          });
+        }
+        return {
+          success: false,
+          missing: permissionsToCheck,
+        };
+      }
+      throw error;
+    }
 
     let hasAccess = false;
     if (info.permission.includes('General')) {
