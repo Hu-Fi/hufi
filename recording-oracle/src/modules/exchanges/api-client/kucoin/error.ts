@@ -10,7 +10,10 @@ export class KucoinClientError extends ExchangeApiClientError {
 }
 
 export class KucoinApiError extends KucoinClientError {
-  constructor(readonly code: string) {
+  constructor(
+    readonly code: string,
+    readonly codeMsg: string,
+  ) {
     super('API response error');
   }
 }
