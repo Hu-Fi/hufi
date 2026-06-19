@@ -31,11 +31,15 @@ import { IncompleteKeySuppliedError } from './errors';
 import { ExchangeApiClientFactory } from './exchange-api-client-factory';
 import { generateConfigByExchangeStub } from './fixtures';
 import { HyperliquidClient } from './hyperliquid';
+import { KrakenClient } from './kraken';
+import { KucoinClient } from './kucoin';
 import { PancakeswapClient } from './pancakeswap';
 
 vi.mock('ccxt');
 vi.mock('./bigone');
 vi.mock('./ccxt');
+vi.mock('./kraken');
+vi.mock('./kucoin');
 vi.mock('./hyperliquid');
 vi.mock('./pancakeswap');
 
@@ -49,6 +53,8 @@ const EXPECTED_BASE_OPTIONS = Object.freeze({
 const mockedBigoneClient = vi.mocked(BigoneClient, { deep: true });
 const mockedCcxtExchangeClient = vi.mocked(CcxtExchangeClient, { deep: true });
 const mockedHyperliquidClient = vi.mocked(HyperliquidClient, { deep: true });
+const mockedKrakenClient = vi.mocked(KrakenClient, { deep: true });
+const mockedKucoinClient = vi.mocked(KucoinClient, { deep: true });
 const mockedPancakeswapClient = vi.mocked(PancakeswapClient, { deep: true });
 
 const mockLoggerConfigService: Pick<
@@ -346,6 +352,60 @@ describe('ExchangeApiClientFactory', () => {
           extraCreds: {
             uid: apiKeyMemo,
           },
+        }),
+      );
+    });
+
+    test('should correctly init client for kraken', () => {
+      exchangeName = ExchangeName.KRAKEN;
+
+      mockedKrakenClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
+        true,
+      );
+
+      const client = exchangeApiClientFactory.createCex(ExchangeName.KRAKEN, {
+        apiKey,
+        secret,
+        userId,
+      });
+
+      expect(client).toBeInstanceOf(KrakenClient);
+
+      expect(mockedKrakenClient).toHaveBeenCalledTimes(1);
+      expect(mockedKrakenClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apiKey,
+          secret,
+          userId,
+        }),
+      );
+    });
+
+    test('should correctly init client for kucoin', () => {
+      exchangeName = ExchangeName.KUCOIN;
+
+      mockedKucoinClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
+        true,
+      );
+      const apiKeyPassphrase = faker.lorem.word();
+
+      const client = exchangeApiClientFactory.createCex(ExchangeName.KUCOIN, {
+        apiKey,
+        secret,
+        userId,
+        extras: {
+          passphrase: apiKeyPassphrase,
+        },
+      });
+
+      expect(client).toBeInstanceOf(KucoinClient);
+
+      expect(mockedKucoinClient).toHaveBeenCalledTimes(1);
+      expect(mockedKucoinClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apiKey,
+          secret,
+          userId,
         }),
       );
     });

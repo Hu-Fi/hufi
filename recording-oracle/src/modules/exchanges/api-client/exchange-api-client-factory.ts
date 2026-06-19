@@ -176,9 +176,7 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
     } else if (exchangeName === ExchangeName.KUCOIN) {
       cexApiClient = new KucoinClient({
         ...clientInitOptions,
-        extraCreds: {
-          passphrase: (initOptions.extras as KucoinExtras).passphrase,
-        },
+        extraCreds: initOptions.extras as KucoinExtras,
       });
     } else {
       const ccxtClientInitOptions: CcxtExchangeClientInitOptions = {

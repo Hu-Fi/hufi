@@ -198,7 +198,7 @@ export class KucoinClient implements ExchangeApiClient {
         url: path,
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json', // required by API
           ...this.createAuthHeaders(method, path, options),
         },
         validateStatus: () => true,
@@ -288,7 +288,10 @@ export class KucoinClient implements ExchangeApiClient {
     since: number,
     until: number,
     nextPageToken?: number,
-  ) {
+  ): Promise<{
+    items: ApiSpotTrade[];
+    nextPageToken?: number;
+  }> {
     /**
      * Data returned in reverse-chronological order
      */
@@ -299,7 +302,7 @@ export class KucoinClient implements ExchangeApiClient {
       params: {
         symbol,
         startAt: since,
-        endAt: until,
+        endAt: until - 1, // API is inclusive
         lastId: nextPageToken,
         limit: MAX_PAGE_SIZE,
       },
@@ -325,7 +328,6 @@ export class KucoinClient implements ExchangeApiClient {
     }
 
     const kcSymbol = kucoinUtils.mapSymbolToKcSymbol(symbol);
-    const _until = until - 1; // API is inclusive
 
     let nextPageToken: number | undefined;
     let apiTrades: ApiSpotTrade[];
@@ -333,7 +335,7 @@ export class KucoinClient implements ExchangeApiClient {
       ({ items: apiTrades, nextPageToken } = await this._fetchMySpotTrades(
         kcSymbol,
         since,
-        _until,
+        until,
         nextPageToken,
       ));
 
