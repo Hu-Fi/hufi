@@ -318,10 +318,6 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         }
         break;
       }
-      case ExchangeName.BIGONE: {
-        fetchParams.network = 'Ethereum';
-        break;
-      }
       case ExchangeName.BITMART: {
         fetchParams.network = 'ETH';
         break;
