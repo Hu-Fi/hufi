@@ -35,7 +35,7 @@ const FormExchangeSelect = <
   field,
   disabled = false,
   campaignType,
-  exchangeTypes = [],
+  exchangeTypes,
   error = false,
 }: FormExchangeSelectProps<TFieldValues, TName>) => {
   const { exchanges, exchangesMap } = useExchangesContext();
@@ -43,7 +43,7 @@ const FormExchangeSelect = <
   const supportedExchanges = useMemo(() => {
     let _exchanges = (exchanges || []).filter((exchange) => exchange.enabled);
 
-    if (exchangeTypes.length) {
+    if (exchangeTypes?.length) {
       _exchanges = _exchanges.filter((exchange) =>
         exchangeTypes.includes(exchange.type)
       );
