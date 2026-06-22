@@ -56,8 +56,7 @@ export const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
     .string()
     .when('exchange', {
       is: 'kucoin',
-      then: (schema) =>
-        schema.required('Required') && schema.min(7, 'Min 7 characters'),
+      then: (schema) => schema.required('Required').min(7, 'Min 7 characters'),
       otherwise: (schema) => schema.optional(),
     })
     .trim()
