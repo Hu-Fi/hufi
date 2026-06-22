@@ -60,7 +60,9 @@ export const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
       otherwise: (schema) => schema.optional(),
     })
     .trim()
-    .max(32, 'Max 32 characters'),
+    .min(7, 'Min 7 characters')
+    .max(32, 'Max 32 characters')
+    .matches(/^\S*$/, 'No spaces allowed'),
   exchange: yup.string().required('Required'),
 });
 

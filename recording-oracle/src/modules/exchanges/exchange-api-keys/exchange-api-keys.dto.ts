@@ -9,7 +9,9 @@ import {
   IsNotEmpty,
   IsObject,
   IsString,
+  Matches,
   MaxLength,
+  MinLength,
   Validate,
   ValidateIf,
   ValidateNested,
@@ -42,7 +44,9 @@ export class KucoinExtras {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @MinLength(7)
   @MaxLength(32)
+  @Matches(/^\S*$/, { message: 'passphrase should not contain spaces' })
   passphrase: string;
 }
 
