@@ -29,6 +29,7 @@ export type APIKeyFormValues = {
   secret: string;
   exchange: string;
   memo?: string;
+  passphrase?: string;
 };
 
 export const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
@@ -51,6 +52,17 @@ export const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
     })
     .trim()
     .max(32, 'Max 32 characters'),
+  passphrase: yup
+    .string()
+    .when('exchange', {
+      is: 'kucoin',
+      then: (schema) => schema.required('Required'),
+      otherwise: (schema) => schema.optional(),
+    })
+    .trim()
+    .min(7, 'Min 7 characters')
+    .max(32, 'Max 32 characters')
+    .matches(/^\S*$/, 'No spaces allowed'),
   exchange: yup.string().required('Required'),
 });
 
@@ -84,12 +96,14 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
       apiKey: '',
       secret: '',
       memo: '',
+      passphrase: '',
     },
   });
 
   const isMobile = useIsMobile();
   const selectedExchange = watch('exchange');
   const isBitmart = selectedExchange === 'bitmart';
+  const isKucoin = selectedExchange === 'kucoin';
 
   useEffect(() => {
     scrollToFirstErrorFieldOnMobile(isMobile, errors);
@@ -103,11 +117,21 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
   };
 
   const onSubmit = (values: APIKeyFormValues) => {
+    let extras: Record<string, string> | undefined;
+    switch (values.exchange) {
+      case 'bitmart':
+        extras = { api_key_memo: values.memo || '' };
+        break;
+      case 'kucoin':
+        extras = { passphrase: values.passphrase || '' };
+        break;
+    }
+
     postExchangeApiKey({
       exchangeName: values.exchange,
       apiKey: values.apiKey,
       secret: values.secret,
-      extras: isBitmart ? { api_key_memo: values.memo || '' } : undefined,
+      extras,
     });
   };
 
@@ -316,6 +340,36 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                   />
                   {errors.memo && (
                     <FormHelperText>{errors.memo.message}</FormHelperText>
+                  )}
+                </FormControl>
+              )}
+              {isKucoin && (
+                <FormControl error={!!errors.passphrase} sx={{ width: '100%' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: 'white',
+                      fontWeight: 500,
+                      mb: 1.5,
+                    }}
+                  >
+                    Passphrase
+                  </Typography>
+                  <Controller
+                    name="passphrase"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        type="text"
+                        id="passphrase-input"
+                        placeholder="Enter"
+                        error={!!errors.passphrase}
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.passphrase && (
+                    <FormHelperText>{errors.passphrase.message}</FormHelperText>
                   )}
                 </FormControl>
               )}

@@ -138,6 +138,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
       minWidth: isMobile ? 90 : longestApiKeyLength * 10 + 100,
       renderCell: (params) => {
         const isBitmart = params.row.exchangeName === 'bitmart';
+        const isKucoin = params.row.exchangeName === 'kucoin';
         return (
           <Box
             sx={{
@@ -161,6 +162,27 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                 title={
                   <Typography variant="tooltip">
                     Memo: {params.row.extras.api_key_memo}
+                  </Typography>
+                }
+                sx={{ ml: 1 }}
+              >
+                <InfoTooltipInner
+                  sx={{
+                    width: '20px',
+                    height: '20px',
+                    px: 1,
+                    bgcolor: 'background.default',
+                  }}
+                />
+              </CustomTooltip>
+            )}
+            {isKucoin && !!params.row.extras?.passphrase && (
+              <CustomTooltip
+                arrow
+                placement="top"
+                title={
+                  <Typography variant="tooltip">
+                    Passphrase: {params.row.extras.passphrase}
                   </Typography>
                 }
                 sx={{ ml: 1 }}

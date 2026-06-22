@@ -3,24 +3,23 @@ import { ExchangeName } from '@/common/constants';
 import {
   AccountBalance,
   ExchangePermission,
-  ExtraCreds,
   RequiredAccessCheckResult,
   Trade,
 } from './types';
 
-export type CexApiClientInitOptions = {
+type ExchangeApiClientInitOptions = {
   userId: string;
-  apiKey: string;
-  secret: string;
-  extraCreds?: ExtraCreds;
   sandbox?: boolean;
   loggingConfig?: Partial<{
     logPermissionErrors: boolean;
   }>;
 };
+export type CexApiClientInitOptions = ExchangeApiClientInitOptions & {
+  apiKey: string;
+  secret: string;
+};
 
-export type DexApiClientInitOptions = {
-  userId: string;
+export type DexApiClientInitOptions = ExchangeApiClientInitOptions & {
   userEvmAddress: string;
 };
 

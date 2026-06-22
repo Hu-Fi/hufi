@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import { Agent as HttpAgent } from 'http';
+import { Agent as HttpsAgent } from 'https';
 import { setTimeout as delay } from 'timers/promises';
 
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -125,6 +127,8 @@ export class KrakenClient implements ExchangeApiClient {
     this.apiClient = axios.create({
       baseURL: BASE_API_URL,
       timeout: API_TIMEOUT,
+      httpAgent: new HttpAgent(httpUtils.DEFAULT_HTTP_AGENT_OPTIONS),
+      httpsAgent: new HttpsAgent(httpUtils.DEFAULT_HTTP_AGENT_OPTIONS),
     });
 
     this.loggingConfig = {
