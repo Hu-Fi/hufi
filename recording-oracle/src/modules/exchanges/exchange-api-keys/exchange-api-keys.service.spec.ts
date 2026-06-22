@@ -223,19 +223,22 @@ describe('ExchangeApiKeysService', () => {
         exchangeName: input.exchangeName,
         apiKey: expect.any(String),
         secretKey: expect.any(String),
-        extras: input.extras,
+        extras: expect.any(String),
         isValid: true,
         missingPermissions: [],
         updatedAt: expect.any(Date),
       });
 
-      const [decryptedApiKey, decryptedSecretKey] = await Promise.all([
-        aesEncryptionService.decrypt(entity.apiKey),
-        aesEncryptionService.decrypt(entity.secretKey),
-      ]);
+      const [decryptedApiKey, decryptedSecretKey, decryptedExtras] =
+        await Promise.all([
+          aesEncryptionService.decrypt(entity.apiKey),
+          aesEncryptionService.decrypt(entity.secretKey),
+          aesEncryptionService.decrypt(entity.extras!),
+        ]);
 
       expect(decryptedApiKey.toString()).toBe(input.apiKey);
       expect(decryptedSecretKey.toString()).toBe(input.secretKey);
+      expect(JSON.parse(decryptedExtras.toString())).toEqual(input.extras);
     });
   });
 
@@ -262,15 +265,18 @@ describe('ExchangeApiKeysService', () => {
       const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
 
-      const [encryptedApiKey, encryptedSecretKey] = await Promise.all([
-        aesEncryptionService.encrypt(Buffer.from(apiKey)),
-        aesEncryptionService.encrypt(Buffer.from(secretKey)),
-      ]);
+      const [encryptedApiKey, encryptedSecretKey, encryptedExtras] =
+        await Promise.all([
+          aesEncryptionService.encrypt(Buffer.from(apiKey)),
+          aesEncryptionService.encrypt(Buffer.from(secretKey)),
+          aesEncryptionService.encrypt(Buffer.from(JSON.stringify(extras))),
+        ]);
 
       const mockedExchangeApiKey = generateExchangeApiKey(
         {
           encryptedApiKey,
           encryptedSecretKey,
+          encryptedExtras,
         },
         {
           userId,
@@ -301,14 +307,17 @@ describe('ExchangeApiKeysService', () => {
       const { userId, exchangeName, apiKey, secretKey, extras } =
         generateExchangeApiKeysData();
 
-      const [encryptedApiKey, encryptedSecretKey] = await Promise.all([
-        aesEncryptionService.encrypt(Buffer.from(apiKey)),
-        aesEncryptionService.encrypt(Buffer.from(secretKey)),
-      ]);
+      const [encryptedApiKey, encryptedSecretKey, encryptedExtras] =
+        await Promise.all([
+          aesEncryptionService.encrypt(Buffer.from(apiKey)),
+          aesEncryptionService.encrypt(Buffer.from(secretKey)),
+          aesEncryptionService.encrypt(Buffer.from(JSON.stringify(extras))),
+        ]);
       const mockedExchangeApiKey = generateExchangeApiKey(
         {
           encryptedApiKey,
           encryptedSecretKey,
+          encryptedExtras,
         },
         {
           userId,

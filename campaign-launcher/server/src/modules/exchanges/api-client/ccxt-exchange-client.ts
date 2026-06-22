@@ -24,7 +24,8 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
     switch (exchangeName) {
       case ExchangeName.BYBIT:
       case ExchangeName.GATE:
-      case ExchangeName.HYPERLIQUID: {
+      case ExchangeName.HYPERLIQUID:
+      case ExchangeName.KUCOIN: {
         perExchangeClientOptions = {
           options: {
             fetchMarkets: {

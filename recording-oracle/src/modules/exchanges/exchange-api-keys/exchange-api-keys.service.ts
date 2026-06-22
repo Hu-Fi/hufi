@@ -79,9 +79,16 @@ export class ExchangeApiKeysService {
       this.aesEncryptionService.encrypt(Buffer.from(apiKey)),
       this.aesEncryptionService.encrypt(Buffer.from(secretKey)),
     ]);
+
+    let extrasToSave: string | null = null;
+    if (extras) {
+      extrasToSave = await this.aesEncryptionService.encrypt(
+        Buffer.from(JSON.stringify(extras)),
+      );
+    }
     enrolledKey.apiKey = encryptedApiKey;
     enrolledKey.secretKey = encryptedSecretKey;
-    enrolledKey.extras = extras ?? null;
+    enrolledKey.extras = extrasToSave;
     enrolledKey.isValid = true;
     enrolledKey.missingPermissions = [];
     enrolledKey.updatedAt = new Date();
@@ -112,11 +119,19 @@ export class ExchangeApiKeysService {
       this.aesEncryptionService.decrypt(entity.secretKey),
     ]);
 
+    let extras: ExchangeExtras | undefined;
+    if (entity.extras) {
+      const dectyptedExtras = await this.aesEncryptionService.decrypt(
+        entity.extras,
+      );
+      extras = JSON.parse(dectyptedExtras.toString()) as ExchangeExtras;
+    }
+
     return {
       id: entity.id,
       apiKey: decryptedApiKey.toString(),
       secretKey: decryptedSecretKey.toString(),
-      extras: entity.extras ?? undefined,
+      extras,
       isValid: entity.isValid,
       missingPermissions: entity.missingPermissions,
     };
@@ -132,11 +147,18 @@ export class ExchangeApiKeysService {
         const decodedApiKey = await this.aesEncryptionService.decrypt(
           enrolledKey.apiKey,
         );
+        let extras: ExchangeExtras | undefined;
+        if (enrolledKey.extras) {
+          const decodedExtras = await this.aesEncryptionService.decrypt(
+            enrolledKey.extras,
+          );
+          extras = JSON.parse(decodedExtras.toString()) as ExchangeExtras;
+        }
 
         return {
           exchangeName: enrolledKey.exchangeName,
           apiKey: decodedApiKey.toString(),
-          extras: enrolledKey.extras === null ? undefined : enrolledKey.extras,
+          extras,
           isValid: enrolledKey.isValid,
           missingPermissions: enrolledKey.missingPermissions,
         };

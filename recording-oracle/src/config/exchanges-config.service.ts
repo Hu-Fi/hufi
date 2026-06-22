@@ -50,6 +50,11 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
         skipCcxtPreload: true,
       },
+      [ExchangeName.KUCOIN]: {
+        enabled: this.configService.get('FEATURE_KUCOIN', 'true') === 'true',
+        type: ExchangeType.CEX,
+        skipCcxtPreload: true,
+      },
       [ExchangeName.PANCAKESWAP]: {
         enabled:
           this.configService.get('FEATURE_PANCAKESWAP', 'true') === 'true',

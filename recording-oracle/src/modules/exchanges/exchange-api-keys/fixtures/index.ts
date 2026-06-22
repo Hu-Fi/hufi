@@ -25,6 +25,7 @@ export function generateExchangeApiKey(
   input: {
     encryptedApiKey: string;
     encryptedSecretKey: string;
+    encryptedExtras?: string;
   },
   overrides: Partial<
     Pick<ExchangeApiKeyEntity, 'userId' | 'exchangeName' | 'extras'>
@@ -36,7 +37,7 @@ export function generateExchangeApiKey(
     exchangeName: overrides.exchangeName || generateExchangeName(),
     apiKey: input.encryptedApiKey,
     secretKey: input.encryptedSecretKey,
-    extras: overrides.extras ?? null,
+    extras: input.encryptedExtras ?? null,
     isValid: true,
     missingPermissions: [],
     createdAt: faker.date.recent(),

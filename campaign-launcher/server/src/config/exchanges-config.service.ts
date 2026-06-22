@@ -67,6 +67,11 @@ export class ExchangesConfigService {
         ...getExchangeMetaFromCcxt(ExchangeName.KRAKEN),
         type: ExchangeType.CEX,
       },
+      [ExchangeName.KUCOIN]: {
+        enabled: this.configService.get('FEATURE_KUCOIN', 'true') === 'true',
+        ...getExchangeMetaFromCcxt(ExchangeName.KUCOIN),
+        type: ExchangeType.CEX,
+      },
       [ExchangeName.MEXC]: {
         enabled: this.configService.get('FEATURE_MEXC', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.MEXC),

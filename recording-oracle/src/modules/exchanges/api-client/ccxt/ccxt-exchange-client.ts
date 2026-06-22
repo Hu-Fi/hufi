@@ -29,9 +29,10 @@ import { BASE_CCXT_CLIENT_OPTIONS } from './constants';
 import { getPaginationHelpers } from './pagination-helpers';
 import * as ccxtClientUtils from './utils';
 
-export interface CcxtExchangeClientInitOptions extends CexApiClientInitOptions {
+export type CcxtExchangeClientInitOptions = CexApiClientInitOptions & {
+  extraCreds?: { uid: string };
   preloadedExchangeClient?: Exchange;
-}
+};
 
 function CatchApiAccessErrors(expectedPermission: ExchangePermission) {
   return function (

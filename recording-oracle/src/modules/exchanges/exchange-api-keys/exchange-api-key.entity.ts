@@ -11,7 +11,7 @@ import {
 import { DATABASE_SCHEMA_NAME } from '@/common/constants';
 import { type UserEntity } from '@/modules/users';
 
-import { ExchangeExtras, ExchangePermission } from '../api-client';
+import { ExchangePermission } from '../api-client';
 
 /**
  * We expect API keys to be <=200 charactes, so after encryption
@@ -37,8 +37,8 @@ export class ExchangeApiKeyEntity {
   @Column('varchar', { length: 10000 })
   secretKey: string;
 
-  @Column('jsonb', { nullable: true })
-  extras: ExchangeExtras | null;
+  @Column('varchar', { length: 10000, nullable: true })
+  extras: string | null;
 
   @Column('boolean')
   isValid: boolean;
