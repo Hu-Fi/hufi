@@ -28,6 +28,10 @@ const CAMPAIGN_TYPE_DESCRIPTIONS: Record<LaunchSupportedCampaignType, string> =
       'Requires market makers to collectively maintain a specified amount of a particular token.',
     [CampaignType.THRESHOLD]:
       'Requires market makers to maintain a minimum balance of a specified token.',
+    [CampaignType.THRESHOLD_MARKET_MAKING]:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    [CampaignType.COMPETITIVE_MARKET_MAKING]:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
   };
 
 const CampaignTypeStep: FC<Props> = ({

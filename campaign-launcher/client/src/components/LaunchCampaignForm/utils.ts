@@ -26,15 +26,28 @@ const defaultFormValuesMap = {
     symbol: '',
     minimum_balance_target: '',
   },
+  [CampaignType.COMPETITIVE_MARKET_MAKING]: {
+    ...baseFormValues,
+    type: CampaignType.COMPETITIVE_MARKET_MAKING,
+    pair: '',
+    minimum_volume_required: '',
+    rewards_distribution: [],
+  },
+  [CampaignType.THRESHOLD_MARKET_MAKING]: {
+    ...baseFormValues,
+    type: CampaignType.THRESHOLD_MARKET_MAKING,
+    pair: '',
+    minimum_volume_target: '',
+    max_participants: '',
+  },
 };
 
-/**
- * TODO: rethink if we need this array and type after we add support for more campaign types
- */
 export const LAUNCH_SUPPORTED_CAMPAIGN_TYPES = [
   CampaignType.MARKET_MAKING,
   CampaignType.HOLDING,
   CampaignType.THRESHOLD,
+  CampaignType.THRESHOLD_MARKET_MAKING,
+  CampaignType.COMPETITIVE_MARKET_MAKING,
 ] as const;
 export type LaunchSupportedCampaignType =
   (typeof LAUNCH_SUPPORTED_CAMPAIGN_TYPES)[number];

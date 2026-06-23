@@ -16,16 +16,20 @@ import {
   CampaignType,
   type ThresholdFormValues,
   type HoldingFormValues,
+  type CompetitiveMmFormValues,
+  type ThresholdMmFormValues,
 } from '@/types';
 import { scrollToFirstErrorFieldOnMobile } from '@/utils';
 
 import { campaignValidationSchema } from '../validation';
 
 import {
+  BottomNavigation,
+  CompetitiveMmForm,
+  HoldingForm,
   MarketMakingForm,
   ThresholdForm,
-  HoldingForm,
-  BottomNavigation,
+  ThresholdMmForm,
 } from '.';
 
 type Props = {
@@ -122,6 +126,24 @@ const EscrowDetailsStep: FC<Props> = ({
                   errors={errors}
                   watch={watch as UseFormWatch<ThresholdFormValues>}
                   trigger={trigger as UseFormTrigger<ThresholdFormValues>}
+                  campaignType={campaignType}
+                />
+              )}
+              {campaignType === CampaignType.COMPETITIVE_MARKET_MAKING && (
+                <CompetitiveMmForm
+                  control={control as Control<CompetitiveMmFormValues>}
+                  errors={errors}
+                  watch={watch as UseFormWatch<CompetitiveMmFormValues>}
+                  trigger={trigger as UseFormTrigger<CompetitiveMmFormValues>}
+                  campaignType={campaignType}
+                />
+              )}
+              {campaignType === CampaignType.THRESHOLD_MARKET_MAKING && (
+                <ThresholdMmForm
+                  control={control as Control<ThresholdMmFormValues>}
+                  errors={errors}
+                  watch={watch as UseFormWatch<ThresholdMmFormValues>}
+                  trigger={trigger as UseFormTrigger<ThresholdMmFormValues>}
                   campaignType={campaignType}
                 />
               )}

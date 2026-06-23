@@ -4,6 +4,7 @@ import type { ObjectSchema } from 'yup';
 import {
   AllowanceType,
   CampaignType,
+  type ThresholdMmFormValues,
   type CampaignFormValues,
   type HoldingFormValues,
   type MarketMakingFormValues,
@@ -174,6 +175,24 @@ const thresholdValidationSchema = yup.object({
     .required('Minimum balance target is required'),
 }) as ObjectSchema<ThresholdFormValues>;
 
+export const thresholdMmValidationSchema = yup.object({
+  ...baseValidationSchema,
+  pair: yup
+    .string()
+    .required('Required')
+    .matches(TRADING_PAIR_REGEX, 'Invalid pair'),
+  minimum_volume_target: yup
+    .number()
+    .typeError('Minimum volume target is required')
+    .min(1, 'Minimum volume target must be greater than or equal to 1')
+    .required('Minimum volume target is required'),
+  max_participants: yup
+    .number()
+    .typeError('Maximum participants is required')
+    .min(1, 'Maximum participants must be greater than or equal to 1')
+    .required('Maximum participants is required'),
+}) as ObjectSchema<ThresholdMmFormValues>;
+
 export const campaignValidationSchema = yup.lazy((value) => {
   if (value && typeof value === 'object' && 'type' in value) {
     if (value.type === CampaignType.HOLDING) {
@@ -182,6 +201,8 @@ export const campaignValidationSchema = yup.lazy((value) => {
       return marketMakingValidationSchema;
     } else if (value.type === CampaignType.THRESHOLD) {
       return thresholdValidationSchema;
+    } else if (value.type === CampaignType.THRESHOLD_MARKET_MAKING) {
+      return thresholdMmValidationSchema;
     }
   }
   return marketMakingValidationSchema;

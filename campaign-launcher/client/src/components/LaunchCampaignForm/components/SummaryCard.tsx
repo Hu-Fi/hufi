@@ -10,6 +10,8 @@ import {
   type HoldingFormValues,
   type ThresholdFormValues,
   CampaignType,
+  type CompetitiveMmFormValues,
+  type ThresholdMmFormValues,
 } from '@/types';
 import { getNetworkName, getTokenInfo, mapTypeToLabel } from '@/utils';
 import dayjs from '@/utils/dayjs';
@@ -69,6 +71,18 @@ const getTargetInfo = (
         value: (formValues as ThresholdFormValues)?.minimum_balance_target,
         token: (formValues as ThresholdFormValues)?.symbol,
       };
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      return {
+        label: 'Minimum volume required',
+        value: (formValues as CompetitiveMmFormValues)?.minimum_volume_required,
+        token: (formValues as CompetitiveMmFormValues)?.pair.split('/')[1],
+      };
+    case CampaignType.THRESHOLD_MARKET_MAKING:
+      return {
+        label: 'Minimum volume target',
+        value: (formValues as ThresholdMmFormValues)?.minimum_volume_target,
+        token: (formValues as ThresholdMmFormValues)?.pair.split('/')[1],
+      };
   }
 };
 
@@ -78,19 +92,17 @@ const getSymbolOrPairInfo = (
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       return {
         label: 'Pair',
         value: (formValues as MarketMakingFormValues)?.pair,
       };
     case CampaignType.HOLDING:
-      return {
-        label: 'Symbol',
-        value: (formValues as HoldingFormValues)?.symbol,
-      };
     case CampaignType.THRESHOLD:
       return {
         label: 'Symbol',
-        value: (formValues as ThresholdFormValues)?.symbol,
+        value: (formValues as HoldingFormValues)?.symbol,
       };
   }
 };
