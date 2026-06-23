@@ -324,11 +324,11 @@ describe('manifest utils', () => {
       }),
       // too short symbol
       Object.assign({}, validManifest, {
-        symbol: 1,
+        symbol: faker.string.alphanumeric({ casing: 'upper', length: 1 }),
       }),
       // too long symbol
       Object.assign({}, validManifest, {
-        symbol: 11,
+        symbol: faker.string.alphanumeric({ casing: 'upper', length: 11 }),
       }),
       // invalid balance target
       Object.assign({}, validManifest, {
@@ -680,11 +680,11 @@ describe('manifest utils', () => {
       }),
       // too short symbol
       Object.assign({}, validManifest, {
-        symbol: 1,
+        symbol: faker.string.alphanumeric({ casing: 'upper', length: 1 }),
       }),
       // too long symbol
       Object.assign({}, validManifest, {
-        symbol: 11,
+        symbol: faker.string.alphanumeric({ casing: 'upper', length: 11 }),
       }),
       // invalid minimum balance target
       Object.assign({}, validManifest, {

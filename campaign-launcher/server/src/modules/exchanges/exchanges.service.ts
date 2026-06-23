@@ -53,7 +53,7 @@ export class ExchangesService {
 
           const isWeirdPair =
             this.isWeirdSymbol(baseSymbol) ||
-            this.isWeirdSymbol(quoteSymbol, 3);
+            this.isWeirdSymbol(quoteSymbol, { minLength: 3 });
 
           return !isWeirdPair;
         });
@@ -118,13 +118,15 @@ export class ExchangesService {
 
   private isWeirdSymbol(
     symbol: string,
-    minLength = MIN_SYMBOL_LENGTH,
+    {
+      minLength = MIN_SYMBOL_LENGTH,
+      maxLength = MAX_SYMBOL_LENGTH,
+    }: Partial<{ minLength: number; maxLength: number }> = {},
   ): boolean {
-    if (minLength < MIN_SYMBOL_LENGTH || minLength > MAX_SYMBOL_LENGTH) {
-      throw new Error(
-        `minLength must be in [${MIN_SYMBOL_LENGTH}; ${MAX_SYMBOL_LENGTH}] range`,
-      );
+    if (minLength > maxLength) {
+      throw new Error('Invalid length options');
     }
+
     if (!symbol) {
       return true;
     }
@@ -137,6 +139,6 @@ export class ExchangesService {
       return true;
     }
 
-    return symbol.length < minLength || symbol.length > MAX_SYMBOL_LENGTH;
+    return symbol.length < minLength || symbol.length > maxLength;
   }
 }
