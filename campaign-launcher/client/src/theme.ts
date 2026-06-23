@@ -18,21 +18,30 @@ declare module '@mui/material/styles' {
   interface TypeBackground {
     subtle: string;
   }
+  interface TypeText {
+    muted?: string;
+    subtle?: string;
+    auxiliary?: string;
+  }
   interface PaletteColor {
     '100'?: string;
     '200'?: string;
     '300'?: string;
     '400'?: string;
-    '500'?: string;
     strong?: string;
+    muted?: string;
+    subtle?: string;
+    auxiliary?: string;
   }
   interface SimplePaletteColorOptions {
     '100'?: string;
     '200'?: string;
     '300'?: string;
     '400'?: string;
-    '500'?: string;
     strong?: string;
+    muted?: string;
+    subtle?: string;
+    auxiliary?: string;
   }
   interface TypographyVariants {
     body3: React.CSSProperties;
@@ -92,11 +101,6 @@ const theme = createTheme({
       main: '#d4cfff',
       contrastText: 'rgba(0, 0, 0, 0.87)',
     },
-    secondary: {
-      main: '#5d0Ce9',
-      '100': '#6b6490',
-      '200': '#a29dca',
-    },
     accent: {
       main: '#fa2a75',
       dark: '#af1d51',
@@ -107,7 +111,6 @@ const theme = createTheme({
       '200': '#43ba96',
       '300': '#ffbb00',
       '400': '#ff6262',
-      '500': '#a0a0a0',
     },
     border: {
       main: 'rgba(255, 255, 255, 0.07)',
@@ -121,6 +124,9 @@ const theme = createTheme({
     text: {
       primary: '#d4cfff',
       secondary: 'rgba(212, 207, 255, 0.70)',
+      muted: '#6b6490',
+      subtle: '#a29dca',
+      auxiliary: '#a0a0a0',
     },
     success: {
       main: '#43ba96',

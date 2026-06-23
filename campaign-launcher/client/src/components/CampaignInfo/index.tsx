@@ -270,7 +270,7 @@ const CampaignInfo: FC<Props> = ({
           <Typography
             variant="subtitle2"
             sx={{
-              color: 'secondary.100',
+              color: 'text.muted',
               textTransform: 'uppercase',
             }}
           >

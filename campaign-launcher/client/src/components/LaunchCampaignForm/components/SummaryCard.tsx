@@ -38,7 +38,7 @@ const Row = ({ children }: { children: React.ReactNode }) => (
 );
 
 const RowName = styled(Typography)(({ theme }) => ({
-  color: theme.palette.neutral['500'],
+  color: theme.palette.text.auxiliary,
 }));
 
 const RowValue = styled(Typography)(({ theme }) => ({

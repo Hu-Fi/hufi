@@ -38,7 +38,7 @@ const CardTitle = styled('h5')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-  color: theme.palette.secondary['100'],
+  color: theme.palette.text.muted,
   margin: 0,
   fontSize: '16px',
   fontWeight: 600,

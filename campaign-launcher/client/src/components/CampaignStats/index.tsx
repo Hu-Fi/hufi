@@ -55,7 +55,7 @@ export const CardName = styled(Typography)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: 12,
-  color: theme.palette.secondary['100'],
+  color: theme.palette.text.muted,
   fontSize: '16px',
   fontWeight: 600,
   lineHeight: '18px',
@@ -234,7 +234,7 @@ const CampaignStats: FC<Props> = ({
             variant="body3"
             sx={{
               ml: 6,
-              color: 'neutral.500',
+              color: 'text.auxiliary',
             }}
           >
             Cancelled on{' '}

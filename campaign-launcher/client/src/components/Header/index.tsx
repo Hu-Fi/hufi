@@ -59,7 +59,7 @@ const StyledLink = ({
         textDecoration: 'none',
         color: {
           xs: 'text.primary',
-          md: isActive ? 'neutral.100' : 'secondary.100',
+          md: isActive ? 'neutral.100' : 'text.muted',
         },
         fontWeight: isActive ? 600 : 400,
         fontSize: '14px',

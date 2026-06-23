@@ -49,7 +49,7 @@ const PageErrorState = ({
         <Typography component="p" variant="h4" sx={{ color: 'neutral.100' }}>
           Something went wrong
         </Typography>
-        <Typography variant="body3" sx={{ color: 'neutral.500', mb: 2 }}>
+        <Typography variant="body3" sx={{ color: 'text.auxiliary', mb: 2 }}>
           {description}
         </Typography>
         <Button

@@ -67,7 +67,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
             <Typography
               variant="body3"
               sx={{
-                color: 'neutral.500',
+                color: 'text.auxiliary',
                 textAlign: 'center',
               }}
             >
@@ -89,7 +89,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
             <Typography
               variant="body3"
               sx={{
-                color: 'neutral.500',
+                color: 'text.auxiliary',
                 my: 3,
               }}
             >

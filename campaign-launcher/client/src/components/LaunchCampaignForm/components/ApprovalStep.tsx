@@ -328,7 +328,7 @@ const ApprovalStep: FC<Props> = ({
                                     selected_allowance ===
                                       AllowanceType.CUSTOM && !isApproving
                                       ? 'neutral.100'
-                                      : 'neutral.500',
+                                      : 'text.auxiliary',
                                 },
                               }}
                             />
@@ -449,7 +449,7 @@ const ApprovalStep: FC<Props> = ({
                                   selected_allowance ===
                                     AllowanceType.UNLIMITED && !isApproving
                                     ? 'neutral.100'
-                                    : 'neutral.500',
+                                    : 'text.auxiliary',
                               },
                             }}
                           />

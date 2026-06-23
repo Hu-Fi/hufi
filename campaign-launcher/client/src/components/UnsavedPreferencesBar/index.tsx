@@ -58,7 +58,7 @@ const UnsavedPreferencesBar: FC<Props> = ({
           >
             <Typography
               variant={isMobile ? 'body1' : 'body3'}
-              sx={{ color: 'neutral.500' }}
+              sx={{ color: 'text.auxiliary' }}
             >
               You have{' '}
               <Typography

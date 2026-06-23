@@ -8,7 +8,7 @@ import { CampaignStatus, type Campaign } from '@/types';
 const RESULT = {
   none: {
     label: 'N/A',
-    color: 'neutral.500',
+    color: 'text.auxiliary',
   },
   intermediate: {
     label: 'Intermediate',

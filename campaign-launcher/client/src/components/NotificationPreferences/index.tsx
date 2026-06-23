@@ -189,12 +189,12 @@ const NotificationPreferences: FC<Props> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            color: 'secondary.200',
+            color: 'text.subtle',
           }}
         >
           <CircularProgress
             size={isMobile ? 18 : 24}
-            sx={{ color: 'secondary.200' }}
+            sx={{ color: 'text.subtle' }}
           />
           Waiting for Telegram&hellip;
         </Typography>
@@ -251,7 +251,7 @@ const NotificationPreferences: FC<Props> = ({
           </Typography>
           <Typography
             variant={isMobile ? 'subtitle4' : 'body1'}
-            sx={{ color: 'secondary.200' }}
+            sx={{ color: 'text.subtle' }}
           >
             Get Telegram updates on HuFi activity.
           </Typography>
@@ -327,7 +327,7 @@ const NotificationPreferences: FC<Props> = ({
             </Typography>
             <Typography
               variant={isMobile ? 'subtitle4' : 'body1'}
-              sx={{ color: 'secondary.200' }}
+              sx={{ color: 'text.subtle' }}
             >
               Send a message when a campaign is auto-joined
             </Typography>

@@ -74,7 +74,7 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
       >
         {title}
       </Typography>
-      <Typography variant="body3" sx={{ color: 'neutral.500' }}>
+      <Typography variant="body3" sx={{ color: 'text.auxiliary' }}>
         {description}
       </Typography>
     </Stack>
@@ -154,7 +154,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
       >
         {title}
       </Typography>
-      <Typography variant="body3" sx={{ color: 'neutral.500', mb: 2 }}>
+      <Typography variant="body3" sx={{ color: 'text.auxiliary', mb: 2 }}>
         {description}
       </Typography>
       {!isSignerReady && <ConnectWallet />}
@@ -232,7 +232,7 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
       >
         {title}
       </Typography>
-      <Typography variant="body3" sx={{ color: 'neutral.500', mb: 2 }}>
+      <Typography variant="body3" sx={{ color: 'text.auxiliary', mb: 2 }}>
         {description}
       </Typography>
       {isSignerReady ? (

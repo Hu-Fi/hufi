@@ -151,7 +151,7 @@ const PreferencesPage: FC = () => {
       >
         Preferences
       </Typography>
-      <Typography variant="body3" sx={{ color: 'secondary.100' }}>
+      <Typography variant="body3" sx={{ color: 'text.muted' }}>
         Configure your account defaults and automation settings. Changes apply
         to your connected wallet.
       </Typography>

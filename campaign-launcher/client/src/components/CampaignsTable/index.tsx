@@ -70,7 +70,7 @@ const CampaignsTable: FC<Props> = ({
             <Typography
               variant="subtitle3"
               sx={{
-                color: 'secondary.200',
+                color: 'text.subtle',
                 textTransform: 'uppercase',
               }}
             >
@@ -314,7 +314,7 @@ const CampaignsTable: FC<Props> = ({
           },
         },
         '& .MuiDataGrid-columnHeaderTitle': {
-          color: 'secondary.100',
+          color: 'text.muted',
           fontWeight: 600,
           fontSize: '14px',
           lineHeight: '18px',

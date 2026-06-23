@@ -182,7 +182,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           <Typography
             variant="subtitle5"
             sx={{
-              color: 'secondary.200',
+              color: 'text.subtle',
               textTransform: 'uppercase',
             }}
           >
@@ -226,7 +226,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           <Typography
             variant="subtitle5"
             sx={{
-              color: 'secondary.200',
+              color: 'text.subtle',
               textTransform: 'uppercase',
             }}
           >

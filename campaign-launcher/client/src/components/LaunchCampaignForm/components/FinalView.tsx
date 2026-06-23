@@ -44,7 +44,7 @@ const FinalView: FC<Props> = ({
         variant="body1"
         sx={{
           fontWeight: 500,
-          color: 'neutral.500',
+          color: 'text.auxiliary',
         }}
       >
         Your {mapTypeToLabel(campaignType)} campaign has been successfully
