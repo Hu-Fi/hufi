@@ -5,6 +5,7 @@ import ethLogo from '@/assets/tokens/eth.png';
 import hmtLogo from '@/assets/tokens/hmt.png';
 import icbxLogo from '@/assets/tokens/icbx.png';
 import mobLogo from '@/assets/tokens/mob.png';
+import sentioLogo from '@/assets/tokens/sentio.png';
 import usdcLogo from '@/assets/tokens/usdc.png';
 import usdtLogo from '@/assets/tokens/usdt.png';
 import xinLogo from '@/assets/tokens/xin.png';
@@ -65,6 +66,11 @@ export const TOKENS: TokenData[] = [
     name: 'ccd',
     label: 'CCD',
     icon: ccdLogo,
+  },
+  {
+    name: 'st',
+    label: 'ST',
+    icon: sentioLogo,
   },
 ];
 

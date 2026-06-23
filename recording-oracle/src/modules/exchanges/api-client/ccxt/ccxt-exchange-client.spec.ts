@@ -857,6 +857,39 @@ describe('CcxtExchangeClient', () => {
           },
         );
       });
+
+      test('should fetch deposit address info for ETH network on bitmart', async () => {
+        mockedCcxt[ExchangeName.BITMART] = vi.fn(
+          function MockedCcxtExchangeCtor() {
+            return mockedExchange;
+          },
+        );
+
+        const mockedAddressStructure = generateCcxtDepositAddressStructure();
+        mockedExchange.fetchDepositAddress.mockResolvedValueOnce(
+          mockedAddressStructure,
+        );
+
+        ccxtExchangeApiClient = new CcxtExchangeClient(ExchangeName.BITMART, {
+          apiKey: faker.string.sample(),
+          secret: faker.string.sample(),
+          userId: faker.string.uuid(),
+        });
+
+        const address = await ccxtExchangeApiClient.fetchDepositAddress(
+          mockedAddressStructure.currency,
+        );
+
+        expect(address).toEqual(mockedAddressStructure.address);
+
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledTimes(1);
+        expect(mockedExchange.fetchDepositAddress).toHaveBeenCalledWith(
+          mockedAddressStructure.currency,
+          {
+            network: 'ETH',
+          },
+        );
+      });
     });
   });
 });

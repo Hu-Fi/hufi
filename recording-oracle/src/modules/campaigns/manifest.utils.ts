@@ -19,8 +19,8 @@ import {
   ThresholdMarketMakingCampaignDetails,
 } from './types';
 
-const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{3,10}$/;
-const TRADING_PAIR_REGEX = /^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/;
+const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{2,10}$/;
+const TRADING_PAIR_REGEX = /^[\dA-Z]{2,10}\/[\dA-Z]{3,10}$/;
 
 const baseManifestSchema = Joi.object({
   type: Joi.string().min(2).required(),

@@ -42,13 +42,14 @@ export function isThresholdManifest(
   return manifest.type === CampaignType.THRESHOLD;
 }
 
+const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{2,10}$/;
+const TRADING_PAIR_REGEX = /^[\dA-Z]{2,10}\/[\dA-Z]{3,10}$/;
+
 const marketMakingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.MARKET_MAKING).required(),
   exchange: Joi.string().required(),
   daily_volume_target: Joi.number().strict().greater(0).required(),
-  pair: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
-    .required(),
+  pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
@@ -57,9 +58,7 @@ const holdingManifestSchema = Joi.object({
   type: Joi.string().valid(CampaignType.HOLDING).required(),
   exchange: Joi.string().required(),
   daily_balance_target: Joi.number().strict().greater(0).required(),
-  symbol: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}$/)
-    .required(),
+  symbol: Joi.string().pattern(TOKEN_SYMBOL_REGEX).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
@@ -86,9 +85,7 @@ const competitiveMarketMakingManifestSchema = Joi.object({
         '"rewards_distribution" sum must be less than or equal to 100',
     }),
   minimum_volume_required: Joi.number().strict().positive().required(),
-  pair: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
-    .required(),
+  pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
@@ -98,9 +95,7 @@ const thresholdMarketMakingManifestSchema = Joi.object({
   exchange: Joi.string().required(),
   minimum_volume_target: Joi.number().strict().positive().required(),
   max_participants: Joi.number().strict().positive().integer().required(),
-  pair: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/)
-    .required(),
+  pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });
@@ -110,9 +105,7 @@ const thresholdManifestSchema = Joi.object({
   exchange: Joi.string().required(),
   minimum_balance_target: Joi.number().strict().greater(0).required(),
   max_participants: Joi.number().strict().positive().integer(),
-  symbol: Joi.string()
-    .pattern(/^[\dA-Z]{3,10}$/)
-    .required(),
+  symbol: Joi.string().pattern(TOKEN_SYMBOL_REGEX).required(),
   start_date: Joi.date().iso().required(),
   end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
 }).options({ allowUnknown: true, stripUnknown: true });

@@ -13,6 +13,8 @@ import {
 const MAX_DURATION = 100 * 24 * 60 * 60 * 1000; // 100 days
 const MIN_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
+const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{2,10}$/;
+const TRADING_PAIR_REGEX = /^[\dA-Z]{2,10}\/[\dA-Z]{3,10}$/;
 
 const validateCampaignDuration = (startDate: Date, endDate: Date) => {
   const duration = endDate.getTime() - startDate.getTime();
@@ -138,7 +140,7 @@ const marketMakingValidationSchema = yup.object({
   pair: yup
     .string()
     .required('Required')
-    .matches(/^[\dA-Z]{3,10}\/[\dA-Z]{3,10}$/, 'Invalid pair'),
+    .matches(TRADING_PAIR_REGEX, 'Invalid pair'),
   daily_volume_target: yup
     .number()
     .typeError('Daily volume target is required')
@@ -151,7 +153,7 @@ const holdingValidationSchema = yup.object({
   symbol: yup
     .string()
     .required('Required')
-    .matches(/^[\dA-Z]{3,10}$/, 'Invalid symbol'),
+    .matches(TOKEN_SYMBOL_REGEX, 'Invalid symbol'),
   daily_balance_target: yup
     .number()
     .typeError('Daily balance target is required')
@@ -164,7 +166,7 @@ const thresholdValidationSchema = yup.object({
   symbol: yup
     .string()
     .required('Required')
-    .matches(/^[\dA-Z]{3,10}$/, 'Invalid symbol'),
+    .matches(TOKEN_SYMBOL_REGEX, 'Invalid symbol'),
   minimum_balance_target: yup
     .number()
     .typeError('Minimum balance target is required')

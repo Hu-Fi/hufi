@@ -337,7 +337,7 @@ export const getTargetInfo = (campaign: Campaign | JoinedCampaign) => {
       };
     case CampaignType.THRESHOLD_MARKET_MAKING:
       return {
-        label: 'Min Volume',
+        label: 'Target Volume',
         value: campaign.details.minimum_volume_target,
       };
     case CampaignType.HOLDING:
