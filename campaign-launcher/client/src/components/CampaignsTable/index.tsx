@@ -70,7 +70,7 @@ const CampaignsTable: FC<Props> = ({
             <Typography
               variant="subtitle3"
               sx={{
-                color: 'secondary.400',
+                color: 'secondary.200',
                 textTransform: 'uppercase',
               }}
             >

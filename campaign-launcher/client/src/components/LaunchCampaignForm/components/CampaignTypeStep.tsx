@@ -82,7 +82,7 @@ const CampaignTypeStep: FC<Props> = ({
                     }}
                   >
                     <StarIcon
-                      sx={{ color: 'secondary.200', width: 24, height: 24 }}
+                      sx={{ color: 'text.primary', width: 24, height: 24 }}
                     />
                     <Typography variant="h5" sx={{ color: 'neutral.100' }}>
                       {mapTypeToLabel(type)}

@@ -173,7 +173,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             flex: 1,
             p: { xs: 1.5, md: 2 },
             gap: 1.5,
-            bgcolor: 'secondary.300',
+            bgcolor: 'background.subtle',
             borderRadius: '8px',
             border: '1px solid',
             borderColor: 'border.strong',
@@ -182,7 +182,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           <Typography
             variant="subtitle5"
             sx={{
-              color: 'secondary.400',
+              color: 'secondary.200',
               textTransform: 'uppercase',
             }}
           >
@@ -217,7 +217,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             flex: 1,
             p: { xs: 1.5, md: 2 },
             gap: 1.5,
-            bgcolor: 'secondary.300',
+            bgcolor: 'background.subtle',
             borderRadius: '8px',
             border: '1px solid',
             borderColor: 'border.strong',
@@ -226,7 +226,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           <Typography
             variant="subtitle5"
             sx={{
-              color: 'secondary.400',
+              color: 'secondary.200',
               textTransform: 'uppercase',
             }}
           >

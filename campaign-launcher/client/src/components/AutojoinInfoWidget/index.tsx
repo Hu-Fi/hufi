@@ -90,7 +90,7 @@ const AutojoinInfoWidget: FC = () => {
           </Typography>
           <Typography
             sx={{
-              color: 'secondary.400',
+              color: 'secondary.200',
               fontSize: { xs: 12, md: 16 },
               fontWeight: 500,
               lineHeight: { xs: '100%', lg: '150%' },

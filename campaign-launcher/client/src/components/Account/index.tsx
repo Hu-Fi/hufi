@@ -90,7 +90,7 @@ const Account: FC = () => {
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disableRipple
         sx={{
-          bgcolor: 'secondary.200',
+          bgcolor: 'primary.main',
           borderRadius: '4px',
           width: 'fit-content',
           px: 1,
@@ -129,7 +129,7 @@ const Account: FC = () => {
           paper: {
             elevation: 0,
             sx: {
-              bgcolor: 'secondary.200',
+              bgcolor: 'primary.main',
               width: anchorEl?.getBoundingClientRect().width,
               minWidth: 'fit-content',
               borderTopLeftRadius: 0,

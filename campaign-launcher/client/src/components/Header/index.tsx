@@ -152,7 +152,7 @@ const Header: FC = () => {
             <IconButton
               sx={{
                 display: { xs: 'flex', md: 'none' },
-                color: 'secondary.200',
+                color: 'text.primary',
                 p: 0,
               }}
               onClick={handleMenuOpen}

@@ -198,7 +198,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: 'secondary.400',
+                color: 'secondary.200',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -208,7 +208,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: 'secondary.400',
+                color: 'secondary.200',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -252,7 +252,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               variant={isMobile ? 'subtitle4' : 'body1'}
-              sx={{ color: 'secondary.400' }}
+              sx={{ color: 'secondary.200' }}
             >
               Select which campaign types to autojoin
             </Typography>
@@ -323,7 +323,7 @@ const AutojoinPreferences: FC<Props> = ({
               </Typography>
               <Typography
                 variant={isMobile ? 'subtitle4' : 'body1'}
-                sx={{ color: 'secondary.400' }}
+                sx={{ color: 'secondary.200' }}
               >
                 Only autojoin campaigns running on these exchanges
               </Typography>
@@ -419,7 +419,7 @@ const AutojoinPreferences: FC<Props> = ({
               </Typography>
               <Typography
                 variant={isMobile ? 'subtitle4' : 'body1'}
-                sx={{ color: 'secondary.400' }}
+                sx={{ color: 'secondary.200' }}
               >
                 Autojoin campaigns for these tokens only
               </Typography>

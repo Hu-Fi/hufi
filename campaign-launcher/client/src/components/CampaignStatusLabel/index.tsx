@@ -32,7 +32,7 @@ const mapStatusToColorAndText = (
       }
     case CampaignStatus.COMPLETED:
       return {
-        color: 'secondary.200',
+        color: 'text.primary',
         text: 'Ended',
       };
     case CampaignStatus.CANCELLED:
@@ -47,7 +47,7 @@ const mapStatusToColorAndText = (
       };
     default:
       return {
-        color: 'secondary.200',
+        color: 'text.primary',
         text: 'Unknown',
       };
   }

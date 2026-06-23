@@ -58,7 +58,7 @@ const getTimelineInfo = (
       return {
         label: 'Ended on',
         value: endDate.format(DATE_FORMAT),
-        color: 'secondary.200',
+        color: 'text.primary',
         isPending: false,
       };
     }

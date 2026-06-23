@@ -89,7 +89,7 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
                 height: 9,
                 bgcolor:
                   currentStep >= index + 1
-                    ? 'secondary.200'
+                    ? 'primary.main'
                     : 'background.paper',
                 borderRadius: '90px',
               }}

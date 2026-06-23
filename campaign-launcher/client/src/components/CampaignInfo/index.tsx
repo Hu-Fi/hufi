@@ -276,7 +276,7 @@ const CampaignInfo: FC<Props> = ({
           >
             Joined at
           </Typography>
-          <Typography variant="body1" sx={{ color: 'secondary.200' }}>
+          <Typography variant="body1">
             {' '}
             {formatDate(joinedAt)}
             {', '}

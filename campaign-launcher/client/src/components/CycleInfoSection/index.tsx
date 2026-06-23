@@ -201,7 +201,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
               width: 4,
               height: 4,
               borderRadius: '50%',
-              bgcolor: 'secondary.200',
+              bgcolor: 'primary.main',
               opacity: 0.6,
             }}
           />

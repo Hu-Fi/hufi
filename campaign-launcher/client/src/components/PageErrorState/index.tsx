@@ -38,7 +38,7 @@ const PageErrorState = ({
             width: '72px',
             height: '72px',
             p: 1,
-            bgcolor: 'secondary.300',
+            bgcolor: 'background.subtle',
             borderRadius: '16px',
             border: '1px solid',
             borderColor: 'border.strong',

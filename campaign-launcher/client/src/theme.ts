@@ -15,6 +15,9 @@ declare module '@mui/material/styles' {
     neutral?: PaletteColorOptions;
     border?: PaletteColorOptions;
   }
+  interface TypeBackground {
+    subtle: string;
+  }
   interface PaletteColor {
     '100'?: string;
     '200'?: string;
@@ -92,9 +95,7 @@ const theme = createTheme({
     secondary: {
       main: '#5d0Ce9',
       '100': '#6b6490',
-      '200': '#d4cfff',
-      '300': '#2d284e',
-      '400': '#a29dca',
+      '200': '#a29dca',
     },
     accent: {
       main: '#fa2a75',
@@ -115,6 +116,7 @@ const theme = createTheme({
     background: {
       default: '#100735',
       paper: '#251d47',
+      subtle: '#2d284e',
     },
     text: {
       primary: '#d4cfff',

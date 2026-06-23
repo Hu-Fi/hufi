@@ -166,7 +166,7 @@ const LaunchStep: FC<Props> = ({
                     py: 1.5,
                     px: 2,
                     gap: 1.5,
-                    bgcolor: 'secondary.300',
+                    bgcolor: 'background.subtle',
                   }}
                 >
                   <Button

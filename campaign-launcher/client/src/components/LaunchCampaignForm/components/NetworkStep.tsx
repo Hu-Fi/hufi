@@ -208,7 +208,7 @@ const NetworkStep: FC<Props> = ({
                     border: '1px solid',
                     borderColor: isSelected ? 'accent.main' : 'border.strong',
                     cursor: 'pointer',
-                    '& > svg': { fontSize: '44px', color: 'secondary.200' },
+                    '& > svg': { fontSize: '44px', color: 'text.primary' },
                   }}
                   onClick={() => handleClickOnNetwork(value)}
                 >
