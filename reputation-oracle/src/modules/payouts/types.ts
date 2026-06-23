@@ -56,6 +56,7 @@ export type IntermediateResultsData = {
   chain_id: number;
   address: string;
   exchange: string;
+  symbol: string;
   results: IntermediateResult[];
 };
 

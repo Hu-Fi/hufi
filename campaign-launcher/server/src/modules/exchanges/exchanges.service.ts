@@ -7,6 +7,9 @@ import { ExchangeApiClientFactory } from './api-client';
 import { ExchangesCache } from './exchanges-cache';
 import { ExchangeDataDto } from './exchanges.dto';
 
+const MIN_SYMBOL_LENGTH = 2;
+const MAX_SYMBOL_LENGTH = 10;
+
 @Injectable()
 export class ExchangesService {
   private readonly logger = logger.child({ context: ExchangesService.name });
@@ -46,9 +49,11 @@ export class ExchangesService {
            * won't be ever maked
            */
 
-          const isWeirdPair = symbol
-            .split('/')
-            .some((token) => this.isWeirdSymbol(token));
+          const [baseSymbol, quoteSymbol] = symbol.split('/');
+
+          const isWeirdPair =
+            this.isWeirdSymbol(baseSymbol) ||
+            this.isWeirdSymbol(quoteSymbol, 3);
 
           return !isWeirdPair;
         });
@@ -111,7 +116,15 @@ export class ExchangesService {
     }
   }
 
-  private isWeirdSymbol(symbol: string): boolean {
+  private isWeirdSymbol(
+    symbol: string,
+    minLength = MIN_SYMBOL_LENGTH,
+  ): boolean {
+    if (minLength < MIN_SYMBOL_LENGTH || minLength > MAX_SYMBOL_LENGTH) {
+      throw new Error(
+        `minLength must be in [${MIN_SYMBOL_LENGTH}; ${MAX_SYMBOL_LENGTH}] range`,
+      );
+    }
     if (!symbol) {
       return true;
     }
@@ -124,6 +137,6 @@ export class ExchangesService {
       return true;
     }
 
-    return symbol.length < 3 || symbol.length > 10;
+    return symbol.length < minLength || symbol.length > MAX_SYMBOL_LENGTH;
   }
 }

@@ -190,13 +190,13 @@ describe('manifest utils', () => {
         ...validManifest,
       },
       Object.assign({}, validManifest, {
-        pair: `1${faker.string.alphanumeric({
+        pair: `B${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}2/3${faker.string.alphanumeric({
+          length: faker.number.int({ min: 1, max: 9 }),
+        })}/Q${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}4`,
+          length: faker.number.int({ min: 2, max: 9 }),
+        })}`,
       }),
     ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
@@ -220,6 +220,46 @@ describe('manifest utils', () => {
       // lowercase pair
       Object.assign({}, validManifest, {
         pair: generateTradingPair().toLowerCase(),
+      }),
+      // too short base symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 1,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 10 }),
+        })}`,
+      }),
+      // too short quote symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 2,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 1, max: 2 }),
+        })}`,
+      }),
+      // too long base symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 11,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 10 }),
+        })}`,
+      }),
+      // too long quote symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 2, max: 10 }),
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 11,
+        })}`,
       }),
       // invalid volume target
       Object.assign({}, validManifest, {
@@ -258,10 +298,10 @@ describe('manifest utils', () => {
     test.each([
       { ...validManifest },
       Object.assign({}, validManifest, {
-        symbol: `5${faker.string.alphanumeric({
+        symbol: `S${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}6`,
+          length: faker.number.int({ min: 1, max: 9 }),
+        })}`,
       }),
     ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
@@ -281,6 +321,14 @@ describe('manifest utils', () => {
       // lowercased symbol
       Object.assign({}, validManifest, {
         symbol: faker.finance.currencyCode().toLowerCase(),
+      }),
+      // too short symbol
+      Object.assign({}, validManifest, {
+        symbol: 1,
+      }),
+      // too long symbol
+      Object.assign({}, validManifest, {
+        symbol: 11,
       }),
       // invalid balance target
       Object.assign({}, validManifest, {
@@ -319,13 +367,13 @@ describe('manifest utils', () => {
     test.each([
       { ...validManifest },
       Object.assign({}, validManifest, {
-        pair: `1${faker.string.alphanumeric({
+        pair: `B${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}2/3${faker.string.alphanumeric({
+          length: faker.number.int({ min: 1, max: 9 }),
+        })}/Q${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}4`,
+          length: faker.number.int({ min: 2, max: 9 }),
+        })}`,
       }),
     ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
@@ -336,39 +384,91 @@ describe('manifest utils', () => {
     });
 
     test.each([
+      // invalid (lowercased) type
       Object.assign({}, validManifest, {
         type: CampaignType.COMPETITIVE_MARKET_MAKING.toLowerCase(),
       }),
+      // invalid trading pair symbol
       Object.assign({}, validManifest, {
         pair: generateTradingPair().replace('/', ''),
       }),
+      // token symbol instead of trading pair
       Object.assign({}, validManifest, {
         pair: faker.finance.currencyCode(),
       }),
+      // lowercase pair
       Object.assign({}, validManifest, {
         pair: generateTradingPair().toLowerCase(),
       }),
+      // empty rewards distribution
       Object.assign({}, validManifest, {
         rewards_distribution: [],
       }),
+      // negative rewards distribution value
       Object.assign({}, validManifest, {
         rewards_distribution: [faker.number.int({ min: -100, max: 0 })],
       }),
+      // too short base symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 1,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 10 }),
+        })}`,
+      }),
+      // too short quote symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 2,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 1, max: 2 }),
+        })}`,
+      }),
+      // too long base symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 11,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 10 }),
+        })}`,
+      }),
+      // too long quote symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 2, max: 10 }),
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 11,
+        })}`,
+      }),
+      // missing rewards distribution
       Object.assign({}, validManifest, {
         rewards_distribution: undefined,
       }),
+      // rewards distribution string value
       Object.assign({}, validManifest, {
         rewards_distribution: [faker.number.int({ min: 1 }).toString()],
       }),
+      // negative minimum volume required
       Object.assign({}, validManifest, {
         minimum_volume_required: faker.number.float({ min: -100, max: -1 }),
       }),
+      // missing minimum volume required
       Object.assign({}, validManifest, {
         minimum_volume_required: undefined,
       }),
+      // minimum volume required string
       Object.assign({}, validManifest, {
         minimum_volume_required: faker.number.int({ min: 1 }).toString(),
       }),
+      // rewards distribution sum exceeds 100
       Object.assign({}, validManifest, {
         rewards_distribution: [60, 41],
       }),
@@ -419,13 +519,13 @@ describe('manifest utils', () => {
     test.each([
       { ...validManifest },
       Object.assign({}, validManifest, {
-        pair: `1${faker.string.alphanumeric({
+        pair: `B${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}2/3${faker.string.alphanumeric({
+          length: faker.number.int({ min: 1, max: 9 }),
+        })}/Q${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}4`,
+          length: faker.number.int({ min: 2, max: 9 }),
+        })}`,
       }),
     ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
@@ -436,42 +536,95 @@ describe('manifest utils', () => {
     });
 
     test.each([
+      // invalid (lowercased) type
       Object.assign({}, validManifest, {
         type: CampaignType.THRESHOLD_MARKET_MAKING.toLowerCase(),
       }),
+      // invalid trading pair symbol
       Object.assign({}, validManifest, {
         pair: generateTradingPair().replace('/', ''),
       }),
+      // token symbol instead of trading pair
       Object.assign({}, validManifest, {
         pair: faker.finance.currencyCode(),
       }),
+      // lowercase pair
       Object.assign({}, validManifest, {
         pair: generateTradingPair().toLowerCase(),
       }),
+      // too short base symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 1,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 10 }),
+        })}`,
+      }),
+      // too short quote symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 2,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 1, max: 2 }),
+        })}`,
+      }),
+      // too long base symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 11,
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 3, max: 10 }),
+        })}`,
+      }),
+      // too long quote symbol
+      Object.assign({}, validManifest, {
+        pair: `${faker.string.alphanumeric({
+          casing: 'upper',
+          length: faker.number.int({ min: 2, max: 10 }),
+        })}/${faker.string.alphanumeric({
+          casing: 'upper',
+          length: 11,
+        })}`,
+      }),
+      // invalid minimum volume target
       Object.assign({}, validManifest, {
         minimum_volume_target: faker.number.int({ min: -42, max: 0 }),
       }),
+      // missing minimum volume target
       Object.assign({}, validManifest, {
         minimum_volume_target: undefined,
       }),
+      // minimum volume target string
       Object.assign({}, validManifest, {
         minimum_volume_target: faker.number.int({ min: 1 }).toString(),
       }),
+      // unsafe minimum volume target
       Object.assign({}, validManifest, {
         minimum_volume_target: Number.MAX_SAFE_INTEGER + 42,
       }),
+      // max participants string
       Object.assign({}, validManifest, {
         max_participants: faker.number.int({ min: 1 }).toString(),
       }),
+      // missing max participants
       Object.assign({}, validManifest, {
         max_participants: undefined,
       }),
+      // max participants zero
       Object.assign({}, validManifest, {
         max_participants: 0,
       }),
+      // max participants negative
       Object.assign({}, validManifest, {
         max_participants: faker.number.int({ min: -42, max: -1 }),
       }),
+      // max participants non-integer
       Object.assign({}, validManifest, {
         max_participants: faker.number.float({ fractionDigits: 3 }),
       }),
@@ -501,10 +654,10 @@ describe('manifest utils', () => {
         max_participants: faker.number.int({ min: 1 }),
       }),
       Object.assign({}, validManifest, {
-        symbol: `5${faker.string.alphanumeric({
+        symbol: `S${faker.string.alphanumeric({
           casing: 'upper',
-          length: faker.number.int({ min: 3, max: 8 }),
-        })}6`,
+          length: faker.number.int({ min: 1, max: 9 }),
+        })}`,
       }),
     ])('should not throw for valid manifest [%#]', (testManifest) => {
       expect(
@@ -524,6 +677,14 @@ describe('manifest utils', () => {
       // lowercased symbol
       Object.assign({}, validManifest, {
         symbol: faker.finance.currencyCode().toLowerCase(),
+      }),
+      // too short symbol
+      Object.assign({}, validManifest, {
+        symbol: 1,
+      }),
+      // too long symbol
+      Object.assign({}, validManifest, {
+        symbol: 11,
       }),
       // invalid minimum balance target
       Object.assign({}, validManifest, {

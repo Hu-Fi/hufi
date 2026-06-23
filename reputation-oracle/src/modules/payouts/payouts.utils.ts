@@ -37,6 +37,7 @@ const intermedateResultsSchema = Joi.object({
     .required(),
   address: Joi.string().required(),
   exchange: Joi.string().required(),
+  symbol: Joi.string().required(),
   results: Joi.array().items(intermediateResultSchema).required(),
 }).options({ allowUnknown: true, stripUnknown: false });
 

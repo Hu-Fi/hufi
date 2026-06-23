@@ -47,7 +47,7 @@ export class CampaignsAutojoinPreferencesDto {
   @IsArray()
   @ArrayMaxSize(MAX_CAMPAIGNS_AUTOJOIN_TOKENS)
   @IsString({ each: true })
-  @Matches(/^[A-Z0-9]{3,10}$/, { each: true })
+  @Matches(/^[A-Z0-9]{2,10}$/, { each: true })
   @ArrayUnique()
   tokens: string[];
 }

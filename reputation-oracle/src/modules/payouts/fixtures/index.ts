@@ -13,15 +13,24 @@ import {
   ParticipantOutcome,
 } from '../types';
 
-function generateValidSymbol(): string {
+const MIN_SYMBOL_LENGTH = 2;
+const MAX_SYMBOL_LENGTH = 10;
+
+function generateValidSymbol(minLength = MIN_SYMBOL_LENGTH): string {
+  if (minLength > MAX_SYMBOL_LENGTH || minLength < MIN_SYMBOL_LENGTH) {
+    throw new Error(
+      `minLength must be in [${MIN_SYMBOL_LENGTH}, ${MAX_SYMBOL_LENGTH}] range`,
+    );
+  }
+
   return faker.string.alphanumeric({
     casing: 'upper',
-    length: faker.number.int({ min: 3, max: 10 }),
+    length: faker.number.int({ min: minLength, max: MAX_SYMBOL_LENGTH }),
   });
 }
 
 function generateValidPair(): string {
-  return `${generateValidSymbol()}/${generateValidSymbol()}`;
+  return `${generateValidSymbol()}/${generateValidSymbol(3)}`;
 }
 
 export function generateManifest(
@@ -175,6 +184,10 @@ export function generateIntermediateResultsData(): IntermediateResultsData {
     chain_id: generateTestnetChainId(),
     address: faker.finance.ethereumAddress(),
     exchange: faker.lorem.slug(),
+    symbol: faker.helpers.arrayElement([
+      generateValidSymbol(),
+      generateValidPair(),
+    ]),
     results: [],
   };
 
