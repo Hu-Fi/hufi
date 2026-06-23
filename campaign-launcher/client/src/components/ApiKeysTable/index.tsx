@@ -113,11 +113,9 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
             }}
           >
             <Typography
-              variant="body2"
+              variant="body1"
               sx={{
                 textTransform: 'capitalize',
-                fontWeight: 500,
-                lineHeight: '100%',
               }}
             >
               {exchangeName}
@@ -146,13 +144,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
               alignItems: 'center',
             }}
           >
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 500,
-                lineHeight: '100%',
-              }}
-            >
+            <Typography variant="body1">
               {isMobile ? formatAddress(params.row.apiKey) : params.row.apiKey}
             </Typography>
             {isBitmart && !!params.row.extras?.api_key_memo && (
@@ -171,7 +163,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                     width: '20px',
                     height: '20px',
                     px: 1,
-                    bgcolor: 'primary.100',
+                    bgcolor: 'background.default',
                   }}
                 />
               </CustomTooltip>
@@ -226,7 +218,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                 disabled={isRevalidating}
                 onClick={() => handleClickOnRefresh(exchangeName)}
               >
-                <RefreshIcon />
+                <RefreshIcon sx={{ fontSize: '20px' }} />
               </IconButton>
             )}
             <IconButton
@@ -234,14 +226,14 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
               disableRipple
               onClick={() => handleClickOnEdit(exchangeName)}
             >
-              <EditIcon sx={{ color: 'text.primary' }} />
+              <EditIcon sx={{ color: 'text.primary', fontSize: '20px' }} />
             </IconButton>
             <IconButton
               sx={{ p: 0 }}
               disableRipple
               onClick={() => handleClickOnDelete(exchangeName)}
             >
-              <DeleteIcon sx={{ color: 'text.primary' }} />
+              <DeleteIcon sx={{ color: 'text.primary', fontSize: '20px' }} />
             </IconButton>
           </Box>
         );
@@ -296,9 +288,8 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
                 >
                   <NoKeysIcon sx={{ fontSize: 48 }} />
                   <Typography
-                    variant="body2"
+                    variant="body1"
                     sx={{
-                      fontWeight: 500,
                       color: 'text.secondary',
                     }}
                   >
@@ -316,7 +307,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
             p: isMobile ? 0 : 0,
             width: '100%',
             height: '400px',
-            background: 'primary.100',
+            background: 'background.default',
           },
           '& .MuiDataGrid-cell': {
             display: 'flex',
@@ -340,7 +331,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
             bgcolor: 'transparent',
           },
           '& .MuiDataGrid-columnHeader': {
-            bgcolor: 'primary.200',
+            bgcolor: 'background.paper',
             fontSize: '14px',
             lineHeight: '14px',
             fontWeight: 500,

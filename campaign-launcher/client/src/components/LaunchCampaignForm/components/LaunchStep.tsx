@@ -101,15 +101,7 @@ const LaunchStep: FC<Props> = ({
   return (
     <>
       {!isEscrowCreated && (
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'neutral.100',
-            mx: 'auto',
-            fontSize: { xs: '18px', md: '20px' },
-            fontWeight: { xs: 700, md: 600 },
-          }}
-        >
+        <Typography variant="h5" sx={{ color: 'neutral.100', mx: 'auto' }}>
           One final look before you initiate the campaign
         </Typography>
       )}
@@ -121,7 +113,6 @@ const LaunchStep: FC<Props> = ({
             mx: 'auto',
             height: 'fit-content',
             gap: 2,
-            bgcolor: 'primary.200',
             borderRadius: '8px',
             border: '1px solid',
             borderColor: 'border.strong',

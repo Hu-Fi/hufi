@@ -44,9 +44,8 @@ type Props = {
 
 const labelStyles = {
   color: 'neutral.100',
+  fontWeight: 500,
   mb: 1.5,
-  lineHeight: '100%',
-  letterSpacing: '0px',
 };
 
 const MarketMakingForm: FC<Props> = ({
@@ -70,7 +69,7 @@ const MarketMakingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Exchange
           </Typography>
           <Controller
@@ -89,7 +88,7 @@ const MarketMakingForm: FC<Props> = ({
           )}
         </FormControl>
         <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Trading Pair
           </Typography>
           <Controller
@@ -112,7 +111,7 @@ const MarketMakingForm: FC<Props> = ({
                     paper: {
                       elevation: 4,
                       sx: {
-                        bgcolor: 'primary.100',
+                        bgcolor: 'background.default',
                       },
                     },
                   }}
@@ -170,7 +169,7 @@ const MarketMakingForm: FC<Props> = ({
             width: '100%',
           }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Start Date
           </Typography>
           <Controller
@@ -206,7 +205,7 @@ const MarketMakingForm: FC<Props> = ({
             width: '100%',
           }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             End Date
           </Typography>
           <Controller
@@ -243,7 +242,7 @@ const MarketMakingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Fund Token
           </Typography>
           <Controller
@@ -258,7 +257,7 @@ const MarketMakingForm: FC<Props> = ({
                     paper: {
                       elevation: 4,
                       sx: {
-                        bgcolor: 'primary.100',
+                        bgcolor: 'background.default',
                       },
                     },
                   },
@@ -281,7 +280,7 @@ const MarketMakingForm: FC<Props> = ({
           error={!!errors.daily_volume_target}
           sx={{ width: '100%' }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Daily Volume Target
           </Typography>
           <Controller
@@ -342,10 +341,8 @@ const MarketMakingForm: FC<Props> = ({
                         }}
                       >
                         <Typography
-                          variant="body1"
-                          sx={{
-                            color: 'text.primary',
-                          }}
+                          variant="body3"
+                          sx={{ color: 'text.primary' }}
                         >
                           {getTokenInfo(volumeToken).label || ''}
                         </Typography>

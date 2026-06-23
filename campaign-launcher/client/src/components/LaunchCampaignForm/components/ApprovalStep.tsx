@@ -45,13 +45,7 @@ const AllowanceTooltip = ({ type }: { type: AllowanceType }) => {
       arrow
       placement={isMobile ? 'top' : 'right'}
       title={
-        <Typography
-          component="p"
-          variant="tooltip"
-          sx={{ color: 'primary.100' }}
-        >
-          {allowanceTooltipText[type]}
-        </Typography>
+        <Typography variant="tooltip">{allowanceTooltipText[type]}</Typography>
       }
     >
       <InfoTooltipInner />
@@ -208,11 +202,7 @@ const ApprovalStep: FC<Props> = ({
           >
             <Stack sx={{ maxWidth: '500px', width: '100%' }}>
               <Stack sx={{ gap: { xs: 1.5, md: 3 } }}>
-                <Typography
-                  variant="h6"
-                  component="h3"
-                  sx={{ color: 'neutral.100' }}
-                >
+                <Typography variant="h5" sx={{ color: 'neutral.100' }}>
                   Campaign Fund Amount
                 </Typography>
                 <FormControl
@@ -245,7 +235,12 @@ const ApprovalStep: FC<Props> = ({
                           input: {
                             endAdornment: (
                               <InputAdornment position="end">
-                                {inputAdornmentLabel}
+                                <Typography
+                                  variant="body3"
+                                  sx={{ color: 'text.primary' }}
+                                >
+                                  {inputAdornmentLabel}
+                                </Typography>
                               </InputAdornment>
                             ),
                           },
@@ -259,7 +254,7 @@ const ApprovalStep: FC<Props> = ({
                     </FormHelperText>
                   )}
                   <Typography
-                    variant="body2"
+                    variant="body1"
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -270,7 +265,7 @@ const ApprovalStep: FC<Props> = ({
                     }}
                   >
                     <span>Current allowance:</span>
-                    <Typography component="span" sx={{ color: 'accent.main' }}>
+                    <Typography variant="body1" sx={{ color: 'accent.main' }}>
                       {currentAllowance === UNLIMITED_AMOUNT
                         ? 'Unlimited'
                         : `${currentAllowance ?? 0} ${fundToken.toUpperCase()}`}
@@ -281,11 +276,7 @@ const ApprovalStep: FC<Props> = ({
               <Divider sx={{ my: 4 }} />
               <Stack sx={{ gap: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography
-                    variant="h6"
-                    component="h3"
-                    sx={{ color: 'neutral.100' }}
-                  >
+                  <Typography variant="h5" sx={{ color: 'neutral.100' }}>
                     Token Approval
                   </Typography>
                   {(isLoading || isApproving) && <CircularProgress size={24} />}
@@ -332,6 +323,7 @@ const ApprovalStep: FC<Props> = ({
                               sx={{
                                 mr: 0,
                                 '& .MuiRadio-root, & .MuiTypography-root': {
+                                  fontSize: '16px',
                                   color:
                                     selected_allowance ===
                                       AllowanceType.CUSTOM && !isApproving
@@ -416,10 +408,8 @@ const ApprovalStep: FC<Props> = ({
                                           }}
                                         >
                                           <Typography
-                                            variant="body1"
-                                            sx={{
-                                              color: 'text.primary',
-                                            }}
+                                            variant="body3"
+                                            sx={{ color: 'text.primary' }}
                                           >
                                             {inputAdornmentLabel}
                                           </Typography>
@@ -454,6 +444,7 @@ const ApprovalStep: FC<Props> = ({
                             sx={{
                               mr: 0,
                               '& .MuiRadio-root, & .MuiTypography-root': {
+                                fontSize: '16px',
                                 color:
                                   selected_allowance ===
                                     AllowanceType.UNLIMITED && !isApproving

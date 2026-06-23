@@ -34,7 +34,7 @@ export const StatsCard = styled(Box, {
   flex: 1,
   gap: '45px',
   ...(withBorder && {
-    backgroundColor: theme.palette.primary['200'],
+    backgroundColor: theme.palette.background.paper,
     borderRadius: '16px',
     border: '1px solid',
     borderColor: theme.palette.border.main,
@@ -52,6 +52,9 @@ export const StatsCard = styled(Box, {
 }));
 
 export const CardName = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
   color: theme.palette.secondary['100'],
   fontSize: '16px',
   fontWeight: 600,
@@ -60,6 +63,7 @@ export const CardName = styled(Typography)(({ theme }) => ({
   textTransform: 'uppercase',
 
   [theme.breakpoints.down('md')]: {
+    gap: 6,
     color: theme.palette.text.secondary,
     fontSize: '14px',
     fontWeight: 400,
@@ -205,7 +209,7 @@ const CampaignStats: FC<Props> = ({
             bgcolor: '#361034',
             borderRadius: '16px',
             border: '1px solid',
-            borderColor: 'neutral.400',
+            borderColor: 'error.main',
           }}
         >
           <Box
@@ -217,17 +221,17 @@ const CampaignStats: FC<Props> = ({
           >
             <CancelIcon sx={{ fontSize: 32 }} />
             <Typography
-              variant="h5"
+              variant="h4"
               component="p"
               sx={{
-                color: 'neutral.400',
-                fontWeight: 600,
+                color: 'error.main',
               }}
             >
               Campaign Cancelled
             </Typography>
           </Box>
           <Typography
+            variant="body3"
             sx={{
               ml: 6,
               color: 'neutral.500',
@@ -245,7 +249,7 @@ const CampaignStats: FC<Props> = ({
         spacing={{ xs: 0, md: 6 }}
         sx={{
           width: '100%',
-          bgcolor: 'primary.200',
+          bgcolor: 'background.paper',
           borderRadius: '16px',
           border: '1px solid',
           borderColor: 'border.main',
@@ -284,7 +288,7 @@ const CampaignStats: FC<Props> = ({
       >
         <Grid size={{ xs: 6, md: 4 }}>
           <StatsCard withBorder>
-            <CardName variant="subtitle2">{targetInfo.label}</CardName>
+            <CardName>{targetInfo.label}</CardName>
             <CardValue>
               <CompactNumberWithTooltip
                 value={targetInfo.value}
@@ -297,7 +301,7 @@ const CampaignStats: FC<Props> = ({
         {isOngoingCampaign && (
           <Grid size={{ xs: 6, md: 4 }} sx={{ display: 'flex' }}>
             <StatsCard withBorder>
-              <CardName variant="subtitle2">
+              <CardName>
                 {showUserPerformance ? 'Ranking' : 'Total Participants'}
               </CardName>
               <CardValue>

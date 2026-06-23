@@ -28,7 +28,7 @@ const ViewAllButton = ({ onClick }: { onClick: () => void }) => (
       left: 0,
       right: 0,
       background: {
-        xs: 'primary.200',
+        xs: 'background.paper',
         md: 'linear-gradient(0deg, #251D47 12.72%, rgba(37, 29, 71, 0.00) 100%)',
       },
     }}
@@ -97,6 +97,7 @@ const getTargetLabel = (campaignType: CampaignType): string => {
       return 'Unknown Target';
   }
 };
+
 type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
@@ -150,12 +151,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         </Typography>
         <Typography
           component="p"
-          sx={{
-            fontSize: { xs: '12px', md: '16px' },
-            fontWeight: 500,
-            lineHeight: 1,
-            opacity: 0.6,
-          }}
+          variant={isMobile ? 'subtitle4' : 'body3'}
+          sx={{ opacity: 0.6 }}
         >
           Actual on: {formatActualOnDate(leaderboard.updated_at)}
         </Typography>
@@ -164,7 +161,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         elevation={0}
         sx={{
           width: '100%',
-          bgcolor: { xs: 'transparent', md: 'primary.200' },
+          bgcolor: { xs: 'transparent', md: 'background.paper' },
           borderRadius: '8px',
           border: { xs: 'none', md: '1px solid' },
           borderColor: { xs: 'unset', md: 'border.strong' },
@@ -211,10 +208,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   },
                   borderBottom: { xs: 'none', md: 'none' },
                   borderColor: { xs: 'unset', md: 'border.strong' },
-                  background: {
-                    xs: 'border.strong',
-                    md: 'linear-gradient(180deg, #3a2e6f 0%, #231d3e 100%)',
-                  },
+                  background:
+                    'linear-gradient(180deg, #3a2e6f 0%, #231d3e 100%)',
                 }}
               >
                 <Box
@@ -254,12 +249,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   >
                     <Typography
                       component="p"
-                      variant={isMobile ? 'caption' : 'h6'}
-                      sx={{
-                        color: 'neutral.100',
-                        fontWeight: 600,
-                        letterSpacing: { xs: 0, md: 2 },
-                      }}
+                      variant={isMobile ? 'subtitle3' : 'h5'}
+                      sx={{ color: 'neutral.100' }}
                     >
                       {formatAddress(address, 4, 2)}
                     </Typography>
@@ -273,7 +264,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                     py: { xs: 1, md: 1.5 },
                     px: { xs: 1, md: 1.5 },
                     gap: { xs: 0.5, md: 1.5 },
-                    bgcolor: 'primary.200',
+                    bgcolor: 'background.paper',
                     borderRadius: '8px',
                     border: { xs: 'none', md: '1px solid' },
                     borderColor: { xs: 'unset', md: 'border.strong' },

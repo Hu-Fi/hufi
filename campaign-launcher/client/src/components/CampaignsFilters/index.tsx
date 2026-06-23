@@ -67,11 +67,10 @@ const CampaignsFilters: FC<Props> = ({
         sx={{
           p: 0,
           position: 'relative',
-          bgcolor: 'primary.100',
           width: 42,
           height: 42,
           border: '1px solid',
-          borderColor: 'primary.200',
+          borderColor: 'border.strong',
           borderRadius: '100%',
         }}
       >

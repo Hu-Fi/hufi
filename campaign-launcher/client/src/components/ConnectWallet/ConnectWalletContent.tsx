@@ -132,7 +132,7 @@ const ConnectWalletContent: FC = () => {
           mt: 5,
         }}
       >
-        <Typography variant="h6" sx={{ color: 'neutral.100' }}>
+        <Typography variant="body3" sx={{ color: 'neutral.100' }}>
           Continue in {connectingWallet.name}
         </Typography>
         <Box
@@ -147,7 +147,7 @@ const ConnectWalletContent: FC = () => {
           }}
         />
         <Typography
-          variant="body2"
+          variant="body3"
           sx={{ color: 'text.secondary', mx: 2, textAlign: 'center' }}
         >
           Click on 'Open' and accept the connection request in the wallet, or
@@ -224,7 +224,7 @@ const ConnectWalletContent: FC = () => {
         textAlign: 'center',
       }}
     >
-      <Typography variant="h6" sx={{ color: 'neutral.100' }}>
+      <Typography variant="body3" sx={{ color: 'neutral.100' }}>
         Scan with {connectingWallet.name}
       </Typography>
       <Box
@@ -242,7 +242,7 @@ const ConnectWalletContent: FC = () => {
           uri={wcUri}
         />
       </Box>
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography variant="body3" sx={{ color: 'text.secondary' }}>
         Open your wallet app and scan this QR code to continue.
       </Typography>
       <Button
@@ -257,13 +257,14 @@ const ConnectWalletContent: FC = () => {
     </Stack>
   ) : (
     <Stack sx={{ height: '100%', minHeight: 0 }}>
-      <Typography variant="h6" sx={{ color: 'neutral.100', mb: 1 }}>
+      <Typography
+        component="h6"
+        variant="body4"
+        sx={{ color: 'neutral.100', mb: 1 }}
+      >
         Connect Wallet
       </Typography>
-      <Typography
-        variant="body2"
-        sx={{ color: 'text.primary', fontWeight: 500, mb: 3, pr: 5 }}
-      >
+      <Typography variant="body1" sx={{ color: 'text.primary', mb: 3, pr: 5 }}>
         Connect your wallet to create, participate in campaigns and even track
         your performance on the leaderboard.
       </Typography>
@@ -302,7 +303,7 @@ const ConnectWalletContent: FC = () => {
       >
         {!isFetching && showAllWallets && displayedWallets.length === 0 && (
           <Stack sx={{ alignItems: 'center', py: 15 }}>
-            <Typography variant="body2" sx={{ color: 'text.primary' }}>
+            <Typography variant="body1" sx={{ color: 'text.primary' }}>
               No wallets found
             </Typography>
           </Stack>
@@ -375,7 +376,7 @@ const ConnectWalletContent: FC = () => {
                       />
                     )}
                     <Typography
-                      variant="body2"
+                      variant="body1"
                       sx={{
                         color: 'neutral.100',
                         maxWidth: '100%',

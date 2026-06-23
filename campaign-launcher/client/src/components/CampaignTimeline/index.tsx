@@ -107,9 +107,9 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
       />
       {label && (
         <Typography
+          variant="body1"
           sx={{
-            fontSize: 14,
-            letterSpacing: '0.15px',
+            color: 'text.primary',
             mr: isRow ? 1 : 0,
           }}
         >
@@ -146,15 +146,7 @@ const CampaignTimeline: FC<Props> = ({ campaign, direction = 'row' }) => {
             }}
           />
         )}
-        <Typography
-          sx={{
-            color,
-            fontSize: 14,
-            fontWeight: 700,
-            lineHeight: '150%',
-            letterSpacing: '0.15px',
-          }}
-        >
+        <Typography variant="body2" sx={{ color }}>
           {value}
         </Typography>
       </Box>

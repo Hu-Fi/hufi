@@ -23,7 +23,7 @@ const slotProps = {
   paper: {
     elevation: 4,
     sx: {
-      bgcolor: 'primary.100',
+      bgcolor: 'background.default',
     },
   },
 };
@@ -101,8 +101,8 @@ const FormExchangeSelect = <
                 />
               )}
               <Typography
-                variant="body2"
-                sx={{ color: 'primary', textTransform: 'capitalize' }}
+                variant="body1"
+                sx={{ color: 'neutral.100', textTransform: 'capitalize' }}
               >
                 {exchange?.display_name}
               </Typography>

@@ -102,6 +102,7 @@ const JoinCampaignOverlay: FC<Props> = ({
               px: 4,
               py: 4,
               maxWidth: 560,
+              height: 400,
               width: '100%',
             }
       }
@@ -109,7 +110,7 @@ const JoinCampaignOverlay: FC<Props> = ({
         px: 2,
         py: 4,
         minHeight: isConnectStep ? '450px' : 'auto',
-        maxHeight: isConnectStep ? '550px' : 'auto',
+        maxHeight: isConnectStep ? '550px' : '400px',
       }}
       closeButtonSx={{
         top: shouldShowTwoSteps ? 24 : 32,
@@ -145,19 +146,13 @@ const JoinCampaignOverlay: FC<Props> = ({
         {!isConnectStep && (
           <Stack sx={{ gap: 1.5 }}>
             <Typography
-              variant="body1"
-              sx={{
-                color: 'neutral.100',
-                fontSize: { xs: '16px', md: '20px' },
-                fontWeight: 600,
-              }}
+              component="h6"
+              variant="body4"
+              sx={{ color: 'neutral.100' }}
             >
               Sign In
             </Typography>
-            <Typography
-              variant="subtitle2"
-              sx={{ color: 'text.primary', fontWeight: 500 }}
-            >
+            <Typography variant="body1">
               To keep your account secure, please sign this message. This is a
               gasless way to confirm you own this address.
             </Typography>
@@ -181,11 +176,11 @@ const JoinCampaignOverlay: FC<Props> = ({
               }}
             >
               <Typography variant="body1">Connected Wallet</Typography>
-              <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>
+              <Typography variant="body1">
                 {formatAddress(activeAddress)}
               </Typography>
             </Box>
-            <Stack direction="row" sx={{ gap: 2, mt: 6 }}>
+            <Stack direction="row" sx={{ gap: 2, mt: 'auto' }}>
               <Button
                 variant="outlined"
                 size="large"

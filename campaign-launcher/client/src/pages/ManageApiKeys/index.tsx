@@ -64,9 +64,9 @@ const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
         alignItems: 'center',
         width: '100%',
         height: MOBILE_BOTTOM_NAV_HEIGHT,
-        bgcolor: 'primary.100',
+        bgcolor: 'background.default',
         borderTop: '2px solid',
-        borderColor: 'primary.200',
+        borderColor: 'background.paper',
         position: 'fixed',
         bottom: 0,
         left: 0,
@@ -126,14 +126,7 @@ const ManageApiKeysPage: FC = () => {
           mb: { xs: showDocsReference ? 2 : 4, md: 4 },
         }}
       >
-        <Typography
-          component="h2"
-          variant="h6"
-          sx={{
-            color: 'neutral.100',
-            fontWeight: 600,
-          }}
-        >
+        <Typography component="h2" variant="h5" sx={{ color: 'neutral.100' }}>
           Manage API Keys
         </Typography>
         {!isMobile && addApiKeyCta}

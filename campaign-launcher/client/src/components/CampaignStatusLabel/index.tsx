@@ -2,6 +2,7 @@ import { type FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { type Campaign, CampaignStatus } from '@/types';
 
 const mapStatusToColorAndText = (
@@ -63,6 +64,7 @@ const CampaignStatusLabel: FC<Props> = ({
   startDate,
   endDate,
 }) => {
+  const isMobile = useIsMobile();
   const { color, text } = mapStatusToColorAndText(
     campaignStatus,
     startDate,
@@ -86,11 +88,9 @@ const CampaignStatusLabel: FC<Props> = ({
         }}
       />
       <Typography
+        variant={isMobile ? 'body2' : 'body3'}
         sx={{
           color,
-          fontSize: 12,
-          fontWeight: 600,
-          lineHeight: '150%',
           textTransform: 'capitalize',
         }}
       >

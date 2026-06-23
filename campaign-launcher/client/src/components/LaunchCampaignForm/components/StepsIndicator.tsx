@@ -19,7 +19,8 @@ const CampaignTypeTooltip: FC = () => {
           target="_blank"
           rel="noopener noreferrer"
           sx={{
-            color: 'primary.100',
+            color: 'primary.contrastText',
+            textDecoration: 'underline',
           }}
         >
           What are the campaign types?
@@ -37,7 +38,9 @@ type Props = {
 };
 
 const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
+  const isMobile = useIsMobile();
   const isLastStep = currentStep === steps.length;
+
   return (
     <Stack
       sx={{
@@ -48,29 +51,21 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
       <Box
         sx={{
           display: 'flex',
-          alignItems: { xs: 'flex-start', md: 'center' },
+          alignItems: { xs: 'center', md: 'center' },
           gap: 0.5,
         }}
       >
         {!isLastStep && (
           <Typography
-            variant="h6"
-            sx={{
-              color: 'neutral.100',
-              fontSize: { xs: '18px', md: '20px' },
-              fontWeight: { xs: 700, md: 600 },
-            }}
+            variant={isMobile ? 'h6' : 'h5'}
+            sx={{ color: 'neutral.100', fontWeight: { xs: 700, md: 600 } }}
           >
             {currentStep}.
           </Typography>
         )}
         <Typography
-          variant="h6"
-          sx={{
-            color: 'neutral.100',
-            fontSize: { xs: '18px', md: '20px' },
-            fontWeight: { xs: 700, md: 600 },
-          }}
+          variant={isMobile ? 'h6' : 'h5'}
+          sx={{ color: 'neutral.100', fontWeight: { xs: 700, md: 600 } }}
         >
           {steps[currentStep - 1]}
         </Typography>
@@ -93,7 +88,9 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
                 flexGrow: 1,
                 height: 9,
                 bgcolor:
-                  currentStep >= index + 1 ? 'secondary.200' : 'primary.200',
+                  currentStep >= index + 1
+                    ? 'secondary.200'
+                    : 'background.paper',
                 borderRadius: '90px',
               }}
             />

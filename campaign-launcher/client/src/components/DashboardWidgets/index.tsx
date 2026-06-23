@@ -21,7 +21,7 @@ const Card = styled('div', {
   display: 'flex',
   flexDirection: isReverse ? 'column-reverse' : 'column',
   height: '100%',
-  backgroundColor: theme.palette.primary['200'],
+  backgroundColor: theme.palette.background.paper,
   borderRadius: '16px',
   border: '1px solid',
   borderColor: theme.palette.border.main,
@@ -86,10 +86,11 @@ const DashboardWidgets: FC = () => {
             />
           ) : (
             <Typography
-              variant={isMobile ? 'h6' : 'h4'}
+              variant={isMobile ? 'h5' : 'h3'}
+              component="p"
               sx={{
                 color: 'neutral.100',
-                fontWeight: { xs: 500, md: 800 },
+                lineHeight: { xs: '32px', md: '42px' },
                 mt: { xs: 0, md: 5 },
                 mb: { xs: 1, md: 0 },
               }}
@@ -115,10 +116,11 @@ const DashboardWidgets: FC = () => {
             />
           ) : (
             <Typography
-              variant={isMobile ? 'h6' : 'h4'}
+              variant={isMobile ? 'h5' : 'h3'}
+              component="p"
               sx={{
                 color: 'neutral.100',
-                fontWeight: { xs: 500, md: 800 },
+                lineHeight: { xs: '32px', md: '42px' },
                 mt: { xs: 0, md: 5 },
                 mb: { xs: 1, md: 0 },
               }}
@@ -133,12 +135,11 @@ const DashboardWidgets: FC = () => {
           {isConnected ? (
             <>
               <Typography
-                component="h5"
+                variant="h5"
+                component="p"
                 sx={{
                   color: 'neutral.100',
-                  fontSize: '20px',
                   textTransform: 'capitalize',
-                  lineHeight: { xs: '150%', md: '100%' },
                   fontWeight: { xs: 600, md: 800 },
                   mb: 1,
                 }}
@@ -146,7 +147,7 @@ const DashboardWidgets: FC = () => {
                 Host Trading Campaigns in 5 Mins
               </Typography>
               <Typography
-                variant="body2"
+                variant="body1"
                 sx={{
                   color: 'text.secondary',
                   mb: 3,
@@ -162,9 +163,10 @@ const DashboardWidgets: FC = () => {
               <CardTitle>
                 <LinkIcon sx={{ width: 20, height: 20 }} />
                 <Typography
+                  variant="h5"
+                  component="p"
                   sx={{
                     color: 'neutral.100',
-                    fontSize: '20px',
                     textTransform: 'capitalize',
                     fontWeight: { xs: 600, md: 800 },
                     lineHeight: '36px',
@@ -174,7 +176,7 @@ const DashboardWidgets: FC = () => {
                 </Typography>
               </CardTitle>
               <Typography
-                variant="body2"
+                variant="body1"
                 sx={{
                   color: 'text.secondary',
                   mb: 3,

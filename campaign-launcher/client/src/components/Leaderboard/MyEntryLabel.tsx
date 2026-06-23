@@ -12,15 +12,7 @@ const MyEntryLabel = () => (
       background: 'linear-gradient(98deg, #FFF -10.24%, #FEC0D6 106.59%)',
     }}
   >
-    <Typography
-      variant="caption"
-      sx={{
-        color: '#e65d8e',
-        fontWeight: 600,
-        letterSpacing: 0,
-        lineHeight: 1,
-      }}
-    >
+    <Typography variant="subtitle3" sx={{ color: '#e65d8e' }}>
       You
     </Typography>
   </Box>

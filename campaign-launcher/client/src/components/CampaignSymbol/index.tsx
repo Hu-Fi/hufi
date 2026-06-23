@@ -33,6 +33,7 @@ export const getSymbolStyles = (size: 'xs' | 'small' | 'medium' | 'large') => {
         text: {
           fontWeight: 600,
           fontSize: 20,
+          lineHeight: '20px',
         },
       };
     case 'medium':

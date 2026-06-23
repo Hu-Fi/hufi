@@ -193,13 +193,7 @@ const Campaigns: FC = () => {
           >
             Campaigns
           </Typography>
-          <Typography
-            sx={{
-              fontSize: 15,
-              fontWeight: 400,
-              color: 'secondary.100',
-            }}
-          >
+          <Typography variant="body3" sx={{ color: 'secondary.100' }}>
             Join or host trading campaigns to earn rewards.
           </Typography>
         </Stack>

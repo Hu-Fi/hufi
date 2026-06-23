@@ -41,7 +41,6 @@ const BaseDrawer: FC<PropsWithChildren<Props>> = ({
           elevation: 0,
           sx: {
             py: 2,
-            bgcolor: 'primary.200',
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
             border: 'none',

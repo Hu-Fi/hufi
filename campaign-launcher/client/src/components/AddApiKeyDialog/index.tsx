@@ -163,20 +163,12 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
           }}
         >
           <Typography
-            variant="h5"
-            sx={{
-              color: 'neutral.100',
-              fontWeight: 700,
-            }}
+            variant={isMobile ? 'body4' : 'h4'}
+            sx={{ color: 'neutral.100' }}
           >
             Add API Key
           </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant="body1">
             For you to join a running campaign you must connect your API key
           </Typography>
         </Stack>
@@ -199,12 +191,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               }}
             >
               <ModalLoading />
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  textAlign: 'center',
-                }}
-              >
+              <Typography variant="body1" sx={{ textAlign: 'center' }}>
                 Connecting API key...
               </Typography>
             </Stack>
@@ -229,7 +216,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                 }}
               >
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
                     color: 'neutral.100',
                     fontWeight: 500,
@@ -255,7 +242,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               </FormControl>
               <FormControl error={!!errors.apiKey} sx={{ flex: 1 }}>
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
                     color: 'neutral.100',
                     fontWeight: 500,
@@ -286,7 +273,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               </FormControl>
               <FormControl error={!!errors.secret} sx={{ width: '100%' }}>
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
                     color: 'neutral.100',
                     fontWeight: 500,
@@ -316,7 +303,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               {isBitmart && (
                 <FormControl error={!!errors.memo} sx={{ width: '100%' }}>
                   <Typography
-                    variant="h6"
+                    variant="h5"
                     sx={{
                       color: 'neutral.100',
                       fontWeight: 500,
@@ -386,7 +373,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             >
               <ModalSuccess>
                 <Typography
-                  variant="subtitle2"
+                  variant="body1"
                   sx={{
                     py: 1,
                     mb: 1,

@@ -172,7 +172,7 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
             >
               <ModalLoading />
               <Typography
-                variant="subtitle2"
+                variant="body1"
                 sx={{
                   textAlign: 'center',
                 }}
@@ -356,7 +356,7 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
             >
               <ModalSuccess>
                 <Typography
-                  variant="subtitle2"
+                  variant="body1"
                   sx={{
                     py: 1,
                     mb: 1,

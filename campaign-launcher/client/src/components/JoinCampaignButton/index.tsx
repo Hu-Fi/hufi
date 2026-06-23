@@ -168,7 +168,7 @@ const JoinCampaignButton: FC<Props> = ({ campaign }) => {
         onClick={handleButtonClick}
       >
         {isJoining ? (
-          <CircularProgress size={24} sx={{ color: 'primary.100' }} />
+          <CircularProgress size={24} sx={{ color: 'inherit' }} />
         ) : (
           getButtonText()
         )}

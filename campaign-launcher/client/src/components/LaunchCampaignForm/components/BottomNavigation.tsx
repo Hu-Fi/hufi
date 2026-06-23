@@ -36,9 +36,9 @@ const Wrapper = ({
           right: '0',
           bottom: { xs: 0, md: 'auto' },
           width: '100%',
-          bgcolor: 'primary.100',
+          bgcolor: 'background.default',
           borderTop: '2px solid',
-          borderColor: 'primary.200',
+          borderColor: 'background.paper',
           zIndex: (theme) => theme.zIndex.appBar,
         }}
       >

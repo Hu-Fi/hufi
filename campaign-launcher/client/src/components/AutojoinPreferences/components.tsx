@@ -21,7 +21,7 @@ export const SwitchStyled = styled((props: SwitchProps) => (
       transform: 'translateX(26px)',
       color: theme.palette.neutral['100'],
       '& + .MuiSwitch-track': {
-        backgroundColor: theme.palette.neutral['200'],
+        backgroundColor: theme.palette.success.main,
         opacity: 1,
         border: 0,
       },
@@ -30,12 +30,12 @@ export const SwitchStyled = styled((props: SwitchProps) => (
       },
     },
     '&.Mui-focusVisible .MuiSwitch-thumb': {
-      color: theme.palette.neutral['200'],
+      color: theme.palette.success.main,
       border: '6px solid',
       borderColor: theme.palette.neutral['100'],
     },
     '&.Mui-disabled .MuiSwitch-thumb': {
-      color: theme.palette.primary['200'],
+      color: theme.palette.background.paper,
     },
     '&.Mui-disabled + .MuiSwitch-track': {
       opacity: 0.7,
@@ -47,7 +47,7 @@ export const SwitchStyled = styled((props: SwitchProps) => (
   },
   '& .MuiSwitch-track': {
     borderRadius: 999,
-    backgroundColor: theme.palette.primary['100'],
+    backgroundColor: theme.palette.background.default,
     opacity: 1,
     transition: theme.transitions.create(['background-color'], {
       duration: 500,
@@ -116,7 +116,7 @@ export const CheckboxIcon = () => (
     sx={{
       width: 20,
       height: 20,
-      bgcolor: 'primary.200',
+      bgcolor: 'background.paper',
       borderRadius: '20px',
       border: '1px solid',
       borderColor: 'border.strong',

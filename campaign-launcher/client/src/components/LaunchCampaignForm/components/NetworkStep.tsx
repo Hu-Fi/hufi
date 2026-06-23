@@ -47,7 +47,7 @@ const NotStakedWarning: FC<{
           alignItems: 'center',
           gap: 1.5,
           fontWeight: 600,
-          color: 'neutral.300',
+          color: 'warning.main',
         }}
       >
         <WarningIcon />
@@ -205,7 +205,6 @@ const NetworkStep: FC<Props> = ({
                     px: 3,
                     gap: 2,
                     borderRadius: '12px',
-                    bgcolor: 'primary.200',
                     border: '1px solid',
                     borderColor: isSelected ? 'accent.main' : 'border.strong',
                     cursor: 'pointer',
@@ -214,13 +213,7 @@ const NetworkStep: FC<Props> = ({
                   onClick={() => handleClickOnNetwork(value)}
                 >
                   {getChainIcon(value)}
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: 'neutral.100',
-                      fontWeight: 500,
-                    }}
-                  >
+                  <Typography variant="body3" sx={{ color: 'neutral.100' }}>
                     {label}
                   </Typography>
                 </Paper>

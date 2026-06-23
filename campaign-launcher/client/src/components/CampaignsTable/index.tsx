@@ -68,12 +68,10 @@ const CampaignsTable: FC<Props> = ({
               size="medium"
             />
             <Typography
-              variant="caption"
+              variant="subtitle3"
               sx={{
                 color: 'secondary.400',
                 textTransform: 'uppercase',
-                fontWeight: 600,
-                letterSpacing: 0,
               }}
             >
               {mapTypeToLabel(params.row.type)}
@@ -93,6 +91,7 @@ const CampaignsTable: FC<Props> = ({
           params.row.exchange_name;
         return (
           <Typography
+            variant="body4"
             sx={{
               color: 'neutral.100',
               textTransform: 'capitalize',
@@ -163,15 +162,7 @@ const CampaignsTable: FC<Props> = ({
         const { label: targetTokenSymbol } = getTokenInfo(targetToken);
         const targetValue = getTargetInfo(params.row).value;
         return (
-          <Typography
-            component="p"
-            variant="subtitle2"
-            sx={{
-              color: 'neutral.100',
-              fontSize: 16,
-              fontWeight: 700,
-            }}
-          >
+          <Typography variant="body4" sx={{ color: 'neutral.100' }}>
             <CompactNumberWithTooltip value={targetValue} /> {targetTokenSymbol}
           </Typography>
         );
@@ -186,13 +177,7 @@ const CampaignsTable: FC<Props> = ({
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row;
           return (
-            <Typography
-              variant="body1"
-              sx={{
-                color: 'neutral.100',
-                fontWeight: 700,
-              }}
-            >
+            <Typography variant="body4" sx={{ color: 'neutral.100' }}>
               <span>{fund_amount}</span> <span>{fund_token.toUpperCase()}</span>
             </Typography>
           );
@@ -202,13 +187,7 @@ const CampaignsTable: FC<Props> = ({
           params.row;
 
         return (
-          <Typography
-            variant="body1"
-            sx={{
-              color: 'neutral.100',
-              fontWeight: 600,
-            }}
-          >
+          <Typography variant="body4" sx={{ color: 'neutral.100' }}>
             <FormattedNumber
               value={formatTokenAmount(fund_amount, fund_token_decimals)}
               suffix={` ${fund_token_symbol}`}
@@ -303,7 +282,7 @@ const CampaignsTable: FC<Props> = ({
         border: 'none',
         borderRadius: '18px',
         opacity: isFetching ? 0.5 : 1,
-        bgcolor: 'primary.200',
+        bgcolor: 'background.paper',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',
         },

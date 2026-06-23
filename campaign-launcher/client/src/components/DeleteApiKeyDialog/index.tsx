@@ -57,34 +57,25 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
           height: '100%',
         }}
       >
-        <WarningIcon sx={{ fontSize: 60, mb: 2, color: 'neutral.300' }} />
-        <Typography
-          variant="h6"
-          sx={{
-            mb: 2,
-            fontWeight: 700,
-          }}
-        >
+        <WarningIcon sx={{ fontSize: 60, mb: 2, color: 'warning.main' }} />
+        <Typography variant="h4" sx={{ mb: 2 }}>
           Delete API key?
         </Typography>
         {isPending && <ModalLoading />}
         {isIdle && (
           <>
             <Typography
-              variant="body1"
+              variant="body3"
               sx={{
-                textAlign: 'center',
                 color: 'neutral.500',
-                fontWeight: 500,
+                textAlign: 'center',
               }}
             >
               You are about to delete an API KEY for{' '}
               <Typography
-                variant="body1"
-                component="span"
+                variant="body3"
                 sx={{
                   color: 'text.primary',
-                  fontWeight: 600,
                   textTransform: 'capitalize',
                 }}
               >
@@ -96,11 +87,10 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
               You can update it instead.
             </Typography>
             <Typography
-              variant="body1"
+              variant="body3"
               sx={{
                 color: 'neutral.500',
                 my: 3,
-                fontWeight: 500,
               }}
             >
               Do you want to continue?
@@ -110,7 +100,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
         {isSuccess && (
           <ModalSuccess>
             <Typography
-              variant="subtitle2"
+              variant="body3"
               sx={{
                 py: 1,
                 mb: 1,

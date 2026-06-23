@@ -143,19 +143,15 @@ const PreferencesPage: FC = () => {
     <PageWrapper>
       <Typography
         component="h2"
-        variant="h6"
+        variant="h5"
         sx={{
           color: 'neutral.100',
-          fontWeight: 700,
-          lineHeight: '150%',
           mb: 1.5,
         }}
       >
         Preferences
       </Typography>
-      <Typography
-        sx={{ fontSize: 15, fontWeight: 400, color: 'secondary.100' }}
-      >
+      <Typography variant="body3" sx={{ color: 'secondary.100' }}>
         Configure your account defaults and automation settings. Changes apply
         to your connected wallet.
       </Typography>

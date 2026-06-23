@@ -57,7 +57,6 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           width: 640,
           maxHeight: '700px',
           overflowY: 'hidden',
-          bgcolor: 'primary.200',
           borderRadius: '20px',
           position: 'relative',
           boxShadow: 'none',

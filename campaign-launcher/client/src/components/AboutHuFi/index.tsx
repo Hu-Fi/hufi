@@ -18,12 +18,8 @@ const AboutHuFi: FC = () => {
       }}
     >
       <Typography
-        variant={isMobile ? 'h6' : 'h5'}
-        sx={{
-          color: 'neutral.100',
-          fontWeight: { xs: 500, md: 800 },
-          letterSpacing: { xs: '0px', md: '-0.5px' },
-        }}
+        variant={isMobile ? 'h5' : 'h4'}
+        sx={{ color: 'neutral.100' }}
       >
         About HuFi
       </Typography>
@@ -31,7 +27,7 @@ const AboutHuFi: FC = () => {
         sx={{
           px: 2,
           py: { xs: 2, md: 4 },
-          bgcolor: 'primary.200',
+          bgcolor: 'background.paper',
           borderRadius: '8px',
           border: '1px solid',
           borderColor: 'border.strong',
@@ -42,7 +38,6 @@ const AboutHuFi: FC = () => {
           variant="body2"
           sx={{
             color: 'neutral.100',
-            fontWeight: 600,
             mt: { xs: 0, md: 4 },
             mb: 2,
           }}
@@ -52,6 +47,7 @@ const AboutHuFi: FC = () => {
           activities that support the token&apos;s growth.
         </Typography>
         <Link
+          variant="body3"
           href={DOCS_URL}
           target="_blank"
           rel="noreferrer"
@@ -60,8 +56,6 @@ const AboutHuFi: FC = () => {
             alignItems: 'center',
             width: 'fit-content',
             color: 'accent.main',
-            fontSize: 16,
-            fontWeight: 500,
             textDecoration: 'none',
             '&:hover': {
               textDecoration: 'underline',

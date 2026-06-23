@@ -27,14 +27,14 @@ const AutojoinInfoWidget: FC = () => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         display: 'flex',
         flexDirection: { xs: 'column', md: 'row' },
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'relative',
         width: '100%',
-        background: 'linear-gradient(90deg, #251d47 0%, #3c2f73 100%)',
+        background: `linear-gradient(90deg, ${theme.palette.background.paper} 0%, ${theme.palette.border.strong} 100%)`,
         gap: { xs: 3, md: 10 },
         mt: { xs: 0, md: 2 },
         mb: { xs: 4, md: 8 },
@@ -44,7 +44,7 @@ const AutojoinInfoWidget: FC = () => {
         borderRadius: '18px',
         border: '2px solid',
         borderColor: 'border.strong',
-      }}
+      })}
     >
       <Box sx={{ display: 'flex', gap: { xs: 1.5, md: 3 } }}>
         <Box
@@ -67,7 +67,7 @@ const AutojoinInfoWidget: FC = () => {
               position: 'absolute',
               top: 0,
               right: 4,
-              color: 'neutral.200',
+              color: 'success.main',
             }}
           />
         </Box>

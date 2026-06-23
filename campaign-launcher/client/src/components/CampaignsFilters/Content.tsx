@@ -188,10 +188,9 @@ const CampaignsFiltersContent: FC<Props> = ({
       }}
     >
       <Typography
-        variant="h6"
+        variant={isMobile ? 'body4' : 'h4'}
         sx={{
           color: 'neutral.100',
-          lineHeight: 1,
           ml: { xs: 2, md: 4 },
           mb: 3,
         }}
@@ -214,14 +213,7 @@ const CampaignsFiltersContent: FC<Props> = ({
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Network
           </Typography>
           {networkOptions.map(({ label, value }) => (
@@ -278,14 +270,7 @@ const CampaignsFiltersContent: FC<Props> = ({
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Status
           </Typography>
           <FormControlLabel
@@ -328,14 +313,7 @@ const CampaignsFiltersContent: FC<Props> = ({
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Campaign Type
           </Typography>
           <FormControlLabel
@@ -378,14 +356,7 @@ const CampaignsFiltersContent: FC<Props> = ({
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Exchanges
           </Typography>
           <FormControlLabel

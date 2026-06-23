@@ -39,7 +39,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
         px: 0,
         pb: 0,
         borderTop: '2px solid',
-        borderColor: 'primary.200',
+        borderColor: 'background.paper',
         zIndex: (theme) => theme.zIndex.appBar,
       }}
     >
@@ -50,7 +50,6 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
           display: 'flex',
           width: '100%',
           overflow: 'hidden',
-          bgcolor: 'primary.100',
         }}
       >
         {NAV_ITEMS.map(({ label, to, icon: Icon }) => {
@@ -68,7 +67,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
                 flex: 1,
                 height: `${MOBILE_BOTTOM_NAV_HEIGHT}px`,
                 color: isActive ? 'accent.main' : 'text.primary',
-                bgcolor: isActive ? 'primary.200' : 'primary.100',
+                bgcolor: isActive ? 'background.paper' : 'background.default',
                 gap: 1,
                 textDecoration: 'none',
                 transition: 'all 0.2s ease',
@@ -81,15 +80,7 @@ const MobileBottomNav: FC<{ isVisible: boolean }> = ({ isVisible }) => {
               }}
             >
               <Icon sx={{ fontSize: 36 }} />
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 500,
-                  lineHeight: '100%',
-                }}
-              >
-                {label}
-              </Typography>
+              <Typography variant="subtitle4">{label}</Typography>
             </MuiLink>
           );
         })}

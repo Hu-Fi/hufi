@@ -16,7 +16,7 @@ const ModalSuccess: FC<PropsWithChildren> = ({ children }) => {
           flexShrink: 0,
           p: '12px',
           color: 'neutral.100',
-          bgcolor: 'neutral.200',
+          bgcolor: 'success.main',
           borderRadius: 100,
         }}
       >

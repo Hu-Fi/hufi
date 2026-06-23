@@ -50,8 +50,10 @@ const StyledLink = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 0.5,
         width: { xs: 'fit-content', md: 'auto' },
+        minWidth: { xs: 'fit-content', md: '110px' },
         px: { xs: 0, md: 2 },
         py: { xs: 0, md: 1 },
         textDecoration: 'none',
@@ -61,6 +63,7 @@ const StyledLink = ({
         },
         fontWeight: isActive ? 600 : 400,
         fontSize: '14px',
+        lineHeight: '150%',
         bgcolor: isActive ? 'border.main' : 'transparent',
         borderRadius: '10px',
         '&:hover': {
@@ -118,7 +121,7 @@ const Header: FC = () => {
         position: 'sticky',
         top: 0,
         zIndex: (theme) => theme.zIndex.appBar,
-        bgcolor: 'primary.100',
+        bgcolor: 'background.default',
         boxShadow: 'none',
         width: '100%',
         borderBottom: '1px solid',
@@ -218,7 +221,7 @@ const Header: FC = () => {
               sx: {
                 top: '62px !important',
                 left: '0 !important',
-                bgcolor: 'primary.100',
+                bgcolor: 'background.default',
                 maxWidth: '100%',
                 width: '100%',
               },

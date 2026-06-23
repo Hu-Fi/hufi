@@ -28,7 +28,7 @@ const ModalError: FC<Props> = ({ message }) => {
         <CloseIcon sx={{ width: 34, height: 34 }} />
       </Box>
       <Typography
-        variant="subtitle2"
+        variant="body1"
         sx={{
           color: 'error.main',
           mb: 1,

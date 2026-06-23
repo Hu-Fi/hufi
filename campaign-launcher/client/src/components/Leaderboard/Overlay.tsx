@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { type CampaignType, type LeaderboardEntry } from '@/types';
 
@@ -43,7 +42,6 @@ const LeaderboardOverlay: FC<Props> = ({
 }) => {
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
-  const isMobile = useIsMobile();
   const { activeAddress } = useActiveAccount();
 
   const filteredData = useMemo(() => {
@@ -81,28 +79,14 @@ const LeaderboardOverlay: FC<Props> = ({
             px: { xs: 2, md: 4 },
             pt: { xs: 2, md: 4 },
             pb: { xs: 2, md: 3 },
-            bgcolor: 'primary.100',
+            bgcolor: 'background.paper',
             overflow: 'hidden',
           }}
         >
-          <Typography
-            component="h6"
-            variant={isMobile ? 'h6' : 'h5'}
-            sx={{
-              color: 'neutral.100',
-              fontWeight: 700,
-            }}
-          >
+          <Typography variant="h5" sx={{ color: 'neutral.100' }}>
             {`Leaderboard (${symbol})`}
           </Typography>
-          <Typography
-            sx={{
-              fontSize: '12px',
-              fontWeight: 500,
-              lineHeight: 1,
-              mt: 0.5,
-            }}
-          >
+          <Typography variant="subtitle4" sx={{ mt: 0.5 }}>
             Actual on: {formatActualOnDate(updatedAt)}
           </Typography>
           <TextField

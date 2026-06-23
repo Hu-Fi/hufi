@@ -17,8 +17,8 @@ const TabFilterStyled = styled('button')<{ isActive: boolean }>(
     fontWeight: 500,
     borderRadius: '40px',
     backgroundColor: isActive
-      ? theme.palette.primary['200']
-      : theme.palette.primary['100'],
+      ? theme.palette.background.paper
+      : theme.palette.background.default,
     border: '1px solid',
     borderColor: isActive
       ? theme.palette.accent.main
@@ -33,7 +33,7 @@ const GradientBox = styled(Box)(({ theme }) => ({
   right: 42,
   width: 100,
   height: 42,
-  background: `linear-gradient(90deg, rgba(16, 7, 53, 0) 0%, ${theme.palette.primary['100']} 100%)`,
+  background: `linear-gradient(90deg, rgba(16, 7, 53, 0) 0%, ${theme.palette.background.default} 100%)`,
   transition: 'display 0.3s ease-in-out',
   cursor: 'pointer',
 }));

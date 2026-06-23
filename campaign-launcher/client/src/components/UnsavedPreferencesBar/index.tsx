@@ -39,7 +39,7 @@ const UnsavedPreferencesBar: FC<Props> = ({
           position: 'fixed',
           bottom: 0,
           left: 0,
-          bgcolor: 'primary.200',
+          bgcolor: 'background.paper',
           borderTop: '1px solid',
           borderColor: 'border.strong',
           zIndex: 10,
@@ -57,17 +57,14 @@ const UnsavedPreferencesBar: FC<Props> = ({
             }}
           >
             <Typography
-              sx={{
-                fontSize: 16,
-                fontWeight: 500,
-                color: 'neutral.500',
-                lineHeight: '150%',
-              }}
+              variant={isMobile ? 'body1' : 'body3'}
+              sx={{ color: 'neutral.500' }}
             >
               You have{' '}
               <Typography
                 component="span"
-                sx={{ color: 'neutral.300', fontWeight: 500 }}
+                variant={isMobile ? 'body1' : 'body3'}
+                sx={{ color: 'warning.main' }}
               >
                 unsaved changes
               </Typography>

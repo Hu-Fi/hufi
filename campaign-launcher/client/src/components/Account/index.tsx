@@ -27,8 +27,8 @@ import { useWeb3Auth } from '@/providers/Web3AuthProvider';
 import { formatAddress } from '@/utils';
 
 const buttonSx = {
-  color: 'primary.100',
-  bgcolor: '#f5efff',
+  color: 'primary.contrastText',
+  bgcolor: 'neutral.100',
   p: 1,
   width: '100%',
   fontWeight: 600,
@@ -100,10 +100,9 @@ const Account: FC = () => {
       >
         <AvatarIcon sx={{ width: 24, height: 24 }} />
         <Typography
+          variant="body2"
           sx={{
-            color: 'primary.100',
-            fontSize: '14px',
-            fontWeight: 600,
+            color: 'primary.contrastText',
             px: 1,
           }}
         >
@@ -111,7 +110,7 @@ const Account: FC = () => {
         </Typography>
         <ChevronIcon
           sx={{
-            color: 'primary.100',
+            color: 'primary.contrastText',
             transform: anchorEl ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease-in-out',
           }}
@@ -178,7 +177,7 @@ const Account: FC = () => {
                     width: '20px',
                     height: '20px',
                     px: 1,
-                    bgcolor: 'primary.100',
+                    bgcolor: 'background.default',
                     '& > span': { color: 'neutral.100' },
                   }}
                 />

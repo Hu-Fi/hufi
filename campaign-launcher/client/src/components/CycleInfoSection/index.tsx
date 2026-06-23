@@ -32,27 +32,11 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
             py: { xs: 1, md: 1.5 },
           }}
         >
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: 'primary.100',
-              fontWeight: 500,
-              lineHeight: 1,
-              letterSpacing: 0,
-            }}
-          >
+          <Typography variant="body1">
             For each cycle, the total reward pool is evenly distributed among
             participants.
           </Typography>
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: 'primary.100',
-              fontWeight: 500,
-              lineHeight: 1,
-              letterSpacing: 0,
-            }}
-          >
+          <Typography variant="body1">
             Reward per cycle = Total reward pool ÷{' '}
             {hasParticipantsLimit
               ? 'max participants'
@@ -70,10 +54,10 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
           px: 0.5,
           bgcolor: 'transparent',
           border: { xs: '1px solid', md: '2px solid' },
-          borderColor: 'secondary.100',
+          borderColor: 'inherit',
           '& > span': {
             fontSize: { xs: 10, md: 14 },
-            color: 'secondary.100',
+            color: 'inherit',
           },
         }}
       />
@@ -209,13 +193,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             opacity: 0.6,
           }}
         >
-          <Typography
-            component="span"
-            sx={{
-              fontSize: { xs: 12, md: 16 },
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant={isMobile ? 'subtitle3' : 'body3'}>
             {`Cycle ${cycleTimeline.currentCycle} of ${cycleTimeline.totalCycles}`}
           </Typography>
           <Box
@@ -227,13 +205,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
               opacity: 0.6,
             }}
           />
-          <Typography
-            component="span"
-            sx={{
-              fontSize: { xs: 12, md: 16 },
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant={isMobile ? 'subtitle4' : 'body3'}>
             Resets every 24h
           </Typography>
         </Box>
@@ -287,10 +259,12 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
                     gap: { xs: 0.75, md: 1.5 },
                   }}
                 >
-                  <CardName>Individual Reward</CardName>
-                  <IndividualRewardTooltip
-                    hasParticipantsLimit={!!campaign.details.max_participants}
-                  />
+                  <CardName>
+                    Individual Reward{' '}
+                    <IndividualRewardTooltip
+                      hasParticipantsLimit={!!campaign.details.max_participants}
+                    />
+                  </CardName>
                 </Box>
                 <CardValue
                   sx={{

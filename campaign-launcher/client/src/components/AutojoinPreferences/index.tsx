@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 
 import { TOKENS } from '@/constants/tokens';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { AutojoinLabelIcon, LightningIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { CampaignType, type UserPreferences } from '@/types';
@@ -62,6 +63,7 @@ const AutojoinPreferences: FC<Props> = ({
   const selectedExchanges = preferences?.exchanges ?? [];
   const selectedTokens = preferences?.tokens ?? [];
 
+  const isMobile = useIsMobile();
   const { exchanges: exchangesOptions, isLoading: isExchangesLoading } =
     useExchangesContext();
 
@@ -130,21 +132,21 @@ const AutojoinPreferences: FC<Props> = ({
         width: '100%',
         borderRadius: '18px',
         border: '2px solid',
-        borderColor: enabled ? 'neutral.200' : 'primary.100',
+        borderColor: enabled ? 'success.main' : 'transparent',
         overflow: 'hidden',
       }}
     >
       <Box
-        sx={{
+        sx={(theme) => ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           width: '100%',
-          background: 'linear-gradient(90deg, #251d47 0%, #3c2f73 100%)',
+          background: `linear-gradient(90deg, ${theme.palette.background.paper} 0%, ${theme.palette.border.strong} 100%)`,
           gap: 2,
           px: { xs: 2, md: 5 },
           py: { xs: 3.5, md: 4.5 },
-        }}
+        })}
       >
         <Box
           sx={{
@@ -173,7 +175,7 @@ const AutojoinPreferences: FC<Props> = ({
                 position: 'absolute',
                 top: 0,
                 right: 4,
-                color: enabled ? 'neutral.200' : '#201d2c',
+                color: enabled ? 'success.main' : '#201d2c',
               }}
             />
           </Box>
@@ -227,7 +229,7 @@ const AutojoinPreferences: FC<Props> = ({
         )}
       </Box>
       <Stack
-        sx={{ display: enabled ? 'flex' : 'none', bgcolor: 'primary.200' }}
+        sx={{ display: enabled ? 'flex' : 'none', bgcolor: 'background.paper' }}
       >
         <Row>
           <Box
@@ -243,22 +245,14 @@ const AutojoinPreferences: FC<Props> = ({
             }}
           >
             <Typography
-              sx={{
-                color: 'neutral.100',
-                fontSize: { xs: 16, md: 20 },
-                fontWeight: { xs: 700, md: 600 },
-                lineHeight: { xs: '100%', md: '150%' },
-              }}
+              variant={isMobile ? 'body4' : 'h5'}
+              sx={{ color: 'neutral.100' }}
             >
               Campaign types
             </Typography>
             <Typography
-              sx={{
-                color: 'secondary.400',
-                fontSize: { xs: 12, md: 14 },
-                fontWeight: 500,
-                lineHeight: '100%',
-              }}
+              variant={isMobile ? 'subtitle4' : 'body1'}
+              sx={{ color: 'secondary.400' }}
             >
               Select which campaign types to autojoin
             </Typography>
@@ -322,22 +316,14 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
               <Typography
-                sx={{
-                  color: 'neutral.100',
-                  fontSize: { xs: 16, md: 20 },
-                  fontWeight: { xs: 700, md: 600 },
-                  lineHeight: { xs: '100%', md: '150%' },
-                }}
+                variant={isMobile ? 'body4' : 'h5'}
+                sx={{ color: 'neutral.100' }}
               >
                 Exchanges
               </Typography>
               <Typography
-                sx={{
-                  color: 'secondary.400',
-                  fontSize: { xs: 12, md: 14 },
-                  fontWeight: 500,
-                  lineHeight: '100%',
-                }}
+                variant={isMobile ? 'subtitle4' : 'body1'}
+                sx={{ color: 'secondary.400' }}
               >
                 Only autojoin campaigns running on these exchanges
               </Typography>
@@ -426,22 +412,14 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
               <Typography
-                sx={{
-                  color: 'neutral.100',
-                  fontSize: { xs: 16, md: 20 },
-                  fontWeight: { xs: 700, md: 600 },
-                  lineHeight: { xs: '100%', md: '150%' },
-                }}
+                variant={isMobile ? 'body4' : 'h5'}
+                sx={{ color: 'neutral.100' }}
               >
                 Tokens
               </Typography>
               <Typography
-                sx={{
-                  color: 'secondary.400',
-                  fontSize: { xs: 12, md: 14 },
-                  fontWeight: 500,
-                  lineHeight: '100%',
-                }}
+                variant={isMobile ? 'subtitle4' : 'body1'}
+                sx={{ color: 'secondary.400' }}
               >
                 Autojoin campaigns for these tokens only
               </Typography>
