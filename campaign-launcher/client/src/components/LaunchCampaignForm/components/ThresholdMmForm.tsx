@@ -43,10 +43,9 @@ type Props = {
 };
 
 const labelStyles = {
-  color: 'white',
+  color: 'neutral.100',
+  fontWeight: 500,
   mb: 1.5,
-  lineHeight: '100%',
-  letterSpacing: '0px',
 };
 
 const ThresholdMarketMakingForm: FC<Props> = ({
@@ -70,7 +69,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Exchange
           </Typography>
           <Controller
@@ -89,7 +88,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
           )}
         </FormControl>
         <FormControl error={!!errors.pair} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Trading Pair
           </Typography>
           <Controller
@@ -170,7 +169,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
             width: '100%',
           }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Start Date
           </Typography>
           <Controller
@@ -206,7 +205,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
             width: '100%',
           }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             End Date
           </Typography>
           <Controller
@@ -243,7 +242,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Fund Token
           </Typography>
           <Controller
@@ -278,7 +277,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
           )}
         </FormControl>
         <FormControl error={!!errors.max_participants} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Maximum participant limit
           </Typography>
           <Controller
@@ -330,7 +329,7 @@ const ThresholdMarketMakingForm: FC<Props> = ({
           error={!!errors.minimum_volume_target}
           sx={{ width: '100%' }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Minimum Traded Amount
           </Typography>
           <Controller
@@ -391,10 +390,8 @@ const ThresholdMarketMakingForm: FC<Props> = ({
                         }}
                       >
                         <Typography
-                          variant="body1"
-                          sx={{
-                            color: 'text.primary',
-                          }}
+                          variant="body3"
+                          sx={{ color: 'text.primary' }}
                         >
                           {getTokenInfo(volumeToken).label || ''}
                         </Typography>

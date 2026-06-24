@@ -189,7 +189,8 @@ export const thresholdMmValidationSchema = yup.object({
   max_participants: yup
     .number()
     .typeError('Maximum participants is required')
-    .min(1, 'Maximum participants must be greater than or equal to 1')
+    .min(1, 'The number must be greater than or equal to 1')
+    .integer('The number must be an integer')
     .required('Maximum participants is required'),
 }) as ObjectSchema<ThresholdMmFormValues>;
 
