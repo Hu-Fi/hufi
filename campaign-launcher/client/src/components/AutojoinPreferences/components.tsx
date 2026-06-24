@@ -19,9 +19,9 @@ export const SwitchStyled = styled((props: SwitchProps) => (
     transitionDuration: '300ms',
     '&.Mui-checked': {
       transform: 'translateX(26px)',
-      color: '#fff',
+      color: theme.palette.neutral['100'],
       '& + .MuiSwitch-track': {
-        backgroundColor: '#43ba96',
+        backgroundColor: theme.palette.success.main,
         opacity: 1,
         border: 0,
       },
@@ -30,11 +30,12 @@ export const SwitchStyled = styled((props: SwitchProps) => (
       },
     },
     '&.Mui-focusVisible .MuiSwitch-thumb': {
-      color: '#33cf4d',
-      border: '6px solid #fff',
+      color: theme.palette.success.main,
+      border: '6px solid',
+      borderColor: theme.palette.neutral['100'],
     },
     '&.Mui-disabled .MuiSwitch-thumb': {
-      color: '#251d47',
+      color: theme.palette.background.paper,
     },
     '&.Mui-disabled + .MuiSwitch-track': {
       opacity: 0.7,
@@ -46,7 +47,7 @@ export const SwitchStyled = styled((props: SwitchProps) => (
   },
   '& .MuiSwitch-track': {
     borderRadius: 999,
-    backgroundColor: '#100735',
+    backgroundColor: theme.palette.background.default,
     opacity: 1,
     transition: theme.transitions.create(['background-color'], {
       duration: 500,
@@ -68,18 +69,15 @@ export const SwitchStyled = styled((props: SwitchProps) => (
   },
 }));
 
-export const FormControlLabelStyled = styled(FormControlLabel, {
-  shouldForwardProp: (prop) => prop !== 'borderColor',
-})<{ borderColor: string }>(({ borderColor }) => ({
+export const FormControlLabelStyled = styled(FormControlLabel)(({ theme }) => ({
   border: '1px solid',
-  borderColor,
   borderRadius: 40,
   padding: '0px 16px',
   margin: 0,
   minWidth: 150,
   gap: 3,
   '& .MuiFormControlLabel-label': {
-    color: 'white',
+    color: theme.palette.neutral['100'],
     fontSize: 16,
     fontWeight: 500,
     lineHeight: '150%',
@@ -97,11 +95,12 @@ export const FormControlLabelStyled = styled(FormControlLabel, {
   },
 }));
 
-export const Row = styled(Box)({
+export const Row = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   width: '100%',
-  borderTop: '1px solid #3a2e6f',
+  borderTop: '1px solid',
+  borderColor: theme.palette.border.strong,
   minHeight: 140,
 
   '@media (max-width: 900px)': {
@@ -110,16 +109,17 @@ export const Row = styled(Box)({
     gap: '24px',
     padding: '24px 16px',
   },
-});
+}));
 
 export const CheckboxIcon = () => (
   <Box
     sx={{
       width: 20,
       height: 20,
+      bgcolor: 'background.paper',
       borderRadius: '20px',
-      border: '1px solid #3a2e6f',
-      bgcolor: '#2d254e',
+      border: '1px solid',
+      borderColor: 'border.strong',
     }}
   />
 );
@@ -133,9 +133,9 @@ export const CheckboxCheckedIcon = () => (
       width: 20,
       height: 20,
       borderRadius: '20px',
-      bgcolor: 'error.main',
+      bgcolor: 'accent.main',
     }}
   >
-    <CheckIcon sx={{ color: '#ffffff', fontSize: 16 }} />
+    <CheckIcon sx={{ color: 'neutral.100', fontSize: 16 }} />
   </Box>
 );

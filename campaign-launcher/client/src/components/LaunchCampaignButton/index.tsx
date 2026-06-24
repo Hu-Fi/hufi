@@ -27,9 +27,8 @@ const LaunchCampaignButton: FC<Props> = ({
     <Button
       variant="contained"
       size={size}
-      color="error"
+      color="accent"
       sx={{
-        color: 'white',
         width: 'fit-content',
         ...sx,
       }}

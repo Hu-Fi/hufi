@@ -4,6 +4,7 @@ import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 
 import ConnectWallet from '@/components/ConnectWallet';
 import LaunchCampaignButton from '@/components/LaunchCampaignButton';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { BigFilterIcon, CampaignIcon, LockIcon } from '@/icons';
 import { useSignerContext } from '@/providers/SignerProvider';
@@ -23,6 +24,7 @@ const NO_CAMPAIGNS_MATCH_FILTERS_DESCRIPTION =
   "None of the campaigns fit the filters you've applied. Try adjusting or clearing them to see more results.";
 
 const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
+  const isMobile = useIsMobile();
   let title;
   let description;
 
@@ -54,9 +56,10 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           width: '72px',
           height: '72px',
           p: 1,
+          bgcolor: 'background.subtle',
           borderRadius: '16px',
-          border: '1px solid #433679',
-          bgcolor: '#32295a',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {hasActiveFilters ? (
@@ -66,22 +69,12 @@ const AllCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         )}
       </Box>
       <Typography
-        component="p"
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontWeight: 700,
-        }}
+        variant={isMobile ? 'h5' : 'h4'}
+        sx={{ color: 'neutral.100' }}
       >
         {title}
       </Typography>
-      <Typography
-        sx={{
-          fontSize: 16,
-          fontWeight: 500,
-          color: '#a0a0a0',
-        }}
-      >
+      <Typography variant="body3" sx={{ color: 'text.auxiliary' }}>
         {description}
       </Typography>
     </Stack>
@@ -92,6 +85,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
   const { isAuthenticated, signIn } = useWeb3Auth();
   const { isSignerReady } = useSignerContext();
   const { showError } = useNotification();
+  const isMobile = useIsMobile();
 
   let title;
   let description;
@@ -138,9 +132,10 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           width: '72px',
           height: '72px',
           p: 1,
+          bgcolor: 'background.subtle',
           borderRadius: '16px',
-          border: '1px solid #433679',
-          bgcolor: '#32295a',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {!isAuthenticated && (
@@ -154,23 +149,12 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         )}
       </Box>
       <Typography
-        component="p"
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontWeight: 700,
-        }}
+        variant={isMobile ? 'h5' : 'h4'}
+        sx={{ color: 'neutral.100' }}
       >
         {title}
       </Typography>
-      <Typography
-        sx={{
-          fontSize: 16,
-          fontWeight: 500,
-          color: '#a0a0a0',
-          mb: 2,
-        }}
-      >
+      <Typography variant="body3" sx={{ color: 'text.auxiliary', mb: 2 }}>
         {description}
       </Typography>
       {!isSignerReady && <ConnectWallet />}
@@ -178,7 +162,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         <Button
           variant="contained"
           size="large"
-          color="error"
+          color="accent"
           onClick={handleSignIn}
         >
           Sign In
@@ -190,6 +174,7 @@ const JoinedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
 
 const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
   const { isSignerReady } = useSignerContext();
+  const isMobile = useIsMobile();
 
   let title;
   let description;
@@ -227,9 +212,10 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
           width: '72px',
           height: '72px',
           p: 1,
+          bgcolor: 'background.subtle',
           borderRadius: '16px',
-          border: '1px solid #433679',
-          bgcolor: '#32295a',
+          border: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
         {!isSignerReady && <LockIcon sx={{ width: '100%', height: '100%' }} />}
@@ -241,23 +227,12 @@ const HostedCampaignsEmptyState: FC<ChildProps> = ({ hasActiveFilters }) => {
         )}
       </Box>
       <Typography
-        component="p"
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontWeight: 700,
-        }}
+        variant={isMobile ? 'h5' : 'h4'}
+        sx={{ color: 'neutral.100' }}
       >
         {title}
       </Typography>
-      <Typography
-        sx={{
-          fontSize: 16,
-          fontWeight: 500,
-          color: '#a0a0a0',
-          mb: 2,
-        }}
-      >
+      <Typography variant="body3" sx={{ color: 'text.auxiliary', mb: 2 }}>
         {description}
       </Typography>
       {isSignerReady ? (
@@ -277,7 +252,6 @@ const CampaignsEmptyState: FC<Props> = ({ view, hasActiveFilters }) => {
         display: 'flex',
         py: 3,
         px: 2,
-        bgcolor: '#251d47',
         borderRadius: '16px',
         height: '400px',
       }}

@@ -57,34 +57,25 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
           height: '100%',
         }}
       >
-        <WarningIcon sx={{ fontSize: 60, mb: 2, color: '#b98c08' }} />
-        <Typography
-          variant="h6"
-          sx={{
-            mb: 2,
-            fontWeight: 700,
-          }}
-        >
+        <WarningIcon sx={{ fontSize: 60, mb: 2, color: 'warning.main' }} />
+        <Typography variant="h4" sx={{ mb: 2 }}>
           Delete API key?
         </Typography>
         {isPending && <ModalLoading />}
         {isIdle && (
           <>
             <Typography
-              variant="body1"
+              variant="body3"
               sx={{
+                color: 'text.auxiliary',
                 textAlign: 'center',
-                color: '#a0a0a0',
-                fontWeight: 500,
               }}
             >
               You are about to delete an API KEY for{' '}
               <Typography
-                variant="body1"
-                component="span"
+                variant="body3"
                 sx={{
                   color: 'text.primary',
-                  fontWeight: 600,
                   textTransform: 'capitalize',
                 }}
               >
@@ -96,11 +87,10 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
               You can update it instead.
             </Typography>
             <Typography
-              variant="body1"
+              variant="body3"
               sx={{
-                color: '#a0a0a0',
+                color: 'text.auxiliary',
                 my: 3,
-                fontWeight: 500,
               }}
             >
               Do you want to continue?
@@ -110,7 +100,7 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
         {isSuccess && (
           <ModalSuccess>
             <Typography
-              variant="subtitle2"
+              variant="body3"
               sx={{
                 py: 1,
                 mb: 1,
@@ -134,20 +124,22 @@ const DeleteApiKeyDialog: FC<Props> = ({ open, onClose, exchangeName }) => {
             fullWidth={isMobile}
             disabled={isPending}
             onClick={handleClose}
-            sx={{ color: 'white', borderColor: '#433679', minWidth: 135 }}
+            sx={{
+              color: 'neutral.100',
+              borderColor: 'border.strong',
+              minWidth: 135,
+            }}
           >
             {isIdle ? 'Cancel' : 'Close'}
           </Button>
           {isIdle && (
             <Button
               variant="contained"
+              color="error"
               fullWidth={isMobile}
               onClick={handleDelete}
               sx={{
-                color: 'white',
-                bgcolor: '#da4c4f',
                 minWidth: 135,
-                boxShadow: 'none',
               }}
             >
               Delete

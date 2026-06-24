@@ -20,7 +20,8 @@ const CampaignsViewToggle: FC<Props> = ({
       sx={{
         display: { xs: 'none', md: 'flex' },
         borderRadius: '54px',
-        border: '1px solid #251d47',
+        border: '1px solid',
+        borderColor: 'background.paper',
         width: 'fit-content',
         overflow: 'hidden',
       }}
@@ -31,7 +32,7 @@ const CampaignsViewToggle: FC<Props> = ({
         sx={{
           py: 1,
           px: 1.5,
-          bgcolor: isGridView ? '#251d47' : 'transparent',
+          bgcolor: isGridView ? 'background.paper' : 'transparent',
           borderRadius: 0,
         }}
         onClick={() => onViewChange('grid')}
@@ -40,7 +41,10 @@ const CampaignsViewToggle: FC<Props> = ({
           sx={{
             fill: 'transparent',
             '& path': {
-              stroke: isGridView ? '#fa2a75' : 'white',
+              stroke: (theme) =>
+                isGridView
+                  ? theme.palette.accent.main
+                  : theme.palette.neutral['100'],
             },
           }}
         />
@@ -51,7 +55,7 @@ const CampaignsViewToggle: FC<Props> = ({
         sx={{
           py: 1,
           px: 1.5,
-          bgcolor: isGridView ? 'transparent' : '#251d47',
+          bgcolor: isGridView ? 'transparent' : 'background.paper',
           borderRadius: 0,
         }}
         onClick={() => onViewChange('table')}
@@ -60,7 +64,10 @@ const CampaignsViewToggle: FC<Props> = ({
           sx={{
             fill: 'transparent',
             '& path': {
-              stroke: isGridView ? 'white' : '#fa2a75',
+              stroke: (theme) =>
+                isGridView
+                  ? theme.palette.neutral['100']
+                  : theme.palette.accent.main,
             },
           }}
         />

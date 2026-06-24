@@ -65,9 +65,9 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
         flexDirection: 'column',
         p: 2,
         gap: 1.5,
-        bgcolor: '#251D47',
         borderRadius: '8px',
-        border: '1px solid #433679',
+        border: '1px solid',
+        borderColor: 'border.main',
       }}
     >
       <Stack
@@ -89,11 +89,10 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           }}
         >
           <Typography
-            variant="caption"
+            variant="subtitle3"
             sx={{
               color: 'text.primary',
               textTransform: 'uppercase',
-              fontWeight: 600,
             }}
           >
             {mapTypeToLabel(campaign.type)}
@@ -128,13 +127,11 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           />
         </Box>
       </Stack>
-      <Box
+      <Stack
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
           justifyContent: 'center',
-          gap: 1,
-          color: 'white',
+          gap: 1.5,
+          color: 'neutral.100',
         }}
       >
         <CampaignSymbol
@@ -150,12 +147,9 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           }}
         >
           <Typography
+            variant="body4"
             sx={{
-              color: 'white',
-              fontSize: 16,
-              fontWeight: 600,
-              lineHeight: '150%',
-              letterSpacing: '0.15px',
+              color: 'neutral.100',
               textTransform: 'capitalize',
             }}
           >
@@ -163,7 +157,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           </Typography>
           <CampaignTimeline campaign={campaign} />
         </Box>
-      </Box>
+      </Stack>
       <Stack
         direction="row"
         sx={{
@@ -179,18 +173,16 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             flex: 1,
             p: { xs: 1.5, md: 2 },
             gap: 1.5,
+            bgcolor: 'background.subtle',
             borderRadius: '8px',
-            border: '1px solid #433679',
-            bgcolor: '#2d284e',
+            border: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Typography
+            variant="subtitle5"
             sx={{
-              color: '#a29dca',
-              fontSize: 10,
-              lineHeight: '135%',
-              fontWeight: 700,
-              letterSpacing: '1.2px',
+              color: 'text.subtle',
               textTransform: 'uppercase',
             }}
           >
@@ -198,7 +190,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           </Typography>
           <Typography
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: 18,
               fontWeight: 700,
               lineHeight: '150%',
@@ -225,18 +217,16 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
             flex: 1,
             p: { xs: 1.5, md: 2 },
             gap: 1.5,
+            bgcolor: 'background.subtle',
             borderRadius: '8px',
-            border: '1px solid #433679',
-            bgcolor: '#2d284e',
+            border: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Typography
+            variant="subtitle5"
             sx={{
-              color: '#a29dca',
-              fontSize: 10,
-              lineHeight: '135%',
-              fontWeight: 700,
-              letterSpacing: '1.2px',
+              color: 'text.subtle',
               textTransform: 'uppercase',
             }}
           >
@@ -244,7 +234,7 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           </Typography>
           <Typography
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontSize: 18,
               fontWeight: 700,
               lineHeight: '150%',
@@ -286,7 +276,10 @@ const CampaignCard: FC<Props> = ({ campaign, isJoinedCampaign }) => {
           size="large"
           color="primary"
           fullWidth
-          sx={{ color: 'white', borderColor: '#433679' }}
+          sx={{
+            color: 'neutral.100',
+            borderColor: 'border.strong',
+          }}
         >
           View Details
         </Button>

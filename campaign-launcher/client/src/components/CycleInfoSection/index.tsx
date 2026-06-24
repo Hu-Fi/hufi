@@ -32,27 +32,11 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
             py: { xs: 1, md: 1.5 },
           }}
         >
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: '#161616',
-              fontWeight: 500,
-              lineHeight: 1,
-              letterSpacing: 0,
-            }}
-          >
+          <Typography variant="body1">
             For each cycle, the total reward pool is evenly distributed among
             participants.
           </Typography>
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: '#161616',
-              fontWeight: 500,
-              lineHeight: 1,
-              letterSpacing: 0,
-            }}
-          >
+          <Typography variant="body1">
             Reward per cycle = Total reward pool ÷{' '}
             {hasParticipantsLimit
               ? 'max participants'
@@ -70,10 +54,10 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
           px: 0.5,
           bgcolor: 'transparent',
           border: { xs: '1px solid', md: '2px solid' },
-          borderColor: { xs: 'text.secondary', md: '#6b6490' },
+          borderColor: 'inherit',
           '& > span': {
             fontSize: { xs: 10, md: 14 },
-            color: { xs: 'text.secondary', md: '#6b6490' },
+            color: 'inherit',
           },
         }}
       />
@@ -176,7 +160,8 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         pt: 3,
         pb: { xs: 2, md: 3 },
         gap: { xs: 2, md: 3 },
-        borderBottom: '1px solid #473C74',
+        borderBottom: '1px solid',
+        borderColor: 'border.strong',
       }}
     >
       <Box
@@ -191,7 +176,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         <Typography
           component="h6"
           sx={{
-            color: isMobile ? 'white' : 'text.primary',
+            color: isMobile ? 'neutral.100' : 'text.primary',
             fontSize: { xs: 20, md: 16 },
             fontWeight: { xs: 500, md: 600 },
             letterSpacing: { xs: 0, md: '3.2px' },
@@ -208,13 +193,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
             opacity: 0.6,
           }}
         >
-          <Typography
-            component="span"
-            sx={{
-              fontSize: { xs: 12, md: 16 },
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant={isMobile ? 'subtitle3' : 'body3'}>
             {`Cycle ${cycleTimeline.currentCycle} of ${cycleTimeline.totalCycles}`}
           </Typography>
           <Box
@@ -222,17 +201,11 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
               width: 4,
               height: 4,
               borderRadius: '50%',
-              bgcolor: 'text.primary',
+              bgcolor: 'primary.main',
               opacity: 0.6,
             }}
           />
-          <Typography
-            component="span"
-            sx={{
-              fontSize: { xs: 12, md: 16 },
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant={isMobile ? 'subtitle4' : 'body3'}>
             Resets every 24h
           </Typography>
         </Box>
@@ -246,7 +219,11 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         >
           <StatsCard withBorder>
             <CardName>Cycle Reward Pool</CardName>
-            <CardValue color={isThresholdBasedCampaign ? 'white' : '#46db99'}>
+            <CardValue
+              sx={{
+                color: isThresholdBasedCampaign ? 'neutral.100' : 'neutral.200',
+              }}
+            >
               <FormattedNumber
                 value={cycleRewardPool}
                 decimals={2}
@@ -282,13 +259,20 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
                     gap: { xs: 0.75, md: 1.5 },
                   }}
                 >
-                  <CardName>Individual Reward</CardName>
-                  <IndividualRewardTooltip
-                    hasParticipantsLimit={!!campaign.details.max_participants}
-                  />
+                  <CardName>
+                    Individual Reward{' '}
+                    <IndividualRewardTooltip
+                      hasParticipantsLimit={!!campaign.details.max_participants}
+                    />
+                  </CardName>
                 </Box>
                 <CardValue
-                  color={eligibleParticipants.length > 0 ? '#46db99' : 'white'}
+                  sx={{
+                    color:
+                      eligibleParticipants.length > 0
+                        ? 'neutral.200'
+                        : 'neutral.100',
+                  }}
                 >
                   {individualReward ? (
                     <FormattedNumber
@@ -332,7 +316,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         >
           <StatsCard withBorder>
             <CardName>Ends in</CardName>
-            <CardValue color="text.primary">
+            <CardValue sx={{ color: 'text.primary' }}>
               {cycleTimeline.remainingTime}
             </CardValue>
           </StatsCard>

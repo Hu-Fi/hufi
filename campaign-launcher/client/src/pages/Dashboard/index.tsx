@@ -33,7 +33,7 @@ const LinkToCampaigns = () => (
       alignItems: 'center',
       justifyContent: { xs: 'space-between', sm: 'flex-start' },
       width: { xs: '100%', sm: 'auto' },
-      color: 'white',
+      color: 'neutral.100',
       fontSize: { xs: 20, sm: 24 },
       fontWeight: { xs: 500, sm: 800 },
       letterSpacing: { xs: '0px', sm: '-0.5px' },
@@ -43,7 +43,7 @@ const LinkToCampaigns = () => (
     }}
   >
     Campaigns
-    <ChevronIcon sx={{ transform: 'rotate(-90deg)', color: 'white' }} />
+    <ChevronIcon sx={{ transform: 'rotate(-90deg)', color: 'neutral.100' }} />
   </Link>
 );
 
@@ -142,7 +142,7 @@ const Dashboard: FC = () => {
           variant="outlined"
           size="large"
           fullWidth
-          sx={{ mt: 2, color: 'white', borderColor: 'error.main' }}
+          sx={{ mt: 2, color: 'neutral.100', borderColor: 'accent.main' }}
         >
           View All
         </Button>

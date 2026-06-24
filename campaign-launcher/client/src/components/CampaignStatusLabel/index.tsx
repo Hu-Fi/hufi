@@ -2,6 +2,7 @@ import { type FC } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { type Campaign, CampaignStatus } from '@/types';
 
 const mapStatusToColorAndText = (
@@ -15,38 +16,38 @@ const mapStatusToColorAndText = (
     case CampaignStatus.ACTIVE:
       if (now < startDate) {
         return {
-          color: '#b78608',
+          color: 'neutral.300',
           text: 'Awaiting start date',
         };
       } else if (now > endDate) {
         return {
-          color: '#5596ff',
+          color: 'neutral.300',
           text: 'Waiting for payouts',
         };
       } else {
         return {
-          color: '#1a926e',
+          color: 'neutral.200',
           text: 'Active',
         };
       }
     case CampaignStatus.COMPLETED:
       return {
-        color: '#d4cfff',
+        color: 'text.primary',
         text: 'Ended',
       };
     case CampaignStatus.CANCELLED:
       return {
-        color: '#da4c4f',
+        color: 'neutral.400',
         text: 'Cancelled',
       };
     case CampaignStatus.TO_CANCEL:
       return {
-        color: '#da4c4f',
+        color: 'neutral.400',
         text: 'Pending cancellation',
       };
     default:
       return {
-        color: '#d4cfff',
+        color: 'text.primary',
         text: 'Unknown',
       };
   }
@@ -63,6 +64,7 @@ const CampaignStatusLabel: FC<Props> = ({
   startDate,
   endDate,
 }) => {
+  const isMobile = useIsMobile();
   const { color, text } = mapStatusToColorAndText(
     campaignStatus,
     startDate,
@@ -86,11 +88,9 @@ const CampaignStatusLabel: FC<Props> = ({
         }}
       />
       <Typography
+        variant={isMobile ? 'body2' : 'body3'}
         sx={{
           color,
-          fontSize: 12,
-          fontWeight: 600,
-          lineHeight: '150%',
           textTransform: 'capitalize',
         }}
       >

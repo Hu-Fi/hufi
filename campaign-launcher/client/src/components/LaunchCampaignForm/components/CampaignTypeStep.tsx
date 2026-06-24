@@ -67,9 +67,8 @@ const CampaignTypeStep: FC<Props> = ({
                     px: 3,
                     height: { xs: 150, md: 170 },
                     borderRadius: '8px',
-                    bgcolor: '#251d47',
                     border: '1px solid',
-                    borderColor: isSelected ? 'error.main' : '#433679',
+                    borderColor: isSelected ? 'accent.main' : 'border.strong',
                     cursor: 'pointer',
                   }}
                   onClick={() => handleChangeCampaignType(type)}
@@ -83,24 +82,13 @@ const CampaignTypeStep: FC<Props> = ({
                     }}
                   >
                     <StarIcon
-                      sx={{ color: 'primary.main', width: 24, height: 24 }}
+                      sx={{ color: 'text.primary', width: 24, height: 24 }}
                     />
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: 'white',
-                        fontWeight: 600,
-                      }}
-                    >
+                    <Typography variant="h5" sx={{ color: 'neutral.100' }}>
                       {mapTypeToLabel(type)}
                     </Typography>
                   </Box>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: 'text.secondary',
-                    }}
-                  >
+                  <Typography variant="body3" sx={{ color: 'text.secondary' }}>
                     {CAMPAIGN_TYPE_DESCRIPTIONS[type]}
                   </Typography>
                 </Paper>

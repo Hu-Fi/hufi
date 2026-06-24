@@ -2,22 +2,21 @@ import { type FC } from 'react';
 
 import { Box, Link, Stack, Typography } from '@mui/material';
 
-import { useIsMobile } from '@/hooks/useBreakpoints';
 import { OpenInNewIcon } from '@/icons';
 import { CampaignStatus, type Campaign } from '@/types';
 
 const RESULT = {
   none: {
     label: 'N/A',
-    color: '#a0a0a0',
+    color: 'text.auxiliary',
   },
   intermediate: {
     label: 'Intermediate',
-    color: 'warning.main',
+    color: 'neutral.300',
   },
   final: {
     label: 'Final',
-    color: 'success.main',
+    color: 'neutral.200',
   },
 };
 
@@ -28,7 +27,6 @@ type Props = {
 };
 
 const CampaignResultsSection: FC<Props> = ({ campaign }) => {
-  const isMobile = useIsMobile();
   const { final_results_url, intermediate_results_url, status } = campaign;
 
   const isFinished = [
@@ -91,7 +89,8 @@ const CampaignResultsSection: FC<Props> = ({ campaign }) => {
           justifyContent: 'space-between',
           gap: { xs: 1, md: 2 },
           bgcolor: 'rgba(212, 207, 255, 0.15)',
-          border: '1px solid rgba(255, 255, 255, 0.07)',
+          border: '1px solid',
+          borderColor: 'border.main',
           borderRadius: '8px',
           p: { xs: 1.5, md: 2 },
         }}
@@ -99,7 +98,6 @@ const CampaignResultsSection: FC<Props> = ({ campaign }) => {
         <Typography
           component="h6"
           sx={{
-            color: isMobile ? '#a496c2' : 'text.primary',
             fontSize: { xs: 12, md: 16 },
             fontWeight: 600,
             lineHeight: { xs: '150%', md: '100%' },

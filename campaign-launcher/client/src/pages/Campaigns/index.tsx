@@ -177,14 +177,15 @@ const Campaigns: FC = () => {
           pb: { xs: 3, md: 0 },
           px: { xs: 2, md: 0 },
           gap: { xs: 3, md: 4 },
-          borderBottom: { xs: '1px solid #473c74', md: 'none' },
+          borderBottom: { xs: '1px solid', md: 'none' },
+          borderColor: { xs: 'border.strong', md: 'unset' },
         }}
       >
         <Stack>
           <Typography
             variant={isMobile ? 'h5' : 'h3'}
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               fontWeight: isMobile ? 600 : 800,
               mb: { xs: 0.5, md: 1.5 },
               letterSpacing: isMobile ? '0px' : '-1.5px',
@@ -192,13 +193,7 @@ const Campaigns: FC = () => {
           >
             Campaigns
           </Typography>
-          <Typography
-            sx={{
-              fontSize: 15,
-              fontWeight: 400,
-              color: '#6b6490',
-            }}
-          >
+          <Typography variant="body3" sx={{ color: 'text.muted' }}>
             Join or host trading campaigns to earn rewards.
           </Typography>
         </Stack>
@@ -212,7 +207,7 @@ const Campaigns: FC = () => {
             <Button
               variant="outlined"
               size={isMobile ? 'medium' : 'large'}
-              color="error"
+              color="accent"
               sx={{ color: 'white' }}
               onClick={() => navigate(ROUTES.MANAGE_API_KEYS)}
               startIcon={<ApiKeyIcon />}

@@ -25,11 +25,10 @@ const ConnectWallet: FC<ConnectWalletProps> = ({ size = 'large' }) => {
       <Button
         variant="contained"
         size={size}
-        color="error"
+        color="accent"
         disabled={isConnecting}
         onClick={openConnectWallet}
         sx={{
-          color: 'white',
           width: 'fit-content',
           fontSize: 12,
           gap: 1,
