@@ -96,7 +96,11 @@ const theme = createTheme({
     },
   },
   palette: {
-    mode: 'dark', // Ensures MUI derives default palette values for a dark theme.
+    /**
+     * Ensures MUI derives default palette values for a dark theme
+     * in places that we don't override, e.g. "disabled" state of buttons, etc.
+     */
+    mode: 'dark',
     primary: {
       main: '#d4cfff',
       contrastText: 'rgba(0, 0, 0, 0.87)',
