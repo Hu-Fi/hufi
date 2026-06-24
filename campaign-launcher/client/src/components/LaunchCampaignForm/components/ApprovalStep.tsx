@@ -72,7 +72,7 @@ const ApprovalStep: FC<Props> = ({
 
   const {
     control,
-    formState: { errors },
+    formState: { errors, touchedFields },
     handleSubmit,
     watch,
     setValue,
@@ -111,12 +111,15 @@ const ApprovalStep: FC<Props> = ({
   const { showError } = useNotification();
 
   useEffect(() => {
+    const isAllowanceTouched = !!touchedFields.selected_allowance;
+    if (isAllowanceTouched) return;
+
     fetchAllowance(fundToken).then((allowance) => {
       if (allowance === UNLIMITED_AMOUNT) {
         setValue('selected_allowance', AllowanceType.UNLIMITED);
       }
     });
-  }, [fundToken, fetchAllowance, setValue]);
+  }, [touchedFields.selected_allowance, fundToken, fetchAllowance, setValue]);
 
   useEffect(() => {
     if (isMobile && errors.fund_amount) {
@@ -265,7 +268,11 @@ const ApprovalStep: FC<Props> = ({
                     }}
                   >
                     <span>Current allowance:</span>
-                    <Typography variant="body1" sx={{ color: 'accent.main' }}>
+                    <Typography
+                      component="span"
+                      variant="body1"
+                      sx={{ color: 'accent.main' }}
+                    >
                       {currentAllowance === UNLIMITED_AMOUNT
                         ? 'Unlimited'
                         : `${currentAllowance ?? 0} ${fundToken.toUpperCase()}`}
