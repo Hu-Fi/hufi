@@ -57,7 +57,6 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           width: 640,
           maxHeight: '700px',
           overflowY: 'hidden',
-          bgcolor: '#251d47',
           borderRadius: '20px',
           position: 'relative',
           boxShadow: 'none',
@@ -69,7 +68,7 @@ const BaseModal: FC<PropsWithChildren<Props>> = ({
           onClick={handleClose}
           sx={{
             p: 0,
-            color: 'white',
+            color: 'neutral.100',
             position: 'absolute',
             top: 48,
             right: 32,

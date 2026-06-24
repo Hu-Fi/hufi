@@ -32,7 +32,7 @@ const controlSlotProps = {
 const labelSlotProps = {
   typography: {
     sx: {
-      color: 'white',
+      color: 'neutral.100',
       textTransform: 'capitalize',
       ml: 1,
     },
@@ -44,9 +44,10 @@ const CheckboxIcon = () => (
     sx={{
       width: 20,
       height: 20,
-      borderRadius: '4px',
-      border: '1.5px solid #6d6d6d',
       bgcolor: 'transparent',
+      borderRadius: '4px',
+      border: '1.5px solid',
+      borderColor: 'border.strong',
     }}
   />
 );
@@ -60,10 +61,10 @@ const CheckboxCheckedIcon = () => (
       width: 20,
       height: 20,
       borderRadius: '4px',
-      bgcolor: 'error.main',
+      bgcolor: 'accent.main',
     }}
   >
-    <CheckIcon sx={{ color: '#ffffff', fontSize: 16 }} />
+    <CheckIcon sx={{ color: 'neutral.100', fontSize: 16 }} />
   </Box>
 );
 
@@ -187,10 +188,9 @@ const CampaignsFiltersContent: FC<Props> = ({
       }}
     >
       <Typography
-        variant="h6"
+        variant={isMobile ? 'body4' : 'h4'}
         sx={{
-          color: 'white',
-          lineHeight: 1,
+          color: 'neutral.100',
           ml: { xs: 2, md: 4 },
           mb: 3,
         }}
@@ -213,14 +213,7 @@ const CampaignsFiltersContent: FC<Props> = ({
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Network
           </Typography>
           {networkOptions.map(({ label, value }) => (
@@ -237,9 +230,10 @@ const CampaignsFiltersContent: FC<Props> = ({
                       sx={{
                         width: 20,
                         height: 20,
-                        borderRadius: '50%',
-                        border: '1.5px solid #6d6d6d',
                         bgcolor: 'transparent',
+                        borderRadius: '50%',
+                        border: '1.5px solid',
+                        borderColor: 'border.strong',
                       }}
                     />
                   }
@@ -252,10 +246,10 @@ const CampaignsFiltersContent: FC<Props> = ({
                         width: 20,
                         height: 20,
                         borderRadius: '50%',
-                        bgcolor: 'error.main',
+                        bgcolor: 'accent.main',
                       }}
                     >
-                      <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
+                      <CheckIcon sx={{ color: 'neutral.100', fontSize: 16 }} />
                     </Box>
                   }
                 />
@@ -269,21 +263,14 @@ const CampaignsFiltersContent: FC<Props> = ({
             />
           ))}
         </Stack>
-        <Divider sx={{ borderColor: '#3a2e6f' }} />
+        <Divider sx={{ borderColor: 'border.strong' }} />
         <Stack
           sx={{
             gap: 1,
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Status
           </Typography>
           <FormControlLabel
@@ -319,21 +306,14 @@ const CampaignsFiltersContent: FC<Props> = ({
             />
           ))}
         </Stack>
-        <Divider sx={{ borderColor: '#3a2e6f' }} />
+        <Divider sx={{ borderColor: 'border.strong' }} />
         <Stack
           sx={{
             gap: 1,
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Campaign Type
           </Typography>
           <FormControlLabel
@@ -369,21 +349,14 @@ const CampaignsFiltersContent: FC<Props> = ({
             />
           ))}
         </Stack>
-        <Divider sx={{ borderColor: '#3a2e6f' }} />
+        <Divider sx={{ borderColor: 'border.strong' }} />
         <Stack
           sx={{
             gap: 1,
             px: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-            }}
-          >
+          <Typography variant="body1" sx={{ textTransform: 'uppercase' }}>
             Exchanges
           </Typography>
           <FormControlLabel
@@ -425,7 +398,8 @@ const CampaignsFiltersContent: FC<Props> = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderTop: '1px solid #3a2e6f',
+          borderTop: '1px solid',
+          borderColor: 'border.strong',
           py: 3,
           px: { xs: 2, md: 3 },
           gap: 2,
@@ -438,8 +412,7 @@ const CampaignsFiltersContent: FC<Props> = ({
           fullWidth={isMobile}
           disableRipple
           sx={{
-            color: 'white',
-            boxShadow: 'none',
+            color: 'neutral.100',
           }}
           onClick={handleClearAll}
         >
@@ -449,13 +422,9 @@ const CampaignsFiltersContent: FC<Props> = ({
           type="submit"
           size="large"
           variant="contained"
-          color="error"
+          color="accent"
           fullWidth={isMobile}
           disableRipple
-          sx={{
-            color: 'white',
-            boxShadow: 'none',
-          }}
         >
           Apply filters
         </Button>

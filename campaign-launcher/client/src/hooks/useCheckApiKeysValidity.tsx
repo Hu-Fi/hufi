@@ -28,6 +28,7 @@ const useCheckApiKeysValidity = () => {
           <Link
             component={RouterLink}
             to={ROUTES.MANAGE_API_KEYS}
+            variant="body1"
             sx={{
               color: 'inherit',
               textDecoration: 'underline',

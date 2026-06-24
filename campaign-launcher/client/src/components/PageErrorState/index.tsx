@@ -16,7 +16,6 @@ const PageErrorState = ({
         display: 'flex',
         py: 3,
         px: 2,
-        bgcolor: '#251d47',
         borderRadius: '16px',
         height: '400px',
       }}
@@ -39,39 +38,25 @@ const PageErrorState = ({
             width: '72px',
             height: '72px',
             p: 1,
+            bgcolor: 'background.subtle',
             borderRadius: '16px',
-            border: '1px solid #433679',
-            bgcolor: '#32295a',
+            border: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <SettingsIcon sx={{ width: '100%', height: '100%' }} />
         </Box>
-        <Typography
-          component="p"
-          variant="h6"
-          sx={{
-            color: 'white',
-            fontWeight: 700,
-          }}
-        >
+        <Typography component="p" variant="h4" sx={{ color: 'neutral.100' }}>
           Something went wrong
         </Typography>
-        <Typography
-          sx={{
-            fontSize: 16,
-            fontWeight: 500,
-            color: '#a0a0a0',
-            mb: 2,
-          }}
-        >
+        <Typography variant="body3" sx={{ color: 'text.auxiliary', mb: 2 }}>
           {description}
         </Typography>
         <Button
           variant="outlined"
           size="large"
-          color="primary"
           startIcon={<RefreshIcon />}
-          sx={{ borderColor: '#3a2e6f' }}
+          sx={{ bgcolor: 'background.paper', borderColor: 'border.strong' }}
           onClick={onRefetch}
         >
           Retry

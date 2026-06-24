@@ -8,7 +8,7 @@ import { type CampaignStatus, type CampaignType } from '@/types';
 
 import CampaignsFiltersContent from './Content';
 
-const FiltersCountStyled = styled('div')({
+const FiltersCountStyled = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -17,11 +17,11 @@ const FiltersCountStyled = styled('div')({
   position: 'absolute',
   top: -4,
   right: -4,
-  backgroundColor: '#FA2A75',
-  color: 'white',
+  backgroundColor: theme.palette.accent.main,
+  color: theme.palette.neutral['100'],
   fontSize: 12,
   borderRadius: '50%',
-});
+}));
 
 export type CampaignsFiltersSelection = {
   network: number;
@@ -67,10 +67,10 @@ const CampaignsFilters: FC<Props> = ({
         sx={{
           p: 0,
           position: 'relative',
-          bgcolor: 'background.default',
           width: 42,
           height: 42,
-          border: '1px solid #251d47',
+          border: '1px solid',
+          borderColor: 'border.strong',
           borderRadius: '100%',
         }}
       >

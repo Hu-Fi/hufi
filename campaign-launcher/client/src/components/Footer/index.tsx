@@ -35,7 +35,6 @@ const Footer: FC<{ reserveBottomOffset: boolean }> = ({
     <Box
       component="footer"
       sx={{
-        bgcolor: 'background.default',
         pb: reserveBottomOffset ? `${MOBILE_BOTTOM_NAV_HEIGHT}px` : 0,
       }}
     >
@@ -45,16 +44,12 @@ const Footer: FC<{ reserveBottomOffset: boolean }> = ({
             alignItems: 'center',
             pt: 1,
             pb: 3,
-            gap: 1,
-            borderTop: '1px solid #433679',
+            gap: 1.5,
+            borderTop: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              color: 'text.secondary',
-            }}
-          >
+          <Typography variant="subtitle4" sx={{ color: 'text.secondary' }}>
             © {new Date().getFullYear()} HuFi powered by HUMAN Protocol
           </Typography>
           <Box

@@ -102,6 +102,7 @@ const JoinCampaignOverlay: FC<Props> = ({
               px: 4,
               py: 4,
               maxWidth: 560,
+              height: 400,
               width: '100%',
             }
       }
@@ -109,7 +110,7 @@ const JoinCampaignOverlay: FC<Props> = ({
         px: 2,
         py: 4,
         minHeight: isConnectStep ? '450px' : 'auto',
-        maxHeight: isConnectStep ? '550px' : 'auto',
+        maxHeight: isConnectStep ? '550px' : '400px',
       }}
       closeButtonSx={{
         top: shouldShowTwoSteps ? 24 : 32,
@@ -134,7 +135,9 @@ const JoinCampaignOverlay: FC<Props> = ({
                   width: 90,
                   borderRadius: 10,
                   bgcolor:
-                    index === 0 || !isConnectStep ? 'text.primary' : '#3a2e6f',
+                    index === 0 || !isConnectStep
+                      ? 'text.primary'
+                      : 'border.strong',
                 }}
               />
             ))}
@@ -143,19 +146,13 @@ const JoinCampaignOverlay: FC<Props> = ({
         {!isConnectStep && (
           <Stack sx={{ gap: 1.5 }}>
             <Typography
-              variant="body1"
-              sx={{
-                color: 'white',
-                fontSize: { xs: '16px', md: '20px' },
-                fontWeight: 600,
-              }}
+              component="h6"
+              variant="body4"
+              sx={{ color: 'neutral.100' }}
             >
               Sign In
             </Typography>
-            <Typography
-              variant="subtitle2"
-              sx={{ color: 'text.primary', fontWeight: 500 }}
-            >
+            <Typography variant="body1">
               To keep your account secure, please sign this message. This is a
               gasless way to confirm you own this address.
             </Typography>
@@ -169,20 +166,21 @@ const JoinCampaignOverlay: FC<Props> = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1px solid #433679',
-                borderRadius: '8px',
                 justifyContent: 'space-between',
                 mt: 2,
                 px: 1.5,
                 py: 2,
+                borderRadius: '8px',
+                border: '1px solid',
+                borderColor: 'border.strong',
               }}
             >
               <Typography variant="body1">Connected Wallet</Typography>
-              <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>
+              <Typography variant="body1">
                 {formatAddress(activeAddress)}
               </Typography>
             </Box>
-            <Stack direction="row" sx={{ gap: 2, mt: 6 }}>
+            <Stack direction="row" sx={{ gap: 2, mt: 'auto' }}>
               <Button
                 variant="outlined"
                 size="large"
@@ -190,8 +188,8 @@ const JoinCampaignOverlay: FC<Props> = ({
                 disabled={isOverlayActionLoading}
                 onClick={onClose}
                 sx={{
-                  color: 'white',
-                  borderColor: '#433679',
+                  color: 'neutral.100',
+                  borderColor: 'border.strong',
                 }}
               >
                 Cancel
@@ -199,7 +197,7 @@ const JoinCampaignOverlay: FC<Props> = ({
               <Button
                 variant="contained"
                 size="large"
-                color="error"
+                color="accent"
                 fullWidth
                 disabled={isOverlayActionLoading}
                 onClick={handleAuthenticate}

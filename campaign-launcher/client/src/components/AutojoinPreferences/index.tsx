@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 
 import { TOKENS } from '@/constants/tokens';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { AutojoinLabelIcon, LightningIcon } from '@/icons';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import { CampaignType, type UserPreferences } from '@/types';
@@ -62,6 +63,7 @@ const AutojoinPreferences: FC<Props> = ({
   const selectedExchanges = preferences?.exchanges ?? [];
   const selectedTokens = preferences?.tokens ?? [];
 
+  const isMobile = useIsMobile();
   const { exchanges: exchangesOptions, isLoading: isExchangesLoading } =
     useExchangesContext();
 
@@ -130,21 +132,21 @@ const AutojoinPreferences: FC<Props> = ({
         width: '100%',
         borderRadius: '18px',
         border: '2px solid',
-        borderColor: enabled ? '#43ba96' : '#100735',
+        borderColor: enabled ? 'success.main' : 'transparent',
         overflow: 'hidden',
       }}
     >
       <Box
-        sx={{
+        sx={(theme) => ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           width: '100%',
-          background: 'linear-gradient(90deg, #251D47 0%, #3C2F73 100%)',
+          background: `linear-gradient(90deg, ${theme.palette.background.paper} 0%, ${theme.palette.border.strong} 100%)`,
           gap: 2,
           px: { xs: 2, md: 5 },
           py: { xs: 3.5, md: 4.5 },
-        }}
+        })}
       >
         <Box
           sx={{
@@ -173,7 +175,7 @@ const AutojoinPreferences: FC<Props> = ({
                 position: 'absolute',
                 top: 0,
                 right: 4,
-                color: enabled ? '#43ba96' : '#201d2c',
+                color: enabled ? 'success.main' : '#201d2c',
               }}
             />
           </Box>
@@ -186,7 +188,7 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Typography
               sx={{
-                color: 'white',
+                color: 'neutral.100',
                 fontSize: { xs: 16, md: 20 },
                 fontWeight: 700,
                 lineHeight: '100%',
@@ -196,7 +198,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: '#a29dca',
+                color: 'text.subtle',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -206,7 +208,7 @@ const AutojoinPreferences: FC<Props> = ({
             </Typography>
             <Typography
               sx={{
-                color: '#a29dca',
+                color: 'text.subtle',
                 fontSize: { xs: 12, md: 16 },
                 fontWeight: 500,
                 lineHeight: '100%',
@@ -217,7 +219,7 @@ const AutojoinPreferences: FC<Props> = ({
           </Box>
         </Box>
         {isPreferencesLoading || isExchangesLoading ? (
-          <CircularProgress size={28} sx={{ color: 'white' }} />
+          <CircularProgress size={28} sx={{ color: 'neutral.100' }} />
         ) : (
           <SwitchStyled
             checked={enabled}
@@ -226,7 +228,9 @@ const AutojoinPreferences: FC<Props> = ({
           />
         )}
       </Box>
-      <Stack sx={{ display: enabled ? 'flex' : 'none', bgcolor: '#251d47' }}>
+      <Stack
+        sx={{ display: enabled ? 'flex' : 'none', bgcolor: 'background.paper' }}
+      >
         <Row>
           <Box
             sx={{
@@ -241,22 +245,14 @@ const AutojoinPreferences: FC<Props> = ({
             }}
           >
             <Typography
-              sx={{
-                color: 'white',
-                fontSize: { xs: 16, md: 20 },
-                fontWeight: { xs: 700, md: 600 },
-                lineHeight: { xs: '100%', md: '150%' },
-              }}
+              variant={isMobile ? 'body4' : 'h5'}
+              sx={{ color: 'neutral.100' }}
             >
               Campaign types
             </Typography>
             <Typography
-              sx={{
-                color: '#a29dca',
-                fontSize: { xs: 12, md: 14 },
-                fontWeight: 500,
-                lineHeight: '100%',
-              }}
+              variant={isMobile ? 'subtitle4' : 'body1'}
+              sx={{ color: 'text.subtle' }}
             >
               Select which campaign types to autojoin
             </Typography>
@@ -266,7 +262,7 @@ const AutojoinPreferences: FC<Props> = ({
             flexItem
             sx={{
               display: { xs: 'none', md: 'block' },
-              borderColor: '#3a2e6f',
+              borderColor: 'border.strong',
             }}
           />
           <Box
@@ -286,7 +282,9 @@ const AutojoinPreferences: FC<Props> = ({
                   key={value}
                   label={label}
                   labelPlacement="start"
-                  borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  sx={{
+                    borderColor: isChecked ? 'accent.main' : 'border.strong',
+                  }}
                   disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
@@ -318,22 +316,14 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
               <Typography
-                sx={{
-                  color: 'white',
-                  fontSize: { xs: 16, md: 20 },
-                  fontWeight: { xs: 700, md: 600 },
-                  lineHeight: { xs: '100%', md: '150%' },
-                }}
+                variant={isMobile ? 'body4' : 'h5'}
+                sx={{ color: 'neutral.100' }}
               >
                 Exchanges
               </Typography>
               <Typography
-                sx={{
-                  color: '#a29dca',
-                  fontSize: { xs: 12, md: 14 },
-                  fontWeight: 500,
-                  lineHeight: '100%',
-                }}
+                variant={isMobile ? 'subtitle4' : 'body1'}
+                sx={{ color: 'text.subtle' }}
               >
                 Only autojoin campaigns running on these exchanges
               </Typography>
@@ -350,10 +340,12 @@ const AutojoinPreferences: FC<Props> = ({
                 width: { xs: 100, md: 200 },
                 minWidth: { xs: 100, md: 200 },
                 px: { xs: '14px', md: '22px' },
-                color: isAllExchangesSelected ? 'error.main' : 'white',
+                color: isAllExchangesSelected ? 'accent.main' : 'neutral.100',
                 borderRadius: 99,
                 border: '1px solid',
-                borderColor: isAllExchangesSelected ? 'error.main' : '#3a2e6f',
+                borderColor: isAllExchangesSelected
+                  ? 'accent.main'
+                  : 'border.strong',
               }}
               onClick={() => handleSelectAll('exchanges')}
             >
@@ -365,7 +357,7 @@ const AutojoinPreferences: FC<Props> = ({
             flexItem
             sx={{
               display: { xs: 'none', md: 'block' },
-              borderColor: '#3a2e6f',
+              borderColor: 'border.strong',
             }}
           />
           <Box
@@ -386,7 +378,9 @@ const AutojoinPreferences: FC<Props> = ({
                   key={name}
                   label={display_name}
                   labelPlacement="start"
-                  borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  sx={{
+                    borderColor: isChecked ? 'accent.main' : 'border.strong',
+                  }}
                   disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox
@@ -418,22 +412,14 @@ const AutojoinPreferences: FC<Props> = ({
           >
             <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
               <Typography
-                sx={{
-                  color: 'white',
-                  fontSize: { xs: 16, md: 20 },
-                  fontWeight: { xs: 700, md: 600 },
-                  lineHeight: { xs: '100%', md: '150%' },
-                }}
+                variant={isMobile ? 'body4' : 'h5'}
+                sx={{ color: 'neutral.100' }}
               >
                 Tokens
               </Typography>
               <Typography
-                sx={{
-                  color: '#a29dca',
-                  fontSize: { xs: 12, md: 14 },
-                  fontWeight: 500,
-                  lineHeight: '100%',
-                }}
+                variant={isMobile ? 'subtitle4' : 'body1'}
+                sx={{ color: 'text.subtle' }}
               >
                 Autojoin campaigns for these tokens only
               </Typography>
@@ -450,10 +436,12 @@ const AutojoinPreferences: FC<Props> = ({
                 width: { xs: 100, md: 200 },
                 minWidth: { xs: 100, md: 200 },
                 px: { xs: '14px', md: '22px' },
-                color: isAllTokensSelected ? 'error.main' : 'white',
+                color: isAllTokensSelected ? 'accent.main' : 'neutral.100',
                 borderRadius: 99,
                 border: '1px solid',
-                borderColor: isAllTokensSelected ? 'error.main' : '#3a2e6f',
+                borderColor: isAllTokensSelected
+                  ? 'accent.main'
+                  : 'border.strong',
               }}
               onClick={() => handleSelectAll('tokens')}
             >
@@ -465,7 +453,7 @@ const AutojoinPreferences: FC<Props> = ({
             flexItem
             sx={{
               display: { xs: 'none', md: 'block' },
-              borderColor: '#3a2e6f',
+              borderColor: 'border.strong',
             }}
           />
           <Box
@@ -496,7 +484,9 @@ const AutojoinPreferences: FC<Props> = ({
                     </Box>
                   }
                   labelPlacement="start"
-                  borderColor={isChecked ? '#fa2a75' : '#3a2e6f'}
+                  sx={{
+                    borderColor: isChecked ? 'accent.main' : 'border.strong',
+                  }}
                   disabled={isPreferencesLoading || isSavingPreferences}
                   control={
                     <Checkbox

@@ -158,24 +158,17 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             px: { xs: 2, md: 4 },
             pt: { xs: 2, md: 6 },
             pb: 3,
-            borderBottom: '1px solid #3a2e6f',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           <Typography
-            variant="h5"
-            sx={{
-              color: 'white',
-              fontWeight: 700,
-            }}
+            variant={isMobile ? 'body4' : 'h4'}
+            sx={{ color: 'neutral.100' }}
           >
             Add API Key
           </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant="body1">
             For you to join a running campaign you must connect your API key
           </Typography>
         </Stack>
@@ -198,12 +191,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               }}
             >
               <ModalLoading />
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  textAlign: 'center',
-                }}
-              >
+              <Typography variant="body1" sx={{ textAlign: 'center' }}>
                 Connecting API key...
               </Typography>
             </Stack>
@@ -228,9 +216,9 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                 }}
               >
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontWeight: 500,
                     mb: 1.5,
                   }}
@@ -254,9 +242,9 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               </FormControl>
               <FormControl error={!!errors.apiKey} sx={{ flex: 1 }}>
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontWeight: 500,
                     mb: 1.5,
                   }}
@@ -285,9 +273,9 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               </FormControl>
               <FormControl error={!!errors.secret} sx={{ width: '100%' }}>
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
-                    color: 'white',
+                    color: 'neutral.100',
                     fontWeight: 500,
                     mb: 1.5,
                   }}
@@ -315,9 +303,9 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               {isBitmart && (
                 <FormControl error={!!errors.memo} sx={{ width: '100%' }}>
                   <Typography
-                    variant="h6"
+                    variant="h5"
                     sx={{
-                      color: 'white',
+                      color: 'neutral.100',
                       fontWeight: 500,
                       mb: 1.5,
                     }}
@@ -385,7 +373,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             >
               <ModalSuccess>
                 <Typography
-                  variant="subtitle2"
+                  variant="body1"
                   sx={{
                     py: 1,
                     mb: 1,
@@ -423,7 +411,8 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             justifyContent: 'flex-end',
             py: 3,
             px: { xs: 2, md: 3 },
-            borderTop: '1px solid #3a2e6f',
+            borderTop: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
           {isIdle && (
@@ -431,7 +420,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
               variant="contained"
               size="large"
               type="submit"
-              color="error"
+              color="accent"
               fullWidth={isMobile}
             >
               Connect API key
@@ -441,7 +430,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             <Button
               size="large"
               variant="contained"
-              color="error"
+              color="accent"
               disabled={isPending}
               fullWidth={isMobile}
               sx={{ minWidth: 130 }}
@@ -454,7 +443,7 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
             <Button
               size="large"
               variant="contained"
-              color="error"
+              color="accent"
               fullWidth={isMobile}
               sx={{ minWidth: 130 }}
               onClick={resetMutation}

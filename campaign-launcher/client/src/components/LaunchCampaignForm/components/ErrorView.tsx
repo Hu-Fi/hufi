@@ -25,7 +25,12 @@ const ErrorView: FC<Props> = ({ onRetry }) => {
         <Button
           size="large"
           variant="outlined"
-          sx={{ mt: 4, mx: 'auto', color: 'white', borderColor: '#433679' }}
+          sx={{
+            mt: 4,
+            mx: 'auto',
+            color: 'neutral.100',
+            borderColor: 'border.strong',
+          }}
           onClick={onRetry}
         >
           Try again

@@ -59,7 +59,7 @@ const CampaignsTable: FC<Props> = ({
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              color: 'white',
+              color: 'neutral.100',
             }}
           >
             <CampaignSymbol
@@ -68,12 +68,10 @@ const CampaignsTable: FC<Props> = ({
               size="medium"
             />
             <Typography
-              variant="caption"
+              variant="subtitle3"
               sx={{
-                color: '#a39fbc',
+                color: 'text.subtle',
                 textTransform: 'uppercase',
-                fontWeight: 600,
-                letterSpacing: 0,
               }}
             >
               {mapTypeToLabel(params.row.type)}
@@ -93,8 +91,9 @@ const CampaignsTable: FC<Props> = ({
           params.row.exchange_name;
         return (
           <Typography
+            variant="body4"
             sx={{
-              color: 'white',
+              color: 'neutral.100',
               textTransform: 'capitalize',
             }}
           >
@@ -163,15 +162,7 @@ const CampaignsTable: FC<Props> = ({
         const { label: targetTokenSymbol } = getTokenInfo(targetToken);
         const targetValue = getTargetInfo(params.row).value;
         return (
-          <Typography
-            component="p"
-            variant="subtitle2"
-            sx={{
-              color: 'white',
-              fontSize: 16,
-              fontWeight: 700,
-            }}
-          >
+          <Typography variant="body4" sx={{ color: 'neutral.100' }}>
             <CompactNumberWithTooltip value={targetValue} /> {targetTokenSymbol}
           </Typography>
         );
@@ -186,13 +177,7 @@ const CampaignsTable: FC<Props> = ({
         if (isJoinedCampaigns) {
           const { fund_amount, fund_token } = params.row;
           return (
-            <Typography
-              variant="body1"
-              sx={{
-                color: 'white',
-                fontWeight: 700,
-              }}
-            >
+            <Typography variant="body4" sx={{ color: 'neutral.100' }}>
               <span>{fund_amount}</span> <span>{fund_token.toUpperCase()}</span>
             </Typography>
           );
@@ -202,13 +187,7 @@ const CampaignsTable: FC<Props> = ({
           params.row;
 
         return (
-          <Typography
-            variant="body1"
-            sx={{
-              color: 'white',
-              fontWeight: 600,
-            }}
-          >
+          <Typography variant="body4" sx={{ color: 'neutral.100' }}>
             <FormattedNumber
               value={formatTokenAmount(fund_amount, fund_token_decimals)}
               suffix={` ${fund_token_symbol}`}
@@ -241,11 +220,12 @@ const CampaignsTable: FC<Props> = ({
                 height: 42,
                 p: 0,
                 borderRadius: '4px',
-                border: '1px solid #433679',
+                border: '1px solid',
+                borderColor: 'border.strong',
                 gap: 1,
                 '& .view-details-text': {
                   display: 'none',
-                  color: 'white',
+                  color: 'neutral.100',
                   fontSize: '14px',
                   fontWeight: 600,
                 },
@@ -302,7 +282,7 @@ const CampaignsTable: FC<Props> = ({
         border: 'none',
         borderRadius: '18px',
         opacity: isFetching ? 0.5 : 1,
-        bgcolor: '#251d47',
+        bgcolor: 'background.paper',
         '& .MuiDataGrid-withBorderColor': {
           border: 'none !important',
         },
@@ -334,7 +314,7 @@ const CampaignsTable: FC<Props> = ({
           },
         },
         '& .MuiDataGrid-columnHeaderTitle': {
-          color: '#716c8b',
+          color: 'text.muted',
           fontWeight: 600,
           fontSize: '14px',
           lineHeight: '18px',
@@ -347,7 +327,8 @@ const CampaignsTable: FC<Props> = ({
           mb: 0,
           py: 2,
           bgcolor: 'transparent',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid',
+          borderColor: 'border.main',
           '&:hover': {
             bgcolor: 'transparent',
           },

@@ -12,16 +12,16 @@ export const NotificationProvider: FC<PropsWithChildren> = ({ children }) => {
             flexWrap: 'nowrap',
           },
           '.notistack-MuiContent-success': {
-            backgroundColor: '#0ad397',
+            backgroundColor: '#43ba96',
           },
           '.notistack-MuiContent-error': {
-            backgroundColor: '#fa2a75',
+            backgroundColor: '#ff6262',
           },
           '.notistack-MuiContent-warning': {
-            backgroundColor: '#ffa726',
+            backgroundColor: '#ffbb00',
           },
           '.notistack-MuiContent-info': {
-            backgroundColor: '#5d0Ce9',
+            backgroundColor: '#6309ff',
           },
         }}
       />

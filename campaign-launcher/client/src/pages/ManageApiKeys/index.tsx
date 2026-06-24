@@ -38,7 +38,7 @@ const DocsReference: FC<{ exchangeName: string }> = ({ exchangeName }) => {
         rel="noopener noreferrer"
         sx={{
           display: 'inline',
-          color: 'error.main',
+          color: 'accent.main',
           fontSize: 14,
           fontWeight: 500,
           textDecoration: 'none',
@@ -65,7 +65,8 @@ const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
         width: '100%',
         height: MOBILE_BOTTOM_NAV_HEIGHT,
         bgcolor: 'background.default',
-        borderTop: '2px solid #251d47',
+        borderTop: '2px solid',
+        borderColor: 'background.paper',
         position: 'fixed',
         bottom: 0,
         left: 0,
@@ -106,7 +107,7 @@ const ManageApiKeysPage: FC = () => {
     <Button
       size="large"
       variant="contained"
-      color="error"
+      color="accent"
       fullWidth={isMobile}
       sx={{ minWidth: '135px' }}
       onClick={() => setIsDialogOpen(true)}
@@ -125,14 +126,7 @@ const ManageApiKeysPage: FC = () => {
           mb: { xs: showDocsReference ? 2 : 4, md: 4 },
         }}
       >
-        <Typography
-          component="h2"
-          variant="h6"
-          sx={{
-            color: 'white',
-            fontWeight: 600,
-          }}
-        >
+        <Typography component="h2" variant="h5" sx={{ color: 'neutral.100' }}>
           Manage API Keys
         </Typography>
         {!isMobile && addApiKeyCta}
