@@ -22,7 +22,7 @@ jobs:
       reputation_oracle: ${{ steps.filter.outputs.reputation_oracle }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
