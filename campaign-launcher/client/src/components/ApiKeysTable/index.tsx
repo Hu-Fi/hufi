@@ -208,7 +208,7 @@ const ApiKeysTable: FC<ApiKeysTableProps> = ({ data, isLoading }) => {
               gap: 1.5,
             }}
           >
-            {(!isValid || 2 > 1) && (
+            {!isValid && (
               <IconButton
                 sx={{
                   p: 0,
