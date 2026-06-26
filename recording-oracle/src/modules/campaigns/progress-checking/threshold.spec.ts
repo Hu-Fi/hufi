@@ -40,7 +40,7 @@ describe('ThresholdProgressChecker', () => {
     });
 
     test.each([undefined, null, NaN])(
-      'should fail if invalid minimum balance target provided [%#]',
+      'should fail if invalid minimum balance target provided [%$]',
       (input) => {
         expect(() => {
           new TestCampaignProgressChecker(mockedExchangesService, {

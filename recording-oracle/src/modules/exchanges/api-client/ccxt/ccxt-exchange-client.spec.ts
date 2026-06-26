@@ -119,7 +119,7 @@ describe('CcxtExchangeClient', () => {
     });
 
     test.each([true, false, undefined])(
-      'should create instance with sandbox mode [%#]',
+      'should create instance with sandbox mode [%$]',
       (sandboxParam) => {
         const apiKey = faker.string.sample();
         const secret = faker.string.sample();
@@ -490,7 +490,7 @@ describe('CcxtExchangeClient', () => {
             '{"code":10072,"msg":"Invalid access key"}',
             `mexc {"code":700006,"msg":"IP [${faker.internet.ip()}] not in the ip white list"}`,
           ])(
-            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            'should throw ExchangeApiAccessError when invalid api key [%$]',
             async (errorMessage) => {
               mockedExchange.fetchMyTrades.mockRejectedValueOnce(
                 new Error(errorMessage),
@@ -613,7 +613,7 @@ describe('CcxtExchangeClient', () => {
             '{"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Invalid access key"}',
           ])(
-            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            'should throw ExchangeApiAccessError when invalid api key [%$]',
             async (errorMessage) => {
               mockedExchange.fetchBalance.mockRejectedValueOnce(
                 new Error(errorMessage),
@@ -735,7 +735,7 @@ describe('CcxtExchangeClient', () => {
             '{"code":10072,"msg":"Api key info invalid"}',
             '{"code":10072,"msg":"Invalid access key"}',
           ])(
-            'should throw ExchangeApiAccessError when invalid api key [%#]',
+            'should throw ExchangeApiAccessError when invalid api key [%$]',
             async (errorMessage) => {
               mockedExchange.fetchDepositAddress.mockRejectedValueOnce(
                 new Error(errorMessage),

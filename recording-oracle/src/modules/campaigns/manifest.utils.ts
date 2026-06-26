@@ -19,19 +19,6 @@ import {
   ThresholdMarketMakingCampaignDetails,
 } from './types';
 
-const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{2,10}$/;
-const TRADING_PAIR_REGEX = /^[\dA-Z]{2,10}\/[\dA-Z]{3,10}$/;
-
-const baseManifestSchema = Joi.object({
-  type: Joi.string().min(2).required(),
-  exchange: Joi.string().min(2).required(),
-  /**
-   * Duration interval is [start_date, end_date)
-   */
-  start_date: Joi.date().iso().required(),
-  end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
-}).options({ allowUnknown: true, stripUnknown: false });
-
 export async function downloadCampaignManifest(
   url: string,
   manifestHash: string,
@@ -45,6 +32,19 @@ export async function downloadCampaignManifest(
   return manifestData.toString();
 }
 
+const TOKEN_SYMBOL_REGEX = /^[\dA-Z]{2,10}$/;
+const TRADING_PAIR_REGEX = /^[\dA-Z]{2,10}\/[\dA-Z]{3,10}$/;
+
+const baseManifestSchema = Joi.object({
+  type: Joi.string().min(2).required(),
+  exchange: Joi.string().min(2).required(),
+  /**
+   * Duration interval is [start_date, end_date)
+   */
+  start_date: Joi.date().iso().required(),
+  end_date: Joi.date().iso().greater(Joi.ref('start_date')).required(),
+}).options({ allowUnknown: true, stripUnknown: false });
+
 export function validateBaseSchema(manifest: string): CampaignManifestBase {
   try {
     const manifestJson = JSON.parse(manifest);
@@ -57,7 +57,7 @@ export function validateBaseSchema(manifest: string): CampaignManifestBase {
 }
 
 const marketMakingManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.MARKET_MAKING),
+  type: Joi.string().valid(CampaignType.MARKET_MAKING).required(),
   pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   daily_volume_target: Joi.number().strict().positive().required(),
 });
@@ -67,12 +67,14 @@ export function assertValidMarketMakingCampaignManifest(
   try {
     Joi.assert(manifest, marketMakingManifestSchema);
   } catch {
-    throw new Error('Invalid market making campaign manifest schema');
+    throw new Error(
+      `Invalid ${CampaignType.MARKET_MAKING} campaign manifest schema`,
+    );
   }
 }
 
 const competitiveMarketMakingManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING),
+  type: Joi.string().valid(CampaignType.COMPETITIVE_MARKET_MAKING).required(),
   pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   minimum_volume_required: Joi.number().strict().positive().required(),
   rewards_distribution: Joi.array()
@@ -101,13 +103,13 @@ export function assertValidCompetitiveMarketMakingCampaignManifest(
     Joi.assert(manifest, competitiveMarketMakingManifestSchema);
   } catch {
     throw new Error(
-      'Invalid competitive market making campaign manifest schema',
+      `Invalid ${CampaignType.COMPETITIVE_MARKET_MAKING} campaign manifest schema`,
     );
   }
 }
 
 const thresholdMarketMakingManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.THRESHOLD_MARKET_MAKING),
+  type: Joi.string().valid(CampaignType.THRESHOLD_MARKET_MAKING).required(),
   pair: Joi.string().pattern(TRADING_PAIR_REGEX).required(),
   minimum_volume_target: Joi.number().strict().positive().required(),
   max_participants: Joi.number().strict().positive().integer().required(),
@@ -118,12 +120,14 @@ export function assertValidThresholdMarketMakingCampaignManifest(
   try {
     Joi.assert(manifest, thresholdMarketMakingManifestSchema);
   } catch {
-    throw new Error('Invalid threshold market making campaign manifest schema');
+    throw new Error(
+      `Invalid ${CampaignType.THRESHOLD_MARKET_MAKING} campaign manifest schema`,
+    );
   }
 }
 
 const holdingManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.HOLDING),
+  type: Joi.string().valid(CampaignType.HOLDING).required(),
   symbol: Joi.string().pattern(TOKEN_SYMBOL_REGEX).required(),
   daily_balance_target: Joi.number().strict().positive().required(),
 });
@@ -133,12 +137,12 @@ export function assertValidHoldingCampaignManifest(
   try {
     Joi.assert(manifest, holdingManifestSchema);
   } catch {
-    throw new Error('Invalid holding campaign manifest schema');
+    throw new Error(`Invalid ${CampaignType.HOLDING} campaign manifest schema`);
   }
 }
 
 const thresholdManifestSchema = baseManifestSchema.keys({
-  type: Joi.string().valid(CampaignType.THRESHOLD),
+  type: Joi.string().valid(CampaignType.THRESHOLD).required(),
   symbol: Joi.string().pattern(TOKEN_SYMBOL_REGEX).required(),
   minimum_balance_target: Joi.number().strict().positive().required(),
   max_participants: Joi.number().strict().positive().integer(),
@@ -149,7 +153,9 @@ export function assertValidThresholdCampaignManifest(
   try {
     Joi.assert(manifest, thresholdManifestSchema);
   } catch {
-    throw new Error('Invalid threshold campaign manifest schema');
+    throw new Error(
+      `Invalid ${CampaignType.THRESHOLD} campaign manifest schema`,
+    );
   }
 }
 
