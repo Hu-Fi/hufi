@@ -434,7 +434,7 @@ describe('payouts utils', () => {
         ],
       },
     ])(
-      'should throw when invalid intermediate results schema [%#]',
+      'should throw when invalid intermediate results schema [%$]',
       async (mockedIntermediateResults) => {
         const mockedIntermediateResultsHash = calculateIntermediateResultsHash(
           mockedIntermediateResults,

@@ -41,7 +41,7 @@ describe('ThresholdMarketMakingProgressChecker', () => {
     });
 
     test.each([undefined, null, NaN])(
-      'should fail if invalid minimum volume target provided [%#]',
+      'should fail if invalid minimum volume target provided [%$]',
       (input) => {
         expect(() => {
           new ThresholdMarketMakingProgressChecker(mockedExchangesService, {

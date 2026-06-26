@@ -25,7 +25,7 @@ describe('PromisePool', () => {
       0,
       -1 * faker.number.int({ min: 1 }),
       faker.number.float({ min: 0.001, max: 10 }),
-    ])('should throw when invalid concurrency [%#]', (testConcurrency) => {
+    ])('should throw when invalid concurrency [%$]', (testConcurrency) => {
       expect(() => {
         new PromisePool({ concurrency: testConcurrency });
       }).toThrow('concurrency must be a positive integer');
@@ -36,7 +36,7 @@ describe('PromisePool', () => {
       -1 * faker.number.int({ min: 1 }),
       faker.number.float({ min: 0.001, max: 10 }),
     ])(
-      'should throw when invalid backpressureLimit [%#]',
+      'should throw when invalid backpressureLimit [%$]',
       (testBackpressureLimit) => {
         expect(() => {
           new PromisePool({

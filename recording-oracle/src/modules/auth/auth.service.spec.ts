@@ -101,7 +101,7 @@ describe('AuthService', () => {
       null,
       { uuid: faker.string.uuid() } as unknown as RefreshTokenEntity,
     ])(
-      'should generate access and refresh tokens for worker [%#]',
+      'should generate access and refresh tokens for worker [%$]',
       async (existingRefreshToken) => {
         const now = Date.now();
         const user = generateUserEntity();
