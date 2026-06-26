@@ -3974,7 +3974,7 @@ describe('CampaignsService', () => {
         endDate: new Date(mockedNow.valueOf() - 1),
       },
     ])(
-      'should return null if campaign finisihed [%$]',
+      'should return null if campaign finished [%$]',
       async (campaignOverrides) => {
         Object.assign(campaign, campaignOverrides);
 
