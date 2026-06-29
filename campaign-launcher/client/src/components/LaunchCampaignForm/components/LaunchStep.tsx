@@ -101,15 +101,7 @@ const LaunchStep: FC<Props> = ({
   return (
     <>
       {!isEscrowCreated && (
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'white',
-            mx: 'auto',
-            fontSize: { xs: '18px', md: '20px' },
-            fontWeight: { xs: 700, md: 600 },
-          }}
-        >
+        <Typography variant="h5" sx={{ color: 'neutral.100', mx: 'auto' }}>
           One final look before you initiate the campaign
         </Typography>
       )}
@@ -121,9 +113,9 @@ const LaunchStep: FC<Props> = ({
             mx: 'auto',
             height: 'fit-content',
             gap: 2,
-            bgcolor: '#251d47',
             borderRadius: '8px',
-            border: '1px solid #433679',
+            border: '1px solid',
+            borderColor: 'border.strong',
             overflow: 'hidden',
             position: 'relative',
           }}
@@ -174,18 +166,17 @@ const LaunchStep: FC<Props> = ({
                     py: 1.5,
                     px: 2,
                     gap: 1.5,
-                    bgcolor: '#302854',
+                    bgcolor: 'background.subtle',
                   }}
                 >
                   <Button
                     size="large"
                     variant="outlined"
+                    fullWidth
                     disabled={isCreatingEscrow}
                     sx={{
-                      borderRadius: '4px',
-                      flex: 1,
-                      color: 'white',
-                      borderColor: '#433679',
+                      color: 'neutral.100',
+                      borderColor: 'border.strong',
                     }}
                     onClick={handleBackToEdit}
                   >
@@ -194,14 +185,9 @@ const LaunchStep: FC<Props> = ({
                   <Button
                     size="large"
                     variant="contained"
-                    color="error"
+                    color="accent"
+                    fullWidth
                     disabled={isCreatingEscrow}
-                    sx={{
-                      borderRadius: '4px',
-                      flex: 1,
-                      boxShadow: 'none',
-                      '&:hover': { boxShadow: 'none' },
-                    }}
                     onClick={handleLaunchCampaign}
                   >
                     Go Live

@@ -42,10 +42,9 @@ type Props = {
 };
 
 const labelStyles = {
-  color: 'white',
+  color: 'neutral.100',
+  fontWeight: 500,
   mb: 1.5,
-  lineHeight: '100%',
-  letterSpacing: '0px',
 };
 
 const HoldingForm: FC<Props> = ({
@@ -68,7 +67,7 @@ const HoldingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.exchange} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Exchange
           </Typography>
           <Controller
@@ -87,7 +86,7 @@ const HoldingForm: FC<Props> = ({
           )}
         </FormControl>
         <FormControl error={!!errors.symbol} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Symbol
           </Typography>
           <Controller
@@ -161,7 +160,7 @@ const HoldingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.start_date} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Start Date
           </Typography>
           <Controller
@@ -192,7 +191,7 @@ const HoldingForm: FC<Props> = ({
           )}
         </FormControl>
         <FormControl error={!!errors.end_date} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             End Date
           </Typography>
           <Controller
@@ -229,7 +228,7 @@ const HoldingForm: FC<Props> = ({
         sx={{ gap: { xs: 4, md: 2 } }}
       >
         <FormControl error={!!errors.fund_token} sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Fund Token
           </Typography>
           <Controller
@@ -267,7 +266,7 @@ const HoldingForm: FC<Props> = ({
           error={!!errors.daily_balance_target}
           sx={{ width: '100%' }}
         >
-          <Typography variant="h6" sx={labelStyles}>
+          <Typography variant="h5" sx={labelStyles}>
             Daily Balance Target
           </Typography>
           <Controller
@@ -328,10 +327,8 @@ const HoldingForm: FC<Props> = ({
                         }}
                       >
                         <Typography
-                          variant="body1"
-                          sx={{
-                            color: 'text.primary',
-                          }}
+                          variant="body3"
+                          sx={{ color: 'text.primary' }}
                         >
                           {symbol ? getTokenInfo(symbol).label || '' : ''}
                         </Typography>

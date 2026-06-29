@@ -32,23 +32,18 @@ const SignInPromptModal: FC<Props> = ({ open, onClose }) => {
       }}
     >
       <Stack>
-        <Typography variant="h5" sx={{ mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
           Sign in for additional features:
         </Typography>
         <List sx={{ p: 0, listStyle: 'disc', pl: 1.5 }}>
           <ListItem sx={{ p: 0, display: 'list-item', lineHeight: '12px' }}>
-            <Typography variant="body1">Manage API keys</Typography>
+            <Typography variant="body3">Manage API keys</Typography>
           </ListItem>
           <ListItem sx={{ p: 0, display: 'list-item', lineHeight: '12px' }}>
-            <Typography variant="body1">Join campaigns</Typography>
+            <Typography variant="body3">Join campaigns</Typography>
           </ListItem>
         </List>
-        <Stack
-          sx={{
-            mt: 3,
-            gap: 1,
-          }}
-        >
+        <Stack sx={{ mt: 3, gap: 1 }}>
           <Button
             variant="contained"
             size="large"

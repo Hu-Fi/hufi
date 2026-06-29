@@ -50,18 +50,24 @@ const StyledLink = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 0.5,
         width: { xs: 'fit-content', md: 'auto' },
+        minWidth: { xs: 'fit-content', md: '110px' },
         px: { xs: 0, md: 2 },
         py: { xs: 0, md: 1 },
         textDecoration: 'none',
-        color: { xs: 'text.primary', md: isActive ? 'white' : '#6b6490' },
+        color: {
+          xs: 'text.primary',
+          md: isActive ? 'neutral.100' : 'text.muted',
+        },
         fontWeight: isActive ? 600 : 400,
         fontSize: '14px',
-        bgcolor: isActive ? 'rgba(255, 255, 255, 0.07)' : 'transparent',
+        lineHeight: '150%',
+        bgcolor: isActive ? 'border.main' : 'transparent',
         borderRadius: '10px',
         '&:hover': {
-          color: 'white',
+          color: 'neutral.100',
         },
         ...sx,
       }}
@@ -118,7 +124,8 @@ const Header: FC = () => {
         bgcolor: 'background.default',
         boxShadow: 'none',
         width: '100%',
-        borderBottom: '1px solid #433679',
+        borderBottom: '1px solid',
+        borderColor: 'border.strong',
         '& .MuiToolbar-root': {
           px: { xs: 2, md: 0 },
         },
@@ -145,7 +152,7 @@ const Header: FC = () => {
             <IconButton
               sx={{
                 display: { xs: 'flex', md: 'none' },
-                color: 'primary.main',
+                color: 'text.primary',
                 p: 0,
               }}
               onClick={handleMenuOpen}

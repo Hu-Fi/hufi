@@ -219,7 +219,7 @@ describe('Web3Service', () => {
         ],
       },
     ])(
-      'should cache and return null if price is not available [%#]',
+      'should cache and return null if price is not available [%$]',
       async (apiResponse: GetTokenPriceBySymbolResponse) => {
         mockedAlchemy.prices.getTokenPriceBySymbol.mockResolvedValueOnce(
           apiResponse,

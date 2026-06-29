@@ -19,7 +19,8 @@ const CampaignTypeTooltip: FC = () => {
           target="_blank"
           rel="noopener noreferrer"
           sx={{
-            color: 'primary.contrast',
+            color: 'primary.contrastText',
+            textDecoration: 'underline',
           }}
         >
           What are the campaign types?
@@ -37,7 +38,9 @@ type Props = {
 };
 
 const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
+  const isMobile = useIsMobile();
   const isLastStep = currentStep === steps.length;
+
   return (
     <Stack
       sx={{
@@ -48,29 +51,21 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
       <Box
         sx={{
           display: 'flex',
-          alignItems: { xs: 'flex-start', md: 'center' },
+          alignItems: { xs: 'center', md: 'center' },
           gap: 0.5,
         }}
       >
         {!isLastStep && (
           <Typography
-            variant="h6"
-            sx={{
-              color: 'white',
-              fontSize: { xs: '18px', md: '20px' },
-              fontWeight: { xs: 700, md: 600 },
-            }}
+            variant={isMobile ? 'h6' : 'h5'}
+            sx={{ color: 'neutral.100', fontWeight: { xs: 700, md: 600 } }}
           >
             {currentStep}.
           </Typography>
         )}
         <Typography
-          variant="h6"
-          sx={{
-            color: 'white',
-            fontSize: { xs: '18px', md: '20px' },
-            fontWeight: { xs: 700, md: 600 },
-          }}
+          variant={isMobile ? 'h6' : 'h5'}
+          sx={{ color: 'neutral.100', fontWeight: { xs: 700, md: 600 } }}
         >
           {steps[currentStep - 1]}
         </Typography>
@@ -92,7 +87,10 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
                 maxWidth: 100,
                 flexGrow: 1,
                 height: 9,
-                bgcolor: currentStep >= index + 1 ? 'primary.main' : '#251D47',
+                bgcolor:
+                  currentStep >= index + 1
+                    ? 'primary.main'
+                    : 'background.paper',
                 borderRadius: '90px',
               }}
             />

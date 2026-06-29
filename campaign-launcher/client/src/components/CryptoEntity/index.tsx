@@ -36,7 +36,7 @@ const CryptoEntity: FC<Props> = ({ symbol, size = 'small' }) => {
       )}
       <Typography
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           ...getSymbolStyles(size).text,
         }}
       >

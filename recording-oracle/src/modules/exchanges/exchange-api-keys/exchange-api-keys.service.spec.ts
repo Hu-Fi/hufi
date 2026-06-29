@@ -104,7 +104,7 @@ describe('ExchangeApiKeysService', () => {
       Object.assign(generateExchangeApiKeysData(), { userId: '' }),
       Object.assign(generateExchangeApiKeysData(), { apiKey: '' }),
       Object.assign(generateExchangeApiKeysData(), { secretKey: '' }),
-    ])('should throw when required param is missing [%#]', async (input) => {
+    ])('should throw when required param is missing [%$]', async (input) => {
       let thrownError: any;
       try {
         await exchangeApiKeysService.enroll(input);

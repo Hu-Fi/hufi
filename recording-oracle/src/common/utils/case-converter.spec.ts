@@ -14,7 +14,7 @@ describe('Case converting utilities', () => {
       true,
       null,
       undefined,
-    ])('should not transform basic value [%#]', (value: unknown) => {
+    ])('should not transform basic value [%$]', (value: unknown) => {
       expect(CaseConverter.transformKeysToCamelCase(value)).toEqual(value);
     });
 
@@ -98,7 +98,7 @@ describe('Case converting utilities', () => {
       true,
       null,
       undefined,
-    ])('should not transform primitive [%#]', (value: unknown) => {
+    ])('should not transform primitive [%$]', (value: unknown) => {
       expect(CaseConverter.transformKeysToSnakeCase(value)).toEqual(value);
     });
 

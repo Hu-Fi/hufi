@@ -28,7 +28,7 @@ const TelegramAccountLinkButton: FC<Props> = ({
         size="large"
         disabled={isDisabled}
         fullWidth={isMobile}
-        sx={{ color: 'white', borderColor: '#433679', gap: 1 }}
+        sx={{ color: 'neutral.100', borderColor: 'border.strong', gap: 1 }}
         onClick={onUnlink}
       >
         <ConnectWalletIcon sx={{ fontSize: 20, fill: 'none' }} />
@@ -43,7 +43,7 @@ const TelegramAccountLinkButton: FC<Props> = ({
       size="large"
       disabled={isDisabled}
       fullWidth={isMobile}
-      sx={{ color: 'white', borderColor: '#433679', gap: 1 }}
+      sx={{ color: 'neutral.100', borderColor: 'border.strong', gap: 1 }}
       onClick={onLink}
     >
       <TelegramIcon sx={{ fontSize: 20 }} />

@@ -18,7 +18,7 @@ describe('API clients utils', () => {
     });
 
     test.each([NaN, false, ''])(
-      'should return false if not a number [%#]',
+      'should return false if not a number [%$]',
       (timestamp) => {
         expect(isAcceptableTimestamp(timestamp as number, maxLookbackMs)).toBe(
           false,

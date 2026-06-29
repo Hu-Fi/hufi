@@ -28,7 +28,7 @@ const ViewAllButton = ({ onClick }: { onClick: () => void }) => (
       left: 0,
       right: 0,
       background: {
-        xs: '#251d47',
+        xs: 'background.paper',
         md: 'linear-gradient(0deg, #251D47 12.72%, rgba(37, 29, 71, 0.00) 100%)',
       },
     }}
@@ -38,8 +38,8 @@ const ViewAllButton = ({ onClick }: { onClick: () => void }) => (
       fullWidth
       onClick={onClick}
       sx={{
-        color: 'white',
-        borderColor: 'error.main',
+        color: 'neutral.100',
+        borderColor: 'accent.main',
         height: 'fit-content',
       }}
     >
@@ -97,6 +97,7 @@ const getTargetLabel = (campaignType: CampaignType): string => {
       return 'Unknown Target';
   }
 };
+
 type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
@@ -124,7 +125,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         mx: { xs: -2, md: 0 },
         px: { xs: 2, md: 0 },
         gap: { xs: 1, md: 3 },
-        borderBottom: '1px solid #473C74',
+        borderBottom: '1px solid',
+        borderColor: 'border.strong',
       }}
     >
       <Box
@@ -138,7 +140,7 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         <Typography
           component="h6"
           sx={{
-            color: isMobile ? 'white' : 'text.primary',
+            color: isMobile ? 'neutral.100' : 'text.primary',
             fontSize: { xs: '20px', md: '16px' },
             fontWeight: { xs: 500, md: 600 },
             letterSpacing: { xs: 0, md: 3.2 },
@@ -149,12 +151,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         </Typography>
         <Typography
           component="p"
-          sx={{
-            fontSize: { xs: '12px', md: '16px' },
-            fontWeight: 500,
-            lineHeight: 1,
-            opacity: 0.6,
-          }}
+          variant={isMobile ? 'subtitle4' : 'body3'}
+          sx={{ opacity: 0.6 }}
         >
           Actual on: {formatActualOnDate(leaderboard.updated_at)}
         </Typography>
@@ -163,9 +161,10 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
         elevation={0}
         sx={{
           width: '100%',
-          bgcolor: { xs: 'transparent', md: '#251d47' },
+          bgcolor: { xs: 'transparent', md: 'background.paper' },
           borderRadius: '8px',
-          border: { xs: 'none', md: '1px solid #433679' },
+          border: { xs: 'none', md: '1px solid' },
+          borderColor: { xs: 'unset', md: 'border.strong' },
           overflow: 'hidden',
         }}
       >
@@ -176,7 +175,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
             pt: { xs: 0, md: 4 },
             px: { xs: 0, md: 4 },
             gap: { xs: 0, md: 2 },
-            borderBottom: showList ? '1px solid #3a2e6f' : 'none',
+            borderBottom: showList ? '1px solid' : 'none',
+            borderColor: 'border.strong',
           }}
         >
           {leaderboard.data.slice(0, 3).map((entry) => {
@@ -204,13 +204,12 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   borderRadius: '15px 15px 0 0',
                   border: {
                     xs: 'none',
-                    md: '1px solid #3a2e6f',
+                    md: '1px solid',
                   },
                   borderBottom: { xs: 'none', md: 'none' },
-                  background: {
-                    xs: '#3a2e6f',
-                    md: 'linear-gradient(180deg, #3a2e6f 0%, #231d3e 100%)',
-                  },
+                  borderColor: { xs: 'unset', md: 'border.strong' },
+                  background:
+                    'linear-gradient(180deg, #3a2e6f 0%, #231d3e 100%)',
                 }}
               >
                 <Box
@@ -250,12 +249,8 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                   >
                     <Typography
                       component="p"
-                      variant={isMobile ? 'caption' : 'h6'}
-                      sx={{
-                        color: '#e8e8e8',
-                        fontWeight: 600,
-                        letterSpacing: { xs: 0, md: 2 },
-                      }}
+                      variant={isMobile ? 'subtitle3' : 'h5'}
+                      sx={{ color: 'neutral.100' }}
                     >
                       {formatAddress(address, 4, 2)}
                     </Typography>
@@ -269,9 +264,10 @@ const Leaderboard: FC<Props> = ({ campaign, leaderboard }) => {
                     py: { xs: 1, md: 1.5 },
                     px: { xs: 1, md: 1.5 },
                     gap: { xs: 0.5, md: 1.5 },
+                    bgcolor: 'background.paper',
                     borderRadius: '8px',
-                    border: { xs: 'none', md: '1px solid #433679' },
-                    bgcolor: '#251d47',
+                    border: { xs: 'none', md: '1px solid' },
+                    borderColor: { xs: 'unset', md: 'border.strong' },
                   }}
                 >
                   <Box

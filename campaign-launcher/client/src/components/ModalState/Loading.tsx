@@ -9,7 +9,7 @@ const ModalLoading: FC = () => {
       sx={{
         mx: 'auto',
         mb: 4,
-        color: '#9354ff',
+        color: 'accent.main',
         '& .MuiCircularProgress-circle': { strokeWidth: '1.5px' },
       }}
     />
