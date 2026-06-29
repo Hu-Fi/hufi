@@ -181,6 +181,16 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
                 : '-'}
             </RowValue>
           </Row>
+          {campaignType === CampaignType.THRESHOLD_MARKET_MAKING && (
+            <Row>
+              <RowName>Maximum participant limit</RowName>
+              <RowValue>
+                {showFormValues
+                  ? (formValues as ThresholdMmFormValues)?.max_participants
+                  : '-'}
+              </RowValue>
+            </Row>
+          )}
           <Row>
             <RowName>
               {campaignType

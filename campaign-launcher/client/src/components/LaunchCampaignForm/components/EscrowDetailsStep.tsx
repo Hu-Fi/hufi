@@ -94,11 +94,11 @@ const EscrowDetailsStep: FC<Props> = ({
             <Stack
               sx={{
                 gap: { xs: 4, md: 3 },
-                maxWidth: '600px',
-                width: { xs: '100%', md: 'auto' },
+                width: { xs: '100%', md: '600px' },
                 '& .MuiFormHelperText-root': {
                   mt: 0.5,
                   mx: 0,
+                  lineHeight: 1,
                 },
               }}
             >

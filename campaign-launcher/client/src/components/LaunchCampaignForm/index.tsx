@@ -51,7 +51,7 @@ const LaunchCampaignForm: FC = () => {
         display: { xs: 'flex', md: isLastStep ? 'flex' : 'grid' },
         gridTemplateColumns: isLastStep ? undefined : '2fr 1fr',
         gridTemplateRows: '64px auto auto',
-        columnGap: 12,
+        columnGap: 10,
         flex: isLastStep ? 0 : 1,
         flexDirection: 'column',
         gridTemplateAreas: isLastStep
@@ -91,6 +91,7 @@ const LaunchCampaignForm: FC = () => {
           fundAmount={fundAmount}
           setFundAmount={setFundAmount}
           formValues={formValues}
+          setFormValues={setFormValues}
           handleChangeStep={setStep}
         />
       )}

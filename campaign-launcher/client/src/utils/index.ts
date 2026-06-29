@@ -394,3 +394,11 @@ export const isThresholdBasedCampaignType = (type: CampaignType) => {
     CampaignType.THRESHOLD_MARKET_MAKING,
   ].includes(type);
 };
+
+export const getOrdinalSuffix = (index: number) => {
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const remainder = index % 100;
+  return remainder > 10 && remainder < 20
+    ? 'th'
+    : suffixes[remainder % 10] || 'th';
+};

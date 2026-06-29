@@ -1,8 +1,15 @@
-import { type SetStateAction, type Dispatch, useEffect, type FC } from 'react';
+import {
+  type SetStateAction,
+  type Dispatch,
+  useEffect,
+  type FC,
+  useState,
+} from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Box,
+  Button,
   CircularProgress,
   Divider,
   FormControl,
@@ -18,16 +25,26 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 
 import CustomTooltip from '@/components/CustomTooltip';
+import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import RewardsDistribution from '@/components/RewardsDistribution';
 import { UNLIMITED_AMOUNT } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useTokenAllowance } from '@/hooks/useTokenAllowance';
-import { AllowanceType, type CampaignFormValues } from '@/types';
-import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
+import { AllowanceType, CampaignType, type CampaignFormValues } from '@/types';
+import {
+  getCompactNumberParts,
+  getOrdinalSuffix,
+  getTokenInfo,
+  isExceedingMaximumInteger,
+} from '@/utils';
 
 import { formatInputValue } from '../utils';
-import { createFundAmountValidationSchema } from '../validation';
+import {
+  type ApprovalFormValues,
+  createFundAmountValidationSchema,
+} from '../validation';
 
 import { BottomNavigation } from './';
 
@@ -57,6 +74,7 @@ type Props = {
   fundAmount: string;
   setFundAmount: (amount: string) => void;
   formValues: CampaignFormValues;
+  setFormValues: (values: CampaignFormValues) => void;
   handleChangeStep: Dispatch<SetStateAction<number>>;
 };
 
@@ -64,11 +82,15 @@ const ApprovalStep: FC<Props> = ({
   fundAmount,
   setFundAmount,
   formValues,
+  setFormValues,
   handleChangeStep,
 }) => {
+  const [openRewardsDistribution, setOpenRewardsDistribution] = useState(false);
   const { fund_token: fundToken } = formValues;
   const isMobile = useIsMobile();
   const formId = 'approval-form';
+  const isCompetitiveMM =
+    formValues.type === CampaignType.COMPETITIVE_MARKET_MAKING;
 
   const {
     control,
@@ -76,28 +98,33 @@ const ApprovalStep: FC<Props> = ({
     handleSubmit,
     watch,
     setValue,
-  } = useForm<{
-    fund_amount: string;
-    selected_allowance: AllowanceType;
-    custom_allowance_amount: string;
-  }>({
+  } = useForm<ApprovalFormValues>({
     mode: isMobile ? 'onSubmit' : 'onChange',
     resolver: yupResolver(
       createFundAmountValidationSchema(
         formValues.start_date,
         formValues.end_date,
-        formValues.fund_token
+        formValues.fund_token,
+        isCompetitiveMM
       )
     ),
     defaultValues: {
       fund_amount: fundAmount,
       selected_allowance: AllowanceType.CUSTOM,
       custom_allowance_amount: '',
+      ...(isCompetitiveMM
+        ? { rewards_distribution: formValues.rewards_distribution }
+        : {}),
     },
     shouldFocusError: isMobile,
   });
 
-  const { selected_allowance, custom_allowance_amount } = watch();
+  const {
+    fund_amount,
+    selected_allowance,
+    custom_allowance_amount,
+    rewards_distribution,
+  } = watch();
 
   const {
     approve,
@@ -141,11 +168,18 @@ const ApprovalStep: FC<Props> = ({
     handleChangeStep((prev) => prev + 1);
   };
 
-  const onSubmit = async (data: {
-    fund_amount: string;
-    selected_allowance: AllowanceType;
-    custom_allowance_amount: string;
-  }) => {
+  const saveApprovalStepValues = () => {
+    setFundAmount(fund_amount);
+
+    if (isCompetitiveMM && rewards_distribution) {
+      setFormValues({
+        ...formValues,
+        rewards_distribution,
+      });
+    }
+  };
+
+  const onSubmit = async (data: ApprovalFormValues) => {
     const { fund_amount, selected_allowance, custom_allowance_amount } = data;
     let canSkipApproval = false;
 
@@ -159,7 +193,7 @@ const ApprovalStep: FC<Props> = ({
     }
 
     if (canSkipApproval) {
-      setFundAmount(fund_amount);
+      saveApprovalStepValues();
       handleNextClick();
       return;
     }
@@ -172,7 +206,7 @@ const ApprovalStep: FC<Props> = ({
     const isApproved = await approve(fundToken, amountToApprove);
 
     if (isApproved) {
-      setFundAmount(fund_amount);
+      saveApprovalStepValues();
       handleNextClick();
       return;
     } else {
@@ -204,8 +238,11 @@ const ApprovalStep: FC<Props> = ({
             }}
           >
             <Stack sx={{ maxWidth: '500px', width: '100%' }}>
-              <Stack sx={{ gap: { xs: 1.5, md: 3 } }}>
-                <Typography variant="h5" sx={{ color: 'neutral.100' }}>
+              <Stack sx={{ gap: 1.5 }}>
+                <Typography
+                  variant="h5"
+                  sx={{ color: 'neutral.100', fontWeight: 500 }}
+                >
                   Campaign Fund Amount
                 </Typography>
                 <FormControl
@@ -263,7 +300,7 @@ const ApprovalStep: FC<Props> = ({
                       alignItems: 'center',
                       justifyContent: { xs: 'flex-start', md: 'space-between' },
                       color: 'neutral.100',
-                      mt: 1,
+                      mt: 0.5,
                       gap: { xs: 0.5, md: 0 },
                     }}
                   >
@@ -280,6 +317,130 @@ const ApprovalStep: FC<Props> = ({
                   </Typography>
                 </FormControl>
               </Stack>
+              {!!rewards_distribution && (
+                <Stack sx={{ gap: 1.5, mt: 4 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{ color: 'neutral.100', fontWeight: 500 }}
+                  >
+                    Rewards Distribution
+                  </Typography>
+                  {errors.rewards_distribution && (
+                    <FormHelperText sx={{ color: 'error.main' }}>
+                      {errors.rewards_distribution.message}
+                    </FormHelperText>
+                  )}
+                  <Stack
+                    sx={{
+                      display:
+                        rewards_distribution.length > 0 ? 'flex' : 'none',
+                      width: { xs: '100%', md: '380px' },
+                      mb: 1.5,
+                      gap: 1.5,
+                    }}
+                  >
+                    {rewards_distribution.map((percentage, index) => {
+                      const { value, suffix, decimals } = getCompactNumberParts(
+                        (percentage * Number(fund_amount)) / 100
+                      );
+                      return (
+                        <Box
+                          key={index}
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: 1.5,
+                          }}
+                        >
+                          <Typography
+                            variant="body3"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.75,
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{
+                                p: 0.25,
+                                borderRadius: '50%',
+                                bgcolor: 'neutral.200',
+                              }}
+                            />
+                            {`${index + 1}${getOrdinalSuffix(index + 1)} place`}
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                bgcolor: 'background.paper',
+                                py: 0.5,
+                                px: 1.5,
+                                borderRadius: '99px',
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              <FormattedNumber
+                                value={value}
+                                decimals={decimals}
+                                suffix={`${suffix} ${fundToken}`}
+                              />
+                            </Typography>
+                            <Typography
+                              variant="body3"
+                              sx={{
+                                color: 'neutral.100',
+                                width: '40px',
+                                textAlign: 'right',
+                              }}
+                            >
+                              {percentage}%
+                            </Typography>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    disabled={
+                      isLoading ||
+                      isApproving ||
+                      !fund_amount ||
+                      !!errors.fund_amount
+                    }
+                    sx={{
+                      width: { xs: '100%', md: '380px' },
+                    }}
+                    onClick={() => setOpenRewardsDistribution(true)}
+                  >
+                    {rewards_distribution.length > 0
+                      ? 'Edit reward distribution'
+                      : 'Set reward distribution by ranking'}
+                  </Button>
+                  <RewardsDistribution
+                    open={openRewardsDistribution}
+                    onClose={() => setOpenRewardsDistribution(false)}
+                    data={rewards_distribution}
+                    setData={(data) =>
+                      setValue('rewards_distribution', data, {
+                        shouldValidate: true,
+                      })
+                    }
+                    fundAmount={Number(fund_amount)}
+                    fundToken={fundToken}
+                  />
+                </Stack>
+              )}
               <Divider sx={{ my: 4 }} />
               <Stack sx={{ gap: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -288,11 +449,7 @@ const ApprovalStep: FC<Props> = ({
                   </Typography>
                   {(isLoading || isApproving) && <CircularProgress size={24} />}
                 </Box>
-                <FormControl
-                  sx={{
-                    display: isLoading ? 'none' : 'flex',
-                  }}
-                >
+                <FormControl sx={{ display: isLoading ? 'none' : 'flex' }}>
                   <Controller
                     name="selected_allowance"
                     control={control}

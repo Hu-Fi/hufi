@@ -325,9 +325,14 @@ const ThresholdMarketMakingForm: FC<Props> = ({
             <FormHelperText>{errors.max_participants.message}</FormHelperText>
           )}
         </FormControl>
+      </Stack>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{ gap: { xs: 4, md: 2 } }}
+      >
         <FormControl
           error={!!errors.minimum_volume_target}
-          sx={{ width: '100%' }}
+          sx={{ width: { xs: '100%', md: 'calc(50% - 8px)' } }}
         >
           <Typography variant="h5" sx={labelStyles}>
             Minimum Traded Amount
