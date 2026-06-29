@@ -50,10 +50,13 @@ const LaunchCampaignForm: FC = () => {
       sx={{
         display: { xs: 'flex', md: isLastStep ? 'flex' : 'grid' },
         gridTemplateColumns: isLastStep ? undefined : '2fr 1fr',
-        gridTemplateRows: '64px auto auto',
+        gridTemplateRows: '64px 1fr auto',
         columnGap: 10,
         flex: isLastStep ? 0 : 1,
         flexDirection: 'column',
+        minHeight: 0,
+        maxHeight: { xs: 'auto', md: 'calc(100dvh - 220px)' },
+        overflow: { md: 'hidden' },
         gridTemplateAreas: isLastStep
           ? undefined
           : `
