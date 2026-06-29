@@ -1,8 +1,9 @@
-import { type FC } from 'react';
+import { useState, type FC } from 'react';
 
 import { type ChainId } from '@human-protocol/sdk';
-import { Paper, Stack, styled, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, styled, Typography } from '@mui/material';
 
+import ViewDistributionDialog from '@/components/RewardsDistribution/ViewDistributionDialog';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import {
   type CampaignFormValues,
@@ -108,6 +109,8 @@ const getSymbolOrPairInfo = (
 };
 
 const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
+  const [openRewardsDialog, setOpenRewardsDialog] = useState(false);
+
   const { exchangesMap } = useExchangesContext();
   const exchangeName = exchangesMap.get(
     formValues?.exchange || ''
@@ -118,6 +121,11 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
   const isLastStep = step === 5;
 
   const showFormValues = step > 3;
+
+  const isCompetitiveMm =
+    campaignType === CampaignType.COMPETITIVE_MARKET_MAKING &&
+    formValues &&
+    'rewards_distribution' in formValues;
 
   const symbolOrPairLabel = campaignType
     ? getSymbolOrPairInfo(campaignType, formValues as CampaignFormValues).label
@@ -134,6 +142,41 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
   const targetToken = campaignType
     ? getTargetInfo(campaignType, formValues as CampaignFormValues).token
     : '';
+
+  const renderRewardsDistributionButton = () => {
+    if (!isCompetitiveMm) return null;
+
+    if (formValues?.rewards_distribution.length === 0)
+      return <RowValue>-</RowValue>;
+
+    return (
+      <Button
+        variant="text"
+        disableRipple
+        sx={{
+          p: 0,
+          gap: 0.5,
+          fontSize: 14,
+          textDecoration: 'underline',
+          '&:hover': {
+            bgcolor: 'transparent',
+            textDecoration: 'underline',
+          },
+        }}
+        onClick={() => setOpenRewardsDialog(true)}
+      >
+        <Box
+          component="span"
+          sx={{
+            p: 0.25,
+            borderRadius: '50%',
+            bgcolor: 'neutral.200',
+          }}
+        />
+        {formValues?.rewards_distribution.length} positions
+      </Button>
+    );
+  };
 
   return (
     <Paper
@@ -181,6 +224,22 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
                 : '-'}
             </RowValue>
           </Row>
+          <Row>
+            <RowName>Start Date</RowName>
+            <RowValue>
+              {showFormValues && formValues?.start_date
+                ? dayjs(formValues?.start_date).format('Do MMM YYYY HH:mm')
+                : '-'}
+            </RowValue>
+          </Row>
+          <Row>
+            <RowName>End Date</RowName>
+            <RowValue>
+              {showFormValues && formValues?.end_date
+                ? dayjs(formValues?.end_date).format('Do MMM YYYY HH:mm')
+                : '-'}
+            </RowValue>
+          </Row>
           {campaignType === CampaignType.THRESHOLD_MARKET_MAKING && (
             <Row>
               <RowName>Maximum participant limit</RowName>
@@ -201,22 +260,6 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
               {showFormValues ? `${targetValue} ${targetToken}` : '-'}
             </RowValue>
           </Row>
-          <Row>
-            <RowName>Start Date</RowName>
-            <RowValue>
-              {showFormValues && formValues?.start_date
-                ? dayjs(formValues?.start_date).format('Do MMM YYYY HH:mm')
-                : '-'}
-            </RowValue>
-          </Row>
-          <Row>
-            <RowName>End Date</RowName>
-            <RowValue>
-              {showFormValues && formValues?.end_date
-                ? dayjs(formValues?.end_date).format('Do MMM YYYY HH:mm')
-                : '-'}
-            </RowValue>
-          </Row>
         </>
       )}
       {step > 3 && (
@@ -228,6 +271,19 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
               ? getTokenInfo(formValues?.fund_token || '')?.label
               : ''}
           </RowValue>
+        </Row>
+      )}
+      {step > 3 && isCompetitiveMm && (
+        <Row>
+          <RowName>Rewards Distribution</RowName>
+          {renderRewardsDistributionButton()}
+          <ViewDistributionDialog
+            open={openRewardsDialog}
+            onClose={() => setOpenRewardsDialog(false)}
+            rewardsDistribution={formValues?.rewards_distribution || []}
+            fundAmount={fundAmount || ''}
+            fundToken={formValues.fund_token}
+          />
         </Row>
       )}
     </Paper>
