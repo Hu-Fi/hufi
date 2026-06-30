@@ -7,7 +7,9 @@ import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import UserProgressWidget from '@/components/UserProgressWidget';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
   formatTokenAmount,
@@ -48,6 +50,7 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
       placement="top"
     >
       <InfoTooltipInner
+        component="span"
         sx={{
           width: { xs: 16, md: 24 },
           height: { xs: 16, md: 24 },
@@ -68,6 +71,7 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
 type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
+  isJoined: boolean;
 };
 
 const useCycleTimeline = (startDate: string, endDate: string) => {
@@ -115,16 +119,25 @@ const getTotalGeneratedCardTitle = (
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
       return isMobile ? 'Total Generated Vol.' : 'Total Generated Volume';
     case CampaignType.HOLDING:
       return 'Total Held';
   }
 };
 
-const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
+const CycleInfoSection: FC<Props> = ({ campaign, leaderboard, isJoined }) => {
   const isMobile = useIsMobile();
+  const { activeAddress } = useActiveAccount();
 
   const isThresholdBasedCampaign = isThresholdBasedCampaignType(campaign.type);
+
+  const userResult = leaderboard.data.find(
+    (entry) => entry.address === activeAddress
+  );
+
+  const showUserProgressWidget =
+    isThresholdBasedCampaign && isJoined && userResult;
 
   const cycleTimeline = useCycleTimeline(
     campaign.start_date,
@@ -211,6 +224,19 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         </Box>
       </Box>
       <Grid container spacing={{ xs: 1.5, md: 3 }}>
+        {showUserProgressWidget && (
+          <Grid size={{ xs: 6, md: 12 }}>
+            <UserProgressWidget
+              userResult={userResult?.result || 0}
+              fundToken={campaign.fund_token_symbol}
+              target={
+                campaign.details.minimum_volume_target ||
+                campaign.details.minimum_balance_target ||
+                0
+              }
+            />
+          </Grid>
+        )}
         <Grid
           size={{ xs: 6, md: 4 }}
           sx={{
