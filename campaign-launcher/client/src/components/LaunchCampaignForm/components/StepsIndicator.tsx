@@ -76,7 +76,7 @@ const StepsIndicator: FC<Props> = ({ steps, currentStep }) => {
           direction="row"
           sx={{
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1, md: 2 },
           }}
         >
           {steps.map((step, index) => (

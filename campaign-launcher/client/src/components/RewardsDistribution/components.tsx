@@ -53,7 +53,7 @@ export const RewardAmount: FC<RewardAmountProps> = ({
         bgcolor: 'background.paper',
         py: 0.5,
         px: { xs: 1, md: 1.5 },
-        minWidth: { xs: '110px', md: '115px' },
+        minWidth: { xs: '110px', md: '120px' },
         borderRadius: '99px',
         textTransform: 'uppercase',
       }}

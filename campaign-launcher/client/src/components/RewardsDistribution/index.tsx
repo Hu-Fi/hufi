@@ -184,6 +184,7 @@ const RewardsDistribution: FC<Props> = ({
                   top: 0,
                   left: 0,
                   width: `${currentAllocatedPercentage}%`,
+                  maxWidth: '100%',
                   height: '100%',
                   borderRadius: '90px',
                   bgcolor: 'success.main',
@@ -231,10 +232,10 @@ const RewardsDistribution: FC<Props> = ({
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         height: '36px',
-                        width: { xs: '110px', md: '120px' },
+                        width: { xs: '110px', md: '125px' },
                         py: 0.5,
                         px: { xs: 1, md: 1.5 },
-                        gap: 1,
+                        gap: 0.75,
                         bgcolor: 'background.paper',
                         borderRadius: '4px',
                         border: '1px solid',
@@ -260,12 +261,15 @@ const RewardsDistribution: FC<Props> = ({
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography
                           variant="body2"
-                          sx={{ color: 'neutral.100' }}
+                          sx={{
+                            color: 'neutral.100',
+                            width: 40,
+                            textAlign: 'center',
+                          }}
                         >
                           {percentage}%
                         </Typography>
                       </Box>
-
                       <IconButton
                         sx={{
                           p: 0.5,
