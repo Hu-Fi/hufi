@@ -3,6 +3,7 @@ import { type FC } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { CardName, StatsCard } from '@/components/CampaignStats';
+import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { SuccessIcon } from '@/icons';
 
@@ -43,15 +44,20 @@ const SuccessCircle = () => (
 );
 
 const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
-  const percentage = Math.round((userResult / target) * 100);
-  const isTargetAchieved = userResult >= target;
+  const percentage = Math.floor((userResult / target) * 100);
+  const isTargetAchieved = userResult > target;
 
   const isMobile = useIsMobile();
 
   return (
     <StatsCard withBorder>
       <CardName>User Progress</CardName>
-      <Stack sx={{ gap: 3, mt: { xs: 0, md: isTargetAchieved ? -1.5 : -3 } }}>
+      <Stack
+        sx={{
+          gap: { xs: 2, md: 3 },
+          mt: { xs: 0, md: isTargetAchieved ? -1.5 : -3 },
+        }}
+      >
         {isTargetAchieved ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <SuccessCircle />
@@ -74,7 +80,13 @@ const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
           </Box>
         ) : (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 2, md: 4 },
+              }}
+            >
               <Box
                 sx={{
                   position: 'relative',
@@ -101,9 +113,9 @@ const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
               </Box>
               <Typography
                 component="span"
-                variant="h3"
+                variant={isMobile ? 'h5' : 'h3'}
                 sx={{
-                  width: 88,
+                  width: { xs: 'fit-content', md: 88 },
                   textAlign: 'right',
                   color: 'neutral.200',
                   fontWeight: 700,
@@ -119,15 +131,32 @@ const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 2,
-                mr: 15,
+                mr: { xs: 0, md: 15 },
               }}
             >
-              <Typography variant="body3" sx={{ fontWeight: 600 }}>
-                {`${userResult} / ${target} ${fundToken}`}
+              <Typography
+                variant={isMobile ? 'body1' : 'body3'}
+                sx={{ fontWeight: 600 }}
+              >
+                <FormattedNumber value={userResult} decimals={2} />
+                {' / '}
+                <FormattedNumber
+                  value={target}
+                  decimals={2}
+                  suffix={` ${fundToken}`}
+                />
               </Typography>
-              <Typography variant="body4">
-                <Typography variant="body4" sx={{ color: 'neutral.300' }}>
-                  {Math.round(target - userResult)} {fundToken}
+              <Typography variant={isMobile ? 'body1' : 'body4'}>
+                <Typography
+                  component="span"
+                  variant={isMobile ? 'body1' : 'body4'}
+                  sx={{ color: 'neutral.300' }}
+                >
+                  <FormattedNumber
+                    value={Math.floor((target - userResult) * 100) / 100}
+                    decimals={2}
+                    suffix={` ${fundToken}`}
+                  />
                 </Typography>{' '}
                 remaining to qualify
               </Typography>
