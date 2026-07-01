@@ -225,7 +225,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard, isJoined }) => {
       </Box>
       <Grid container spacing={{ xs: 1.5, md: 3 }}>
         {showUserProgressWidget && (
-          <Grid size={{ xs: 6, md: 12 }}>
+          <Grid size={{ xs: 12, md: 12 }}>
             <UserProgressWidget
               userResult={userResult?.result || 0}
               fundToken={campaign.fund_token_symbol}
