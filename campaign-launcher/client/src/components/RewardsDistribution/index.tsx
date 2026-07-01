@@ -1,15 +1,16 @@
-import { useEffect, useState, type FC } from 'react';
+import {
+  useEffect,
+  useState,
+  type FC,
+  type KeyboardEvent,
+  type WheelEvent,
+} from 'react';
 
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import {
-  DashboardSquareEditIcon,
-  MinusIcon,
-  PlusIcon,
-  WarningIcon,
-} from '@/icons';
+import { DashboardSquareEditIcon, WarningIcon } from '@/icons';
 import { getOrdinalSuffix } from '@/utils';
 
 import { RewardAmount, RewardPlace } from './components';
@@ -24,6 +25,21 @@ type Props = {
   fundToken: string;
 };
 
+const formatPercentageInputs = (data: number[]) => data.map(String);
+
+const isValidPercentageInput = (value: string) => {
+  const maxPercentageInputLength = 3;
+  const containsOnlyDigits = [...value].every(
+    (char) => char >= '0' && char <= '9'
+  );
+
+  return (
+    value.length <= maxPercentageInputLength &&
+    containsOnlyDigits &&
+    Number(value) <= 100
+  );
+};
+
 const RewardsDistribution: FC<Props> = ({
   open,
   onClose,
@@ -32,60 +48,88 @@ const RewardsDistribution: FC<Props> = ({
   fundAmount,
   fundToken,
 }) => {
-  const [draftData, setDraftData] = useState<number[]>(data);
+  const [rewardPercentages, setRewardPercentages] = useState<number[]>(data);
+  const [draftPercentageInputs, setDraftPercentageInputs] = useState<string[]>(
+    formatPercentageInputs(data)
+  );
   const [editPositionsDialogOpen, setEditPositionsDialogOpen] = useState(false);
 
   const isMobile = useIsMobile();
 
-  const currentAllocatedPercentage = draftData.reduce(
+  const currentAllocatedPercentage = rewardPercentages.reduce(
     (acc, curr) => acc + curr,
     0
   );
 
-  const rewardedPositionsCount = draftData.filter(Boolean).length;
+  const rewardedPositionsCount = rewardPercentages.filter(Boolean).length;
 
   const isFullyAllocated = currentAllocatedPercentage === 100;
 
   useEffect(() => {
     if (data.length === 0) {
-      setDraftData([40, 30, 20, 10]);
+      const defaultData = [40, 30, 20, 10];
+      setRewardPercentages(defaultData);
+      setDraftPercentageInputs(formatPercentageInputs(defaultData));
     }
   }, [data]);
 
-  const handleDecreasePercentage = (index: number) => {
-    if (currentAllocatedPercentage === 0) return;
+  const getPercentageRange = (index: number) => {
+    const previousPercentage = rewardPercentages[index - 1] ?? 100;
+    const nextPercentage = rewardPercentages[index + 1] ?? 0;
+    const allocatedWithoutCurrent =
+      currentAllocatedPercentage - rewardPercentages[index];
+    const maxByRemainingPool = 100 - allocatedWithoutCurrent;
+    const min = nextPercentage;
+    const max = Math.max(min, Math.min(previousPercentage, maxByRemainingPool));
 
-    const newValue = Math.max(draftData[index] - 1, 0);
-
-    if (newValue < draftData[index + 1] || newValue < 0) {
-      return;
-    }
-
-    const newData = [...draftData];
-    newData[index] = newValue;
-    setDraftData(newData);
+    return { min, max };
   };
 
-  const handleIncreasePercentage = (index: number) => {
-    if (isFullyAllocated) return;
+  const handleSetPercentage = (index: number, value: number) => {
+    const { min, max } = getPercentageRange(index);
+    const newValue = Math.min(Math.max(value, min), max);
 
-    const newValue = Math.min(draftData[index] + 1, 100);
+    const newData = [...rewardPercentages];
+    newData[index] = newValue;
+    setRewardPercentages(newData);
+    setDraftPercentageInputs(formatPercentageInputs(newData));
+  };
 
-    if (newValue > draftData[index - 1] || newValue > 100) {
+  const handleChangePercentageInput = (index: number, value: string) => {
+    if (!isValidPercentageInput(value)) {
       return;
     }
 
-    const newData = [...draftData];
-    newData[index] = newValue;
-    setDraftData(newData);
+    const newInputs = [...draftPercentageInputs];
+    newInputs[index] = value;
+    setDraftPercentageInputs(newInputs);
+  };
+
+  const handleCommitPercentageInput = (index: number) => {
+    const inputValue = draftPercentageInputs[index];
+
+    if (!inputValue) {
+      setDraftPercentageInputs(formatPercentageInputs(rewardPercentages));
+      return;
+    }
+
+    const value = Number(inputValue);
+
+    if (!Number.isFinite(value)) {
+      setDraftPercentageInputs(formatPercentageInputs(rewardPercentages));
+      return;
+    }
+
+    handleSetPercentage(index, value);
   };
 
   const handleEditPositions = (data: number[]) => {
-    setDraftData(data);
+    setRewardPercentages(data);
+    setDraftPercentageInputs(formatPercentageInputs(data));
   };
 
   const handleProceedWithDistribution = () => {
-    setData(draftData.filter(Boolean));
+    setData(rewardPercentages.filter(Boolean));
     onClose();
   };
 
@@ -202,7 +246,7 @@ const RewardsDistribution: FC<Props> = ({
               gap: 1.5,
             }}
           >
-            {draftData.map((percentage, index, array) => {
+            {rewardPercentages.map((percentage, index) => {
               return (
                 <Box
                   key={index}
@@ -226,67 +270,74 @@ const RewardsDistribution: FC<Props> = ({
                       fundToken={fundToken}
                       fundAmount={fundAmount}
                     />
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        height: '36px',
-                        width: { xs: '110px', md: '125px' },
-                        py: 0.5,
-                        px: { xs: 1, md: 1.5 },
-                        gap: 0.75,
-                        bgcolor: 'background.paper',
-                        borderRadius: '4px',
-                        border: '1px solid',
-                        borderColor: 'border.strong',
+                    <TextField
+                      value={draftPercentageInputs[index] ?? String(percentage)}
+                      onChange={(event) =>
+                        handleChangePercentageInput(index, event.target.value)
+                      }
+                      onBlur={() => handleCommitPercentageInput(index)}
+                      slotProps={{
+                        htmlInput: {
+                          inputMode: 'numeric',
+                          pattern: '[0-9]*',
+                          onWheel: (event: WheelEvent<HTMLInputElement>) =>
+                            event.currentTarget.blur(),
+                          onKeyDown: (
+                            event: KeyboardEvent<HTMLInputElement>
+                          ) => {
+                            if (event.key === 'Enter') {
+                              event.currentTarget.blur();
+                              return;
+                            }
+
+                            if (event.key === 'Escape') {
+                              event.preventDefault();
+                              setDraftPercentageInputs(
+                                formatPercentageInputs(rewardPercentages)
+                              );
+                              return;
+                            }
+
+                            if (
+                              event.key !== 'ArrowUp' &&
+                              event.key !== 'ArrowDown'
+                            ) {
+                              return;
+                            }
+
+                            event.preventDefault();
+
+                            const direction = event.key === 'ArrowUp' ? 1 : -1;
+                            handleSetPercentage(index, percentage + direction);
+                          },
+                          sx: {
+                            textAlign: 'left',
+                          },
+                        },
+                        input: {
+                          endAdornment: (
+                            <Typography
+                              variant="body2"
+                              sx={{ color: 'text.secondary' }}
+                            >
+                              %
+                            </Typography>
+                          ),
+                        },
                       }}
-                    >
-                      <IconButton
-                        sx={{
-                          p: 0.5,
-                          width: 24,
-                          height: 24,
-                          color: 'text.primary',
-                        }}
-                        disabled={
-                          percentage < 1 ||
-                          currentAllocatedPercentage === 0 ||
-                          percentage - 1 < array[index + 1]
-                        }
-                        onClick={() => handleDecreasePercentage(index)}
-                      >
-                        <MinusIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'neutral.100',
-                            width: 40,
-                            textAlign: 'center',
-                          }}
-                        >
-                          {percentage}%
-                        </Typography>
-                      </Box>
-                      <IconButton
-                        sx={{
-                          p: 0.5,
-                          width: 24,
-                          height: 24,
-                          color: 'text.primary',
-                        }}
-                        disabled={
-                          percentage > 99 ||
-                          isFullyAllocated ||
-                          percentage + 1 > array[index - 1]
-                        }
-                        onClick={() => handleIncreasePercentage(index)}
-                      >
-                        <PlusIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Box>
+                      sx={{
+                        width: 80,
+                        '& .MuiInputBase-root': {
+                          height: 32,
+                          bgcolor: 'background.paper',
+                          px: 1.5,
+                        },
+                        '& input': {
+                          p: 0,
+                          color: 'neutral.100',
+                        },
+                      }}
+                    />
                   </Box>
                 </Box>
               );
@@ -317,7 +368,7 @@ const RewardsDistribution: FC<Props> = ({
             <EditPositionsDialog
               open={editPositionsDialogOpen}
               onClose={() => setEditPositionsDialogOpen(false)}
-              rewardsData={draftData}
+              rewardsData={rewardPercentages}
               onSaveChanges={(data) => handleEditPositions(data)}
             />
           </Stack>

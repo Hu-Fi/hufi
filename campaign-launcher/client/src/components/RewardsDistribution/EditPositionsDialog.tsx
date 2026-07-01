@@ -116,7 +116,7 @@ const EditPositionsDialog: FC<Props> = ({
                       alignItems: 'center',
                       justifyContent: 'center',
                       width: 90,
-                      height: 36,
+                      height: 32,
                       ml: 3,
                       bgcolor: 'background.paper',
                       borderRadius: '4px',
@@ -136,8 +136,8 @@ const EditPositionsDialog: FC<Props> = ({
                   <IconButton
                     sx={{
                       p: 0.5,
-                      width: 36,
-                      height: 36,
+                      width: 32,
+                      height: 32,
                       ml: 'auto',
                       color: 'error.main',
                       bgcolor: 'background.paper',

@@ -55,9 +55,12 @@ const CampaignTypeStep: FC<Props> = ({
           mt: 4,
           width: '100%',
           gridArea: 'main',
+          minHeight: 0,
+          height: '100%',
+          overflow: 'hidden',
         }}
       >
-        <Grid container spacing={2.5}>
+        <Grid container spacing={2.5} sx={{ overflowY: { md: 'auto' } }}>
           {LAUNCH_SUPPORTED_CAMPAIGN_TYPES.map((type) => {
             const isSelected = formValues?.type === type;
             return (
