@@ -25,6 +25,5 @@ declare global {
   };
 
   type TelegramLoginResult =
-    | { id_token: string; user: Record<string, unknown> }
-    | { error: string };
+    { id_token: string; user: Record<string, unknown> } | { error: string };
 }

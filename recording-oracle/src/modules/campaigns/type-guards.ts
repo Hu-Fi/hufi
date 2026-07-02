@@ -62,8 +62,7 @@ export function isBalanceBasedCampaign(
   campaign: CampaignEntity,
 ): campaign is CampaignEntity &
   (
-    | { details: HoldingCampaignDetails }
-    | { details: ThresholdCampaignDetails }
+    { details: HoldingCampaignDetails } | { details: ThresholdCampaignDetails }
   ) {
   return [CampaignType.HOLDING, CampaignType.THRESHOLD].includes(campaign.type);
 }
