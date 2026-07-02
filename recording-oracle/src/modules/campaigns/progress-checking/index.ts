@@ -24,7 +24,4 @@ export type ProgressCheckResult =
   | ThresholdMarketMakingResult
   | ThresholdResult;
 export type CampaignProgressMeta =
-  | HoldingMeta
-  | MarketMakingMeta
-  | ThresholdMarketMakingMeta
-  | ThresholdMeta;
+  HoldingMeta | MarketMakingMeta | ThresholdMarketMakingMeta | ThresholdMeta;

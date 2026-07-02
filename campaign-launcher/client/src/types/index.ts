@@ -188,9 +188,7 @@ export type ThresholdManifestDto = BaseManifestDto & {
 };
 
 export type ManifestUploadDto =
-  | MarketMakingManifestDto
-  | HoldingManifestDto
-  | ThresholdManifestDto;
+  MarketMakingManifestDto | HoldingManifestDto | ThresholdManifestDto;
 
 export type CampaignsQueryParams = {
   chain_id: ChainId;
@@ -263,9 +261,7 @@ export type ThresholdFormValues = BaseCampaignFormValues & {
 };
 
 export type CampaignFormValues =
-  | MarketMakingFormValues
-  | HoldingFormValues
-  | ThresholdFormValues;
+  MarketMakingFormValues | HoldingFormValues | ThresholdFormValues;
 
 export enum CampaignJoinStatus {
   USER_ALREADY_JOINED = 'already_joined',
