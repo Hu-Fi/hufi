@@ -1,3 +1,4 @@
+import avaLogo from '@/assets/tokens/ava.png';
 import bnbLogo from '@/assets/tokens/bnb.png';
 import btcLogo from '@/assets/tokens/btc.png';
 import ccdLogo from '@/assets/tokens/ccd.png';
@@ -8,6 +9,7 @@ import mobLogo from '@/assets/tokens/mob.png';
 import sentioLogo from '@/assets/tokens/sentio.png';
 import usdcLogo from '@/assets/tokens/usdc.png';
 import usdtLogo from '@/assets/tokens/usdt.png';
+import vicLogo from '@/assets/tokens/vic.png';
 import xinLogo from '@/assets/tokens/xin.png';
 import type { TokenData } from '@/types';
 
@@ -71,6 +73,16 @@ export const TOKENS: TokenData[] = [
     name: 'st',
     label: 'ST',
     icon: sentioLogo,
+  },
+  {
+    name: 'vic',
+    label: 'VIC',
+    icon: vicLogo,
+  },
+  {
+    name: 'ava',
+    label: 'AVA',
+    icon: avaLogo,
   },
 ];
 
