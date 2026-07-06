@@ -13,6 +13,7 @@ import JoinCampaignButton from '@/components/JoinCampaignButton';
 import { useReserveLayoutBottomOffset } from '@/components/Layout';
 import Leaderboard from '@/components/Leaderboard';
 import PageWrapper from '@/components/PageWrapper';
+import RewardsDistributionWidget from '@/components/RewardsDistribution/CampaignWidget';
 import { MOBILE_BOTTOM_NAV_HEIGHT } from '@/constants';
 import {
   useCheckCampaignJoinStatus,
@@ -20,9 +21,15 @@ import {
 } from '@/hooks/recording-oracle/campaign';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useCampaignDetails } from '@/hooks/useCampaigns';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { useAuthedUserData } from '@/providers/AuthedUserData';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
-import { CampaignStatus, type Campaign, type EvmAddress } from '@/types';
+import {
+  CampaignStatus,
+  CampaignType,
+  type Campaign,
+  type EvmAddress,
+} from '@/types';
 import { isCampaignDetails, isThresholdBasedCampaignType } from '@/utils';
 
 const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
@@ -59,6 +66,7 @@ const CampaignDetails: FC = () => {
 
   const { joinedCampaigns } = useAuthedUserData();
   const { exchangesMap } = useExchangesContext();
+  const { activeAddress } = useActiveAccount();
   const isMobile = useIsMobile();
 
   const { data: campaign, isFetching: isCampaignLoading } =
@@ -108,6 +116,9 @@ const CampaignDetails: FC = () => {
     campaignData.start_date < new Date().toISOString() &&
     campaignData.end_date > new Date().toISOString();
 
+  const isCompetitiveMmCampaign =
+    campaignData?.type === CampaignType.COMPETITIVE_MARKET_MAKING;
+
   const showJoinCampaignButton =
     isMobile && !isJoined && isOngoingCampaign && !!exchangeInfo?.enabled;
 
@@ -118,6 +129,16 @@ const CampaignDetails: FC = () => {
     !isThresholdBasedCampaignType(campaignData.type) &&
     leaderboard &&
     leaderboard.data.length > 0;
+
+  const showRewardsDistributionWidget =
+    showLeaderboard && isCompetitiveMmCampaign;
+
+  const userPosition = useMemo(() => {
+    const idx = leaderboard?.data.findIndex(
+      (item) => item.address.toLowerCase() === activeAddress?.toLowerCase()
+    );
+    return idx ? idx + 1 : undefined;
+  }, [leaderboard?.data, activeAddress]);
 
   return (
     <PageWrapper>
@@ -135,6 +156,14 @@ const CampaignDetails: FC = () => {
         isJoined={isJoined}
         leaderboard={leaderboard}
       />
+      {showRewardsDistributionWidget && (
+        <RewardsDistributionWidget
+          data={campaignData.details.rewards_distribution || []}
+          fundToken={campaignData.fund_token_symbol}
+          fundAmount={campaignData.fund_amount}
+          userPosition={userPosition}
+        />
+      )}
       {isOngoingCampaign && !!leaderboard && (
         <CycleInfoSection
           campaign={campaignData}

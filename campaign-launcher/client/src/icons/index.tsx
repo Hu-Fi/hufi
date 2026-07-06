@@ -675,36 +675,6 @@ export const LinkOnIcon: FC<SvgIconProps> = (props) => {
   );
 };
 
-export const MinusIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 16 16" fill="none">
-      <path
-        fill="none"
-        d="M13.334 8H2.66732"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </SvgIcon>
-  );
-};
-
-export const PlusIcon: FC<SvgIconProps> = (props) => {
-  return (
-    <SvgIcon {...props} viewBox="0 0 16 16" fill="none">
-      <path
-        fill="none"
-        d="M7.99935 2.66675V13.3334M13.3327 8.00008H2.66602"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </SvgIcon>
-  );
-};
-
 export const TrashIcon: FC<SvgIconProps> = (props) => {
   return (
     <SvgIcon {...props} viewBox="0 0 16 16" fill="none">

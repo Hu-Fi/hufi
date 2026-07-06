@@ -58,6 +58,7 @@ export type Campaign = {
     daily_volume_target?: number;
     // Competitive Market Making
     minimum_volume_required?: number;
+    rewards_distribution?: number[];
     // Threshold Market Making
     minimum_volume_target?: number;
     // Holding
