@@ -45,25 +45,26 @@ const SuccessCircle = () => (
 
 const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
   const percentage = Math.floor((userResult / target) * 100);
-  const isTargetAchieved = userResult > target;
+  const isTargetAchieved = userResult >= target;
 
   const isMobile = useIsMobile();
 
   return (
-    <StatsCard withBorder>
+    <StatsCard sx={{ gap: { xs: 3, md: 4 } }} withBorder>
       <CardName>User Progress</CardName>
-      <Stack
-        sx={{
-          gap: { xs: 2, md: 3 },
-          mt: { xs: 0, md: isTargetAchieved ? -1.5 : -3 },
-        }}
-      >
+      <Stack sx={{ gap: { xs: 2, md: 3 } }}>
         {isTargetAchieved ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: { xs: 1.5, md: 2 },
+            }}
+          >
             <SuccessCircle />
             <Stack sx={{ gap: 1 }}>
               <Typography
-                variant={isMobile ? 'h6' : 'h5'}
+                variant={isMobile ? 'body4' : 'h5'}
                 component="p"
                 sx={{ color: 'neutral.100' }}
               >
@@ -155,10 +156,11 @@ const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
                   <FormattedNumber
                     value={Math.floor((target - userResult) * 100) / 100}
                     decimals={2}
+                    prefix={isMobile ? '+' : ''}
                     suffix={` ${fundToken}`}
                   />
                 </Typography>{' '}
-                remaining to qualify
+                {isMobile ? 'to qualify' : 'remaining to qualify'}
               </Typography>
             </Box>
           </>

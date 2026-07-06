@@ -283,7 +283,7 @@ const ApprovalStep: FC<Props> = ({
                 gap: { sm: 3, md: 2 },
               }}
             >
-              <Stack sx={{ maxWidth: '500px', width: '100%' }}>
+              <Stack sx={{ maxWidth: '600px', width: '100%' }}>
                 <Stack sx={{ gap: 1.5 }}>
                   <Typography
                     variant="h5"
@@ -529,7 +529,7 @@ const ApprovalStep: FC<Props> = ({
                               direction="row"
                               sx={{
                                 alignItems: 'center',
-                                width: '220px',
+                                width: '250px',
                                 gap: 1,
                               }}
                             >
@@ -562,7 +562,7 @@ const ApprovalStep: FC<Props> = ({
                                 '& .MuiFormHelperText-root': {
                                   mx: 0,
                                   mt: 0.5,
-                                  maxWidth: '220px',
+                                  maxWidth: '250px',
                                 },
                               }}
                             >
@@ -648,7 +648,7 @@ const ApprovalStep: FC<Props> = ({
                             direction="row"
                             sx={{
                               alignItems: 'center',
-                              width: '220px',
+                              width: '250px',
                               gap: 1,
                             }}
                           >
@@ -656,7 +656,7 @@ const ApprovalStep: FC<Props> = ({
                               value={AllowanceType.UNLIMITED}
                               disabled={isApproving}
                               control={<Radio color="accent" />}
-                              label="Unlimited Approval"
+                              label="Unlimited Allowance"
                               sx={{
                                 mr: 0,
                                 '& .MuiRadio-root, & .MuiTypography-root': {
