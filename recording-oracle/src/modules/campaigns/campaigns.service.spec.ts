@@ -720,7 +720,7 @@ describe('CampaignsService', () => {
       generateHoldingCampaignManifest(),
       generateThresholdampaignManifest(),
     ])(
-      'should retrieve and return data (manifest url) [%#]',
+      'should retrieve and return data (manifest url) [%$]',
       async (mockedManifest) => {
         const manifestUrl = faker.internet.url();
         const manifestHash = faker.string.hexadecimal();
@@ -781,7 +781,7 @@ describe('CampaignsService', () => {
       generateHoldingCampaignManifest(),
       generateThresholdampaignManifest(),
     ])(
-      'should retrieve and return data (manifest json) [%#]',
+      'should retrieve and return data (manifest json) [%$]',
       async (mockedManifest) => {
         const totalFundedAmount = faker.number.bigInt({ min: 1 });
 
@@ -1366,7 +1366,7 @@ describe('CampaignsService', () => {
       [EscrowStatus.Cancelled, CampaignCancelledError],
       [EscrowStatus.Complete, CampaignAlreadyFinishedError],
     ])(
-      'should throw when campaign status mismatches escrow: [%#]',
+      'should throw when campaign status mismatches escrow: [%$]',
       async (escrowStatus, errorClass) => {
         mockCampaignsRepository.findOneByChainIdAndAddress.mockResolvedValueOnce(
           campaign,
@@ -3289,7 +3289,7 @@ describe('CampaignsService', () => {
       CampaignType.COMPETITIVE_MARKET_MAKING,
       CampaignType.THRESHOLD_MARKET_MAKING,
     ])(
-      'should record generated volume stat for [%#] campaign',
+      'should record generated volume stat for [%$] campaign',
       async (campaignType) => {
         campaign = generateCampaignEntity(campaignType);
 
@@ -3319,7 +3319,7 @@ describe('CampaignsService', () => {
     );
 
     test.each([CampaignType.HOLDING, CampaignType.THRESHOLD])(
-      'should not record generated volume stat for [%#] campaign',
+      'should not record generated volume stat for [%$] campaign',
       async (campaignType) => {
         campaign = generateCampaignEntity(campaignType);
 
@@ -3974,7 +3974,7 @@ describe('CampaignsService', () => {
         endDate: new Date(mockedNow.valueOf() - 1),
       },
     ])(
-      'should return null if campaign finisihed [%#]',
+      'should return null if campaign finished [%$]',
       async (campaignOverrides) => {
         Object.assign(campaign, campaignOverrides);
 

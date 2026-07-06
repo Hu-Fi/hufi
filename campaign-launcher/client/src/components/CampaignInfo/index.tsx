@@ -68,14 +68,15 @@ const CampaignInfo: FC<Props> = ({
             mx: -2,
             px: 2,
             pb: 4,
-            gap: 2,
-            borderBottom: '1px solid #473C74',
+            gap: 2.5,
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
           }}
         >
-          <Skeleton variant="text" width="100%" height={32} />
-          <Skeleton variant="text" width="100%" height={48} />
+          <Skeleton variant="text" width="100%" height={24} />
+          <Skeleton variant="text" width="100%" height={49} />
           {isJoined && (
-            <Skeleton variant="rectangular" width="100%" height={39} />
+            <Skeleton variant="rectangular" width="100%" height={36} />
           )}
         </Stack>
       );
@@ -86,7 +87,7 @@ const CampaignInfo: FC<Props> = ({
         <Skeleton variant="text" width="100%" height={42} />
         <Skeleton variant="text" width="100%" height={32} />
         {isJoined && (
-          <Skeleton variant="rectangular" width="100%" height={39} />
+          <Skeleton variant="rectangular" width="100%" height={36} />
         )}
       </Stack>
     );
@@ -105,8 +106,9 @@ const CampaignInfo: FC<Props> = ({
         mx: { xs: -2, md: 0 },
         px: { xs: 2, md: 0 },
         pb: { xs: 4, md: 0 },
-        gap: { xs: 2, md: 3.5 },
-        borderBottom: { xs: '1px solid #473C74', md: 'none' },
+        gap: { xs: 2.5, md: 3.5 },
+        borderBottom: { xs: '1px solid', md: 'none' },
+        borderColor: { xs: 'border.strong', md: 'unset' },
       }}
     >
       <Box
@@ -118,13 +120,7 @@ const CampaignInfo: FC<Props> = ({
           height: { xs: 'auto', md: '42px' },
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'white',
-            fontWeight: { xs: 500, md: 600 },
-          }}
-        >
+        <Typography variant="h5" sx={{ color: 'neutral.100' }}>
           Campaign Details
         </Typography>
         <Box
@@ -166,19 +162,16 @@ const CampaignInfo: FC<Props> = ({
               width: { xs: 24, md: 32 },
               height: { xs: 24, md: 32 },
               borderRadius: '100%',
-              bgcolor: '#3a2e6f',
+              bgcolor: 'background.paper',
               '& > svg': { fontSize: { xs: '12px', md: '16px' } },
             }}
           >
             {getChainIcon(campaign.chain_id)}
           </Box>
           <Typography
+            variant={isMobile ? 'body1' : 'h5'}
             sx={{
-              color: isMobile ? 'text.primary' : 'white',
-              fontSize: { xs: 14, md: 20 },
-              fontWeight: 500,
-              lineHeight: '100%',
-              letterSpacing: 0,
+              color: isMobile ? 'text.primary' : 'neutral.100',
               textTransform: 'uppercase',
             }}
           >
@@ -196,12 +189,9 @@ const CampaignInfo: FC<Props> = ({
         {(isJoined || isHosted) && (
           <>
             <Typography
+              variant={isMobile ? 'body1' : 'h5'}
               sx={{
-                color: 'error.main',
-                fontSize: { xs: 14, md: 20 },
-                fontWeight: 500,
-                lineHeight: '100%',
-                letterSpacing: 0,
+                color: 'accent.main',
                 textTransform: 'uppercase',
               }}
             >
@@ -223,10 +213,8 @@ const CampaignInfo: FC<Props> = ({
             title={formatTime(campaign.start_date)}
           >
             <Typography
+              variant={isMobile ? 'body1' : 'h5'}
               sx={{
-                fontSize: { xs: 14, md: 20 },
-                fontWeight: 500,
-                lineHeight: '100%',
                 textDecoration: 'underline',
                 textDecorationStyle: 'dotted',
                 textDecorationThickness: '12%',
@@ -236,13 +224,9 @@ const CampaignInfo: FC<Props> = ({
             </Typography>
           </CustomTooltip>
           <Typography
+            variant={isMobile ? 'body1' : 'h5'}
             component="span"
-            sx={{
-              color: 'error.main',
-              fontSize: { xs: 14, md: 20 },
-              fontWeight: 500,
-              lineHeight: '100%',
-            }}
+            sx={{ color: 'accent.main' }}
           >
             &gt;
           </Typography>
@@ -252,10 +236,8 @@ const CampaignInfo: FC<Props> = ({
             title={formatTime(campaign.end_date)}
           >
             <Typography
+              variant={isMobile ? 'body1' : 'h5'}
               sx={{
-                fontSize: { xs: 14, md: 20 },
-                fontWeight: 500,
-                lineHeight: '100%',
                 textDecoration: 'underline',
                 textDecorationStyle: 'dotted',
                 textDecorationThickness: '12%',
@@ -266,14 +248,7 @@ const CampaignInfo: FC<Props> = ({
           </CustomTooltip>
         </Box>
         <DividerStyled orientation="vertical" flexItem />
-        <Typography
-          sx={{
-            fontSize: { xs: 14, md: 20 },
-            fontWeight: 500,
-            lineHeight: '100%',
-            letterSpacing: 0,
-          }}
-        >
+        <Typography variant={isMobile ? 'body1' : 'h5'}>
           {oracleFee}% Oracle fees
         </Typography>
       </Box>
@@ -288,28 +263,20 @@ const CampaignInfo: FC<Props> = ({
             py: 1,
             bgcolor: 'rgba(212, 207, 255, 0.15)',
             borderRadius: '8px',
-            border: '1px solid rgba(255, 255, 255, 0.07)',
+            border: '1px solid',
+            borderColor: 'border.main',
           }}
         >
           <Typography
+            variant="subtitle2"
             sx={{
-              color: '#a496c2',
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: '150%',
-              letterSpacing: '1.5px',
+              color: 'text.muted',
               textTransform: 'uppercase',
             }}
           >
             Joined at
           </Typography>
-          <Typography
-            sx={{
-              fontSize: 14,
-              fontWeight: 500,
-              lineHeight: '150%',
-            }}
-          >
+          <Typography variant="body1">
             {' '}
             {formatDate(joinedAt)}
             {', '}

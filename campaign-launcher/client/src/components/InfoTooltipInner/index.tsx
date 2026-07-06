@@ -25,7 +25,7 @@ const InfoTooltipInner = forwardRef((props: BoxProps, ref) => {
     >
       <Typography
         component="span"
-        variant="subtitle2"
+        variant="body1"
         sx={{
           color: 'text.secondary',
           textTransform: 'lowercase',

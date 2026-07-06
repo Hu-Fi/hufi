@@ -89,8 +89,7 @@ export function calculateRewardPool(
      * where equal portion is defined as `dailyReward / maxParticipants`
      */
     const progressMeta = progress.meta as
-      | ThresholdMeta
-      | ThresholdMarketMakingMeta;
+      ThresholdMeta | ThresholdMarketMakingMeta;
     const nEligibleParticipants = progressMeta.total_score;
     if (
       campaign.details.maxParticipants &&

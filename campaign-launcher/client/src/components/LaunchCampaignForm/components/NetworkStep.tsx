@@ -47,7 +47,7 @@ const NotStakedWarning: FC<{
           alignItems: 'center',
           gap: 1.5,
           fontWeight: 600,
-          color: '#b98c08',
+          color: 'warning.main',
         }}
       >
         <WarningIcon />
@@ -56,7 +56,7 @@ const NotStakedWarning: FC<{
       <Typography
         variant="body2"
         sx={{
-          color: 'white',
+          color: 'neutral.100',
           fontWeight: 500,
         }}
       >
@@ -76,7 +76,7 @@ const NotStakedWarning: FC<{
           onClick={() =>
             window.open(STAKING_DASHBOARD_URL, '_blank', 'noopener,noreferrer')
           }
-          sx={{ color: 'white', borderColor: 'white', gap: 1.5 }}
+          sx={{ color: 'neutral.100', borderColor: 'neutral.100', gap: 1.5 }}
         >
           Stake HMT
           <ArrowLeftIcon sx={{ transform: 'rotate(135deg)' }} />
@@ -86,7 +86,7 @@ const NotStakedWarning: FC<{
           size="large"
           disabled={isCheckingStake}
           onClick={handleRefresh}
-          sx={{ color: 'white', gap: 1.5 }}
+          sx={{ color: 'neutral.100', gap: 1.5 }}
         >
           <RefreshIcon sx={{ fontSize: '20px' }} />
           Refresh
@@ -205,22 +205,15 @@ const NetworkStep: FC<Props> = ({
                     px: 3,
                     gap: 2,
                     borderRadius: '12px',
-                    bgcolor: '#251d47',
                     border: '1px solid',
-                    borderColor: isSelected ? 'error.main' : '#433679',
+                    borderColor: isSelected ? 'accent.main' : 'border.strong',
                     cursor: 'pointer',
-                    '& > svg': { fontSize: '44px' },
+                    '& > svg': { fontSize: '44px', color: 'text.primary' },
                   }}
                   onClick={() => handleClickOnNetwork(value)}
                 >
                   {getChainIcon(value)}
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: 'white',
-                      fontWeight: 500,
-                    }}
-                  >
+                  <Typography variant="body3" sx={{ color: 'neutral.100' }}>
                     {label}
                   </Typography>
                 </Paper>

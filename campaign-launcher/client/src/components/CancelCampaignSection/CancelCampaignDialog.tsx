@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ModalLoading, ModalSuccess } from '@/components/ModalState';
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { WarningIcon } from '@/icons';
 import { useSignerContext } from '@/providers/SignerProvider';
@@ -25,6 +26,7 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
   const { isSignerReady, signer } = useSignerContext();
   const { showError } = useNotification();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const isIdle = !isCancelling && !isCancelled;
 
@@ -78,30 +80,22 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
         }}
       >
         <Typography
-          variant="h5"
+          variant={isMobile ? 'body3' : 'h4'}
           sx={{
             display: 'flex',
             alignItems: 'center',
-            color: 'white',
-            fontSize: { xs: 16, md: 24 },
-            fontWeight: 700,
-            lineHeight: '100%',
+            color: 'neutral.100',
             mb: 3,
             gap: { xs: 0.75, md: 1.5 },
           }}
         >
           <WarningIcon
-            sx={{ fontSize: { xs: 24, md: 32 }, color: '#cb3434' }}
+            sx={{ fontSize: { xs: 24, md: 32 }, color: 'error.main' }}
           />
           Cancel Campaign
         </Typography>
         {isCancelling && (
-          <Box
-            sx={{
-              display: 'flex',
-              my: 'auto',
-            }}
-          >
+          <Box sx={{ display: 'flex', my: 'auto' }}>
             <ModalLoading />
           </Box>
         )}
@@ -118,7 +112,7 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
             <ModalSuccess>
               {/* TODO: we may need to update the docs and reference to the docs here */}
               <Typography
-                variant="body1"
+                variant="body3"
                 sx={{
                   py: 1,
                   mb: 1,
@@ -131,14 +125,7 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           </Stack>
         )}
         {isIdle && (
-          <Typography
-            sx={{
-              fontSize: { xs: 14, md: 16 },
-              fontWeight: 500,
-              lineHeight: '20px',
-              mb: 4,
-            }}
-          >
+          <Typography variant={isMobile ? 'body1' : 'body3'} sx={{ mb: 4 }}>
             Cancelling this campaign will immediately stop it from being shown
             as active. All user activity will no longer be recorded. Results
             will be calculated up to the point of cancellation, and any earned
@@ -152,26 +139,28 @@ const CancelCampaignDialog: FC<Props> = ({ open, onClose, campaign }) => {
           width: '100%',
           py: { xs: 2, md: 3 },
           px: { xs: 2, md: 4 },
-          borderTop: '1px solid #3a2e6f',
+          borderTop: '1px solid',
+          borderColor: 'border.strong',
         }}
       >
-        {isCancelled && (
+        {isCancelled ? (
           <Button
             size="large"
             variant="contained"
+            color="accent"
+            fullWidth
             onClick={handleClose}
-            sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
           >
             Close
           </Button>
-        )}
-        {!isCancelled && (
+        ) : (
           <Button
             size="large"
             variant="contained"
+            color="error"
+            fullWidth
             disabled={isCancelling}
             onClick={handleCancelCampaign}
-            sx={{ width: '100%', bgcolor: '#ff6262', color: 'white' }}
           >
             Cancel Campaign
           </Button>

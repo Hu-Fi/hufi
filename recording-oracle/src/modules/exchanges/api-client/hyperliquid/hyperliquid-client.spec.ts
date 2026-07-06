@@ -51,7 +51,7 @@ describe('HyperliquidClient', () => {
   });
 
   test.each([true, false, undefined])(
-    'should create instance with sandbox mode [%#]',
+    'should create instance with sandbox mode [%$]',
     (sandboxParam) => {
       const client = new HyperliquidClient({
         userId: faker.string.uuid(),

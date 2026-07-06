@@ -15,8 +15,7 @@ export type CompetitiveCampaignManifest = BaseCampaignManifest & {
 };
 
 export type CampaignManifest =
-  | BaseCampaignManifest
-  | CompetitiveCampaignManifest;
+  BaseCampaignManifest | CompetitiveCampaignManifest;
 
 export type CampaignWithResults = Pick<
   IEscrow,

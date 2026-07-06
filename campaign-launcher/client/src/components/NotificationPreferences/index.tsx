@@ -147,25 +147,20 @@ const NotificationPreferences: FC<Props> = ({
       return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography
+            variant={isMobile ? 'body1' : 'body3'}
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              color: '#43ba96',
-              fontSize: { xs: 12, md: 16 },
-              fontWeight: 500,
-              lineHeight: '100%',
+              color: 'success.main',
             }}
           >
             <LinkOnIcon sx={{ fontSize: { xs: 18, md: 24 } }} />
             Linked
           </Typography>
           <Typography
-            sx={{
-              color: 'rgba(212, 207, 255, 0.70)',
-              fontSize: { xs: 12, md: 16 },
-              lineHeight: '100%',
-            }}
+            variant={isMobile ? 'body1' : 'body3'}
+            sx={{ color: 'text.secondary' }}
           >
             id: {telegramUserId}
           </Typography>
@@ -174,14 +169,12 @@ const NotificationPreferences: FC<Props> = ({
     } else if (!isLinked && !isLinking) {
       return (
         <Typography
+          variant={isMobile ? 'body1' : 'body3'}
           sx={{
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            color: '#b98c08',
-            fontSize: { xs: 12, md: 16 },
-            fontWeight: 500,
-            lineHeight: '100%',
+            color: 'warning.main',
           }}
         >
           <LinkOffIcon sx={{ fontSize: { xs: 18, md: 24 } }} />
@@ -191,19 +184,17 @@ const NotificationPreferences: FC<Props> = ({
     } else {
       return (
         <Typography
+          variant={isMobile ? 'body1' : 'body3'}
           sx={{
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            color: '#a29dca',
-            fontSize: { xs: 12, md: 16 },
-            fontWeight: 500,
-            lineHeight: '100%',
+            color: 'text.subtle',
           }}
         >
           <CircularProgress
             size={isMobile ? 18 : 24}
-            sx={{ color: '#a29dca' }}
+            sx={{ color: 'text.subtle' }}
           />
           Waiting for Telegram&hellip;
         </Typography>
@@ -216,11 +207,13 @@ const NotificationPreferences: FC<Props> = ({
       sx={{
         width: '100%',
         minHeight: { xs: 'auto', md: '290px' },
-        bgcolor: '#251d47',
+        bgcolor: 'background.paper',
         borderRadius: '18px',
-        borderTop: '1px solid #3a2e6f',
+        borderTop: '1px solid',
+        borderColor: 'border.strong',
         '& > :not(:last-child)': {
-          borderBottom: '1px solid #342d54',
+          borderBottom: '1px solid',
+          borderColor: 'border.strong',
         },
       }}
     >
@@ -245,26 +238,20 @@ const NotificationPreferences: FC<Props> = ({
             bgcolor: '#53a6e4',
           }}
         >
-          <TelegramIcon sx={{ fontSize: { xs: 24, md: 32 }, color: 'white' }} />
+          <TelegramIcon
+            sx={{ fontSize: { xs: 24, md: 32 }, color: 'neutral.100' }}
+          />
         </Box>
         <Stack sx={{ gap: { xs: 0.5, md: 1 } }}>
           <Typography
-            sx={{
-              color: 'white',
-              fontSize: { xs: 16, md: 20 },
-              fontWeight: 700,
-              lineHeight: '100%',
-            }}
+            variant={isMobile ? 'body4' : 'h5'}
+            sx={{ color: 'neutral.100' }}
           >
             Telegram Alerts
           </Typography>
           <Typography
-            sx={{
-              color: '#a29dca',
-              fontSize: { xs: 12, md: 16 },
-              fontWeight: 500,
-              lineHeight: '100%',
-            }}
+            variant={isMobile ? 'subtitle4' : 'body1'}
+            sx={{ color: 'text.subtle' }}
           >
             Get Telegram updates on HuFi activity.
           </Typography>
@@ -283,12 +270,8 @@ const NotificationPreferences: FC<Props> = ({
       >
         <Stack sx={{ gap: { xs: 1.5, md: 2.5 } }}>
           <Typography
-            sx={{
-              color: 'white',
-              fontSize: { xs: 16, md: 20 },
-              fontWeight: { xs: 700, md: 500 },
-              lineHeight: '100%',
-            }}
+            variant={isMobile ? 'body4' : 'h5'}
+            sx={{ color: 'neutral.100' }}
           >
             Telegram Account
           </Typography>
@@ -337,22 +320,14 @@ const NotificationPreferences: FC<Props> = ({
         >
           <Stack sx={{ gap: { xs: 0.5, md: 2.5 } }}>
             <Typography
-              sx={{
-                color: 'white',
-                fontSize: { xs: 16, md: 20 },
-                fontWeight: { xs: 700, md: 500 },
-                lineHeight: '100%',
-              }}
+              variant={isMobile ? 'body4' : 'h5'}
+              sx={{ color: 'neutral.100' }}
             >
               Autojoin notifications
             </Typography>
             <Typography
-              sx={{
-                color: '#a29dca',
-                fontSize: { xs: 12, md: 16 },
-                fontWeight: 500,
-                lineHeight: '100%',
-              }}
+              variant={isMobile ? 'subtitle4' : 'body1'}
+              sx={{ color: 'text.subtle' }}
             >
               Send a message when a campaign is auto-joined
             </Typography>

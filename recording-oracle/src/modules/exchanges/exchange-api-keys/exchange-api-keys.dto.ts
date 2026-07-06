@@ -78,9 +78,7 @@ export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
   @ValidateNested()
   @Transform((params: { obj: EnrollExchangeApiKeysDto; value: unknown }) => {
     let exchangeExtrasDtoClass:
-      | Constructor<BitmartExtras>
-      | Constructor<KucoinExtras>
-      | undefined;
+      Constructor<BitmartExtras> | Constructor<KucoinExtras> | undefined;
 
     switch (params.obj.exchangeName) {
       case ExchangeName.BITMART: {

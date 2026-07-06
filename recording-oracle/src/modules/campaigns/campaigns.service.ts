@@ -1093,8 +1093,7 @@ export class CampaignsService implements OnModuleDestroy {
     | { status: CampaignJoinStatus.JOIN_IS_CLOSED; reason: string }
     | {
         status:
-          | CampaignJoinStatus.NOT_AVAILABLE
-          | CampaignJoinStatus.USER_CAN_JOIN;
+          CampaignJoinStatus.NOT_AVAILABLE | CampaignJoinStatus.USER_CAN_JOIN;
       }
   > {
     const campaign = await this.findOneByChainIdAndAddress(

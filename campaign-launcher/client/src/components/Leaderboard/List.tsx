@@ -36,13 +36,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         headerName: 'Rank',
         width: isMobile ? 55 : 100,
         renderCell: (params) => (
-          <Typography
-            variant="body2"
-            sx={{
-              color: 'white',
-              fontWeight: 500,
-            }}
-          >
+          <Typography variant="body1" sx={{ color: 'neutral.100' }}>
             #{params.row.rank}
           </Typography>
         ),
@@ -63,13 +57,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
                 gap: 1,
               }}
             >
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'white',
-                  fontWeight: 500,
-                }}
-              >
+              <Typography variant="body1" sx={{ color: 'neutral.100' }}>
                 {formatAddress(params.row.address, 4, 2)}
               </Typography>
               {isMyEntry && <MyEntryLabel />}
@@ -86,13 +74,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
             params.row.estimated_reward_gross
           );
           return (
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'white',
-                fontWeight: 500,
-              }}
-            >
+            <Typography variant="body1" sx={{ color: 'neutral.100' }}>
               <FormattedNumber
                 value={value}
                 decimals={decimals}
@@ -109,10 +91,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         width: isMobile ? 55 : 100,
         renderCell: (params) => {
           return (
-            <Typography
-              variant="body2"
-              sx={{ color: 'white', fontWeight: 500 }}
-            >
+            <Typography variant="body1" sx={{ color: 'neutral.100' }}>
               <CompactNumberWithTooltip value={params.row.score} />
             </Typography>
           );
@@ -128,14 +107,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         width: isMobile ? 75 : 100,
         renderCell: (params) => {
           return (
-            <Typography
-              sx={{
-                color: 'white',
-                fontSize: 14,
-                lineHeight: 1,
-                fontWeight: 500,
-              }}
-            >
+            <Typography variant="body1" sx={{ color: 'neutral.100' }}>
               <CompactNumberWithTooltip value={params.row.result} />
             </Typography>
           );
@@ -151,7 +123,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
         flex: 1,
         minHeight: 0,
         overflow: 'hidden',
-        bgcolor: '#251d47',
+        bgcolor: 'background.paper',
       }}
     >
       <DataGrid
@@ -176,10 +148,11 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
           border: 'none',
           bgcolor: 'inherit',
           '& .MuiDataGrid-columnHeaders': {
-            borderBottom: '1px solid #3a2e6f',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
           },
           '& .MuiDataGrid-columnHeader': {
-            bgcolor: '#251d47',
+            bgcolor: 'background.paper',
             borderBottom: 'none !important',
             px: 0,
             pointerEvents: 'none',
@@ -199,7 +172,8 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
             fontWeight: 500,
           },
           '& .MuiDataGrid-row': {
-            borderBottom: '1px solid #3a2e6f',
+            borderBottom: '1px solid',
+            borderColor: 'border.strong',
             '&:hover': {
               bgcolor: 'transparent',
             },
@@ -208,7 +182,7 @@ const LeaderboardList = memo(({ data, activeAddress, campaignType }: Props) => {
             },
           },
           '& .MuiDataGrid-row.leaderboard-row--active': {
-            bgcolor: '#3a2e6f',
+            bgcolor: 'border.strong',
           },
           '& .MuiDataGrid-cell': {
             display: 'flex',
