@@ -132,9 +132,9 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard, isJoined }) => {
 
   const isThresholdBasedCampaign = isThresholdBasedCampaignType(campaign.type);
 
-  const userResult = leaderboard.data.find(
-    (entry) => entry.address === activeAddress
-  );
+  const userResult = activeAddress
+    ? leaderboard.data.find((entry) => entry.address === activeAddress)
+    : undefined;
 
   const showUserProgressWidget =
     isThresholdBasedCampaign && isJoined && userResult;

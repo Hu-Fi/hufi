@@ -146,7 +146,7 @@ const CampaignDetails: FC = () => {
     const idx = leaderboard?.data.findIndex(
       (item) => item.address.toLowerCase() === activeAddress?.toLowerCase()
     );
-    return idx ? idx + 1 : undefined;
+    return idx !== undefined && idx >= 0 ? idx + 1 : undefined;
   }, [leaderboard?.data, activeAddress]);
 
   return (

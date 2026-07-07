@@ -43,7 +43,9 @@ export const createFundAmountValidationSchema = (
     .test(
       'rewards-distribution-total',
       'Rewards distribution is required',
-      (value) => value.reduce((sum, percentage) => sum + percentage, 0) === 100
+      (value) =>
+        Array.isArray(value) &&
+        value.reduce((sum, percentage) => sum + percentage, 0) === 100
     );
 
   return yup.object({
