@@ -30,7 +30,11 @@ import {
   type Campaign,
   type EvmAddress,
 } from '@/types';
-import { isCampaignDetails, isThresholdBasedCampaignType } from '@/utils';
+import {
+  formatTokenAmount,
+  isCampaignDetails,
+  isThresholdBasedCampaignType,
+} from '@/utils';
 
 const BottomButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
@@ -110,6 +114,11 @@ const CampaignDetails: FC = () => {
 
   const campaignData = campaign || parsedData;
 
+  const formattedFundAmount = +formatTokenAmount(
+    campaignData?.fund_amount || '0',
+    campaignData?.fund_token_decimals || 18
+  );
+
   const isOngoingCampaign =
     !!campaignData &&
     campaignData.status === CampaignStatus.ACTIVE &&
@@ -160,7 +169,7 @@ const CampaignDetails: FC = () => {
         <RewardsDistributionWidget
           data={campaignData.details.rewards_distribution || []}
           fundToken={campaignData.fund_token_symbol}
-          fundAmount={campaignData.fund_amount}
+          fundAmount={formattedFundAmount}
           userPosition={userPosition}
         />
       )}

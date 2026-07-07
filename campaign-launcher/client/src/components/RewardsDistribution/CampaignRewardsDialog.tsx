@@ -28,7 +28,7 @@ type Props = {
   onClose: () => void;
   data: number[];
   fundToken: string;
-  fundAmount: string;
+  fundAmount: number;
   userPosition: number | undefined;
 };
 
@@ -81,7 +81,7 @@ const CampaignRewardsDialog: FC<Props> = ({
           const isTop3 = index < 3;
           const isMyEntry = userPosition === index + 1;
           const { value, decimals } = getCompactNumberParts(
-            (Number(fundAmount) * item) / 100
+            (fundAmount * item) / 100
           );
           return (
             <Box

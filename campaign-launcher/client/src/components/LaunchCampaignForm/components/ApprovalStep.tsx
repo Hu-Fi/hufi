@@ -27,20 +27,18 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 
 import CustomTooltip from '@/components/CustomTooltip';
-import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import RewardsDistribution from '@/components/RewardsDistribution';
+import {
+  RewardAmount,
+  RewardPlace,
+} from '@/components/RewardsDistribution/components';
 import { UNLIMITED_AMOUNT } from '@/constants';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { useNotification } from '@/hooks/useNotification';
 import { useTokenAllowance } from '@/hooks/useTokenAllowance';
 import { AllowanceType, CampaignType, type CampaignFormValues } from '@/types';
-import {
-  getCompactNumberParts,
-  getOrdinalSuffix,
-  getTokenInfo,
-  isExceedingMaximumInteger,
-} from '@/utils';
+import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 
 import { formatInputValue } from '../utils';
 import {
@@ -385,10 +383,6 @@ const ApprovalStep: FC<Props> = ({
                       }}
                     >
                       {rewards_distribution.map((percentage, index) => {
-                        const { value, suffix, decimals } =
-                          getCompactNumberParts(
-                            (percentage * Number(fund_amount)) / 100
-                          );
                         return (
                           <Box
                             key={index}
@@ -399,24 +393,7 @@ const ApprovalStep: FC<Props> = ({
                               gap: 1.5,
                             }}
                           >
-                            <Typography
-                              variant="body3"
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.75,
-                              }}
-                            >
-                              <Box
-                                component="span"
-                                sx={{
-                                  p: 0.25,
-                                  borderRadius: '50%',
-                                  bgcolor: 'neutral.200',
-                                }}
-                              />
-                              {`${index + 1}${getOrdinalSuffix(index + 1)} place`}
-                            </Typography>
+                            <RewardPlace place={index + 1} />
                             <Box
                               sx={{
                                 display: 'flex',
@@ -424,24 +401,12 @@ const ApprovalStep: FC<Props> = ({
                                 gap: 1.5,
                               }}
                             >
+                              <RewardAmount
+                                percentage={percentage}
+                                fundToken={fundToken}
+                                fundAmount={Number(fund_amount)}
+                              />
                               <Typography
-                                variant="body1"
-                                sx={{
-                                  bgcolor: 'background.paper',
-                                  py: 0.5,
-                                  px: 1.5,
-                                  borderRadius: '99px',
-                                  textTransform: 'uppercase',
-                                }}
-                              >
-                                <FormattedNumber
-                                  value={value}
-                                  decimals={decimals}
-                                  suffix={`${suffix} ${fundToken}`}
-                                />
-                              </Typography>
-                              <Typography
-                                variant="body3"
                                 sx={{
                                   color: 'neutral.100',
                                   width: '40px',

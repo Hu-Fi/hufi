@@ -83,7 +83,7 @@ const ViewAllButton = ({
 type Props = {
   data: number[];
   fundToken: string;
-  fundAmount: string;
+  fundAmount: number;
   userPosition: number | undefined;
 };
 
@@ -98,10 +98,11 @@ const CampaignWidget: FC<Props> = ({
   const isMobile = useIsMobile();
 
   const totalPlaces = data.length;
-  const showViewAllButton = isMobile ? totalPlaces > 7 : totalPlaces > 11;
+  const limitPlaces = isMobile ? 7 : 11;
+  const showViewAllButton = totalPlaces > limitPlaces;
 
   const userReward = userPosition
-    ? (data[userPosition - 1] * Number(fundAmount)) / 100
+    ? (data[userPosition - 1] * fundAmount) / 100
     : undefined;
 
   return (
@@ -218,7 +219,7 @@ const CampaignWidget: FC<Props> = ({
               const { color, background, icon, outerBackground } =
                 TOP_3_META[index];
               const { value, decimals } = getCompactNumberParts(
-                (Number(fundAmount) * item) / 100
+                (fundAmount * item) / 100
               );
               return (
                 <Grid key={index} size={{ xs: index > 0 ? 6 : 12, md: 4 }}>
@@ -295,7 +296,7 @@ const CampaignWidget: FC<Props> = ({
             <Grid container spacing={2}>
               {data.slice(3, 11).map((item, index) => {
                 const { value, decimals } = getCompactNumberParts(
-                  (Number(fundAmount) * item) / 100
+                  (fundAmount * item) / 100
                 );
                 return (
                   <Grid key={index} size={{ xs: 12, md: 3 }}>
@@ -353,7 +354,7 @@ const CampaignWidget: FC<Props> = ({
             <Stack sx={{ mx: -2 }}>
               {data.slice(3, 7).map((item, index) => {
                 const { value, decimals } = getCompactNumberParts(
-                  (Number(fundAmount) * item) / 100
+                  (fundAmount * item) / 100
                 );
                 return (
                   <Box

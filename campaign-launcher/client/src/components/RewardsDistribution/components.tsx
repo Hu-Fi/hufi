@@ -2,9 +2,8 @@ import { type FC } from 'react';
 
 import { Box, SvgIcon, type SvgIconProps, Typography } from '@mui/material';
 
+import FormattedNumber from '@/components/FormattedNumber';
 import { getCompactNumberParts, getOrdinalSuffix } from '@/utils';
-
-import FormattedNumber from '../FormattedNumber';
 
 type RewardPlaceProps = {
   place: number;
