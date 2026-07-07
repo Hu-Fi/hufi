@@ -6,7 +6,7 @@ import FormattedNumber from '@/components/FormattedNumber';
 import MyEntryLabel from '@/components/Leaderboard/MyEntryLabel';
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { useIsMobile } from '@/hooks/useBreakpoints';
-import { getCompactNumberParts } from '@/utils';
+import { getCompactNumberParts, getOrdinalSuffix } from '@/utils';
 
 const TOP_3_COLORS = [
   {
@@ -72,7 +72,6 @@ const CampaignRewardsDialog: FC<Props> = ({
         sx={{
           flex: 1,
           minHeight: 0,
-          mb: 4,
           overflowY: 'auto',
           '& > *': { flexShrink: 0 },
         }}
@@ -171,6 +170,13 @@ const CampaignRewardsDialog: FC<Props> = ({
                 >
                   #{userPosition}
                 </Typography>
+                <Typography sx={{ color: 'neutral.100' }}>
+                  <FormattedNumber
+                    value={0}
+                    decimals={0}
+                    suffix={` ${fundToken}`}
+                  />
+                </Typography>
                 <MyEntryLabel />
               </Box>
               <Typography>Not eligible</Typography>
@@ -178,6 +184,11 @@ const CampaignRewardsDialog: FC<Props> = ({
           </>
         )}
       </Stack>
+      <Typography sx={{ m: 4, opacity: 0.6 }}>
+        Participants finishing below{' '}
+        {`${data.length}${getOrdinalSuffix(data.length)}`} place receive no
+        reward from this campaign.
+      </Typography>
     </ResponsiveOverlay>
   );
 };
