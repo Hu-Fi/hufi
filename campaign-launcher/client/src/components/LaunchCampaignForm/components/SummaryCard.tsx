@@ -23,7 +23,6 @@ type Props = {
   step: number;
   chainId: ChainId | null;
   formValues: CampaignFormValues | null;
-  fundAmount?: string;
 };
 
 const Row = ({ children }: { children: React.ReactNode }) => (
@@ -108,7 +107,7 @@ const getSymbolOrPairInfo = (
   }
 };
 
-const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
+const SummaryCard: FC<Props> = ({ step, chainId, formValues }) => {
   const [openRewardsDialog, setOpenRewardsDialog] = useState(false);
 
   const { exchangesMap } = useExchangesContext();
@@ -116,7 +115,7 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
     formValues?.exchange || ''
   )?.display_name;
 
-  const { type: campaignType } = formValues || {};
+  const { type: campaignType, fund_amount: fundAmount } = formValues || {};
 
   const isLastStep = step === 5;
 
@@ -281,7 +280,7 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
             open={openRewardsDialog}
             onClose={() => setOpenRewardsDialog(false)}
             rewardsDistribution={formValues?.rewards_distribution || []}
-            fundAmount={fundAmount || ''}
+            fundAmount={Number(fundAmount) || 0}
             fundToken={formValues.fund_token}
           />
         </Row>

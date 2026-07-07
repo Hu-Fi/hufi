@@ -13,7 +13,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   rewardsDistribution: number[];
-  fundAmount: string;
+  fundAmount: number;
   fundToken: string;
 };
 
@@ -25,7 +25,7 @@ const ViewDistributionDialog: FC<Props> = ({
   fundToken,
 }) => {
   const isMobile = useIsMobile();
-  const { value, suffix, decimals } = getCompactNumberParts(Number(fundAmount));
+  const { value, suffix, decimals } = getCompactNumberParts(fundAmount);
 
   return (
     <ResponsiveOverlay
@@ -131,7 +131,7 @@ const ViewDistributionDialog: FC<Props> = ({
                   <RewardAmount
                     percentage={percentage}
                     fundToken={fundToken}
-                    fundAmount={Number(fundAmount)}
+                    fundAmount={fundAmount}
                   />
                   <Typography
                     variant="body2"

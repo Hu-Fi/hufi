@@ -27,14 +27,12 @@ const steps = [
 const LaunchCampaignForm: FC = () => {
   const [step, setStep] = useState(1);
   const [chainId, setChainId] = useState<ChainId | null>(null);
-  const [fundAmount, setFundAmount] = useState<string>('');
   const [formValues, setFormValues] = useState<CampaignFormValues | null>(null);
 
   const isMobile = useIsMobile();
 
   const handleStartOver = () => {
     setStep(1);
-    setFundAmount('');
     setFormValues(null);
     setChainId(null);
   };
@@ -91,8 +89,6 @@ const LaunchCampaignForm: FC = () => {
       )}
       {step === 4 && formValues && (
         <ApprovalStep
-          fundAmount={fundAmount}
-          setFundAmount={setFundAmount}
           formValues={formValues}
           setFormValues={setFormValues}
           handleChangeStep={setStep}
@@ -101,7 +97,6 @@ const LaunchCampaignForm: FC = () => {
       {step === 5 && formValues && chainId && (
         <LaunchStep
           chainId={chainId}
-          fundAmount={fundAmount}
           formValues={formValues}
           handleChangeStep={setStep}
           handleStartOver={handleStartOver}

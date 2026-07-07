@@ -73,16 +73,12 @@ const AllowanceTooltip = ({ type }: { type: AllowanceType }) => {
 };
 
 type Props = {
-  fundAmount: string;
-  setFundAmount: (amount: string) => void;
   formValues: CampaignFormValues;
   setFormValues: (values: CampaignFormValues) => void;
   handleChangeStep: Dispatch<SetStateAction<number>>;
 };
 
 const ApprovalStep: FC<Props> = ({
-  fundAmount,
-  setFundAmount,
   formValues,
   setFormValues,
   handleChangeStep,
@@ -91,7 +87,7 @@ const ApprovalStep: FC<Props> = ({
   const [showTopFade, setShowTopFade] = useState(false);
   const [showBottomFade, setShowBottomFade] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const { fund_token: fundToken } = formValues;
+  const { fund_token: fundToken, fund_amount: fundAmount } = formValues;
   const isMobile = useIsMobile();
   const formId = 'approval-form';
   const isCompetitiveMM =
@@ -114,7 +110,7 @@ const ApprovalStep: FC<Props> = ({
       )
     ),
     defaultValues: {
-      fund_amount: fundAmount,
+      fund_amount: fundAmount.toString(),
       selected_allowance: AllowanceType.CUSTOM,
       custom_allowance_amount: '',
       ...(isCompetitiveMM
@@ -185,14 +181,14 @@ const ApprovalStep: FC<Props> = ({
   };
 
   const saveApprovalStepValues = () => {
-    setFundAmount(fund_amount);
-
-    if (isCompetitiveMM && rewards_distribution) {
-      setFormValues({
-        ...formValues,
-        rewards_distribution,
-      });
-    }
+    const payload = {
+      ...formValues,
+      fund_amount,
+      ...(isCompetitiveMM && rewards_distribution
+        ? { rewards_distribution }
+        : {}),
+    };
+    setFormValues(payload);
   };
 
   const onSubmit = async (data: ApprovalFormValues) => {
