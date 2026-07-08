@@ -81,75 +81,82 @@ const EscrowDetailsStep: FC<Props> = ({
           mt: 4,
           width: '100%',
           gridArea: 'main',
+          minHeight: 0,
+          height: '100%',
+          overflow: 'hidden',
         }}
       >
-        <form id={formId} onSubmit={handleSubmit(onSubmit)}>
+        <Stack
+          component="form"
+          id={formId}
+          onSubmit={handleSubmit(onSubmit)}
+          direction="row"
+          sx={{
+            justifyContent: 'space-between',
+            gap: { sm: 3, md: 2 },
+            overflowY: { md: 'auto' },
+            pr: { md: 2 },
+            scrollbarGutter: { md: 'stable' },
+          }}
+        >
           <Stack
-            direction="row"
             sx={{
-              justifyContent: 'space-between',
-              gap: { sm: 3, md: 2 },
+              gap: { xs: 4, md: 3 },
+              width: { xs: '100%', md: '600px' },
+              '& .MuiFormHelperText-root': {
+                mt: 0.5,
+                mx: 0,
+                lineHeight: 1,
+              },
             }}
           >
-            <Stack
-              sx={{
-                gap: { xs: 4, md: 3 },
-                width: { xs: '100%', md: '600px' },
-                '& .MuiFormHelperText-root': {
-                  mt: 0.5,
-                  mx: 0,
-                  lineHeight: 1,
-                },
-              }}
-            >
-              {campaignType === CampaignType.MARKET_MAKING && (
-                <MarketMakingForm
-                  control={control as Control<MarketMakingFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<MarketMakingFormValues>}
-                  trigger={trigger as UseFormTrigger<MarketMakingFormValues>}
-                  campaignType={campaignType}
-                />
-              )}
-              {campaignType === CampaignType.HOLDING && (
-                <HoldingForm
-                  control={control as Control<HoldingFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<HoldingFormValues>}
-                  trigger={trigger as UseFormTrigger<HoldingFormValues>}
-                  campaignType={campaignType}
-                />
-              )}
-              {campaignType === CampaignType.THRESHOLD && (
-                <ThresholdForm
-                  control={control as Control<ThresholdFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<ThresholdFormValues>}
-                  trigger={trigger as UseFormTrigger<ThresholdFormValues>}
-                  campaignType={campaignType}
-                />
-              )}
-              {campaignType === CampaignType.COMPETITIVE_MARKET_MAKING && (
-                <CompetitiveMmForm
-                  control={control as Control<CompetitiveMmFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<CompetitiveMmFormValues>}
-                  trigger={trigger as UseFormTrigger<CompetitiveMmFormValues>}
-                  campaignType={campaignType}
-                />
-              )}
-              {campaignType === CampaignType.THRESHOLD_MARKET_MAKING && (
-                <ThresholdMmForm
-                  control={control as Control<ThresholdMmFormValues>}
-                  errors={errors}
-                  watch={watch as UseFormWatch<ThresholdMmFormValues>}
-                  trigger={trigger as UseFormTrigger<ThresholdMmFormValues>}
-                  campaignType={campaignType}
-                />
-              )}
-            </Stack>
+            {campaignType === CampaignType.MARKET_MAKING && (
+              <MarketMakingForm
+                control={control as Control<MarketMakingFormValues>}
+                errors={errors}
+                watch={watch as UseFormWatch<MarketMakingFormValues>}
+                trigger={trigger as UseFormTrigger<MarketMakingFormValues>}
+                campaignType={campaignType}
+              />
+            )}
+            {campaignType === CampaignType.HOLDING && (
+              <HoldingForm
+                control={control as Control<HoldingFormValues>}
+                errors={errors}
+                watch={watch as UseFormWatch<HoldingFormValues>}
+                trigger={trigger as UseFormTrigger<HoldingFormValues>}
+                campaignType={campaignType}
+              />
+            )}
+            {campaignType === CampaignType.THRESHOLD && (
+              <ThresholdForm
+                control={control as Control<ThresholdFormValues>}
+                errors={errors}
+                watch={watch as UseFormWatch<ThresholdFormValues>}
+                trigger={trigger as UseFormTrigger<ThresholdFormValues>}
+                campaignType={campaignType}
+              />
+            )}
+            {campaignType === CampaignType.COMPETITIVE_MARKET_MAKING && (
+              <CompetitiveMmForm
+                control={control as Control<CompetitiveMmFormValues>}
+                errors={errors}
+                watch={watch as UseFormWatch<CompetitiveMmFormValues>}
+                trigger={trigger as UseFormTrigger<CompetitiveMmFormValues>}
+                campaignType={campaignType}
+              />
+            )}
+            {campaignType === CampaignType.THRESHOLD_MARKET_MAKING && (
+              <ThresholdMmForm
+                control={control as Control<ThresholdMmFormValues>}
+                errors={errors}
+                watch={watch as UseFormWatch<ThresholdMmFormValues>}
+                trigger={trigger as UseFormTrigger<ThresholdMmFormValues>}
+                campaignType={campaignType}
+              />
+            )}
           </Stack>
-        </form>
+        </Stack>
       </Stack>
       <BottomNavigation
         formId={formId}
