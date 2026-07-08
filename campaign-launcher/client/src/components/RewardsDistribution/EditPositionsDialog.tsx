@@ -5,6 +5,7 @@ import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import ResponsiveOverlay from '@/components/ResponsiveOverlay';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { TrashIcon } from '@/icons';
+import { areArraysEqual } from '@/utils';
 
 import { RewardPlace } from './components';
 
@@ -13,12 +14,6 @@ type Props = {
   onClose: () => void;
   rewardsData: number[];
   onSaveChanges: (data: number[]) => void;
-};
-
-const isTwoArraysEqual = (arr1: number[], arr2: number[]) => {
-  if (arr1.length !== arr2.length) return false;
-
-  return arr1.every((value, index) => value === arr2[index]);
 };
 
 const EditPositionsDialog: FC<Props> = ({
@@ -36,7 +31,7 @@ const EditPositionsDialog: FC<Props> = ({
   }, [rewardsData]);
 
   const isDataChanged = useMemo(() => {
-    return !isTwoArraysEqual(draftData, rewardsData);
+    return !areArraysEqual(draftData, rewardsData);
   }, [draftData, rewardsData]);
 
   const handleAddPosition = () => {

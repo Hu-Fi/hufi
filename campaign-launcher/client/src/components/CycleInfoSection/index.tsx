@@ -228,7 +228,7 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard, isJoined }) => {
           <Grid size={{ xs: 12, md: 12 }}>
             <UserProgressWidget
               userResult={userResult?.result || 0}
-              fundToken={campaign.fund_token_symbol}
+              targetToken={targetTokenSymbol || ''}
               target={
                 campaign.details.minimum_volume_target ||
                 campaign.details.minimum_balance_target ||

@@ -7,12 +7,6 @@ import FormattedNumber from '@/components/FormattedNumber';
 import { useIsMobile } from '@/hooks/useBreakpoints';
 import { SuccessIcon } from '@/icons';
 
-type Props = {
-  userResult: number;
-  fundToken: string;
-  target: number;
-};
-
 const SuccessCircle = () => (
   <Box
     sx={{
@@ -43,16 +37,22 @@ const SuccessCircle = () => (
   </Box>
 );
 
-const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
+type Props = {
+  userResult: number;
+  targetToken: string;
+  target: number;
+};
+
+const UserProgressWidget: FC<Props> = ({ userResult, targetToken, target }) => {
   const percentage = Math.floor((userResult / target) * 100);
   const isTargetAchieved = userResult >= target;
 
   const isMobile = useIsMobile();
 
   return (
-    <StatsCard sx={{ gap: { xs: 3, md: 4 } }} withBorder>
+    <StatsCard sx={{ gap: { xs: 3, md: isTargetAchieved ? 4 : 2 } }} withBorder>
       <CardName>User Progress</CardName>
-      <Stack sx={{ gap: { xs: 2, md: 3 } }}>
+      <Stack sx={{ gap: { xs: 2, md: 1 } }}>
         {isTargetAchieved ? (
           <Box
             sx={{
@@ -144,7 +144,7 @@ const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
                 <FormattedNumber
                   value={target}
                   decimals={2}
-                  suffix={` ${fundToken}`}
+                  suffix={` ${targetToken}`}
                 />
               </Typography>
               <Typography variant={isMobile ? 'body1' : 'body4'}>
@@ -157,7 +157,7 @@ const UserProgressWidget: FC<Props> = ({ userResult, fundToken, target }) => {
                     value={Math.floor((target - userResult) * 100) / 100}
                     decimals={2}
                     prefix={isMobile ? '+' : ''}
-                    suffix={` ${fundToken}`}
+                    suffix={` ${targetToken}`}
                   />
                 </Typography>{' '}
                 {isMobile ? 'to qualify' : 'remaining to qualify'}

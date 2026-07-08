@@ -43,7 +43,7 @@ import { getTokenInfo, isExceedingMaximumInteger } from '@/utils';
 import { formatInputValue } from '../utils';
 import {
   type ApprovalFormValues,
-  createFundAmountValidationSchema,
+  createApprovalStepValidationSchema,
 } from '../validation';
 
 import { BottomNavigation } from './';
@@ -100,7 +100,7 @@ const ApprovalStep: FC<Props> = ({
   } = useForm<ApprovalFormValues>({
     mode: isMobile ? 'onSubmit' : 'onChange',
     resolver: yupResolver(
-      createFundAmountValidationSchema(
+      createApprovalStepValidationSchema(
         formValues.start_date,
         formValues.end_date,
         formValues.fund_token,

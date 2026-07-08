@@ -30,7 +30,7 @@ export type ApprovalFormValues = {
   rewards_distribution?: number[];
 };
 
-export const createFundAmountValidationSchema = (
+export const createApprovalStepValidationSchema = (
   startDate: Date,
   endDate: Date,
   fundToken: string,
@@ -38,7 +38,12 @@ export const createFundAmountValidationSchema = (
 ) => {
   const rewardsDistributionValidationSchema = yup
     .array()
-    .of(yup.number().required())
+    .of(
+      yup
+        .number()
+        .positive('Reward percentage must be greater than 0')
+        .required()
+    )
     .required('Rewards distribution is required')
     .test(
       'rewards-distribution-total',
@@ -229,7 +234,6 @@ const competitiveMmValidationSchema = yup.object({
     .typeError('Minimum volume is required')
     .min(1, 'Minimum volume must be greater than or equal to 1')
     .required('Minimum volume is required'),
-  rewards_distribution: yup.array().of(yup.number().required()).default([]),
 }) as ObjectSchema<CompetitiveMmFormValues>;
 
 export const campaignValidationSchema = yup.lazy((value) => {
