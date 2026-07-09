@@ -141,16 +141,17 @@ const RewardsDistribution: FC<Props> = ({
         display: 'flex',
         flexDirection: 'column',
         p: 0,
-        height: 670,
+        height: 700,
       }}
       mobileSx={{ p: 0, height: '90dvh', maxHeight: '700px' }}
+      closeButtonSx={{ top: { xs: 22, md: 50 } }}
     >
       <Stack
         sx={{
-          gap: 2.5,
+          gap: { xs: 1.5, md: 2.5 },
           px: { xs: 2, md: 4 },
           pt: { xs: 3, md: 6 },
-          pb: { xs: 1, md: 3 },
+          pb: { xs: 0, md: 3 },
           borderBottom: { xs: 'none', md: '1px solid' },
           borderColor: { xs: 'unset', md: 'border.strong' },
         }}
@@ -162,7 +163,8 @@ const RewardsDistribution: FC<Props> = ({
           Set reward distribution
         </Typography>
         <Typography variant="body1">
-          Assign a % of the reward pool to each finishing rank
+          Assign a % of the reward pool to each finishing rank. Rewards will be
+          evenly distributed for each cycle
         </Typography>
       </Stack>
       <Box sx={{ display: 'flex', flex: 1, minHeight: 0, p: { xs: 2, md: 4 } }}>
@@ -377,7 +379,7 @@ const RewardsDistribution: FC<Props> = ({
       <Stack
         sx={{
           py: 3,
-          px: 4,
+          px: { xs: 2, md: 4 },
           borderTop: '1px solid',
           borderColor: 'border.strong',
           height: 95,

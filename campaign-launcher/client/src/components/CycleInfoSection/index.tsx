@@ -1,4 +1,4 @@
-import { type FC, useEffect, useMemo, useState } from 'react';
+import { type FC } from 'react';
 
 import { Box, Grid, Stack, Typography } from '@mui/material';
 
@@ -9,6 +9,7 @@ import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
 import UserProgressWidget from '@/components/UserProgressWidget';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useCycleTimeline } from '@/hooks/useCycleTimeline';
 import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
@@ -17,7 +18,6 @@ import {
   getTokenInfo,
   isThresholdBasedCampaignType,
 } from '@/utils';
-import dayjs from '@/utils/dayjs';
 
 const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
   hasParticipantsLimit,
@@ -72,45 +72,6 @@ type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
   isJoined: boolean;
-};
-
-const useCycleTimeline = (startDate: string, endDate: string) => {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
-
-  const cycleTimeInfo = useMemo(() => {
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
-    const nowDate = dayjs(now);
-
-    const totalCycles = Math.ceil(end.diff(start, 'day', true));
-    const fullCyclesPassed = nowDate.diff(start, 'day', false);
-    const currentCycle = Math.min(totalCycles, fullCyclesPassed + 1);
-    const cycleEndCandidate = start.add(currentCycle, 'day');
-    const currentCycleEnd = cycleEndCandidate.isBefore(end)
-      ? cycleEndCandidate
-      : end;
-    const remainingMs = Math.max(0, currentCycleEnd.diff(nowDate));
-
-    return {
-      currentCycle,
-      totalCycles,
-      remainingTime: dayjs
-        .duration(Math.max(0, remainingMs))
-        .format('HH[h]:mm[m]:ss[s]'),
-    };
-  }, [startDate, endDate, now]);
-
-  return cycleTimeInfo;
 };
 
 const getTotalGeneratedCardTitle = (

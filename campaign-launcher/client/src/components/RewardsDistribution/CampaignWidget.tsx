@@ -3,8 +3,11 @@ import { useState, type FC } from 'react';
 import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 
 import { CardName } from '@/components/CampaignStats';
+import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
+import InfoTooltipInner from '@/components/InfoTooltipInner';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useCycleTimeline } from '@/hooks/useCycleTimeline';
 import { getCompactNumberParts, getOrdinalSuffix } from '@/utils';
 
 import CampaignRewardsDialog from './CampaignRewardsDialog';
@@ -80,10 +83,52 @@ const ViewAllButton = ({
   );
 };
 
+const RewardTooltip: FC = () => {
+  return (
+    <CustomTooltip
+      title={
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+            px: { xs: 0, md: 1 },
+            py: { xs: 1, md: 1.5 },
+          }}
+        >
+          <Typography variant="body1">
+            The reward distribution applies equally to every cycle.
+          </Typography>
+        </Box>
+      }
+      arrow
+      placement="top"
+    >
+      <InfoTooltipInner
+        component="span"
+        sx={{
+          width: { xs: 16, md: 24 },
+          height: { xs: 16, md: 24 },
+          px: 0.5,
+          bgcolor: 'transparent',
+          border: { xs: '1px solid', md: '2px solid' },
+          borderColor: 'inherit',
+          '& > span': {
+            fontSize: { xs: 10, md: 14 },
+            color: 'inherit',
+          },
+        }}
+      />
+    </CustomTooltip>
+  );
+};
+
 type Props = {
   data: number[];
   fundToken: string;
   fundAmount: number;
+  startDate: string;
+  endDate: string;
   userPosition: number | undefined;
 };
 
@@ -91,18 +136,22 @@ const CampaignWidget: FC<Props> = ({
   data,
   fundToken,
   fundAmount,
+  startDate,
+  endDate,
   userPosition,
 }) => {
   const [openAllRewardsDialog, setOpenAllRewardsDialog] = useState(false);
 
   const isMobile = useIsMobile();
+  const { totalCycles } = useCycleTimeline(startDate, endDate);
 
   const totalPlaces = data.length;
   const limitPlaces = isMobile ? 7 : 11;
   const showViewAllButton = totalPlaces > limitPlaces;
 
+  const rewardAmountPerCycle = fundAmount / totalCycles;
   const userReward = userPosition
-    ? (data[userPosition - 1] * fundAmount) / 100
+    ? (data[userPosition - 1] * rewardAmountPerCycle) / 100
     : undefined;
 
   return (
@@ -125,7 +174,9 @@ const CampaignWidget: FC<Props> = ({
           px: { xs: 2, md: 4 },
         }}
       >
-        <CardName>Reward Distribution</CardName>
+        <CardName>
+          Reward Distribution <RewardTooltip />
+        </CardName>
         {!!userPosition && (
           <Box
             sx={{
@@ -219,7 +270,7 @@ const CampaignWidget: FC<Props> = ({
               const { color, background, icon, outerBackground } =
                 TOP_3_META[index];
               const { value, decimals } = getCompactNumberParts(
-                (fundAmount * item) / 100
+                (rewardAmountPerCycle * item) / 100
               );
               return (
                 <Grid key={index} size={{ xs: index > 0 ? 6 : 12, md: 4 }}>
@@ -296,7 +347,7 @@ const CampaignWidget: FC<Props> = ({
             <Grid container spacing={2}>
               {data.slice(3, 11).map((item, index) => {
                 const { value, decimals } = getCompactNumberParts(
-                  (fundAmount * item) / 100
+                  (rewardAmountPerCycle * item) / 100
                 );
                 return (
                   <Grid key={index} size={{ xs: 12, md: 3 }}>
@@ -354,7 +405,7 @@ const CampaignWidget: FC<Props> = ({
             <Stack sx={{ mx: -2 }}>
               {data.slice(3, 7).map((item, index) => {
                 const { value, decimals } = getCompactNumberParts(
-                  (fundAmount * item) / 100
+                  (rewardAmountPerCycle * item) / 100
                 );
                 return (
                   <Box
@@ -420,7 +471,7 @@ const CampaignWidget: FC<Props> = ({
         onClose={() => setOpenAllRewardsDialog(false)}
         data={data}
         fundToken={fundToken}
-        fundAmount={fundAmount}
+        rewardAmountPerCycle={rewardAmountPerCycle}
         userPosition={userPosition}
       />
     </Stack>

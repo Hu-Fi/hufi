@@ -170,6 +170,8 @@ const CampaignDetails: FC = () => {
           data={campaignData.details.rewards_distribution || []}
           fundToken={campaignData.fund_token_symbol}
           fundAmount={formattedFundAmount}
+          startDate={campaignData.start_date}
+          endDate={campaignData.end_date}
           userPosition={userPosition}
         />
       )}
