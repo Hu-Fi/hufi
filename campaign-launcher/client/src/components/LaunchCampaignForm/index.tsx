@@ -27,14 +27,12 @@ const steps = [
 const LaunchCampaignForm: FC = () => {
   const [step, setStep] = useState(1);
   const [chainId, setChainId] = useState<ChainId | null>(null);
-  const [fundAmount, setFundAmount] = useState<string>('');
   const [formValues, setFormValues] = useState<CampaignFormValues | null>(null);
 
   const isMobile = useIsMobile();
 
   const handleStartOver = () => {
     setStep(1);
-    setFundAmount('');
     setFormValues(null);
     setChainId(null);
   };
@@ -50,10 +48,13 @@ const LaunchCampaignForm: FC = () => {
       sx={{
         display: { xs: 'flex', md: isLastStep ? 'flex' : 'grid' },
         gridTemplateColumns: isLastStep ? undefined : '2fr 1fr',
-        gridTemplateRows: '64px auto auto',
-        columnGap: 12,
+        gridTemplateRows: '64px 1fr auto',
+        columnGap: 10,
         flex: isLastStep ? 0 : 1,
         flexDirection: 'column',
+        minHeight: 0,
+        maxHeight: { xs: 'auto', md: 'calc(100dvh - 220px)' },
+        overflow: { md: 'hidden' },
         gridTemplateAreas: isLastStep
           ? undefined
           : `
@@ -88,16 +89,14 @@ const LaunchCampaignForm: FC = () => {
       )}
       {step === 4 && formValues && (
         <ApprovalStep
-          fundAmount={fundAmount}
-          setFundAmount={setFundAmount}
           formValues={formValues}
+          setFormValues={setFormValues}
           handleChangeStep={setStep}
         />
       )}
       {step === 5 && formValues && chainId && (
         <LaunchStep
           chainId={chainId}
-          fundAmount={fundAmount}
           formValues={formValues}
           handleChangeStep={setStep}
           handleStartOver={handleStartOver}

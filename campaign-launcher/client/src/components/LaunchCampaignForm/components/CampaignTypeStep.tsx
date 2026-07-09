@@ -28,6 +28,10 @@ const CAMPAIGN_TYPE_DESCRIPTIONS: Record<LaunchSupportedCampaignType, string> =
       'Requires market makers to collectively maintain a specified amount of a particular token.',
     [CampaignType.THRESHOLD]:
       'Requires market makers to maintain a minimum balance of a specified token.',
+    [CampaignType.THRESHOLD_MARKET_MAKING]:
+      'Requires market makers to generate an exact amount of trading activity on a chosen pair.',
+    [CampaignType.COMPETITIVE_MARKET_MAKING]:
+      'Requires market makers to generate an exact amount of trading activity on a chosen pair and rewards only top performers.',
   };
 
 const CampaignTypeStep: FC<Props> = ({
@@ -51,9 +55,20 @@ const CampaignTypeStep: FC<Props> = ({
           mt: 4,
           width: '100%',
           gridArea: 'main',
+          minHeight: 0,
+          height: '100%',
+          overflow: 'hidden',
         }}
       >
-        <Grid container spacing={3}>
+        <Grid
+          container
+          spacing={2.5}
+          sx={{
+            overflowY: { md: 'auto' },
+            pr: { md: 2 },
+            scrollbarGutter: { md: 'stable' },
+          }}
+        >
           {LAUNCH_SUPPORTED_CAMPAIGN_TYPES.map((type) => {
             const isSelected = formValues?.type === type;
             return (
@@ -64,8 +79,8 @@ const CampaignTypeStep: FC<Props> = ({
                     display: 'flex',
                     flexDirection: 'column',
                     py: 2,
-                    px: 3,
-                    height: { xs: 150, md: 170 },
+                    px: 2,
+                    height: { xs: 150, md: 140 },
                     borderRadius: '8px',
                     border: '1px solid',
                     borderColor: isSelected ? 'accent.main' : 'border.strong',
@@ -78,7 +93,7 @@ const CampaignTypeStep: FC<Props> = ({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 2,
-                      mb: { xs: 2, md: 1, lg: 4 },
+                      mb: { xs: 2, md: 1, lg: 3 },
                     }}
                   >
                     <StarIcon

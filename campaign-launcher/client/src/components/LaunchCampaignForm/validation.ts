@@ -4,10 +4,12 @@ import type { ObjectSchema } from 'yup';
 import {
   AllowanceType,
   CampaignType,
+  type ThresholdMmFormValues,
   type CampaignFormValues,
   type HoldingFormValues,
   type MarketMakingFormValues,
   type ThresholdFormValues,
+  type CompetitiveMmFormValues,
 } from '@/types';
 
 const MAX_DURATION = 100 * 24 * 60 * 60 * 1000; // 100 days
@@ -21,11 +23,36 @@ const validateCampaignDuration = (startDate: Date, endDate: Date) => {
   return duration <= MAX_DURATION && duration >= MIN_DURATION;
 };
 
-export const createFundAmountValidationSchema = (
+export type ApprovalFormValues = {
+  selected_allowance: AllowanceType;
+  custom_allowance_amount: string;
+  fund_amount: string;
+  rewards_distribution?: number[];
+};
+
+export const createApprovalStepValidationSchema = (
   startDate: Date,
   endDate: Date,
-  fundToken: string
+  fundToken: string,
+  requiresRewardsDistribution = false
 ) => {
+  const rewardsDistributionValidationSchema = yup
+    .array()
+    .of(
+      yup
+        .number()
+        .positive('Reward percentage must be greater than 0')
+        .required()
+    )
+    .required('Rewards distribution is required')
+    .test(
+      'rewards-distribution-total',
+      'Rewards distribution is required',
+      (value) =>
+        Array.isArray(value) &&
+        value.reduce((sum, percentage) => sum + percentage, 0) === 100
+    );
+
   return yup.object({
     selected_allowance: yup
       .string()
@@ -93,7 +120,10 @@ export const createFundAmountValidationSchema = (
 
         return true;
       }),
-  });
+    ...(requiresRewardsDistribution
+      ? { rewards_distribution: rewardsDistributionValidationSchema }
+      : {}),
+  }) as ObjectSchema<ApprovalFormValues>;
 };
 
 const baseValidationSchema = {
@@ -174,6 +204,38 @@ const thresholdValidationSchema = yup.object({
     .required('Minimum balance target is required'),
 }) as ObjectSchema<ThresholdFormValues>;
 
+const thresholdMmValidationSchema = yup.object({
+  ...baseValidationSchema,
+  pair: yup
+    .string()
+    .required('Required')
+    .matches(TRADING_PAIR_REGEX, 'Invalid pair'),
+  minimum_volume_target: yup
+    .number()
+    .typeError('Minimum volume target is required')
+    .min(1, 'Minimum volume target must be greater than or equal to 1')
+    .required('Minimum volume target is required'),
+  max_participants: yup
+    .number()
+    .typeError('Maximum participants is required')
+    .min(1, 'The number must be greater than or equal to 1')
+    .integer('The number must be an integer')
+    .required('Maximum participants is required'),
+}) as ObjectSchema<ThresholdMmFormValues>;
+
+const competitiveMmValidationSchema = yup.object({
+  ...baseValidationSchema,
+  pair: yup
+    .string()
+    .required('Required')
+    .matches(TRADING_PAIR_REGEX, 'Invalid pair'),
+  minimum_volume_required: yup
+    .number()
+    .typeError('Minimum volume is required')
+    .min(1, 'Minimum volume must be greater than or equal to 1')
+    .required('Minimum volume is required'),
+}) as ObjectSchema<CompetitiveMmFormValues>;
+
 export const campaignValidationSchema = yup.lazy((value) => {
   if (value && typeof value === 'object' && 'type' in value) {
     if (value.type === CampaignType.HOLDING) {
@@ -182,6 +244,10 @@ export const campaignValidationSchema = yup.lazy((value) => {
       return marketMakingValidationSchema;
     } else if (value.type === CampaignType.THRESHOLD) {
       return thresholdValidationSchema;
+    } else if (value.type === CampaignType.THRESHOLD_MARKET_MAKING) {
+      return thresholdMmValidationSchema;
+    } else if (value.type === CampaignType.COMPETITIVE_MARKET_MAKING) {
+      return competitiveMmValidationSchema;
     }
   }
   return marketMakingValidationSchema;

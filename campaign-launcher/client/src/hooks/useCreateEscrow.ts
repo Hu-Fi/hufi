@@ -69,6 +69,22 @@ const createManifest = (data: CampaignFormValues): ManifestUploadDto => {
         symbol: data.symbol,
         minimum_balance_target: Number(data.minimum_balance_target),
       };
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      return {
+        ...baseManifest,
+        type: data.type,
+        pair: data.pair,
+        minimum_volume_required: Number(data.minimum_volume_required),
+        rewards_distribution: data.rewards_distribution,
+      };
+    case CampaignType.THRESHOLD_MARKET_MAKING:
+      return {
+        ...baseManifest,
+        type: data.type,
+        pair: data.pair,
+        minimum_volume_target: Number(data.minimum_volume_target),
+        max_participants: Number(data.max_participants),
+      };
     default: {
       const _never: never = data;
       return _never;
