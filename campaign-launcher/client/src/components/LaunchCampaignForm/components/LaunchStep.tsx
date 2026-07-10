@@ -21,7 +21,6 @@ import { SummaryCard, ErrorView, FinalView, BottomNavigation } from '.';
 
 type Props = {
   chainId: ChainId;
-  fundAmount: string;
   formValues: CampaignFormValues;
   handleChangeStep: Dispatch<SetStateAction<number>>;
   handleStartOver: () => void;
@@ -29,7 +28,6 @@ type Props = {
 
 const LaunchStep: FC<Props> = ({
   chainId,
-  fundAmount,
   formValues,
   handleChangeStep,
   handleStartOver,
@@ -51,11 +49,7 @@ const LaunchStep: FC<Props> = ({
   };
 
   const handleLaunchCampaign = async () => {
-    const data = {
-      ...formValues,
-      fund_amount: fundAmount,
-    };
-    await createEscrow(data);
+    await createEscrow(formValues);
   };
 
   const handleTryAgainClick = () => {
@@ -69,11 +63,6 @@ const LaunchStep: FC<Props> = ({
 
   const onViewCampaignDetailsClick = () => {
     if (!escrowData) return;
-
-    const formData = {
-      ...formValues,
-      fund_amount: fundAmount,
-    };
 
     const {
       escrowAddress,
@@ -90,7 +79,7 @@ const LaunchStep: FC<Props> = ({
     const payload = constructCampaignDetails({
       chainId,
       address: escrowAddress,
-      data: formData,
+      data: formValues,
       tokenDecimals,
       fees,
     });
@@ -151,12 +140,7 @@ const LaunchStep: FC<Props> = ({
           )}
           {!isError && !isEscrowCreated && (
             <>
-              <SummaryCard
-                step={5}
-                chainId={chainId}
-                fundAmount={fundAmount}
-                formValues={formValues}
-              />
+              <SummaryCard step={5} chainId={chainId} formValues={formValues} />
               {!isMobile && (
                 <Stack
                   direction="row"

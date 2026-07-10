@@ -184,6 +184,23 @@ export const constructCampaignDetails = ({
     data.fund_amount.toString(),
     tokenDecimals
   );
+  const details = (() => {
+    switch (data.type) {
+      case CampaignType.MARKET_MAKING:
+        return { daily_volume_target: data.daily_volume_target };
+      case CampaignType.HOLDING:
+        return { daily_balance_target: data.daily_balance_target };
+      case CampaignType.THRESHOLD:
+        return { minimum_balance_target: data.minimum_balance_target };
+      case CampaignType.COMPETITIVE_MARKET_MAKING:
+        return { minimum_volume_required: data.minimum_volume_required };
+      case CampaignType.THRESHOLD_MARKET_MAKING:
+        return {
+          minimum_volume_target: data.minimum_volume_target,
+          max_participants: data.max_participants,
+        };
+    }
+  })();
 
   return {
     id: address,
@@ -191,20 +208,8 @@ export const constructCampaignDetails = ({
     address: address,
     type: data.type,
     exchange_name: data.exchange,
-    ...(data.type === CampaignType.MARKET_MAKING && { symbol: data.pair }),
-    ...(data.type === CampaignType.HOLDING && { symbol: data.symbol }),
-    ...(data.type === CampaignType.THRESHOLD && { symbol: data.symbol }),
-    details: {
-      ...(data.type === CampaignType.MARKET_MAKING && {
-        daily_volume_target: data.daily_volume_target,
-      }),
-      ...(data.type === CampaignType.HOLDING && {
-        daily_balance_target: data.daily_balance_target,
-      }),
-      ...(data.type === CampaignType.THRESHOLD && {
-        minimum_balance_target: data.minimum_balance_target,
-      }),
-    },
+    symbol: 'pair' in data ? data.pair : data.symbol,
+    details,
     start_date: data.start_date,
     end_date: data.end_date,
     final_results_url: null,
@@ -393,4 +398,18 @@ export const isThresholdBasedCampaignType = (type: CampaignType) => {
     CampaignType.THRESHOLD,
     CampaignType.THRESHOLD_MARKET_MAKING,
   ].includes(type);
+};
+
+export const getOrdinalSuffix = (index: number) => {
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const remainder = index % 100;
+  return remainder > 10 && remainder < 20
+    ? 'th'
+    : suffixes[remainder % 10] || 'th';
+};
+
+export const areArraysEqual = (arr1: number[], arr2: number[]) => {
+  if (arr1.length !== arr2.length) return false;
+
+  return arr1.every((value, index) => value === arr2[index]);
 };

@@ -1,8 +1,9 @@
-import { type FC } from 'react';
+import { useState, type FC } from 'react';
 
 import { type ChainId } from '@human-protocol/sdk';
-import { Paper, Stack, styled, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, styled, Typography } from '@mui/material';
 
+import ViewDistributionDialog from '@/components/RewardsDistribution/ViewDistributionDialog';
 import { useExchangesContext } from '@/providers/ExchangesProvider';
 import {
   type CampaignFormValues,
@@ -10,6 +11,8 @@ import {
   type HoldingFormValues,
   type ThresholdFormValues,
   CampaignType,
+  type CompetitiveMmFormValues,
+  type ThresholdMmFormValues,
 } from '@/types';
 import { getNetworkName, getTokenInfo, mapTypeToLabel } from '@/utils';
 import dayjs from '@/utils/dayjs';
@@ -20,7 +23,6 @@ type Props = {
   step: number;
   chainId: ChainId | null;
   formValues: CampaignFormValues | null;
-  fundAmount?: string;
 };
 
 const Row = ({ children }: { children: React.ReactNode }) => (
@@ -69,6 +71,18 @@ const getTargetInfo = (
         value: (formValues as ThresholdFormValues)?.minimum_balance_target,
         token: (formValues as ThresholdFormValues)?.symbol,
       };
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+      return {
+        label: 'Minimum volume required',
+        value: (formValues as CompetitiveMmFormValues)?.minimum_volume_required,
+        token: (formValues as CompetitiveMmFormValues)?.pair.split('/')[1],
+      };
+    case CampaignType.THRESHOLD_MARKET_MAKING:
+      return {
+        label: 'Minimum volume target',
+        value: (formValues as ThresholdMmFormValues)?.minimum_volume_target,
+        token: (formValues as ThresholdMmFormValues)?.pair.split('/')[1],
+      };
   }
 };
 
@@ -78,34 +92,39 @@ const getSymbolOrPairInfo = (
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
+    case CampaignType.THRESHOLD_MARKET_MAKING:
       return {
         label: 'Pair',
         value: (formValues as MarketMakingFormValues)?.pair,
       };
     case CampaignType.HOLDING:
+    case CampaignType.THRESHOLD:
       return {
         label: 'Symbol',
         value: (formValues as HoldingFormValues)?.symbol,
       };
-    case CampaignType.THRESHOLD:
-      return {
-        label: 'Symbol',
-        value: (formValues as ThresholdFormValues)?.symbol,
-      };
   }
 };
 
-const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
+const SummaryCard: FC<Props> = ({ step, chainId, formValues }) => {
+  const [openRewardsDialog, setOpenRewardsDialog] = useState(false);
+
   const { exchangesMap } = useExchangesContext();
   const exchangeName = exchangesMap.get(
     formValues?.exchange || ''
   )?.display_name;
 
-  const { type: campaignType } = formValues || {};
+  const { type: campaignType, fund_amount: fundAmount } = formValues || {};
 
   const isLastStep = step === 5;
 
   const showFormValues = step > 3;
+
+  const isCompetitiveMm =
+    campaignType === CampaignType.COMPETITIVE_MARKET_MAKING &&
+    formValues &&
+    'rewards_distribution' in formValues;
 
   const symbolOrPairLabel = campaignType
     ? getSymbolOrPairInfo(campaignType, formValues as CampaignFormValues).label
@@ -122,6 +141,41 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
   const targetToken = campaignType
     ? getTargetInfo(campaignType, formValues as CampaignFormValues).token
     : '';
+
+  const renderRewardsDistributionButton = () => {
+    if (!isCompetitiveMm) return null;
+
+    if (formValues?.rewards_distribution.length === 0)
+      return <RowValue>-</RowValue>;
+
+    return (
+      <Button
+        variant="text"
+        disableRipple
+        sx={{
+          p: 0,
+          gap: 0.5,
+          fontSize: 14,
+          textDecoration: 'underline',
+          '&:hover': {
+            bgcolor: 'transparent',
+            textDecoration: 'underline',
+          },
+        }}
+        onClick={() => setOpenRewardsDialog(true)}
+      >
+        <Box
+          component="span"
+          sx={{
+            p: 0.25,
+            borderRadius: '50%',
+            bgcolor: 'neutral.200',
+          }}
+        />
+        {formValues?.rewards_distribution.length} positions
+      </Button>
+    );
+  };
 
   return (
     <Paper
@@ -170,16 +224,6 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
             </RowValue>
           </Row>
           <Row>
-            <RowName>
-              {campaignType
-                ? getTargetInfo(campaignType, formValues).label
-                : ''}
-            </RowName>
-            <RowValue>
-              {showFormValues ? `${targetValue} ${targetToken}` : '-'}
-            </RowValue>
-          </Row>
-          <Row>
             <RowName>Start Date</RowName>
             <RowValue>
               {showFormValues && formValues?.start_date
@@ -195,6 +239,26 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
                 : '-'}
             </RowValue>
           </Row>
+          {campaignType === CampaignType.THRESHOLD_MARKET_MAKING && (
+            <Row>
+              <RowName>Maximum participant limit</RowName>
+              <RowValue>
+                {showFormValues
+                  ? (formValues as ThresholdMmFormValues)?.max_participants
+                  : '-'}
+              </RowValue>
+            </Row>
+          )}
+          <Row>
+            <RowName>
+              {campaignType
+                ? getTargetInfo(campaignType, formValues).label
+                : ''}
+            </RowName>
+            <RowValue>
+              {showFormValues ? `${targetValue} ${targetToken}` : '-'}
+            </RowValue>
+          </Row>
         </>
       )}
       {step > 3 && (
@@ -206,6 +270,19 @@ const SummaryCard: FC<Props> = ({ step, chainId, formValues, fundAmount }) => {
               ? getTokenInfo(formValues?.fund_token || '')?.label
               : ''}
           </RowValue>
+        </Row>
+      )}
+      {step > 3 && isCompetitiveMm && (
+        <Row>
+          <RowName>Rewards Distribution</RowName>
+          {renderRewardsDistributionButton()}
+          <ViewDistributionDialog
+            open={openRewardsDialog}
+            onClose={() => setOpenRewardsDialog(false)}
+            rewardsDistribution={formValues?.rewards_distribution || []}
+            fundAmount={Number(fundAmount) || 0}
+            fundToken={formValues.fund_token}
+          />
         </Row>
       )}
     </Paper>

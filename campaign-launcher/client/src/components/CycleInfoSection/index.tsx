@@ -1,4 +1,4 @@
-import { type FC, useEffect, useMemo, useState } from 'react';
+import { type FC } from 'react';
 
 import { Box, Grid, Stack, Typography } from '@mui/material';
 
@@ -7,7 +7,10 @@ import CompactNumberWithTooltip from '@/components/CompactNumberWithTooltip';
 import CustomTooltip from '@/components/CustomTooltip';
 import FormattedNumber from '@/components/FormattedNumber';
 import InfoTooltipInner from '@/components/InfoTooltipInner';
+import UserProgressWidget from '@/components/UserProgressWidget';
 import { useIsMobile } from '@/hooks/useBreakpoints';
+import { useCycleTimeline } from '@/hooks/useCycleTimeline';
+import { useActiveAccount } from '@/providers/ActiveAccountProvider';
 import { CampaignType, type LeaderboardData, type Campaign } from '@/types';
 import {
   formatTokenAmount,
@@ -15,7 +18,6 @@ import {
   getTokenInfo,
   isThresholdBasedCampaignType,
 } from '@/utils';
-import dayjs from '@/utils/dayjs';
 
 const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
   hasParticipantsLimit,
@@ -48,6 +50,7 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
       placement="top"
     >
       <InfoTooltipInner
+        component="span"
         sx={{
           width: { xs: 16, md: 24 },
           height: { xs: 16, md: 24 },
@@ -68,45 +71,7 @@ const IndividualRewardTooltip: FC<{ hasParticipantsLimit: boolean }> = ({
 type Props = {
   campaign: Campaign;
   leaderboard: LeaderboardData;
-};
-
-const useCycleTimeline = (startDate: string, endDate: string) => {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
-
-  const cycleTimeInfo = useMemo(() => {
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
-    const nowDate = dayjs(now);
-
-    const totalCycles = Math.ceil(end.diff(start, 'day', true));
-    const fullCyclesPassed = nowDate.diff(start, 'day', false);
-    const currentCycle = Math.min(totalCycles, fullCyclesPassed + 1);
-    const cycleEndCandidate = start.add(currentCycle, 'day');
-    const currentCycleEnd = cycleEndCandidate.isBefore(end)
-      ? cycleEndCandidate
-      : end;
-    const remainingMs = Math.max(0, currentCycleEnd.diff(nowDate));
-
-    return {
-      currentCycle,
-      totalCycles,
-      remainingTime: dayjs
-        .duration(Math.max(0, remainingMs))
-        .format('HH[h]:mm[m]:ss[s]'),
-    };
-  }, [startDate, endDate, now]);
-
-  return cycleTimeInfo;
+  isJoined: boolean;
 };
 
 const getTotalGeneratedCardTitle = (
@@ -115,16 +80,25 @@ const getTotalGeneratedCardTitle = (
 ) => {
   switch (campaignType) {
     case CampaignType.MARKET_MAKING:
+    case CampaignType.COMPETITIVE_MARKET_MAKING:
       return isMobile ? 'Total Generated Vol.' : 'Total Generated Volume';
     case CampaignType.HOLDING:
       return 'Total Held';
   }
 };
 
-const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
+const CycleInfoSection: FC<Props> = ({ campaign, leaderboard, isJoined }) => {
   const isMobile = useIsMobile();
+  const { activeAddress } = useActiveAccount();
 
   const isThresholdBasedCampaign = isThresholdBasedCampaignType(campaign.type);
+
+  const userResult = activeAddress
+    ? leaderboard.data.find((entry) => entry.address === activeAddress)
+    : undefined;
+
+  const showUserProgressWidget =
+    isThresholdBasedCampaign && isJoined && userResult;
 
   const cycleTimeline = useCycleTimeline(
     campaign.start_date,
@@ -211,6 +185,19 @@ const CycleInfoSection: FC<Props> = ({ campaign, leaderboard }) => {
         </Box>
       </Box>
       <Grid container spacing={{ xs: 1.5, md: 3 }}>
+        {showUserProgressWidget && (
+          <Grid size={{ xs: 12, md: 12 }}>
+            <UserProgressWidget
+              userResult={userResult?.result || 0}
+              targetToken={targetTokenSymbol || ''}
+              target={
+                campaign.details.minimum_volume_target ||
+                campaign.details.minimum_balance_target ||
+                0
+              }
+            />
+          </Grid>
+        )}
         <Grid
           size={{ xs: 6, md: 4 }}
           sx={{

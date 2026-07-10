@@ -58,6 +58,7 @@ export type Campaign = {
     daily_volume_target?: number;
     // Competitive Market Making
     minimum_volume_required?: number;
+    rewards_distribution?: number[];
     // Threshold Market Making
     minimum_volume_target?: number;
     // Holding
@@ -187,8 +188,26 @@ export type ThresholdManifestDto = BaseManifestDto & {
   minimum_balance_target: number;
 };
 
+export type CompetitiveMmManifestDto = BaseManifestDto & {
+  type: CampaignType.COMPETITIVE_MARKET_MAKING;
+  pair: string;
+  minimum_volume_required: number;
+  rewards_distribution: number[];
+};
+
+export type ThresholdMmManifestDto = BaseManifestDto & {
+  type: CampaignType.THRESHOLD_MARKET_MAKING;
+  pair: string;
+  minimum_volume_target: number;
+  max_participants: number;
+};
+
 export type ManifestUploadDto =
-  MarketMakingManifestDto | HoldingManifestDto | ThresholdManifestDto;
+  | MarketMakingManifestDto
+  | HoldingManifestDto
+  | ThresholdManifestDto
+  | CompetitiveMmManifestDto
+  | ThresholdMmManifestDto;
 
 export type CampaignsQueryParams = {
   chain_id: ChainId;
@@ -260,8 +279,26 @@ export type ThresholdFormValues = BaseCampaignFormValues & {
   minimum_balance_target: number | string;
 };
 
+export type CompetitiveMmFormValues = BaseCampaignFormValues & {
+  type: CampaignType.COMPETITIVE_MARKET_MAKING;
+  pair: string;
+  minimum_volume_required: number | string;
+  rewards_distribution: number[];
+};
+
+export type ThresholdMmFormValues = BaseCampaignFormValues & {
+  type: CampaignType.THRESHOLD_MARKET_MAKING;
+  pair: string;
+  minimum_volume_target: number | string;
+  max_participants: number | string;
+};
+
 export type CampaignFormValues =
-  MarketMakingFormValues | HoldingFormValues | ThresholdFormValues;
+  | MarketMakingFormValues
+  | HoldingFormValues
+  | ThresholdFormValues
+  | CompetitiveMmFormValues
+  | ThresholdMmFormValues;
 
 export enum CampaignJoinStatus {
   USER_ALREADY_JOINED = 'already_joined',
