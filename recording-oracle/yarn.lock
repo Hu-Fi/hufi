@@ -4309,10 +4309,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csv-parse@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "csv-parse@npm:7.0.0"
-  checksum: 10c0/89bf952fcb762d3e8c806041eefc2887b852c837bc0c3c8db57ef9983ffe3925eb5d5675a0e78a032a5b78caa1e0bfb272a5534525780398ff06daa0c730c755
+"csv-parse@npm:^7.0.1":
+  version: 7.0.1
+  resolution: "csv-parse@npm:7.0.1"
+  checksum: 10c0/144038951b5c235fece4640461e0a736d97845559c1246e8f37aac0fbde2a645e71819ca5e801286680511a0ab6bfb33ec23fc5c0b4344fb2818b64611dd9700
   languageName: node
   linkType: hard
 
@@ -7684,7 +7684,7 @@ __metadata:
     ccxt: "npm:^4.5.37"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.15.1"
-    csv-parse: "npm:^7.0.0"
+    csv-parse: "npm:^7.0.1"
     dayjs: "npm:^1.11.19"
     decimal.js: "npm:^10.6.0"
     eslint: "npm:^10.2.0"
