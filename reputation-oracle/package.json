@@ -41,7 +41,7 @@
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.9",
     "@types/lodash": "^4",
-    "@types/node": "^25.2.3",
+    "@types/node": "^26.0.0",
     "@vitest/ui": "^4.1.5",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
