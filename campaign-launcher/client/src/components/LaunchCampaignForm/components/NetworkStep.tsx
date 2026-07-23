@@ -8,7 +8,8 @@ import {
   type SetStateAction,
 } from 'react';
 
-import { StakingClient, type ChainId } from '@human-protocol/sdk';
+import { type ChainId } from '@human-protocol/sdk';
+import { StakingClient } from '@human-protocol/sdk/dist/staking';
 import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 
 import { useIsMobile } from '@/hooks/useBreakpoints';
