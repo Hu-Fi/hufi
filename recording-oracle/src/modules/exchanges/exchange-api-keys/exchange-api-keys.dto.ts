@@ -32,14 +32,6 @@ export class ExchangeNameParamDto {
   exchangeName: ExchangeName;
 }
 
-export class BitmartExtras {
-  @ApiProperty({ name: 'api_key_memo' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(32)
-  apiKeyMemo: string;
-}
-
 export class KucoinExtras {
   @ApiProperty()
   @IsString()
@@ -50,7 +42,6 @@ export class KucoinExtras {
   passphrase: string;
 }
 
-@ApiExtraModels(BitmartExtras)
 @ApiExtraModels(KucoinExtras)
 export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
   @ApiProperty({ name: 'api_key' })
@@ -67,24 +58,16 @@ export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
 
   @ApiPropertyOptional({
     description: 'Exchange-specific extras',
-    oneOf: [
-      { $ref: getSchemaPath(BitmartExtras) },
-      { $ref: getSchemaPath(KucoinExtras) },
-    ],
+    oneOf: [{ $ref: getSchemaPath(KucoinExtras) }],
   })
   @ValidateIf((o: EnrollExchangeApiKeysDto) =>
-    [ExchangeName.BITMART, ExchangeName.KUCOIN].includes(o.exchangeName),
+    [ExchangeName.KUCOIN].includes(o.exchangeName),
   )
   @ValidateNested()
   @Transform((params: { obj: EnrollExchangeApiKeysDto; value: unknown }) => {
-    let exchangeExtrasDtoClass:
-      Constructor<BitmartExtras> | Constructor<KucoinExtras> | undefined;
+    let exchangeExtrasDtoClass: Constructor<KucoinExtras> | undefined;
 
     switch (params.obj.exchangeName) {
-      case ExchangeName.BITMART: {
-        exchangeExtrasDtoClass = BitmartExtras;
-        break;
-      }
       case ExchangeName.KUCOIN: {
         exchangeExtrasDtoClass = KucoinExtras;
         break;
@@ -92,7 +75,6 @@ export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
     }
 
     if (exchangeExtrasDtoClass) {
-      // @ts-expect-error - expected different constructor signatures
       return plainToInstance(exchangeExtrasDtoClass, params.value || {});
     }
   })
@@ -101,7 +83,7 @@ export class EnrollExchangeApiKeysDto extends ExchangeNameParamDto {
    * so add basic check that the extras object is provided to fail-early
    */
   @IsObject()
-  extras?: BitmartExtras | KucoinExtras;
+  extras?: KucoinExtras;
 }
 
 export class EnrollExchangeApiKeysResponseDto {
@@ -109,7 +91,6 @@ export class EnrollExchangeApiKeysResponseDto {
   id: string;
 }
 
-@ApiExtraModels(BitmartExtras)
 @ApiExtraModels(KucoinExtras)
 export class EnrolledApiKeyDto {
   @ApiProperty({ name: 'exchange_name' })
@@ -119,10 +100,7 @@ export class EnrolledApiKeyDto {
   apiKey: string;
 
   @ApiPropertyOptional({
-    oneOf: [
-      { $ref: getSchemaPath(BitmartExtras) },
-      { $ref: getSchemaPath(KucoinExtras) },
-    ],
+    oneOf: [{ $ref: getSchemaPath(KucoinExtras) }],
   })
   extras?: object;
 

@@ -1,7 +1,6 @@
 import { ExchangeName } from '@/common/constants';
 import Environment from '@/common/utils/environment';
 
-import * as bitmartHelpers from './bitmart';
 import * as bybitHelpers from './bybit';
 import * as gateHelpers from './gate';
 import * as htxHelpers from './htx';
@@ -37,10 +36,6 @@ export function getPaginationHelpers(
   let paginationHelpers: PaginationHelpers<any, any>;
 
   switch (exchangeName) {
-    case ExchangeName.BITMART: {
-      paginationHelpers = bitmartHelpers;
-      break;
-    }
     case ExchangeName.BYBIT: {
       paginationHelpers = bybitHelpers;
       break;
