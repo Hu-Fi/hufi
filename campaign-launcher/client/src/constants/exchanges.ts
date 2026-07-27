@@ -1,6 +1,5 @@
 export enum ExchangeName {
   BIGONE = 'bigone',
-  BITMART = 'bitmart',
   BYBIT = 'bybit',
   GATE = 'gate',
   HTX = 'htx',

@@ -28,7 +28,6 @@ export type APIKeyFormValues = {
   apiKey: string;
   secret: string;
   exchange: string;
-  memo?: string;
   passphrase?: string;
 };
 
@@ -43,15 +42,6 @@ export const validationSchema: yup.ObjectSchema<APIKeyFormValues> = yup.object({
     .required('Required')
     .trim()
     .max(200, 'Max 200 characters'),
-  memo: yup
-    .string()
-    .when('exchange', {
-      is: 'bitmart',
-      then: (schema) => schema.required('Required'),
-      otherwise: (schema) => schema.optional(),
-    })
-    .trim()
-    .max(32, 'Max 32 characters'),
   passphrase: yup
     .string()
     .when('exchange', {
@@ -94,14 +84,12 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
       exchange: '',
       apiKey: '',
       secret: '',
-      memo: '',
       passphrase: '',
     },
   });
 
   const isMobile = useIsMobile();
   const selectedExchange = watch('exchange');
-  const isBitmart = selectedExchange === 'bitmart';
   const isKucoin = selectedExchange === 'kucoin';
 
   useEffect(() => {
@@ -118,9 +106,6 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
   const onSubmit = (values: APIKeyFormValues) => {
     let extras: Record<string, string> | undefined;
     switch (values.exchange) {
-      case 'bitmart':
-        extras = { api_key_memo: values.memo || '' };
-        break;
       case 'kucoin':
         extras = { passphrase: values.passphrase || '' };
         break;
@@ -300,36 +285,6 @@ const AddApiKeyDialog: FC<Props> = ({ open, onClose }) => {
                   <FormHelperText>{errors.secret.message}</FormHelperText>
                 )}
               </FormControl>
-              {isBitmart && (
-                <FormControl error={!!errors.memo} sx={{ width: '100%' }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      color: 'neutral.100',
-                      fontWeight: 500,
-                      mb: 1.5,
-                    }}
-                  >
-                    Memo
-                  </Typography>
-                  <Controller
-                    name="memo"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        type="text"
-                        id="memo-input"
-                        placeholder="Enter"
-                        error={!!errors.memo}
-                        {...field}
-                      />
-                    )}
-                  />
-                  {errors.memo && (
-                    <FormHelperText>{errors.memo.message}</FormHelperText>
-                  )}
-                </FormControl>
-              )}
               {isKucoin && (
                 <FormControl error={!!errors.passphrase} sx={{ width: '100%' }}>
                   <Typography

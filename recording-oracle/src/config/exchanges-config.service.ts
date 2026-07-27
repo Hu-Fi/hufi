@@ -20,10 +20,6 @@ export class ExchangesConfigService {
         type: ExchangeType.CEX,
         skipCcxtPreload: true,
       },
-      [ExchangeName.BITMART]: {
-        enabled: this.configService.get('FEATURE_BITMART', 'true') === 'true',
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.BYBIT]: {
         enabled: this.configService.get('FEATURE_BYBIT', 'true') === 'true',
         type: ExchangeType.CEX,

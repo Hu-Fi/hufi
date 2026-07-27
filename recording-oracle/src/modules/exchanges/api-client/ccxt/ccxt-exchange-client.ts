@@ -318,10 +318,6 @@ export class CcxtExchangeClient implements ExchangeApiClient {
         }
         break;
       }
-      case ExchangeName.BITMART: {
-        fetchParams.network = 'ETH';
-        break;
-      }
     }
 
     const response = await this.ccxtClient.fetchDepositAddress(

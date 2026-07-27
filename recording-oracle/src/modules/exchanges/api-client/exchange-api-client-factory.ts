@@ -17,7 +17,6 @@ import {
   BASE_CCXT_CLIENT_OPTIONS,
   CcxtExchangeClient,
   CcxtExchangeClientInitOptions,
-  type BitmartExtras,
 } from './ccxt';
 import { IncompleteKeySuppliedError } from './errors';
 import type {
@@ -35,7 +34,7 @@ import { PancakeswapClient } from './pancakeswap';
 
 const PRELOAD_CCXT_CLIENTS_INTERVAL = ms('6 hours'); // ms after previous load
 
-export type ExchangeExtras = BitmartExtras | KucoinExtras;
+export type ExchangeExtras = KucoinExtras;
 
 type CreateCexApiClientInitOptions = Omit<
   CexApiClientInitOptions,
@@ -187,12 +186,8 @@ export class ExchangeApiClientFactory implements OnModuleInit, OnModuleDestroy {
        * Add extra options per exchange if needed
        */
       switch (exchangeName) {
-        case ExchangeName.BITMART: {
-          ccxtClientInitOptions.extraCreds = {
-            uid: (initOptions.extras as BitmartExtras).apiKeyMemo,
-          };
+        default:
           break;
-        }
       }
 
       cexApiClient = new CcxtExchangeClient(

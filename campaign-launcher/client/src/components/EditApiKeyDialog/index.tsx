@@ -56,21 +56,22 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
       exchange: '',
       apiKey: '',
       secret: '',
-      memo: '',
       passphrase: '',
     },
   });
 
   const isMobile = useIsMobile();
-  const [apiKeyValue, secretValue, exchange, memoValue, passphraseValue] =
-    watch(['apiKey', 'secret', 'exchange', 'memo', 'passphrase']);
+  const [apiKeyValue, secretValue, exchange, passphraseValue] = watch([
+    'apiKey',
+    'secret',
+    'exchange',
+    'passphrase',
+  ]);
 
-  const isBitmart = exchange === 'bitmart';
   const isKucoin = exchange === 'kucoin';
   const isSaveDisabled =
     !apiKeyValue?.trim() ||
     !secretValue?.trim() ||
-    (isBitmart && !memoValue?.trim()) ||
     (isKucoin && !passphraseValue?.trim());
 
   useEffect(() => {
@@ -79,7 +80,6 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
         exchange: exchangeName,
         apiKey: '',
         secret: '',
-        memo: '',
         passphrase: '',
       });
     }
@@ -99,9 +99,6 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
   const onSubmit = (values: APIKeyFormValues) => {
     let extras: Record<string, string> | undefined;
     switch (values.exchange) {
-      case 'bitmart':
-        extras = { api_key_memo: values.memo || '' };
-        break;
       case 'kucoin':
         extras = { passphrase: values.passphrase || '' };
         break;
@@ -283,36 +280,6 @@ const EditApiKeyDialog: FC<Props> = ({ open, exchangeName, onClose }) => {
                   <FormHelperText>{errors.secret.message}</FormHelperText>
                 )}
               </FormControl>
-              {isBitmart && (
-                <FormControl error={!!errors.memo} sx={{ flex: 1 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: 'neutral.100',
-                      fontWeight: 500,
-                      mb: 1.5,
-                    }}
-                  >
-                    Memo
-                  </Typography>
-                  <Controller
-                    name="memo"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        type="text"
-                        id="memo-input"
-                        placeholder="Enter"
-                        error={!!errors.memo}
-                        {...field}
-                      />
-                    )}
-                  />
-                  {errors.memo && (
-                    <FormHelperText>{errors.memo.message}</FormHelperText>
-                  )}
-                </FormControl>
-              )}
               {isKucoin && (
                 <FormControl error={!!errors.passphrase} sx={{ flex: 1 }}>
                   <Typography

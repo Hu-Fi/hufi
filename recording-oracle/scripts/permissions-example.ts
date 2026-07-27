@@ -16,9 +16,6 @@ const run = async () => {
     sandbox: SANDBOX,
     apiKey: API_KEY,
     secret: SECRET_KEY,
-    // extraCreds: {
-    //   uid: 'api_key_memo_for_bitmart',
-    // },
     userId: 'scripts-permissions-example',
     loggingConfig: {
       logPermissionErrors: true,
