@@ -50,7 +50,6 @@ export class CcxtExchangeClient extends BaseExchangeApiClient {
         break;
       }
       case ExchangeName.BIGONE:
-      case ExchangeName.BITMART:
       case ExchangeName.MEXC:
       case ExchangeName.XT:
       default: {

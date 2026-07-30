@@ -36,11 +36,6 @@ export class ExchangesConfigService {
         ...getExchangeMetaFromCcxt(ExchangeName.BIGONE),
         type: ExchangeType.CEX,
       },
-      [ExchangeName.BITMART]: {
-        enabled: this.configService.get('FEATURE_BITMART', 'true') === 'true',
-        ...getExchangeMetaFromCcxt(ExchangeName.BITMART),
-        type: ExchangeType.CEX,
-      },
       [ExchangeName.BYBIT]: {
         enabled: this.configService.get('FEATURE_BYBIT', 'true') === 'true',
         ...getExchangeMetaFromCcxt(ExchangeName.BYBIT),

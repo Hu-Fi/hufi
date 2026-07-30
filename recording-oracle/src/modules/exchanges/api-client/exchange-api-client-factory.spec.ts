@@ -323,39 +323,6 @@ describe('ExchangeApiClientFactory', () => {
       );
     });
 
-    test('should correctly init client for bitmart', () => {
-      exchangeName = ExchangeName.BITMART;
-
-      mockedCcxtExchangeClient.prototype.checkRequiredCredentials.mockReturnValueOnce(
-        true,
-      );
-      const apiKeyMemo = faker.lorem.word();
-
-      const client = exchangeApiClientFactory.createCex(exchangeName, {
-        apiKey,
-        secret,
-        userId,
-        extras: {
-          apiKeyMemo,
-        },
-      });
-
-      expect(client).toBeDefined();
-
-      expect(mockedCcxtExchangeClient).toHaveBeenCalledTimes(1);
-      expect(mockedCcxtExchangeClient).toHaveBeenCalledWith(
-        exchangeName,
-        expect.objectContaining({
-          apiKey,
-          secret,
-          userId,
-          extraCreds: {
-            uid: apiKeyMemo,
-          },
-        }),
-      );
-    });
-
     test('should correctly init client for kraken', () => {
       exchangeName = ExchangeName.KRAKEN;
 
